@@ -1374,6 +1374,7 @@ class QuickSearch
                         '.', ''),
                     ')', ''),
                 '(', '') LIKE %s
+                OR candidate.key_skills LIKE %s
             )
             AND
                 candidate.site_id = %s
@@ -1383,6 +1384,7 @@ class QuickSearch
                 candidate.date_modified DESC,
                 candidate.first_name ASC,
                 candidate.last_name ASC",
+            $wildCardString,
             $wildCardString,
             $wildCardString,
             $wildCardString,
