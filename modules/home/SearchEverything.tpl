@@ -68,6 +68,7 @@
                     <tr>
                         <th align="left" nowrap="nowrap">First Name</th>
                         <th align="left" nowrap="nowrap">Last Name</th>
+                        <th align="left">Key Skills</th>
                         <th align="left" width="160">Home</th>
                         <th align="left" width="160">Cell</th>
                         <th align="left" width="65">Owner</th>
@@ -87,6 +88,7 @@
                                     <?php $this->_($candidatesData['lastName']) ?>
                                 </a>
                             </td>
+                            <td valign="top"><?php $this->_($candidatesData['keySkills']); ?></td>
                             <td valign="top" align="left"><?php $this->_($candidatesData['phoneHome']); ?></td>
                             <td valign="top" align="left"><?php $this->_($candidatesData['phoneCell']); ?></td>
                             <td nowrap="nowrap"><?php $this->_($candidatesData['ownerAbbrName']) ?></td>
