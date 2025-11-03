@@ -47,6 +47,7 @@ include_once(LEGACY_ROOT . '/lib/CommonErrors.php');
 include_once(LEGACY_ROOT . '/lib/ImportUtility.php');
 include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/Tags.php');
+include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
 eval(Hooks::get('XML_FEED_SUBMISSION_SETTINGS_HEADERS'));
 
 /* Users.php is included by index.php already. */
@@ -597,6 +598,25 @@ class SettingsUI extends UserInterface
                         CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                     }
                     $this->EEOEOCSettings();
+                }
+                break;
+
+            case 'gdprSettings':
+                if ($this->getUserAccessLevel('settings.gdprSettings') < ACCESS_LEVEL_DEMO)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if ($this->isPostBack())
+                {
+                    if ($this->getUserAccessLevel('settings.gdprSettings.POST') < ACCESS_LEVEL_SA)
+                    {
+                        CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    }
+                    $this->onGDPRSettings();
+                }
+                else
+                {
+                    $this->gdprSettings();
                 }
                 break;
 
@@ -1997,6 +2017,36 @@ class SettingsUI extends UserInterface
         }
 
         CATSUtility::transferRelativeURI('m=settings&a=administration');
+    }
+
+    /*
+     * Called by handleRequest() to show the GDPR settings template.
+     */
+    private function gdprSettings()
+    {
+        $gdprSettings = new GDPRSettings($this->_siteID);
+        $gdprSettingsRS = $gdprSettings->getAll();
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Administration');
+        $this->_template->assign('gdprSettings', $gdprSettingsRS);
+        $this->_template->assign('gdprSaved', isset($_GET['saved']));
+        $this->_template->display('./modules/settings/GDPRSettings.tpl');
+    }
+
+    private function onGDPRSettings()
+    {
+        $gdprSettings = new GDPRSettings($this->_siteID);
+
+        $expirationYears = $this->getTrimmedInput('gdprExpirationYears', $_POST);
+
+        if (!ctype_digit((string) $expirationYears) || (int) $expirationYears <= 0) {
+            CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Expiration must be a positive whole number of years.');
+        }
+
+        $gdprSettings->set('expirationYears', (string) (int) $expirationYears);
+
+        CATSUtility::transferRelativeURI('m=settings&a=gdprSettings&saved=1');
     }
 
     /*

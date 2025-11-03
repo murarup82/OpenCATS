@@ -38,6 +38,7 @@ include_once(LEGACY_ROOT . '/lib/Candidates.php');
 include_once(LEGACY_ROOT . '/lib/ActivityEntries.php');
 include_once(LEGACY_ROOT . '/lib/Export.php');
 include_once(LEGACY_ROOT . '/lib/InfoString.php');
+include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
 include_once(LEGACY_ROOT . '/lib/EmailTemplates.php');
 include_once(LEGACY_ROOT . '/lib/FileUtility.php');
 include_once(LEGACY_ROOT . '/lib/CareerPortal.php');
@@ -1357,6 +1358,32 @@ class JobOrdersUI extends UserInterface
         $questionnaire = new Questionnaire($this->_siteID);
         $questionnaires = $questionnaire->getAll(false);
 
+        $gdprSettings = new GDPRSettings($this->_siteID);
+        $gdprSettingsRS = $gdprSettings->getAll();
+
+        $gdprExpirationYears = (int) $gdprSettingsRS['expirationYears'];
+        if ($gdprExpirationYears <= 0) {
+            $gdprExpirationYears = 2;
+        }
+
+        $defaultGdprExpiration = date(
+            'm-d-y',
+            strtotime('+' . $gdprExpirationYears . ' years')
+        );
+
+        if (!isset($fields['gdprSigned'])) {
+            $fields['gdprSigned'] = 0;
+        } else {
+            $fields['gdprSigned'] = ((int) $fields['gdprSigned'] === 1) ? 1 : 0;
+        }
+
+        if (
+            !isset($fields['gdprExpirationDate']) ||
+            $fields['gdprExpirationDate'] === ''
+        ) {
+            $fields['gdprExpirationDate'] = $defaultGdprExpiration;
+        }
+
         $this->_template->assign('careerPortalEnabled', $careerPortalEnabled);
         $this->_template->assign('questionnaires', $questionnaires);
         $this->_template->assign('contents', $contents);
@@ -1373,6 +1400,7 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('associatedTextResume', false);
         $this->_template->assign('associatedFileResume', false);
         $this->_template->assign('EEOSettingsRS', $EEOSettingsRS);
+        $this->_template->assign('gdprSettingsRS', $gdprSettingsRS);
 
         if (!eval(Hooks::get('JO_ADD_CANDIDATE_MODAL'))) return;
 

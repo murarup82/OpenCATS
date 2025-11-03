@@ -103,6 +103,29 @@
                             <input type="text" class="inputbox" id="bestTimeToCall" name="bestTimeToCall" value="<?php $this->_($this->data['bestTimeToCall']); ?>" style="width: 150px;" />
                         </td>
                     </tr>
+                    <tr>
+                        <td class="tdVertical">
+                            <label id="gdprSignedLabel" for="gdprSigned">GDPR Signed:</label>
+                        </td>
+                        <td class="tdData">
+                            <select id="gdprSigned" name="gdprSigned" class="inputbox" style="width: 150px;">
+                                <option value="0"<?php if (empty($this->data['gdprSigned'])) echo ' selected="selected"'; ?>>No</option>
+                                <option value="1"<?php if (!empty($this->data['gdprSigned'])) echo ' selected="selected"'; ?>>Yes</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tdVertical">
+                            <label id="gdprExpirationDateLabel" for="gdprExpirationDate">GDPR Expiration Date:</label>
+                        </td>
+                        <td class="tdData">
+                            <?php if (!empty($this->data['gdprExpirationDateMDY'])): ?>
+                                <script type="text/javascript">DateInput('gdprExpirationDate', false, 'MM-DD-YY', '<?php echo($this->data['gdprExpirationDateMDY']); ?>', -1);</script>
+                            <?php else: ?>
+                                <script type="text/javascript">DateInput('gdprExpirationDate', false, 'MM-DD-YY', '', -1);</script>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
 
                     <tr>
                         <td class="tdVertical" valign="top" style="height: 28px;">

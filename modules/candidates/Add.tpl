@@ -202,7 +202,30 @@
                         </td>
                     </tr>
 
-                    <?php $tabIndex = 15; ?>
+                    <?php $tabIndex = 14; ?>
+                    <tr>
+                        <td class="tdVertical">
+                            <label id="gdprSignedLabel" for="gdprSigned">GDPR Signed:</label>
+                        </td>
+                        <td class="tdData">
+                            <select name="gdprSigned" id="gdprSigned" tabindex="<?php echo($tabIndex++); ?>">
+                                <option value="0"<?php if (empty($this->preassignedFields['gdprSigned'])) echo ' selected="selected"'; ?>>No</option>
+                                <option value="1"<?php if (!empty($this->preassignedFields['gdprSigned'])) echo ' selected="selected"'; ?>>Yes</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tdVertical">
+                            <label id="gdprExpirationDateLabel" for="gdprExpirationDate">GDPR Expiration Date:</label>
+                        </td>
+                        <td class="tdData">
+                            <script type="text/javascript">DateInput('gdprExpirationDate', false, 'MM-DD-YY', '<?php echo(isset($this->preassignedFields['gdprExpirationDate']) ? $this->preassignedFields['gdprExpirationDate'] : ''); ?>', <?php echo($tabIndex++); ?>);</script>
+                            <?php /* DateInput()s take up 3 tabindexes. */ ?>
+                            <?php $tabIndex += 2; ?>
+                            <div class="noteUnsized">Default is <?php $this->_($this->gdprSettingsRS['expirationYears']); ?> year(s) from today.</div>
+                        </td>
+                    </tr>
+                    <?php $tabIndex = 18; ?>
                 </table>
 
                 <?php if (!$this->isParsingEnabled || $this->associatedAttachment != 0): ?>

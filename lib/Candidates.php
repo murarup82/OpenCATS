@@ -88,6 +88,8 @@ class Candidates
      * @param string EEO gender, or '' to not specify.
      * @param string EEO veteran status, or '' to not specify.
      * @param string EEO disability status, or '' to not specify.
+     * @param boolean GDPR consent signed flag.
+     * @param string GDPR expiration date in MySQL format or NULL.
      * @param boolean Skip creating a history entry?
      * @return integer Candidate ID of new candidate, or -1 on failure.
      */
@@ -108,6 +110,8 @@ class Candidates
         $desiredPay,
         $notes,
         $bestTimeToCall,
+        $gdprSigned,
+        $gdprExpirationDate,
         $enteredBy,
         $owner,
         $gender = '',
@@ -134,6 +138,8 @@ class Candidates
                 desired_pay,
                 notes,
                 best_time_to_call,
+                gdpr_signed,
+                gdpr_expiration_date,
                 entered_by,
                 is_hot,
                 owner,
@@ -185,15 +191,17 @@ class Candidates
             $this->_db->makeQueryStringOrNULL($dateAvailable),
             $this->_db->makeQueryString($currentEmployer),
             ($canRelocate ? '1' : '0'),
-            $this->_db->makeQueryString($currentPay),
-            $this->_db->makeQueryString($desiredPay),
-            $this->_db->makeQueryString($notes),
-            $this->_db->makeQueryString($bestTimeToCall),
-            $this->_db->makeQueryInteger($enteredBy),
-            $this->_db->makeQueryInteger($owner),
-            $this->_db->makeQueryInteger($this->_siteID),
-            $this->_db->makeQueryInteger($race),
-            $this->_db->makeQueryInteger($veteran),
+                $this->_db->makeQueryString($currentPay),
+                $this->_db->makeQueryString($desiredPay),
+                $this->_db->makeQueryString($notes),
+                $this->_db->makeQueryString($bestTimeToCall),
+                $this->_db->makeQueryInteger($gdprSigned ? 1 : 0),
+                $this->_db->makeQueryStringOrNULL($gdprExpirationDate),
+                $this->_db->makeQueryInteger($enteredBy),
+                $this->_db->makeQueryInteger($owner),
+                $this->_db->makeQueryInteger($this->_siteID),
+                $this->_db->makeQueryInteger($race),
+                $this->_db->makeQueryInteger($veteran),
             $this->_db->makeQueryString($disability),
             $this->_db->makeQueryString($gender)
         );
@@ -237,6 +245,8 @@ class Candidates
      * @param string Desired pay rate / salary.
      * @param string Misc. candidate notes.
      * @param string Candidate's personal web site.
+     * @param boolean GDPR consent signed flag.
+     * @param string GDPR expiration date in MySQL format or NULL.
      * @param integer Owner user ID.
      * @param string EEO gender, or '' to not specify.
      * @param string EEO gender, or '' to not specify.
@@ -262,6 +272,8 @@ class Candidates
         $desiredPay,
         $notes,
         $bestTimeToCall,
+        $gdprSigned,
+        $gdprExpirationDate,
         $owner,
         $isHot,
         $email,
@@ -293,6 +305,8 @@ class Candidates
                 is_hot                = %s,
                 notes                 = %s,
                 best_time_to_call     = %s,
+                gdpr_signed           = %s,
+                gdpr_expiration_date  = %s,
                 owner                 = %s,
                 date_modified         = NOW(),
                 eeo_ethnic_type_id    = %s,
@@ -321,6 +335,8 @@ class Candidates
             ($isHot ? '1' : '0'),
             $this->_db->makeQueryString($notes),
             $this->_db->makeQueryString($bestTimeToCall),
+            $this->_db->makeQueryInteger($gdprSigned ? 1 : 0),
+            $this->_db->makeQueryStringOrNULL($gdprExpirationDate),
             $this->_db->makeQueryInteger($owner),
             $this->_db->makeQueryInteger($race),
             $this->_db->makeQueryInteger($veteran),
@@ -486,6 +502,11 @@ class Candidates
                 candidate.can_relocate AS canRelocate,
                 candidate.best_time_to_call AS bestTimeToCall,
                 candidate.is_hot AS isHot,
+                candidate.gdpr_signed AS gdprSigned,
+                DATE_FORMAT(
+                    candidate.gdpr_expiration_date, '%%m-%%d-%%y'
+                ) AS gdprExpirationDate,
+                candidate.gdpr_expiration_date AS gdprExpirationDateISO,
                 candidate.is_admin_hidden AS isAdminHidden,
                 DATE_FORMAT(
                     candidate.date_created, '%%m-%%d-%%y (%%h:%%i %%p)'
@@ -613,6 +634,10 @@ class Candidates
                 candidate.can_relocate AS canRelocate,
                 candidate.best_time_to_call AS bestTimeToCall,
                 candidate.is_hot AS isHot,
+                candidate.gdpr_signed AS gdprSigned,
+                DATE_FORMAT(
+                    candidate.gdpr_expiration_date, '%%m-%%d-%%y'
+                ) AS gdprExpirationDate,
                 candidate.eeo_ethnic_type_id AS eeoEthnicTypeID,
                 candidate.eeo_veteran_type_id AS eeoVeteranTypeID,
                 candidate.eeo_disability_status AS eeoDisabilityStatus,

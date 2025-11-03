@@ -188,6 +188,8 @@ CREATE TABLE `candidate` (
   `is_active` int(1) DEFAULT '1',
   `is_admin_hidden` int(1) DEFAULT '0',
   `best_time_to_call` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `gdpr_signed` int(1) NOT NULL DEFAULT '0',
+  `gdpr_expiration_date` date DEFAULT NULL,
   PRIMARY KEY (`candidate_id`),
   KEY `IDX_first_name` (`first_name`),
   KEY `IDX_last_name` (`last_name`),
@@ -964,7 +966,7 @@ CREATE TABLE `settings` (
   `site_id` int(11) NOT NULL DEFAULT '0',
   `settings_type` int(11) DEFAULT '0',
   PRIMARY KEY (`settings_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*Data for the table `settings` */
 
@@ -972,6 +974,8 @@ insert  into `settings`(`settings_id`,`setting`,`value`,`site_id`,`settings_type
 insert  into `settings`(`settings_id`,`setting`,`value`,`site_id`,`settings_type`) values (2,'fromAddress','admin@testdomain.com',180,1);
 insert  into `settings`(`settings_id`,`setting`,`value`,`site_id`,`settings_type`) values (3,'configured','1',1,1);
 insert  into `settings`(`settings_id`,`setting`,`value`,`site_id`,`settings_type`) values (4,'configured','1',180,1);
+insert  into `settings`(`settings_id`,`setting`,`value`,`site_id`,`settings_type`) values (5,'gdprExpirationYears','2',1,5);
+insert  into `settings`(`settings_id`,`setting`,`value`,`site_id`,`settings_type`) values (6,'gdprExpirationYears','2',180,5);
 
 /*Table structure for table `site` */
 

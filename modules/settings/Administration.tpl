@@ -162,6 +162,17 @@
                             <tr>
                                 <td>
                                     <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=gdprSettings">
+                                        GDPR Settings
+                                    </a>
+                                </td>
+                                <td>
+                                    Configure GDPR consent defaults such as expiration timeline.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
                                     <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=tags">
                                         Configure Tags
                                     </a>

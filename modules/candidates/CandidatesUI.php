@@ -38,6 +38,7 @@ include_once(LEGACY_ROOT . '/lib/ActivityEntries.php');
 include_once(LEGACY_ROOT . '/lib/JobOrders.php');
 include_once(LEGACY_ROOT . '/lib/Export.php');
 include_once(LEGACY_ROOT . '/lib/ExtraFields.php');
+include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
 include_once(LEGACY_ROOT . '/lib/Calendar.php');
 include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 include_once(LEGACY_ROOT . '/lib/EmailTemplates.php');
@@ -480,6 +481,21 @@ class CandidatesUI extends UserInterface
             $data['titleClass'] = 'jobTitleCold';
         }
 
+        if ($data['gdprSigned'] == 1) {
+            $data['gdprSignedText'] = 'Yes';
+        } else {
+            $data['gdprSignedText'] = 'No';
+        }
+
+        if (
+            empty($data['gdprExpirationDateISO']) ||
+            $data['gdprExpirationDateISO'] == '0000-00-00'
+        ) {
+            $data['gdprExpirationDateDisplay'] = '';
+        } else {
+            $data['gdprExpirationDateDisplay'] = $data['gdprExpirationDate'];
+        }
+
         $attachments = new Attachments($this->_siteID);
         $attachmentsRS = $attachments->getAll(
             DATA_ITEM_CANDIDATE,
@@ -681,6 +697,33 @@ class CandidatesUI extends UserInterface
             $preassignedFields = array_merge($preassignedFields, $fields);
         }
 
+        $gdprSettings = new GDPRSettings($this->_siteID);
+        $gdprSettingsRS = $gdprSettings->getAll();
+
+        $gdprExpirationYears = (int) $gdprSettingsRS['expirationYears'];
+        if ($gdprExpirationYears <= 0) {
+            $gdprExpirationYears = 2;
+        }
+
+        $defaultGdprExpiration = date(
+            'm-d-y',
+            strtotime('+' . $gdprExpirationYears . ' years')
+        );
+
+        if (!isset($preassignedFields['gdprSigned'])) {
+            $preassignedFields['gdprSigned'] = 0;
+        } else {
+            $preassignedFields['gdprSigned'] =
+                ((int) $preassignedFields['gdprSigned'] === 1) ? 1 : 0;
+        }
+
+        if (
+            !isset($preassignedFields['gdprExpirationDate']) ||
+            $preassignedFields['gdprExpirationDate'] === ''
+        ) {
+            $preassignedFields['gdprExpirationDate'] = $defaultGdprExpiration;
+        }
+
         /* Get preattached resume, if any. */
         if ($this->isRequiredIDValid('attachmentID', $_GET)) {
             $associatedAttachment = $_GET['attachmentID'];
@@ -775,6 +818,7 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('associatedTextResume', $associatedTextResume);
         $this->_template->assign('associatedFileResume', $associatedFileResume);
         $this->_template->assign('EEOSettingsRS', $EEOSettingsRS);
+        $this->_template->assign('gdprSettingsRS', $gdprSettingsRS);
         $this->_template->assign('isModal', false);
 
         /* REMEMBER TO ALSO UPDATE JobOrdersUI::addCandidateModal() IF
@@ -810,6 +854,8 @@ class CandidatesUI extends UserInterface
                 'race'            => $this->getTrimmedInput('race', $_POST),
                 'veteran'         => $this->getTrimmedInput('veteran', $_POST),
                 'disability'      => $this->getTrimmedInput('disability', $_POST),
+                'gdprSigned'      => $this->getTrimmedInput('gdprSigned', $_POST),
+                'gdprExpirationDate' => $this->getTrimmedInput('gdprExpirationDate', $_POST),
                 'documentTempFile' => $this->getTrimmedInput('documentTempFile', $_POST),
                 'isFromParser'    => true
             );
@@ -1021,6 +1067,12 @@ class CandidatesUI extends UserInterface
             $data['dateAvailableMDY'] = $data['dateAvailable'];
         }
 
+        if (!empty($data['gdprExpirationDate'])) {
+            $data['gdprExpirationDateMDY'] = $data['gdprExpirationDate'];
+        } else {
+            $data['gdprExpirationDateMDY'] = '';
+        }
+
         if (!eval(Hooks::get('CANDIDATE_EDIT'))) return;
 
         $EEOSettings = new EEOSettings($this->_siteID);
@@ -1168,6 +1220,46 @@ class CandidatesUI extends UserInterface
         $veteran         = $this->getTrimmedInput('veteran', $_POST);
         $disability      = $this->getTrimmedInput('disability', $_POST);
 
+        $gdprSignedInput = $this->getTrimmedInput('gdprSigned', $_POST);
+        $gdprSigned = ((int) $gdprSignedInput === 1) ? 1 : 0;
+
+        $gdprExpirationDateInput = $this->getTrimmedInput('gdprExpirationDate', $_POST);
+        $gdprExpirationDate = null;
+        if (!empty($gdprExpirationDateInput)) {
+            if (!DateUtility::validate('-', $gdprExpirationDateInput, DATE_FORMAT_MMDDYY)) {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid GDPR expiration date.');
+            }
+
+            $gdprExpirationDate = DateUtility::convert(
+                '-',
+                $gdprExpirationDateInput,
+                DATE_FORMAT_MMDDYY,
+                DATE_FORMAT_YYYYMMDD
+            );
+        } else if ($gdprSigned) {
+            CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'GDPR expiration date is required when GDPR Signed is Yes.');
+        }
+
+        $gdprSignedInput = $this->getTrimmedInput('gdprSigned', $_POST);
+        $gdprSigned = ((int) $gdprSignedInput === 1) ? 1 : 0;
+
+        $gdprExpirationDateInput = $this->getTrimmedInput('gdprExpirationDate', $_POST);
+        $gdprExpirationDate = null;
+        if (!empty($gdprExpirationDateInput)) {
+            if (!DateUtility::validate('-', $gdprExpirationDateInput, DATE_FORMAT_MMDDYY)) {
+                $this->$fatal('Invalid GDPR expiration date.', $moduleDirectory);
+            }
+
+            $gdprExpirationDate = DateUtility::convert(
+                '-',
+                $gdprExpirationDateInput,
+                DATE_FORMAT_MMDDYY,
+                DATE_FORMAT_YYYYMMDD
+            );
+        } else if ($gdprSigned) {
+            $this->$fatal('GDPR expiration date is required when GDPR Signed is Yes.', $moduleDirectory);
+        }
+
         /* Candidate source list editor. */
         $sourceCSV = $this->getTrimmedInput('sourceCSV', $_POST);
 
@@ -1198,6 +1290,8 @@ class CandidatesUI extends UserInterface
             $desiredPay,
             $notes,
             $bestTimeToCall,
+            $gdprSigned,
+            $gdprExpirationDate,
             $owner,
             $isHot,
             $email,
@@ -2350,6 +2444,8 @@ class CandidatesUI extends UserInterface
             $desiredPay,
             $notes,
             $bestTimeToCall,
+            $gdprSigned,
+            $gdprExpirationDate,
             $this->_userID,
             $this->_userID,
             $gender,

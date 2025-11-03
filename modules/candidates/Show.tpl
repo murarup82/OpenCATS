@@ -91,6 +91,20 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 <td class="vertical">Best Time To Call:</td>
                                 <td class="data"><?php $this->_($this->data['bestTimeToCall']); ?></td>
                             </tr>
+                            <tr>
+                                <td class="vertical">GDPR Signed:</td>
+                                <td class="data"><?php $this->_($this->data['gdprSignedText']); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">GDPR Expiration Date:</td>
+                                <td class="data">
+                                    <?php if (!empty($this->data['gdprExpirationDateDisplay'])): ?>
+                                        <?php $this->_($this->data['gdprExpirationDateDisplay']); ?>
+                                    <?php else: ?>
+                                        Not set
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
 
                             <tr>
                                 <td class="vertical">Address:</td>
