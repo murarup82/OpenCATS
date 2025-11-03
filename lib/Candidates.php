@@ -366,7 +366,9 @@ class Candidates
             return false;
         }
 
-        if (!empty($emailAddress)) {
+        $emailAddress = trim($emailAddress);
+
+        if (!empty($emailAddress) && StringUtility::isEmailAddress($emailAddress)) {
             /* Send e-mail notification. */
             //FIXME: Make subject configurable.
             $mailer = new Mailer($this->_siteID);
@@ -376,6 +378,8 @@ class Candidates
                 $email,
                 true
             );
+        } elseif (!empty($emailAddress)) {
+            /* Skip notification when we don't have a valid address. */
         }
 
         return true;
@@ -628,6 +632,7 @@ class Candidates
                 candidate.phone_cell AS phoneCell,
                 candidate.address AS address,
                 candidate.city AS city,
+                candidate.country AS country,
                 candidate.source AS source,
                 candidate.key_skills AS keySkills,
                 candidate.current_employer AS currentEmployer,

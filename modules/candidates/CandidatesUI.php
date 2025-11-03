@@ -2406,6 +2406,26 @@ class CandidatesUI extends UserInterface
         $veteran         = $this->getTrimmedInput('veteran', $_POST);
         $disability      = $this->getTrimmedInput('disability', $_POST);
 
+        $gdprSignedInput = $this->getTrimmedInput('gdprSigned', $_POST);
+        $gdprSigned = ((int) $gdprSignedInput === 1) ? 1 : 0;
+
+        $gdprExpirationDateInput = $this->getTrimmedInput('gdprExpirationDate', $_POST);
+        $gdprExpirationDate = null;
+        if (!empty($gdprExpirationDateInput)) {
+            if (!DateUtility::validate('-', $gdprExpirationDateInput, DATE_FORMAT_MMDDYY)) {
+                $this->$fatal('Invalid GDPR expiration date.', $moduleDirectory);
+            }
+
+            $gdprExpirationDate = DateUtility::convert(
+                '-',
+                $gdprExpirationDateInput,
+                DATE_FORMAT_MMDDYY,
+                DATE_FORMAT_YYYYMMDD
+            );
+        } else if ($gdprSigned) {
+            $this->$fatal('GDPR expiration date is required when GDPR Signed is Yes.', $moduleDirectory);
+        }
+
         /* Candidate source list editor. */
         $sourceCSV = $this->getTrimmedInput('sourceCSV', $_POST);
 
