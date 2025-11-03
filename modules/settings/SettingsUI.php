@@ -2044,7 +2044,7 @@ class SettingsUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Expiration must be a positive whole number of years.');
         }
 
-        $gdprSettings->set('expirationYears', (string) (int) $expirationYears);
+        $gdprSettings->set('gdprExpirationYears', (string) (int) $expirationYears);
 
         CATSUtility::transferRelativeURI('m=settings&a=gdprSettings&saved=1');
     }

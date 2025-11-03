@@ -37,6 +37,7 @@ include_once(LEGACY_ROOT . '/lib/History.php');
 include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 include_once(LEGACY_ROOT . '/lib/ExtraFields.php');
 include_once(LEGACY_ROOT . '/lib/DataGrid.php');
+include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
 
 
 /**
@@ -57,6 +58,7 @@ class Candidates
         $this->_siteID = $siteID;
         $this->_db = DatabaseConnection::getInstance();
         $this->extraFields = new ExtraFields($siteID, DATA_ITEM_CANDIDATE);
+        GDPRSettings::ensureSchema();
     }
 
     /**

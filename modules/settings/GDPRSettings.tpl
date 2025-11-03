@@ -29,7 +29,7 @@
                             <input type="hidden" name="postback" value="postback" />
 
                             <label for="gdprExpirationYears">Consent expiration (years):</label><br />
-                            <input type="text" name="gdprExpirationYears" id="gdprExpirationYears" value="<?php $this->_($this->gdprSettings['expirationYears']); ?>" style="width: 60px;" />
+                            <input type="text" name="gdprExpirationYears" id="gdprExpirationYears" value="<?php $this->_($this->gdprSettings['gdprExpirationYears']); ?>" style="width: 60px;" />
                             <span class="noteUnsized">This value is used to pre-fill the GDPR expiration date when adding new candidates.</span>
 
                             <br /><br />

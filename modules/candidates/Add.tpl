@@ -222,7 +222,7 @@
                             <script type="text/javascript">DateInput('gdprExpirationDate', false, 'MM-DD-YY', '<?php echo(isset($this->preassignedFields['gdprExpirationDate']) ? $this->preassignedFields['gdprExpirationDate'] : ''); ?>', <?php echo($tabIndex++); ?>);</script>
                             <?php /* DateInput()s take up 3 tabindexes. */ ?>
                             <?php $tabIndex += 2; ?>
-                            <div class="noteUnsized">Default is <?php $this->_($this->gdprSettingsRS['expirationYears']); ?> year(s) from today.</div>
+                            <div class="noteUnsized">Default is <?php $this->_($this->gdprSettingsRS['gdprExpirationYears']); ?> year(s) from today.</div>
                         </td>
                     </tr>
                     <?php $tabIndex = 18; ?>

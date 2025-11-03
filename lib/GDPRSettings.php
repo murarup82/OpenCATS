@@ -3,10 +3,14 @@
  * GDPR Settings Library
  *
  * Provides accessors for site-specific GDPR configuration stored in the
- * shared settings table.
+ * shared settings table and ensures required schema elements exist.
  */
 class GDPRSettings
 {
+    const SETTING_KEY = 'gdprExpirationYears';
+
+    private static $_schemaChecked = false;
+
     private $_db;
     private $_siteID;
 
@@ -14,6 +18,39 @@ class GDPRSettings
     {
         $this->_siteID = $siteID;
         $this->_db = DatabaseConnection::getInstance();
+        self::ensureSchema();
+    }
+
+    /**
+     * Make sure the database has the columns we rely on.
+     *
+     * @return void
+     */
+    public static function ensureSchema()
+    {
+        if (self::$_schemaChecked) {
+            return;
+        }
+
+        $db = DatabaseConnection::getInstance();
+
+        $columnCheck = $db->getAllAssoc("SHOW COLUMNS FROM candidate LIKE 'gdpr_signed'");
+        if (empty($columnCheck)) {
+            $db->query(
+                "ALTER TABLE candidate
+                    ADD COLUMN gdpr_signed int(1) NOT NULL DEFAULT '0' AFTER best_time_to_call"
+            );
+        }
+
+        $columnCheck = $db->getAllAssoc("SHOW COLUMNS FROM candidate LIKE 'gdpr_expiration_date'");
+        if (empty($columnCheck)) {
+            $db->query(
+                "ALTER TABLE candidate
+                    ADD COLUMN gdpr_expiration_date date DEFAULT NULL AFTER gdpr_signed"
+            );
+        }
+
+        self::$_schemaChecked = true;
     }
 
     /**
@@ -24,7 +61,7 @@ class GDPRSettings
     public function getAll()
     {
         $settings = array(
-            'expirationYears' => '2'
+            self::SETTING_KEY => '2'
         );
 
         $sql = sprintf(
@@ -42,10 +79,17 @@ class GDPRSettings
         );
         $rs = $this->_db->getAllAssoc($sql);
 
+        $hasExpirationSetting = false;
+
         foreach ($rs as $row) {
-            if (array_key_exists($row['setting'], $settings)) {
-                $settings[$row['setting']] = $row['value'];
+            if ($row['setting'] == self::SETTING_KEY) {
+                $settings[self::SETTING_KEY] = $row['value'];
+                $hasExpirationSetting = true;
             }
+        }
+
+        if (!$hasExpirationSetting) {
+            $this->set(self::SETTING_KEY, $settings[self::SETTING_KEY]);
         }
 
         return $settings;
@@ -60,15 +104,21 @@ class GDPRSettings
      */
     public function set($setting, $value)
     {
+        if ($setting === 'expirationYears') {
+            $setting = self::SETTING_KEY;
+        }
+
+        self::ensureSchema();
+
         $sql = sprintf(
             "DELETE FROM
                 settings
             WHERE
                 settings.setting = %s
             AND
-                settings.site_id = %s
+                site_id = %s
             AND
-                settings.settings_type = %s",
+                settings_type = %s",
             $this->_db->makeQueryStringOrNULL($setting),
             $this->_siteID,
             SETTINGS_GDPR

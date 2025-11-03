@@ -1361,7 +1361,7 @@ class JobOrdersUI extends UserInterface
         $gdprSettings = new GDPRSettings($this->_siteID);
         $gdprSettingsRS = $gdprSettings->getAll();
 
-        $gdprExpirationYears = (int) $gdprSettingsRS['expirationYears'];
+        $gdprExpirationYears = (int) $gdprSettingsRS['gdprExpirationYears'];
         if ($gdprExpirationYears <= 0) {
             $gdprExpirationYears = 2;
         }
