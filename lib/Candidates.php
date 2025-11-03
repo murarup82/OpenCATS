@@ -172,6 +172,7 @@ class Candidates
                 %s,
                 %s,
                 %s,
+                %s,
                 0,
                 %s,
                 %s,
