@@ -66,7 +66,6 @@ function AddressParser_parse(editBoxID, mode, indicatorID, arrowButtonID)
         }
     
         var firstNameField  = document.getElementById('firstName');
-        var middleNameField = document.getElementById('middleName');
         var lastNameField   = document.getElementById('lastName');
         var nameField       = document.getElementById('name');
         var addressField    = document.getElementById('address');
@@ -95,7 +94,6 @@ function AddressParser_parse(editBoxID, mode, indicatorID, arrowButtonID)
             }
 
             if (firstNameField)  firstNameField.value  = '';
-            if (middleNameField) middleNameField.value = '';
             if (lastNameField)   lastNameField.value   = '';
             if (nameField)       nameField.value       = '';
             if (addressField)    addressField.value    = '';
@@ -130,7 +128,6 @@ function AddressParser_parse(editBoxID, mode, indicatorID, arrowButtonID)
 
         var nameNode       = http.responseXML.getElementsByTagName('name').item(0);
         var firstNameNode  = nameNode.getElementsByTagName('first').item(0);
-        var middleNameNode = nameNode.getElementsByTagName('middle').item(0);
         var lastNameNode   = nameNode.getElementsByTagName('last').item(0);
 
         var phoneNumbersNode = http.responseXML.getElementsByTagName('phonenumbers').item(0);
@@ -159,15 +156,6 @@ function AddressParser_parse(editBoxID, mode, indicatorID, arrowButtonID)
             firstNameField.value = '';
         }
         
-        if (middleNameField && middleNameNode.firstChild)
-        {
-            middleNameField.value = middleNameNode.firstChild.nodeValue;
-        }
-        else if (middleNameField)
-        {
-            middleNameField.value = '';
-        }
-
         if (lastNameField && lastNameNode.firstChild)
         {
             lastNameField.value = lastNameNode.firstChild.nodeValue;

@@ -167,7 +167,7 @@ class AddressParser
 
     /**
      * Returns an associative array of the parsed address:
-     *   firstName, middleName, lastName, addressLineOne, addressLineTwo, zip
+     *   firstName, lastName, addressLineOne, addressLineTwo, zip
      *   email, phoneCell, phoneWork
      *
      * @return array Address info (associative array).
@@ -419,37 +419,28 @@ class AddressParser
                 break;
 
             case '3':
-                /* Reorder everything if we're in "last, first" mode. */
-                $fullNameArray['firstName']  = $tokens[($lastCommaFirst ? 1 : 0)];
-                $fullNameArray['middleName'] = $tokens[($lastCommaFirst ? 2 : 1)];
-                $fullNameArray['lastName']   = $tokens[($lastCommaFirst ? 0 : 2)];
-                break;
-
             default:
                 if ($lastCommaFirst) {
-                    /* Assume that the first token is the last name, the last token
-                     * is the middle name, and the tokens inbetween are the first name.
+                    /* Assume that the first token is the last name and everything else
+                     * belongs to the first name.
                      */
                     $fullNameArray['firstName']  = ArrayUtility::implodeRange(
                         ' ',
                         $tokens,
                         1,
-                        ($tokenCount - 2)
+                        ($tokenCount - 1)
                     );
-                    $fullNameArray['middleName'] = $tokens[$tokenCount - 1];
                     $fullNameArray['lastName']   = $tokens[0];
                 } else {
-                    /* Assume that the last token is the last name, the token before
-                     * the last token is the middle name, and all other preceding
-                     * tokens are part of the first name.
+                    /* Assume that the last token is the last name and everything before
+                     * it belongs to the first name.
                      */
                     $fullNameArray['firstName']  = ArrayUtility::implodeRange(
                         ' ',
                         $tokens,
                         0,
-                        ($tokenCount - 3)
+                        ($tokenCount - 2)
                     );
-                    $fullNameArray['middleName'] = $tokens[$tokenCount - 2];
                     $fullNameArray['lastName']   = $tokens[$tokenCount - 1];
                 }
                 break;

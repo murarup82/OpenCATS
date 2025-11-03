@@ -98,7 +98,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], 'Raed-Anne');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Stanford');
         $this->assertSame($parsedAddressArray['addressLineOne'], '110 North Elk Road');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -131,8 +131,8 @@ EOF;
         $this->addressParser->parse($address, ADDRESSPARSER_MODE_PERSON);
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
-        $this->assertSame($parsedAddressArray['firstName'], 'Lee');
-        $this->assertSame($parsedAddressArray['middleName'], 'Ann');
+        $this->assertSame($parsedAddressArray['firstName'], 'Lee Ann');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Chambers');
         $this->assertSame($parsedAddressArray['addressLineOne'], '9128 Standard Blvd');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -169,8 +169,8 @@ EOF;
         $this->addressParser->parse($address, ADDRESSPARSER_MODE_PERSON);
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
-        $this->assertSame($parsedAddressArray['firstName'], 'Michael');
-        $this->assertSame($parsedAddressArray['middleName'], 'Nicholas');
+        $this->assertSame($parsedAddressArray['firstName'], 'Michael Nicholas');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'O\'Mercurio');
         $this->assertSame($parsedAddressArray['addressLineOne'], '57830 Decoration Park');
         $this->assertSame($parsedAddressArray['addressLineTwo'], 'Apt. 7');
@@ -208,7 +208,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], 'Enock');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Chamberlin');
         $this->assertSame($parsedAddressArray['addressLineOne'], '281 Kerby Road Apt # C');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -245,7 +245,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], 'Horacio');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Alfonzo');
         $this->assertSame($parsedAddressArray['addressLineOne'], 'PO BOX 422428');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -274,7 +274,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], '');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], '');
         $this->assertSame($parsedAddressArray['addressLineOne'], '');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -303,7 +303,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], '');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], '');
         $this->assertSame($parsedAddressArray['addressLineOne'], '');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -332,8 +332,8 @@ EOF;
         $this->addressParser->parse($address, ADDRESSPARSER_MODE_PERSON);
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
-        $this->assertSame($parsedAddressArray['firstName'], 'Will');
-        $this->assertSame($parsedAddressArray['middleName'], 'G.');
+        $this->assertSame($parsedAddressArray['firstName'], 'Will G.');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Buckner');
         $this->assertSame($parsedAddressArray['addressLineOne'], '');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -365,8 +365,8 @@ EOF;
         $this->addressParser->parse($address, ADDRESSPARSER_MODE_PERSON);
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
-        $this->assertSame($parsedAddressArray['firstName'], 'Roger');
-        $this->assertSame($parsedAddressArray['middleName'], 'B.');
+        $this->assertSame($parsedAddressArray['firstName'], 'Roger B.');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Pickler');
         $this->assertSame($parsedAddressArray['addressLineOne'], '2073 Physics Ct. E');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -396,7 +396,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], 'Mike');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Jackson');
         $this->assertSame($parsedAddressArray['addressLineOne'], 'PO Box 30205');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -428,7 +428,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], 'Mike');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Jackson');
         $this->assertSame($parsedAddressArray['addressLineOne'], 'RR 2');
         $this->assertSame($parsedAddressArray['addressLineTwo'], 'Box 101');
@@ -460,7 +460,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], 'Mike');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Jackson');
         $this->assertSame($parsedAddressArray['addressLineOne'], 'RR 2');
         $this->assertSame($parsedAddressArray['addressLineTwo'], 'Box 101');
@@ -490,8 +490,8 @@ EOF;
         $this->addressParser->parse($address, ADDRESSPARSER_MODE_PERSON);
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
-        $this->assertSame($parsedAddressArray['firstName'], 'Roger');
-        $this->assertSame($parsedAddressArray['middleName'], 'B.');
+        $this->assertSame($parsedAddressArray['firstName'], 'Roger B.');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Pickler');
         $this->assertSame($parsedAddressArray['addressLineOne'], '2073 Physics Ct. E');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -522,8 +522,8 @@ EOF;
         $this->addressParser->parse($address, ADDRESSPARSER_MODE_PERSON);
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
-        $this->assertSame($parsedAddressArray['firstName'], 'Roger');
-        $this->assertSame($parsedAddressArray['middleName'], 'B.');
+        $this->assertSame($parsedAddressArray['firstName'], 'Roger B.');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Pickler');
         $this->assertSame($parsedAddressArray['addressLineOne'], '2073 Physics Ct. E');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -555,8 +555,8 @@ EOF;
         $this->addressParser->parse($address, ADDRESSPARSER_MODE_PERSON);
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
-        $this->assertSame($parsedAddressArray['firstName'], 'Roger');
-        $this->assertSame($parsedAddressArray['middleName'], 'B.');
+        $this->assertSame($parsedAddressArray['firstName'], 'Roger B.');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], 'Pickler');
         $this->assertSame($parsedAddressArray['addressLineOne'], '2073 Physics Ct. E');
         $this->assertSame($parsedAddressArray['addressLineTwo'], '');
@@ -591,7 +591,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], '');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], '');
         $this->assertSame($parsedAddressArray['company'], 'CompuServe, Inc.');
         $this->assertSame($parsedAddressArray['addressLineOne'], '5000 Arlington Centre Boulevard');
@@ -624,7 +624,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], '');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], '');
         $this->assertSame($parsedAddressArray['company'], 'Graphical Brass Interfaces, Inc.');
         $this->assertSame($parsedAddressArray['addressLineOne'], 'R.R. 1, Box 210A');
@@ -657,7 +657,7 @@ EOF;
         $parsedAddressArray = $this->addressParser->getAddressArray();
 
         $this->assertSame($parsedAddressArray['firstName'], '');
-        $this->assertSame($parsedAddressArray['middleName'], '');
+        $this->assertArrayNotHasKey('middleName', $parsedAddressArray);
         $this->assertSame($parsedAddressArray['lastName'], '');
         $this->assertSame($parsedAddressArray['company'], '1st Tech Systems, Inc.');
         $this->assertSame($parsedAddressArray['addressLineOne'], '53-54 Cape Road');

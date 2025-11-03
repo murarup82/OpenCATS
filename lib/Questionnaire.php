@@ -683,7 +683,6 @@ class Questionnaire
             $cData['candidateID'],
             $isActive ? true : false,
             $cData['firstName'],
-            $cData['middleName'],
             $cData['lastName'],
             $cData['email1'],
             $cData['email2'],

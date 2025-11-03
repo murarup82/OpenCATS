@@ -136,7 +136,6 @@ $interface->outputXMLPage(
     "    <company>". $parsedAddressArray['company'] ."</company>\n" .
     "    <name>\n" .
     "        <first>"  . $parsedAddressArray['firstName']  . "</first>\n" .
-    "        <middle>" . $parsedAddressArray['middleName'] . "</middle>\n" .
     "        <last>"   . $parsedAddressArray['lastName']   . "</last>\n" .
     "    </name>\n" .
     "    <address>\n" .
