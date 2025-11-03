@@ -93,11 +93,6 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             </tr>
 
                             <tr>
-                                <td class="vertical">Home Phone:</td>
-                                <td class="data"><?php $this->_($this->data['phoneHome']); ?></td>
-                            </tr>
-
-                            <tr>
                                 <td class="vertical">Cell Phone:</td>
                                 <td class="data"><?php $this->_($this->data['phoneCell']); ?></td>
                             </tr>

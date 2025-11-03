@@ -78,15 +78,6 @@
 
                     <tr>
                         <td class="tdVertical">
-                            <label id="phoneHomeLabel" for="phoneHome">Home Phone:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" class="inputbox" id="phoneHome" name="phoneHome" value="<?php $this->_($this->data['phoneHome']); ?>" style="width: 150px;" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
                             <label id="phoneCellLabel" for="phoneCell">Cell Phone:</label>
                         </td>
                         <td class="tdData">

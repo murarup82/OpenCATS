@@ -92,7 +92,7 @@ class Candidates
      * @return integer Candidate ID of new candidate, or -1 on failure.
      */
     public function add($firstName, $middleName, $lastName, $email1, $email2,
-        $phoneHome, $phoneCell, $phoneWork, $address, $city, $state, $zip,
+        $phoneCell, $phoneWork, $address, $city, $state, $zip,
         $source, $keySkills, $dateAvailable, $currentEmployer, $canRelocate,
         $currentPay, $desiredPay, $notes, $webSite, $bestTimeToCall, $enteredBy, $owner,
         $gender = '', $race = '', $veteran = '', $disability = '',
@@ -105,7 +105,6 @@ class Candidates
                 last_name,
                 email1,
                 email2,
-                phone_home,
                 phone_cell,
                 phone_work,
                 address,
@@ -156,7 +155,6 @@ class Candidates
                 %s,
                 %s,
                 %s,
-                %s,
                 0,
                 %s,
                 %s,
@@ -172,7 +170,6 @@ class Candidates
             $this->_db->makeQueryString($lastName),
             $this->_db->makeQueryString($email1),
             $this->_db->makeQueryString($email2),
-            $this->_db->makeQueryString($phoneHome),
             $this->_db->makeQueryString($phoneCell),
             $this->_db->makeQueryString($phoneWork),
             $this->_db->makeQueryString($address),
@@ -247,7 +244,7 @@ class Candidates
      * @return boolean True if successful; false otherwise.
      */
     public function update($candidateID, $isActive, $firstName, $middleName, $lastName,
-        $email1, $email2, $phoneHome, $phoneCell, $phoneWork, $address,
+        $email1, $email2, $phoneCell, $phoneWork, $address,
         $city, $state, $zip, $source, $keySkills, $dateAvailable,
         $currentEmployer, $canRelocate, $currentPay, $desiredPay,
         $notes, $webSite, $bestTimeToCall, $owner, $isHot, $email, $emailAddress,
@@ -263,7 +260,6 @@ class Candidates
                 last_name             = %s,
                 email1                = %s,
                 email2                = %s,
-                phone_home            = %s,
                 phone_work            = %s,
                 phone_cell            = %s,
                 address               = %s,
@@ -297,7 +293,6 @@ class Candidates
             $this->_db->makeQueryString($lastName),
             $this->_db->makeQueryString($email1),
             $this->_db->makeQueryString($email2),
-            $this->_db->makeQueryString($phoneHome),
             $this->_db->makeQueryString($phoneWork),
             $this->_db->makeQueryString($phoneCell),
             $this->_db->makeQueryString($address),
@@ -466,7 +461,6 @@ class Candidates
                 candidate.last_name AS lastName,
                 candidate.email1 AS email1,
                 candidate.email2 AS email2,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_work AS phoneWork,
                 candidate.phone_cell AS phoneCell,
                 candidate.address AS address,
@@ -602,7 +596,6 @@ class Candidates
                 candidate.last_name AS lastName,
                 candidate.email1 AS email1,
                 candidate.email2 AS email2,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_work AS phoneWork,
                 candidate.phone_cell AS phoneCell,
                 candidate.address AS address,
@@ -1133,13 +1126,12 @@ class Candidates
         return (boolean) $this->_db->query($sql);
     }
 
-    public function checkDuplicity($firstName, $middleName, $lastName, $email1, $email2, $phoneHome, $phoneCell, $phoneWork, $address, $city)
+    public function checkDuplicity($firstName, $middleName, $lastName, $email1, $email2, $phoneCell, $phoneWork, $address, $city)
     {
         $sql = sprintf(
             "SELECT
                 candidate.candidate_id AS candidateID,
                 candidate.middle_name AS middleName,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.phone_work AS phoneWork,
                 candidate.email1 AS email1,
@@ -1163,7 +1155,6 @@ class Candidates
         {
             $phoneNumbers = array();
 
-            if($phoneHome != ""){array_push($phoneNumbers, preg_replace('/\s+/', '', $phoneHome));}
             if($phoneCell != ""){array_push($phoneNumbers, preg_replace('/\s+/', '', $phoneCell));}
             if($phoneWork != ""){array_push($phoneNumbers, preg_replace('/\s+/', '', $phoneWork));}
             
@@ -1174,7 +1165,6 @@ class Candidates
             foreach($rs as $row)
             {   
                 $phoneNumbersDB = array();
-                if($row['phoneHome'] != ""){array_push($phoneNumbersDB, preg_replace('/\s+/', '', $row['phoneHome']));}
                 if($row['phoneCell'] != ""){array_push($phoneNumbersDB, preg_replace('/\s+/', '', $row['phoneCell']));}
                 if($row['phoneWork'] != ""){array_push($phoneNumbersDB, preg_replace('/\s+/', '', $row['phoneWork']));}
                 $phoneNumbersDB = array_map('strtolower', $phoneNumbersDB);
@@ -1472,15 +1462,6 @@ class Candidates
                 $update .= ", ";
             }
             $update .= "phone_work = '" . $rs['phoneWork']."'";
-            $comma = true;
-        }
-        if($params['phoneHome'] == "1")
-        {
-            if($comma)
-            {
-                $update .= ", ";
-            }
-            $update .= "phone_home = '" . $rs['phoneHome']."'";
             $comma = true;
         }
         if($params['address'] == "1")
@@ -2013,11 +1994,6 @@ class CandidatesDataGrid extends DataGrid
                                      'sortableColumn'     => 'email2',
                                      'pagerWidth'    => 80,
                                      'filter'         => 'candidate.email2'),
-
-            'Home Phone' =>     array('select'   => 'candidate.phone_home AS phoneHome',
-                                     'sortableColumn'     => 'phoneHome',
-                                     'pagerWidth'    => 80,
-                                     'filter'         => 'candidate.phone_home'),
 
             'Cell Phone' =>     array('select'   => 'candidate.phone_cell AS phoneCell',
                                      'sortableColumn'     => 'phoneCell',

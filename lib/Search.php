@@ -392,7 +392,6 @@ class SearchCandidates
                 candidate.last_name AS lastName,
                 candidate.city AS city,
                 candidate.state AS state,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -439,7 +438,6 @@ class SearchCandidates
                 candidate.last_name AS lastName,
                 candidate.city AS city,
                 candidate.state AS state,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -499,7 +497,6 @@ class SearchCandidates
                 candidate.last_name AS lastName,
                 candidate.city AS city,
                 candidate.state AS state,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -552,7 +549,6 @@ class SearchCandidates
                 candidate.last_name AS lastName,
                 candidate.city AS city,
                 candidate.state AS state,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -607,7 +603,6 @@ class SearchCandidates
                 candidate.last_name AS lastName,
                 candidate.city AS city,
                 candidate.state AS state,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -678,7 +673,6 @@ class SearchCandidates
                 candidate.last_name AS lastName,
                 candidate.city AS city,
                 candidate.state AS state,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.address AS address,
                 candidate.email1 AS email1,
@@ -1360,13 +1354,6 @@ class QuickSearch
                 OR CONCAT(candidate.last_name, ', ', candidate.first_name) LIKE %s
                 OR candidate.email1 LIKE %s
                 OR candidate.email2 LIKE %s
-                OR REPLACE(
-                    REPLACE(
-                        REPLACE(
-                            REPLACE(candidate.phone_home, '-', ''),
-                        '.', ''),
-                    ')', ''),
-                '(', '') LIKE %s
                 OR REPLACE(
                     REPLACE(
                         REPLACE(

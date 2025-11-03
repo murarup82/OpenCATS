@@ -904,7 +904,6 @@ class CandidatesUI extends UserInterface
                 'lastName'        => $this->getSanitisedInput('lastName', $_POST),
                 'email1'          => $this->getSanitisedInput('email1', $_POST),
                 'email2'          => $this->getSanitisedInput('email2', $_POST),
-                'phoneHome'       => $this->getSanitisedInput('phoneHome', $_POST),
                 'phoneCell'       => $this->getSanitisedInput('phoneCell', $_POST),
                 'phoneWork'       => $this->getSanitisedInput('phoneWork', $_POST),
                 'address'         => $this->getSanitisedInput('address', $_POST),
@@ -1016,8 +1015,8 @@ class CandidatesUI extends UserInterface
                     if (isset($res['city'])) $fields['city'] = $res['city']; else $fields['city'] = '';
                     if (isset($res['state'])) $fields['state'] = $res['state']; else $fields['state'] = '';
                     if (isset($res['zip_code'])) $fields['zip'] = $res['zip_code']; else $fields['zip'] = '';
-                    if (isset($res['phone_number'])) $fields['phoneHome'] = $res['phone_number']; else $fields['phoneHome'] = '';
-                    $fields['phoneWork'] = $fields['phoneCell'] = '';
+                    if (isset($res['phone_number'])) $fields['phoneCell'] = $res['phone_number']; else $fields['phoneCell'] = '';
+                    $fields['phoneWork'] = '';
                     if (isset($res['skills'])) $fields['keySkills'] = str_replace("\n", ' ', str_replace('"', '\'\'', $res['skills']));
                 }
 
@@ -1352,7 +1351,6 @@ class CandidatesUI extends UserInterface
             $lastName,
             $email1,
             $email2,
-            $phoneHome,
             $phoneCell,
             $phoneWork,
             $address,
@@ -3511,7 +3509,6 @@ class CandidatesUI extends UserInterface
         }
         $params['phoneCell'] = $_POST['phoneCell'];
         $params['phoneWork'] = $_POST['phoneWork'];
-        $params['phoneHome'] = $_POST['phoneHome'];
         $params['address'] = $_POST['address'];
         $params['website'] = $_POST['website'];
         $params['oldCandidateID'] = $_POST['oldCandidateID'];
