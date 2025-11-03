@@ -33,15 +33,6 @@
                     <td align="center"><input type="radio" name="firstName" value=1 checked/></td>
                     <td align="left"><?php echo($this->rsNew['firstName']); ?></td>
                 </tr>
-                
-                
-                <tr>
-                    <td colspan=4 align="center">Middle Name&nbsp;</td>
-                </tr>
-                <tr>
-                    <td align="right"><?php echo($this->rsOld['middleName']); ?></td>
-                    <td align="center"><input type="radio" name="middleName" value=0 /></td>
-                    <td align="center"><input type="radio" name="middleName" value=1 checked/></td>
                     <td align="left"><?php echo($this->rsNew['middleName']); ?></td>
                 </tr>
                 
@@ -81,15 +72,7 @@
                     <td align="left"><?php echo($this->rsNew['phoneCell'] == '') ? '(none)' : ($this->rsNew['phoneCell']); ?></td>
                 </tr>
                 
-                <tr>
-                    <td colspan=4 align="center">Home phone&nbsp;</td>
-                </tr>
-                <tr>
-                    <td align="right"><?php echo($this->rsOld['phoneHome'] == '') ? '(none)' : ($this->rsOld['phoneHome']); ?></td>
-                    <td align="center"><input type="radio" name="phoneHome" value=0 /></td>
-                    <td align="center"><input type="radio" name="phoneHome" value=1 checked/></td>
-                    <td align="left"><?php echo($this->rsNew['phoneHome'] == '') ? '(none)' : ($this->rsNew['phoneHome']); ?></td>
-                </tr>
+                
                 
                 <tr>
                     <td colspan=4 align="center">Work phone&nbsp;</td>

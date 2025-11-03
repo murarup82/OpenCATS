@@ -658,7 +658,6 @@ class Candidates
                 candidate.candidate_id AS candidateID,
                 candidate.last_name AS lastName,
                 candidate.first_name AS firstName,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.email1 AS email1,
                 candidate.key_skills as keySkills
@@ -677,15 +676,14 @@ class Candidates
         return $this->_db->getAllAssoc($sql);
     }
 
-    /**
-     * Returns a candidate ID that matches the specified e-mail address.
-     *
-     * @param string Candidate e-mail address,
-     * @return integer Candidate ID, or -1 if no matching candidates were
-     *                 found.
-     */
-    public function getIDByEmail($email)
-    {
+            (
+                candidate.phone_cell = %s
+                OR candidate.phone_work = %s
+            )
+            AND
+                candidate.site_id = %s
+        );
+        $rs = $this->_db->getAssoc($sql);
         $sql = sprintf(
             "SELECT
                 candidate.candidate_id AS candidateID
@@ -726,7 +724,6 @@ class Candidates
             )
             AND
                 candidate.site_id = %s",
-            $this->_db->makeQueryString($phone),
             $this->_db->makeQueryString($phone),
             $this->_db->makeQueryString($phone),
             $this->_siteID

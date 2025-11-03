@@ -623,13 +623,6 @@ class SearchCandidates
                 REPLACE(
                     REPLACE(
                         REPLACE(
-                            REPLACE(candidate.phone_home, '-', ''),
-                        '.', ''),
-                    ')', ''),
-                '(', '') LIKE %s
-                OR REPLACE(
-                    REPLACE(
-                        REPLACE(
                             REPLACE(candidate.phone_cell, '-', ''),
                         '.', ''),
                     ')', ''),
@@ -641,7 +634,6 @@ class SearchCandidates
                 candidate.site_id = %s
             ORDER BY
                 %s %s",
-            $wildCardString,
             $wildCardString,
             $this->_siteID,
             $sortBy,
@@ -1330,7 +1322,6 @@ class QuickSearch
                 candidate.candidate_id AS candidateID,
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
-                candidate.phone_home AS phoneHome,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,

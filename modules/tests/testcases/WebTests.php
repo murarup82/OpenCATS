@@ -65,7 +65,6 @@ class CandidatesWebTest extends CATSWebTestCase
         );
         $this->assertField('email1');
         $this->assertField('email2');
-        $this->assertField('phoneHome');
         $this->assertField('phoneCell');
         $this->assertField('phoneWork');
         $this->assertField('city');
@@ -119,7 +118,6 @@ class CandidatesWebTest extends CATSWebTestCase
         );
         $this->assertField('email1');
         $this->assertField('email2');
-        $this->assertField('phoneHome');
         $this->assertField('phoneCell');
         $this->assertField('phoneWork');
         $this->assertField('city');

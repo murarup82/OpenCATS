@@ -226,10 +226,7 @@ class HomeUI extends UserInterface
                     $candidatesRS[$rowIndex]['ownerAbbrName'] = 'None';
                 }
 
-                if (empty($candidatesRS[$rowIndex]['phoneHome']))
-                {
-                    $candidatesRS[$rowIndex]['phoneHome'] = 'None';
-                }
+                
 
                 if (empty($candidatesRS[$rowIndex]['phoneCell']))
                 {

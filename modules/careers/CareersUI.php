@@ -230,7 +230,6 @@ class CareersUI extends UserInterface
             $content = str_replace('<input-zip>', '<input name="zip" id="zip" class="inputBoxNormal" value="' . $candidate['zip'] . '" />', $content);
             $content = str_replace('<input-phoneWork>', '<input name="phoneWork" id="phoneWork" class="inputBoxNormal" value="' . $candidate['phoneWork'] . '" />', $content);
             $content = str_replace('<input-email1>', '<input name="email1" id="email1" class="inputBoxNormal" value="' . $candidate['email1'] . '" />', $content);
-            $content = str_replace('<input-phoneHome>', '<input name="phoneHome" id="phoneHome" class="inputBoxNormal" value="' . $candidate['phoneHome'] . '" />', $content);
             $content = str_replace('<input-phoneCell>', '<input name="phoneCell" id="phoneCell" class="inputBoxNormal" value="' . $candidate['phoneCell'] . '" />', $content);
             $content = str_replace('<input-bestTimeToCall>', '<input name="bestTimeToCall" id="bestTimeToCall" class="inputBoxNormal" value="' . $candidate['bestTimeToCall'] . '" />', $content);
             $content = str_replace('<input-keySkills>', '<input name="keySkills" id="keySkills" class="inputBoxNormal" value="' . $candidate['keySkills'] . '" />', $content);
@@ -587,7 +586,6 @@ class CareersUI extends UserInterface
             $template['Content'] = str_replace('<input-zip>', '<input name="zip" id="zip" class="inputBoxNormal" value="' . $zip . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-phone>', '<input name="phone" id="phone" class="inputBoxNormal" value="' . $phone . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-email>', '<input name="email" id="email" class="inputBoxNormal" value="' . $email . '" />', $template['Content']);
-            $template['Content'] = str_replace('<input-phone-home>', '<input name="phoneHome" id="phoneHome" class="inputBoxNormal" value="' . $phoneHome . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-phone-cell>', '<input name="phoneCell" id="phoneCell" class="inputBoxNormal" value="' . $phoneCell . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-best-time-to-call>', '<input name="bestTimeToCall" id="bestTimeToCall" class="inputBoxNormal" value="' . $bestTimeToCall . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-email2>', '<input name="email2" id="email2" class="inputBoxNormal" value="' . $email2 . '" />', $template['Content']);
@@ -1218,9 +1216,8 @@ class CareersUI extends UserInterface
         $state          = $this->getSanitisedInput('state', $_POST);
         $zip            = $this->getSanitisedInput('zip', $_POST);
         $source         = $this->getSanitisedInput('source', $_POST);
-        $phone          = $this->getSanitisedInput('phone', $_POST);
-        $phoneHome      = $this->getSanitisedInput('phoneHome', $_POST);
-        $phoneCell      = $this->getSanitisedInput('phoneCell', $_POST);
+    $phone          = $this->getSanitisedInput('phone', $_POST);
+    $phoneCell      = $this->getSanitisedInput('phoneCell', $_POST);
         $bestTimeToCall = $this->getSanitisedInput('bestTimeToCall', $_POST);
         $keySkills      = $this->getSanitisedInput('keySkills', $_POST);
         $extraNotes     = $this->getSanitisedInput('extraNotes', $_POST);
@@ -1264,7 +1261,7 @@ class CareersUI extends UserInterface
          * process repeated postings, etc.
          */
         $fields = array('firstName', 'lastName', 'email', 'address', 'city', 'state', 'zip', 'phone',
-            'phoneHome', 'phoneCell'
+            'phoneCell'
         );
         $storedVal = '';
         foreach ($fields as $field)

@@ -235,7 +235,6 @@ class ImportUI extends UserInterface
             'City',             'city',
             'State',            'state',
             'Zip',              'zip',
-            'Home Phone',       'phone_home',
             'Cell Phone',       'phone_cell',
             'Work Phone',       'phone_work',
             'Notes',            'notes',
