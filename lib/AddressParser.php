@@ -173,7 +173,7 @@ class AddressParser
     /**
      * Returns an associative array of the parsed address:
      *   firstName, middleName, lastName, addressLineOne, addressLineTwo, zip
-     *   email, phoneCell, phoneHome, phoneWork
+     *   email, phoneCell, phoneWork
      *
      * @return array Address info (associative array).
      */

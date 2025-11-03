@@ -687,7 +687,6 @@ class Questionnaire
             $cData['lastName'],
             $cData['email1'],
             $cData['email2'],
-            $cData['phoneHome'],
             $cData['phoneCell'],
             $cData['phoneWork'],
             $cData['address'],
