@@ -74,8 +74,7 @@ class Candidates
      * @param string Work phone number.
      * @param string Address (can be multiple lines).
      * @param string City.
-     * @param string State / province.
-     * @param string Postal code.
+     * @param string Country.
      * @param string Source where this candidate was found.
      * @param string Key skills.
      * @param string Date available.
@@ -238,8 +237,7 @@ class Candidates
      * @param string Work phone number.
      * @param string Address (can be multiple lines).
      * @param string City.
-     * @param string State / province.
-     * @param string Postal code.
+     * @param string Country.
      * @param string Source where this candidate was found.
      * @param string Key skills.
      * @param string Date available.
@@ -267,6 +265,7 @@ class Candidates
         $phoneCell,
         $address,
         $city,
+        $country,
         $source,
         $keySkills,
         $dateAvailable,

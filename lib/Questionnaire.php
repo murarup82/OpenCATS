@@ -679,6 +679,19 @@ class Questionnaire
             }
         }
 
+        $gdprSigned = isset($cData['gdprSigned']) ? (int) $cData['gdprSigned'] : 0;
+        $gdprExpirationDate = null;
+        if (!empty($cData['gdprExpirationDateISO'])) {
+            $gdprExpirationDate = $cData['gdprExpirationDateISO'];
+        } else if (!empty($cData['gdprExpirationDate'])) {
+            $gdprExpirationDate = DateUtility::convert(
+                '-',
+                $cData['gdprExpirationDate'],
+                DATE_FORMAT_MMDDYY,
+                DATE_FORMAT_YYYYMMDD
+            );
+        }
+
         return $candidate->update(
             $cData['candidateID'],
             $isActive ? true : false,
@@ -698,10 +711,16 @@ class Questionnaire
             $cData['desiredPay'],
             $notes,
             $cData['bestTimeToCall'],
+            $gdprSigned,
+            $gdprExpirationDate,
             $cData['owner'],
             $isHot ? true : false,
             $cData['email1'],
-            $cData['email1']
+            $cData['email1'],
+            isset($cData['eeoGender']) ? $cData['eeoGender'] : '',
+            isset($cData['eeoEthnicType']) ? $cData['eeoEthnicType'] : '',
+            isset($cData['eeoVeteranType']) ? $cData['eeoVeteranType'] : '',
+            isset($cData['eeoDisabilityStatus']) ? $cData['eeoDisabilityStatus'] : ''
         );
     }
 }
