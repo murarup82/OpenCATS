@@ -24,9 +24,9 @@ VALUES
 
 
 INSERT INTO `candidate`
-(`candidate_id`, `site_id`, `last_name`, `first_name`, `middle_name`, `phone_home`, `phone_cell`, `phone_work`, `address`, `city`, `state`, `zip`, `source`, `date_available`, `can_relocate`, `notes`, `key_skills`, `current_employer`, `entered_by`, `owner`, `date_created`, `date_modified`, `email1`, `email2`, `web_site`, `import_id`, `is_hot`, `eeo_ethnic_type_id`, `eeo_veteran_type_id`, `eeo_disability_status`, `eeo_gender`, `desired_pay`, `current_pay`, `is_active`, `is_admin_hidden`, `best_time_to_call`)
+(`candidate_id`, `site_id`, `last_name`, `first_name`, `middle_name`, `phone_cell`, `phone_work`, `address`, `city`, `state`, `zip`, `source`, `date_available`, `can_relocate`, `notes`, `key_skills`, `current_employer`, `entered_by`, `owner`, `date_created`, `date_modified`, `email1`, `email2`, `web_site`, `import_id`, `is_hot`, `eeo_ethnic_type_id`, `eeo_veteran_type_id`, `eeo_disability_status`, `eeo_gender`, `desired_pay`, `current_pay`, `is_active`, `is_admin_hidden`, `best_time_to_call`)
 VALUES
-(20000, 1, 'Tuk', 'Pipin', '', '', '', '', '', '', '', '', '(none)', NULL, 0, '', '', '', 1, 1, '2016-08-10 14:48:32', '2016-08-10 14:48:57', '', '', '', 0, 0, 0, 0, '', '', '', '', 1, 0, '');
+(20000, 1, 'Tuk', 'Pipin', '', '', '', '', '', '', '', '(none)', NULL, 0, '', '', 1, 1, '2016-08-10 14:48:32', '2016-08-10 14:48:57', '', '', '', 0, 0, 0, 0, '', '', '', '', 1, 0, '');
 
 INSERT INTO `joborder`
 (`joborder_id`, `recruiter`, `contact_id`, `company_id`, `entered_by`, `owner`, `site_id`, `client_job_id`, `title`, `description`, `notes`, `type`, `duration`, `rate_max`, `salary`, `status`, `is_hot`, `openings`, `city`, `state`, `start_date`, `date_created`, `date_modified`, `public`, `company_department_id`, `is_admin_hidden`, `openings_available`, `questionnaire_id`)

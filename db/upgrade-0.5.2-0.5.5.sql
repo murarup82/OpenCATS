@@ -202,7 +202,7 @@ ALTER TABLE `calendar_event_type` ADD KEY `IDX_short_description` (`short_descri
 ALTER TABLE `candidate` ADD KEY `IDX_site_id` (`site_id`);
 ALTER TABLE `candidate` ADD KEY `IDX_first_name` (`first_name`);
 ALTER TABLE `candidate` ADD KEY `IDX_last_name` (`last_name`);
-ALTER TABLE `candidate` ADD KEY `IDX_phone_home` (`phone_home`);
+-- phone_home index removed during cleanup; column no longer present
 ALTER TABLE `candidate` ADD KEY `IDX_phone_cell` (`phone_cell`);
 ALTER TABLE `candidate` ADD KEY `IDX_phone_work` (`phone_work`);
 ALTER TABLE `candidate` ADD KEY `IDX_key_skills` (`key_skills`(255));
