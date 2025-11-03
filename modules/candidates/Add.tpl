@@ -137,14 +137,7 @@
                         </td>
                     </tr>
 
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="middleNameLabel" for="middleName">Middle Name:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="2" name="middleName" id="middleName" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['middleName'])) $this->_($this->preassignedFields['middleName']); ?>" />
-                        </td>
-                    </tr>
+                    <!-- Middle Name removed -->
 
                     <tr>
                         <td class="tdVertical">

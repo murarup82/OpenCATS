@@ -282,11 +282,10 @@ class CareersUI extends UserInterface
             $candidatesLib = new Candidates($siteID);
 
             // Update the candidate's information
-            $candidatesLib->update(
+            $candidates->update(
                 $candidate['candidateID'],
                 $candidate['isActive'] ? true : false,
                 $firstName,
-                $candidate['middleName'],
                 $lastName,
                 $email1,
                 $email1,
@@ -1108,7 +1107,6 @@ class CareersUI extends UserInterface
 
         /* funciton getSanitisedInput used to fix XSS vuln in public portal */
         $lastName       = $this->getSanitisedInput('lastName', $_POST);
-        $middleName     = $this->getSanitisedInput('middleName', $_POST);
         $firstName      = $this->getSanitisedInput('firstName', $_POST);
         $email          = $this->getSanitisedInput('email', $_POST);
         $email2         = $this->getSanitisedInput('email2', $_POST);
@@ -1185,7 +1183,6 @@ class CareersUI extends UserInterface
                 $candidateID,
                 $candidate['isActive'] ? true : false,
                 $firstName,
-                $middleName,
                 $lastName,
                 $email,
                 $email2,
@@ -1224,7 +1221,6 @@ class CareersUI extends UserInterface
             /* New candidate. */
             $candidateID = $candidates->add(
                 $firstName,
-                $middleName,
                 $lastName,
                 $email,
                 $email2,

@@ -65,7 +65,6 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 <td class="data">
                                     <span style="font-weight: bold;" class="<?php echo($this->data['titleClass']); ?>">
                                         <?php $this->_($this->data['firstName']); ?>
-                                        <?php $this->_($this->data['middleName']); ?>
                                         <?php $this->_($this->data['lastName']); ?>
                                         <?php if ($this->data['isActive'] != 1): ?>
                                             &nbsp;<span style="color:orange;">(INACTIVE)</span>

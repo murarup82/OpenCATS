@@ -94,7 +94,6 @@ class Candidates
      */
     public function add(
         $firstName,
-        $middleName,
         $lastName,
         $email1,
         $email2,
@@ -125,7 +124,6 @@ class Candidates
         $sql = sprintf(
             "INSERT INTO candidate (
                 first_name,
-                middle_name,
                 last_name,
                 email1,
                 email2,
@@ -190,7 +188,6 @@ class Candidates
                 %s
             )",
             $this->_db->makeQueryString($firstName),
-            $this->_db->makeQueryString($middleName),
             $this->_db->makeQueryString($lastName),
             $this->_db->makeQueryString($email1),
             $this->_db->makeQueryString($email2),
@@ -269,7 +266,6 @@ class Candidates
         $candidateID,
         $isActive,
         $firstName,
-        $middleName,
         $lastName,
         $email1,
         $email2,
@@ -304,7 +300,6 @@ class Candidates
             SET
                 is_active             = %s,
                 first_name            = %s,
-                middle_name           = %s,
                 last_name             = %s,
                 email1                = %s,
                 email2                = %s,
@@ -337,7 +332,6 @@ class Candidates
                 site_id = %s",
             ($isActive ? '1' : '0'),
             $this->_db->makeQueryString($firstName),
-            $this->_db->makeQueryString($middleName),
             $this->_db->makeQueryString($lastName),
             $this->_db->makeQueryString($email1),
             $this->_db->makeQueryString($email2),
@@ -506,7 +500,6 @@ class Candidates
                 candidate.candidate_id AS candidateID,
                 candidate.is_active AS isActive,
                 candidate.first_name AS firstName,
-                candidate.middle_name AS middleName,
                 candidate.last_name AS lastName,
                 candidate.email1 AS email1,
                 candidate.email2 AS email2,
@@ -639,7 +632,6 @@ class Candidates
                 candidate.candidate_id AS candidateID,
                 candidate.is_active AS isActive,
                 candidate.first_name AS firstName,
-                candidate.middle_name AS middleName,
                 candidate.last_name AS lastName,
                 candidate.email1 AS email1,
                 candidate.email2 AS email2,
@@ -1149,12 +1141,11 @@ class Candidates
         return (bool) $this->_db->query($sql);
     }
 
-    public function checkDuplicity($firstName, $middleName, $lastName, $email1, $email2, $phoneCell, $phoneWork, $address, $city)
+    public function checkDuplicity($firstName, $lastName, $email1, $email2, $phoneCell, $phoneWork, $address, $city)
     {
         $sql = sprintf(
             "SELECT
                 candidate.candidate_id AS candidateID,
-                candidate.middle_name AS middleName,
                 candidate.phone_cell AS phoneCell,
                 candidate.phone_work AS phoneWork,
                 candidate.email1 AS email1,
@@ -1199,9 +1190,7 @@ class Candidates
                 $phoneNumbersDB = array_map('strtolower', $phoneNumbersDB);
                 $phoneNumbersDB = array_map('trim', $phoneNumbersDB);
 
-                if (strtolower($row['middleName']) == strtolower($middleName) && $middleName != "") {
-                    array_push($duplicatesID, $row['candidateID']);
-                } else if (sizeof(array_diff($phoneNumbers, $phoneNumbersDB)) != sizeof($phoneNumbers) || sizeof(array_diff($phoneNumbersDB, $phoneNumbers)) != sizeof($phoneNumbersDB)) {
+                if (sizeof(array_diff($phoneNumbers, $phoneNumbersDB)) != sizeof($phoneNumbers) || sizeof(array_diff($phoneNumbersDB, $phoneNumbers)) != sizeof($phoneNumbersDB)) {
                     array_push($duplicatesID, $row['candidateID']);
                 } else if ((strtolower(trim($email1)) == strtolower(trim($row['email1'])) && trim($email1) != "") || (strtolower(trim($email1)) == strtolower(trim($row['email2'])) && trim($email1) != "") ||
                     (strtolower(trim($email2)) == strtolower(trim($row['email1'])) && trim($email2) != "") || (strtolower(trim($email2)) == strtolower(trim($row['email2'])) && trim($email2) != "")
@@ -1443,13 +1432,7 @@ class Candidates
             $update .= "first_name = '" . $rs['firstName'] . "'";
             $comma = true;
         }
-        if ($params['middleName'] == "1") {
-            if ($comma) {
-                $update .= ", ";
-            }
-            $update .= "middle_name = '" . $rs['middleName'] . "'";
-            $comma = true;
-        }
+        // middle name removed from schema
         if ($params['lastName'] == "1") {
             if ($comma) {
                 $update .= ", ";

@@ -800,7 +800,6 @@ class CandidatesUI extends UserInterface
             // Retain all field data since this isn't done over AJAX (yet)
             $fields = array(
                 'firstName'       => $this->getSanitisedInput('firstName', $_POST),
-                'middleName'      => $this->getSanitisedInput('middleName', $_POST),
                 'lastName'        => $this->getSanitisedInput('lastName', $_POST),
                 'email1'          => $this->getSanitisedInput('email1', $_POST),
                 'email2'          => $this->getSanitisedInput('email2', $_POST),
@@ -899,7 +898,7 @@ class CandidatesUI extends UserInterface
                     else $fields['firstName'] = '';
                     if (isset($res['last_name'])) $fields['lastName'] = $res['last_name'];
                     else $fields['lastName'] = '';
-                    $fields['middleName'] = '';
+                    // middle name removed from UI/schema
                     if (isset($res['email_address'])) $fields['email1'] = $res['email_address'];
                     else $fields['email1'] = '';
                     $fields['email2'] = '';
@@ -1172,7 +1171,6 @@ class CandidatesUI extends UserInterface
 
         $isActive        = $this->isChecked('isActive', $_POST);
         $firstName       = $this->getSanitisedInput('firstName', $_POST);
-        $middleName      = $this->getSanitisedInput('middleName', $_POST);
         $lastName        = $this->getSanitisedInput('lastName', $_POST);
         $email1          = $this->getSanitisedInput('email1', $_POST);
         $email2          = $this->getSanitisedInput('email2', $_POST);
@@ -1208,7 +1206,6 @@ class CandidatesUI extends UserInterface
             $candidateID,
             $isActive,
             $firstName,
-            $middleName,
             $lastName,
             $email1,
             $email2,
@@ -2334,7 +2331,6 @@ class CandidatesUI extends UserInterface
         $canRelocate = $this->isChecked('canRelocate', $_POST);
 
         $lastName        = $this->getTrimmedInput('lastName', $_POST);
-        $middleName      = $this->getTrimmedInput('middleName', $_POST);
         $firstName       = $this->getTrimmedInput('firstName', $_POST);
         $email1          = $this->getTrimmedInput('email1', $_POST);
         $email2          = $this->getTrimmedInput('email2', $_POST);
@@ -2374,11 +2370,10 @@ class CandidatesUI extends UserInterface
 
         $candidates = new Candidates($this->_siteID);
 
-        $duplicatesID = $candidates->checkDuplicity($firstName, $middleName, $lastName, $email1, $email2, $phoneCell, $phoneWork, $address, $city);
+        $duplicatesID = $candidates->checkDuplicity($firstName, $lastName, $email1, $email2, $phoneCell, $phoneWork, $address, $city);
 
         $candidateID = $candidates->add(
             $firstName,
-            $middleName,
             $lastName,
             $email1,
             $email2,
@@ -3200,7 +3195,7 @@ class CandidatesUI extends UserInterface
         $candidates = new Candidates($this->_siteID);
         $params = array();
         $params['firstName'] = $_POST['firstName'];
-        $params['middleName'] =  $_POST['middleName'];
+        // middleName removed from schema
         $params['lastName'] = $_POST['lastName'];
         if (isset($_POST['email'])) {
             $params['emails'] = $_POST['email'];

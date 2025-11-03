@@ -41,14 +41,7 @@
                         </td>
                     </tr>
 
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="middleNameLabel" for="middleName">Middle Name:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" class="inputbox" id="middleName" name="middleName" value="<?php $this->_($this->data['middleName']); ?>" style="width: 150px;" />
-                        </td>
-                    </tr>
+                    <!-- Middle Name removed -->
 
                     <tr>
                         <td class="tdVertical">

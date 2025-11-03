@@ -230,7 +230,6 @@ CREATE TABLE `candidate` (
   `site_id` int(11) NOT NULL DEFAULT '0',
   `last_name` varchar(64) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `first_name` varchar(64) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-  `middle_name` varchar(32) COLLATE utf8_unicode_ci DEFAULT NULL,
   `phone_cell` varchar(40) COLLATE utf8_unicode_ci DEFAULT NULL,
   `phone_work` varchar(40) COLLATE utf8_unicode_ci DEFAULT NULL,
   `address` text COLLATE utf8_unicode_ci,

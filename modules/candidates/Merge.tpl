@@ -33,7 +33,7 @@
                     <td align="center"><input type="radio" name="firstName" value=1 checked/></td>
                     <td align="left"><?php echo($this->rsNew['firstName']); ?></td>
                 </tr>
-                    <td align="left"><?php echo($this->rsNew['middleName']); ?></td>
+                    <td align="left">&nbsp;</td>
                 </tr>
                 
                 <tr>
