@@ -82,7 +82,7 @@
                             <td align="left" valign="top"><?php $this->_($data['email1']); ?></td>
                             <td align="left" valign="top"><?php $this->_($data['phoneCell']); ?></td>
                             <td align="left" valign="top"><?php $this->_($data['city']); ?></td>
-                            <td align="left" valign="top"><?php $this->_($data['state']); ?></td>
+                            <td align="left" valign="top"><?php $this->_($data['country']); ?></td>
                             <td align="left" valign="top" nowrap="nowrap"><?php $this->_($data['ownerFirstName'])." ".$this->_($data['ownerLastName']); ?></td>
                             <td align="center" nowrap="nowrap">
                                 <a href="#" title="Show Candidate" onclick="javascript:openCenteredPopup('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;display=popup&amp;candidateID=<?php $this->_($data['candidateID']); ?>', 'viewCandidateDetails', 1000, 675, true); return false;">
@@ -107,7 +107,7 @@
                         <th align="left">E-mail</th>
                         <th align="left">Cell phone</th>
                         <th align="left">City</th>
-                        <th align="left">State</th>
+                        <th align="left">Country</th>
                         <th align="left">Owner</th>
                         <th align="center">Action</th>
                     </tr>
@@ -135,7 +135,7 @@
                             <td align="left" valign="top"><?php $this->_($data['email1']); ?></td>
                             <td align="left" valign="top"><?php $this->_($data['phoneCell']); ?></td>
                             <td align="left" valign="top"><?php $this->_($data['city']); ?></td>
-                            <td align="left" valign="top"><?php $this->_($data['state']); ?></td>
+                            <td align="left" valign="top"><?php $this->_($data['country']); ?></td>
                             <td align="left" valign="top" nowrap="nowrap"><?php $this->_($data['ownerFirstName'])." ".$this->_($data['ownerLastName']); ?></td>
                             <td align="center" nowrap="nowrap">
                                 <a href="#" title="Show Candidate" onclick="javascript:openCenteredPopup('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;display=popup&amp;candidateID=<?php $this->_($data['candidateID']); ?>', 'viewCandidateDetails', 1000, 675, true); return false;">

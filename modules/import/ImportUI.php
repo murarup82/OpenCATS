@@ -225,24 +225,18 @@ class ImportUI extends UserInterface
             'address',
             'City',
             'city',
-            'State',
-            'state',
-            'Zip',
-            'zip',
+            'Country',
+            'country',
+            'State/Province',
+            'country',
             'Cell Phone',
             'phone_cell',
-            'Work Phone',
-            'phone_work',
             'Notes',
             'notes',
             'Current Employer',
             'current_employer',
             'Email',
             'email1',
-            'Email 2',
-            'email2',
-            'Web Site',
-            'web_site',
             'Key Skills',
             'key_skills'
         );
@@ -1157,7 +1151,7 @@ class ImportUI extends UserInterface
                     $dataCompany['phone1'] = $dataNamed['phone_work'];
                 }
 
-                foreach (array('address', 'city', 'state', 'zip') as $field) {
+                foreach (array('address', 'city', 'country') as $field) {
                     if (isset($dataNamed[$field])) {
                         $dataCompany[$field] = $dataNamed[$field];
                     }
@@ -1640,15 +1634,14 @@ class ImportUI extends UserInterface
                      * We need to check for duplicate candidate entries before adding a new
                      * candidate into CATS. The criteria is as follows:
                      * - if email is present, does it match an existing e-mail
-                     * - if last name and zip code or last name and phone numbers are present, do they match likewise
+                     * - if last name and phone number are present, do they match likewise
                      */
-                    if (strpos($doc['email'], '@') !== false) {
+                    if (!empty($doc['email']) && strpos($doc['email'], '@') !== false) {
                         $sql = sprintf(
                             'SELECT count(*) '
                                 . 'FROM candidate '
-                                . 'WHERE (candidate.email1 = %s OR candidate.email2 = %s) '
+                                . 'WHERE candidate.email1 = %s '
                                 . 'AND candidate.site_id = %d',
-                            $db->makeQueryString($doc['email']),
                             $db->makeQueryString($doc['email']),
                             $this->_siteID
                         );
@@ -1657,33 +1650,15 @@ class ImportUI extends UserInterface
                         }
                     }
 
-                    if (strlen($doc['lastName']) > 3 && isset($doc['phone']) && strlen($doc['phone']) >= 10) {
+                    if (strlen($doc['lastName']) > 3 && isset($doc['phone']) && strlen(preg_replace('/\D+/', '', $doc['phone'])) >= 7) {
                         $sql = sprintf(
                             'SELECT count(*) '
                                 . 'FROM candidate '
                                 . 'WHERE candidate.last_name = %s '
-                                . 'AND (candidate.phone_cell = %s '
-                                . 'OR candidate.phone_work = %s) '
+                                . 'AND candidate.phone_cell = %s '
                                 . 'AND candidate.site_id = %d',
                             $db->makeQueryString($doc['lastName']),
                             $db->makeQueryString($doc['phone']),
-                            $db->makeQueryString($doc['phone']),
-                            $this->_siteID
-                        );
-                        if ($db->getColumn($sql, 0, 0) > 0) {
-                            $isCandidateUnique = false;
-                        }
-                    }
-
-                    if (strlen($doc['lastName']) > 3 && isset($doc['zip']) && strlen($doc['zip']) >= 5) {
-                        $sql = sprintf(
-                            'SELECT count(*) '
-                                . 'FROM candidate '
-                                . 'WHERE candidate.last_name = %s '
-                                . 'AND candidate.zip = %s '
-                                . 'AND candidate.site_id = %d',
-                            $db->makeQueryString($doc['lastName']),
-                            $db->makeQueryString($doc['zipCode']),
                             $this->_siteID
                         );
                         if ($db->getColumn($sql, 0, 0) > 0) {
@@ -1695,34 +1670,37 @@ class ImportUI extends UserInterface
                         // This was parsed data
                         $candidates = new Candidates($siteID);
 
+                        $importCountry = '';
+                        if (!empty($doc['country'])) {
+                            $importCountry = $doc['country'];
+                        } else if (!empty($doc['state'])) {
+                            $importCountry = $doc['state'];
+                        }
+
+                        $phoneCell = isset($doc['phone']) ? $doc['phone'] : '';
+
                         $candidateID = $candidates->add(
-                            $doc['firstName'],
-                            '',
-                            $doc['lastName'],
+                            isset($doc['firstName']) ? $doc['firstName'] : '',
+                            isset($doc['lastName']) ? $doc['lastName'] : '',
                             $doc['email'],
-                            '',
-                            $doc['phone'],
-                            '',
-                            '',
-                            $doc['address'],
-                            $doc['city'],
-                            $doc['state'],
-                            $doc['zipCode'],
-                            '',
-                            $doc['skills'],
-                            NULL,
-                            '',
+                            $phoneCell,
+                            isset($doc['address']) ? $doc['address'] : '',
+                            isset($doc['city']) ? $doc['city'] : '',
+                            $importCountry,
+                            isset($doc['source']) ? $doc['source'] : '',
+                            isset($doc['skills']) ? $doc['skills'] : '',
+                            null,
+                            isset($doc['employer']) ? $doc['employer'] : '',
                             false,
                             '',
                             '',
                             'This resume was parsed automatically. You should review it for errors.',
                             '',
-                            '',
                             $userID,
                             $userID,
                             '',
-                            0,
-                            0,
+                            '',
+                            '',
                             '',
                             true
                         );
@@ -1762,7 +1740,7 @@ class ImportUI extends UserInterface
                                     CATSUtility::getIndexName(),
                                     $candidateID
                                 ),
-                                'location' => trim($doc['city'] . ' ' . $doc['state'] . ' ' . $doc['zipCode'])
+                                'location' => trim($doc['city'] . ' ' . $importCountry)
                             );
                         }
                     } else {

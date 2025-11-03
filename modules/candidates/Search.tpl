@@ -71,7 +71,7 @@
                                 <?php $this->pager->printSortLink('city', 'City'); ?>
                             </th>
                             <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('state', 'State'); ?>
+                                <?php $this->pager->printSortLink('country', 'Country'); ?>
                             </th>
                             <th align="left" nowrap="nowrap">
                                 <?php $this->pager->printSortLink('dateCreatedSort', 'Created'); ?>
@@ -123,7 +123,7 @@
                                     <?php echo($data['excerpt']); ?>
                                 </td>
                                 <td valign="top"><?php $this->_($data['city']); ?></td>
-                                <td valign="top"><?php $this->_($data['state']); ?></td>
+                                <td valign="top"><?php $this->_($data['country']); ?></td>
                                 <td valign="top"><?php $this->_($data['dateCreated']); ?></td>
                                 <td valign="top"><?php $this->_($data['dateModified']); ?></td>
                                 <td valign="top" nowrap="nowrap"><?php $this->_($data['ownerAbbrName']); ?>&nbsp;</td>
@@ -161,7 +161,7 @@
                                 <?php $this->pager->printSortLink('city', 'City'); ?>
                             </th>
                             <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('state', 'State'); ?>
+                                <?php $this->pager->printSortLink('country', 'Country'); ?>
                             </th>
                             <th align="left" nowrap="nowrap">
                                 <?php $this->pager->printSortLink('dateCreated', 'Created'); ?>
@@ -201,7 +201,7 @@
                                     <?php $this->_($data['keySkills']); ?>&nbsp;
                                 </td>
                                 <td><?php $this->_($data['city']); ?>&nbsp;</td>
-                                <td><?php $this->_($data['state']); ?>&nbsp;</td>
+                                <td><?php $this->_($data['country']); ?>&nbsp;</td>
                                 <td><?php $this->_($data['dateCreated']); ?>&nbsp;</td>
                                 <td><?php $this->_($data['dateModified']); ?>&nbsp;</td>
                                 <td nowrap="nowrap"><?php $this->_($data['ownerAbbrName']); ?>&nbsp;</td>

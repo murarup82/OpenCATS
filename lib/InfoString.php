@@ -133,22 +133,6 @@ class InfoString
              );
         }
 
-        if (!empty($infoRS['email2']))
-        {
-            $infoString .= sprintf(
-                '<br /><span class="bold">Secondary Email:</span>&nbsp;%s',
-                htmlspecialchars($infoRS['email2'])
-            );
-        }
-
-        if (!empty($infoRS['phoneWork']))
-        {
-            $infoString .= sprintf(
-                '<br /><span class="bold">Work Phone:</span>&nbsp;%s',
-                htmlspecialchars($infoRS['phoneWork'])
-            );
-        }
-
         if (!empty($infoRS['phoneCell']))
         {
             $infoString .= sprintf(
@@ -180,19 +164,11 @@ class InfoString
                 );
             }
 
-            if (!empty($infoRS['state']))
+            if (!empty($infoRS['country']))
             {
                 $infoString .= sprintf(
                     '&nbsp;%s',
-                    htmlspecialchars($infoRS['state'])
-                );
-            }
-
-            if (!empty($infoRS['zip']))
-            {
-                $infoString .= sprintf(
-                    '&nbsp;%s',
-                    htmlspecialchars($infoRS['zip'])
+                    htmlspecialchars($infoRS['country'])
                 );
             }
         }

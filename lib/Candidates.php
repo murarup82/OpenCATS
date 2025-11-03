@@ -99,7 +99,6 @@ class Candidates
         $address,
         $city,
         $country,
-        $country,
         $source,
         $keySkills,
         $dateAvailable,

@@ -442,7 +442,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS state,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -460,7 +460,7 @@ class SearchCandidates
                 ON candidate.owner = owner_user.user_id
             WHERE
             (
-                LOWER(candidate.state) LIKE %s                
+                LOWER(candidate.country) LIKE %s                
             )
             AND
                 candidate.is_admin_hidden = 0
@@ -611,7 +611,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS state,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -658,7 +658,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS state,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -709,7 +709,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS state,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -768,7 +768,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS state,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -820,7 +820,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS state,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -874,7 +874,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS state,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -1668,7 +1668,7 @@ class QuickSearch
             WHERE
             (
 				LOWER(candidate.city) LIKE %s 
-				OR LOWER(candidate.state) LIKE %s 
+				OR LOWER(candidate.country) LIKE %s 
                 OR LOWER(candidate.skill_texts) LIKE %s 
 				OR CONCAT(candidate.first_name, ' ', candidate.last_name) LIKE %s
                 OR CONCAT(candidate.last_name, ' ', candidate.first_name) LIKE %s
@@ -2339,7 +2339,7 @@ class SearchByResumePager extends Pager
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS state,
                 DATE_FORMAT(
                     candidate.date_created, '%%m-%%d-%%y'
                 ) AS dateCreated,

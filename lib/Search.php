@@ -391,7 +391,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS country,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -437,7 +437,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS country,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -496,7 +496,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS country,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -548,7 +548,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS country,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -602,7 +602,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS country,
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
@@ -664,7 +664,7 @@ class SearchCandidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS country,
                 candidate.phone_cell AS phoneCell,
                 candidate.address AS address,
                 candidate.email1 AS email1,
@@ -1325,7 +1325,6 @@ class QuickSearch
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
-                candidate.email2 AS email2,
                 owner_user.first_name AS ownerFirstName,
                 owner_user.last_name AS ownerLastName,
                 DATE_FORMAT(
@@ -1344,7 +1343,6 @@ class QuickSearch
                 OR CONCAT(candidate.last_name, ' ', candidate.first_name) LIKE %s
                 OR CONCAT(candidate.last_name, ', ', candidate.first_name) LIKE %s
                 OR candidate.email1 LIKE %s
-                OR candidate.email2 LIKE %s
                 OR REPLACE(
                     REPLACE(
                         REPLACE(
@@ -1968,7 +1966,7 @@ class SearchByResumePager extends Pager
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.city AS city,
-                candidate.state AS state,
+                candidate.country AS country,
                 DATE_FORMAT(
                     candidate.date_created, '%%m-%%d-%%y'
                 ) AS dateCreated,

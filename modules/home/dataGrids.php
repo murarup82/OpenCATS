@@ -289,7 +289,7 @@ class CallsDataGrid extends DataGrid
                 data_item_type.short_description AS item,
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
-                candidate.phone_work AS workPhone,
+                candidate.phone_cell AS workPhone,
                 candidate.phone_cell AS cellPhone,
                 candidate.is_hot AS isHot,
                 joborder.is_hot AS jobIsHot,

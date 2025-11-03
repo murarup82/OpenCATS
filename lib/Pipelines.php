@@ -546,7 +546,7 @@ class Pipelines
                 candidate.candidate_id AS candidateID,
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
-                candidate.state As state,
+                candidate.country AS country,
                 candidate.email1 AS candidateEmail,
                 candidate_joborder.status AS jobOrderStatus,
                 candidate.is_hot AS isHotCandidate,
