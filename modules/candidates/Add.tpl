@@ -205,52 +205,6 @@
                     <?php $tabIndex = 15; ?>
                 </table>
 
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="phoneCellLabel" for="phoneCell">Cell Phone:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="7" name="phoneCell" id="phoneCell" class="inputbox" style="width: 150px;" value="<?php if (isset($this->preassignedFields['phoneCell'])) $this->_($this->preassignedFields['phoneCell']); ?>" onchange="checkPhoneAlreadyInSystem(this.value);" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="addressLabel" for="address">Address:</label>
-                        </td>
-                        <td class="tdData">
-                            <textarea tabindex="9" name="address" id="address" rows="2" cols="40" class="inputbox" style="width: 150px"><?php if(isset($this->preassignedFields['address'])) $this->_($this->preassignedFields['address']); if(isset($this->preassignedFields['address2'])) $this->_("\n" . $this->preassignedFields['address2']); ?></textarea>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="images/indicator2.gif" id="addressParserIndicator" alt="" style="visibility: hidden; margin-left: 10px;" height="16" width="16" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="cityLabel" for="city">City:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="11" name="city" id="city" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['city'])) $this->_($this->preassignedFields['city']); ?>" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="countryLabel" for="country">Country:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="12" name="country" id="country" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['country'])) $this->_($this->preassignedFields['country']); ?>" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="bestTimeLabel" for="bestTimeToCall">Best Time to Call:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="13" name="bestTimeToCall" id="bestTimeToCall" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['bestTimeToCall'])) $this->_($this->preassignedFields['bestTimeToCall']); ?>" />
-                        </td>
-                    </tr>
-
-                    <?php $tabIndex = 15; ?>
-                </table>
-
                 <?php if (!$this->isParsingEnabled || $this->associatedAttachment != 0): ?>
                 <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?>" style="margin-top: 5px;">Resume</p>
 
