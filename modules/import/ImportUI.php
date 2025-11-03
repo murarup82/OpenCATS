@@ -1678,6 +1678,8 @@ class ImportUI extends UserInterface
                         }
 
                         $phoneCell = isset($doc['phone']) ? $doc['phone'] : '';
+                        $gdprSigned = 0;
+                        $gdprExpirationDate = null;
 
                         $candidateID = $candidates->add(
                             isset($doc['firstName']) ? $doc['firstName'] : '',
@@ -1696,6 +1698,8 @@ class ImportUI extends UserInterface
                             '',
                             'This resume was parsed automatically. You should review it for errors.',
                             '',
+                            $gdprSigned,
+                            $gdprExpirationDate,
                             $userID,
                             $userID,
                             '',

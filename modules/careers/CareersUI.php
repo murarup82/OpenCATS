@@ -43,6 +43,8 @@ include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/DocumentToText.php');
 include_once(LEGACY_ROOT . '/lib/FileUtility.php');
 include_once(LEGACY_ROOT . '/lib/ParseUtility.php');
+include_once(LEGACY_ROOT . '/lib/DateUtility.php');
+include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
 
 class CareersUI extends UserInterface
 {
@@ -294,6 +296,19 @@ class CareersUI extends UserInterface
             // Update the candidate's information
             $primaryPhone = $phoneCell;
 
+            $gdprSigned = isset($candidate['gdprSigned']) ? (int) $candidate['gdprSigned'] : 0;
+            $gdprExpirationDate = null;
+            if (!empty($candidate['gdprExpirationDateISO'])) {
+                $gdprExpirationDate = $candidate['gdprExpirationDateISO'];
+            } else if (!empty($candidate['gdprExpirationDate'])) {
+                $gdprExpirationDate = DateUtility::convert(
+                    '-',
+                    $candidate['gdprExpirationDate'],
+                    DATE_FORMAT_MMDDYY,
+                    DATE_FORMAT_YYYYMMDD
+                );
+            }
+
             $candidates->update(
                 $candidate['candidateID'],
                 $candidate['isActive'] ? true : false,
@@ -313,6 +328,8 @@ class CareersUI extends UserInterface
                 $candidate['desiredPay'],
                 $candidate['notes'],
                 $bestTimeToCall,
+                $gdprSigned,
+                $gdprExpirationDate,
                 $candidate['owner'],
                 !empty($candidate['isHot']),
                 $email1,
@@ -1176,6 +1193,19 @@ class CareersUI extends UserInterface
             $candidate = $candidates->get($candidateID);
 
             // Candidate exists and registered. Update their profile with new values (if provided)
+            $gdprSigned = isset($candidate['gdprSigned']) ? (int) $candidate['gdprSigned'] : 0;
+            $gdprExpirationDate = null;
+            if (!empty($candidate['gdprExpirationDateISO'])) {
+                $gdprExpirationDate = $candidate['gdprExpirationDateISO'];
+            } else if (!empty($candidate['gdprExpirationDate'])) {
+                $gdprExpirationDate = DateUtility::convert(
+                    '-',
+                    $candidate['gdprExpirationDate'],
+                    DATE_FORMAT_MMDDYY,
+                    DATE_FORMAT_YYYYMMDD
+                );
+            }
+
             $candidates->update(
                 $candidateID,
                 $candidate['isActive'] ? true : false,
@@ -1195,6 +1225,8 @@ class CareersUI extends UserInterface
                 isset($candidate['desiredPay']) ? $candidate['desiredPay'] : '',
                 $candidate['notes'],
                 $bestTimeToCall,
+                $gdprSigned,
+                $gdprExpirationDate,
                 $automatedUser['userID'],
                 isset($candidate['isHot']) ? (bool) $candidate['isHot'] : false,
                 $email,
@@ -1214,6 +1246,9 @@ class CareersUI extends UserInterface
 
         if ($candidateID === false || $candidateID < 0) {
             /* New candidate. */
+            $gdprSigned = 0;
+            $gdprExpirationDate = null;
+
             $candidateID = $candidates->add(
                 $firstName,
                 $lastName,
@@ -1232,6 +1267,8 @@ class CareersUI extends UserInterface
                 'Candidate submitted these notes with first application: '
                     . "\n\n" . $extraNotes,
                 $bestTimeToCall,
+                $gdprSigned,
+                $gdprExpirationDate,
                 $automatedUser['userID'],
                 $automatedUser['userID'],
                 $gender,
