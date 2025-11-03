@@ -180,25 +180,18 @@ class DatabaseConnection
 
         $this->_queryResult = mysqli_query($this->_connection, $query);
 
-        // handle connection failures
-        if (isset($this->_queryResult->connect_errno)) {
-            $error = "errno: " . $this->_queryResult->connect_errno . ", ";
-            $error .= "error: " . $this->_queryResult->connect_error;
-
-            die (
-                '<!-- NOSPACEFILTER --><p style="background: #ec3737; padding:'
-                . ' 4px; margin-top: 0; font: normal normal bold 12px/130%'
-                . ' Arial, Tahoma, sans-serif;">Query Error -- Report to System'
-                . " Administrator ASAP</p><pre>\n\nMySQL Query Failed: "
-                . $error . "\n\n" . $query . "</pre>\n\n"
-            );
-            return false;
-        }
-
-        if (!$this->_queryResult && isset($this->_queryResult->connect_errno) && !$ignoreErrors)
+        if ($this->_queryResult === false)
         {
-            $error = "errno: " . $this->_queryResult->connect_errno . ", ";
-            $error .= "error: " . $this->_queryResult->connect_error;
+            $errno = mysqli_errno($this->_connection);
+            $errorMessage = mysqli_error($this->_connection);
+            $error = "errno: " . $errno . ", error: " . $errorMessage;
+
+            $this->logQueryError($query, $error);
+
+            if ($ignoreErrors)
+            {
+                return false;
+            }
 
             echo (
                 '<!-- NOSPACEFILTER --><p style="background: #ec3737; padding:'
@@ -579,12 +572,32 @@ class DatabaseConnection
      * MySQL connection.
      *
      * @return string Error message, or '' if no error occurred.
-     */
+    */
     public function getError()
     {
-        $error = "errno: " . mysqli_connect_errno() . ", ";
-        $error .= "error: " . mysqli_connect_error();
+        if ($this->_connection === null)
+        {
+            $error = "errno: " . mysqli_connect_errno() . ", ";
+            $error .= "error: " . mysqli_connect_error();
+            return $error;
+        }
+
+        $error = "errno: " . mysqli_errno($this->_connection) . ", ";
+        $error .= "error: " . mysqli_error($this->_connection);
         return $error;
+    }
+
+    private function logQueryError($query, $error)
+    {
+        $message = sprintf(
+            "[%s] %s\nQuery: %s\n",
+            date('Y-m-d H:i:s'),
+            $error,
+            $query
+        );
+
+        $logFile = LEGACY_ROOT . '/temp/mysql-error.log';
+        error_log($message, 3, $logFile);
     }
 
     /**
