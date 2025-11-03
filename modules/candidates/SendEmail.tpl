@@ -39,18 +39,7 @@
                 $emailTo = '';
                 foreach($this->recipients as $recipient)
                 {
-                        if(strlen($recipient['email1']) > 0)
-                        {
-                            $eml = $recipient['email1'];
-                        }
-                        else if(strlen($recipient['email2']) > 0)
-                        {
-                            $eml = $recipient['email2'];
-                        }
-                        else
-                        {
-                            $eml = '';
-                        }
+                        $eml = (strlen($recipient['email1']) > 0) ? $recipient['email1'] : '';
                         if($eml != '')
                         {
                             if($emailTo != '')

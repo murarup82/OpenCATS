@@ -446,14 +446,6 @@ class CandidatesUI extends UserInterface
             return;
         }
 
-        /* We want to handle formatting the city and state here instead
-         * of in the template.
-         */
-        $data['cityAndState'] = StringUtility::makeCityStateString(
-            $data['city'],
-            $data['state']
-        );
-
         /*
          * Replace newlines with <br />, fix HTML "special" characters, and
          * strip leading empty lines and spaces.
@@ -802,13 +794,10 @@ class CandidatesUI extends UserInterface
                 'firstName'       => $this->getSanitisedInput('firstName', $_POST),
                 'lastName'        => $this->getSanitisedInput('lastName', $_POST),
                 'email1'          => $this->getSanitisedInput('email1', $_POST),
-                'email2'          => $this->getSanitisedInput('email2', $_POST),
                 'phoneCell'       => $this->getSanitisedInput('phoneCell', $_POST),
-                'phoneWork'       => $this->getSanitisedInput('phoneWork', $_POST),
                 'address'         => $this->getSanitisedInput('address', $_POST),
                 'city'            => $this->getSanitisedInput('city', $_POST),
-                'state'           => $this->getSanitisedInput('state', $_POST),
-                'zip'             => $this->getSanitisedInput('zip', $_POST),
+                'country'         => $this->getSanitisedInput('country', $_POST),
                 'source'          => $this->getTrimmedInput('source', $_POST),
                 'keySkills'       => $this->getSanitisedInput('keySkills', $_POST),
                 'currentEmployer' => $this->getSanitisedInput('currentEmployer', $_POST),
@@ -816,7 +805,6 @@ class CandidatesUI extends UserInterface
                 'desiredPay'      => $this->getSanitisedInput('desiredPay', $_POST),
                 'notes'           => $this->getSanitisedInput('notes', $_POST),
                 'canRelocate'     => $this->getSanitisedInput('canRelocate', $_POST),
-                'webSite'         => $this->getSanitisedInput('webSite', $_POST),
                 'bestTimeToCall'  => $this->getSanitisedInput('bestTimeToCall', $_POST),
                 'gender'          => $this->getTrimmedInput('gender', $_POST),
                 'race'            => $this->getTrimmedInput('race', $_POST),
@@ -901,18 +889,19 @@ class CandidatesUI extends UserInterface
                     // middle name removed from UI/schema
                     if (isset($res['email_address'])) $fields['email1'] = $res['email_address'];
                     else $fields['email1'] = '';
-                    $fields['email2'] = '';
                     if (isset($res['us_address'])) $fields['address'] = $res['us_address'];
                     else $fields['address'] = '';
                     if (isset($res['city'])) $fields['city'] = $res['city'];
                     else $fields['city'] = '';
-                    if (isset($res['state'])) $fields['state'] = $res['state'];
-                    else $fields['state'] = '';
-                    if (isset($res['zip_code'])) $fields['zip'] = $res['zip_code'];
-                    else $fields['zip'] = '';
+                    if (isset($res['country'])) {
+                        $fields['country'] = $res['country'];
+                    } else if (isset($res['state'])) {
+                        $fields['country'] = $res['state'];
+                    } else {
+                        $fields['country'] = '';
+                    }
                     if (isset($res['phone_number'])) $fields['phoneCell'] = $res['phone_number'];
                     else $fields['phoneCell'] = '';
-                    $fields['phoneWork'] = '';
                     if (isset($res['skills'])) $fields['keySkills'] = str_replace("\n", ' ', str_replace('"', '\'\'', $res['skills']));
                 }
 
@@ -1098,15 +1087,6 @@ class CandidatesUI extends UserInterface
             $phoneCell = $this->getSanitisedInput('phoneCell', $_POST);
         }
 
-        $formattedPhoneWork = StringUtility::extractPhoneNumber(
-            $this->getSanitisedInput('phoneWork', $_POST)
-        );
-        if (!empty($formattedPhoneWork)) {
-            $phoneWork = $formattedPhoneWork;
-        } else {
-            $phoneWork = $this->getSanitisedInput('phoneWork', $_POST);
-        }
-
         $candidateID = $_POST['candidateID'];
         $owner       = $_POST['owner'];
 
@@ -1173,18 +1153,15 @@ class CandidatesUI extends UserInterface
         $firstName       = $this->getSanitisedInput('firstName', $_POST);
         $lastName        = $this->getSanitisedInput('lastName', $_POST);
         $email1          = $this->getSanitisedInput('email1', $_POST);
-        $email2          = $this->getSanitisedInput('email2', $_POST);
         $address         = $this->getSanitisedInput('address', $_POST);
         $city            = $this->getSanitisedInput('city', $_POST);
-        $state           = $this->getSanitisedInput('state', $_POST);
-        $zip             = $this->getSanitisedInput('zip', $_POST);
+        $country         = $this->getSanitisedInput('country', $_POST);
         $source          = $this->getSanitisedInput('source', $_POST);
         $keySkills       = $this->getSanitisedInput('keySkills', $_POST);
         $currentEmployer = $this->getSanitisedInput('currentEmployer', $_POST);
         $currentPay      = $this->getSanitisedInput('currentPay', $_POST);
         $desiredPay      = $this->getSanitisedInput('desiredPay', $_POST);
         $notes           = $this->getSanitisedInput('notes', $_POST);
-        $webSite         = $this->getSanitisedInput('webSite', $_POST);
         $bestTimeToCall  = $this->getTrimmedInput('bestTimeToCall', $_POST);
         $gender          = $this->getTrimmedInput('gender', $_POST);
         $race            = $this->getTrimmedInput('race', $_POST);
@@ -1208,13 +1185,10 @@ class CandidatesUI extends UserInterface
             $firstName,
             $lastName,
             $email1,
-            $email2,
             $phoneCell,
-            $phoneWork,
             $address,
             $city,
-            $state,
-            $zip,
+            $country,
             $source,
             $keySkills,
             $dateAvailable,
@@ -1223,7 +1197,6 @@ class CandidatesUI extends UserInterface
             $currentPay,
             $desiredPay,
             $notes,
-            $webSite,
             $bestTimeToCall,
             $owner,
             $isHot,
@@ -2318,33 +2291,21 @@ class CandidatesUI extends UserInterface
             $phoneCell = $this->getTrimmedInput('phoneCell', $_POST);
         }
 
-        $formattedPhoneWork = StringUtility::extractPhoneNumber(
-            $this->getTrimmedInput('phoneWork', $_POST)
-        );
-        if (!empty($formattedPhoneWork)) {
-            $phoneWork = $formattedPhoneWork;
-        } else {
-            $phoneWork = $this->getTrimmedInput('phoneWork', $_POST);
-        }
-
         /* Can Relocate */
         $canRelocate = $this->isChecked('canRelocate', $_POST);
 
         $lastName        = $this->getTrimmedInput('lastName', $_POST);
         $firstName       = $this->getTrimmedInput('firstName', $_POST);
         $email1          = $this->getTrimmedInput('email1', $_POST);
-        $email2          = $this->getTrimmedInput('email2', $_POST);
         $address         = $this->getTrimmedInput('address', $_POST);
         $city            = $this->getTrimmedInput('city', $_POST);
-        $state           = $this->getTrimmedInput('state', $_POST);
-        $zip             = $this->getTrimmedInput('zip', $_POST);
+        $country         = $this->getTrimmedInput('country', $_POST);
         $source          = $this->getTrimmedInput('source', $_POST);
         $keySkills       = $this->getTrimmedInput('keySkills', $_POST);
         $currentEmployer = $this->getTrimmedInput('currentEmployer', $_POST);
         $currentPay      = $this->getTrimmedInput('currentPay', $_POST);
         $desiredPay      = $this->getTrimmedInput('desiredPay', $_POST);
         $notes           = $this->getTrimmedInput('notes', $_POST);
-        $webSite         = $this->getTrimmedInput('webSite', $_POST);
         $bestTimeToCall  = $this->getTrimmedInput('bestTimeToCall', $_POST);
         $gender          = $this->getTrimmedInput('gender', $_POST);
         $race            = $this->getTrimmedInput('race', $_POST);
@@ -2370,19 +2331,16 @@ class CandidatesUI extends UserInterface
 
         $candidates = new Candidates($this->_siteID);
 
-        $duplicatesID = $candidates->checkDuplicity($firstName, $lastName, $email1, $email2, $phoneCell, $phoneWork, $address, $city);
+        $duplicatesID = $candidates->checkDuplicity($firstName, $lastName, $email1, $phoneCell, $address, $city);
 
         $candidateID = $candidates->add(
             $firstName,
             $lastName,
             $email1,
-            $email2,
             $phoneCell,
-            $phoneWork,
             $address,
             $city,
-            $state,
-            $zip,
+            $country,
             $source,
             $keySkills,
             $dateAvailable,
@@ -2391,7 +2349,6 @@ class CandidatesUI extends UserInterface
             $currentPay,
             $desiredPay,
             $notes,
-            $webSite,
             $bestTimeToCall,
             $this->_userID,
             $this->_userID,
@@ -3070,7 +3027,7 @@ class CandidatesUI extends UserInterface
             $db = DatabaseConnection::getInstance();
 
             $rs = $db->getAllAssoc(sprintf(
-                'SELECT candidate_id, first_name, last_name, email1, email2 '
+                'SELECT candidate_id, first_name, last_name, email1 '
                     . 'FROM candidate '
                     . 'WHERE candidate_id IN (%s)',
                 $db_str
@@ -3203,9 +3160,7 @@ class CandidatesUI extends UserInterface
             $params['emails'] = array();
         }
         $params['phoneCell'] = $_POST['phoneCell'];
-        $params['phoneWork'] = $_POST['phoneWork'];
         $params['address'] = $_POST['address'];
-        $params['website'] = $_POST['website'];
         $params['oldCandidateID'] = $_POST['oldCandidateID'];
         $params['newCandidateID'] = $_POST['newCandidateID'];
 

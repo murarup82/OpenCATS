@@ -163,11 +163,9 @@ CREATE TABLE `candidate` (
   `last_name` varchar(64) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `first_name` varchar(64) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `phone_cell` varchar(40) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `phone_work` varchar(40) COLLATE utf8_unicode_ci DEFAULT NULL,
   `address` text COLLATE utf8_unicode_ci,
   `city` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `state` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `zip` varchar(16) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `country` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL,
   `source` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
   `date_available` datetime DEFAULT NULL,
   `can_relocate` int(1) NOT NULL DEFAULT '0',
@@ -179,8 +177,6 @@ CREATE TABLE `candidate` (
   `date_created` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
   `date_modified` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
   `email1` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `email2` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `web_site` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
   `import_id` int(11) NOT NULL DEFAULT '0',
   `is_hot` int(1) NOT NULL DEFAULT '0',
   `eeo_ethnic_type_id` int(11) DEFAULT '0',
@@ -196,14 +192,13 @@ CREATE TABLE `candidate` (
   KEY `IDX_first_name` (`first_name`),
   KEY `IDX_last_name` (`last_name`),
   KEY `IDX_phone_cell` (`phone_cell`),
-  KEY `IDX_phone_work` (`phone_work`),
   KEY `IDX_key_skills` (`key_skills`(255)),
   KEY `IDX_entered_by` (`entered_by`),
   KEY `IDX_owner` (`owner`),
   KEY `IDX_date_created` (`date_created`),
   KEY `IDX_date_modified` (`date_modified`),
   KEY `IDX_site_first_last_modified` (`site_id`,`first_name`,`last_name`,`date_modified`),
-  KEY `IDX_site_id_email_1_2` (`site_id`,`email1`(8),`email2`(8))
+  KEY `IDX_site_id_email` (`site_id`,`email1`(8))
 ) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*Data for the table `candidate` */

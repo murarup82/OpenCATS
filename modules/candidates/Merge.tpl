@@ -57,12 +57,6 @@
                     <td align="left"><?php echo($this->rsNew['email1'] == '') ?  '(none)' : ($this->rsNew['email1']);  ?></td>
                 </tr>
                 <tr>
-                    <td align="right"><?php echo($this->rsOld['email2'] == '') ?  '(none)' : ($this->rsOld['email2']); ?></td>
-                    <td align="center"><input type="checkbox" name="email[]" value="<?php echo ($this->rsOld['email2'] == '') ?  '' : ($this->rsOld['email2']); ?>" onclick="return keepCount('email')"/></td>
-                    <td align="center"><input type="checkbox" name="email[]" value="<?php echo ($this->rsNew['email2'] == '') ?  '' : ($this->rsNew['email2']); ?>" onclick="return keepCount('email')" checked/></td>
-                    <td align="left"><?php echo($this->rsNew['email2'] == '') ?  '(none)' : ($this->rsNew['email2']); ?></td>
-                </tr>
-                <tr>
                     <td colspan=4 align="center">Cell phone&nbsp;</td>
                 </tr>
                 <tr>
@@ -71,44 +65,21 @@
                     <td align="center"><input type="radio" name="phoneCell" value=1 checked/></td>
                     <td align="left"><?php echo($this->rsNew['phoneCell'] == '') ? '(none)' : ($this->rsNew['phoneCell']); ?></td>
                 </tr>
-                
-                
-                
-                <tr>
-                    <td colspan=4 align="center">Work phone&nbsp;</td>
-                </tr>
-                <tr>
-                    <td align="right"><?php echo($this->rsOld['phoneWork'] == '') ? '(none)' : ($this->rsOld['phoneWork']); ?></td>
-                    <td align="center"><input type="radio" name="phoneWork" value=0 /></td>
-                    <td align="center"><input type="radio" name="phoneWork" value=1 checked/></td>
-                    <td align="left"><?php echo($this->rsNew['phoneWork'] == '') ? '(none)' : ($this->rsNew['phoneWork']); ?></td>
-                </tr>
-                
-                <tr>
-                    <td colspan=4 align="center">Website&nbsp;</td>
-                </tr>
-                <tr>
-                    <td align="right"><?php echo($this->rsOld['webSite'] == '') ? '(none)' : ($this->rsOld['webSite']); ?></td>
-                    <td align="center"><input type="radio" name="website" value=0 /></td>
-                    <td align="center"><input type="radio" name="website" value=1 checked/></td>
-                    <td align="left"><?php echo($this->rsNew['webSite'] == '') ? '(none)' : ($this->rsNew['webSite']); ?></td>
-                </tr>
-                
                 <tr>
                     <td colspan=4 align="center">Address&nbsp;</td>
                 </tr>
                 <tr>
-                    <?php if($this->rsOld['address'] == "" && $this->rsOld['city'] == "" && $this->rsOld['state'] == "" && $this->rsOld['zip'] == ""): ?>
+                    <?php if($this->rsOld['address'] == "" && $this->rsOld['city'] == "" && $this->rsOld['country'] == ""): ?>
                         <td align="right"><?php echo "(none)"; ?></td>
                     <?php else: ?>
-                        <td align="right"><?php echo($this->rsOld['address'].'<br/>'.$this->rsOld['city']." ".$this->rsOld['zip'].'<br/>'.$this->rsOld['state']); ?></td>
+                        <td align="right"><?php echo($this->rsOld['address'].'<br/>'.$this->rsOld['city'].'<br/>'.$this->rsOld['country']); ?></td>
                     <?php endif; ?>
                     <td align="center"><input type="radio" name="address" value=0 /></td>
                     <td align="center"><input type="radio" name="address" value=1 checked/></td>
-                    <?php if($this->rsNew['address'] == "" && $this->rsNew['city'] == "" && $this->rsNew['state'] == "" && $this->rsNew['zip'] == ""): ?>
+                    <?php if($this->rsNew['address'] == "" && $this->rsNew['city'] == "" && $this->rsNew['country'] == ""): ?>
                         <td align="left"><?php echo "(none)";  ?></td>
                     <?php else: ?>
-                        <td align="left"><?php echo($this->rsNew['address'].'<br/>'.$this->rsNew['city']." ".$this->rsNew['zip'].'<br/>'.$this->rsNew['state']);  ?></td>
+                        <td align="left"><?php echo($this->rsNew['address'].'<br/>'.$this->rsNew['city'].'<br/>'.$this->rsNew['country']);  ?></td>
                     <?php endif; ?>
                 </tr>
                 

@@ -204,13 +204,16 @@ class CareersUI extends UserInterface
             }
 
             /* Replace input fields. */
+            $countryValue = isset($candidate['country']) ? $candidate['country'] : (isset($candidate['state']) ? $candidate['state'] : '');
+
             $content = str_replace('<input-firstName>', '<input name="firstName" id="firstName" class="inputBoxName" value="' . $candidate['firstName'] . '" />', $content);
             $content = str_replace('<input-lastName>', '<input name="lastName" id="lastName" class="inputBoxName" value="' . $candidate['lastName'] . '" />', $content);
             $content = str_replace('<input-address>', '<textarea name="address" class="inputBoxArea">' . $candidate['address'] . '</textarea>', $content);
             $content = str_replace('<input-city>', '<input name="city" id="city" class="inputBoxNormal" value="' . $candidate['city'] . '" />', $content);
-            $content = str_replace('<input-state>', '<input name="state" id="state" class="inputBoxNormal" value="' . $candidate['state'] . '" />', $content);
-            $content = str_replace('<input-zip>', '<input name="zip" id="zip" class="inputBoxNormal" value="' . $candidate['zip'] . '" />', $content);
-            $content = str_replace('<input-phoneWork>', '<input name="phoneWork" id="phoneWork" class="inputBoxNormal" value="' . $candidate['phoneWork'] . '" />', $content);
+            $content = str_replace('<input-country>', '<input name="country" id="country" class="inputBoxNormal" value="' . $countryValue . '" />', $content);
+            $content = str_replace('<input-state>', '<input name="country" id="country" class="inputBoxNormal" value="' . $countryValue . '" />', $content);
+            $content = str_replace('<input-zip>', '', $content);
+            $content = str_replace('<input-phoneWork>', '', $content);
             $content = str_replace('<input-email1>', '<input name="email1" id="email1" class="inputBoxNormal" value="' . $candidate['email1'] . '" />', $content);
             $content = str_replace('<input-phoneCell>', '<input name="phoneCell" id="phoneCell" class="inputBoxNormal" value="' . $candidate['phoneCell'] . '" />', $content);
             $content = str_replace('<input-bestTimeToCall>', '<input name="bestTimeToCall" id="bestTimeToCall" class="inputBoxNormal" value="' . $candidate['bestTimeToCall'] . '" />', $content);
@@ -251,13 +254,10 @@ class CareersUI extends UserInterface
                 'firstName',
                 'lastName',
                 'email1',
-                'phoneHome',
                 'phoneCell',
-                'phoneWork',
                 'address',
                 'city',
-                'state',
-                'zip',
+                'country',
                 'keySkills',
                 'currentEmployer',
                 'bestTimeToCall'
@@ -265,16 +265,26 @@ class CareersUI extends UserInterface
             $fieldValues = array();
 
             foreach ($fields as $field) {
-                if (isset($_POST[$field]) && $_POST[$field] != '') {
-                    eval('$' . $field . ' = trim($_POST[\'' . $field . '\']);');
-                    $fieldValues[$field] = $_POST[$field];
+                if (isset($_POST[$field]) && $_POST[$field] !== '') {
+                    ${$field} = trim($_POST[$field]);
+                } else if (isset($candidate[$field])) {
+                    ${$field} = $candidate[$field];
                 } else {
-                    eval('$' . $field . ' = $candidate[\'' . $field . '\'];');
-                    $fieldValues[$field] = $candidate[$field];
+                    ${$field} = '';
                 }
-            }
+            $fieldValues[$field] = ${$field};
+        }
 
-            // Get the attachment to replace (if exists)
+        if (empty($country) && isset($_POST['state']) && $_POST['state'] !== '') {
+            $country = trim($_POST['state']);
+            $fieldValues['country'] = $country;
+        } else if (empty($country) && isset($candidate['state'])) {
+            $country = $candidate['state'];
+            $fieldValues['country'] = $country;
+        }
+        $fieldValues['state'] = $country;
+
+        // Get the attachment to replace (if exists)
             $attachmentID = isset($_GET[$id = 'attachmentID']) ? $_GET[$id] : -1;
             $attachmentID = $attachmentID != -1 ? $attachmentID : false;
 
@@ -282,20 +292,18 @@ class CareersUI extends UserInterface
             $candidatesLib = new Candidates($siteID);
 
             // Update the candidate's information
+            $primaryPhone = $phoneCell;
+
             $candidates->update(
                 $candidate['candidateID'],
                 $candidate['isActive'] ? true : false,
                 $firstName,
                 $lastName,
                 $email1,
-                $email1,
-                $phoneHome,
-                $phoneCell,
-                $phoneWork,
+                $primaryPhone,
                 $address,
                 $city,
-                $state,
-                $zip,
+                $country,
                 $candidate['source'],
                 $keySkills,
                 $candidate['dateAvailable'],
@@ -304,16 +312,15 @@ class CareersUI extends UserInterface
                 $candidate['currentPay'],
                 $candidate['desiredPay'],
                 $candidate['notes'],
-                $candidate['webSite'],
                 $bestTimeToCall,
                 $candidate['owner'],
-                $candidate['isHot'] ? true : false,
+                !empty($candidate['isHot']),
                 $email1,
                 $email1,
-                $candidate['eeoGender'],
-                $candidate['eeoEthnicType'],
-                $candidate['eeoVeteranType'],
-                $candidate['eeoDisabilityStatus']
+                isset($candidate['eeoGender']) ? $candidate['eeoGender'] : '',
+                isset($candidate['eeoEthnicType']) ? $candidate['eeoEthnicType'] : '',
+                isset($candidate['eeoVeteranType']) ? $candidate['eeoVeteranType'] : '',
+                isset($candidate['eeoDisabilityStatus']) ? $candidate['eeoDisabilityStatus'] : ''
             );
 
             $uploadResume = FileUtility::getUploadFileFromPost($siteID, 'careerportaladd', 'file');
@@ -399,13 +406,14 @@ class CareersUI extends UserInterface
             $lastName = isset($_POST[$id = 'lastName']) ? $_POST[$id] : '';
             $address = isset($_POST[$id = 'address']) ? $_POST[$id] : '';
             $city = isset($_POST[$id = 'city']) ? $_POST[$id] : '';
-            $state = isset($_POST[$id = 'state']) ? $_POST[$id] : '';
-            $zip = isset($_POST[$id = 'zip']) ? $_POST[$id] : '';
+            $country = isset($_POST['country']) ? $_POST['country'] : (isset($_POST['state']) ? $_POST['state'] : '');
             $phone = isset($_POST[$id = 'phone']) ? $_POST[$id] : '';
             $email = isset($_POST[$id = 'email']) ? $_POST[$id] : '';
             $phoneCell = isset($_POST[$id = 'phoneCell']) ? $_POST[$id] : '';
+            if ($phoneCell === '' && $phone !== '') {
+                $phoneCell = $phone;
+            }
             $bestTimeToCall = isset($_POST[$id = 'bestTimeToCall']) ? $_POST[$id] : '';
-            $email2 = isset($_POST[$id = 'email2']) ? $_POST[$id] : '';
             $emailconfirm = isset($_POST[$id = 'emailconfirm']) ? $_POST[$id] : '';
             $keySkills = isset($_POST[$id = 'keySkills']) ? $_POST[$id] : '';
             $source = isset($_POST[$id = 'source']) ? $_POST[$id] : '';
@@ -426,12 +434,13 @@ class CareersUI extends UserInterface
                     $lastName = $candidate['lastName'];
                     $address = $candidate['address'];
                     $city = $candidate['city'];
-                    $state = $candidate['state'];
-                    $zip = $candidate['zip'];
-                    $phone = $candidate['phoneWork'];
+                    $country = isset($candidate['country']) ? $candidate['country'] : (isset($candidate['state']) ? $candidate['state'] : '');
                     $phoneCell = $candidate['phoneCell'];
+                    if ($phoneCell === '' && isset($candidate['phoneWork'])) {
+                        $phoneCell = $candidate['phoneWork'];
+                    }
+                    $phone = $phoneCell;
                     $email = $candidate['email1'];
-                    $email2 = $candidate['email2'];
                     $emailconfirm = $email;
                     $keySkills = $candidate['keySkills'];
                     $source = $candidate['source'];
@@ -459,12 +468,13 @@ class CareersUI extends UserInterface
                         $lastName = $candidate['lastName'];
                         $address = $candidate['address'];
                         $city = $candidate['city'];
-                        $state = $candidate['state'];
-                        $zip = $candidate['zip'];
-                        $phone = $candidate['phoneWork'];
+                        $country = isset($candidate['country']) ? $candidate['country'] : (isset($candidate['state']) ? $candidate['state'] : '');
                         $phoneCell = $candidate['phoneCell'];
+                        if ($phoneCell === '' && isset($candidate['phoneWork'])) {
+                            $phoneCell = $candidate['phoneWork'];
+                        }
+                        $phone = $phoneCell;
                         $email = $candidate['email1'];
-                        $email2 = $candidate['email2'];
                         $emailconfirm = $email;
                         $keySkills = $candidate['keySkills'];
                         $source = $candidate['source'];
@@ -503,14 +513,15 @@ class CareersUI extends UserInterface
                             if (isset($res[$id = 'last_name']) && $res[$id] != '' && $lastName == '') $lastName = $res[$id];
                             if (isset($res[$id = 'us_address']) && $res[$id] != '' && $address == '') $address = $res[$id];
                             if (isset($res[$id = 'city']) && $res[$id] != '' && $city == '') $city = $res[$id];
-                            if (isset($res[$id = 'state']) && $res[$id] != '' && $state == '') $state = $res[$id];
-                            if (isset($res[$id = 'zip_code']) && $res[$id] != '' && $zip == '') $zip = $res[$id];
+                            if (isset($res[$id = 'state']) && $res[$id] != '' && $country == '') $country = $res[$id];
                             if (isset($res[$id = 'email_address']) && $res[$id] != '' && $email == '') {
                                 $email = $res[$id];
-                                $email2 = $res[$id];
                                 $emailconfirm = $res[$id];
                             }
-                            if (isset($res[$id = 'phone_number']) && $res[$id] != '' && $phone == '') $phone = $res[$id];
+                            if (isset($res[$id = 'phone_number']) && $res[$id] != '' && $phoneCell == '') {
+                                $phoneCell = $res[$id];
+                                $phone = $res[$id];
+                            }
                             if (isset($res[$id = 'skills']) && $res[$id] != '' && $keySkills == '') $keySkills = $res[$id];
                         }
                     }
@@ -554,13 +565,14 @@ class CareersUI extends UserInterface
             $template['Content'] = str_replace('<input-lastName>', '<input name="lastName" id="lastName" class="inputBoxName" value="' . $lastName . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-address>', '<textarea name="address" class="inputBoxArea">' . $address . '</textarea>', $template['Content']);
             $template['Content'] = str_replace('<input-city>', '<input name="city" id="city" class="inputBoxNormal" value="' . $city . '" />', $template['Content']);
-            $template['Content'] = str_replace('<input-state>', '<input name="state" id="state" class="inputBoxNormal" value="' . $state . '" />', $template['Content']);
-            $template['Content'] = str_replace('<input-zip>', '<input name="zip" id="zip" class="inputBoxNormal" value="' . $zip . '" />', $template['Content']);
-            $template['Content'] = str_replace('<input-phone>', '<input name="phone" id="phone" class="inputBoxNormal" value="' . $phone . '" />', $template['Content']);
+            $template['Content'] = str_replace('<input-country>', '<input name="country" id="country" class="inputBoxNormal" value="' . $country . '" />', $template['Content']);
+            $template['Content'] = str_replace('<input-state>', '<input name="country" id="country" class="inputBoxNormal" value="' . $country . '" />', $template['Content']);
+            $template['Content'] = str_replace('<input-zip>', '', $template['Content']);
+            $template['Content'] = str_replace('<input-phone>', '', $template['Content']);
             $template['Content'] = str_replace('<input-email>', '<input name="email" id="email" class="inputBoxNormal" value="' . $email . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-phone-cell>', '<input name="phoneCell" id="phoneCell" class="inputBoxNormal" value="' . $phoneCell . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-best-time-to-call>', '<input name="bestTimeToCall" id="bestTimeToCall" class="inputBoxNormal" value="' . $bestTimeToCall . '" />', $template['Content']);
-            $template['Content'] = str_replace('<input-email2>', '<input name="email2" id="email2" class="inputBoxNormal" value="' . $email2 . '" />', $template['Content']);
+            $template['Content'] = str_replace('<input-email2>', '', $template['Content']);
             $template['Content'] = str_replace('<input-emailconfirm>', '<input name="emailconfirm" id="emailconfirm" class="inputBoxNormal" value="' . $emailconfirm . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-keySkills>', '<input name="keySkills" id="keySkills" class="inputBoxNormal" value="' . $keySkills . '" />', $template['Content']);
             $template['Content'] = str_replace('<input-source>', '<input name="source" id="source" class="inputBoxNormal" value="' . $source . '" />', $template['Content']);
@@ -966,32 +978,15 @@ class CareersUI extends UserInterface
                 }';
         }
 
-        if (strpos($template['Content'], '<input-state req>') !== false) {
+        if (
+            strpos($template['Content'], '<input-country req>') !== false
+            || strpos($template['Content'], '<input-state req>') !== false
+        ) {
             $validator .= '
-                if (document.getElementById(\'state\').value == \'\')
+                if (document.getElementById(\'country\').value == \'\')
                 {
-                    alert(\'Please enter a state.\');
-                    document.getElementById(\'state\').focus();
-                    return false;
-                }';
-        }
-
-        if (strpos($template['Content'], '<input-zip req>') !== false) {
-            $validator .= '
-                if (document.getElementById(\'zip\').value == \'\')
-                {
-                    alert(\'Please enter a zip code.\');
-                    document.getElementById(\'zip\').focus();
-                    return false;
-                }';
-        }
-
-        if (strpos($template['Content'], '<input-phone req>') !== false) {
-            $validator .= '
-                if (document.getElementById(\'phone\').value == \'\')
-                {
-                    alert(\'Please enter a phone number.\');
-                    document.getElementById(\'phone\').focus();
+                    alert(\'Please enter a country.\');
+                    document.getElementById(\'country\').focus();
                     return false;
                 }';
         }
@@ -1109,14 +1104,18 @@ class CareersUI extends UserInterface
         $lastName       = $this->getSanitisedInput('lastName', $_POST);
         $firstName      = $this->getSanitisedInput('firstName', $_POST);
         $email          = $this->getSanitisedInput('email', $_POST);
-        $email2         = $this->getSanitisedInput('email2', $_POST);
         $address        = $this->getSanitisedInput('address', $_POST);
         $city           = $this->getSanitisedInput('city', $_POST);
-        $state          = $this->getSanitisedInput('state', $_POST);
-        $zip            = $this->getSanitisedInput('zip', $_POST);
+        $country        = $this->getSanitisedInput('country', $_POST);
+        if (empty($country)) {
+            $country = $this->getSanitisedInput('state', $_POST);
+        }
         $source         = $this->getSanitisedInput('source', $_POST);
         $phone          = $this->getSanitisedInput('phone', $_POST);
         $phoneCell      = $this->getSanitisedInput('phoneCell', $_POST);
+        if (empty($phoneCell)) {
+            $phoneCell = $phone;
+        }
         $bestTimeToCall = $this->getSanitisedInput('bestTimeToCall', $_POST);
         $keySkills      = $this->getSanitisedInput('keySkills', $_POST);
         $extraNotes     = $this->getSanitisedInput('extraNotes', $_POST);
@@ -1161,9 +1160,7 @@ class CareersUI extends UserInterface
             'email',
             'address',
             'city',
-            'state',
-            'zip',
-            'phone',
+            'country',
             'phoneCell'
         );
         $storedVal = '';
@@ -1185,25 +1182,23 @@ class CareersUI extends UserInterface
                 $firstName,
                 $lastName,
                 $email,
-                $email2,
                 $phoneCell,
-                $phone,
                 $address,
                 $city,
-                $state,
-                $zip,
+                $country,
                 $source,
                 $keySkills,
                 '',
                 $employer,
-                '',
-                '',
-                '',
+                isset($candidate['canRelocate']) ? (bool) $candidate['canRelocate'] : false,
+                isset($candidate['currentPay']) ? $candidate['currentPay'] : '',
+                isset($candidate['desiredPay']) ? $candidate['desiredPay'] : '',
                 $candidate['notes'],
-                '',
                 $bestTimeToCall,
                 $automatedUser['userID'],
-                $automatedUser['userID'],
+                isset($candidate['isHot']) ? (bool) $candidate['isHot'] : false,
+                $email,
+                $email,
                 $gender,
                 $race,
                 $veteran,
@@ -1223,23 +1218,19 @@ class CareersUI extends UserInterface
                 $firstName,
                 $lastName,
                 $email,
-                $email2,
                 $phoneCell,
-                $phone,
                 $address,
                 $city,
-                $state,
-                $zip,
+                $country,
                 $source,
                 $keySkills,
                 '',
                 $employer,
-                '',
+                false,
                 '',
                 '',
                 'Candidate submitted these notes with first application: '
                     . "\n\n" . $extraNotes,
-                '',
                 $bestTimeToCall,
                 $automatedUser['userID'],
                 $automatedUser['userID'],
@@ -1597,9 +1588,8 @@ class CareersUI extends UserInterface
         }
 
         $sql .= sprintf(
-            'site_id = %d AND (LCASE(email1) = %s OR LCASE(email2) = %s) LIMIT 1',
+            'site_id = %d AND LCASE(email1) = %s LIMIT 1',
             $siteID,
-            $db->makeQueryString(strtolower($fields['email'])),
             $db->makeQueryString(strtolower($fields['email']))
         );
 
@@ -1641,7 +1631,9 @@ class CareersUI extends UserInterface
                     // Some fields have multiple meanings:
                     if (!strcmp($matches[1][$i], 'email1')) $fields['email'] = urldecode($matches[2][$i]);
                     else if (!strcmp($matches[1][$i], 'currentEmployer')) $fields['employer'] = urldecode($matches[2][$i]);
-                    else if (!strcmp($matches[1][$i], 'phoneWork')) $fields['phone'] = urldecode($matches[2][$i]);
+                    else if (!strcmp($matches[1][$i], 'state')) $fields['country'] = urldecode($matches[2][$i]);
+                    else if (!strcmp($matches[1][$i], 'country')) $fields['state'] = urldecode($matches[2][$i]);
+                    else if (!strcmp($matches[1][$i], 'phoneCell')) $fields['phone'] = urldecode($matches[2][$i]);
                 }
             }
         }

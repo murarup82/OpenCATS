@@ -156,25 +156,6 @@
                             <input type="text" tabindex="3" name="email1" id="email1" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['email'])) $this->_($this->preassignedFields['email']); elseif (isset($this->preassignedFields['email1'])) $this->_($this->preassignedFields['email1']); ?>" onchange="checkEmailAlreadyInSystem(this.value);" />
                         </td>
                     </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="email2Label" for="email2">2nd E-Mail:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="4" name="email2" id="email2" class="inputbox" style="width: 150px" value="<?php if (isset($this->preassignedFields['email2'])) $this->_($this->preassignedFields['email2']); ?>" onchange="checkEmailAlreadyInSystem(this.value);" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="webSiteLabel" for="webSite">Web Site:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="5" name="webSite" id="webSite" class="inputbox" style="width: 150px" value="<?php if (isset($this->preassignedFields['webSite'])) $this->_($this->preassignedFields['webSite']); ?>" />
-                        </td>
-                    </tr>
-
                     
 
                     <tr>
@@ -185,16 +166,6 @@
                             <input type="text" tabindex="7" name="phoneCell" id="phoneCell" class="inputbox" style="width: 150px;" value="<?php if (isset($this->preassignedFields['phoneCell'])) $this->_($this->preassignedFields['phoneCell']); ?>" onchange="checkPhoneAlreadyInSystem(this.value);" />
                         </td>
                     </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="phoneWorkLabel" for="phoneWork">Work Phone:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="8" name="phoneWork" id="phoneWork" class="inputbox" style="width: 150px" value="<?php if (isset($this->preassignedFields['phoneWork'])) $this->_($this->preassignedFields['phoneWork']); ?>" onchange="checkPhoneAlreadyInSystem(this.value);" />
-                        </td>
-                    </tr>
-
                     <tr>
                         <td class="tdVertical">
                             <label id="addressLabel" for="address">Address:</label>
@@ -216,27 +187,15 @@
 
                     <tr>
                         <td class="tdVertical">
-                            <label id="stateLabel" for="state">State:</label>
+                            <label id="countryLabel" for="country">Country:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" tabindex="12" name="state" id="state" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['state'])) $this->_($this->preassignedFields['state']); ?>" />
+                            <input type="text" tabindex="12" name="country" id="country" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['country'])) $this->_($this->preassignedFields['country']); ?>" />
                         </td>
                     </tr>
-
                     <tr>
                         <td class="tdVertical">
-                            <label id="zipLabel" for="zip">Postal Code:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="13" name="zip" id="zip" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['zip'])) $this->_($this->preassignedFields['zip']); ?>" />&nbsp;
-                            <input type="button" tabindex="92" onclick="CityState_populate('zip', 'ajaxIndicator');" value="Lookup" />
-                            <img src="images/indicator2.gif" alt="AJAX" id="ajaxIndicator" style="vertical-align: middle; visibility: hidden; margin-left: 5px;" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="stateLabel" for="state">Best Time to Call:</label>
+                            <label id="bestTimeLabel" for="bestTimeToCall">Best Time to Call:</label>
                         </td>
                         <td class="tdData">
                             <input type="text" tabindex="13" name="bestTimeToCall" id="bestTimeToCall" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['bestTimeToCall'])) $this->_($this->preassignedFields['bestTimeToCall']); ?>" />
@@ -254,16 +213,6 @@
                             <input type="text" tabindex="7" name="phoneCell" id="phoneCell" class="inputbox" style="width: 150px;" value="<?php if (isset($this->preassignedFields['phoneCell'])) $this->_($this->preassignedFields['phoneCell']); ?>" onchange="checkPhoneAlreadyInSystem(this.value);" />
                         </td>
                     </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="phoneWorkLabel" for="phoneWork">Work Phone:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="8" name="phoneWork" id="phoneWork" class="inputbox" style="width: 150px" value="<?php if (isset($this->preassignedFields['phoneWork'])) $this->_($this->preassignedFields['phoneWork']); ?>" onchange="checkPhoneAlreadyInSystem(this.value);" />
-                        </td>
-                    </tr>
-
                     <tr>
                         <td class="tdVertical">
                             <label id="addressLabel" for="address">Address:</label>
@@ -282,30 +231,17 @@
                             <input type="text" tabindex="11" name="city" id="city" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['city'])) $this->_($this->preassignedFields['city']); ?>" />
                         </td>
                     </tr>
-
                     <tr>
                         <td class="tdVertical">
-                            <label id="stateLabel" for="state">State:</label>
+                            <label id="countryLabel" for="country">Country:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" tabindex="12" name="state" id="state" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['state'])) $this->_($this->preassignedFields['state']); ?>" />
+                            <input type="text" tabindex="12" name="country" id="country" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['country'])) $this->_($this->preassignedFields['country']); ?>" />
                         </td>
                     </tr>
-
                     <tr>
                         <td class="tdVertical">
-                            <label id="zipLabel" for="zip">Postal Code:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="13" name="zip" id="zip" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['zip'])) $this->_($this->preassignedFields['zip']); ?>" />&nbsp;
-                            <input type="button" tabindex="92" onclick="CityState_populate('zip', 'ajaxIndicator');" value="Lookup" />
-                            <img src="images/indicator2.gif" alt="AJAX" id="ajaxIndicator" style="vertical-align: middle; visibility: hidden; margin-left: 5px;" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="stateLabel" for="state">Best Time to Call:</label>
+                            <label id="bestTimeLabel" for="bestTimeToCall">Best Time to Call:</label>
                         </td>
                         <td class="tdData">
                             <input type="text" tabindex="13" name="bestTimeToCall" id="bestTimeToCall" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['bestTimeToCall'])) $this->_($this->preassignedFields['bestTimeToCall']); ?>" />
@@ -552,14 +488,8 @@
     <?php if(isset($this->preassignedFields['email']) || isset($this->preassignedFields['email1'])): ?>
         checkEmailAlreadyInSystem(urlDecode("<?php if(isset($this->preassignedFields['email'])) echo(urlencode($this->preassignedFields['email'])); else if(isset($this->preassignedFields['email1'])) echo(urlencode($this->preassignedFields['email1'])); ?>"));
     <?php endif; ?>
-    <?php if(isset($this->preassignedFields['email2']) || isset($this->preassignedFields['email2'])): ?>
-        checkEmailAlreadyInSystem(urlDecode("<?php if(isset($this->preassignedFields['email2'])) echo(urlencode($this->preassignedFields['email2'])); else if(isset($this->preassignedFields['email2'])) echo(urlencode($this->preassignedFields['email2'])); ?>"));
-    <?php endif; ?>
     <?php if(isset($this->preassignedFields['phoneCell']) || isset($this->preassignedFields['phoneCell'])): ?>
         checkEmailAlreadyInSystem(urlDecode("<?php if(isset($this->preassignedFields['phoneCell'])) echo(urlencode($this->preassignedFields['phoneCell'])); else if(isset($this->preassignedFields['phoneCell'])) echo(urlencode($this->preassignedFields['phoneCell'])); ?>"));
-    <?php endif; ?>
-    <?php if(isset($this->preassignedFields['phoneWork']) || isset($this->preassignedFields['phoneWork'])): ?>
-        checkEmailAlreadyInSystem(urlDecode("<?php if(isset($this->preassignedFields['phoneWork'])) echo(urlencode($this->preassignedFields['phoneWork'])); else if(isset($this->preassignedFields['phoneWork'])) echo(urlencode($this->preassignedFields['phoneWork'])); ?>"));
     <?php endif; ?>
 </script>
 

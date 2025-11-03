@@ -43,8 +43,10 @@
                         <b>Candidate Information:</b><br />
                         <?php echo $this->cData['lastName'] . ', ' . $this->cData['firstName']; ?><br />
                         <?php echo $this->cData['address']; ?><br />
-                        <?php echo ($str = $this->cData['city'] . ' ' . $this->cData['state'] . ' ' . $this->cData['zip']) . strlen($str) > 2 ? '<br />' : ''; ?>
-                        <?php echo ($str = $this->cData['phoneWork'] . ' ' . $this->cData['phoneCell']) . strlen($str) > 2 ? '<br />' : ''; ?>
+                        <?php $location = trim($this->cData['city'] . ' ' . $this->cData['country']); ?>
+                        <?php echo strlen($location) > 0 ? $location . '<br />' : ''; ?>
+                        <?php $phone = trim($this->cData['phoneCell']); ?>
+                        <?php echo strlen($phone) > 0 ? $phone . '<br />' : ''; ?>
                         <a style="font-size: 16px;" href="mailto:<?php echo ($str = $this->cData['email1']); ?>"><?php echo $this->cData['email1']; ?></a><?php echo strlen($str) > 0 ? '<br />' : ''; ?>
                         <br />
                         </span>

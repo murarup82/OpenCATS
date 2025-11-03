@@ -1031,7 +1031,7 @@ class CATSSchema
                 DROP INDEX `IDX_site_id` ON `candidate`;
             ',
             '285' => '
-                CREATE INDEX `IDX_site_id_email_1_2` ON `candidate` (`site_id`,`email1`(8),`email2`(8));
+                CREATE INDEX `IDX_site_id_email` ON `candidate` (`site_id`,`email1`(8));
             ',
             '286' => '
                 ALTER TABLE  `joborder` CHANGE  `status`  `status` VARCHAR(16) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT \'Active\';
@@ -1325,6 +1325,68 @@ class CATSSchema
             ',
             '364' => '
                 UPDATE user SET password = md5(password) WHERE can_change_password=1;
+            ',
+            '365' => 'PHP:
+                $columns = $db->getAllAssoc("SHOW COLUMNS FROM candidate");
+                $columnNames = array();
+                foreach ($columns as $column)
+                {
+                    $columnNames[$column["Field"]] = true;
+                }
+
+                if (isset($columnNames["email2"]))
+                {
+                    $db->query("ALTER TABLE candidate DROP COLUMN email2");
+                }
+
+                if (isset($columnNames["web_site"]))
+                {
+                    $db->query("ALTER TABLE candidate DROP COLUMN web_site");
+                }
+
+                if (isset($columnNames["phone_work"]))
+                {
+                    $db->query("ALTER TABLE candidate DROP COLUMN phone_work");
+                }
+
+                if (isset($columnNames["zip"]))
+                {
+                    $db->query("ALTER TABLE candidate DROP COLUMN zip");
+                }
+
+                if (isset($columnNames["state"]) && !isset($columnNames["country"]))
+                {
+                    $db->query("ALTER TABLE candidate CHANGE `state` `country` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL");
+                }
+
+                $indexes = $db->getAllAssoc("SHOW INDEX FROM candidate");
+                $indexNames = array();
+                foreach ($indexes as $index)
+                {
+                    $indexNames[$index["Key_name"]] = true;
+                }
+
+                if (isset($indexNames["IDX_phone_work"]))
+                {
+                    $db->query("ALTER TABLE candidate DROP INDEX IDX_phone_work");
+                }
+
+                if (isset($indexNames["IDX_site_id_email_1_2"]))
+                {
+                    $db->query("ALTER TABLE candidate DROP INDEX IDX_site_id_email_1_2");
+                }
+
+                $indexes = $db->getAllAssoc("SHOW INDEX FROM candidate");
+                $indexNames = array();
+                foreach ($indexes as $index)
+                {
+                    $indexNames[$index["Key_name"]] = true;
+                }
+
+                if (!isset($indexNames["IDX_site_id_email"]))
+                {
+                    $db->query("ALTER TABLE candidate ADD INDEX IDX_site_id_email (site_id, email1(8))");
+                }
             ',
 
         );

@@ -82,7 +82,6 @@ class Candidates
      * @param string Current pay rate / salary.
      * @param string Desired pay rate / salary.
      * @param string Misc. candidate notes.
-     * @param string Candidate's personal web site.
      * @param integer Entered-by user ID.
      * @param integer Owner user ID.
      * @param string EEO gender, or '' to not specify.
@@ -96,13 +95,11 @@ class Candidates
         $firstName,
         $lastName,
         $email1,
-        $email2,
         $phoneCell,
-        $phoneWork,
         $address,
         $city,
-        $state,
-        $zip,
+        $country,
+        $country,
         $source,
         $keySkills,
         $dateAvailable,
@@ -111,7 +108,6 @@ class Candidates
         $currentPay,
         $desiredPay,
         $notes,
-        $webSite,
         $bestTimeToCall,
         $enteredBy,
         $owner,
@@ -126,13 +122,10 @@ class Candidates
                 first_name,
                 last_name,
                 email1,
-                email2,
                 phone_cell,
-                phone_work,
                 address,
                 city,
-                state,
-                zip,
+                country,
                 source,
                 key_skills,
                 date_available,
@@ -141,7 +134,6 @@ class Candidates
                 current_pay,
                 desired_pay,
                 notes,
-                web_site,
                 best_time_to_call,
                 entered_by,
                 is_hot,
@@ -174,9 +166,6 @@ class Candidates
                 %s,
                 %s,
                 %s,
-                %s,
-                %s,
-                %s,
                 0,
                 %s,
                 %s,
@@ -190,13 +179,10 @@ class Candidates
             $this->_db->makeQueryString($firstName),
             $this->_db->makeQueryString($lastName),
             $this->_db->makeQueryString($email1),
-            $this->_db->makeQueryString($email2),
             $this->_db->makeQueryString($phoneCell),
-            $this->_db->makeQueryString($phoneWork),
             $this->_db->makeQueryString($address),
             $this->_db->makeQueryString($city),
-            $this->_db->makeQueryString($state),
-            $this->_db->makeQueryString($zip),
+            $this->_db->makeQueryString($country),
             $this->_db->makeQueryString($source),
             $this->_db->makeQueryString($keySkills),
             $this->_db->makeQueryStringOrNULL($dateAvailable),
@@ -205,7 +191,6 @@ class Candidates
             $this->_db->makeQueryString($currentPay),
             $this->_db->makeQueryString($desiredPay),
             $this->_db->makeQueryString($notes),
-            $this->_db->makeQueryString($webSite),
             $this->_db->makeQueryString($bestTimeToCall),
             $this->_db->makeQueryInteger($enteredBy),
             $this->_db->makeQueryInteger($owner),
@@ -268,13 +253,9 @@ class Candidates
         $firstName,
         $lastName,
         $email1,
-        $email2,
         $phoneCell,
-        $phoneWork,
         $address,
         $city,
-        $state,
-        $zip,
         $source,
         $keySkills,
         $dateAvailable,
@@ -283,7 +264,6 @@ class Candidates
         $currentPay,
         $desiredPay,
         $notes,
-        $webSite,
         $bestTimeToCall,
         $owner,
         $isHot,
@@ -302,13 +282,10 @@ class Candidates
                 first_name            = %s,
                 last_name             = %s,
                 email1                = %s,
-                email2                = %s,
-                phone_work            = %s,
                 phone_cell            = %s,
                 address               = %s,
                 city                  = %s,
-                state                 = %s,
-                zip                   = %s,
+                country               = %s,
                 source                = %s,
                 key_skills            = %s,
                 date_available        = %s,
@@ -318,7 +295,6 @@ class Candidates
                 can_relocate          = %s,
                 is_hot                = %s,
                 notes                 = %s,
-                web_site              = %s,
                 best_time_to_call     = %s,
                 owner                 = %s,
                 date_modified         = NOW(),
@@ -334,13 +310,10 @@ class Candidates
             $this->_db->makeQueryString($firstName),
             $this->_db->makeQueryString($lastName),
             $this->_db->makeQueryString($email1),
-            $this->_db->makeQueryString($email2),
-            $this->_db->makeQueryString($phoneWork),
             $this->_db->makeQueryString($phoneCell),
             $this->_db->makeQueryString($address),
             $this->_db->makeQueryString($city),
-            $this->_db->makeQueryString($state),
-            $this->_db->makeQueryString($zip),
+            $this->_db->makeQueryString($country),
             $this->_db->makeQueryString($source),
             $this->_db->makeQueryString($keySkills),
             $this->_db->makeQueryStringOrNULL($dateAvailable),
@@ -350,7 +323,6 @@ class Candidates
             ($canRelocate ? '1' : '0'),
             ($isHot ? '1' : '0'),
             $this->_db->makeQueryString($notes),
-            $this->_db->makeQueryString($webSite),
             $this->_db->makeQueryString($bestTimeToCall),
             $this->_db->makeQueryInteger($owner),
             $this->_db->makeQueryInteger($race),
@@ -502,13 +474,11 @@ class Candidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.email1 AS email1,
-                candidate.email2 AS email2,
-                candidate.phone_work AS phoneWork,
                 candidate.phone_cell AS phoneCell,
                 candidate.address AS address,
                 candidate.city AS city,
-                candidate.state AS state,
-                candidate.zip AS zip,
+                candidate.country AS country,
+                candidate.country AS country,
                 candidate.source AS source,
                 candidate.key_skills AS keySkills,
                 candidate.current_employer AS currentEmployer,
@@ -517,7 +487,6 @@ class Candidates
                 candidate.notes AS notes,
                 candidate.owner AS owner,
                 candidate.can_relocate AS canRelocate,
-                candidate.web_site AS webSite,
                 candidate.best_time_to_call AS bestTimeToCall,
                 candidate.is_hot AS isHot,
                 candidate.is_admin_hidden AS isAdminHidden,
@@ -634,13 +603,9 @@ class Candidates
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
                 candidate.email1 AS email1,
-                candidate.email2 AS email2,
-                candidate.phone_work AS phoneWork,
                 candidate.phone_cell AS phoneCell,
                 candidate.address AS address,
                 candidate.city AS city,
-                candidate.state AS state,
-                candidate.zip AS zip,
                 candidate.source AS source,
                 candidate.key_skills AS keySkills,
                 candidate.current_employer AS currentEmployer,
@@ -649,7 +614,6 @@ class Candidates
                 candidate.notes AS notes,
                 candidate.owner AS owner,
                 candidate.can_relocate AS canRelocate,
-                candidate.web_site AS webSite,
                 candidate.best_time_to_call AS bestTimeToCall,
                 candidate.is_hot AS isHot,
                 candidate.eeo_ethnic_type_id AS eeoEthnicTypeID,
@@ -719,13 +683,9 @@ class Candidates
             FROM
                 candidate
             WHERE
-            (
                 candidate.email1 = %s
-                OR candidate.email2 = %s
-            )
             AND
                 candidate.site_id = %s",
-            $this->_db->makeQueryString($email),
             $this->_db->makeQueryString($email),
             $this->_siteID
         );
@@ -745,13 +705,9 @@ class Candidates
             FROM
                 candidate
             WHERE
-            (
                 candidate.phone_cell = %s
-                OR candidate.phone_work = %s
-            )
             AND
                 candidate.site_id = %s",
-            $this->_db->makeQueryString($phone),
             $this->_db->makeQueryString($phone),
             $this->_siteID
         );
@@ -1141,15 +1097,13 @@ class Candidates
         return (bool) $this->_db->query($sql);
     }
 
-    public function checkDuplicity($firstName, $lastName, $email1, $email2, $phoneCell, $phoneWork, $address, $city)
+    public function checkDuplicity($firstName, $lastName, $email1, $phoneCell, $address, $city)
     {
         $sql = sprintf(
             "SELECT
                 candidate.candidate_id AS candidateID,
                 candidate.phone_cell AS phoneCell,
-                candidate.phone_work AS phoneWork,
                 candidate.email1 AS email1,
-                candidate.email2 AS email2,
                 candidate.address AS address,
                 candidate.city AS city
             FROM
@@ -1166,38 +1120,29 @@ class Candidates
         $duplicatesID = array();
 
         if ($rs && !$this->_db->isEOF()) {
-            $phoneNumbers = array();
-
-            if ($phoneCell != "") {
-                array_push($phoneNumbers, preg_replace('/\s+/', '', $phoneCell));
+            $normalizedPhone = '';
+            if (!empty($phoneCell)) {
+                $normalizedPhone = strtolower(trim(preg_replace('/\s+/', '', $phoneCell)));
             }
-            if ($phoneWork != "") {
-                array_push($phoneNumbers, preg_replace('/\s+/', '', $phoneWork));
-            }
-
-            $phoneNumbers = array_map('strtolower', $phoneNumbers);
-            $phoneNumbers = array_map('trim', $phoneNumbers);
-
+            $normalizedEmail = strtolower(trim($email1));
+            $normalizedAddress = strtolower(trim($address));
+            $normalizedCity = strtolower(trim($city));
 
             foreach ($rs as $row) {
-                $phoneNumbersDB = array();
-                if ($row['phoneCell'] != "") {
-                    array_push($phoneNumbersDB, preg_replace('/\s+/', '', $row['phoneCell']));
+                $rowPhone = '';
+                if (!empty($row['phoneCell'])) {
+                    $rowPhone = strtolower(trim(preg_replace('/\s+/', '', $row['phoneCell'])));
                 }
-                if ($row['phoneWork'] != "") {
-                    array_push($phoneNumbersDB, preg_replace('/\s+/', '', $row['phoneWork']));
-                }
-                $phoneNumbersDB = array_map('strtolower', $phoneNumbersDB);
-                $phoneNumbersDB = array_map('trim', $phoneNumbersDB);
+                $rowEmail = strtolower(trim($row['email1']));
+                $rowAddress = strtolower(trim($row['address']));
+                $rowCity = strtolower(trim($row['city']));
 
-                if (sizeof(array_diff($phoneNumbers, $phoneNumbersDB)) != sizeof($phoneNumbers) || sizeof(array_diff($phoneNumbersDB, $phoneNumbers)) != sizeof($phoneNumbersDB)) {
+                if ($normalizedPhone !== '' && $rowPhone !== '' && $normalizedPhone === $rowPhone) {
                     array_push($duplicatesID, $row['candidateID']);
-                } else if ((strtolower(trim($email1)) == strtolower(trim($row['email1'])) && trim($email1) != "") || (strtolower(trim($email1)) == strtolower(trim($row['email2'])) && trim($email1) != "") ||
-                    (strtolower(trim($email2)) == strtolower(trim($row['email1'])) && trim($email2) != "") || (strtolower(trim($email2)) == strtolower(trim($row['email2'])) && trim($email2) != "")
-                ) {
+                } else if ($normalizedEmail !== '' && $normalizedEmail === $rowEmail) {
                     array_push($duplicatesID, $row['candidateID']);
-                } else if (strtolower(trim($city)) == strtolower(trim($row['city'])) && trim($city) != "") {
-                    if (strtolower(trim($address)) == strtolower(trim($row['address'])) && trim($address) != "") {
+                } else if ($normalizedCity !== '' && $normalizedCity === $rowCity) {
+                    if ($normalizedAddress !== '' && $normalizedAddress === $rowAddress) {
                         array_push($duplicatesID, $row['candidateID']);
                     }
                 }
@@ -1447,41 +1392,19 @@ class Candidates
             $update .= "phone_cell = '" . $rs['phoneCell'] . "'";
             $comma = true;
         }
-        if ($params['phoneWork'] == "1") {
-            if ($comma) {
-                $update .= ", ";
-            }
-            $update .= "phone_work = '" . $rs['phoneWork'] . "'";
-            $comma = true;
-        }
         if ($params['address'] == "1") {
             if ($comma) {
                 $update .= ", ";
             }
-            $update .= "address = '" . $rs['address'] . "', city = '" . $rs['city'] . "', zip = '" . $rs['zip'] . "', state = '" . $rs['state'] . "'";
+            $update .= "address = '" . $rs['address'] . "', city = '" . $rs['city'] . "', country = '" . $rs['country'] . "'";
             $comma = true;
         }
-        if ($params['website'] == "1") {
-            if ($comma) {
-                $update .= ", ";
-            }
-            $update .= "web_site = '" . $rs['webSite'] . "'";
-            $comma = true;
-        }
-        if (sizeof($params['emails']) == 1) {
+        if (!empty($params['emails'])) {
             if ($comma) {
                 $update .= ", ";
             }
             $update .= "email1 = '" . $params['emails'][0] . "'";
             $comma = true;
-        } else if (sizeof($params['emails']) == 2) {
-            if ($comma) {
-                $update .= ", ";
-                $comma = false;
-            }
-            $update .= "email1 = '" . $params['emails'][0] . "', ";
-            $update .= "email2 = '" . $params['emails'][1] . "', ";
-            $comma = false;
         }
         if ($comma) {
             $update .= ", ";
@@ -1989,25 +1912,11 @@ class CandidatesDataGrid extends DataGrid
                 'filter'         => 'candidate.email1'
             ),
 
-            '2nd E-Mail' =>     array(
-                'select'   => 'candidate.email2 AS email2',
-                'sortableColumn'     => 'email2',
-                'pagerWidth'    => 80,
-                'filter'         => 'candidate.email2'
-            ),
-
             'Cell Phone' =>     array(
                 'select'   => 'candidate.phone_cell AS phoneCell',
                 'sortableColumn'     => 'phoneCell',
                 'pagerWidth'    => 80,
                 'filter'         => 'candidate.phone_cell'
-            ),
-
-            'Work Phone' =>     array(
-                'select'   => 'candidate.phone_work AS phoneWork',
-                'sortableColumn'     => 'phoneWork',
-                'pagerWidth'    => 80,
-                'filter'         => 'candidate.phone_work'
             ),
 
             'Address' =>        array(
@@ -2027,37 +1936,12 @@ class CandidatesDataGrid extends DataGrid
             ),
 
 
-            'State' =>          array(
-                'select'   => 'candidate.state AS state',
-                'sortableColumn'     => 'state',
-                'filterType' => 'dropDown',
-                'pagerWidth'    => 50,
-                'alphaNavigation' => true,
-                'filter'         => 'candidate.state'
-            ),
-
-            'Zip' =>            array(
-                'select'  => 'candidate.zip AS zip',
-                'sortableColumn'    => 'zip',
-                'pagerWidth'   => 50,
-                'filter'         => 'candidate.zip'
-            ),
-
             'Misc Notes' =>     array(
                 'select'  => 'candidate.notes AS notes',
                 'sortableColumn'    => 'notes',
                 'pagerWidth'   => 300,
                 'filter'         => 'candidate.notes'
             ),
-
-            'Web Site' =>      array(
-                'select'  => 'candidate.web_site AS webSite',
-                'pagerRender'     => 'return \'<a href="\'.htmlspecialchars($rsData[\'webSite\']).\'">\'.htmlspecialchars($rsData[\'webSite\']).\'</a>\';',
-                'sortableColumn'    => 'webSite',
-                'pagerWidth'   => 80,
-                'filter'         => 'candidate.web_site'
-            ),
-
             'Key Skills' =>    array(
                 'select'  => 'candidate.key_skills AS keySkills',
                 'pagerRender' => 'return mb_substr(trim($rsData[\'keySkills\']), 0, 30) . (strlen(trim($rsData[\'keySkills\'])) > 30 ? \'...\' : \'\');',
@@ -2274,16 +2158,6 @@ class CandidatesDataGrid extends DataGrid
                                      '
             )
         );
-
-        if (US_ZIPS_ENABLED) {
-            $this->_classColumns['Near Zipcode'] =
-                array(
-                    'select'  => 'candidate.zip AS zip',
-                    'filter' => 'candidate.zip',
-                    'pagerOptional' => false,
-                    'filterTypes'   => '=@'
-                );
-        }
 
         /* Extra fields get added as columns here. */
         $candidates = new Candidates($this->_siteID);

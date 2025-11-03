@@ -83,22 +83,8 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 </td>
                             </tr>
                             <tr>
-                                <td class="vertical">2nd E-Mail:</td>
-                                <td class="data">
-                                    <a href="mailto:<?php $this->_($this->data['email2']); ?>">
-                                        <?php $this->_($this->data['email2']); ?>
-                                    </a>
-                                </td>
-                            </tr>
-
-                            <tr>
                                 <td class="vertical">Cell Phone:</td>
                                 <td class="data"><?php $this->_($this->data['phoneCell']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Work Phone:</td>
-                                <td class="data"><?php $this->_($this->data['phoneWork']); ?></td>
                             </tr>
 
                             <tr>
@@ -112,20 +98,12 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             </tr>
 
                             <tr>
-                                <td class="vertical">&nbsp;</td>
-                                <td class="data">
-                                    <?php $this->_($this->data['cityAndState']); ?>
-                                    <?php $this->_($this->data['zip']); ?>
-                                </td>
+                                <td class="vertical">City:</td>
+                                <td class="data"><?php $this->_($this->data['city']); ?></td>
                             </tr>
-
                             <tr>
-                                <td class="vertical">Web Site:</td>
-                                <td class="data">
-                                    <?php if (!empty($this->data['webSite'])): ?>
-                                        <a href="<?php $this->_($this->data['webSite']); ?>" target="_blank"><?php $this->_($this->data['webSite']); ?></a>
-                                    <?php endif; ?>
-                                </td>
+                                <td class="vertical">Country:</td>
+                                <td class="data"><?php $this->_($this->data['country']); ?></td>
                             </tr>
 
                             <tr>

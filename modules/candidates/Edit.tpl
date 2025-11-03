@@ -62,37 +62,10 @@
                     </tr>
                     <tr>
                         <td class="tdVertical">
-                            <label id="email2Label" for="email2">2nd E-Mail:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" class="inputbox" id="email2" name="email2" value="<?php $this->_($this->data['email2']); ?>" style="width: 150px;" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
                             <label id="phoneCellLabel" for="phoneCell">Cell Phone:</label>
                         </td>
                         <td class="tdData">
                             <input type="text" class="inputbox" id="phoneCell" name="phoneCell" value="<?php $this->_($this->data['phoneCell']); ?>" style="width: 150px;" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="phoneWorkLabel" for="phoneWork">Work Phone:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" class="inputbox" id="phoneWork" name="phoneWork" value="<?php $this->_($this->data['phoneWork']); ?>" style="width: 150px;" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="webSiteLabel" for="webSite">Web Site:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" class="inputbox" id="webSite" name="webSite" value="<?php $this->_($this->data['webSite']); ?>" style="width: 150px" />
                         </td>
                     </tr>
 
@@ -113,24 +86,12 @@
                             <input type="text" class="inputbox" id="city" name="city" value="<?php $this->_($this->data['city']); ?>" style="width: 150px;" />
                         </td>
                     </tr>
-
                     <tr>
                         <td class="tdVertical">
-                            <label id="stateLabel" for="state">State:</label>
+                            <label id="countryLabel" for="country">Country:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" class="inputbox" id="state" name="state" value="<?php $this->_($this->data['state']); ?>" style="width: 150px;" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="zipLabel" for="zip">Postal Code:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" class="inputbox" id="zip" name="zip" value="<?php $this->_($this->data['zip']); ?>" style="width: 150px;" />
-                            <input type="button" class="button" onclick="CityState_populate('zip', 'ajaxIndicator');" value="Lookup" />
-                            <img src="images/indicator2.gif" alt="AJAX" id="ajaxIndicator" style="vertical-align: middle; visibility: hidden; margin-left: 5px;" />
+                            <input type="text" class="inputbox" id="country" name="country" value="<?php $this->_($this->data['country']); ?>" style="width: 150px;" />
                         </td>
                     </tr>
 
