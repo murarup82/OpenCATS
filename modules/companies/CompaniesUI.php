@@ -671,12 +671,12 @@ class CompaniesUI extends UserInterface
             return;
         }
 
-        \$formattedPhone = StringUtility::extractPhoneNumber(
+        $formattedPhone = StringUtility::extractPhoneNumber(
             $this->getSanitisedInput('phone', $_POST)
         );
-        if (!empty(\$formattedPhone))
+        if (!empty($formattedPhone))
         {
-            $phone = \$formattedPhone;
+            $phone = $formattedPhone;
         }
         else
         {
