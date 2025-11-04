@@ -45,9 +45,6 @@ class CompanyRepository
                 %s,
                 %s,
                 %s,
-                %s,
-                %s,
-                %s,
                 NOW(),
                 NOW()
             )",
