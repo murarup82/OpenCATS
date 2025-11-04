@@ -427,7 +427,12 @@ class SearchCandidates
      */
     public function byFullName($wildCardString, $sortBy, $sortDirection)
     {
-        $wildCardString = str_replace('*', '%', $wildCardString) . '%';
+        $wildCardString = str_replace('*', '%', $wildCardString);
+        if (strpos($wildCardString, '%') === false && strpos($wildCardString, '_') === false) {
+            $wildCardString = '%' . $wildCardString . '%';
+        } else if (substr($wildCardString, -1) !== '%') {
+            $wildCardString .= '%';
+        }
         $wildCardString = $this->_db->makeQueryString($wildCardString);
 
         $sql = sprintf(
@@ -1350,25 +1355,23 @@ class QuickSearch
                         '.', ''),
                     ')', ''),
                 '(', '') LIKE %s
-                OR candidate.key_skills LIKE %s
-            )
-            AND
-                candidate.site_id = %s
+                  OR candidate.key_skills LIKE %s
+              )
+              AND
+                  candidate.site_id = %s
             AND
                 candidate.is_admin_hidden = 0
             ORDER BY
                 candidate.date_modified DESC,
                 candidate.first_name ASC,
                 candidate.last_name ASC",
-            $wildCardString,
-            $wildCardString,
-            $wildCardString,
-            $wildCardString,
-            $wildCardString,
-            $wildCardString,
-            $wildCardString,
-            $wildCardString,
-            $this->_siteID
+              $wildCardString,
+              $wildCardString,
+              $wildCardString,
+              $wildCardString,
+              $wildCardString,
+              $wildCardString,
+              $this->_siteID
         );
 
         return $this->_db->getAllAssoc($sql);
