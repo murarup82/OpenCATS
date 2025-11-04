@@ -286,6 +286,55 @@ class Candidates
         $veteran = '',
         $disability = ''
     ) {
+        /* Backwards compatibility: pre-country signature passed 27 arguments.
+         * Detect that case and realign parameters so data doesn't shift.
+         */
+        if (func_num_args() < 28) {
+            $existingRecord = $this->get($candidateID);
+            $countryFromRecord = isset($existingRecord['country']) ? $existingRecord['country'] : '';
+
+            $originalSource = $country;
+            $originalKeySkills = $source;
+            $originalDateAvailable = $keySkills;
+            $originalCurrentEmployer = $dateAvailable;
+            $originalCanRelocate = $currentEmployer;
+            $originalCurrentPay = $canRelocate;
+            $originalDesiredPay = $currentPay;
+            $originalNotes = $desiredPay;
+            $originalBestTimeToCall = $notes;
+            $originalGdprSigned = $bestTimeToCall;
+            $originalGdprExpirationDate = $gdprSigned;
+            $originalOwner = $gdprExpirationDate;
+            $originalIsHot = $owner;
+            $originalEmail = $isHot;
+            $originalEmailAddress = $email;
+            $originalGender = $emailAddress;
+            $originalRace = $gender;
+            $originalVeteran = $race;
+            $originalDisability = $veteran;
+
+            $country = $countryFromRecord;
+            $source = $originalSource;
+            $keySkills = $originalKeySkills;
+            $dateAvailable = $originalDateAvailable;
+            $currentEmployer = $originalCurrentEmployer;
+            $canRelocate = $originalCanRelocate;
+            $currentPay = $originalCurrentPay;
+            $desiredPay = $originalDesiredPay;
+            $notes = $originalNotes;
+            $bestTimeToCall = $originalBestTimeToCall;
+            $gdprSigned = $originalGdprSigned;
+            $gdprExpirationDate = $originalGdprExpirationDate;
+            $owner = $originalOwner;
+            $isHot = $originalIsHot;
+            $email = $originalEmail;
+            $emailAddress = $originalEmailAddress;
+            $gender = $originalGender;
+            $race = $originalRace;
+            $veteran = $originalVeteran;
+            $disability = $originalDisability;
+        }
+
         $sql = sprintf(
             "UPDATE
                 candidate
