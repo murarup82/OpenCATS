@@ -7,11 +7,8 @@ class Company
     private $name;
     private $address;
     private $city;
-    private $state;
-    private $zipCode;
-    private $phoneNumberOne;
-    private $phoneNumberTwo;
-    private $faxNumber;
+    private $country;
+    private $phoneNumber;
     private $url;
     private $keyTechnologies;
     private $isHot;
@@ -55,54 +52,24 @@ class Company
         return $this->city;
     }
     
-    function setState($value)
+    function setCountry($value)
     {
-        $this->state = $value;
+        $this->country = $value;
     }
     
-    function getState()
+    function getCountry()
     {
-        return $this->state;
+        return $this->country;
     }
     
-    function setZipCode($value)
+    function setPhoneNumber($value)
     {
-        $this->zipCode = $value;
+        $this->phoneNumber = $value;
     }
     
-    function getZipCode()
+    function getPhoneNumber()
     {
-        return $this->zipCode;
-    }
-    
-    function setPhoneNumberOne($value)
-    {
-        $this->phoneNumberOne = $value;
-    }
-    
-    function getPhoneNumberOne()
-    {
-        return $this->phoneNumberOne;
-    }
-    
-    function setPhoneNumberTwo($value)
-    {
-        $this->phoneNumberTwo = $value;
-    }
-    
-    function getPhoneNumberTwo()
-    {
-        return $this->phoneNumberTwo;
-    }
-    
-    function setFaxNumber($value)
-    {
-        $this->faxNumber = $value;
-    }
-    
-    function getFaxNumber()
-    {
-        return $this->faxNumber;
+        return $this->phoneNumber;
     }
 
     // TODO: URL should be renamed to Website as URL is a technical but a business concept
@@ -174,11 +141,8 @@ class Company
         $name,
         $address,
         $city,
-        $state,
-        $zipCode,
-        $phoneNumberOne,
-        $phoneNumberTwo,
-        $faxNumber,
+        $country,
+        $phoneNumber,
         $url,
         $keyTechnologies,
         $isHot,
@@ -190,11 +154,8 @@ class Company
         $company = new Company($siteId, $name);
         $company->setAddress($address);
         $company->setCity($city);
-        $company->setState($state);
-        $company->setZipCode($zipCode);
-        $company->setPhoneNumberOne($phoneNumberOne);
-        $company->setPhoneNumberTwo($phoneNumberTwo);
-        $company->setFaxNumber($faxNumber);
+        $company->setCountry($country);
+        $company->setPhoneNumber($phoneNumber);
         $company->setUrl($url);
         $company->setKeyTechnologies($keyTechnologies);
         $company->setIsHot($isHot);

@@ -299,12 +299,11 @@ class Contacts
      * @param integer company ID
      * @param string address line
      * @param string city
-     * @param string state
-     * @param string zip code
+     * @param string country
      * @return boolean True if successful; false otherwise.
      */
     public function updateByCompany($companyID, $address, $city,
-        $state, $zip)
+        $country)
     {
         $sql = sprintf(
             "UPDATE
@@ -313,18 +312,16 @@ class Contacts
                 address      = %s,
                 city          = %s,
                 state         = %s,
-                zip           = %s,
                 date_modified = NOW()
             WHERE
                 left_company != 1
             AND
                 company_id = %s
             AND
-                site_id = %s",
+            site_id = %s",
             $this->_db->makeQueryString($address),
             $this->_db->makeQueryString($city),
-            $this->_db->makeQueryString($state),
-            $this->_db->makeQueryString($zip),
+            $this->_db->makeQueryString($country),
             $this->_db->makeQueryInteger($companyID),
             $this->_siteID
         );

@@ -70,10 +70,8 @@ class Companies
      * @param string Name
      * @param string Address line
      * @param string City
-     * @param string State
-     * @param string Zip code
-     * @param string Phone 1
-     * @param string Phone 2
+     * @param string Country
+     * @param string Phone
      * @param string Url
      * @param string Key technologies
      * @param boolean Is company hot
@@ -82,8 +80,8 @@ class Companies
      * @param integer Owner user
      * @return new Company ID, or -1 on failure.
      */
-    public function add($name, $address, $city, $state, $zip, $phone1,
-                        $phone2, $faxNumber, $url, $keyTechnologies, $isHot,
+    public function add($name, $address, $city, $country, $phone,
+                        $url, $keyTechnologies, $isHot,
                         $notes, $enteredBy, $owner)
     {
         $company= Company::create(
@@ -91,11 +89,8 @@ class Companies
             $name,
             $address,
             $city,
-            $state,
-            $zip,
-            $phone1,
-            $phone2,
-            $faxNumber,
+            $country,
+            $phone,
             $url,
             $keyTechnologies,
             $isHot,
@@ -119,10 +114,8 @@ class Companies
      * @param string Name
      * @param string Address line
      * @param string City
-     * @param string State
-     * @param string Zip Code
-     * @param string Phone 1
-     * @param string Phone 2
+     * @param string Country
+     * @param string Phone
      * @param string URL
      * @param string Key Technologies
      * @param boolean Is company hot
@@ -131,8 +124,8 @@ class Companies
      * @param integer Billing contact ID
      * @return boolean True if successful; false otherwise.
      */
-    public function update($companyID, $name, $address, $city, $state,
-                           $zip, $phone1, $phone2, $faxNumber, $url,
+    public function update($companyID, $name, $address, $city, $country,
+                           $phone, $url,
                            $keyTechnologies, $isHot, $notes, $owner,
                            $billingContact, $email, $emailAddress)
     {
@@ -143,11 +136,8 @@ class Companies
                 name             = %s,
                 address         = %s,
                 city             = %s,
-                state            = %s,
-                zip              = %s,
-                phone1           = %s,
-                phone2           = %s,
-                fax_number       = %s,
+                country          = %s,
+                phone            = %s,
                 url              = %s,
                 key_technologies = %s,
                 is_hot           = %s,
@@ -162,11 +152,8 @@ class Companies
             $this->_db->makeQueryString($name),
             $this->_db->makeQueryString($address),
             $this->_db->makeQueryString($city),
-            $this->_db->makeQueryString($state),
-            $this->_db->makeQueryString($zip),
-            $this->_db->makeQueryString($phone1),
-            $this->_db->makeQueryString($phone2),
-            $this->_db->makeQueryString($faxNumber),
+            $this->_db->makeQueryString($country),
+            $this->_db->makeQueryString($phone),
             $this->_db->makeQueryString($url),
             $this->_db->makeQueryString($keyTechnologies),
             ($isHot ? '1' : '0'),
@@ -321,11 +308,8 @@ class Companies
                 company.is_hot AS isHot,
                 company.address AS address,
                 company.city AS city,
-                company.state AS state,
-                company.zip AS zip,
-                company.phone1 AS phone1,
-                company.phone2 AS phone2,
-                company.fax_number AS faxNumber,
+                company.country AS country,
+                company.phone AS phone,
                 company.url AS url,
                 company.key_technologies AS keyTechnologies,
                 company.notes AS notes,
@@ -380,11 +364,8 @@ class Companies
                 company.is_hot AS isHot,
                 company.address AS address,
                 company.city AS city,
-                company.state AS state,
-                company.zip AS zip,
-                company.phone1 AS phone1,
-                company.phone2 AS phone2,
-                company.fax_number AS faxNumber,
+                company.country AS country,
+                company.phone AS phone,
                 company.url AS url,
                 company.key_technologies AS keyTechnologies,
                 company.notes AS notes,
@@ -497,7 +478,7 @@ class Companies
      }
 
     /**
-     * Returns an array of location data (city, state, zip) for the specified
+     * Returns an array of location data (city, country) for the specified
      * company ID.
      *
      * @param integer Company ID
@@ -509,8 +490,7 @@ class Companies
             "SELECT
                 company.address AS address,
                 company.city AS city,
-                company.state AS state,
-                company.zip AS zip
+                company.country AS country
             FROM
                 company
             WHERE
@@ -799,15 +779,10 @@ class CompaniesDataGrid extends DataGrid
                                      'filterHaving'  => 'jobs',
                                      'filterTypes'   => '===>=<'),
 
-            'Phone' =>     array('select'   => 'company.phone1 AS phone',
+            'Phone' =>     array('select'   => 'company.phone AS phone',
                                      'sortableColumn'     => 'phone',
                                      'pagerWidth'    => 80,
-                                     'filter'         => 'company.phone1'),
-
-            'Phone 2' =>     array('select'   => 'company.phone2 AS phone2',
-                                     'sortableColumn'     => 'phone2',
-                                     'pagerWidth'    => 80,
-                                     'filter'         => 'company.phone2'),
+                                     'filter'         => 'company.phone'),
 
 
             'City' =>           array('select'   => 'company.city AS city',
@@ -817,17 +792,12 @@ class CompaniesDataGrid extends DataGrid
                                      'filter'         => 'company.city'),
 
 
-            'State' =>          array('select'   => 'company.state AS state',
-                                     'sortableColumn'     => 'state',
+            'Country' =>        array('select'   => 'company.country AS country',
+                                     'sortableColumn'     => 'country',
                                      'filterType' => 'dropDown',
                                      'pagerWidth'    => 50,
                                      'alphaNavigation' => true,
-                                     'filter'         => 'company.state'),
-
-            'Zip' =>            array('select'  => 'company.zip AS zip',
-                                     'sortableColumn'    => 'zip',
-                                     'pagerWidth'   => 50,
-                                     'filter'         => 'company.zip'),
+                                     'filter'         => 'company.country'),
 
 
             'Web Site' =>      array('select'  => 'company.url AS webSite',
@@ -891,9 +861,9 @@ class CompaniesDataGrid extends DataGrid
 
         if (US_ZIPS_ENABLED)
         {
-            $this->_classColumns['Near Zipcode'] =
-                               array('select'  => 'company.zip AS zip',
-                                     'filter' => 'company.zip',
+            $this->_classColumns['Country'] =
+                               array('select'  => 'company.country AS country',
+                                     'filter' => 'company.country',
                                      'pagerOptional' => false,
                                      'filterTypes'   => '=@');
         }

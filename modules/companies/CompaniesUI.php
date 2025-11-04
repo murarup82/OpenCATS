@@ -488,40 +488,16 @@ class CompaniesUI extends UserInterface
      */
     private function onAdd()
     {
-        $formattedPhone1 = StringUtility::extractPhoneNumber(
-            $this->getSanitisedInput('phone1', $_POST)
+        $formattedPhone = StringUtility::extractPhoneNumber(
+            $this->getSanitisedInput('phone', $_POST)
         );
-        if (!empty($formattedPhone1))
+        if (!empty($formattedPhone))
         {
-            $phone1 = $formattedPhone1;
+            $phone = $formattedPhone;
         }
         else
         {
-            $phone1 = $this->getSanitisedInput('phone1', $_POST);
-        }
-
-        $formattedPhone2 = StringUtility::extractPhoneNumber(
-            $this->getSanitisedInput('phone2', $_POST)
-        );
-        if (!empty($formattedPhone2))
-        {
-            $phone2 = $formattedPhone2;
-        }
-        else
-        {
-            $phone2 = $this->getSanitisedInput('phone2', $_POST);
-        }
-
-        $formattedFaxNumber = StringUtility::extractPhoneNumber(
-            $this->getSanitisedInput('faxNumber', $_POST)
-        );
-        if (!empty($formattedFaxNumber))
-        {
-            $faxNumber = $formattedFaxNumber;
-        }
-        else
-        {
-            $faxNumber = $this->getSanitisedInput('faxNumber', $_POST);
+            $phone = $this->getSanitisedInput('phone', $_POST);
         }
 
         $url = $this->getSanitisedInput('url', $_POST);
@@ -541,8 +517,7 @@ class CompaniesUI extends UserInterface
         $name            = $this->getSanitisedInput('name', $_POST);
         $address         = $this->getSanitisedInput('address', $_POST);
         $city            = $this->getSanitisedInput('city', $_POST);
-        $state           = $this->getSanitisedInput('state', $_POST);
-        $zip             = $this->getSanitisedInput('zip', $_POST);
+        $country         = $this->getSanitisedInput('country', $_POST);
         $keyTechnologies = $this->getSanitisedInput('keyTechnologies', $_POST);
         $notes           = $this->getSanitisedInput('notes', $_POST);
 
@@ -560,8 +535,8 @@ class CompaniesUI extends UserInterface
 
         $companies = new Companies($this->_siteID);
         $companyID = $companies->add(
-            $name, $address, $city, $state, $zip, $phone1,
-            $phone2, $faxNumber, $url, $keyTechnologies, $isHot,
+            $name, $address, $city, $country, $phone,
+            $url, $keyTechnologies, $isHot,
             $notes, $this->_userID, $this->_userID
         );
 
@@ -696,40 +671,16 @@ class CompaniesUI extends UserInterface
             return;
         }
 
-        $formattedPhone1 = StringUtility::extractPhoneNumber(
-            $this->getSanitisedInput('phone1', $_POST)
+        \$formattedPhone = StringUtility::extractPhoneNumber(
+            $this->getSanitisedInput('phone', $_POST)
         );
-        if (!empty($formattedPhone1))
+        if (!empty(\$formattedPhone))
         {
-            $phone1 = $formattedPhone1;
+            $phone = \$formattedPhone;
         }
         else
         {
-            $phone1 = $this->getSanitisedInput('phone1', $_POST);
-        }
-
-        $formattedPhone2 = StringUtility::extractPhoneNumber(
-            $this->getSanitisedInput('phone2', $_POST)
-        );
-        if (!empty($formattedPhone2))
-        {
-            $phone2 = $formattedPhone2;
-        }
-        else
-        {
-            $phone2 = $this->getSanitisedInput('phone2', $_POST);
-        }
-
-        $formattedFaxNumber = StringUtility::extractPhoneNumber(
-            $this->getSanitisedInput('faxNumber', $_POST)
-        );
-        if (!empty($formattedFaxNumber))
-        {
-            $faxNumber = $formattedFaxNumber;
-        }
-        else
-        {
-            $faxNumber = $this->getSanitisedInput('faxNumber', $_POST);
+            $phone = $this->getSanitisedInput('phone', $_POST);
         }
 
         $url = $this->getSanitisedInput('url', $_POST);
@@ -812,8 +763,7 @@ class CompaniesUI extends UserInterface
         $name            = $this->getSanitisedInput('name', $_POST);
         $address         = $this->getSanitisedInput('address', $_POST);
         $city            = $this->getSanitisedInput('city', $_POST);
-        $state           = $this->getSanitisedInput('state', $_POST);
-        $zip             = $this->getSanitisedInput('zip', $_POST);
+        $country         = $this->getSanitisedInput('country', $_POST);
         $keyTechnologies = $this->getSanitisedInput('keyTechnologies', $_POST);
         $notes           = $this->getSanitisedInput('notes', $_POST);
 
@@ -835,8 +785,8 @@ class CompaniesUI extends UserInterface
         );
         $companies->updateDepartments($companyID, $departmentsDifferences);
 
-        if (!$companies->update($companyID, $name, $address, $city, $state,
-            $zip, $phone1, $phone2, $faxNumber, $url, $keyTechnologies,
+        if (!$companies->update($companyID, $name, $address, $city, $country,
+            $phone, $url, $keyTechnologies,
             $isHot, $notes, $owner, $billingContact, $email, $emailAddress))
         {
             CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to update company.');
@@ -853,7 +803,7 @@ class CompaniesUI extends UserInterface
             if ($_POST['updateContacts'] == 'yes')
             {
                 $contacts = new Contacts($this->_siteID);
-                $contacts->updateByCompany($companyID, $address, $city, $state, $zip);
+                $contacts->updateByCompany($companyID, $address, $city, $country);
             }
         }
 
@@ -1222,3 +1172,5 @@ class CompaniesUI extends UserInterface
 }
 
 ?>
+
+

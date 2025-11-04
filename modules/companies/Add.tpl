@@ -43,30 +43,11 @@
                     
                     <tr>
                         <td class="tdVertical">
-                            <label id="phone1Label" for="phone1">Primary Phone:</label>
+                            <label id="phoneLabel" for="phone">Phone:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" name="phone1" id="phone1" class="inputbox" style="width: 150px" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="phone2Label" for="phone2">Secondary Phone:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" name="phone2" id="phone2" class="inputbox" style="width: 150px" />
+                            <input type="text" name="phone" id="phone" class="inputbox" style="width: 150px" />
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="arrowButton" tabindex="91" align="middle" type="button" value="&lt;--" class="arrowbutton" onclick="AddressParser_parse('addressBlock', 'company', 'addressParserIndicator', 'arrowButton'); document.addCompanyForm.name.focus();" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="faxNumberLabel" for="faxNumber">Fax Number:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" name="faxNumber" id="faxNumber" class="inputbox" style="width: 150px" />
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="images/indicator2.gif" id="addressParserIndicator" alt="" style="visibility: hidden; margin-left: 10px;" height="16" width="16" />
                         </td>
                     </tr>
 
@@ -90,21 +71,11 @@
 
                     <tr>
                         <td class="tdVertical">
-                            <label id="stateLabel" for="state">State:</label>
+                            <label id="countryLabel" for="country">Country:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" name="state" id="state" class="inputbox" style="width: 150px" />
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="tdVertical">
-                            <label id="zipLabel" for="zip">Postal Code:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" name="zip" id="zip" class="inputbox" style="width: 150px" />&nbsp;
-                            <input type="button" class="button" onclick="CityState_populate('zip', 'ajaxIndicator');" value="Lookup" />
-                            <img src="images/indicator2.gif" alt="AJAX" id="ajaxIndicator" style="vertical-align: middle; visibility: hidden; margin-left: 5px;" />
+                            <input type="text" name="country" id="country" class="inputbox" style="width: 150px" />
+                            <img src="images/indicator2.gif" id="addressParserIndicator" alt="" style="visibility: hidden; margin-left: 10px;" height="16" width="16" />
                         </td>
                     </tr>
 
