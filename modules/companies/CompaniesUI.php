@@ -1170,7 +1170,3 @@ class CompaniesUI extends UserInterface
         return $resultSet;
     }
 }
-
-?>
-
-
