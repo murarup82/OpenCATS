@@ -7,6 +7,13 @@ use OpenCATS\UI\QuickActionMenu;
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
+        <?php
+            $jobOrdersRS = is_array($this->jobOrdersRS) ? $this->jobOrdersRS : array();
+            $contactsRS = is_array($this->contactsRS) ? $this->contactsRS : array();
+            $contactsRSWC = is_array($this->contactsRSWC) ? $this->contactsRSWC : array();
+            $contactsRSCount = count($contactsRS);
+            $contactsRSWCCount = count($contactsRSWC);
+        ?>
 
         <div id="contents">
             <table>
@@ -35,18 +42,8 @@ use OpenCATS\UI\QuickActionMenu;
                             <!-- CONTACT INFO -->
 
                             <tr>
-                                <td class="vertical">Primary Phone:</td>
-                                <td class="data"><?php $this->_($this->data['phone1']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Secondary Phone:</td>
-                                <td class="data"><?php $this->_($this->data['phone2']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Fax Number:</td>
-                                <td class="data"><?php $this->_($this->data['faxNumber']); ?></td>
+                                <td class="vertical">Phone:</td>
+                                <td class="data"><?php $this->_($this->data['phone']); ?></td>
                             </tr>
 
                             <tr>
@@ -59,7 +56,6 @@ use OpenCATS\UI\QuickActionMenu;
                                 <td class="vertical">&nbsp;</td>
                                 <td class="data">
                                     <?php $this->_($this->data['cityAndState']); ?>
-                                    <?php $this->_($this->data['zip']); ?>
                                 </td>
                             </tr>
 
@@ -81,9 +77,13 @@ use OpenCATS\UI\QuickActionMenu;
                             <tr>
                                 <td class="vertical">Billing Contact:</td>
                                 <td class="data">
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=show&amp;contactID=<?php echo($this->data['billingContact']); ?>">
-                                        <?php $this->_($this->data['billingContactFullName']); ?>
-                                    </a>
+                                    <?php if (!empty($this->data['billingContact'])): ?>
+                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=show&amp;contactID=<?php echo($this->data['billingContact']); ?>">
+                                            <?php $this->_($this->data['billingContactFullName']); ?>
+                                        </a>
+                                    <?php else: ?>
+                                        (None)
+                                    <?php endif; ?>
                                 </td>
                             </tr>
 
@@ -256,7 +256,8 @@ use OpenCATS\UI\QuickActionMenu;
                     <th align="left" width="25">Action</th>
                 </tr>
 
-                <?php foreach ($this->jobOrdersRS as $rowNumber => $jobOrdersData): ?>
+                <?php if (!empty($jobOrdersRS)): ?>
+                <?php foreach ($jobOrdersRS as $rowNumber => $jobOrdersData): ?>
                     <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
                         <td valign="top" align="left"><?php $this->_($jobOrdersData['jobOrderID']) ?></td>
                         <td valign="top">
@@ -283,6 +284,11 @@ use OpenCATS\UI\QuickActionMenu;
                         </td>
                     </tr>
                 <?php endforeach; ?>
+                <?php else: ?>
+                    <tr class="evenTableRow">
+                        <td colspan="13" align="center">No job orders found.</td>
+                    </tr>
+                <?php endif; ?>
             </table>
 
             <?php if ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT): ?>
@@ -308,8 +314,8 @@ use OpenCATS\UI\QuickActionMenu;
                     <th align="center">Action</th>
                 </tr>
 
-                <?php if (count($this->contactsRSWC) != 0): ?>
-                 <?php foreach ($this->contactsRSWC as $rowNumber => $contactsData): ?>
+                <?php if ($contactsRSWCCount > 0): ?>
+                 <?php foreach ($contactsRSWC as $rowNumber => $contactsData): ?>
                     <tr id="ContactsDefault<?php echo($rowNumber) ?>" class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
                         <td valign="top" align="left">
                             <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=show&amp;contactID=<?php $this->_($contactsData['contactID']) ?>" class="<?php $this->_($contactsData['linkClass']); ?>">
@@ -345,9 +351,15 @@ use OpenCATS\UI\QuickActionMenu;
                 <?php endforeach; ?>
                <?php endif; ?>
 
+               <?php if ($contactsRSCount == 0 && $contactsRSWCCount == 0): ?>
+                    <tr class="evenTableRow">
+                        <td colspan="9" align="center">No contacts found.</td>
+                    </tr>
+               <?php endif; ?>
+
                 <?php /* The following are hidden by default */ ?>
-                <?php if (count($this->contactsRSWC) != count($this->contactsRS) && count($this->contactsRS) != 0) : ?>
-                 <?php foreach ($this->contactsRS as $rowNumber => $contactsData): ?>
+                <?php if ($contactsRSWCCount != $contactsRSCount && $contactsRSCount > 0) : ?>
+                 <?php foreach ($contactsRS as $rowNumber => $contactsData): ?>
                     <tr id="ContactsFull<?php echo($rowNumber) ?>" class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>" style="display:none;">
                         <td valign="top" align="left">
                             <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=show&amp;contactID=<?php $this->_($contactsData['contactID']) ?>" class="<?php $this->_($contactsData['linkClass']); ?>">
@@ -390,15 +402,15 @@ use OpenCATS\UI\QuickActionMenu;
                     <img src="images/actions/add_contact.gif" width="16" height="16" class="absmiddle" alt="add contact" border="0" title="Add Contact"/>&nbsp;Add Contact
                 </a>
             <?php endif; ?>
-            <?php if (count($this->contactsRSWC) != count($this->contactsRS)) : ?>
+            <?php if ($contactsRSWCCount != $contactsRSCount) : ?>
                 &nbsp;
-                <a href="javascript:void(0)" id="linkShowAll" onclick="javascript:for (i = 0; i< <?php echo(count($this->contactsRSWC)); ?>; i++) document.getElementById('ContactsDefault'+i).style.display='none'; for (i = 0; i< <?php echo(count($this->contactsRS)); ?>; i++) document.getElementById('ContactsFull'+i).style.display=''; document.getElementById('linkShowAll').style.display='none'; document.getElementById('linkHideSome').style.display='';">
+                <a href="javascript:void(0)" id="linkShowAll" onclick="javascript:for (i = 0; i< <?php echo($contactsRSWCCount); ?>; i++) document.getElementById('ContactsDefault'+i).style.display='none'; for (i = 0; i< <?php echo($contactsRSCount); ?>; i++) document.getElementById('ContactsFull'+i).style.display=''; document.getElementById('linkShowAll').style.display='none'; document.getElementById('linkHideSome').style.display='';">
                     <img src="images/actions/add_contact.gif" width="16" height="16" class="absmiddle" alt="add contact" border="0" title="Show All"/>
-                    &nbsp;Show contacts who have left (<?php echo(count($this->contactsRS) - count($this->contactsRSWC)); ?>)
+                    &nbsp;Show contacts who have left (<?php echo($contactsRSCount - $contactsRSWCCount); ?>)
                 </a>
-                <a href="javascript:void(0)" id="linkHideSome" style="display:none;" onclick="javascript:for (i = 0; i< <?php echo(count($this->contactsRSWC)); ?>; i++) document.getElementById('ContactsDefault'+i).style.display=''; for (i = 0; i< <?php echo(count($this->contactsRS)); ?>; i++) document.getElementById('ContactsFull'+i).style.display='none'; document.getElementById('linkShowAll').style.display=''; document.getElementById('linkHideSome').style.display='none';">
+                <a href="javascript:void(0)" id="linkHideSome" style="display:none;" onclick="javascript:for (i = 0; i< <?php echo($contactsRSWCCount); ?>; i++) document.getElementById('ContactsDefault'+i).style.display=''; for (i = 0; i< <?php echo($contactsRSCount); ?>; i++) document.getElementById('ContactsFull'+i).style.display='none'; document.getElementById('linkShowAll').style.display=''; document.getElementById('linkHideSome').style.display='none';">
                     <img src="images/actions/add_contact.gif" width="16" height="16" class="absmiddle" alt="add contact" border="0" title="Hide Some"/>
-                    &nbsp;Hide contacts who have left (<?php echo(count($this->contactsRS) - count($this->contactsRSWC)); ?>)
+                    &nbsp;Hide contacts who have left (<?php echo($contactsRSCount - $contactsRSWCCount); ?>)
                 </a>
             <?php endif; ?>
             <!-- /CONTACT INFO -->

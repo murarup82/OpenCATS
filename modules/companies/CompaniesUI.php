@@ -252,7 +252,7 @@ class CompaniesUI extends UserInterface
          * of in the template.
          */
         $data['cityAndState'] = StringUtility::makeCityStateString(
-            $data['city'], $data['state']
+            $data['city'], $data['country']
         );
 
         /*
@@ -288,18 +288,12 @@ class CompaniesUI extends UserInterface
         }
 
         /* Link to Google Maps for this address */
-        if (!empty($data['address']) && !empty($data['city']) && !empty($data['state']))
+        if (!empty($data['address']) && !empty($data['city']) && !empty($data['country']))
         {
             $data['googleMaps'] = '<a href="http://maps.google.com/maps?q=' .
                      urlencode($data['address']) . '+' .
                      urlencode($data['city'])     . '+' .
-                     urlencode($data['state']);
-
-            /* Google Maps will find an address without Zip. */
-            if (!empty($data['zip']))
-            {
-                $data['googleMaps'] .= '+' . $data['zip'];
-            }
+                     urlencode($data['country']);
 
             $data['googleMaps'] .= '" target=_blank><img src="images/google_maps.gif" style="border: none;" class="absmiddle" /></a>';
         }

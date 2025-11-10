@@ -111,28 +111,10 @@
                             <table class="editTable" width="100%" height="100%">
                                 <tr>
                                     <td class="tdVertical">
-                                        <label id="phone1Label" for="phone1">Primary Phone:</label>
+                                        <label id="phoneLabel" for="phone">Phone:</label>
                                     </td>
                                     <td class="tdData">
-                                        <input type="text" name="phone1" id="phone1" value="<?php $this->_($this->data['phone1']); ?>" class="inputbox" style="width: 150px" onkeydown="document.getElementById('changeAddress').style.display='';" />
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td class="tdVertical">
-                                        <label id="phone2Label" for="phone2">Secondary Phone:</label>
-                                    </td>
-                                    <td class="tdData">
-                                        <input type="text" name="phone2" id="phone2" value="<?php $this->_($this->data['phone2']); ?>" class="inputbox" style="width: 150px" onkeydown="document.getElementById('changeAddress').style.display='';" />
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td class="tdVertical">
-                                        <label id="faxNumberLabel" for="faxNumber">Fax Number</label>
-                                    </td>
-                                    <td class="tdData">
-                                        <input type="text" name="faxNumber" id="faxNumber" value="<?php $this->_($this->data['faxNumber']); ?>" class="inputbox" style="width: 150px" onkeydown="document.getElementById('changeAddress').style.display='';" />
+                                        <input type="text" name="phone" id="phone" value="<?php $this->_($this->data['phone']); ?>" class="inputbox" style="width: 150px" onkeydown="document.getElementById('changeAddress').style.display='';" />
                                     </td>
                                 </tr>
 
@@ -154,20 +136,9 @@
 
                                 <tr>
                                     <td class="tdVertical">
-                                        <label id="stateLabel" for="state">State:</label>
+                                        <label id="countryLabel" for="country">Country:</label>
                                     </td>
-                                    <td class="tdData"><input type="text" name="state" id="state" value="<?php $this->_($this->data['state']); ?>" class="inputbox" style="width: 150px" onkeydown="document.getElementById('changeAddress').style.display='';"/></td>
-                                </tr>
-
-                                <tr>
-                                    <td class="tdVertical">
-                                        <label id="zipLabel" for="zip">Postal Code:</label>
-                                    </td>
-                                    <td class="tdData">
-                                        <input type="text" name="zip" id="zip" value="<?php $this->_($this->data['zip']); ?>" class="inputbox" style="width: 150px" onkeydown="document.getElementById('changeAddress').style.display='';" />
-                                        <input type="button" class="button" onclick="CityState_populate('zip', 'ajaxIndicator');" value="Lookup" />
-                                        <img src="images/indicator2.gif" alt="AJAX" id="ajaxIndicator" style="vertical-align: middle; visibility: hidden; margin-left: 5px;" />
-                                    </td>
+                                    <td class="tdData"><input type="text" name="country" id="country" value="<?php $this->_($this->data['country']); ?>" class="inputbox" style="width: 150px" onkeydown="document.getElementById('changeAddress').style.display='';"/></td>
                                 </tr>
 
                                 <tr id="changeAddress" style="display:none;">
