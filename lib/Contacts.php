@@ -896,7 +896,7 @@ class ContactsDataGrid extends DataGrid
                                      'filter'         => 'contact.city'),
 
 
-            'State' =>          array('select'   => 'contact.state AS state',
+            'Country' =>        array('select'   => 'contact.state AS state',
                                      'sortableColumn'     => 'state',
                                      'filterType' => 'dropDown',
                                      'pagerWidth'    => 50,

@@ -54,7 +54,7 @@
                         <th align="left">E-mail</th>
                         <th align="left">Cell phone</th>
                         <th align="left">City</th>
-                        <th align="left">State</th>
+                        <th align="left">Country</th>
                         <th align="left">Owner</th>
                         <th align="center">Action</th>
                     </tr>

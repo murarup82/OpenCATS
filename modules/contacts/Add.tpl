@@ -195,7 +195,7 @@
 
                                 <tr>
                                     <td class="tdVertical">
-                                        <label id="stateLabel" for="state">State:</label>
+                                        <label id="stateLabel" for="state">Country:</label>
                                     </td>
                                     <td class="tdData">
                                         <input type="text" name="state" id="state" class="inputbox" style="width: 150px" />

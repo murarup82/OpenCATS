@@ -57,7 +57,7 @@ class ListsDataGrid extends DataGrid
             array('name' => 'Name', 'width' => 255),
             array('name' => 'Jobs', 'width' => 40),
             array('name' => 'City', 'width' => 90),
-            array('name' => 'State', 'width' => 50),
+            array('name' => 'Country', 'width' => 50),
             array('name' => 'Phone', 'width' => 85),
             array('name' => 'Owner', 'width' => 65),
             array('name' => 'Created', 'width' => 60),

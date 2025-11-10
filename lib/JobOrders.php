@@ -1119,7 +1119,7 @@ class JobOrdersDataGrid extends DataGrid
                                      'alphaNavigation' => true,
                                      'filter'         => 'joborder.city'),
 
-            'State'          => array('select'   => 'joborder.state AS locationState',
+            'Country'        => array('select'   => 'joborder.state AS locationState',
                                      'pagerRender'      => 'return $rsData[\'locationState\'];',
                                      'exportRender'     => 'return $rsData[\'locationState\'];',
                                      'sortableColumn'     => 'locationState',

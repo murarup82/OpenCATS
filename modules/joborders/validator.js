@@ -143,7 +143,7 @@ function checkState()
     fieldLabel = document.getElementById('stateLabel');
     if (fieldValue == '')
     {
-        errorMessage = "    - You must enter a state.\n";
+        errorMessage = "    - You must enter a country.\n";
 
         fieldLabel.style.color = '#ff0000';
     }

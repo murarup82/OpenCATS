@@ -165,7 +165,7 @@
 
                         <tr>
                             <td class="tdVertical">
-                                <label id="stateLabel" for="state">State:</label>
+                                <label id="stateLabel" for="state">Country:</label>
                             </td>
                             <td class="tdData">
                                 <?php if ($this->selectedCompanyID !== false): ?>

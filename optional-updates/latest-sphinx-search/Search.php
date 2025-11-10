@@ -1008,7 +1008,7 @@ class SearchCompanies
                 company.name AS name,
                 company.city AS city,
                 company.country AS state,
-                company.phone1 AS phone1,
+                company.phone AS phone1,
                 company.url AS url,
                 company.key_technologies AS keyTechnologies,
                 company.is_hot AS isHot,
@@ -1051,7 +1051,7 @@ class SearchCompanies
                 company.name AS name,
                 company.city AS city,
                 company.country AS state,
-                company.phone1 AS phone1,
+                company.phone AS phone1,
                 company.url AS url,
                 company.key_technologies AS keyTechnologies,
                 company.is_hot AS isHot,
@@ -1102,7 +1102,7 @@ class SearchCompanies
                 company.name AS name,
                 company.city AS city,
                 company.country AS state,
-                company.phone1 AS phone1,
+                company.phone AS phone1,
                 company.url AS url,
                 company.key_technologies AS keyTechnologies,
                 company.is_hot AS isHot,
@@ -1731,7 +1731,7 @@ class QuickSearch
                 company.name AS name,
                 company.city AS city,
                 company.country AS state,
-                company.phone1 AS phone1,
+                company.phone AS phone1,
                 company.url AS url,
                 company.key_technologies AS keyTechnologies,
                 company.is_hot AS isHot,
@@ -1750,15 +1750,13 @@ class QuickSearch
             WHERE
             (
                 company.name LIKE %s
-                OR company.phone1 LIKE %s
-                OR company.phone2 LIKE %s
+                OR company.phone LIKE %s
                 OR company.url LIKE %s
             )
             AND
                 company.site_id = %s
             ORDER BY
                 company.name ASC",
-            $wildCardString,
             $wildCardString,
             $wildCardString,
             $wildCardString,

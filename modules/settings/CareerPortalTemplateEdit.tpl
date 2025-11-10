@@ -92,7 +92,7 @@
                                 <option value="<input-lastName>">Last Name *</option>
                                 <option value="<input-address>">Address Line</option>
                                 <option value="<input-city>">City</option>
-                                <option value="<input-state>">State</option>
+                                <option value="<input-state>">Country</option>
                                 <option value="<input-zip>">Zip Code</option>
                                 <option value="<input-phone>">Phone Number (Work)</option>
                                 <option value="<input-phone-home>">Phone Number (Home)</option>
@@ -152,7 +152,7 @@
                                 <option value="<title>">Job Title</option>
                                 <option value="<type>">Type</option>
                                 <option value="<city>">City</option>
-                                <option value="<state>">State</option>
+                                <option value="<state>">Country</option>
                                 <option value="<openings>">Openings</option>
                                 <option value="<rate>">Max Rate</option>
                                 <option value="<salary>">Salary</option>
