@@ -155,38 +155,12 @@
                                         <input type="text" name="email1" id="email1" value="<?php $this->_($this->data['email1']); ?>" class="inputbox" style="width: 150px" />
                                     </td>
                                 </tr>
-
-                                <tr>
-                                    <td class="tdVertical">
-                                        <label id="email2Label" for="email2">2nd E-Mail:</label>
-                                    </td>
-                                    <td class="tdData">
-                                        <input type="text" name="email2" id="email2" value="<?php $this->_($this->data['email2']); ?>" class="inputbox" style="width: 150px" />
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td class="tdVertical">
-                                        <label id="phoneWorkLabel" for="phoneWork">Work Phone:</label>
-                                    </td>
-                                    <td class="tdData"><input type="text" name="phoneWork" id="phoneWork" value="<?php $this->_($this->data['phoneWork']); ?>" class="inputbox" style="width: 150px" /></td>
-                                </tr>
-
                                 <tr>
                                     <td class="tdVertical">
                                         <label id="phoneCellLabel" for="phoneCell">Cell Phone:</label>
                                     </td>
                                     <td class="tdData">
                                         <input type="text" name="phoneCell" id="phoneCell" value="<?php $this->_($this->data['phoneCell']); ?>" class="inputbox" style="width: 150px" />
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td class="tdVertical">
-                                        <label id="phoneOtherLabel" for="phoneOther">Other Phone:</label>
-                                    </td>
-                                    <td class="tdData">
-                                        <input type="text" name="phoneOther" id="phoneOther" value="<?php $this->_($this->data['phoneOther']); ?>" class="inputbox" style="width: 150px" />
                                     </td>
                                 </tr>
 
@@ -217,17 +191,11 @@
                                     </td>
                                 </tr>
 
-                                <tr>
-                                    <td class="tdVertical">
-                                        <label id="zipLabel" for="zip">Postal Code:</label>
-                                    </td>
-                                    <td class="tdData">
-                                        <input type="text" name="zip" id="zip" value="<?php $this->_($this->data['zip']); ?>" class="inputbox" style="width: 150px" />
-                                        <input type="button" class="button" onclick="CityState_populate('zip', 'ajaxIndicator');" value="Lookup" />
-                                        <img src="images/indicator2.gif" alt="AJAX" id="ajaxIndicator" style="vertical-align: middle; visibility: hidden; margin-left: 5px;" />
-                                    </td>
-                                </tr>
                             </table>
+                            <input type="hidden" name="email2" id="email2" value="<?php $this->_($this->data['email2']); ?>" />
+                            <input type="hidden" name="phoneWork" id="phoneWork" value="<?php $this->_($this->data['phoneWork']); ?>" />
+                            <input type="hidden" name="phoneOther" id="phoneOther" value="<?php $this->_($this->data['phoneOther']); ?>" />
+                            <input type="hidden" name="zip" id="zip" value="<?php $this->_($this->data['zip']); ?>" />
                         </td>
                     </tr>
                 </table>
@@ -291,3 +259,4 @@
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
+

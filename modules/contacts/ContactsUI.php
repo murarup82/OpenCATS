@@ -445,6 +445,8 @@ class ContactsUI extends UserInterface
         /* Get extra fields. */
         $extraFieldRS = $contacts->extraFields->getValuesForAdd();
 
+        $companiesRS = $companies->getSelectList();
+
         $defaultCompanyID = $companies->getDefaultCompany();
         if ($defaultCompanyID !== false)
         {
@@ -462,6 +464,7 @@ class ContactsUI extends UserInterface
         $this->_template->assign('active', $this);
         $this->_template->assign('extraFieldRS', $extraFieldRS);
         $this->_template->assign('subActive', 'Add Contact');
+        $this->_template->assign('companiesRS', $companiesRS);
         $this->_template->assign('companyRS', $companyRS);
         $this->_template->assign('reportsToRS', $reportsToRS);
         $this->_template->assign('selectedCompanyID', $selectedCompanyID);
