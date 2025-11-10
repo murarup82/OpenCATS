@@ -1,5 +1,5 @@
 <?php /* $Id: Edit.tpl 3810 2007-12-05 19:13:25Z brian $ */ ?>
-<?php TemplateUtility::printHeader('Job Orders', array('modules/joborders/validator.js', 'js/company.js', 'js/sweetTitles.js',  'js/suggest.js', 'js/joborder.js', 'js/lib.js', 'js/listEditor.js', 'vendor/ckeditor/ckeditor/ckeditor.js', 'js/ckeditor-manager.js')); ?>
+<?php TemplateUtility::printHeader('Job Orders', array('modules/joborders/validator.js', 'js/company.js', 'js/sweetTitles.js', 'js/joborder.js', 'js/lib.js', 'js/listEditor.js', 'vendor/ckeditor/ckeditor/ckeditor.js', 'js/ckeditor-manager.js')); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
@@ -48,17 +48,22 @@
                         </td>
 
                         <td class="tdData">
-                            <input type="hidden" name="companyID" id="companyID" value="<?php echo($this->data['companyID']); ?>" />
-
+                            <select name="companyID" id="companyID" tabindex="2" class="inputbox" style="width: 200px;" onchange="updateCompanyData('<?php echo($this->sessionCookie); ?>');">
+                                <option value="0">(Select a Company)</option>
+                                <?php foreach ($this->companiesRS as $rowNumber => $companyData): ?>
+                                    <option value="<?php $this->_($companyData['companyID']); ?>" <?php if ($companyData['companyID'] == $this->data['companyID']) echo('selected'); ?>>
+                                        <?php $this->_($companyData['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>&nbsp;*
                             <?php if ($this->defaultCompanyID !== false): ?>
-                                <input type="radio" name="typeCompany" <?php if ($this->defaultCompanyID != $this->data['companyID']) echo(' checked'); ?> onchange="document.getElementById('companyName').disabled = false; if (oldCompanyID != -1) document.getElementById('companyID').value = oldCompanyID;">
-                                <input type="text" name="companyName" id="companyName" tabindex="2" value="<?php $this->_($this->data['companyName']) ?>" class="inputbox" style="width: 125px" onFocus="suggestListActivate('getCompanyNames', 'companyName', 'CompanyResults', 'companyID', 'ajaxTextEntryHover', 0, '<?php echo($this->sessionCookie); ?>', 'helpShim');" <?php if ($this->defaultCompanyID == $this->data['companyID']) echo(' disabled'); ?>/>&nbsp;*
-                            <?php else: ?>
-                                <input type="text" name="companyName" id="companyName" tabindex="2" value="<?php $this->_($this->data['companyName']) ?>" class="inputbox" style="width: 150px" onFocus="suggestListActivate('getCompanyNames', 'companyName', 'CompanyResults', 'companyID', 'ajaxTextEntryHover', 0, '<?php echo($this->sessionCookie); ?>', 'helpShim');" <?php if ($this->defaultCompanyID == $this->data['companyID']) echo(' disabled'); ?>/>&nbsp;*
+                                <span class="note">
+                                    <a href="javascript:void(0);" onclick="document.getElementById('companyID').value = '<?php echo($this->defaultCompanyID); ?>'; updateCompanyData('<?php echo($this->sessionCookie); ?>'); return false;">
+                                        Use <?php echo($this->defaultCompanyRS['name']); ?>
+                                    </a>
+                                </span>
                             <?php endif; ?>
-                            <br />
-                            <iframe id="helpShim" src="javascript:void(0);" scrolling="no" frameborder="0" style="position:absolute; display:none;"></iframe>
-                            <div id="CompanyResults" class="ajaxSearchResults"></div>
+                            <script type="text/javascript">watchCompanyIDChangeJO('<?php echo($this->sessionCookie); ?>');</script>
                         </td>
 
                         <td class="tdVertical">
@@ -70,17 +75,6 @@
                     </tr>
 
                     <tr>
-                         <td class="tdVertical">
-                            <label id="companyLabel" for=""></label>
-                         </td>
-                         <td class="tdData">
-                            <?php if ($this->defaultCompanyID !== false): ?>
-                                <input type="radio" name="typeCompany" <?php if ($this->defaultCompanyID == $this->data['companyID']) echo(' checked'); ?> id="defaultCompany" onchange="if(document.getElementById('companyName').disabled == false && document.getElementById('companyID').value > 0) {oldCompanyID = document.getElementById('companyID').value; } else if(document.getElementById('companyName').disabled == false) { oldCompanyID = 0; } document.getElementById('companyName').disabled = true; document.getElementById('companyID').value = '<?php echo($this->defaultCompanyID); ?>'; ">&nbsp;<?php echo($this->defaultCompanyRS['name']); ?>
-                            <?php endif; ?>
-                            <script type="text/javascript">oldCompanyID = -1; watchCompanyIDChangeJO('<?php echo($this->sessionCookie); ?>');</script>
-                         </td>
-
-
                         <td class="tdVertical">
                             <label id="maxRateLabel" for="maxRate">Maximum Rate:</label>
                         </td>
@@ -88,6 +82,12 @@
                             <input type="text" tabindex="13" class="inputbox" id="maxRate" name="maxRate" value="<?php $this->_($this->data['maxRate']); ?>" style="width: 150px;" />
                         </td>
 
+                        <td class="tdVertical">
+                            <label id="salaryLabel" for="salary">Salary:</label>
+                        </td>
+                        <td class="tdData">
+                            <input type="text" tabindex="14" class="inputbox" id="salary" name="salary" value="<?php $this->_($this->data['salary']); ?>" style="width: 150px;" />
+                        </td>
                     </tr>
 
                     <tr>
@@ -108,15 +108,6 @@
                             <input type="hidden" id="departmentsCSV" name="departmentsCSV" value="<?php $this->_($this->departmentsString); ?>" />
                         </td>
 
-                        <td class="tdVertical">
-                            <label id="salaryLabel" for="salary">Salary:</label>
-                        </td>
-                        <td class="tdData">
-                            <input type="text" tabindex="14" class="inputbox" id="salary" name="salary" value="<?php $this->_($this->data['salary']); ?>" style="width: 150px;" />
-                        </td>
-                    </tr>
-
-                    <tr>
                         <td class="tdVertical">
                             <label id="contactIDLabel" for="contactID">Contact:</label>
                         </td>

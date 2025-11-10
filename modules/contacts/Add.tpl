@@ -1,5 +1,5 @@
 <?php /* $Id: Add.tpl 3093 2007-09-24 21:09:45Z brian $ */ ?>
-<?php TemplateUtility::printHeader('Contacts', array('modules/contacts/validator.js', 'js/company.js', 'js/sweetTitles.js', 'js/listEditor.js',  'js/contact.js', 'js/suggest.js')); ?>
+<?php TemplateUtility::printHeader('Contacts', array('modules/contacts/validator.js', 'js/company.js', 'js/sweetTitles.js', 'js/listEditor.js',  'js/contact.js')); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active, $this->subActive); ?>
     <div id="main">
@@ -46,15 +46,27 @@
                                         <label id="companyIDLabel" for="companyID">Company:</label>
                                     </td>
                                     <td class="tdData">
-                                        <input type="hidden" name="companyID" id="companyID" value="<?php if ($this->selectedCompanyID === false) { echo(0); } else { echo($this->selectedCompanyID); } ?>" />
-                                        <input type="text" name="companyName" id="companyName" value="<?php if ($this->selectedCompanyID !== false) { $this->_($this->companyRS['name']); } ?>" class="inputbox" style="width: 150px" onFocus="suggestListActivate('getCompanyNames', 'companyName', 'CompanyResults', 'companyID', 'ajaxTextEntryHover', 0, '<?php echo($this->sessionCookie); ?>', 'helpShim');" <?php if ($this->selectedCompanyID !== false) { echo('disabled'); } ?>/>&nbsp;*
-                                        <?php if ($this->defaultCompanyID !== false && $this->selectedCompanyID === false): ?>
-                                            <input type="checkbox" id="defaultCompany" onchange="if (this.checked){ document.getElementById('companyName').disabled = true; document.getElementById('companyID').value = '<?php echo($this->defaultCompanyID); ?>'; document.getElementById('companyName').value = &quot;<?php $this->_($this->defaultCompanyRS['name']); ?>&quot;; } else { document.getElementById('companyName').disabled = false; }">&nbsp;Internal Contact
+                                        <?php
+                                            $preselectedCompanyID = ($this->selectedCompanyID !== false)
+                                                ? $this->selectedCompanyID
+                                                : -1;
+                                        ?>
+                                        <select name="companyID" id="companyID" class="inputbox" style="width: 200px;">
+                                            <option value="-1">(Select a Company)</option>
+                                            <?php foreach ($this->companiesRS as $rowNumber => $companyData): ?>
+                                                <option value="<?php $this->_($companyData['companyID']); ?>" <?php if ($preselectedCompanyID == $companyData['companyID']) echo('selected'); ?>>
+                                                    <?php $this->_($companyData['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>&nbsp;*
+                                        <?php if ($this->defaultCompanyID !== false): ?>
+                                            <span class="note">
+                                                <a href="javascript:void(0);" onclick="document.getElementById('companyID').value = '<?php echo($this->defaultCompanyID); ?>'; currentCompanyID = -1; return false;">
+                                                    Internal Contact
+                                                </a>
+                                            </span>
                                         <?php endif; ?>
                                         <script type="text/javascript">watchCompanyIDChange('<?php echo($this->sessionCookie); ?>');</script>
-                                        <br />
-                                        <iframe id="helpShim" src="javascript:void(0);" scrolling="no" frameborder="0" style="position:absolute; display:none;"></iframe>
-                                        <div id="CompanyResults" class="ajaxSearchResults"></div>
                                     </td>
                                 </tr>
 

@@ -1,5 +1,5 @@
 <?php /* $Id: Edit.tpl 3093 2007-09-24 21:09:45Z brian $ */ ?>
-<?php TemplateUtility::printHeader('Contacts', array('modules/contacts/validator.js', 'js/sweetTitles.js', 'js/suggest.js', 'js/listEditor.js',  'js/contact.js', 'js/company.js')); ?>
+<?php TemplateUtility::printHeader('Contacts', array('modules/contacts/validator.js', 'js/sweetTitles.js', 'js/listEditor.js',  'js/contact.js', 'js/company.js')); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
@@ -45,19 +45,26 @@
 
                                 <tr>
                                     <td class="tdVertical">
-                                        <label id="companyIDLabel" for="companyID"><span id="companyAssociatedLabel" <?php if ($this->data['leftCompany'] != 1): ?> style="display:none;" <?php endif; ?> >Previous </span>Company:</label>
+                    <label id="companyIDLabel" for="companyID"><span id="companyAssociatedLabel" <?php if ($this->data['leftCompany'] != 1): ?> style="display:none;" <?php endif; ?> >Previous </span>Company:</label>
                                     </td>
 
                                     <td class="tdData">
-                                        <input type="hidden" name="companyID" id="companyID" value="<?php $this->_($this->data['companyID']); ?>" />
-                                        <input type="text" name="companyName" id="companyName" value="<?php $this->_($this->data['companyName']); ?>" class="inputbox" style="width: 150px" onFocus="suggestListActivate('getCompanyNames', 'companyName', 'CompanyResults', 'companyID', 'ajaxTextEntryHover', 0, '<?php echo($this->sessionCookie); ?>', 'helpShim');" <?php if ($this->defaultCompanyID == $this->data['companyID']) echo('disabled'); ?> />&nbsp;*
+                                        <select name="companyID" id="companyID" class="inputbox" style="width: 200px;">
+                                            <option value="-1">(Select a Company)</option>
+                                            <?php foreach ($this->companiesRS as $rowNumber => $companyData): ?>
+                                                <option value="<?php $this->_($companyData['companyID']); ?>" <?php if ($companyData['companyID'] == $this->data['companyID']) echo('selected'); ?>>
+                                                    <?php $this->_($companyData['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>&nbsp;*
                                         <?php if ($this->defaultCompanyID !== false): ?>
-                                            <input type="checkbox" id="defaultCompany" onchange="if (this.checked) { document.getElementById('companyName').disabled = true; document.getElementById('companyID').value = '<?php echo($this->defaultCompanyID); ?>'; document.getElementById('companyName').value = &quot;<?php $this->_($this->defaultCompanyRS['name']); ?>&quot;; } else { document.getElementById('companyName').disabled = false; }"<?php if ($this->defaultCompanyID == $this->data['companyID']) echo(' checked'); ?> />&nbsp;Internal Contact
+                                            <span class="note">
+                                                <a href="javascript:void(0);" onclick="document.getElementById('companyID').value = '<?php echo($this->defaultCompanyID); ?>'; currentCompanyID = -1; return false;">
+                                                    Internal Contact
+                                                </a>
+                                            </span>
                                         <?php endif; ?>
                                         <script type="text/javascript">watchCompanyIDChange('<?php echo($this->sessionCookie); ?>');</script>
-                                        <br />
-                                        <iframe id="helpShim" src="javascript:void(0);" scrolling="no" frameborder="0" style="position:absolute; display:none;"></iframe>
-                                        <div id="CompanyResults" class="ajaxSearchResults"></div>
                                     </td>
                                 </tr>
 
