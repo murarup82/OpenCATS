@@ -383,7 +383,8 @@ class CandidatesUI extends UserInterface
             $dataGridProperties = array(
                 'rangeStart'    => 0,
                 'maxResults'    => 15,
-                'filterVisible' => false
+                'filterVisible' => false,
+                'filter'        => 'IsActive==1'
             );
         }
 

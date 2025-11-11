@@ -2212,6 +2212,13 @@ class CandidatesDataGrid extends DataGrid
                 'filterable' => false,
                 'filterDescription' => 'Only Hot Candidates'
             ),
+            'IsActive' =>      array(
+                'select'    => '',
+                'filter'    => 'candidate.is_active',
+                'pagerOptional' => false,
+                'filterable' => false,
+                'filterDescription' => 'Active Candidates'
+            ),
             // Tags filtering
             'Tags'    =>            array(
                 'select'    => '(

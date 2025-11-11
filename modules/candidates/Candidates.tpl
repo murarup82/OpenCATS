@@ -39,6 +39,10 @@
                                         <label for="onlyHotCandidates">Only Hot Candidates</label>&nbsp;
                                     </td>
                                     <td valign="top" align="right" nowrap="nowrap">
+                                        <input type="checkbox" name="onlyActiveCandidates" id="onlyActiveCandidates" <?php if ($this->dataGrid->getFilterValue('IsActive') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsActive', '==', '\'1\''); ?>" />
+                                        <label for="onlyActiveCandidates">Active Candidates</label>&nbsp;
+                                    </td>
+                                    <td valign="top" align="right" nowrap="nowrap">
 	                					<a href="javascript:void(0);" id="exportBoxLink<?= $md5InstanceName ?>" onclick="toggleHideShowControls('<?= $md5InstanceName ?>-tags'); return false;">Filter by tag</a>
 	                					<div id="tagsContainer" style="position:relative">
 	                					<div class="ajaxSearchResults" id="ColumnBox<?= $md5InstanceName ?>-tags" align="left"  style="position:absolute;width:200px;right:0<?= isset($this->globalStyle)?$this->globalStyle:"" ?>">
