@@ -1330,6 +1330,7 @@ class QuickSearch
                 candidate.phone_cell AS phoneCell,
                 candidate.key_skills AS keySkills,
                 candidate.email1 AS email1,
+                candidate.is_active AS isActive,
                 owner_user.first_name AS ownerFirstName,
                 owner_user.last_name AS ownerLastName,
                 DATE_FORMAT(

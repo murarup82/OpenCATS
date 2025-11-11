@@ -208,6 +208,9 @@ class HomeUI extends UserInterface
         $jobOrdersRS  = $search->jobOrders($query);
         //$listsRS      = $search->lists($query);
 
+        $activeCandidatesRS = array();
+        $inactiveCandidatesRS = array();
+
         if (!empty($candidatesRS))
         {
             foreach ($candidatesRS as $rowIndex => $row)
@@ -231,6 +234,18 @@ class HomeUI extends UserInterface
                 if (empty($candidatesRS[$rowIndex]['phoneCell']))
                 {
                     $candidatesRS[$rowIndex]['phoneCell'] = 'None';
+                }
+
+                $isActive = !isset($candidatesRS[$rowIndex]['isActive']) ||
+                    $candidatesRS[$rowIndex]['isActive'];
+
+                if ($isActive)
+                {
+                    $activeCandidatesRS[] = $candidatesRS[$rowIndex];
+                }
+                else
+                {
+                    $inactiveCandidatesRS[] = $candidatesRS[$rowIndex];
                 }
             }
         }
@@ -359,6 +374,8 @@ class HomeUI extends UserInterface
         $this->_template->assign('active', $this);
         $this->_template->assign('jobOrdersRS', $jobOrdersRS);
         $this->_template->assign('candidatesRS', $candidatesRS);
+        $this->_template->assign('activeCandidatesRS', $activeCandidatesRS);
+        $this->_template->assign('inactiveCandidatesRS', $inactiveCandidatesRS);
         $this->_template->assign('companiesRS', $companiesRS);
         $this->_template->assign('contactsRS', $contactsRS);
         //$this->_template->assign('listsRS', $listsRS);

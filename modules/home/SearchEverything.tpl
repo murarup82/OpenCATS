@@ -63,39 +63,51 @@
 
             <!-- Candidates -->
             <p class="note">Candidates Results</p>
-            <?php if (!empty($this->candidatesRS)): ?>
-                <table class="sortable" width="100%">
-                    <tr>
-                        <th align="left" nowrap="nowrap">First Name</th>
-                        <th align="left" nowrap="nowrap">Last Name</th>
-                        <th align="left">Key Skills</th>
-                        <th align="left" width="160">Cell</th>
-                        <th align="left" width="65">Owner</th>
-                        <th align="left" width="60">Created</th>
-                        <th align="left" width="60">Modified</th>
-                    </tr>
-
-                    <?php foreach ($this->candidatesRS as $rowNumber => $candidatesData): ?>
-                        <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
-                            <td>
-                                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($candidatesData['candidateID']) ?>">
-                                    <?php $this->_($candidatesData['firstName']) ?>
-                                </a>
-                            </td>
-                            <td>
-                                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($candidatesData['candidateID']) ?>">
-                                    <?php $this->_($candidatesData['lastName']) ?>
-                                </a>
-                            </td>
-                            <td valign="top"><?php $this->_($candidatesData['keySkills']); ?></td>
-                            <td valign="top" align="left"><?php $this->_($candidatesData['phoneCell']); ?></td>
-                            <td nowrap="nowrap"><?php $this->_($candidatesData['ownerAbbrName']) ?></td>
-                            <td><?php $this->_($candidatesData['dateCreated']) ?></td>
-                            <td><?php $this->_($candidatesData['dateModified']) ?></td>
+            <?php
+                $candidateGroups = array(
+                    'Active Candidates' => $this->activeCandidatesRS,
+                    'Inactive Candidates' => $this->inactiveCandidatesRS
+                );
+                $candidatesGroupHasRows = false;
+            ?>
+            <?php foreach ($candidateGroups as $groupLabel => $resultSet): ?>
+                <?php if (!empty($resultSet)): ?>
+                    <?php $candidatesGroupHasRows = true; ?>
+                    <p><strong><?php echo($groupLabel); ?></strong></p>
+                    <table class="sortable" width="100%">
+                        <tr>
+                            <th align="left" nowrap="nowrap">First Name</th>
+                            <th align="left" nowrap="nowrap">Last Name</th>
+                            <th align="left">Key Skills</th>
+                            <th align="left" width="160">Cell</th>
+                            <th align="left" width="65">Owner</th>
+                            <th align="left" width="60">Created</th>
+                            <th align="left" width="60">Modified</th>
                         </tr>
-                    <?php endforeach; ?>
-                </table>
-            <?php else: ?>
+
+                        <?php foreach ($resultSet as $rowNumber => $candidatesData): ?>
+                            <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
+                                <td>
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($candidatesData['candidateID']) ?>">
+                                        <?php $this->_($candidatesData['firstName']) ?>
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($candidatesData['candidateID']) ?>">
+                                        <?php $this->_($candidatesData['lastName']) ?>
+                                    </a>
+                                </td>
+                                <td valign="top"><?php $this->_($candidatesData['keySkills']); ?></td>
+                                <td valign="top" align="left"><?php $this->_($candidatesData['phoneCell']); ?></td>
+                                <td nowrap="nowrap"><?php $this->_($candidatesData['ownerAbbrName']) ?></td>
+                                <td><?php $this->_($candidatesData['dateCreated']) ?></td>
+                                <td><?php $this->_($candidatesData['dateModified']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            <?php if (!$candidatesGroupHasRows): ?>
                 <p>No matching entries found.</p>
             <?php endif; ?>
             <br />
