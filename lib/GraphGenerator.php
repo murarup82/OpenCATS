@@ -190,6 +190,8 @@ class GraphPie
  */
 class GraphComparisonChart
 {
+    private static $currentLabels = array();
+
     private $xLabels;
     private $xValues;
     private $color;
@@ -257,19 +259,8 @@ class GraphComparisonChart
         $plot->xAxis->setRange(0, max(0, $labelCount - 1));
         $plot->xAxis->setLabelNumber($labelCount);
         $plot->xAxis->setTickInterval(1);
-        $plot->xAxis->setRangeCallback(
-            null,
-            function ($value) use ($labelCount) {
-                return ($labelCount <= 1) ? 0 : ($value / ($labelCount - 1));
-            }
-        );
-        $plot->xAxis->label->setCallbackFunction(function ($value) use ($axisLabels, $labelCount) {
-            $index = (int) round($value);
-            if ($index < 0 || $index >= $labelCount) {
-                return '';
-            }
-            return isset($axisLabels[$index]) ? $axisLabels[$index] : '';
-        });
+        self::$currentLabels = $axisLabels;
+        $plot->xAxis->label->setCallbackFunction('GraphComparisonChart::labelCallback');
         $plot->xAxis->label->setFont(new Tuffy(8));
         $plot->xAxis->label->setAngle(60);
 
@@ -277,6 +268,15 @@ class GraphComparisonChart
 
         $graph->draw();
         die();
+    }
+
+    public static function labelCallback($value)
+    {
+        $index = (int) round($value);
+        if ($index < 0) {
+            return '';
+        }
+        return isset(self::$currentLabels[$index]) ? self::$currentLabels[$index] : '';
     }
 }
 
