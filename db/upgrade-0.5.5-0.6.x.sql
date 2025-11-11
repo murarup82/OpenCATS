@@ -678,3 +678,13 @@ CREATE TABLE `email_history` (
 #r904 9-18-6 BH
 UPDATE system SET schema_version = 904;
 ALTER IGNORE TABLE email_history ADD COLUMN date datetime default NULL;
+
+#r905 11-05-25 Codex
+UPDATE system SET schema_version = 905;
+UPDATE candidate_joborder_status SET short_description = 'New', triggers_email = 0 WHERE candidate_joborder_status_id = 100;
+UPDATE candidate_joborder_status SET short_description = 'HR Validated' WHERE candidate_joborder_status_id = 200;
+UPDATE candidate_joborder_status SET short_description = 'Require Tech Evaluation', triggers_email = 0 WHERE candidate_joborder_status_id = 250;
+UPDATE candidate_joborder_status SET short_description = 'Tech Validated' WHERE candidate_joborder_status_id = 300;
+UPDATE candidate_joborder_status SET short_description = 'Proposed to Customer' WHERE candidate_joborder_status_id = 400;
+UPDATE candidate_joborder_status SET short_description = 'Under Offer Negotiation' WHERE candidate_joborder_status_id = 600;
+UPDATE candidate_joborder_status SET short_description = 'Activity Started' WHERE candidate_joborder_status_id = 800;
