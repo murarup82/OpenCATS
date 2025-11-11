@@ -238,7 +238,7 @@ class GraphComparisonChart
         $graph->border->setColor(new Color(187, 187, 187, 15));
 
         $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
-        $plot->setPadding(15, 15, 35, 50);
+        $plot->setPadding(15, 15, 85, 60);
         $plot->setBarColor(new DarkGreen);
         $plot->barBorder->hide(true);
 
@@ -254,6 +254,7 @@ class GraphComparisonChart
         $plot->yAxis->setLabelNumber(12);
 
         $axisLabels = array_values($this->xLabels);
+        $axisLabels = array_map('GraphComparisonChart::wrapLabel', $axisLabels);
         $labelCount = count($axisLabels);
         $plot->xAxis->auto(FALSE);
         $plot->xAxis->setRange(0, max(0, $labelCount - 1));
@@ -277,6 +278,20 @@ class GraphComparisonChart
             return '';
         }
         return isset(self::$currentLabels[$index]) ? self::$currentLabels[$index] : '';
+    }
+
+    public static function wrapLabel($label)
+    {
+        $label = trim($label);
+        if ($label === '') {
+            return '';
+        }
+
+        if (strpos($label, ' ') === false) {
+            return $label;
+        }
+
+        return preg_replace('/\s+/', "\n", $label, 1);
     }
 }
 
@@ -472,3 +487,5 @@ class WordVerify
 }
 
 ?>
+
+
