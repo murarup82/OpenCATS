@@ -1928,7 +1928,7 @@ class CandidatesDataGrid extends DataGrid
                                      
                                                     if ($rsData[\'submitted\'] == 1)
                                                     {
-                                                        $return .= \'<img src="images/job_orders.gif" alt="" width="16" height="16" title="Submitted for a Job Order" />\';
+                                                        $return .= \'<img src="images/job_orders.gif" alt="" width="16" height="16" title="Proposed to Customer for a Job Order" />\';
                                                     }
                                                     else
                                                     {

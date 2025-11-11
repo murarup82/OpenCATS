@@ -258,17 +258,17 @@ CREATE TABLE `candidate_joborder_status` (
 
 /*Data for the table `candidate_joborder_status` */
 
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (100,'No Contact',0,0,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (200,'Contacted',0,0,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (300,'Qualifying',0,1,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (400,'Submitted',0,1,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (100,'New',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (200,'HR Validated',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (300,'Tech Validated',0,1,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (400,'Proposed to Customer',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (500,'Interviewing',0,1,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (600,'Offered',0,1,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (600,'Under Offer Negotiation',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (700,'Client Declined',0,0,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (800,'Placed',0,1,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (800,'Activity Started',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (0,'No Status',0,0,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (650,'Not in Consideration',0,0,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (250,'Candidate Responded',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (250,'Require Tech Evaluation',0,0,1);
 
 /*Table structure for table `candidate_joborder_status_history` */
 

@@ -996,7 +996,7 @@ class JobOrdersDataGrid extends DataGrid
                                        'filterHaving'  => 'totalPipeline',
                                        'filterTypes'   => '===>=<'),
 
-            'Not Contacted' => array('select'   => '(
+            'New' => array('select'   => '(
                                                               SELECT
                                                                   COUNT(*)
                                                               FROM
@@ -1010,12 +1010,12 @@ class JobOrdersDataGrid extends DataGrid
                                                           ) AS notContacted',
                                        'pagerRender'      => 'return $rsData[\'notContacted\'];',
                                        'sortableColumn'     => 'notContacted',
-                                       'columnHeaderText' => 'NC',
+                                       'columnHeaderText' => 'New',
                                        'pagerWidth'    => 25,
                                        'filterHaving'  => 'notContacted',
                                        'filterTypes'   => '===>=<'),
 
-            'Submitted' =>       array('select'   => '(
+            'Proposed to Customer' =>       array('select'   => '(
                                                             SELECT
                                                                 COUNT(*)
                                                             FROM
@@ -1029,7 +1029,7 @@ class JobOrdersDataGrid extends DataGrid
                                                         ) AS submitted',
                                      'pagerRender'      => 'return $rsData[\'submitted\'];',
                                      'sortableColumn'     => 'submitted',
-                                     'columnHeaderText' => 'S',
+                                     'columnHeaderText' => 'PTC',
                                      'pagerWidth'    => 25,
                                      'filterHaving'  => 'submitted',
                                      'filterTypes'   => '===>=<'),

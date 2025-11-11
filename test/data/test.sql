@@ -361,7 +361,7 @@ CREATE TABLE `candidate_joborder_status` (
 
 LOCK TABLES `candidate_joborder_status` WRITE;
 /*!40000 ALTER TABLE `candidate_joborder_status` DISABLE KEYS */;
-INSERT INTO `candidate_joborder_status` VALUES (100,'No Contact',0,0,1),(200,'Contacted',0,0,1),(300,'Qualifying',0,1,1),(400,'Submitted',0,1,1),(500,'Interviewing',0,1,1),(600,'Offered',0,1,1),(700,'Client Declined',0,0,1),(800,'Placed',0,1,1),(0,'No Status',0,0,1),(650,'Not in Consideration',0,0,1),(250,'Candidate Responded',0,0,1);
+INSERT INTO `candidate_joborder_status` VALUES (100,'New',0,0,1),(200,'HR Validated',0,0,1),(300,'Tech Validated',0,1,1),(400,'Proposed to Customer',0,1,1),(500,'Interviewing',0,1,1),(600,'Under Offer Negotiation',0,1,1),(700,'Client Declined',0,0,1),(800,'Activity Started',0,1,1),(0,'No Status',0,0,1),(650,'Not in Consideration',0,0,1),(250,'Require Tech Evaluation',0,0,1);
 /*!40000 ALTER TABLE `candidate_joborder_status` ENABLE KEYS */;
 UNLOCK TABLES;
 

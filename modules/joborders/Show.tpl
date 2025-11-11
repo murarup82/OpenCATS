@@ -168,7 +168,7 @@ use OpenCATS\UI\QuickActionMenu;
                             </tr>
 
                             <tr>
-                                <td class="vertical">Submitted:</td>
+                                <td class="vertical">Proposed to Customer:</td>
                                 <td class="data"><?php $this->_($this->data['submitted']) ?></td>
                             </tr>
 

@@ -503,7 +503,7 @@ class ReportsUI extends UserInterface
         $pdf->SetFont($fontFace, '', 10);
         $pdf->Write(5, 'Total Candidates ');
         $pdf->SetTextColor(255, 0, 0);
-        $pdf->Write(5, 'Screened');
+        $pdf->Write(5, 'HR Validated');
         $pdf->SetTextColor(0, 0, 0);
         $pdf->Write(5, ' by ' . $siteName . ": \n\n");
 
@@ -511,7 +511,7 @@ class ReportsUI extends UserInterface
         $pdf->SetFont($fontFace, '', 10);
         $pdf->Write(5, 'Total Candidates ');
         $pdf->SetTextColor(0, 125, 0);
-        $pdf->Write(5, 'Submitted');
+        $pdf->Write(5, 'Proposed to Customer');
         $pdf->SetTextColor(0, 0, 0);
         $pdf->Write(5, ' to ' . $companyName . ": \n\n");
 
@@ -527,7 +527,7 @@ class ReportsUI extends UserInterface
         $pdf->SetFont($fontFace, '', 10);
         $pdf->Write(5, 'Total Candidates ');
         $pdf->SetTextColor(255, 75, 0);
-        $pdf->Write(5, 'Placed');
+        $pdf->Write(5, 'Activity Started');
         $pdf->SetTextColor(0, 0, 0);
         $pdf->Write(5, ' at ' . $companyName . ": \n\n\n");
 

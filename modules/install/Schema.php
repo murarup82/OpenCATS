@@ -1068,7 +1068,7 @@ class CATSSchema
                 UPDATE site SET page_views = 0, page_view_days = 0;
             ',
             '296' => '
-                UPDATE candidate_joborder_status SET short_description = \'Qualifying\' WHERE short_description = \'Negotiating\';
+                UPDATE candidate_joborder_status SET short_description = \'Tech Validated\' WHERE short_description = \'Negotiating\';
             ',
             '297' => '
                 ALTER IGNORE TABLE `import` ADD COLUMN date_created date;

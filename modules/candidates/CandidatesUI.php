@@ -2280,7 +2280,7 @@ class CandidatesUI extends UserInterface
             }
 
             if ($resultSet[$rowIndex]['submitted'] == 1) {
-                $resultSet[$rowIndex]['iconTag'] = '<img src="images/job_orders.gif" alt="" width="16" height="16" title="Submitted for a Job Order" />';
+                $resultSet[$rowIndex]['iconTag'] = '<img src="images/job_orders.gif" alt="" width="16" height="16" title="Proposed to Customer for a Job Order" />';
             } else {
                 $resultSet[$rowIndex]['iconTag'] = '<img src="images/mru/blank.gif" alt="" width="16" height="16" />';
             }

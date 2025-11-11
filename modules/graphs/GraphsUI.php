@@ -174,7 +174,7 @@ class GraphsUI extends UserInterface
             $x = array(0, 0, 0, 0);
         }
 
-        $y = array('Screened', 'Submitted', 'Interviewed', 'Placed');
+        $y = array('HR Validated', 'Proposed to Customer', 'Interviewing', 'Activity Started');
 
         $colorArray[] = new LinearGradient(new Red, new White, 0);
         $colorArray[] = new LinearGradient(new DarkGreen, new White, 0);
@@ -477,28 +477,28 @@ class GraphsUI extends UserInterface
         {
             $y = array(
                 "Total Pipeline",
-                "Contacted",
-                "Cand Replied",
-                "Qualifying",
-                "Submitted",
+                "HR Validated",
+                "Require Tech Evaluation",
+                "Tech Validated",
+                "Proposed to Customer",
                 "Interviewing",
-                "Offered",
-                "Declined",
-                "Placed"
+                "Under Offer Negotiation",
+                "Client Declined",
+                "Activity Started"
             );
         }
         else
         {
             $y = array(
                 "Total Pipeline",
-                "|Contacted",
-                "Cand Replied",
-                "|Qualifying",
-                "Submitted",
+                "|HR Validated",
+                "Require Tech Evaluation",
+                "|Tech Validated",
+                "Proposed to Customer",
                 "|Interviewing",
-                "Offered",
-                "|Declined",
-                "Placed"
+                "Under Offer Negotiation",
+                "|Client Declined",
+                "Activity Started"
             );
         }
 

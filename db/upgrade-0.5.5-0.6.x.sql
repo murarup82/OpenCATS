@@ -144,14 +144,14 @@ CREATE TABLE `candidate_joborder_status` (
   PRIMARY KEY  (`candidate_status_id`),
   KEY `IDX_short_description` (`short_description`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
-INSERT INTO `candidate_joborder_status` VALUES (100, 'No Contact', 0, 1, 1);
-INSERT INTO `candidate_joborder_status` VALUES (200, 'Contacted', 0, 1, 1);
-INSERT INTO `candidate_joborder_status` VALUES (300, 'Negotiating', 0, 1, 1);
-INSERT INTO `candidate_joborder_status` VALUES (400, 'Submitted', 0, 1, 1);
+INSERT INTO `candidate_joborder_status` VALUES (100, 'New', 0, 1, 1);
+INSERT INTO `candidate_joborder_status` VALUES (200, 'HR Validated', 0, 1, 1);
+INSERT INTO `candidate_joborder_status` VALUES (300, 'Tech Validated', 0, 1, 1);
+INSERT INTO `candidate_joborder_status` VALUES (400, 'Proposed to Customer', 0, 1, 1);
 INSERT INTO `candidate_joborder_status` VALUES (500, 'Interviewing', 0, 1, 1);
-INSERT INTO `candidate_joborder_status` VALUES (600, 'Offered', 0, 1, 1);
-INSERT INTO `candidate_joborder_status` VALUES (700, 'Passed On', 0, 1, 1);
-INSERT INTO `candidate_joborder_status` VALUES (800, 'Placed', 0, 1, 1);
+INSERT INTO `candidate_joborder_status` VALUES (600, 'Under Offer Negotiation', 0, 1, 1);
+INSERT INTO `candidate_joborder_status` VALUES (700, 'Client Declined', 0, 1, 1);
+INSERT INTO `candidate_joborder_status` VALUES (800, 'Activity Started', 0, 1, 1);
 CREATE TABLE `candidate_joborder_status_history` (
   `candidate_joborder_status_history_id` int(11) NOT NULL auto_increment,
   `candidate_id` int(11) NOT NULL default '0',
@@ -428,7 +428,7 @@ UPDATE system SET schema_version = 673;
 ALTER TABLE `dashboard_module` CHANGE `paramater_CSV` `parameter_CSV` text collate utf8_unicode_ci;
 ALTER TABLE `dashboard_module` CHANGE `paramater_defaults` `parameter_defaults` text collate utf8_unicode_ci;
 ALTER TABLE `dashboard_component` CHANGE `module_paramaters` `module_parameters` text collate utf8_unicode_ci;
-UPDATE dashboard_module SET parameter_CSV = '"No Status Color: ,colorpickerartichow","No Contact Color: ,colorpickerartichow","Contacted Color: ,colorpickerartichow","Negotiating Color: ,colorpickerartichow","Submitted Color: ,colorpickerartichow","Interviewing Color: ,colorpickerartichow","Offered Color: ,colorpickerartichow","Passed On Color: ,colorpickerartichow","Placed Color: ,colorpickerartichow"' WHERE name = "pipeline";
+UPDATE dashboard_module SET parameter_CSV = '"No Status Color: ,colorpickerartichow","New Color: ,colorpickerartichow","HR Validated Color: ,colorpickerartichow","Require Tech Evaluation Color: ,colorpickerartichow","Proposed to Customer Color: ,colorpickerartichow","Interviewing Color: ,colorpickerartichow","Under Offer Negotiation Color: ,colorpickerartichow","Client Declined Color: ,colorpickerartichow","Activity Started Color: ,colorpickerartichow"' WHERE name = "pipeline";
 UPDATE dashboard_module SET parameter_defaults = '"DarkGreen","DarkGreen","DarkGreen","DarkGreen","Orange","DarkGreen","DarkGreen","DarkGreen","DarkGreen"' WHERE name = "pipeline";
 
 #r674 8-29-6 BH
@@ -438,7 +438,7 @@ UPDATE dashboard_module SET parameter_defaults = "\"DarkGreen\",\"DarkGreen\",\"
 
 #r675 8-29-6 BH
 UPDATE system SET schema_version = 675;
-UPDATE dashboard_module SET parameter_CSV = '"No Contact Color: ,colorpickerartichow","Contacted Color: ,colorpickerartichow","Negotiating Color: ,colorpickerartichow","Submitted Color: ,colorpickerartichow","Interviewing Color: ,colorpickerartichow","Offered Color: ,colorpickerartichow","Passed On Color: ,colorpickerartichow","Placed Color: ,colorpickerartichow"' WHERE name = "pipeline";
+UPDATE dashboard_module SET parameter_CSV = '"New Color: ,colorpickerartichow","HR Validated Color: ,colorpickerartichow","Require Tech Evaluation Color: ,colorpickerartichow","Proposed to Customer Color: ,colorpickerartichow","Interviewing Color: ,colorpickerartichow","Under Offer Negotiation Color: ,colorpickerartichow","Client Declined Color: ,colorpickerartichow","Activity Started Color: ,colorpickerartichow"' WHERE name = "pipeline";
 UPDATE dashboard_component SET module_parameters = "\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"Orange\",\"DarkGreen\",\"AlmostBlack\",\"DarkGreen\"" WHERE module_name = "pipeline";
 UPDATE dashboard_module SET parameter_defaults = "\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"Orange\",\"DarkGreen\",\"AlmostBlack\",\"DarkGreen\"" WHERE name = "pipeline";
 
@@ -461,7 +461,7 @@ INSERT INTO dashboard_component SELECT NULL, 'html', '\"<a href=\"\"http://www.c
 
 #r701 8-29-6 BH
 UPDATE system SET schema_version = 701;
-UPDATE dashboard_module SET parameter_CSV = '"Total Pipeline Color: ,colorpickerartichow","Contacted Color: ,colorpickerartichow","Negotiating Color: ,colorpickerartichow","Submitted Color: ,colorpickerartichow","Interviewing Color: ,colorpickerartichow","Offered Color: ,colorpickerartichow","Passed On Color: ,colorpickerartichow","Placed Color: ,colorpickerartichow"' WHERE name = "pipeline";
+UPDATE dashboard_module SET parameter_CSV = '"Total Pipeline Color: ,colorpickerartichow","HR Validated Color: ,colorpickerartichow","Require Tech Evaluation Color: ,colorpickerartichow","Proposed to Customer Color: ,colorpickerartichow","Interviewing Color: ,colorpickerartichow","Under Offer Negotiation Color: ,colorpickerartichow","Client Declined Color: ,colorpickerartichow","Activity Started Color: ,colorpickerartichow"' WHERE name = "pipeline";
 
 #r752 9-5-6 WB
 UPDATE system SET schema_version = 752;
@@ -579,8 +579,8 @@ UPDATE `calendar_settings` SET setting = 'defaultPublic' WHERE setting = 'allPub
 
 #r796 9-10-6 WB
 UPDATE system SET schema_version = 796;
-INSERT INTO `candidate_joborder_status` VALUES (650, 'N/A', 0, 1, 1);
-UPDATE candidate_joborder_status SET short_description = 'Rejected by Client' WHERE candidate_joborder_status_id = 700;
+INSERT INTO `candidate_joborder_status` VALUES (650, 'Not in Consideration', 0, 0, 1);
+UPDATE candidate_joborder_status SET short_description = 'Client Declined' WHERE candidate_joborder_status_id = 700;
 UPDATE candidate_joborder_status SET triggers_email = 0 WHERE candidate_joborder_status_id IN (650, 700);
 
 #r797 9-11-6 BH
@@ -607,12 +607,12 @@ INSERT INTO email_template SELECT NULL, '%DATETIME%\r\n\r\nDear %USERFULLNAME%,\
 
 #r800 9-13-6 BH
 UPDATE system SET schema_version = 800;
-INSERT INTO candidate_joborder_status VALUES (250, 'Candidate Responded', 0, 1, 1);
+INSERT INTO candidate_joborder_status VALUES (250, 'Require Tech Evaluation', 0, 1, 1);
 UPDATE candidate_joborder_status SET triggers_email = 0 WHERE candidate_joborder_status_id = 200;
 ALTER IGNORE TABLE `user` ADD `is_demo` int(1) default 0;
 UPDATE user SET is_demo = 1 WHERE user_name = "john@customsearch.com" ;
 UPDATE dashboard_component SET module_parameters = '\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"Orange\",\"DarkGreen\",\"AlmostBlack\",\"DarkGreen\"' WHERE module_name = 'pipeline';
-UPDATE dashboard_module SET parameter_CSV = '\"Total Pipeline Color: ,colorpickerartichow\",\"Contacted Color: ,colorpickerartichow\",\"Candidate Replied Color: ,colorpickerartichow\",\"Negotiating Color: ,colorpickerartichow\",\"Submitted Color: ,colorpickerartichow\",\"Interviewing Color: ,colorpickerartichow\",\"Offered Color: ,colorpickerartichow\",\"Passed On Color: ,colorpickerartichow\",\"Placed Color: ,colorpickerartichow\"' WHERE name = 'pipeline';
+UPDATE dashboard_module SET parameter_CSV = '\"Total Pipeline Color: ,colorpickerartichow\",\"HR Validated Color: ,colorpickerartichow\",\"Require Tech Evaluation Color: ,colorpickerartichow\",\"Tech Validated Color: ,colorpickerartichow\",\"Proposed to Customer Color: ,colorpickerartichow\",\"Interviewing Color: ,colorpickerartichow\",\"Under Offer Negotiation Color: ,colorpickerartichow\",\"Client Declined Color: ,colorpickerartichow\",\"Activity Started Color: ,colorpickerartichow\"' WHERE name = 'pipeline';
 UPDATE dashboard_module SET parameter_defaults = '\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"DarkGreen\",\"Orange\",\"DarkGreen\",\"AlmostBlack\",\"DarkGreen\"' WHERE name = 'pipeline';
 UPDATE candidate_joborder_status SET triggers_email = 0 WHERE candidate_joborder_status_id = 100;
 
@@ -632,7 +632,7 @@ ALTER IGNORE TABLE `email_template` ADD `disabled` int(1) default 0;
 UPDATE system SET schema_version = 803;
 UPDATE candidate_joborder_status SET short_description = 'Client Declined' WHERE candidate_joborder_status_id = 700;
 UPDATE candidate_joborder_status SET short_description = 'Not in Consideration' WHERE candidate_joborder_status_id = 650;
-UPDATE dashboard_module SET parameter_CSV = '\"Total Pipeline Color: ,colorpickerartichow\",\"Contacted Color: ,colorpickerartichow\",\"Candidate Replied Color: ,colorpickerartichow\",\"Negotiating Color: ,colorpickerartichow\",\"Submitted Color: ,colorpickerartichow\",\"Interviewing Color: ,colorpickerartichow\",\"Offered Color: ,colorpickerartichow\",\"Client Declined Color: ,colorpickerartichow\",\"Placed Color: ,colorpickerartichow\"' WHERE name = 'pipeline';
+UPDATE dashboard_module SET parameter_CSV = '\"Total Pipeline Color: ,colorpickerartichow\",\"HR Validated Color: ,colorpickerartichow\",\"Require Tech Evaluation Color: ,colorpickerartichow\",\"Tech Validated Color: ,colorpickerartichow\",\"Proposed to Customer Color: ,colorpickerartichow\",\"Interviewing Color: ,colorpickerartichow\",\"Under Offer Negotiation Color: ,colorpickerartichow\",\"Client Declined Color: ,colorpickerartichow\",\"Activity Started Color: ,colorpickerartichow\"' WHERE name = 'pipeline';
 
 #r804 9-14-6 BH
 UPDATE system SET schema_version = 804;

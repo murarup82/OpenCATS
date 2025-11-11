@@ -92,7 +92,7 @@
 
                     <tr>
                         <td class="tdVertical" style="width: 140px;">
-                            <label id="dataSet1Label"for="dataSet1">Candidates Screened:</label>
+                            <label id="dataSet1Label"for="dataSet1">Candidates HR Validated:</label>
                         </td>
                         <td class="tdData">
                             <input type="text" class="inputbox" name="dataSet1" id="dataSet1" value="<?php $this->_($this->reportParameters['dataSet1']); ?>" style="width: 75px;" onchange="setDataSet();" />&nbsp;*
@@ -101,7 +101,7 @@
 
                     <tr>
                         <td class="tdVertical">
-                            <label id="dataSet2Label"for="dataSet2">Candidates Submitted:</label>
+                            <label id="dataSet2Label"for="dataSet2">Candidates Proposed to Customer:</label>
                         </td>
                         <td class="tdData">
                             <input type="text" class="inputbox" name="dataSet2" id="dataSet2" value="<?php $this->_($this->reportParameters['dataSet2']); ?>" style="width: 75px;" onchange="setDataSet();" />&nbsp;*
@@ -119,7 +119,7 @@
 
                     <tr>
                         <td class="tdVertical">
-                            <label id="dataSet4Label"for="dataSet4">Candidates Placed:</label>
+                            <label id="dataSet4Label"for="dataSet4">Candidates Activity Started:</label>
                         </td>
                         <td class="tdData">
                             <input type="text" class="inputbox" name="dataSet4" id="dataSet4" value="<?php $this->_($this->reportParameters['dataSet4']); ?>" style="width: 75px;" onchange="setDataSet();" />&nbsp;*
