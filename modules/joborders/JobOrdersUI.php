@@ -1530,6 +1530,9 @@ class JobOrdersUI extends UserInterface
             $statusChangeTemplate
         );
 
+        $activityEntries = new ActivityEntries($this->_siteID);
+        $activityTypes = $activityEntries->getTypes();
+
         $calendar = new Calendar($this->_siteID);
         $calendarEventTypes = $calendar->getAllEventTypes();
 
@@ -1555,6 +1558,7 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('emailDisabled', $emailDisabled);
         $this->_template->assign('isFinishedMode', false);
         $this->_template->assign('isJobOrdersMode', true);
+        $this->_template->assign('activityTypes', $activityTypes);
 
         if (!eval(Hooks::get('JO_ADD_ACTIVITY_CHANGE_STATUS'))) return;
 

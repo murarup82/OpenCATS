@@ -252,8 +252,11 @@ class GraphComparisonChart
         $plot->yAxis->setLabelNumber(12);
 
         $axisLabels = array_values($this->xLabels);
+        $labelCount = count($axisLabels);
         $plot->xAxis->auto(FALSE);
-        $plot->xAxis->setLabelNumber(count($axisLabels));
+        $plot->xAxis->setRange(0, max(0, $labelCount - 1));
+        $plot->xAxis->setLabelNumber($labelCount);
+        $plot->xAxis->setTickInterval(1);
         $plot->xAxis->label->setCallbackFunction(function ($value) use ($axisLabels) {
             $index = (int) round($value);
             return isset($axisLabels[$index]) ? $axisLabels[$index] : '';
