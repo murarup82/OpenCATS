@@ -257,8 +257,17 @@ class GraphComparisonChart
         $plot->xAxis->setRange(0, max(0, $labelCount - 1));
         $plot->xAxis->setLabelNumber($labelCount);
         $plot->xAxis->setTickInterval(1);
-        $plot->xAxis->label->setCallbackFunction(function ($value) use ($axisLabels) {
+        $plot->xAxis->setRangeCallback(
+            null,
+            function ($value) use ($labelCount) {
+                return ($labelCount <= 1) ? 0 : ($value / ($labelCount - 1));
+            }
+        );
+        $plot->xAxis->label->setCallbackFunction(function ($value) use ($axisLabels, $labelCount) {
             $index = (int) round($value);
+            if ($index < 0 || $index >= $labelCount) {
+                return '';
+            }
             return isset($axisLabels[$index]) ? $axisLabels[$index] : '';
         });
         $plot->xAxis->label->setFont(new Tuffy(8));
