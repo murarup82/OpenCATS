@@ -251,7 +251,13 @@ class GraphComparisonChart
         $plot->yAxis->hide();
         $plot->yAxis->setLabelNumber(12);
 
-        $plot->xAxis->setLabelText($this->xLabels);
+        $axisLabels = array_values($this->xLabels);
+        $plot->xAxis->auto(FALSE);
+        $plot->xAxis->setLabelNumber(count($axisLabels));
+        $plot->xAxis->label->setCallbackFunction(function ($value) use ($axisLabels) {
+            $index = (int) round($value);
+            return isset($axisLabels[$index]) ? $axisLabels[$index] : '';
+        });
         $plot->xAxis->label->setFont(new Tuffy(8));
         $plot->xAxis->label->setAngle(60);
 
