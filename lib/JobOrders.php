@@ -465,7 +465,7 @@ class JobOrders
             GROUP BY
                 joborder.joborder_id",
             $this->_db->makeQueryInteger($jobOrderID),
-            PIPELINE_STATUS_SUBMITTED,
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $this->_siteID,
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_siteID
@@ -712,7 +712,7 @@ class JobOrders
             ORDER BY
                 daysOld ASC,
                 dateCreatedSort DESC",
-            PIPELINE_STATUS_SUBMITTED,
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $this->_siteID,
             $this->_siteID,
             $statusCriterion,
@@ -1004,7 +1004,7 @@ class JobOrdersDataGrid extends DataGrid
                                                               WHERE
                                                                   joborder_id = joborder.joborder_id
                                                               AND
-                                                                  (status = '.PIPELINE_STATUS_NOCONTACT.' OR status = '.PIPELINE_STATUS_NOSTATUS.')
+                                                                  (status = '.PIPELINE_STATUS_NEW.' OR status = '.PIPELINE_STATUS_NOSTATUS.')
                                                               AND
                                                                   site_id = '.$this->_siteID.'
                                                           ) AS notContacted',
@@ -1023,7 +1023,7 @@ class JobOrdersDataGrid extends DataGrid
                                                             WHERE
                                                                 joborder_id = joborder.joborder_id
                                                             AND
-                                                                status_to = '.PIPELINE_STATUS_SUBMITTED.'
+                                                                status_to = '.PIPELINE_STATUS_PROPOSED_TO_CUSTOMER.'
                                                             AND
                                                                 site_id = '.$this->_siteID.'
                                                         ) AS submitted',
@@ -1051,7 +1051,7 @@ class JobOrdersDataGrid extends DataGrid
                                      'filterHaving'  => 'pipeline',
                                      'filterTypes'   => '===>=<'),
 
-             'Interviews' =>       array('select'   => '(
+             'Approved by Customer/Project' =>       array('select'   => '(
                                                              SELECT
                                                                  COUNT(*)
                                                              FROM
@@ -1059,15 +1059,15 @@ class JobOrdersDataGrid extends DataGrid
                                                              WHERE
                                                                  joborder_id = joborder.joborder_id
                                                              AND
-                                                                 status_to = '.PIPELINE_STATUS_INTERVIEWING.'
+                                                                 status_to = '.PIPELINE_STATUS_APPROVED_BY_CUSTOMER.'
                                                              AND
                                                                  site_id = '.$this->_siteID.'
-                                                         ) AS interviewingCount',
-                                      'pagerRender'      => 'return $rsData[\'interviewingCount\'];',
-                                      'sortableColumn'     => 'interviewingCount',
-                                      'columnHeaderText' => 'I',
+                                                         ) AS approvedCount',
+                                      'pagerRender'      => 'return $rsData[\'approvedCount\'];',
+                                      'sortableColumn'     => 'approvedCount',
+                                      'columnHeaderText' => 'APC',
                                       'pagerWidth'    => 25,
-                                      'filterHaving'  => 'interviewingCount',
+                                      'filterHaving'  => 'approvedCount',
                                       'filterTypes'   => '===>=<'),
 
             'Owner' =>         array('select'   => 'owner_user.first_name AS ownerFirstName,' .

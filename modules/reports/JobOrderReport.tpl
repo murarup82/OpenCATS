@@ -110,7 +110,7 @@
 
                     <tr>
                         <td class="tdVertical">
-                            <label id="dataSet3Label"for="dataSet3">Candidates Interviewed:</label>
+                            <label id="dataSet3Label"for="dataSet3">Candidates Approved by Customer/Project:</label>
                         </td>
                         <td class="tdData">
                             <input type="text" class="inputbox" name="dataSet3" id="dataSet3" value="<?php $this->_($this->reportParameters['dataSet3']); ?>" style="width: 75px;" onchange="setDataSet();" />&nbsp;*

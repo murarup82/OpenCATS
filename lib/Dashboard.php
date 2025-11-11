@@ -167,9 +167,9 @@ class Dashboard
             LIMIT 20
             ",
             $select,
-            PIPELINE_STATUS_SUBMITTED,
-            PIPELINE_STATUS_INTERVIEWING,
-            PIPELINE_STATUS_PLACED,
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
+            PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
+            PIPELINE_STATUS_ACTIVITY_STARTED,
             $this->_siteID
         );
         

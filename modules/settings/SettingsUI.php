@@ -2089,14 +2089,15 @@ class SettingsUI extends UserInterface
 
         $candidateJoborderStatusSendsMessage = unserialize($mailerSettingsRS['candidateJoborderStatusSendsMessage']);
 
-        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_CONTACTED] = (UserInterface::isChecked('statusChangeContacted', $_POST) ? 1 : 0);
-        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_CANDIDATE_REPLIED] = (UserInterface::isChecked('statusChangeReplied', $_POST) ? 1 : 0);
-        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_QUALIFYING] = (UserInterface::isChecked('statusChangeQualifying', $_POST) ? 1 : 0);
-        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_SUBMITTED] = (UserInterface::isChecked('statusChangeSubmitted', $_POST) ? 1 : 0);
-        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_INTERVIEWING] = (UserInterface::isChecked('statusChangeInterviewing', $_POST) ? 1 : 0);
-        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_OFFERED] = (UserInterface::isChecked('statusChangeOffered', $_POST) ? 1 : 0);
-        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_CLIENTDECLINED] = (UserInterface::isChecked('statusChangeDeclined', $_POST) ? 1 : 0);
-        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_PLACED] = (UserInterface::isChecked('statusChangePlaced', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_HR_VALIDATED] = (UserInterface::isChecked('statusChangeContacted', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_REQUIRE_TECH_EVAL] = (UserInterface::isChecked('statusChangeReplied', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_TECH_VALIDATED] = (UserInterface::isChecked('statusChangeQualifying', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_PROPOSED_TO_CUSTOMER] = (UserInterface::isChecked('statusChangeSubmitted', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_CLIENT_DECISION_PENDING] = (UserInterface::isChecked('statusChangeClientDecision', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_APPROVED_BY_CUSTOMER] = (UserInterface::isChecked('statusChangeInterviewing', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_UNDER_OFFER_NEGOTIATION] = (UserInterface::isChecked('statusChangeOffered', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_OFFER_ACCEPTED] = (UserInterface::isChecked('statusChangeDeclined', $_POST) ? 1 : 0);
+        $candidateJoborderStatusSendsMessage[PIPELINE_STATUS_ACTIVITY_STARTED] = (UserInterface::isChecked('statusChangePlaced', $_POST) ? 1 : 0);
 
         $mailerSettings->set('candidateJoborderStatusSendsMessage', serialize($candidateJoborderStatusSendsMessage));
 

@@ -519,7 +519,7 @@ class ReportsUI extends UserInterface
         $pdf->SetFont($fontFace, '', 10);
         $pdf->Write(5, 'Total Candidates ');
         $pdf->SetTextColor(0, 0, 255);
-        $pdf->Write(5, 'Interviewed');
+        $pdf->Write(5, 'Approved by Customer/Project');
         $pdf->SetTextColor(0, 0, 0);
         $pdf->Write(5, ' by ' . $companyName . ": \n\n");
 

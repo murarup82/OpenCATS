@@ -2685,7 +2685,7 @@ class CandidatesUI extends UserInterface
             $statusID = -1;
         } else {
             $statusID = $_POST['statusID'];
-            if ($statusID == PIPELINE_STATUS_PLACED) {
+            if ($statusID == PIPELINE_STATUS_ACTIVITY_STARTED) {
                 $jobOrders = new JobOrders($this->_siteID);
                 $canBeHired = $jobOrders->checkOpenings($regardingID);
                 if (!$canBeHired) {
@@ -2826,13 +2826,13 @@ class CandidatesUI extends UserInterface
             );
 
             /* If status = placed, and open positions > 0, reduce number of open positions by one. */
-            if ($statusID == PIPELINE_STATUS_PLACED && is_numeric($data['openingsAvailable']) && $data['openingsAvailable'] > 0) {
+            if ($statusID == PIPELINE_STATUS_ACTIVITY_STARTED && is_numeric($data['openingsAvailable']) && $data['openingsAvailable'] > 0) {
                 $jobOrders = new JobOrders($this->_siteID);
                 $jobOrders->updateOpeningsAvailable($regardingID, $data['openingsAvailable'] - 1);
             }
 
             /* If status is changed from placed to something else, increase number of open positions by one. */
-            if ($statusID != PIPELINE_STATUS_PLACED && $data['statusID'] == PIPELINE_STATUS_PLACED) {
+            if ($statusID != PIPELINE_STATUS_ACTIVITY_STARTED && $data['statusID'] == PIPELINE_STATUS_ACTIVITY_STARTED) {
                 $jobOrders = new JobOrders($this->_siteID);
                 $jobOrders->updateOpeningsAvailable($regardingID, $data['openingsAvailable'] + 1);
             }

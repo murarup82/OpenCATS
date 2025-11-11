@@ -70,13 +70,9 @@ CREATE TABLE `activity_type` (
 
 /*Data for the table `activity_type` */
 
-insert  into `activity_type`(`activity_type_id`,`short_description`) values (100,'Call');
-insert  into `activity_type`(`activity_type_id`,`short_description`) values (200,'Email');
-insert  into `activity_type`(`activity_type_id`,`short_description`) values (300,'Meeting');
-insert  into `activity_type`(`activity_type_id`,`short_description`) values (400,'Other');
-insert  into `activity_type`(`activity_type_id`,`short_description`) values (500,'Call (Talked)');
-insert  into `activity_type`(`activity_type_id`,`short_description`) values (600,'Call (LVM)');
-insert  into `activity_type`(`activity_type_id`,`short_description`) values (700,'Call (Missed)');
+insert  into `activity_type`(`activity_type_id`,`short_description`) values (100,'Phone Call');
+insert  into `activity_type`(`activity_type_id`,`short_description`) values (200,'E-Mail');
+insert  into `activity_type`(`activity_type_id`,`short_description`) values (300,'Video-Conf');
 
 /*Table structure for table `attachment` */
 
@@ -262,12 +258,12 @@ insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_d
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (200,'HR Validated',0,0,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (300,'Tech Validated',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (400,'Proposed to Customer',0,1,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (500,'Interviewing',0,1,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (500,'Approved by Customer/Project',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (600,'Under Offer Negotiation',0,1,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (700,'Client Declined',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (700,'Offer Accepted',0,0,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (800,'Activity Started',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (0,'No Status',0,0,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (650,'Not in Consideration',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (650,'Client Decision Pending',0,0,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (250,'Require Tech Evaluation',0,0,1);
 
 /*Table structure for table `candidate_joborder_status_history` */

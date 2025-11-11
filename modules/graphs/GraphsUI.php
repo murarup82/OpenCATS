@@ -174,7 +174,7 @@ class GraphsUI extends UserInterface
             $x = array(0, 0, 0, 0);
         }
 
-        $y = array('HR Validated', 'Proposed to Customer', 'Interviewing', 'Activity Started');
+        $y = array('HR Validated', 'Proposed to Customer', 'Approved by Customer/Project', 'Activity Started');
 
         $colorArray[] = new LinearGradient(new Red, new White, 0);
         $colorArray[] = new LinearGradient(new DarkGreen, new White, 0);
@@ -454,7 +454,7 @@ class GraphsUI extends UserInterface
         }
         
         $graph = new pipelineStatisticsGraph(
-            $y, $x, $colorArray, $this->width, $this->height, "Submissions", "Interviews", "Hires", $view, $noData
+            $y, $x, $colorArray, $this->width, $this->height, "Proposed to Customer", "Approved by Customer/Project", "Activity Started", $view, $noData
         );
         
         $graph->draw();
@@ -472,55 +472,63 @@ class GraphsUI extends UserInterface
 
         $statisticsData = $statistics->getPipelineData($_GET['params']);
 
-        /* We can expand things a bit if we have more room. */
-        if ($this->width > 600)
-        {
-            $y = array(
-                "Total Pipeline",
-                "HR Validated",
-                "Require Tech Evaluation",
-                "Tech Validated",
-                "Proposed to Customer",
-                "Interviewing",
-                "Under Offer Negotiation",
-                "Client Declined",
-                "Activity Started"
-            );
-        }
-        else
-        {
-            $y = array(
-                "Total Pipeline",
-                "|HR Validated",
-                "Require Tech Evaluation",
-                "|Tech Validated",
-                "Proposed to Customer",
-                "|Interviewing",
-                "Under Offer Negotiation",
-                "|Client Declined",
-                "Activity Started"
-            );
-        }
+        $fullLabels = array(
+            "Total Pipeline",
+            "New",
+            "HR Validated",
+            "Require Tech Evaluation",
+            "Tech Validated",
+            "Proposed to Customer",
+            "Client Decision Pending",
+            "Approved by Customer/Project",
+            "Under Offer Negotiation",
+            "Offer Accepted",
+            "Activity Started"
+        );
 
-        $x[8] = $statisticsData['placed'];
-        $x[7] = $statisticsData['passedOn'];
-        $x[6] = $statisticsData['offered'] + $x[8];
-        $x[5] = $statisticsData['interviewing'] + $x[6];
-        $x[4] = $statisticsData['submitted'] + $x[5];
-        $x[3] = $statisticsData['qualifying'] + $x[4];
-        $x[2] = $statisticsData['replied'] + $x[3];
-        $x[1] = $statisticsData['contacted'] + $x[2];
-        $x[0] = $statisticsData['totalPipeline'];
+        $compactLabels = array(
+            "Total",
+            "|New",
+            "HR Validated",
+            "|Tech Eval",
+            "Tech Validated",
+            "|Proposed",
+            "Client Decision Pending",
+            "|Approved",
+            "Under Offer",
+            "|Offer Accepted",
+            "Activity Started"
+        );
 
-        $colorOptions = Graphs::getColorOptions();
-        $colorArray = array();
+        $y = ($this->width > 600) ? $fullLabels : $compactLabels;
 
-        for ($i = 0; $i < 9; $i++)
-        {
-            $colorArray[] = new LinearGradient(new DarkGreen, new White, 0);
-        }
-        $colorArray[4] = new LinearGradient(new Orange, new White, 0);
-        $colorArray[7] = new LinearGradient(new AlmostBlack, new White, 0);
+        $x = array(
+            $statisticsData['totalPipeline'],
+            $statisticsData['new'],
+            $statisticsData['hrValidated'],
+            $statisticsData['requireTechEvaluation'],
+            $statisticsData['techValidated'],
+            $statisticsData['proposedToCustomer'],
+            $statisticsData['clientDecisionPending'],
+            $statisticsData['approvedByCustomer'],
+            $statisticsData['underOfferNegotiation'],
+            $statisticsData['offerAccepted'],
+            $statisticsData['activityStarted']
+        );
+
+        $colorArray = array(
+            new LinearGradient(new DarkGreen, new White, 0),
+            new LinearGradient(new MidGreen, new White, 0),
+            new LinearGradient(new MidGreen, new White, 0),
+            new LinearGradient(new MidGreen, new White, 0),
+            new LinearGradient(new Color(60, 160, 60), new White, 0),
+            new LinearGradient(new Orange, new White, 0),
+            new LinearGradient(new DarkGreen, new White, 0),
+            new LinearGradient(new Color(200, 150, 20), new White, 0),
+            new LinearGradient(new Color(90, 90, 235), new White, 0),
+            new LinearGradient(new AlmostBlack, new White, 0),
+            new LinearGradient(new DarkGreen, new White, 0)
+        );
 
         $graph = new GraphComparisonChart(
             $y, $x, $colorArray, 'Status of Candidates', $this->width,

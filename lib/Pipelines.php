@@ -381,6 +381,22 @@ class Pipelines
     // FIXME: Document me.
     public function getStatuses()
     {
+        $orderClause = sprintf(
+            "FIELD(candidate_joborder_status_id, %s)",
+            implode(',', array(
+                PIPELINE_STATUS_NEW,
+                PIPELINE_STATUS_HR_VALIDATED,
+                PIPELINE_STATUS_REQUIRE_TECH_EVAL,
+                PIPELINE_STATUS_TECH_VALIDATED,
+                PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
+                PIPELINE_STATUS_CLIENT_DECISION_PENDING,
+                PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
+                PIPELINE_STATUS_UNDER_OFFER_NEGOTIATION,
+                PIPELINE_STATUS_OFFER_ACCEPTED,
+                PIPELINE_STATUS_ACTIVITY_STARTED
+            ))
+        );
+
         $sql = sprintf(
             "SELECT
                 candidate_joborder_status_id AS statusID,
@@ -392,8 +408,8 @@ class Pipelines
             WHERE
                 is_enabled = 1
             ORDER BY
-                candidate_joborder_status_id ASC",
-            $this->_siteID
+                %s",
+            $orderClause
         );
 
         return $this->_db->getAllAssoc($sql);
@@ -403,6 +419,22 @@ class Pipelines
     // Throws out No Status.
     public function getStatusesForPicking()
     {
+        $orderClause = sprintf(
+            "FIELD(candidate_joborder_status_id, %s)",
+            implode(',', array(
+                PIPELINE_STATUS_NEW,
+                PIPELINE_STATUS_HR_VALIDATED,
+                PIPELINE_STATUS_REQUIRE_TECH_EVAL,
+                PIPELINE_STATUS_TECH_VALIDATED,
+                PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
+                PIPELINE_STATUS_CLIENT_DECISION_PENDING,
+                PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
+                PIPELINE_STATUS_UNDER_OFFER_NEGOTIATION,
+                PIPELINE_STATUS_OFFER_ACCEPTED,
+                PIPELINE_STATUS_ACTIVITY_STARTED
+            ))
+        );
+
         $sql = sprintf(
             "SELECT
                 candidate_joborder_status_id AS statusID,
@@ -416,8 +448,8 @@ class Pipelines
             AND
                 candidate_joborder_status_id != 0
             ORDER BY
-                candidate_joborder_status_id ASC",
-            $this->_siteID
+                %s",
+            $orderClause
         );
 
         return $this->_db->getAllAssoc($sql);
@@ -633,7 +665,7 @@ class Pipelines
             DATA_ITEM_CANDIDATE,
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_db->makeQueryInteger($jobOrderID),
-            PIPELINE_STATUS_SUBMITTED,
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $this->_siteID,
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_siteID,

@@ -627,7 +627,7 @@ class Candidates
             GROUP BY
                 candidate.candidate_id",
             $this->_db->makeQueryInteger($candidateID),
-            PIPELINE_STATUS_SUBMITTED,
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $this->_siteID,
             $this->_db->makeQueryInteger($candidateID),
             $this->_siteID
@@ -1951,9 +1951,9 @@ class CandidatesDataGrid extends DataGrid
 														AND attachment.data_item_type = ' . DATA_ITEM_CANDIDATE . '
                                                     LEFT JOIN candidate_joborder AS candidate_joborder_submitted
                                                         ON candidate_joborder_submitted.candidate_id = candidate.candidate_id
-                                                        AND candidate_joborder_submitted.status >= ' . PIPELINE_STATUS_SUBMITTED . '
+                                                        AND candidate_joborder_submitted.status >= ' . PIPELINE_STATUS_PROPOSED_TO_CUSTOMER . '
                                                         AND candidate_joborder_submitted.site_id = ' . $this->_siteID . '
-                                                        AND candidate_joborder_submitted.status != ' . PIPELINE_STATUS_NOTINCONSIDERATION . ' LEFT JOIN candidate_duplicates 
+                                                        AND candidate_joborder_submitted.status != ' . PIPELINE_STATUS_CLIENT_DECISION_PENDING . ' LEFT JOIN candidate_duplicates 
                                                         ON candidate.candidate_id = 
                                                         candidate_duplicates.new_candidate_id',
                 'pagerWidth'    => 100,
