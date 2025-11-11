@@ -141,14 +141,6 @@ class InfoString
             );
         }
 
-        if (!empty($infoRS['phoneOther']))
-        {
-            $infoString .= sprintf(
-                '<br /><span class="bold">Other Phone:</span>&nbsp;%s',
-                htmlspecialchars($infoRS['phoneOther'])
-            );
-        }
-
         if (!empty($infoRS['address']))
         {
             $infoString .= sprintf(

@@ -723,16 +723,16 @@ class Contacts
                 contact.last_name AS lastName,
                 contact.first_name AS firstName,
                 contact.title AS title,
-                contact.phone_work AS phoneWork,
+                contact.phone_cell AS phoneCell,
                 company.name AS companyName
             FROM
                 contact
             LEFT JOIN company
                 ON contact.company_id = company.company_id
             WHERE
-                contact.phone_work != ''
+                contact.phone_cell != ''
             AND
-                contact.phone_work IS NOT NULL
+                contact.phone_cell IS NOT NULL
             AND
                 contact.site_id = %s
             AND
@@ -852,36 +852,17 @@ class ContactsDataGrid extends DataGrid
                                      'pagerOptional'  => true,
                                      'filter'         => 'company_department.department'),
 
-            'Work Phone' =>   array('select'  => 'contact.phone_work AS workPhone',
-                                     'sortableColumn'    => 'workPhone',
-                                     'pagerWidth'   => 140,
-                                     'alphaNavigation' => false,
-                                     'pagerOptional'  => true,
-                                     'filter'         => 'contact.work_phone'),
-
-            'Cell Phone' =>    array('select'  => 'contact.phone_cell AS cellPhone',
-                                     'sortableColumn'    => 'cellPhone',
+            'Phone' =>   array('select'  => 'contact.phone_cell AS phone',
+                                     'sortableColumn'    => 'phone',
                                      'pagerWidth'   => 140,
                                      'alphaNavigation' => false,
                                      'pagerOptional'  => true,
                                      'filter'         => 'contact.phone_cell'),
 
-            'Other Phone' =>   array('select'  => 'contact.phone_other AS otherPhone',
-                                     'sortableColumn'    => 'otherPhone',
-                                     'pagerWidth'   => 140,
-                                     'alphaNavigation' => false,
-                                     'pagerOptional'  => true,
-                                     'filter'         => 'contact.phone_other'),
-
             'E-Mail' =>         array('select'   => 'contact.email1 AS email1',
                                      'sortableColumn'     => 'email1',
                                      'pagerWidth'    => 80,
                                      'filter'         => 'contact.email1'),
-
-            '2nd E-Mail' =>     array('select'   => 'contact.email2 AS email2',
-                                     'sortableColumn'     => 'email2',
-                                     'pagerWidth'    => 80,
-                                     'filter'         => 'contact.email2'),
 
             'Address' =>        array('select'   => 'contact.address AS address',
                                      'sortableColumn'     => 'address',

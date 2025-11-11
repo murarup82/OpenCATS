@@ -307,7 +307,7 @@ use OpenCATS\UI\QuickActionMenu;
                     <th align="left" nowrap="nowrap">Last Name</th>
                     <th align="left">Title</th>
                     <th align="left">Department</th>
-                    <th align="left" nowrap="nowrap">Work Phone</th>
+                    <th align="left" nowrap="nowrap">Phone</th>
                     <th align="left" nowrap="nowrap">Cell Phone</th>
                     <th align="left">Created</th>
                     <th align="left">Owner</th>
@@ -329,7 +329,7 @@ use OpenCATS\UI\QuickActionMenu;
                         </td>
                         <td valign="top" align="left"><?php $this->_($contactsData['title']) ?></td>
                         <td valign="top" align="left"><?php $this->_($contactsData['department']) ?></td>
-                        <td valign="top" align="left"><?php $this->_($contactsData['phoneWork']) ?></td>
+                        <td valign="top" align="left"><?php $this->_($contactsData['phoneCell']) ?></td>
                         <td valign="top" align="left"><?php $this->_($contactsData['phoneCell']) ?></td>
                         <td valign="top" align="left"><?php $this->_($contactsData['dateCreated']) ?></td>
                         <td valign="top" align="left"><?php $this->_($contactsData['ownerAbbrName']); ?></td>
@@ -373,7 +373,7 @@ use OpenCATS\UI\QuickActionMenu;
                         </td>
                         <td valign="top" align="left"><?php $this->_($contactsData['title']) ?></td>
                         <td valign="top" align="left"><?php $this->_($contactsData['department']) ?></td>
-                        <td valign="top" align="left"><?php $this->_($contactsData['phoneWork']) ?></td>
+                        <td valign="top" align="left"><?php $this->_($contactsData['phoneCell']) ?></td>
                         <td valign="top" align="left"><?php $this->_($contactsData['phoneCell']) ?></td>
                         <td valign="top" align="left"><?php $this->_($contactsData['dateCreated']) ?></td>
                         <td valign="top" align="left"><?php $this->_($contactsData['ownerAbbrName']); ?></td>

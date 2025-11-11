@@ -24,7 +24,7 @@
                         <th align="left" nowrap="nowrap">First Name</th>
                         <th align="left" nowrap="nowrap">Last Name</th>
                         <th align="left">Title</th>
-                        <th align="left" nowrap="nowrap">Work Phone</th>
+                        <th align="left" nowrap="nowrap">Phone</th>
                     </tr>
         
                     <?php foreach ($this->rs as $rowNumber => $data): ?>
@@ -33,7 +33,7 @@
                             <td valign="top" align="left"><?php $this->_($data['firstName']); ?></td>
                             <td valign="top" align="left"><?php $this->_($data['lastName']); ?></td>
                             <td valign="top" align="left"><?php $this->_($data['title']); ?></td>
-                            <td valign="top" align="left"><?php $this->_($data['phoneWork']); ?></td>
+                            <td valign="top" align="left"><?php $this->_($data['phoneCell']); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </table>

@@ -144,8 +144,7 @@
                         <th align="left" nowrap="nowrap">Last Name</th>
                         <th align="left">Title</th>
                         <th align="left">Company</th>
-                        <th align="left">Work</th>
-                        <th align="left">Cell</th>
+                        <th align="left">Phone</th>
                         <th align="left">Owner</th>
                         <th align="left">Created</th>
                         <th align="left">Modified</th>
@@ -170,7 +169,6 @@
                                     <?php $this->_($contactsData['companyName']) ?>
                                 </a>
                             </td>
-                            <td valign="top" align="left"><?php $this->_($contactsData['phoneWork']) ?></td>
                             <td valign="top" align="left"><?php $this->_($contactsData['phoneCell']) ?></td>
                             <td valign="top" align="left" nowrap="nowrap"><?php $this->_($contactsData['ownerAbbrName']) ?></td>
                             <td valign="top" align="left"><?php $this->_($contactsData['dateCreated']) ?></td>

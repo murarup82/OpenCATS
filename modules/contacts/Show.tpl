@@ -67,18 +67,8 @@ use OpenCATS\UI\QuickActionMenu;
                             </tr>
 
                             <tr>
-                                <td class="vertical">Work Phone:</td>
-                                <td class="data"><?php $this->_($this->data['phoneWork']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Cell Phone:</td>
+                                <td class="vertical">Phone:</td>
                                 <td class="data"><?php $this->_($this->data['phoneCell']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Other Phone:</td>
-                                <td class="data"><?php $this->_($this->data['phoneOther']); ?></td>
                             </tr>
 
                             <?php for ($i = 0; $i < intval(count($this->extraFieldRS)/2); $i++): ?>
@@ -115,13 +105,6 @@ use OpenCATS\UI\QuickActionMenu;
                             </tr>
 
                             <tr>
-                                <td class="vertical">2nd E-Mail:</td>
-                                <td class="data">
-                                    <a href="mailto:<?php $this->_($this->data['email2']); ?>"><?php $this->_($this->data['email2']); ?></a>
-                                </td>
-                            </tr>
-
-                            <tr>
                                 <td class="vertical">Address:</td>
                                 <td class="data"><?php echo(nl2br(htmlspecialchars($this->data['address']))); ?></td>
                             </tr>
@@ -130,7 +113,6 @@ use OpenCATS\UI\QuickActionMenu;
                                 <td class="vertical">&nbsp;</td>
                                 <td class="data">
                                     <?php $this->_($this->data['cityAndState']); ?>
-                                    <?php $this->_($this->data['zip']); ?>
                                 </td>
                             </tr>
 

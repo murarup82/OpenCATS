@@ -301,11 +301,6 @@ class HomeUI extends UserInterface
                     $contactsRS[$rowIndex]['ownerAbbrName'] = 'None';
                 }
 
-                if (empty($contactsRS[$rowIndex]['phoneWork']))
-                {
-                    $contactsRS[$rowIndex]['phoneWork'] = 'None';
-                }
-
                 if (empty($contactsRS[$rowIndex]['phoneCell']))
                 {
                     $contactsRS[$rowIndex]['phoneCell'] = 'None';
