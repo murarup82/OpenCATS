@@ -190,8 +190,6 @@ class GraphPie
  */
 class GraphComparisonChart
 {
-    private static $currentLabels = array();
-
     private $xLabels;
     private $xValues;
     private $color;
@@ -238,7 +236,7 @@ class GraphComparisonChart
         $graph->border->setColor(new Color(187, 187, 187, 15));
 
         $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
-        $plot->setPadding(15, 15, 85, 60);
+        $plot->setPadding(15, 15, 80, 60);
         $plot->setBarColor(new DarkGreen);
         $plot->barBorder->hide(true);
 
@@ -253,15 +251,11 @@ class GraphComparisonChart
         $plot->yAxis->hide();
         $plot->yAxis->setLabelNumber(12);
 
-        $axisLabels = array_values($this->xLabels);
-        $axisLabels = array_map('GraphComparisonChart::wrapLabel', $axisLabels);
+        $axisLabels = array_map('GraphComparisonChart::wrapLabel', array_values($this->xLabels));
         $labelCount = count($axisLabels);
-        $plot->xAxis->auto(FALSE);
-        $plot->xAxis->setRange(0, max(0, $labelCount - 1));
+        $plot->xAxis->setLabelText($axisLabels);
         $plot->xAxis->setLabelNumber($labelCount);
         $plot->xAxis->setTickInterval(1);
-        self::$currentLabels = $axisLabels;
-        $plot->xAxis->label->setCallbackFunction('GraphComparisonChart::labelCallback');
         $plot->xAxis->label->setFont(new Tuffy(8));
         $plot->xAxis->label->setAngle(60);
 
@@ -269,15 +263,6 @@ class GraphComparisonChart
 
         $graph->draw();
         die();
-    }
-
-    public static function labelCallback($value)
-    {
-        $index = (int) round($value);
-        if ($index < 0) {
-            return '';
-        }
-        return isset(self::$currentLabels[$index]) ? self::$currentLabels[$index] : '';
     }
 
     public static function wrapLabel($label)
