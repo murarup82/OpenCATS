@@ -121,13 +121,14 @@
                     <div id="activityNoteDiv" style="margin-top: 4px;">
                         <span id="addActivitySpanA">Activity Type</span><br />
                         <select id="activityTypeID" name="activityTypeID" class="inputbox" style="width: 150px; margin-bottom: 4px;">
-                            <option selected="selected" value="<?php echo(ACTIVITY_CALL); ?>">Call</option>
-                            <option value="<?php echo(ACTIVITY_CALL_TALKED); ?>">Call (Talked)</option>
-                            <option value="<?php echo(ACTIVITY_CALL_LVM); ?>">Call (LVM)</option>
-                            <option value="<?php echo(ACTIVITY_CALL_MISSED); ?>">Call (Missed)</option>
-                            <option value="<?php echo(ACTIVITY_EMAIL); ?>">E-Mail</option>
-                            <option value="<?php echo(ACTIVITY_MEETING); ?>">Meeting</option>
-                            <option value="<?php echo(ACTIVITY_OTHER); ?>">Other</option>
+                            <?php
+                                $isFirstActivityType = true;
+                                foreach ($this->activityTypes as $activityType):
+                            ?>
+                                <option value="<?php $this->_($activityType['typeID']); ?>" <?php if ($isFirstActivityType): ?>selected="selected"<?php $isFirstActivityType = false; endif; ?>>
+                                    <?php $this->_($activityType['type']); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select><br />
                         <span id="addActivitySpanB">Activity Notes</span><br />
                         <textarea name="activityNote" id="activityNote" cols="50" style="margin-bottom: 4px;" class="inputbox"></textarea>

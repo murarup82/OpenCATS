@@ -1398,7 +1398,7 @@ class CareersUI extends UserInterface
         $activityID = $activityEntries->add(
             $candidateID,
             DATA_ITEM_CANDIDATE,
-            ACTIVITY_OTHER,
+            ACTIVITY_EMAIL,
             $activityNote,
             $automatedUser['userID'],
             $jobOrderID

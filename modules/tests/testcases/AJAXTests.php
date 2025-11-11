@@ -63,7 +63,7 @@ class ActivityTest extends CATSAJAXTestCase
                 'f' => 'addActivity',
                 'dataItemID' => $testCandidateID,
                 'dataItemType' => (string) DATA_ITEM_CANDIDATE,
-                'type' => (string) ACTIVITY_CALL_TALKED,
+                'type' => (string) ACTIVITY_PHONE_CALL,
                 'notes' => 'Test notes.',
                 'jobOrderID' => $testJobOrderID1
             )
@@ -77,11 +77,11 @@ class ActivityTest extends CATSAJAXTestCase
 
         $this->assertEqual(
             (string) $xml->type,
-            (string) ACTIVITY_CALL_TALKED
+            (string) ACTIVITY_PHONE_CALL
         );
         $this->assertEqual(
             (string) $xml->typedescription,
-            'Call (Talked)'
+            'Phone Call'
         );
         $this->assertEqual(
             (string) $xml->notes,
@@ -120,7 +120,7 @@ class ActivityTest extends CATSAJAXTestCase
             array(
                 'f' => 'editActivity',
                 'activityID' => $addedActivityID,
-                'type' => (string) ACTIVITY_CALL_LVM,
+                'type' => (string) ACTIVITY_EMAIL,
                 'notes' => 'Test notes that are now edited.',
                 'jobOrderID' => $testJobOrderID2
             )
@@ -134,11 +134,11 @@ class ActivityTest extends CATSAJAXTestCase
 
         $this->assertEqual(
             (string) $xml->type,
-            (string) ACTIVITY_CALL_LVM
+            (string) ACTIVITY_EMAIL
         );
         $this->assertEqual(
             (string) $xml->typedescription,
-            'Call (LVM)'
+            'E-Mail'
         );
         $this->assertEqual(
             (string) $xml->notes,
@@ -849,7 +849,7 @@ class GetPipelineDetailsTest extends CATSAJAXTestCase
         $this->addPipelineActivity(
             $testCandidateID,
             $testJobOrderID1,
-            ACTIVITY_CALL_TALKED,
+            ACTIVITY_PHONE_CALL,
             'Test notes.'
         );
 

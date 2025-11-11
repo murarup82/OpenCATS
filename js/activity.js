@@ -29,83 +29,43 @@
 /* Activity entry type flags. These should match up with the flags
  * from ActivityEntries.php.
  */
-ACTIVITY_CALL        = 100;
-ACTIVITY_EMAIL       = 200;
-ACTIVITY_MEETING     = 300;
-ACTIVITY_OTHER       = 400;
-ACTIVITY_CALL_TALKED = 500;
-ACTIVITY_CALL_LVM    = 600;
-ACTIVITY_CALL_MISSED = 700;
+ACTIVITY_PHONE_CALL = 100;
+ACTIVITY_EMAIL      = 200;
+ACTIVITY_VIDEO_CONF = 300;
 
 function Activity_fillTypeSelect(selectList, selectedText)
 {
     var optionElements = new Array();
 
-    /* Call option. */
+    /* Phone Call option. */
     optionElements[0] = document.createElement('option');
-    optionElements[0].value = ACTIVITY_CALL;
-    optionElements[0].appendChild(document.createTextNode('Call'));
+    optionElements[0].value = ACTIVITY_PHONE_CALL;
+    optionElements[0].appendChild(document.createTextNode('Phone Call'));
 
-    /* Call (Talked) option. */
+    /* E-Mail option. */
     optionElements[1] = document.createElement('option');
-    optionElements[1].value = ACTIVITY_CALL_TALKED;
-    optionElements[1].appendChild(document.createTextNode('Call (Talked)'));
+    optionElements[1].value = ACTIVITY_EMAIL;
+    optionElements[1].appendChild(document.createTextNode('E-Mail'));
 
-    /* Call (LVM) option. */
+    /* Video-Conf option. */
     optionElements[2] = document.createElement('option');
-    optionElements[2].value = ACTIVITY_CALL_LVM;
-    optionElements[2].appendChild(document.createTextNode('Call (LVM)'));
-
-    /* Call (Missed) option. */
-    optionElements[3] = document.createElement('option');
-    optionElements[3].value = ACTIVITY_CALL_MISSED;
-    optionElements[3].appendChild(document.createTextNode('Call (Missed)'));
-
-    /* Email option. */
-    optionElements[4] = document.createElement('option');
-    optionElements[4].value = ACTIVITY_EMAIL;
-    optionElements[4].appendChild(document.createTextNode('E-Mail'));
-
-    /* Meeting option. */
-    optionElements[5] = document.createElement('option');
-    optionElements[5].value = ACTIVITY_MEETING;
-    optionElements[5].appendChild(document.createTextNode('Meeting'));
-
-    /* Other option. */
-    optionElements[6] = document.createElement('option');
-    optionElements[6].value = ACTIVITY_OTHER;
-    optionElements[6].appendChild(document.createTextNode('Other'));
+    optionElements[2].value = ACTIVITY_VIDEO_CONF;
+    optionElements[2].appendChild(document.createTextNode('Video-Conf'));
 
     /* Select the correct option. */
     if (selectedText)
     {
-        if (selectedText == 'Call')
+        if (selectedText == 'Phone Call')
         {
             optionElements[0].setAttribute('selected', 'selected');
         }
-        else if (selectedText == 'Call (Talked)')
+        else if (selectedText == 'E-Mail')
         {
             optionElements[1].setAttribute('selected', 'selected');
         }
-        else if (selectedText == 'Call (LVM)')
+        else if (selectedText == 'Video-Conf')
         {
             optionElements[2].setAttribute('selected', 'selected');
-        }
-        else if (selectedText == 'Call (Missed)')
-        {
-            optionElements[3].setAttribute('selected', 'selected');
-        }
-        else if (selectedText == 'E-Mail')
-        {
-            optionElements[4].setAttribute('selected', 'selected');
-        }
-        else if (selectedText == 'Meeting')
-        {
-            optionElements[5].setAttribute('selected', 'selected');
-        }
-        else if (selectedText == 'Other')
-        {
-            optionElements[6].setAttribute('selected', 'selected');
         }
     }
 

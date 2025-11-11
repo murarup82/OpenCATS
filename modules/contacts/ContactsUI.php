@@ -1337,6 +1337,9 @@ class ContactsUI extends UserInterface
 
         //if (!eval(Hooks::get('CONTACT_ON_ADD_ACTIVITY_SCHEDULE_EVENT_PRE'))) return;
 
+        $activityEntries = new ActivityEntries($this->_siteID);
+        $activityTypes = $activityEntries->getTypes();
+
         if ($this->isChecked('addActivity', $_POST))
         {
             /* Bail out if we don't have a valid job order ID. */
@@ -1352,7 +1355,6 @@ class ContactsUI extends UserInterface
             $activityNote = htmlspecialchars($activityNote);
 
             /* Add the activity entry. */
-            $activityEntries = new ActivityEntries($this->_siteID);
             $activityID = $activityEntries->add(
                 $contactID,
                 DATA_ITEM_CONTACT,
@@ -1556,6 +1558,7 @@ class ContactsUI extends UserInterface
         $this->_template->assign('onlyScheduleEvent', $onlyScheduleEvent);
         $this->_template->assign('eventHTML', $eventHTML);
         $this->_template->assign('changesMade', $changesMade);
+        $this->_template->assign('activityTypes', $activityTypes);
         $this->_template->assign('isFinishedMode', true);
         $this->_template->display(
             './modules/contacts/AddActivityScheduleEventModal.tpl'

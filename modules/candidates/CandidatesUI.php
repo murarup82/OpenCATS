@@ -2668,6 +2668,9 @@ class CandidatesUI extends UserInterface
         $pipelines = new Pipelines($this->_siteID);
         $statusRS = $pipelines->getStatusesForPicking();
 
+        $activityEntries = new ActivityEntries($this->_siteID);
+        $activityTypes = $activityEntries->getTypes();
+
         /* Module directory override for fatal() calls. */
         if ($directoryOverride != '') {
             $moduleDirectory = $directoryOverride;
@@ -2724,7 +2727,6 @@ class CandidatesUI extends UserInterface
             }
 
             /* Add the activity entry. */
-            $activityEntries = new ActivityEntries($this->_siteID);
             $activityID = $activityEntries->add(
                 $candidateID,
                 DATA_ITEM_CANDIDATE,
@@ -3031,6 +3033,7 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('changesMade', $changesMade);
         $this->_template->assign('isFinishedMode', true);
         $this->_template->assign('isJobOrdersMode', $isJobOrdersMode);
+        $this->_template->assign('activityTypes', $activityTypes);
         $this->_template->display(
             './modules/candidates/AddActivityChangeStatusModal.tpl'
         );

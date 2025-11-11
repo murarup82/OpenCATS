@@ -30,13 +30,9 @@
  * @version    $Id: ActivityEntries.php 3592 2007-11-13 17:30:46Z brian $
  */
 
-define('ACTIVITY_CALL',        100);
-define('ACTIVITY_EMAIL',       200);
-define('ACTIVITY_MEETING',     300);
-define('ACTIVITY_OTHER',       400);
-define('ACTIVITY_CALL_TALKED', 500);
-define('ACTIVITY_CALL_LVM',    600);
-define('ACTIVITY_CALL_MISSED', 700);
+define('ACTIVITY_PHONE_CALL', 100);
+define('ACTIVITY_EMAIL',      200);
+define('ACTIVITY_VIDEO_CONF', 300);
 
 /**
  * Candidates library.
@@ -506,7 +502,7 @@ class ActivityEntries
             FROM
                 activity_type
             ORDER BY
-                activity_type_id DESC",
+                activity_type_id ASC",
             $this->_siteID
         );
 
