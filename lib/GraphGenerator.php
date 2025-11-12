@@ -211,100 +211,53 @@ class GraphComparisonChart
     // FIXME: Document me.
     public function draw($format = false)
     {
-        $logFile = LEGACY_ROOT . '/graph_debug.log';
-        file_put_contents(
-            $logFile,
-            sprintf("[%s] GraphComparisonChart start (labels=%d)\n", date('c'), count($this->xLabels)),
-            FILE_APPEND
-        );
-
         /* Make sure we have GD support. */
         if (!function_exists('imagecreatefromjpeg'))
         {
-            file_put_contents(
-                $logFile,
-                sprintf("[%s] GraphComparisonChart aborted: GD extension missing\n", date('c')),
-                FILE_APPEND
-            );
             die();
         }
 
-        try
+        if ($format === false)
         {
-            if ($format === false)
-            {
-                $format = IMG_PNG;
-            }
-
-            $graph = new Graph($this->width, $this->height);
-
-            $graph->setFormat($format);
-            $graph->border->setColor(new Color(0xFF, 0xFF, 0xFF));
-            $graph->setBackgroundColor(new Color(0xF4, 0xF4, 0xF4));
-            $graph->noBorder = true;
-            //$graph->shadow->setSize(3);
-
-            $graph->title->set($this->title);
-            $graph->title->setFont(new Tuffy(12));
-            $graph->title->setColor(new Color(0x00, 0x00, 0x8B));
-            $graph->border->setColor(new Color(187, 187, 187, 15));
-
-            $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
-            $plot->setPadding(15, 15, 45, 50);
-            $plot->setBarColor(new DarkGreen);
-            $plot->barBorder->hide(true);
-
-            $plot->arrayBarBackground = $this->colorArray;
-
-            $plot->label->set($this->xValues);
-            $plot->label->setFormat('%.0f');
-            $plot->label->setBackgroundColor(new Color(240, 240, 240, 15));
-            $plot->label->border->setColor(new Color(187, 187, 187, 15));
-            $plot->label->setPadding(5, 3, 1, 1);
-
-            $plot->yAxis->hide();
-            $plot->yAxis->setLabelNumber(12);
-
-            $plot->xAxis->setLabelText($this->xLabels);
-            $plot->xAxis->setLabelNumber(count($this->xLabels));
-            $plot->xAxis->setTickInterval(1);
-            $plot->xAxis->label->setFont(new Tuffy(8));
-            $plot->xAxis->label->setAngle(60);
-
-            $graph->add($plot);
-
-            $graph->draw();
-            file_put_contents(
-                $logFile,
-                sprintf("[%s] GraphComparisonChart rendered successfully\n", date('c')),
-                FILE_APPEND
-            );
-        }
-        catch (Exception $exception)
-        {
-            file_put_contents(
-                $logFile,
-                sprintf("[%s] GraphComparisonChart exception: %s\n", date('c'), $exception->getMessage()),
-                FILE_APPEND
-            );
-            throw $exception;
+            $format = IMG_PNG;
         }
 
+        $graph = new Graph($this->width, $this->height);
+
+        $graph->setFormat($format);
+        $graph->border->setColor(new Color(0xFF, 0xFF, 0xFF));
+        $graph->setBackgroundColor(new Color(0xF4, 0xF4, 0xF4));
+        $graph->noBorder = true;
+        //$graph->shadow->setSize(3);
+
+        $graph->title->set($this->title);
+        $graph->title->setFont(new Tuffy(12));
+        $graph->title->setColor(new Color(0x00, 0x00, 0x8B));
+        $graph->border->setColor(new Color(187, 187, 187, 15));
+
+        $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
+        $plot->setPadding(15, 15, 35, 29);
+        $plot->setBarColor(new DarkGreen);
+        $plot->barBorder->hide(true);
+
+        $plot->arrayBarBackground = $this->colorArray;
+
+        $plot->label->set($this->xValues);
+        $plot->label->setFormat('%.0f');
+        $plot->label->setBackgroundColor(new Color(240, 240, 240, 15));
+        $plot->label->border->setColor(new Color(187, 187, 187, 15));
+        $plot->label->setPadding(5, 3, 1, 1);
+
+        $plot->yAxis->hide();
+        $plot->yAxis->setLabelNumber(12);
+
+        $plot->xAxis->setLabelText($this->xLabels);
+        $plot->xAxis->label->setFont(new Tuffy(8));
+
+        $graph->add($plot);
+
+        $graph->draw();
         die();
-    }
-
-    public static function wrapLabel($label)
-    {
-        $label = trim($label);
-        if ($label === '') {
-            return '';
-        }
-
-        if (strpos($label, ' ') === false) {
-            return $label;
-        }
-
-        return preg_replace('/\s+/', "\n", $label, 1);
     }
 }
 
@@ -500,5 +453,3 @@ class WordVerify
 }
 
 ?>
-
-
