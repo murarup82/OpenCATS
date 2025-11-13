@@ -190,6 +190,9 @@ class GraphPie
  */
 class GraphComparisonChart
 {
+    private static $axisLabels = array();
+    private static $axisMaxIndex = 0;
+
     private $xLabels;
     private $xValues;
     private $color;
@@ -236,7 +239,7 @@ class GraphComparisonChart
         $graph->border->setColor(new Color(187, 187, 187, 15));
 
         $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
-        $plot->setPadding(15, 15, 65, 40);
+        $plot->setPadding(20, 20, 80, 45);
         $plot->setBarColor(new DarkGreen);
         $plot->barBorder->hide(true);
 
@@ -253,11 +256,24 @@ class GraphComparisonChart
 
         $plot->xAxis->setLabelText($this->xLabels);
         $formattedLabels = array_map('GraphComparisonChart::wrapLabel', $this->xLabels);
-        $plot->xAxis->setLabelText($formattedLabels);
-        $plot->xAxis->setLabelNumber(count($formattedLabels));
-        $plot->xAxis->setTickInterval(1);
-        $plot->xAxis->label->setFont(new Tuffy(8));
-        $plot->xAxis->label->setAngle(60);
+        $labelCount = count($formattedLabels);
+        if ($labelCount > 0)
+        {
+            self::$axisLabels = $formattedLabels;
+            self::$axisMaxIndex = max(0, $labelCount - 1);
+
+            $plot->xAxis->auto(FALSE);
+            $plot->xAxis->setRange(0, self::$axisMaxIndex);
+            $plot->xAxis->setLabelNumber($labelCount);
+            $plot->xAxis->setTickInterval(1);
+            $plot->xAxis->setRangeCallback(
+                'GraphComparisonChart::axisToValue',
+                'GraphComparisonChart::axisToPosition'
+            );
+            $plot->xAxis->label->setCallbackFunction('GraphComparisonChart::labelForValue');
+            $plot->xAxis->label->setFont(new Tuffy(8));
+            $plot->xAxis->label->setAngle(60);
+        }
 
         $graph->add($plot);
 
@@ -278,6 +294,48 @@ class GraphComparisonChart
         $lines = array_slice($lines, 0, 2);
 
         return implode("\n", $lines);
+    }
+
+    public static function axisToValue($position, $min, $max)
+    {
+        if (self::$axisMaxIndex <= 0)
+        {
+            return 0;
+        }
+
+        $scaled = max(0.0, min(1.0, $position));
+        return $scaled * self::$axisMaxIndex;
+    }
+
+    public static function axisToPosition($value, $min, $max)
+    {
+        if (self::$axisMaxIndex <= 0)
+        {
+            return 0;
+        }
+
+        $scaledValue = max(0.0, min((float) self::$axisMaxIndex, $value));
+        return $scaledValue / self::$axisMaxIndex;
+    }
+
+    public static function labelForValue($value)
+    {
+        if (empty(self::$axisLabels))
+        {
+            return '';
+        }
+
+        $index = (int) round($value);
+        if ($index < 0)
+        {
+            $index = 0;
+        }
+        else if ($index >= count(self::$axisLabels))
+        {
+            $index = count(self::$axisLabels) - 1;
+        }
+
+        return self::$axisLabels[$index];
     }
 }
 
