@@ -239,7 +239,7 @@ class GraphComparisonChart
         $graph->border->setColor(new Color(187, 187, 187, 15));
 
         $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
-        $plot->setPadding(30, 30, 140, 60);
+        $plot->setPadding(25, 25, 120, 50);
         $plot->setBarColor(new DarkGreen);
         $plot->barBorder->hide(true);
 
@@ -259,20 +259,17 @@ class GraphComparisonChart
         $labelCount = count($formattedLabels);
         if ($labelCount > 0)
         {
-            self::$axisLabels = $formattedLabels;
-            self::$axisCount = $labelCount;
-
+        $labelCount = count($formattedLabels);
+        if ($labelCount > 0)
+        {
             $plot->xAxis->auto(FALSE);
-            $plot->xAxis->setRange(0, $labelCount);
+            $plot->xAxis->setRange(0, $labelCount - 1);
             $plot->xAxis->setLabelNumber($labelCount);
             $plot->xAxis->setTickInterval(1);
-            $plot->xAxis->setRangeCallback(
-                'GraphComparisonChart::axisToValue',
-                'GraphComparisonChart::axisToPosition'
-            );
-            $plot->xAxis->label->setCallbackFunction('GraphComparisonChart::labelForValue');
+            $plot->xAxis->setLabelText($formattedLabels);
             $plot->xAxis->label->setFont(new Tuffy(7));
             $plot->xAxis->label->setAngle(60);
+        }
         }
 
         $graph->add($plot);
