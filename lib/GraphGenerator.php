@@ -191,7 +191,7 @@ class GraphPie
 class GraphComparisonChart
 {
     private static $axisLabels = array();
-    private static $axisMaxIndex = 0;
+    private static $axisCount = 0;
 
     private $xLabels;
     private $xValues;
@@ -239,7 +239,7 @@ class GraphComparisonChart
         $graph->border->setColor(new Color(187, 187, 187, 15));
 
         $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
-        $plot->setPadding(25, 25, 110, 55);
+        $plot->setPadding(30, 30, 140, 60);
         $plot->setBarColor(new DarkGreen);
         $plot->barBorder->hide(true);
 
@@ -260,10 +260,10 @@ class GraphComparisonChart
         if ($labelCount > 0)
         {
             self::$axisLabels = $formattedLabels;
-            self::$axisMaxIndex = max(0, $labelCount - 1);
+            self::$axisCount = $labelCount;
 
             $plot->xAxis->auto(FALSE);
-            $plot->xAxis->setRange(0, self::$axisMaxIndex);
+            $plot->xAxis->setRange(0, $labelCount);
             $plot->xAxis->setLabelNumber($labelCount);
             $plot->xAxis->setTickInterval(1);
             $plot->xAxis->setRangeCallback(
@@ -298,24 +298,27 @@ class GraphComparisonChart
 
     public static function axisToValue($position, $min, $max)
     {
-        if (self::$axisMaxIndex <= 0)
+        if (self::$axisCount <= 0)
         {
             return 0;
         }
 
-        $scaled = max(0.0, min(1.0, $position));
-        return $scaled * self::$axisMaxIndex;
+        $clamped = max(0.0, min(1.0, $position));
+        $value = $clamped * self::$axisCount - 0.5;
+        $value = max(0.0, min($value, self::$axisCount - 1));
+        return $value;
     }
 
     public static function axisToPosition($value, $min, $max)
     {
-        if (self::$axisMaxIndex <= 0)
+        if (self::$axisCount <= 0)
         {
             return 0;
         }
 
-        $scaledValue = max(0.0, min((float) self::$axisMaxIndex, $value));
-        return $scaledValue / self::$axisMaxIndex;
+        $clamped = max(0.0, min((float) self::$axisCount - 1, $value));
+        $position = ($clamped + 0.5) / self::$axisCount;
+        return max(0.0, min(1.0, $position));
     }
 
     public static function labelForValue($value)
