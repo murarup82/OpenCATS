@@ -236,7 +236,7 @@ class GraphComparisonChart
         $graph->border->setColor(new Color(187, 187, 187, 15));
 
         $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
-        $plot->setPadding(15, 15, 35, 29);
+        $plot->setPadding(15, 15, 65, 40);
         $plot->setBarColor(new DarkGreen);
         $plot->barBorder->hide(true);
 
@@ -252,12 +252,32 @@ class GraphComparisonChart
         $plot->yAxis->setLabelNumber(12);
 
         $plot->xAxis->setLabelText($this->xLabels);
+        $formattedLabels = array_map('GraphComparisonChart::wrapLabel', $this->xLabels);
+        $plot->xAxis->setLabelText($formattedLabels);
+        $plot->xAxis->setLabelNumber(count($formattedLabels));
+        $plot->xAxis->setTickInterval(1);
         $plot->xAxis->label->setFont(new Tuffy(8));
+        $plot->xAxis->label->setAngle(60);
 
         $graph->add($plot);
 
         $graph->draw();
         die();
+    }
+
+    public static function wrapLabel($label)
+    {
+        $label = trim((string) $label);
+        if ($label === '')
+        {
+            return '';
+        }
+
+        $wrapped = wordwrap($label, 12, "\n", true);
+        $lines = explode("\n", $wrapped);
+        $lines = array_slice($lines, 0, 2);
+
+        return implode("\n", $lines);
     }
 }
 
