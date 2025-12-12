@@ -238,7 +238,27 @@ class ImportUI extends UserInterface
             'Email',
             'email1',
             'Key Skills',
-            'key_skills'
+            'key_skills',
+            'Source',
+            'source',
+            'Date Available',
+            'date_available',
+            'Can Relocate',
+            'can_relocate',
+            'Desired Pay',
+            'desired_pay',
+            'Current Pay',
+            'current_pay',
+            'Is Hot',
+            'is_hot',
+            'Is Active',
+            'is_active',
+            'Best Time To Call',
+            'best_time_to_call',
+            'GDPR Signed',
+            'gdpr_signed',
+            'GDPR Expiration Date',
+            'gdpr_expiration_date'
         );
 
         $this->jobOrdersTypes = array(
