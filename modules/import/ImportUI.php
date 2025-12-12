@@ -887,17 +887,22 @@ class ImportUI extends UserInterface
 
             /* Put the data where the user picked for it to go. */
             foreach ($theFieldPreference as $fieldID => $theFieldPreferenceValue) {
-                if (count($theData) <= $fieldID || trim($theData[$fieldID]) == '') {
+                if (count($theData) <= $fieldID) {
+                    continue;
+                }
+
+                $fieldValue = trim($theData[$fieldID]);
+                if ($fieldValue === '') {
                     continue;
                 }
 
                 if ($theFieldPreferenceValue == 'cats') {
                     if (substr($_POST['importIntoField' . $fieldID], 0, 1) == '#') {
                         /* This is an extra field. */
-                        $foreignEntries[substr($_POST['importIntoField' . $fieldID], 1)] = $theData[$fieldID];
+                        $foreignEntries[substr($_POST['importIntoField' . $fieldID], 1)] = $fieldValue;
                     } else {
                         $catsEntriesRows[] = $_POST['importIntoField' . $fieldID];
-                        $catsEntriesValuesNamed[$_POST['importIntoField' . $fieldID]] = trim($theData[$fieldID]);
+                        $catsEntriesValuesNamed[$_POST['importIntoField' . $fieldID]] = $fieldValue;
                     }
                 } else if ($theFieldPreferenceValue == 'foreign' || $theFieldPreferenceValue == 'foreignAdded') {
                     /* Before we do this, ensure that we have permision and the field is in the database. */
@@ -930,7 +935,7 @@ class ImportUI extends UserInterface
                             }
                         }
 
-                        $foreignEntries[$theFields[$fieldID]] = $theData[$fieldID];
+                        $foreignEntries[$theFields[$fieldID]] = $fieldValue;
 
                         /* Future entries will be set to add directly to the table without trying to make the entry. */
                         $theFieldPreference[$fieldID] = 'foreignAdded';
@@ -1062,6 +1067,9 @@ class ImportUI extends UserInterface
 
         if (!eval(Hooks::get('IMPORT_ADD_CANDIDATE'))) return;
 
+        $this->normalizeCandidateBooleanFields($dataNamed);
+        $this->normalizeCandidateDateFields($dataNamed, array('date_available', 'gdpr_expiration_date'));
+
         $candidatesImport = new CandidatesImport($this->_siteID);
         $candidateID = $candidatesImport->add($dataNamed, $this->_userID, $importID);
 
@@ -1074,6 +1082,81 @@ class ImportUI extends UserInterface
         if (!eval(Hooks::get('IMPORT_ADD_CANDIDATE_POST'))) return;
 
         return '';
+    }
+
+    private function normalizeCandidateBooleanFields(array &$dataNamed)
+    {
+        $booleanFields = array(
+            'can_relocate' => 0,
+            'is_hot' => 0,
+            'is_active' => 1,
+            'gdpr_signed' => 0
+        );
+
+        foreach ($booleanFields as $field => $defaultValue) {
+            if (!array_key_exists($field, $dataNamed)) {
+                continue;
+            }
+
+            $dataNamed[$field] = $this->convertToBooleanFlag($dataNamed[$field], $defaultValue);
+        }
+    }
+
+    private function convertToBooleanFlag($value, $defaultValue)
+    {
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+
+        if (is_numeric($value)) {
+            return ((int)$value) ? 1 : 0;
+        }
+
+        if ($value === null) {
+            return $defaultValue;
+        }
+
+        $stringValue = strtolower(trim((string)$value));
+
+        if ($stringValue === '') {
+            return $defaultValue;
+        }
+
+        $truthy = array('yes', 'y', 'true', 't', '1');
+        $falsy = array('no', 'n', 'false', 'f', '0');
+
+        if (in_array($stringValue, $truthy, true)) {
+            return 1;
+        }
+
+        if (in_array($stringValue, $falsy, true)) {
+            return 0;
+        }
+
+        return $defaultValue;
+    }
+
+    private function normalizeCandidateDateFields(array &$dataNamed, array $fields)
+    {
+        foreach ($fields as $field) {
+            if (!array_key_exists($field, $dataNamed)) {
+                continue;
+            }
+
+            $value = trim((string)$dataNamed[$field]);
+            if ($value === '') {
+                unset($dataNamed[$field]);
+                continue;
+            }
+
+            $timestamp = strtotime($value);
+            if ($timestamp === false) {
+                unset($dataNamed[$field]);
+                continue;
+            }
+
+            $dataNamed[$field] = date('Y-m-d', $timestamp);
+        }
     }
 
     /*
