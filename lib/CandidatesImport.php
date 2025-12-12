@@ -19,6 +19,41 @@ class CandidatesImport extends ImportableEntity
      */
     public function add($dataNamed, $userID, $importID)
     {
+        $booleanDefaults = array(
+            'can_relocate' => 0,
+            'is_hot' => 0,
+            'is_active' => 1,
+            'gdpr_signed' => 0
+        );
+
+        foreach ($booleanDefaults as $field => $defaultValue) {
+            if (!array_key_exists($field, $dataNamed)) {
+                $dataNamed[$field] = $defaultValue;
+                continue;
+            }
+
+            $value = $dataNamed[$field];
+
+            if (is_bool($value)) {
+                $dataNamed[$field] = $value ? 1 : 0;
+                continue;
+            }
+
+            if (is_numeric($value)) {
+                $dataNamed[$field] = ((int)$value) ? 1 : 0;
+                continue;
+            }
+
+            $stringValue = strtolower(trim((string)$value));
+            if ($stringValue === '') {
+                $dataNamed[$field] = $defaultValue;
+                continue;
+            }
+
+            $truthy = array('yes', 'y', 'true', 't', '1');
+            $dataNamed[$field] = in_array($stringValue, $truthy, true) ? 1 : 0;
+        }
+
         $data = $this->prepareData($dataNamed);
 
         $columns = $data['dataColumns'];
