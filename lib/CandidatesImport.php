@@ -21,34 +21,41 @@ class CandidatesImport extends ImportableEntity
     {
         $data = $this->prepareData($dataNamed);
 
+        $columns = $data['dataColumns'];
+        $values = $data['data'];
+
+        if (!in_array('can_relocate', $columns, true)) {
+            $columns[] = 'can_relocate';
+            $values[] = $this->_db->makeQueryInteger(0);
+        }
+
+        $columns[] = 'entered_by';
+        $values[] = $this->_db->makeQueryInteger($userID);
+
+        $columns[] = 'owner';
+        $values[] = $this->_db->makeQueryInteger($userID);
+
+        $columns[] = 'site_id';
+        $values[] = $this->_db->makeQueryInteger($this->_siteID);
+
+        $columns[] = 'date_created';
+        $values[] = 'NOW()';
+
+        $columns[] = 'date_modified';
+        $values[] = 'NOW()';
+
+        $columns[] = 'import_id';
+        $values[] = $this->_db->makeQueryInteger($importID);
+
         $sql = sprintf(
             "INSERT INTO candidate (
-                %s,
-                can_relocate,
-                entered_by,
-                owner,
-                site_id,
-                date_created,
-                date_modified,
-                import_id
+                %s
             )
             VALUES (
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                NOW(),
-                NOW(),
                 %s
             )",
-            implode(",\n", $data['dataColumns']),
-            implode(",\n", $data['data']),
-            0,
-            $userID,
-            $userID,
-            $this->_siteID,
-            $importID
+            implode(",\n", $columns),
+            implode(",\n", $values)
         );
         $queryResult = $this->_db->query($sql);
         if (!$queryResult)
