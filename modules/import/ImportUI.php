@@ -1119,7 +1119,7 @@ class ImportUI extends UserInterface
 
         foreach ($booleanFields as $field => $defaultValue) {
             if (!array_key_exists($field, $dataNamed)) {
-                continue;
+                $dataNamed[$field] = $defaultValue;
             }
 
             $dataNamed[$field] = $this->convertToBooleanFlag($dataNamed[$field], $defaultValue);
