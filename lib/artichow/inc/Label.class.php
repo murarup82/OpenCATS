@@ -414,9 +414,9 @@ class awLabel implements awPositionable {
 
 			$value = $this->texts[$key];
 
-			if(is_string($this->function)) {
-				$value = call_user_func($this->function, $value);
-			}
+            if (is_callable($this->function)) {
+                $value = call_user_func($this->function, $value);
+            }
 
 			$text = new awText($value);
 			$text->setFont($this->font);

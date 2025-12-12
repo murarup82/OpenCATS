@@ -239,7 +239,9 @@ class GraphComparisonChart
         $graph->border->setColor(new Color(187, 187, 187, 15));
 
         $plot = new BarPlotPipeline($this->xValues, 1, 1, 0, $this->totalValue);
-        $plot->setPadding(20, 20, 20, 80);
+
+        /* Give extra bottom padding so angled labels don't get clipped. */
+        $plot->setPadding(20, 20, 20, 110);
         $plot->setBarColor(new DarkGreen);
         $plot->barBorder->hide(true);
 
@@ -255,6 +257,7 @@ class GraphComparisonChart
         $plot->yAxis->setLabelNumber(12);
 
         $plot->xAxis->setLabelText($this->xLabels);
+        $plot->xAxis->label->setAngle(45);
 
         $graph->add($plot);
 
