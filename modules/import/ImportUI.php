@@ -892,7 +892,8 @@ class ImportUI extends UserInterface
                 }
 
                 $fieldValue = trim($theData[$fieldID]);
-                if ($fieldValue === '') {
+
+                if ($fieldValue === '' && $this->shouldSkipEmptyCandidateField($_POST['importIntoField' . $fieldID])) {
                     continue;
                 }
 
@@ -1082,6 +1083,29 @@ class ImportUI extends UserInterface
         if (!eval(Hooks::get('IMPORT_ADD_CANDIDATE_POST'))) return;
 
         return '';
+    }
+
+    private function shouldSkipEmptyCandidateField($fieldName)
+    {
+        $fieldName = strtolower((string)$fieldName);
+        $nullable = array(
+            'date_available',
+            'gdpr_expiration_date',
+            'notes',
+            'address',
+            'best_time_to_call',
+            'desired_pay',
+            'current_pay',
+            'source',
+            'key_skills',
+            'current_employer'
+        );
+
+        if (in_array($fieldName, $nullable, true)) {
+            return true;
+        }
+
+        return false;
     }
 
     private function normalizeCandidateBooleanFields(array &$dataNamed)
