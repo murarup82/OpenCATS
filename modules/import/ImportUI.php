@@ -1405,33 +1405,44 @@ class ImportUI extends UserInterface
         if (isset($_SESSION['CATS']) && !empty($_SESSION['CATS'])) {
             $siteID = $_SESSION['CATS']->getSiteID();
         } else {
+            error_log('MassImport: missing CATS session in massImportDocument.');
             echo 'Fail';
             return;
         }
 
+        if (!isset($_SESSION['MASS_IMPORT_ERRORS']) || !is_array($_SESSION['MASS_IMPORT_ERRORS'])) {
+            $_SESSION['MASS_IMPORT_ERRORS'] = array();
+        }
+
+        $failWithMessage = function ($message) {
+            error_log($message);
+            $_SESSION['MASS_IMPORT_ERRORS'][] = $message;
+            echo 'Fail';
+        };
+
         if (isset($_GET['name'])) $name = $_GET['name'];
         else {
-            echo 'Fail';
+            $failWithMessage('MassImport: missing parameter "name" in massImportDocument.');
             return;
         }
         if (isset($_GET['realName'])) $realName = $_GET['realName'];
         else {
-            echo 'Fail';
+            $failWithMessage('MassImport: missing parameter "realName" in massImportDocument.');
             return;
         }
         if (isset($_GET['ext'])) $ext = $_GET['ext'];
         else {
-            echo 'Fail';
+            $failWithMessage('MassImport: missing parameter "ext" in massImportDocument.');
             return;
         }
         if (isset($_GET['cTime'])) $cTime = intval($_GET['cTime']);
         else {
-            echo 'Fail';
+            $failWithMessage('MassImport: missing parameter "cTime" in massImportDocument.');
             return;
         }
         if (isset($_GET['type'])) $type = intval($_GET['type']);
         else {
-            echo 'Fail';
+            $failWithMessage('MassImport: missing parameter "type" in massImportDocument.');
             return;
         }
 
@@ -1456,6 +1467,15 @@ class ImportUI extends UserInterface
             $parsingEnabled = true;
         } else {
             $parsingEnabled = false;
+        }
+
+        /* Verify file exists before attempting conversion, otherwise the converter will fail silently. */
+        if (!file_exists($name)) {
+            $message = sprintf('MassImport: file not found for conversion: "%s" (realpath: %s)', $name, @realpath($name));
+            $failWithMessage($message);
+            $mp['success'] = false;
+            $_SESSION['CATS_PARSE_TEMP'][] = $mp;
+            return;
         }
 
         if ($doc2text->convert($name, $type) === false) {
