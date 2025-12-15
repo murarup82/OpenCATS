@@ -1438,6 +1438,9 @@ class ImportUI extends UserInterface
         if (!isset($_SESSION['CATS_PARSE_TEMP'])) {
             $_SESSION['CATS_PARSE_TEMP'] = array();
         }
+        if (!isset($_SESSION['MASS_IMPORT_ERRORS']) || !is_array($_SESSION['MASS_IMPORT_ERRORS'])) {
+            $_SESSION['MASS_IMPORT_ERRORS'] = array();
+        }
 
         $mp = array(
             'name' => $name,
@@ -1456,6 +1459,21 @@ class ImportUI extends UserInterface
         }
 
         if ($doc2text->convert($name, $type) === false) {
+            $errorDetail = $doc2text->isError() ? $doc2text->getError() : 'Unknown conversion error';
+            $rawOutput = trim($doc2text->getRawOutput());
+            $returnCode = $doc2text->getReturnCode();
+            if ($rawOutput !== '') {
+                $errorDetail .= sprintf(' [return code %d, output: %s]', $returnCode, $rawOutput);
+            } else {
+                $errorDetail .= sprintf(' [return code %d]', $returnCode);
+            }
+            $message = sprintf(
+                'MassImport: failed to convert "%s": %s',
+                $name,
+                $errorDetail
+            );
+            error_log($message);
+            $_SESSION['MASS_IMPORT_ERRORS'][] = $message;
             $mp['success'] = false;
             $_SESSION['CATS_PARSE_TEMP'][] = $mp;
             echo 'Fail';
@@ -1665,6 +1683,35 @@ class ImportUI extends UserInterface
                     'None of the files you uploaded were able '
                         . 'to be imported!'
                 );
+
+                /* Provide inline debug info to help diagnose why nothing was parsed. */
+                $sessionCount = (isset($_SESSION['CATS_PARSE_TEMP']) && is_array($_SESSION['CATS_PARSE_TEMP'])) ? count($_SESSION['CATS_PARSE_TEMP']) : 0;
+                $uploadDir = FileUtility::getUploadPath($siteID, 'massimport');
+                $uploadFiles = ImportUtility::getDirectoryFiles($uploadDir);
+                $uploadCount = (is_array($uploadFiles)) ? count($uploadFiles) : 0;
+                $fileNames = array();
+                if (is_array($uploadFiles)) {
+                    foreach ($uploadFiles as $fileData) {
+                        if (isset($fileData['name'])) {
+                            $fileNames[] = $fileData['name'];
+                        }
+                    }
+                }
+
+                $debugDetails = array(
+                    sprintf('Debug: parsed successes=%d, failures=%d.', $success, $failed),
+                    sprintf('Debug: session parse entries=%d.', $sessionCount),
+                    sprintf('Debug: upload directory "%s" file count=%d.', $uploadDir, $uploadCount),
+                );
+                if (!empty($fileNames)) {
+                    $debugDetails[] = 'Debug: upload files: ' . implode(', ', $fileNames);
+                }
+
+                if (empty($errorDetails)) {
+                    $errorDetails = $debugDetails;
+                } else {
+                    $errorDetails = array_merge($errorDetails, $debugDetails);
+                }
             }
 
             $this->_template->assign('errorDetails', $errorDetails);
