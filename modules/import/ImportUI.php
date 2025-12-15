@@ -1592,6 +1592,7 @@ class ImportUI extends UserInterface
 
         if ($step == 1) {
             if (isset($_SESSION['CATS_PARSE_TEMP'])) unset($_SESSION['CATS_PARSE_TEMP']);
+            if (isset($_SESSION['MASS_IMPORT_ERRORS'])) unset($_SESSION['MASS_IMPORT_ERRORS']);
             $uploadDir = FileUtility::getUploadPath($siteID, 'massimport');
             $files = ImportUtility::getDirectoryFiles($uploadDir);
             if (is_array($files) && count($files)) {
@@ -1617,6 +1618,7 @@ class ImportUI extends UserInterface
              * Step 1: Find any uploaded files and get them into an array.
              */
             if (isset($_SESSION['CATS_PARSE_TEMP'])) unset($_SESSION['CATS_PARSE_TEMP']);
+            if (isset($_SESSION['MASS_IMPORT_ERRORS'])) unset($_SESSION['MASS_IMPORT_ERRORS']);
             $uploadDir = FileUtility::getUploadPath($siteID, 'massimport');
             $files = ImportUtility::getDirectoryFiles($uploadDir);
             if ($files === -1 || !is_array($files) || !count($files)) {
@@ -1654,11 +1656,16 @@ class ImportUI extends UserInterface
             // Make sure the processed files exists, is an array, and is not empty
             list($documents, $success, $failed) = $this->getMassImportDocuments();
             if (!count($documents)) {
+                $errorDetails = array();
+                if (isset($_SESSION['MASS_IMPORT_ERRORS']) && is_array($_SESSION['MASS_IMPORT_ERRORS'])) {
+                    $errorDetails = $_SESSION['MASS_IMPORT_ERRORS'];
+                }
                 $this->_template->assign(
                     'errorMessage',
                     'None of the files you uploaded were able '
                         . 'to be imported!'
                 );
+                $this->_template->assign('errorDetails', $errorDetails);
             }
 
             $this->_template->assign('documents', $documents);

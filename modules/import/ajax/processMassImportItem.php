@@ -54,33 +54,40 @@ for ($i = 0; $i < 50; ++$i)
     {
         continue;
     }
+
+    if (!isset($_SESSION['MASS_IMPORT_ERRORS']) || !is_array($_SESSION['MASS_IMPORT_ERRORS']))
+    {
+        $_SESSION['MASS_IMPORT_ERRORS'] = array();
+    }
     
     $fileName = array_pop($_SESSION['CATS']->massImportFiles);
 
     $fullFilename = $_SESSION['CATS']->massImportDirectory . '/' . $fileName;
 
-    $attachmentCreator = new AttachmentCreator($_SESSION['CATS']->getSiteID());
+$attachmentCreator = new AttachmentCreator($_SESSION['CATS']->getSiteID());
     $attachmentID = $attachmentCreator->createFromFile(
         DATA_ITEM_BULKRESUME, 0, $fullFilename, false, '', true, true
     );
 
     if ($attachmentCreator->isError())
     {
-        /* Log hard errors so admins can see why items failed. */
-        error_log(sprintf(
+        $message = sprintf(
             'MassImport: failed to import "%s": %s',
             $fullFilename,
             $attachmentCreator->getError()
-        ));
+        );
+        error_log($message);
+        $_SESSION['MASS_IMPORT_ERRORS'][] = $message;
     }
     else if ($attachmentCreator->isTextExtractionError())
     {
-        /* Text extraction failed but attachment may still be created. */
-        error_log(sprintf(
+        $message = sprintf(
             'MassImport: text extraction failed for "%s": %s',
             $fullFilename,
             $attachmentCreator->getTextExtractionError()
-        ));
+        );
+        error_log($message);
+        $_SESSION['MASS_IMPORT_ERRORS'][] = $message;
     }
     else if ($attachmentCreator->duplicatesOccurred())
     {
