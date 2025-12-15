@@ -49,6 +49,28 @@ class ImportUI extends UserInterface
 {
     const MAX_ERRORS = 100;
 
+    /**
+     * Log helper for mass import debugging; writes to error_log and temp file.
+     */
+    private function logMassImport($message)
+    {
+        $prefix = 'MassImport: ' . $message;
+        error_log($prefix);
+
+        $logDir = CATS_TEMP_DIR;
+        $logFile = $logDir . '/massimport_debug.log';
+
+        if (!@file_exists($logDir)) {
+            @mkdir($logDir, 0777, true);
+        }
+
+        @file_put_contents(
+            $logFile,
+            date('c') . ' ' . $prefix . PHP_EOL,
+            FILE_APPEND
+        );
+    }
+
 
     public function __construct()
     {
@@ -1419,7 +1441,7 @@ class ImportUI extends UserInterface
         $_SESSION['MASS_IMPORT_DOC_CALLS']++;
 
         $sessionId = session_id();
-        error_log(sprintf(
+        $this->logMassImport(sprintf(
             'MassImport: massImportDocument called (session=%s count=%d) name=%s realName=%s ext=%s type=%s cTime=%s',
             $sessionId,
             $_SESSION['MASS_IMPORT_DOC_CALLS'],
@@ -1431,7 +1453,7 @@ class ImportUI extends UserInterface
         ));
 
         $failWithMessage = function ($message) {
-            error_log($message);
+            $this->logMassImport($message);
             $_SESSION['MASS_IMPORT_ERRORS'][] = $message;
             echo 'Fail';
         };
@@ -1476,7 +1498,7 @@ class ImportUI extends UserInterface
             'type' => $type,
             'cTime' => $cTime,
         );
-        error_log(sprintf('MassImport: session=%s CATS_PARSE_TEMP pre-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
+        $this->logMassImport(sprintf('session=%s CATS_PARSE_TEMP pre-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
 
         $doc2text = new DocumentToText();
         $pu = new ParseUtility();
@@ -1509,18 +1531,18 @@ class ImportUI extends UserInterface
                 $name,
                 $errorDetail
             );
-            error_log($message);
+            $this->logMassImport($message);
             $_SESSION['MASS_IMPORT_ERRORS'][] = $message;
             $mp['success'] = false;
             $_SESSION['CATS_PARSE_TEMP'][] = $mp;
             $_SESSION['MASS_IMPORT_ERRORS'][] = sprintf(
                 'DEBUG: stored failed parse entry for "%s".', $name
             );
-            error_log(sprintf('MassImport: session=%s CATS_PARSE_TEMP post-fail-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
+            $this->logMassImport(sprintf('session=%s CATS_PARSE_TEMP post-fail-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
             echo 'Fail';
             return;
         }
-        error_log(sprintf('MassImport: convert succeeded for "%s" (session=%s).', $name, $sessionId));
+        $this->logMassImport(sprintf('convert succeeded for "%s" (session=%s).', $name, $sessionId));
         $contents = $doc2text->getString();
 
         // Decode things like _rATr to @ so the parser can accurately find things
@@ -1555,7 +1577,7 @@ class ImportUI extends UserInterface
         $_SESSION['MASS_IMPORT_ERRORS'][] = sprintf(
             'DEBUG: stored successful parse entry for "%s".', $name
         );
-        error_log(sprintf('MassImport: session=%s CATS_PARSE_TEMP post-success-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
+        $this->logMassImport(sprintf('session=%s CATS_PARSE_TEMP post-success-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
 
         echo 'Ok';
         return;
@@ -1653,6 +1675,7 @@ class ImportUI extends UserInterface
         }
 
         $this->_template->assign('step', $step);
+        $this->_template->assign('massImportLogPath', CATS_TEMP_DIR . '/massimport_debug.log');
 
         if ($step == 1) {
             if (isset($_SESSION['CATS_PARSE_TEMP'])) unset($_SESSION['CATS_PARSE_TEMP']);
