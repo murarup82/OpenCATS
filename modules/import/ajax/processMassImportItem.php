@@ -64,7 +64,7 @@ for ($i = 0; $i < 50; ++$i)
 
     $fullFilename = $_SESSION['CATS']->massImportDirectory . '/' . $fileName;
 
-$attachmentCreator = new AttachmentCreator($_SESSION['CATS']->getSiteID());
+    $attachmentCreator = new AttachmentCreator($_SESSION['CATS']->getSiteID());
     $attachmentID = $attachmentCreator->createFromFile(
         DATA_ITEM_BULKRESUME, 0, $fullFilename, false, '', true, true
     );
@@ -92,6 +92,15 @@ $attachmentCreator = new AttachmentCreator($_SESSION['CATS']->getSiteID());
     else if ($attachmentCreator->duplicatesOccurred())
     {
         ++$dups;
+    }
+    else if ($attachmentID === false || $attachmentID === -1)
+    {
+        $message = sprintf(
+            'MassImport: unknown failure importing "%s" (no error detail available)',
+            $fullFilename
+        );
+        error_log($message);
+        $_SESSION['MASS_IMPORT_ERRORS'][] = $message;
     }
     else
     {
