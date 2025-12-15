@@ -66,11 +66,21 @@ for ($i = 0; $i < 50; ++$i)
 
     if ($attachmentCreator->isError())
     {
-        //Nothing
+        /* Log hard errors so admins can see why items failed. */
+        error_log(sprintf(
+            'MassImport: failed to import "%s": %s',
+            $fullFilename,
+            $attachmentCreator->getError()
+        ));
     }
     else if ($attachmentCreator->isTextExtractionError())
     {
-        //Nothing
+        /* Text extraction failed but attachment may still be created. */
+        error_log(sprintf(
+            'MassImport: text extraction failed for "%s": %s',
+            $fullFilename,
+            $attachmentCreator->getTextExtractionError()
+        ));
     }
     else if ($attachmentCreator->duplicatesOccurred())
     {
