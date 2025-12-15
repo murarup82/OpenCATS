@@ -88,15 +88,12 @@
                 <tr>
                     <td align="left" valign="top" style="text-align: left; width: 50%; height: 260px;">
                         <div class="noteUnsizedSpan">Status Funnel Snapshot</div>
-                        <map name="funnelmap" id="funnelmap">
-                           <area href="#" alt="All-Time" title="All-Time"
-                                 shape="rect" coords="398,0,461,24" onclick="swapFunnelGraph(0);" />
-                           <area href="#" alt="Last Week" title="Last Week"
-                                 shape="rect" coords="398,25,461,48" onclick="swapFunnelGraph(1);" />
-                            <area href="#" alt="Last Month" title="Last Month"
-                                 shape="rect" coords="398,49,461,74" onclick="swapFunnelGraph(2);" />
-                        </map>
-                        <img src="<?php echo(CATSUtility::getIndexName()); ?>?m=graphs&amp;a=pipelineFunnelSnapshot&amp;width=495&amp;height=230" id="funnelGraph" onclick="" alt="Status Funnel Snapshot" usemap="#funnelmap" border="0" />
+                        <div style="float:right; width:70px; margin-top:4px;">
+                            <div style="padding:4px; border:1px solid #c0c0c0; margin-bottom:2px; cursor:pointer; font-size:10px; background:#f5f5f5;" onclick="swapFunnelGraph(0);">All-Time</div>
+                            <div style="padding:4px; border:1px solid #c0c0c0; margin-bottom:2px; cursor:pointer; font-size:10px; background:#f5f5f5;" onclick="swapFunnelGraph(1);">Last Week</div>
+                            <div style="padding:4px; border:1px solid #c0c0c0; cursor:pointer; font-size:10px; background:#f5f5f5;" onclick="swapFunnelGraph(2);">Last Month</div>
+                        </div>
+                        <img src="<?php echo(CATSUtility::getIndexName()); ?>?m=graphs&amp;a=pipelineFunnelSnapshot&amp;width=495&amp;height=230" id="funnelGraph" onclick="" alt="Status Funnel Snapshot" border="0" />
                     </td>
                 </tr>
             </table>
