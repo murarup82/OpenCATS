@@ -258,6 +258,7 @@ class GraphComparisonChart
 
         $plot->xAxis->setLabelText($this->xLabels);
         $plot->xAxis->label->setAngle(45);
+        $plot->xAxis->label->move(-6, 0);
 
         $graph->add($plot);
 
