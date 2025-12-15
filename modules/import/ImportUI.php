@@ -1418,8 +1418,10 @@ class ImportUI extends UserInterface
         }
         $_SESSION['MASS_IMPORT_DOC_CALLS']++;
 
+        $sessionId = session_id();
         error_log(sprintf(
-            'MassImport: massImportDocument called (count=%d) name=%s realName=%s ext=%s type=%s cTime=%s',
+            'MassImport: massImportDocument called (session=%s count=%d) name=%s realName=%s ext=%s type=%s cTime=%s',
+            $sessionId,
             $_SESSION['MASS_IMPORT_DOC_CALLS'],
             isset($_GET['name']) ? $_GET['name'] : '(none)',
             isset($_GET['realName']) ? $_GET['realName'] : '(none)',
@@ -1474,6 +1476,7 @@ class ImportUI extends UserInterface
             'type' => $type,
             'cTime' => $cTime,
         );
+        error_log(sprintf('MassImport: session=%s CATS_PARSE_TEMP pre-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
 
         $doc2text = new DocumentToText();
         $pu = new ParseUtility();
@@ -1510,10 +1513,14 @@ class ImportUI extends UserInterface
             $_SESSION['MASS_IMPORT_ERRORS'][] = $message;
             $mp['success'] = false;
             $_SESSION['CATS_PARSE_TEMP'][] = $mp;
+            $_SESSION['MASS_IMPORT_ERRORS'][] = sprintf(
+                'DEBUG: stored failed parse entry for "%s".', $name
+            );
+            error_log(sprintf('MassImport: session=%s CATS_PARSE_TEMP post-fail-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
             echo 'Fail';
             return;
         }
-        error_log(sprintf('MassImport: convert succeeded for "%s".', $name));
+        error_log(sprintf('MassImport: convert succeeded for "%s" (session=%s).', $name, $sessionId));
         $contents = $doc2text->getString();
 
         // Decode things like _rATr to @ so the parser can accurately find things
@@ -1545,6 +1552,10 @@ class ImportUI extends UserInterface
 
         $mp['success'] = true;
         $_SESSION['CATS_PARSE_TEMP'][] = $mp;
+        $_SESSION['MASS_IMPORT_ERRORS'][] = sprintf(
+            'DEBUG: stored successful parse entry for "%s".', $name
+        );
+        error_log(sprintf('MassImport: session=%s CATS_PARSE_TEMP post-success-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
 
         echo 'Ok';
         return;
@@ -1757,6 +1768,7 @@ class ImportUI extends UserInterface
                 if (isset($_SESSION['MASS_IMPORT_DOC_CALLS'])) {
                     $debugDetails[] = sprintf('Debug: massImportDocument calls=%d.', (int) $_SESSION['MASS_IMPORT_DOC_CALLS']);
                 }
+                $debugDetails[] = sprintf('Debug: PHP session id=%s.', session_id());
 
                 if (empty($errorDetails)) {
                     $errorDetails = $debugDetails;
