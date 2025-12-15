@@ -59,3 +59,13 @@ function trackTableHighlight()
 
 /* Track current funnel view so changing job order keeps the same mode. */
 var funnelCurrentView = 0;
+
+function swapSeniorityGraph()
+{
+    var seniorityGraphImage = document.getElementById('seniorityGraph');
+    var includeInactiveCheckbox = document.getElementById('seniorityIncludeInactive');
+    var includeInactive = (includeInactiveCheckbox && includeInactiveCheckbox.checked) ? 1 : 0;
+
+    var src = CATSIndexName + "?m=graphs&a=seniorityDistribution&width=495&height=230&includeInactive=" + includeInactive;
+    seniorityGraphImage.src = src;
+}

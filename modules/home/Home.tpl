@@ -106,6 +106,18 @@
                     </td>
                 </tr>
             </table>
+
+            <table>
+                <tr>
+                    <td align="left" valign="top" style="text-align: left; width: 50%; height: 260px;">
+                        <div class="noteUnsizedSpan">Seniority Distribution</div>
+                        <div style="margin:4px 0; font-size:10px;">
+                            <label><input type="checkbox" id="seniorityIncludeInactive" onclick="swapSeniorityGraph();" /> Include inactive</label>
+                        </div>
+                        <img src="<?php echo(CATSUtility::getIndexName()); ?>?m=graphs&amp;a=seniorityDistribution&amp;width=495&amp;height=230" id="seniorityGraph" onclick="" alt="Seniority Distribution" border="0" />
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>

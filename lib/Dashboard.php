@@ -379,6 +379,56 @@ class Dashboard
 
         return $data;
     }
+
+    /**
+     * Seniority distribution across candidates.
+     *
+     * @param bool includeInactive If true, include inactive candidates; otherwise only active.
+     * @return array list of ['label' => seniority, 'count' => n]
+     */
+    public function getSeniorityDistribution($includeInactive = false)
+    {
+        $activeFilter = $includeInactive ? '' : ' AND candidate.is_active = 1';
+
+        $sql = sprintf(
+            "SELECT
+                CASE
+                    WHEN ef.value IS NULL OR ef.value = '' THEN 'Unspecified'
+                    ELSE ef.value
+                END AS seniority,
+                COUNT(*) AS total
+             FROM
+                candidate
+             LEFT JOIN extra_field ef ON
+                ef.data_item_id = candidate.candidate_id
+                AND ef.field_name = 'Seniority'
+                AND ef.data_item_type = %s
+                AND ef.site_id = candidate.site_id
+             WHERE
+                candidate.site_id = %s
+             %s
+             GROUP BY seniority",
+            DATA_ITEM_CANDIDATE,
+            $this->_siteID,
+            $activeFilter
+        );
+
+        $rs = $this->_db->getAllAssoc($sql);
+
+        $data = array();
+        if (!empty($rs))
+        {
+            foreach ($rs as $row)
+            {
+                $data[] = array(
+                    'label' => $row['seniority'],
+                    'count' => (int) $row['total']
+                );
+            }
+        }
+
+        return $data;
+    }
 }
     
 ?>

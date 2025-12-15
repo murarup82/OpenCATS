@@ -130,6 +130,10 @@ class GraphsUI extends UserInterface
                     $this->pipelineFunnelSnapshot();
                     return;
 
+                case 'seniorityDistribution':
+                    $this->seniorityDistribution();
+                    return;
+
                 default:
                     CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'No graph specified.');
                     return;
@@ -602,6 +606,67 @@ class GraphsUI extends UserInterface
 
         $graph = new GraphComparisonChart(
             $labels, $counts, $colorArray, 'Status Funnel Snapshot', $this->width,
+            $this->height, $maxValue, $percentTexts
+        );
+
+        $graph->draw();
+        die();
+    }
+
+    private function seniorityDistribution()
+    {
+        $includeInactive = isset($_GET['includeInactive']) && ((int) $_GET['includeInactive'] === 1);
+
+        $dashboard = new Dashboard($this->_siteID);
+        $distribution = $dashboard->getSeniorityDistribution($includeInactive);
+
+        $labels = array();
+        $counts = array();
+        $percentTexts = array();
+
+        $totalCount = 0;
+        foreach ($distribution as $row)
+        {
+            $totalCount += $row['count'];
+        }
+        if ($totalCount <= 0)
+        {
+            $totalCount = 1;
+        }
+
+        foreach ($distribution as $row)
+        {
+            $labels[] = $row['label'];
+            $counts[] = $row['count'];
+            $percentTexts[] = round(($row['count'] / $totalCount) * 100) . '%';
+        }
+
+        /* Repeat colors as needed. */
+        $colorArray = array(
+            new LinearGradient(new DarkGreen, new White, 0),
+            new LinearGradient(new MidGreen, new White, 0),
+            new LinearGradient(new Color(60, 160, 60), new White, 0),
+            new LinearGradient(new Orange, new White, 0),
+            new LinearGradient(new Color(200, 150, 20), new White, 0),
+            new LinearGradient(new Color(90, 90, 235), new White, 0),
+            new LinearGradient(new DarkBlue, new White, 0),
+            new LinearGradient(new Color(128, 0, 255), new White, 0),
+            new LinearGradient(new AlmostBlack, new White, 0),
+            new LinearGradient(new Color(60, 60, 60), new White, 0)
+        );
+        while (count($colorArray) < count($labels))
+        {
+            $colorArray = array_merge($colorArray, $colorArray);
+        }
+
+        $maxValue = max($counts);
+        if ($maxValue <= 0)
+        {
+            $maxValue = 1;
+        }
+
+        $graph = new GraphComparisonChart(
+            $labels, $counts, array_slice($colorArray, 0, count($labels)), 'Seniority Distribution', $this->width,
             $this->height, $maxValue, $percentTexts
         );
 
