@@ -1441,6 +1441,21 @@ class ImportUI extends UserInterface
         $_SESSION['MASS_IMPORT_DOC_CALLS']++;
 
         $sessionId = session_id();
+        /* Capture fatal errors for this request. */
+        $logger = array($this, 'logMassImport');
+        register_shutdown_function(function () use ($sessionId, $logger) {
+            $error = error_get_last();
+            if ($error !== null && in_array($error['type'], array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR))) {
+                call_user_func($logger, sprintf(
+                    'FATAL session=%s type=%d message=%s file=%s line=%d',
+                    $sessionId,
+                    $error['type'],
+                    $error['message'],
+                    $error['file'],
+                    $error['line']
+                ));
+            }
+        });
         $this->logMassImport(sprintf(
             'MassImport: massImportDocument called (session=%s count=%d) name=%s realName=%s ext=%s type=%s cTime=%s',
             $sessionId,
@@ -1550,6 +1565,7 @@ class ImportUI extends UserInterface
         $contents = DatabaseSearch::fulltextDecode($contents);
         $this->logMassImport(sprintf('after fulltextDecode length=%d (session=%s).', strlen($contents), $sessionId));
 
+        $this->logMassImport(sprintf('parsingEnabled=%s (session=%s).', $parsingEnabled ? 'true' : 'false', $sessionId));
         if ($parsingEnabled) {
             switch ($type) {
                 case DOCUMENT_TYPE_DOC:
@@ -1572,9 +1588,11 @@ class ImportUI extends UserInterface
                 $contents
             );
             $mp['parse'] = $parseData;
+            $this->logMassImport(sprintf('parseData keys=%s (session=%s).', implode(',', array_keys($parseData)), $sessionId));
         }
         $this->logMassImport(sprintf('parse phase complete (session=%s).', $sessionId));
 
+        $this->logMassImport(sprintf('about to push success entry (session=%s).', $sessionId));
         $mp['success'] = true;
         $_SESSION['CATS_PARSE_TEMP'][] = $mp;
         $_SESSION['MASS_IMPORT_ERRORS'][] = sprintf(
