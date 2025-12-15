@@ -278,36 +278,6 @@ class Dashboard
      */
     public function getPipelineSnapshot($view, $jobOrderID = NULL)
     {
-        $oneUnixDay = 86400;
-        $now = time();
-
-        $calendarSettings = new CalendarSettings($this->_siteID);
-        $calendarSettingsRS = $calendarSettings->getAll();
-
-        /* Determine period start/end based on view for date_modified filter. */
-        $weekStart = ($calendarSettingsRS['firstDayMonday'] == 1) ?
-            strtotime('monday this week', $now) :
-            strtotime('sunday this week', $now);
-
-        switch ($view)
-        {
-            case DASHBOARD_GRAPH_YEARLY:
-                $startTS = strtotime(date('Y-01-01', $now));
-                $endTS = strtotime(date('Y-01-01', strtotime('+1 year', $now)));
-                break;
-
-            case DASHBOARD_GRAPH_MONTHLY:
-                $startTS = strtotime(date('Y-m-01', $now));
-                $endTS = strtotime(date('Y-m-01', strtotime('+1 month', $now)));
-                break;
-
-            case DASHBOARD_GRAPH_WEEKLY:
-            default:
-                $startTS = $weekStart;
-                $endTS = $weekStart + ($oneUnixDay * 7);
-                break;
-        }
-
         $jobOrderFilter = '';
         if ($jobOrderID !== NULL && is_numeric($jobOrderID))
         {
@@ -326,15 +296,9 @@ class Dashboard
                 candidate_joborder
              WHERE
                 candidate_joborder.site_id = %s
-             AND
-                candidate_joborder.date_modified >= FROM_UNIXTIME(%s)
-             AND
-                candidate_joborder.date_modified < FROM_UNIXTIME(%s)
              %s
              GROUP BY candidate_joborder.status",
             $this->_siteID,
-            $this->_db->makeQueryInteger($startTS),
-            $this->_db->makeQueryInteger($endTS),
             $jobOrderFilter
         );
 
@@ -350,7 +314,7 @@ class Dashboard
         }
 
         $pipelines = new Pipelines($this->_siteID);
-        $statuses = $pipelines->getStatuses();
+        $statuses = $pipelines->getStatusesForPicking(); // excludes "No Status"
 
         $data = array();
 
