@@ -1544,9 +1544,11 @@ class ImportUI extends UserInterface
         }
         $this->logMassImport(sprintf('convert succeeded for "%s" (session=%s).', $name, $sessionId));
         $contents = $doc2text->getString();
+        $this->logMassImport(sprintf('after getString length=%d (session=%s).', strlen($contents), $sessionId));
 
         // Decode things like _rATr to @ so the parser can accurately find things
         $contents = DatabaseSearch::fulltextDecode($contents);
+        $this->logMassImport(sprintf('after fulltextDecode length=%d (session=%s).', strlen($contents), $sessionId));
 
         if ($parsingEnabled) {
             switch ($type) {
@@ -1571,6 +1573,7 @@ class ImportUI extends UserInterface
             );
             $mp['parse'] = $parseData;
         }
+        $this->logMassImport(sprintf('parse phase complete (session=%s).', $sessionId));
 
         $mp['success'] = true;
         $_SESSION['CATS_PARSE_TEMP'][] = $mp;
@@ -1579,6 +1582,7 @@ class ImportUI extends UserInterface
         );
         $this->logMassImport(sprintf('session=%s CATS_PARSE_TEMP post-success-count=%d', $sessionId, count($_SESSION['CATS_PARSE_TEMP'])));
 
+        $this->logMassImport(sprintf('responding Ok for "%s" (session=%s).', $name, $sessionId));
         echo 'Ok';
         return;
     }
