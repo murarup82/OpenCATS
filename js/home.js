@@ -33,6 +33,13 @@ function swapHomeGraph(view)
     homeGraphImage.src = CATSIndexName + "?m=graphs&a=miniPlacementStatistics&width=495&height=230&view=" + view;
 }
 
+function swapFunnelGraph(view)
+{
+    var funnelGraphImage = document.getElementById('funnelGraph');
+
+    funnelGraphImage.src = CATSIndexName + "?m=graphs&a=pipelineFunnelSnapshot&width=495&height=230&view=" + view;
+}
+
 /* We don't need to mouseover. */
 
 function trackTableHighlight()

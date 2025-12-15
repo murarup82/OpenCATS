@@ -90,6 +90,7 @@ class awBarPlotPipeline extends awPlot implements awLegendable {
 	public $arrayBarBackground;
 	public $maxValue;
 	public $drawPercent;
+    public $customPercentTexts;
 
 	/**
 	 * Construct a new awBarPlot
@@ -123,6 +124,7 @@ class awBarPlotPipeline extends awPlot implements awLegendable {
 		$this->move = new awSide;
 
 		$this->drawPercent = $drawPercent;
+        $this->customPercentTexts = NULL;
 
 		if(!$this->drawPercent)
 		{
@@ -405,9 +407,19 @@ class awBarPlotPipeline extends awPlot implements awLegendable {
     				$maxValue = 1;
 				}
 
+                $percentText = NULL;
+                if (is_array($this->customPercentTexts) && array_key_exists($key, $this->customPercentTexts))
+                {
+                    $percentText = $this->customPercentTexts[$key];
+                }
+                else
+                {
+                    $percentText = ''.round(($value / $maxValue) * 100 ,0).'%';
+                }
+
 				if($value != 0 && $this->drawPercent)
 				{
-				    $this->label->drawSpecial($drawer, $point2, $key, ''.round(($value / $maxValue) * 100 ,0).'%');
+				    $this->label->drawSpecial($drawer, $point2, $key, $percentText);
 				    $this->label->draw($drawer, $point, $key);
 			    }
 			}

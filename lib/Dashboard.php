@@ -31,6 +31,7 @@
  */
 
 include_once(LEGACY_ROOT . '/lib/Calendar.php');
+include_once(LEGACY_ROOT . '/lib/Pipelines.php');
 
 /**
  *	Dashboard Library
@@ -266,6 +267,110 @@ class Dashboard
         
         ksort($data, SORT_NUMERIC);
         
+        return $data;
+    }
+
+    /**
+     * Returns counts for all pipeline statuses for the current period.
+     *
+     * @param integer pipeline view identifier
+     * @return array ordered list of status labels, counts, and retention vs previous stage
+     */
+    public function getPipelineSnapshot($view)
+    {
+        $oneUnixDay = 86400;
+        $now = time();
+
+        $calendarSettings = new CalendarSettings($this->_siteID);
+        $calendarSettingsRS = $calendarSettings->getAll();
+
+        /* Determine period start/end based on view. */
+        $weekStart = ($calendarSettingsRS['firstDayMonday'] == 1) ?
+            strtotime('monday this week', $now) :
+            strtotime('sunday this week', $now);
+
+        switch ($view)
+        {
+            case DASHBOARD_GRAPH_YEARLY:
+                $startTS = strtotime(date('Y-01-01', $now));
+                $endTS = strtotime(date('Y-01-01', strtotime('+1 year', $now)));
+                break;
+
+            case DASHBOARD_GRAPH_MONTHLY:
+                $startTS = strtotime(date('Y-m-01', $now));
+                $endTS = strtotime(date('Y-m-01', strtotime('+1 month', $now)));
+                break;
+
+            case DASHBOARD_GRAPH_WEEKLY:
+            default:
+                $startTS = $weekStart;
+                $endTS = $weekStart + ($oneUnixDay * 7);
+                break;
+        }
+
+        /* Grab counts grouped by status for the selected window. */
+        $sql = sprintf(
+            "SELECT
+                status_to AS statusID,
+                COUNT(*) AS total
+             FROM
+                candidate_joborder_status_history
+             WHERE
+                site_id = %s
+             AND
+                candidate_joborder_status_history.date >= FROM_UNIXTIME(%s)
+             AND
+                candidate_joborder_status_history.date < FROM_UNIXTIME(%s)
+             GROUP BY status_to",
+            $this->_siteID,
+            $this->_db->makeQueryInteger($startTS),
+            $this->_db->makeQueryInteger($endTS)
+        );
+
+        $rs = $this->_db->getAllAssoc($sql);
+
+        $countMap = array();
+        if (!empty($rs))
+        {
+            foreach ($rs as $row)
+            {
+                $countMap[(int)$row['statusID']] = (int)$row['total'];
+            }
+        }
+
+        $pipelines = new Pipelines($this->_siteID);
+        $statuses = $pipelines->getStatuses();
+
+        $data = array();
+        $previousCount = 0;
+
+        foreach ($statuses as $index => $statusRow)
+        {
+            $statusID = (int)$statusRow['statusID'];
+            $count = isset($countMap[$statusID]) ? $countMap[$statusID] : 0;
+
+            if ($index === 0)
+            {
+                $retention = ($count > 0) ? 100 : 0;
+            }
+            else if ($previousCount > 0)
+            {
+                $retention = round(($count / $previousCount) * 100);
+            }
+            else
+            {
+                $retention = 0;
+            }
+
+            $data[] = array(
+                'label' => $statusRow['status'],
+                'count' => $count,
+                'retention' => $retention
+            );
+
+            $previousCount = $count;
+        }
+
         return $data;
     }
 }

@@ -193,9 +193,10 @@ class GraphComparisonChart
     private $color;
     private $title;
     private $totalValue;
+    private $customPercentTexts;
 
 
-    public function __construct($xLabels, $xValues, $colorArray, $title, $width, $height, $totalValue)
+    public function __construct($xLabels, $xValues, $colorArray, $title, $width, $height, $totalValue, $customPercentTexts = array())
     {
         $this->xLabels = $xLabels;
         $this->xValues = $xValues;
@@ -204,6 +205,7 @@ class GraphComparisonChart
         $this->width = $width;
         $this->height = $height;
         $this->totalValue = $totalValue;
+        $this->customPercentTexts = $customPercentTexts;
     }
 
     // FIXME: Document me.
@@ -252,6 +254,10 @@ class GraphComparisonChart
         $plot->xAxis->setLabelText($this->xLabels);
         $plot->xAxis->label->setAngle(45);
         $plot->xAxis->label->move(-15, 0);
+
+        if (!empty($this->customPercentTexts)) {
+            $plot->customPercentTexts = $this->customPercentTexts;
+        }
 
         $graph->add($plot);
 

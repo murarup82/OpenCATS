@@ -126,6 +126,10 @@ class GraphsUI extends UserInterface
                     $this->miniJobOrderPipeline();
                     return;
 
+                case 'pipelineFunnelSnapshot':
+                    $this->pipelineFunnelSnapshot();
+                    return;
+
                 default:
                     CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'No graph specified.');
                     return;
@@ -541,7 +545,53 @@ class GraphsUI extends UserInterface
         die();
     }
 
- 
+    private function pipelineFunnelSnapshot()
+    {
+        $view = isset($_GET['view']) ? (int) $_GET['view'] : DASHBOARD_GRAPH_WEEKLY;
+
+        $dashboard = new Dashboard($this->_siteID);
+        $snapshot = $dashboard->getPipelineSnapshot($view);
+
+        $labels = array();
+        $counts = array();
+        $percentTexts = array();
+
+        foreach ($snapshot as $index => $row)
+        {
+            $labels[] = $row['label'];
+            $counts[] = $row['count'];
+            $percentTexts[] = $row['retention'] . '%';
+        }
+
+        $colorArray = array(
+            new LinearGradient(new DarkGreen, new White, 0),
+            new LinearGradient(new MidGreen, new White, 0),
+            new LinearGradient(new Color(60, 160, 60), new White, 0),
+            new LinearGradient(new Orange, new White, 0),
+            new LinearGradient(new Color(200, 150, 20), new White, 0),
+            new LinearGradient(new Color(90, 90, 235), new White, 0),
+            new LinearGradient(new DarkBlue, new White, 0),
+            new LinearGradient(new Color(128, 0, 255), new White, 0),
+            new LinearGradient(new AlmostBlack, new White, 0),
+            new LinearGradient(new Color(60, 60, 60), new White, 0)
+        );
+
+        $maxValue = max($counts);
+        if ($maxValue <= 0)
+        {
+            $maxValue = 1;
+        }
+
+        $graph = new GraphComparisonChart(
+            $labels, $counts, $colorArray, 'Status Funnel Snapshot', $this->width,
+            $this->height, $maxValue, $percentTexts
+        );
+
+        $graph->draw();
+        die();
+    }
+
+
     private function newSubmissions()
     {
         /* Grab an instance of Statistics. */
