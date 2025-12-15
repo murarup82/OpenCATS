@@ -754,6 +754,23 @@ class Attachments
      */
     public function getBulkAttachments()
     {
+        /* Detect optional columns (backwards compatible with older schemas). */
+        $hasStoredOnS3 = false;
+        $hasStoredLocally = false;
+        $columnCheck = $this->_db->getAllAssoc("SHOW COLUMNS FROM attachment LIKE 'stored_on_s3'");
+        if (is_array($columnCheck) && count($columnCheck) > 0)
+        {
+            $hasStoredOnS3 = true;
+        }
+        $columnCheck = $this->_db->getAllAssoc("SHOW COLUMNS FROM attachment LIKE 'stored_locally'");
+        if (is_array($columnCheck) && count($columnCheck) > 0)
+        {
+            $hasStoredLocally = true;
+        }
+
+        $storedOnS3Select = $hasStoredOnS3 ? 'stored_on_s3 as storedOnS3' : '0 as storedOnS3';
+        $storedLocallySelect = $hasStoredLocally ? 'stored_locally as storedLocally' : '1 as storedLocally';
+
         $sql = sprintf(
             "SELECT
                 attachment_id as attachmentID,
@@ -768,14 +785,16 @@ class Attachments
                 date_modified as dateModified,
                 directory_name as directoryName,
                 file_size_kb as fileSizeKB,
-                stored_on_s3 as storedOnS3,
-                stored_locally as storedLocally
+                %s,
+                %s
             FROM
                 attachment
             WHERE
                 data_item_type = %s
             AND
                 site_id = %d",
+            $storedOnS3Select,
+            $storedLocallySelect,
             $this->_db->makeQueryInteger(DATA_ITEM_BULKRESUME),
             $this->_siteID
         );
