@@ -89,12 +89,12 @@
                     <td align="left" valign="top" style="text-align: left; width: 50%; height: 260px;">
                         <div class="noteUnsizedSpan">Status Funnel Snapshot</div>
                         <map name="funnelmap" id="funnelmap">
-                           <area href="#" alt="Weekly" title="Weekly"
-                                 shape="rect" coords="398,0,461,24" onclick="swapFunnelGraph(<?php echo(DASHBOARD_GRAPH_WEEKLY); ?>);" />
-                           <area href="#" alt="Monthly" title="Monthly"
-                                 shape="rect" coords="398,25,461,48" onclick="swapFunnelGraph(<?php echo(DASHBOARD_GRAPH_MONTHLY); ?>);" />
-                            <area href="#" alt="Yearly" title="Yearly"
-                                 shape="rect" coords="398,49,461,74" onclick="swapFunnelGraph(<?php echo(DASHBOARD_GRAPH_YEARLY); ?>);" />
+                           <area href="#" alt="All-Time" title="All-Time"
+                                 shape="rect" coords="398,0,461,24" onclick="swapFunnelGraph(0);" />
+                           <area href="#" alt="Last Week" title="Last Week"
+                                 shape="rect" coords="398,25,461,48" onclick="swapFunnelGraph(1);" />
+                            <area href="#" alt="Last Month" title="Last Month"
+                                 shape="rect" coords="398,49,461,74" onclick="swapFunnelGraph(2);" />
                         </map>
                         <img src="<?php echo(CATSUtility::getIndexName()); ?>?m=graphs&amp;a=pipelineFunnelSnapshot&amp;width=495&amp;height=230" id="funnelGraph" onclick="" alt="Status Funnel Snapshot" usemap="#funnelmap" border="0" />
                     </td>

@@ -547,11 +547,12 @@ class GraphsUI extends UserInterface
 
     private function pipelineFunnelSnapshot()
     {
-        $view = isset($_GET['view']) ? (int) $_GET['view'] : DASHBOARD_GRAPH_WEEKLY;
+        /* view parameter repurposed for mode: 0=all-time, 1=last week, 2=last month */
+        $mode = isset($_GET['view']) ? (int) $_GET['view'] : 0;
         $jobOrderID = isset($_GET['jobOrderID']) && is_numeric($_GET['jobOrderID']) ? (int) $_GET['jobOrderID'] : NULL;
 
         $dashboard = new Dashboard($this->_siteID);
-        $snapshot = $dashboard->getPipelineSnapshot($view, $jobOrderID);
+        $snapshot = $dashboard->getPipelineSnapshot($mode, $jobOrderID);
 
         $labels = array();
         $counts = array();

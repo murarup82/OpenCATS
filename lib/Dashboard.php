@@ -276,7 +276,14 @@ class Dashboard
      * @param integer pipeline view identifier
      * @return array ordered list of status labels, counts, and retention vs previous stage
      */
-    public function getPipelineSnapshot($view, $jobOrderID = NULL)
+    /**
+     * Pipeline snapshot
+     *
+     * mode 0: all-time (current pipeline counts)
+     * mode 1: last week transitions
+     * mode 2: last month transitions
+     */
+    public function getPipelineSnapshot($mode, $jobOrderID = NULL)
     {
         $jobOrderFilter = '';
         if ($jobOrderID !== NULL && is_numeric($jobOrderID))
@@ -287,24 +294,65 @@ class Dashboard
             );
         }
 
-        /* Grab current counts grouped by status for candidates in pipelines. */
-        $sql = sprintf(
-            "SELECT
-                candidate_joborder.status AS statusID,
-                COUNT(*) AS total
-             FROM
-                candidate_joborder
-             WHERE
-                candidate_joborder.site_id = %s
-             %s
-             GROUP BY candidate_joborder.status",
-            $this->_siteID,
-            $jobOrderFilter
-        );
+        $countMap = array();
+
+        if ($mode === 1 || $mode === 2)
+        {
+            /* Transitions within a relative window. */
+            $now = time();
+            if ($mode === 1)
+            {
+                $startTS = strtotime('-1 week', $now);
+            }
+            else
+            {
+                $startTS = strtotime('-1 month', $now);
+            }
+            $endTS = $now;
+
+            $sql = sprintf(
+                "SELECT
+                    status_to AS statusID,
+                    COUNT(*) AS total
+                 FROM
+                    candidate_joborder_status_history
+                 WHERE
+                    site_id = %s
+                 AND
+                    candidate_joborder_status_history.date >= FROM_UNIXTIME(%s)
+                 AND
+                    candidate_joborder_status_history.date < FROM_UNIXTIME(%s)
+                 %s
+                 GROUP BY status_to",
+                $this->_siteID,
+                $this->_db->makeQueryInteger($startTS),
+                $this->_db->makeQueryInteger($endTS),
+                ($jobOrderID !== NULL && is_numeric($jobOrderID)) ? sprintf(
+                    ' AND candidate_joborder_status_history.joborder_id = %s',
+                    $this->_db->makeQueryInteger($jobOrderID)
+                ) : ''
+            );
+        }
+        else
+        {
+            /* All-time: current pipeline counts. */
+            $sql = sprintf(
+                "SELECT
+                    candidate_joborder.status AS statusID,
+                    COUNT(*) AS total
+                 FROM
+                    candidate_joborder
+                 WHERE
+                    candidate_joborder.site_id = %s
+                 %s
+                 GROUP BY candidate_joborder.status",
+                $this->_siteID,
+                $jobOrderFilter
+            );
+        }
 
         $rs = $this->_db->getAllAssoc($sql);
 
-        $countMap = array();
         if (!empty($rs))
         {
             foreach ($rs as $row)
