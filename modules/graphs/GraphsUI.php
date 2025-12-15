@@ -548,25 +548,42 @@ class GraphsUI extends UserInterface
     private function pipelineFunnelSnapshot()
     {
         $view = isset($_GET['view']) ? (int) $_GET['view'] : DASHBOARD_GRAPH_WEEKLY;
+        $jobOrderID = isset($_GET['jobOrderID']) && is_numeric($_GET['jobOrderID']) ? (int) $_GET['jobOrderID'] : NULL;
 
         $dashboard = new Dashboard($this->_siteID);
-        $snapshot = $dashboard->getPipelineSnapshot($view);
+        $snapshot = $dashboard->getPipelineSnapshot($view, $jobOrderID);
 
         $labels = array();
         $counts = array();
         $percentTexts = array();
 
-        foreach ($snapshot as $index => $row)
+        $totalCount = 0;
+        foreach ($snapshot as $row)
+        {
+            $totalCount += $row['count'];
+        }
+        if ($totalCount <= 0)
+        {
+            $totalCount = 1; // avoid div-by-zero; shows 0% for empty stages
+        }
+
+        /* Add a Total bar first to mirror the per-job-order view. */
+        $labels[] = 'Total';
+        $counts[] = $totalCount;
+        $percentTexts[] = '100%';
+
+        foreach ($snapshot as $row)
         {
             $labels[] = $row['label'];
             $counts[] = $row['count'];
-            $percentTexts[] = $row['retention'] . '%';
+            $percentTexts[] = round(($row['count'] / $totalCount) * 100) . '%';
         }
 
         $colorArray = array(
-            new LinearGradient(new DarkGreen, new White, 0),
+            new LinearGradient(new DarkGreen, new White, 0),          // Total
             new LinearGradient(new MidGreen, new White, 0),
             new LinearGradient(new Color(60, 160, 60), new White, 0),
+            new LinearGradient(new Green, new White, 0),
             new LinearGradient(new Orange, new White, 0),
             new LinearGradient(new Color(200, 150, 20), new White, 0),
             new LinearGradient(new Color(90, 90, 235), new White, 0),

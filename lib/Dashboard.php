@@ -276,7 +276,7 @@ class Dashboard
      * @param integer pipeline view identifier
      * @return array ordered list of status labels, counts, and retention vs previous stage
      */
-    public function getPipelineSnapshot($view)
+    public function getPipelineSnapshot($view, $jobOrderID = NULL)
     {
         $oneUnixDay = 86400;
         $now = time();
@@ -284,7 +284,7 @@ class Dashboard
         $calendarSettings = new CalendarSettings($this->_siteID);
         $calendarSettingsRS = $calendarSettings->getAll();
 
-        /* Determine period start/end based on view. */
+        /* Determine period start/end based on view for date_modified filter. */
         $weekStart = ($calendarSettingsRS['firstDayMonday'] == 1) ?
             strtotime('monday this week', $now) :
             strtotime('sunday this week', $now);
@@ -308,23 +308,34 @@ class Dashboard
                 break;
         }
 
-        /* Grab counts grouped by status for the selected window. */
+        $jobOrderFilter = '';
+        if ($jobOrderID !== NULL && is_numeric($jobOrderID))
+        {
+            $jobOrderFilter = sprintf(
+                ' AND candidate_joborder.joborder_id = %s',
+                $this->_db->makeQueryInteger($jobOrderID)
+            );
+        }
+
+        /* Grab current counts grouped by status for candidates in pipelines. */
         $sql = sprintf(
             "SELECT
-                status_to AS statusID,
+                candidate_joborder.status AS statusID,
                 COUNT(*) AS total
              FROM
-                candidate_joborder_status_history
+                candidate_joborder
              WHERE
-                site_id = %s
+                candidate_joborder.site_id = %s
              AND
-                candidate_joborder_status_history.date >= FROM_UNIXTIME(%s)
+                candidate_joborder.date_modified >= FROM_UNIXTIME(%s)
              AND
-                candidate_joborder_status_history.date < FROM_UNIXTIME(%s)
-             GROUP BY status_to",
+                candidate_joborder.date_modified < FROM_UNIXTIME(%s)
+             %s
+             GROUP BY candidate_joborder.status",
             $this->_siteID,
             $this->_db->makeQueryInteger($startTS),
-            $this->_db->makeQueryInteger($endTS)
+            $this->_db->makeQueryInteger($endTS),
+            $jobOrderFilter
         );
 
         $rs = $this->_db->getAllAssoc($sql);
@@ -342,33 +353,16 @@ class Dashboard
         $statuses = $pipelines->getStatuses();
 
         $data = array();
-        $previousCount = 0;
 
-        foreach ($statuses as $index => $statusRow)
+        foreach ($statuses as $statusRow)
         {
             $statusID = (int)$statusRow['statusID'];
             $count = isset($countMap[$statusID]) ? $countMap[$statusID] : 0;
 
-            if ($index === 0)
-            {
-                $retention = ($count > 0) ? 100 : 0;
-            }
-            else if ($previousCount > 0)
-            {
-                $retention = round(($count / $previousCount) * 100);
-            }
-            else
-            {
-                $retention = 0;
-            }
-
             $data[] = array(
                 'label' => $statusRow['status'],
-                'count' => $count,
-                'retention' => $retention
+                'count' => $count
             );
-
-            $previousCount = $count;
         }
 
         return $data;
