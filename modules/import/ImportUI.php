@@ -1413,6 +1413,20 @@ class ImportUI extends UserInterface
         if (!isset($_SESSION['MASS_IMPORT_ERRORS']) || !is_array($_SESSION['MASS_IMPORT_ERRORS'])) {
             $_SESSION['MASS_IMPORT_ERRORS'] = array();
         }
+        if (!isset($_SESSION['MASS_IMPORT_DOC_CALLS'])) {
+            $_SESSION['MASS_IMPORT_DOC_CALLS'] = 0;
+        }
+        $_SESSION['MASS_IMPORT_DOC_CALLS']++;
+
+        error_log(sprintf(
+            'MassImport: massImportDocument called (count=%d) name=%s realName=%s ext=%s type=%s cTime=%s',
+            $_SESSION['MASS_IMPORT_DOC_CALLS'],
+            isset($_GET['name']) ? $_GET['name'] : '(none)',
+            isset($_GET['realName']) ? $_GET['realName'] : '(none)',
+            isset($_GET['ext']) ? $_GET['ext'] : '(none)',
+            isset($_GET['type']) ? $_GET['type'] : '(none)',
+            isset($_GET['cTime']) ? $_GET['cTime'] : '(none)'
+        ));
 
         $failWithMessage = function ($message) {
             error_log($message);
@@ -1499,6 +1513,7 @@ class ImportUI extends UserInterface
             echo 'Fail';
             return;
         }
+        error_log(sprintf('MassImport: convert succeeded for "%s".', $name));
         $contents = $doc2text->getString();
 
         // Decode things like _rATr to @ so the parser can accurately find things
@@ -1710,10 +1725,20 @@ class ImportUI extends UserInterface
                 $uploadFiles = ImportUtility::getDirectoryFiles($uploadDir);
                 $uploadCount = (is_array($uploadFiles)) ? count($uploadFiles) : 0;
                 $fileNames = array();
+                $fileChecks = array();
                 if (is_array($uploadFiles)) {
                     foreach ($uploadFiles as $fileData) {
                         if (isset($fileData['name'])) {
                             $fileNames[] = $fileData['name'];
+                            $exists = file_exists($fileData['name']) ? 'yes' : 'no';
+                            $readable = is_readable($fileData['name']) ? 'yes' : 'no';
+                            $fileChecks[] = sprintf(
+                                'Debug: %s exists=%s readable=%s realpath=%s',
+                                $fileData['name'],
+                                $exists,
+                                $readable,
+                                @realpath($fileData['name'])
+                            );
                         }
                     }
                 }
@@ -1725,6 +1750,12 @@ class ImportUI extends UserInterface
                 );
                 if (!empty($fileNames)) {
                     $debugDetails[] = 'Debug: upload files: ' . implode(', ', $fileNames);
+                }
+                if (!empty($fileChecks)) {
+                    $debugDetails = array_merge($debugDetails, $fileChecks);
+                }
+                if (isset($_SESSION['MASS_IMPORT_DOC_CALLS'])) {
+                    $debugDetails[] = sprintf('Debug: massImportDocument calls=%d.', (int) $_SESSION['MASS_IMPORT_DOC_CALLS']);
                 }
 
                 if (empty($errorDetails)) {
