@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CATS
  * Graph Generation Library
@@ -33,8 +34,7 @@
 define('GRAPH_TREND_LINES', false);
 
 /* Is GD2 installed? */
-if (function_exists('ImageCreateFromJpeg'))
-{
+if (function_exists('ImageCreateFromJpeg')) {
     include_once(LEGACY_ROOT . '/lib/artichow/LinePlot.class.php');
     include_once(LEGACY_ROOT . '/lib/artichow/BarPlot.class.php');
     include_once(LEGACY_ROOT . '/lib/artichow/inc/Label.class.php');
@@ -70,13 +70,11 @@ class GraphSimple
     public function draw($format = false)
     {
         /* Make sure we have GD support. */
-        if (!function_exists('imagecreatefromjpeg'))
-        {
+        if (!function_exists('imagecreatefromjpeg')) {
             die();
         }
 
-        if ($format === false)
-        {
+        if ($format === false) {
             $format = IMG_PNG;
         }
 
@@ -105,8 +103,7 @@ class GraphSimple
         $plot2->setColor(new DarkBlue);
         $plot2->setThickness(1);
 
-        if (GRAPH_TREND_LINES)
-        {
+        if (GRAPH_TREND_LINES) {
             $group->add($plot2);
         }
 
@@ -142,22 +139,20 @@ class GraphPie
     public function draw($format = false)
     {
         /* Make sure we have GD support. */
-        if (!function_exists('imagecreatefromjpeg'))
-        {
+        if (!function_exists('imagecreatefromjpeg')) {
             die();
         }
 
-        if ($format === false)
-        {
+        if ($format === false) {
             $format = IMG_PNG;
         }
 
         $graph = new Graph($this->width, $this->height);
 
-        $colors = array (
-                new Green,
-                new Orange
-            );
+        $colors = array(
+            new Green,
+            new Orange
+        );
 
         $graph->setFormat($format);
         $graph->setBackgroundColor(new Color(0xF4, 0xF4, 0xF4));
@@ -171,7 +166,7 @@ class GraphPie
         $plot = new Pie($this->xValues, $colors);
         $plot->setCenter(0.5, 0.45);
         $plot->setAbsSize(160, 160);
-        
+
         $plot->setLegend($this->xLabels);
         $plot->legend->setModel(Legend::MODEL_BOTTOM);
         $plot->legend->setPosition(NULL, 1.25); /*$this->legendOffset*/
@@ -215,13 +210,11 @@ class GraphComparisonChart
     public function draw($format = false)
     {
         /* Make sure we have GD support. */
-        if (!function_exists('imagecreatefromjpeg'))
-        {
+        if (!function_exists('imagecreatefromjpeg')) {
             die();
         }
 
-        if ($format === false)
-        {
+        if ($format === false) {
             $format = IMG_PNG;
         }
 
@@ -258,7 +251,7 @@ class GraphComparisonChart
 
         $plot->xAxis->setLabelText($this->xLabels);
         $plot->xAxis->label->setAngle(45);
-        $plot->xAxis->label->move(-6, 0);
+        $plot->xAxis->label->move(-15, 0);
 
         $graph->add($plot);
 
@@ -268,8 +261,7 @@ class GraphComparisonChart
 
     public static function axisToValue($position, $min, $max)
     {
-        if (self::$axisCount <= 0)
-        {
+        if (self::$axisCount <= 0) {
             return 0;
         }
 
@@ -281,8 +273,7 @@ class GraphComparisonChart
 
     public static function axisToPosition($value, $min, $max)
     {
-        if (self::$axisCount <= 0)
-        {
+        if (self::$axisCount <= 0) {
             return 0;
         }
 
@@ -293,18 +284,14 @@ class GraphComparisonChart
 
     public static function labelForValue($value)
     {
-        if (empty(self::$axisLabels))
-        {
+        if (empty(self::$axisLabels)) {
             return '';
         }
 
         $index = (int) round($value);
-        if ($index < 0)
-        {
+        if ($index < 0) {
             $index = 0;
-        }
-        else if ($index >= count(self::$axisLabels))
-        {
+        } else if ($index >= count(self::$axisLabels)) {
             $index = count(self::$axisLabels) - 1;
         }
 
@@ -329,7 +316,7 @@ class pipelineStatisticsGraph
     private $legend3;
     private $view;
     private $noData;
-    
+
 
     public function __construct($xLabels, $xValues, $colorArray, $width, $height, $legend1, $legend2, $legend3, $view, $noData)
     {
@@ -350,17 +337,15 @@ class pipelineStatisticsGraph
     public function draw($format = false)
     {
         /* Make sure we have GD support. */
-        if (!function_exists('imagecreatefromjpeg'))
-        {
+        if (!function_exists('imagecreatefromjpeg')) {
             die();
         }
 
-        if ($format === false)
-        {
+        if ($format === false) {
             $format = IMG_PNG;
         }
 
-        $graph = new Graph($this->width, $this->height, NULL, 0, $this->width-95);
+        $graph = new Graph($this->width, $this->height, NULL, 0, $this->width - 95);
 
         $graph->setFormat($format);
         $graph->setBackgroundColor(new Color(0xF4, 0xF4, 0xF4));
@@ -438,13 +423,11 @@ class jobOrderReportGraph
     public function draw($format = false)
     {
         /* Make sure we have GD support. */
-        if (!function_exists('imagecreatefromjpeg'))
-        {
+        if (!function_exists('imagecreatefromjpeg')) {
             die();
         }
 
-        if ($format === false)
-        {
+        if ($format === false) {
             $format = IMG_JPEG;
         }
 
@@ -502,5 +485,3 @@ class WordVerify
         $object->draw();
     }
 }
-
-?>
