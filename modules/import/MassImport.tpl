@@ -47,14 +47,18 @@
                     <span style="font-size: 16px;">
                     <?php echo $this->errorMessage; ?>
                     </span>
-                    <?php if (isset($this->errorDetails) && is_array($this->errorDetails) && count($this->errorDetails)): ?>
+                    <?php if (isset($this->errorDetails) && is_array($this->errorDetails)): ?>
                         <div style="margin-top: 10px; font-size: 12px;">
                             <b>Details:</b>
-                            <ul>
-                                <?php foreach ($this->errorDetails as $err): ?>
-                                    <li><?php echo htmlspecialchars($err, ENT_QUOTES, 'UTF-8'); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
+                            <?php if (count($this->errorDetails)): ?>
+                                <ul>
+                                    <?php foreach ($this->errorDetails as $err): ?>
+                                        <li><?php echo htmlspecialchars($err, ENT_QUOTES, 'UTF-8'); ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php else: ?>
+                                <div>No specific errors were captured during processing.</div>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                     </div>

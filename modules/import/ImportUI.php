@@ -1655,19 +1655,19 @@ class ImportUI extends UserInterface
         } else if ($step == 3) {
             // Make sure the processed files exists, is an array, and is not empty
             list($documents, $success, $failed) = $this->getMassImportDocuments();
+            $errorDetails = array();
+            if (isset($_SESSION['MASS_IMPORT_ERRORS']) && is_array($_SESSION['MASS_IMPORT_ERRORS'])) {
+                $errorDetails = $_SESSION['MASS_IMPORT_ERRORS'];
+            }
             if (!count($documents)) {
-                $errorDetails = array();
-                if (isset($_SESSION['MASS_IMPORT_ERRORS']) && is_array($_SESSION['MASS_IMPORT_ERRORS'])) {
-                    $errorDetails = $_SESSION['MASS_IMPORT_ERRORS'];
-                }
                 $this->_template->assign(
                     'errorMessage',
                     'None of the files you uploaded were able '
                         . 'to be imported!'
                 );
-                $this->_template->assign('errorDetails', $errorDetails);
             }
 
+            $this->_template->assign('errorDetails', $errorDetails);
             $this->_template->assign('documents', $documents);
         } else if ($step == 4) {
             // Final step, import all applicable candidates
