@@ -134,7 +134,7 @@ class HomeUI extends UserInterface
         
         /* Job order list for funnel filter. */
         $jobOrders = new JobOrders($this->_siteID);
-        $jobOrderList = $jobOrders->getAll(JobOrderStatuses::OPEN);
+        $jobOrderList = $jobOrders->getAll(JOBORDERS_STATUS_ALL);
         $jobOrderOptions = array();
         foreach ($jobOrderList as $row)
         {
