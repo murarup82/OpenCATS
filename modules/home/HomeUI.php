@@ -30,6 +30,8 @@
 include_once(LEGACY_ROOT . '/lib/NewVersionCheck.php');
 include_once(LEGACY_ROOT . '/lib/CommonErrors.php');
 include_once(LEGACY_ROOT . '/lib/Dashboard.php');
+include_once(LEGACY_ROOT . '/lib/JobOrders.php');
+include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 
 class HomeUI extends UserInterface
 {
@@ -129,6 +131,19 @@ class HomeUI extends UserInterface
         $dataGrid2 = DataGrid::get("home:CallsDataGrid", $dataGridProperties);
 
         $this->_template->assign('dataGrid2', $dataGrid2);
+        
+        /* Job order list for funnel filter. */
+        $jobOrders = new JobOrders($this->_siteID);
+        $jobOrderList = $jobOrders->getAll(JobOrderStatuses::OPEN);
+        $jobOrderOptions = array();
+        foreach ($jobOrderList as $row)
+        {
+            $jobOrderOptions[] = array(
+                'id' => $row['jobOrderID'],
+                'title' => $row['title']
+            );
+        }
+        $this->_template->assign('jobOrderOptions', $jobOrderOptions);
         
         $this->_template->assign('active', $this);
         $this->_template->assign('placedRS', $placedRS);

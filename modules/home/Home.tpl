@@ -88,6 +88,15 @@
                 <tr>
                     <td align="left" valign="top" style="text-align: left; width: 50%; height: 260px;">
                         <div class="noteUnsizedSpan">Status Funnel Snapshot</div>
+                        <div style="margin:4px 0; font-size:10px;">
+                            <label for="funnelJobOrder">Job Order:</label>
+                            <select id="funnelJobOrder" onchange="swapFunnelGraph(funnelCurrentView);" style="font-size:10px;">
+                                <option value="">All Job Orders</option>
+                                <?php foreach($this->jobOrderOptions as $option): ?>
+                                    <option value="<?php $this->_($option['id']); ?>"><?php $this->_($option['title']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         <div style="float:right; width:70px; margin-top:4px;">
                             <div style="padding:4px; border:1px solid #c0c0c0; margin-bottom:2px; cursor:pointer; font-size:10px; background:#f5f5f5;" onclick="swapFunnelGraph(0);">All-Time</div>
                             <div style="padding:4px; border:1px solid #c0c0c0; margin-bottom:2px; cursor:pointer; font-size:10px; background:#f5f5f5;" onclick="swapFunnelGraph(1);">Last Week</div>

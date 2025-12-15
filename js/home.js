@@ -35,9 +35,19 @@ function swapHomeGraph(view)
 
 function swapFunnelGraph(view)
 {
+    funnelCurrentView = view;
     var funnelGraphImage = document.getElementById('funnelGraph');
 
-    funnelGraphImage.src = CATSIndexName + "?m=graphs&a=pipelineFunnelSnapshot&width=495&height=230&view=" + view;
+    var jobOrderSelect = document.getElementById('funnelJobOrder');
+    var jobOrderID = (jobOrderSelect && jobOrderSelect.value !== '') ? jobOrderSelect.value : '';
+
+    var src = CATSIndexName + "?m=graphs&a=pipelineFunnelSnapshot&width=495&height=230&view=" + view;
+    if (jobOrderID !== '')
+    {
+        src += "&jobOrderID=" + encodeURIComponent(jobOrderID);
+    }
+
+    funnelGraphImage.src = src;
 }
 
 /* We don't need to mouseover. */
@@ -46,3 +56,6 @@ function trackTableHighlight()
 {
     return;
 }
+
+/* Track current funnel view so changing job order keeps the same mode. */
+var funnelCurrentView = 0;
