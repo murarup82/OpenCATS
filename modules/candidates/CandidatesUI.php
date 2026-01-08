@@ -529,6 +529,29 @@ class CandidatesUI extends UserInterface
                 $attachmentsRS[$rowNumber]['previewLink'] = '&nbsp;';
             }
         }
+
+        $transformAttachments = array();
+        $transformAllowedExtensions = array('pdf', 'docx', 'txt');
+        foreach ($attachmentsRS as $attachmentsData)
+        {
+            if ($attachmentsData['isProfileImage'] == 1)
+            {
+                continue;
+            }
+
+            $extension = strtolower(
+                FileUtility::getFileExtension($attachmentsData['originalFilename'])
+            );
+            if (!in_array($extension, $transformAllowedExtensions, true))
+            {
+                continue;
+            }
+
+            $transformAttachments[] = array(
+                'attachmentID' => $attachmentsData['attachmentID'],
+                'originalFilename' => $attachmentsData['originalFilename']
+            );
+        }
         $pipelines = new Pipelines($this->_siteID);
         $pipelinesRS = $pipelines->getCandidatePipeline($candidateID);
 
@@ -653,6 +676,7 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('data', $data);
         $this->_template->assign('isShortNotes', $isShortNotes);
         $this->_template->assign('attachmentsRS', $attachmentsRS);
+        $this->_template->assign('transformAttachments', $transformAttachments);
         $this->_template->assign('pipelinesRS', $pipelinesRS);
         $this->_template->assign('activityRS', $activityRS);
         $this->_template->assign('calendarRS', $calendarRS);

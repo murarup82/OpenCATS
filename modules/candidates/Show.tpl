@@ -4,9 +4,9 @@ use OpenCATS\UI\CandidateQuickActionMenu;
 use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 ?>
 <?php if ($this->isPopup): ?>
-    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/activity.js', 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js')); ?>
+    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/activity.js', 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/transformCv.js')); ?>
 <?php else: ?>
-    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/activity.js', 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/quickAction-duplicates.js')); ?>
+    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/activity.js', 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/quickAction-duplicates.js', 'modules/candidates/transformCv.js')); ?>
     
     <?php TemplateUtility::printHeaderBlock(); ?>
     <?php TemplateUtility::printTabs($this->active); ?>
@@ -426,6 +426,10 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 </a>
                 &nbsp;&nbsp;&nbsp;&nbsp;
             <?php endif; ?>
+            <a id="transform_cv_link" href="#" onclick="CandidateTransformCV.open(); return false;">
+                <img src="images/parser/transfer.gif" width="16" height="16" class="absmiddle" alt="transform" border="0" />&nbsp;Transform CV
+            </a>
+            &nbsp;&nbsp;&nbsp;&nbsp;
             <?php if ($this->getUserAccessLevel('candidates.administrativeHideShow') >= ACCESS_LEVEL_MULTI_SA): ?>
                 <?php if ($this->data['isAdminHidden'] == 1): ?>
                     <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0">
@@ -444,6 +448,56 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 </a>
                 &nbsp;&nbsp;&nbsp;&nbsp;
             <?php endif; ?>
+            <div id="transformCvOverlay" style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background: #000; opacity: 0.25; z-index: 1000;"></div>
+            <div id="transformCvModal" style="display: none; position: fixed; left: 50%; top: 20%; width: 460px; margin-left: -230px; background: #fff; border: 1px solid #666; padding: 12px; z-index: 1001;">
+                <div style="font-weight: bold; margin-bottom: 8px;">Transform CV</div>
+                <table class="detailsInside">
+                    <tr>
+                        <td class="vertical" style="width: 120px;">CV Attachment:</td>
+                        <td class="data">
+                            <select id="transformCvAttachment" style="width: 300px;" <?php if (empty($this->transformAttachments)) echo('disabled="disabled"'); ?>>
+                                <?php if (empty($this->transformAttachments)): ?>
+                                    <option value="">No eligible attachments</option>
+                                <?php else: ?>
+                                    <?php foreach ($this->transformAttachments as $attachment): ?>
+                                        <option value="<?php echo($attachment['attachmentID']); ?>"><?php $this->_($attachment['originalFilename']); ?></option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="vertical">Job Order:</td>
+                        <td class="data">
+                            <input type="text" id="transformCvJobSearch" style="width: 180px;" onkeyup="CandidateTransformCV.scheduleSearch();" />
+                            <div style="margin-top: 4px;">
+                                <select id="transformCvJobOrder" style="width: 300px;">
+                                    <option value="">Type to search...</option>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="vertical">Language:</td>
+                        <td class="data">
+                            <input type="text" id="transformCvLanguage" style="width: 100px;" />
+                            &nbsp;Role Type:
+                            <input type="text" id="transformCvRoleType" style="width: 100px;" />
+                        </td>
+                    </tr>
+                </table>
+                <div style="margin-top: 10px;">
+                    <input type="button" class="button" id="transformCvSubmit" value="Submit" onclick="CandidateTransformCV.submit();" />
+                    <input type="button" class="button" value="Cancel" onclick="CandidateTransformCV.close();" />
+                </div>
+                <div id="transformCvStatus" style="margin-top: 8px;"></div>
+            </div>
+            <script type="text/javascript">
+                CandidateTransformCV.configure({
+                    candidateID: '<?php echo($this->candidateID); ?>',
+                    sessionCookie: '<?php echo($this->sessionCookie); ?>'
+                });
+            </script>
 <?php endif; ?>
             <br clear="all" />
             <br />
