@@ -70,6 +70,7 @@ define('SETTINGS_CALENDAR',      2);
 define('SETTINGS_EEO',           3);
 define('SETTINGS_CAREER_PORTAL', 4);
 define('SETTINGS_GDPR',          5);
+define('SETTINGS_TALENTFITFLOW', 6);
 
 /* Access level flags. */
 define('ACCESS_LEVEL_DELETED',  -100);

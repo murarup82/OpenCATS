@@ -48,6 +48,8 @@ include_once(LEGACY_ROOT . '/lib/ImportUtility.php');
 include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/Tags.php');
 include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
+include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
+include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
 eval(Hooks::get('XML_FEED_SUBMISSION_SETTINGS_HEADERS'));
 
 /* Users.php is included by index.php already. */
@@ -617,6 +619,25 @@ class SettingsUI extends UserInterface
                 else
                 {
                     $this->gdprSettings();
+                }
+                break;
+
+            case 'talentFitFlowSettings':
+                if ($this->getUserAccessLevel('settings.talentFitFlowSettings') < ACCESS_LEVEL_SA)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if ($this->isPostBack())
+                {
+                    if ($this->getUserAccessLevel('settings.talentFitFlowSettings.POST') < ACCESS_LEVEL_SA)
+                    {
+                        CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    }
+                    $this->onTalentFitFlowSettings();
+                }
+                else
+                {
+                    $this->talentFitFlowSettings();
                 }
                 break;
 
@@ -2047,6 +2068,72 @@ class SettingsUI extends UserInterface
         $gdprSettings->set('gdprExpirationYears', (string) (int) $expirationYears);
 
         CATSUtility::transferRelativeURI('m=settings&a=gdprSettings&saved=1');
+    }
+
+    /*
+     * Called by handleRequest() to show the TalentFitFlow settings template.
+     */
+    private function talentFitFlowSettings()
+    {
+        $tffSettings = new TalentFitFlowSettings($this->_siteID);
+        $tffSettingsRS = $tffSettings->getAll();
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Administration');
+        $this->_template->assign('tffSettings', $tffSettingsRS);
+        $this->_template->assign('tffSaved', isset($_GET['saved']));
+        $this->_template->display('./modules/settings/TalentFitFlowSettings.tpl');
+    }
+
+    /*
+     * Called by handleRequest() to process the TalentFitFlow settings template.
+     */
+    private function onTalentFitFlowSettings()
+    {
+        $tffSettings = new TalentFitFlowSettings($this->_siteID);
+
+        $baseUrl = $this->getTrimmedInput('baseUrl', $_POST);
+        $apiKey = $this->getTrimmedInput('apiKey', $_POST);
+        $hmacSecret = $this->getTrimmedInput('hmacSecret', $_POST);
+
+        if (isset($_POST['testConnection']))
+        {
+            $client = new TalentFitFlowClient(
+                ($baseUrl !== '') ? $baseUrl : null,
+                ($apiKey !== '') ? $apiKey : null,
+                ($hmacSecret !== '') ? $hmacSecret : null
+            );
+
+            $testResult = $client->ping();
+            if ($testResult === false)
+            {
+                $this->_template->assign('tffTestOk', false);
+                $this->_template->assign('tffTestMessage', $client->getLastError());
+            }
+            else
+            {
+                $configured = isset($testResult['opencatsUserConfigured']) && $testResult['opencatsUserConfigured'] ? 'true' : 'false';
+                $this->_template->assign('tffTestOk', (isset($testResult['ok']) && $testResult['ok']));
+                $this->_template->assign('tffTestMessage', 'Ping OK. opencatsUserConfigured: ' . $configured);
+            }
+
+            $this->_template->assign('active', $this);
+            $this->_template->assign('subActive', 'Administration');
+            $this->_template->assign('tffSettings', array(
+                'baseUrl' => $baseUrl,
+                'apiKey' => $apiKey,
+                'hmacSecret' => $hmacSecret
+            ));
+            $this->_template->assign('tffSaved', false);
+            $this->_template->display('./modules/settings/TalentFitFlowSettings.tpl');
+            return;
+        }
+
+        $tffSettings->set('baseUrl', $baseUrl);
+        $tffSettings->set('apiKey', $apiKey);
+        $tffSettings->set('hmacSecret', $hmacSecret);
+
+        CATSUtility::transferRelativeURI('m=settings&a=talentFitFlowSettings&saved=1');
     }
 
     /*

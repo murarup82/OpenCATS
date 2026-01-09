@@ -229,6 +229,34 @@ class TalentFitFlowClient
     }
 
     /**
+     * Pings the TalentFitFlow integration.
+     *
+     * @return array|false
+     */
+    public function ping()
+    {
+        $this->_lastError = '';
+
+        if (!$this->isConfigured())
+        {
+            return $this->_setError('TalentFitFlow is not configured.');
+        }
+
+        $timestamp = $this->_getTimestamp();
+        $payload = $timestamp . '.ping';
+        $signature = $this->_signPayload($payload);
+        $headers = $this->_buildSignedHeaders($timestamp, $signature);
+
+        return $this->_requestJson(
+            'GET',
+            '/api/integrations/opencats/ping',
+            $headers,
+            null,
+            array(200)
+        );
+    }
+
+    /**
      * Downloads the transformed CV using the cv_download_url from the API.
      *
      * @param string $downloadUrl
@@ -275,21 +303,34 @@ class TalentFitFlowClient
     {
         if ($overrideValue !== null)
         {
-            return (string) $overrideValue;
+            return trim((string) $overrideValue);
         }
 
         if (defined($constantName))
         {
-            return (string) constant($constantName);
+            return trim((string) constant($constantName));
         }
 
-        $envValue = getenv($constantName);
-        if ($envValue === false)
+        if (function_exists('getenv'))
         {
-            return '';
+            $envValue = getenv($constantName);
+            if ($envValue !== false && $envValue !== '')
+            {
+                return trim((string) $envValue);
+            }
         }
 
-        return (string) $envValue;
+        if (isset($_ENV[$constantName]))
+        {
+            return trim((string) $_ENV[$constantName]);
+        }
+
+        if (isset($_SERVER[$constantName]))
+        {
+            return trim((string) $_SERVER[$constantName]);
+        }
+
+        return '';
     }
 
     private function _normalizeBaseUrl($baseUrl)

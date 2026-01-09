@@ -9,6 +9,7 @@ include_once(LEGACY_ROOT . '/lib/Attachments.php');
 include_once(LEGACY_ROOT . '/lib/JobOrders.php');
 include_once(LEGACY_ROOT . '/lib/FileUtility.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
+include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 
 $interface = new SecureAJAXInterface();
 
@@ -31,7 +32,14 @@ if ($action === '')
     die();
 }
 
-$client = new TalentFitFlowClient();
+$settings = new TalentFitFlowSettings($interface->getSiteID());
+$settingsRS = $settings->getAll();
+
+$client = new TalentFitFlowClient(
+    ($settingsRS['baseUrl'] !== '') ? $settingsRS['baseUrl'] : null,
+    ($settingsRS['apiKey'] !== '') ? $settingsRS['apiKey'] : null,
+    ($settingsRS['hmacSecret'] !== '') ? $settingsRS['hmacSecret'] : null
+);
 if (!$client->isConfigured())
 {
     $interface->outputXMLErrorPage(-1, 'TalentFitFlow is not configured.');

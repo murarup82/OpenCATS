@@ -181,6 +181,17 @@
                                     Add/Remove tags, description for tags
                                 </td>
                             </tr>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=talentFitFlowSettings">
+                                        TalentFitFlow Integration
+                                    </a>
+                                </td>
+                                <td>
+                                    Configure API credentials for CV transformations.
+                                </td>
+                            </tr>
                         </table>
                         <br />
 
