@@ -8,6 +8,8 @@ var CandidateTransformCV = (function ()
     var pollTimer = null;
     var searchTimer = null;
     var currentJobId = '';
+    var jobOrderOffset = 0;
+    var jobOrderLimit = 50;
     var config = {
         candidateID: '',
         sessionCookie: ''
@@ -71,6 +73,15 @@ var CandidateTransformCV = (function ()
         }
     }
 
+    function setPagingVisible(visible)
+    {
+        var button = byId('transformCvNext');
+        if (button)
+        {
+            button.style.display = visible ? '' : 'none';
+        }
+    }
+
     function open()
     {
         var modal = byId('transformCvModal');
@@ -100,13 +111,11 @@ var CandidateTransformCV = (function ()
         {
             setStatus('No eligible attachments available.', true);
             disableSubmit(true);
+            setPagingVisible(false);
         }
-
-        var jobSelect = byId('transformCvJobOrder');
-        if (jobSelect)
+        else
         {
-            clearOptions(jobSelect);
-            addOption(jobSelect, '', 'Type to search...');
+            loadInitialJobOrders();
         }
     }
 
@@ -140,8 +149,7 @@ var CandidateTransformCV = (function ()
     function searchJobOrders()
     {
         var jobSearch = byId('transformCvJobSearch');
-        var jobSelect = byId('transformCvJobOrder');
-        if (!jobSearch || !jobSelect)
+        if (!jobSearch)
         {
             return;
         }
@@ -149,12 +157,35 @@ var CandidateTransformCV = (function ()
         var query = trim(jobSearch.value);
         if (query === '')
         {
-            clearOptions(jobSelect);
-            addOption(jobSelect, '', 'Type to search...');
+            loadInitialJobOrders();
             return;
         }
 
-        setStatus('Searching...', false);
+        loadJobOrders(query, 0, false);
+    }
+
+    function loadInitialJobOrders()
+    {
+        jobOrderOffset = 0;
+        loadJobOrders('', jobOrderOffset, false);
+    }
+
+    function loadNextJobOrders()
+    {
+        jobOrderOffset += jobOrderLimit;
+        loadJobOrders('', jobOrderOffset, true);
+    }
+
+    function loadJobOrders(query, offset, append)
+    {
+        var jobSelect = byId('transformCvJobOrder');
+        if (!jobSelect)
+        {
+            return;
+        }
+
+        setPagingVisible(query === '');
+        setStatus(query === '' ? 'Loading job orders...' : 'Searching...', false);
 
         var http = AJAX_getXMLHttpObject();
         if (!http)
@@ -163,7 +194,9 @@ var CandidateTransformCV = (function ()
             return;
         }
 
-        var POSTData = '&query=' + urlEncode(query) + '&maxResults=25';
+        var POSTData = '&query=' + urlEncode(query)
+            + '&maxResults=' + jobOrderLimit
+            + '&offset=' + offset;
 
         var callBack = function ()
         {
@@ -186,11 +219,33 @@ var CandidateTransformCV = (function ()
                 return;
             }
 
-            clearOptions(jobSelect);
+            if (!append)
+            {
+                clearOptions(jobSelect);
+                if (query === '')
+                {
+                    addOption(jobSelect, '', 'Select a job order...');
+                }
+            }
+
             var nodes = http.responseXML.getElementsByTagName('joborder');
             if (!nodes || nodes.length === 0)
             {
-                addOption(jobSelect, '', 'No results');
+                if (!append)
+                {
+                    addOption(jobSelect, '', query === '' ? 'No job orders found' : 'No results');
+                }
+                else
+                {
+                    jobOrderOffset = Math.max(0, jobOrderOffset - jobOrderLimit);
+                }
+
+                var nextButton = byId('transformCvNext');
+                if (nextButton)
+                {
+                    nextButton.disabled = true;
+                }
+
                 setStatus('', false);
                 return;
             }
@@ -206,6 +261,12 @@ var CandidateTransformCV = (function ()
                     label = title + ' (' + company + ')';
                 }
                 addOption(jobSelect, jobId, label);
+            }
+
+            var nextButton = byId('transformCvNext');
+            if (nextButton)
+            {
+                nextButton.disabled = (query !== '' || nodes.length < jobOrderLimit);
             }
 
             setStatus('', false);
@@ -466,6 +527,7 @@ var CandidateTransformCV = (function ()
         close: close,
         submit: submit,
         scheduleSearch: scheduleSearch,
+        loadNext: loadNextJobOrders,
         configure: configure
     };
 })();

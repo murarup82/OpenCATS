@@ -22,6 +22,16 @@ if (isset($_REQUEST['query']))
     $query = trim($_REQUEST['query']);
 }
 
+$offset = 0;
+if (isset($_REQUEST['offset']) && ctype_digit((string) $_REQUEST['offset']))
+{
+    $offset = (int) $_REQUEST['offset'];
+    if ($offset < 0)
+    {
+        $offset = 0;
+    }
+}
+
 $maxResults = 25;
 if (isset($_REQUEST['maxResults']) && ctype_digit((string) $_REQUEST['maxResults']))
 {
@@ -34,12 +44,51 @@ if (isset($_REQUEST['maxResults']) && ctype_digit((string) $_REQUEST['maxResults
 
 if ($query === '')
 {
+    $db = DatabaseConnection::getInstance();
+    $sql = sprintf(
+        "SELECT
+            joborder.joborder_id AS jobOrderID,
+            joborder.title AS title,
+            company.name AS companyName
+        FROM
+            joborder
+        LEFT JOIN company
+            ON joborder.company_id = company.company_id
+        WHERE
+            joborder.site_id = %s
+        AND
+            joborder.is_admin_hidden = 0
+        AND
+            (joborder.status IN %s)
+        ORDER BY
+            joborder.date_modified DESC
+        LIMIT %s, %s",
+        $db->makeQueryInteger($siteID),
+        JobOrderStatuses::getOpenStatusSQL(),
+        $db->makeQueryInteger($offset),
+        $db->makeQueryInteger($maxResults)
+    );
+    $merged = $db->getAllAssoc($sql);
+
     $output =
         "<data>\n" .
         "    <errorcode>0</errorcode>\n" .
         "    <errormessage></errormessage>\n" .
-        "    <totalelements>0</totalelements>\n" .
+        "    <totalelements>" . count($merged) . "</totalelements>\n";
+
+    foreach ($merged as $row)
+    {
+        $output .=
+            "    <joborder>\n" .
+            "        <id>" . (int) $row['jobOrderID'] . "</id>\n" .
+            "        <title>" . htmlspecialchars($row['title'], ENT_QUOTES) . "</title>\n" .
+            "        <companyname>" . htmlspecialchars($row['companyName'], ENT_QUOTES) . "</companyname>\n" .
+            "    </joborder>\n";
+    }
+
+    $output .=
         "</data>\n";
+
     $interface->outputXMLPage($output);
     die();
 }

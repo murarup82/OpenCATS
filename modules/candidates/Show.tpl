@@ -474,6 +474,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 <select id="transformCvJobOrder" style="width: 300px;">
                                     <option value="">Type to search...</option>
                                 </select>
+                                <input type="button" class="button" id="transformCvNext" value="Next 50" onclick="CandidateTransformCV.loadNext();" style="margin-left: 6px;" />
                             </div>
                         </td>
                     </tr>
