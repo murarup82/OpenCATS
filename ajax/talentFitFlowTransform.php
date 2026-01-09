@@ -11,6 +11,31 @@ include_once(LEGACY_ROOT . '/lib/FileUtility.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 
+function logTalentFitFlowError($message, $context = array())
+{
+    $payload = $message;
+    if (!empty($context))
+    {
+        if (function_exists('json_encode'))
+        {
+            $encoded = json_encode($context);
+            if ($encoded !== false)
+            {
+                $payload .= ' | ' . $encoded;
+            }
+            else
+            {
+                $payload .= ' | (context_encode_failed)';
+            }
+        }
+        else
+        {
+            $payload .= ' | (context_unavailable)';
+        }
+    }
+    error_log($payload);
+}
+
 $interface = new SecureAJAXInterface();
 
 if ($_SESSION['CATS']->getAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
@@ -58,6 +83,10 @@ if ($action === 'status')
     $status = $client->getTransformStatus($jobId);
     if ($status === false)
     {
+        logTalentFitFlowError('TalentFitFlow status failed', array(
+            'jobId' => $jobId,
+            'error' => $client->getLastError()
+        ));
         $interface->outputXMLErrorPage(-1, $client->getLastError());
         die();
     }
@@ -233,6 +262,18 @@ else if ($jdText !== '')
 $response = $client->createTransform($cvFilePath, $options);
 if ($response === false)
 {
+    logTalentFitFlowError('TalentFitFlow transform failed', array(
+        'candidateId' => $candidateID,
+        'attachmentId' => $attachmentID,
+        'jobOrderId' => $jobOrderID,
+        'cvFile' => $attachment['originalFilename'],
+        'jdFile' => ($jdFilePath !== '') ? basename($jdFilePath) : '',
+        'jdTextUsed' => ($jdText !== ''),
+        'language' => $language,
+        'roleType' => $roleType,
+        'companyId' => isset($jobOrder['companyID']) ? $jobOrder['companyID'] : '',
+        'error' => $client->getLastError()
+    ));
     $interface->outputXMLErrorPage(-1, $client->getLastError());
     die();
 }
