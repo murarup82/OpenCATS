@@ -502,22 +502,29 @@ var CandidateTransformCV = (function ()
             if (status === 'COMPLETED')
             {
                 var url = getNodeValue(http.responseXML, 'cv_download_url');
-                var downloadMarkup = 'Completed.';
+                var downloadLink = '';
                 if (url !== '')
                 {
                     var safeUrl = url.replace(/"/g, '&quot;');
-                    downloadMarkup = 'Completed. <a href="' + safeUrl + '" target="_blank">Download CV</a>';
+                    downloadLink = '<a href="' + safeUrl + '" target="_blank">Download CV</a>';
                 }
                 stopPolling();
 
                 if (storeAttachment)
                 {
-                    setStatus(downloadMarkup + ' Saving attachment...', false);
-                    storeTransformedAttachment(downloadMarkup);
+                    setStatus('Saving attachment...', false);
+                    storeTransformedAttachment(downloadLink);
                     return;
                 }
 
-                setStatus(downloadMarkup, false);
+                if (downloadLink !== '')
+                {
+                    setStatus('Download available: ' + downloadLink, false);
+                }
+                else
+                {
+                    setStatus('Completed.', false);
+                }
                 disableSubmit(false);
                 return;
             }
@@ -556,11 +563,11 @@ var CandidateTransformCV = (function ()
         );
     }
 
-    function storeTransformedAttachment(downloadMarkup)
+    function storeTransformedAttachment(downloadLink)
     {
         if (currentJobId === '' || currentAttachmentId === '' || currentJobOrderId === '')
         {
-            setStatus(downloadMarkup + ' Save failed: missing selection.', true);
+            setStatus('Save failed: missing selection.', true);
             disableSubmit(false);
             return;
         }
@@ -568,7 +575,7 @@ var CandidateTransformCV = (function ()
         var http = AJAX_getXMLHttpObject();
         if (!http)
         {
-            setStatus(downloadMarkup + ' Save failed: browser does not support AJAX.', true);
+            setStatus('Save failed: browser does not support AJAX.', true);
             disableSubmit(false);
             return;
         }
@@ -588,7 +595,7 @@ var CandidateTransformCV = (function ()
 
             if (!http.responseXML)
             {
-                setStatus(downloadMarkup + ' Save failed.', true);
+                setStatus('Save failed.', true);
                 disableSubmit(false);
                 return;
             }
@@ -598,17 +605,22 @@ var CandidateTransformCV = (function ()
             {
                 var errorMessage = getNodeValue(http.responseXML, 'errormessage');
                 var safeMessage = (errorMessage !== '') ? escapeHTML(errorMessage) : 'Save failed.';
-                setStatus(downloadMarkup + ' ' + safeMessage, true);
+                setStatus(safeMessage, true);
                 disableSubmit(false);
                 return;
             }
 
             var attachmentName = getNodeValue(http.responseXML, 'attachment_filename');
             var retrievalUrl = getNodeValue(http.responseXML, 'retrieval_url');
-            var message = downloadMarkup + ' Saved as attachment';
+            var message = '';
+            if (downloadLink !== '')
+            {
+                message = 'Download available: ' + downloadLink + '. ';
+            }
+            message += 'Attachment saved';
             if (attachmentName !== '')
             {
-                message += ': ' + escapeHTML(attachmentName);
+                message += ' as ' + escapeHTML(attachmentName);
             }
             if (retrievalUrl !== '')
             {
