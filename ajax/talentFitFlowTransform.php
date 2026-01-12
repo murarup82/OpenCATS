@@ -221,6 +221,33 @@ function buildTransformTempPath($filename)
     return $tempPath;
 }
 
+function buildTalentFitFlowRequestLogContext($client, $cvFilePath, $cvFileName, $jdFilePath, $jdText, $candidateID, $jobOrderID, $jobOrder, $language, $roleType, $languageFolder)
+{
+    $context = array(
+        'baseUrl' => $client->getBaseUrl(),
+        'candidateId' => $candidateID,
+        'jobOrderId' => $jobOrderID,
+        'jobOrderTitle' => isset($jobOrder['title']) ? $jobOrder['title'] : '',
+        'jobOrderCompany' => isset($jobOrder['companyName']) ? $jobOrder['companyName'] : '',
+        'cvFileName' => $cvFileName,
+        'cvFilePath' => $cvFilePath,
+        'cvFileSize' => @filesize($cvFilePath),
+        'cvFileHash' => (is_readable($cvFilePath) ? hash_file('sha256', $cvFilePath) : ''),
+        'jdMode' => ($jdFilePath !== '' ? 'file' : ($jdText !== '' ? 'text' : 'none')),
+        'jdFilePath' => $jdFilePath,
+        'jdFileSize' => ($jdFilePath !== '' ? @filesize($jdFilePath) : 0),
+        'jdFileHash' => ($jdFilePath !== '' && is_readable($jdFilePath) ? hash_file('sha256', $jdFilePath) : ''),
+        'jdTextLength' => ($jdText !== '' ? strlen($jdText) : 0),
+        'jdTextHash' => ($jdText !== '' ? hash('sha256', $jdText) : ''),
+        'language' => $language,
+        'languageFolder' => $languageFolder,
+        'roleType' => $roleType,
+        'companyId' => isset($jobOrder['companyID']) ? $jobOrder['companyID'] : ''
+    );
+
+    return $context;
+}
+
 $interface = new SecureAJAXInterface();
 
 if ($_SESSION['CATS']->getAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
@@ -526,14 +553,22 @@ foreach ($jobOrderAttachments as $jobOrderAttachment)
     );
     if (is_readable($candidateFilePath))
     {
-        $jdFilePath = $candidateFilePath;
-        break;
+        $fileSize = @filesize($candidateFilePath);
+        if ($fileSize !== false && $fileSize > 0)
+        {
+            $jdFilePath = $candidateFilePath;
+            break;
+        }
     }
 }
 
 if ($jdFilePath === '')
 {
-    $jdText = strip_tags($jobOrder['description']);
+    $jdText = trim(strip_tags($jobOrder['description']));
+    if ($jdText === '')
+    {
+        $jdText = html_entity_decode($jobOrder['title'], ENT_QUOTES);
+    }
 }
 
 $metadata = json_encode(
@@ -576,7 +611,27 @@ else if ($jdText !== '')
 }
 
 $response = $client->createTransform($cvFilePath, $options);
-if ($response === false && $jdFilePath !== '' && $client->getLastHttpStatus() == 404)
+$lastHttpStatus = $client->getLastHttpStatus();
+if ($response === false && $lastHttpStatus == 404)
+{
+    $context = buildTalentFitFlowRequestLogContext(
+        $client,
+        $cvFilePath,
+        $cvFileName,
+        $jdFilePath,
+        $jdText,
+        $candidateID,
+        $jobOrderID,
+        $jobOrder,
+        $language,
+        $roleType,
+        $languageFolder
+    );
+    $context['httpStatus'] = $lastHttpStatus;
+    $context['error'] = $client->getLastError();
+    logTalentFitFlowError('TalentFitFlow transform 404', $context);
+}
+if ($response === false && $jdFilePath !== '' && $lastHttpStatus == 404)
 {
     $fallbackJdText = strip_tags($jobOrder['description']);
     if (trim($fallbackJdText) === '')
@@ -599,6 +654,25 @@ if ($response === false && $jdFilePath !== '' && $client->getLastHttpStatus() ==
             'attachmentId' => $attachmentID,
             'jobOrderId' => $jobOrderID
         ));
+    }
+    else if ($client->getLastHttpStatus() == 404)
+    {
+        $context = buildTalentFitFlowRequestLogContext(
+            $client,
+            $cvFilePath,
+            $cvFileName,
+            '',
+            $fallbackJdText,
+            $candidateID,
+            $jobOrderID,
+            $jobOrder,
+            $language,
+            $roleType,
+            $languageFolder
+        );
+        $context['httpStatus'] = $client->getLastHttpStatus();
+        $context['error'] = $client->getLastError();
+        logTalentFitFlowError('TalentFitFlow transform 404 (jd_text fallback)', $context);
     }
 }
 if ($response === false)
