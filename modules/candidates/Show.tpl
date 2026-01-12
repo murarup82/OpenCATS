@@ -481,9 +481,18 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <tr>
                         <td class="vertical">Language:</td>
                         <td class="data">
-                            <input type="text" id="transformCvLanguage" style="width: 100px;" />
+                            <input type="text" id="transformCvLanguage" value="English" style="width: 100px;" />
                             &nbsp;Role Type:
-                            <input type="text" id="transformCvRoleType" style="width: 100px;" />
+                            <input type="text" id="transformCvRoleType" value="Technical" style="width: 100px;" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="vertical">Save Attachment:</td>
+                        <td class="data">
+                            <label>
+                                <input type="checkbox" id="transformCvStore" />
+                                Download &amp; store as attachment
+                            </label>
                         </td>
                     </tr>
                 </table>

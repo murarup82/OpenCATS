@@ -8,8 +8,13 @@ var CandidateTransformCV = (function ()
     var pollTimer = null;
     var searchTimer = null;
     var currentJobId = '';
+    var currentAttachmentId = '';
+    var currentJobOrderId = '';
     var jobOrderOffset = 0;
     var jobOrderLimit = 50;
+    var storeAttachment = false;
+    var defaultLanguage = 'English';
+    var defaultRoleType = 'Technical';
     var config = {
         candidateID: '',
         sessionCookie: ''
@@ -34,6 +39,34 @@ var CandidateTransformCV = (function ()
         }
 
         return node.firstChild.nodeValue;
+    }
+
+    function escapeHTML(text)
+    {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+    }
+
+    function setDefaults()
+    {
+        var languageInput = byId('transformCvLanguage');
+        if (languageInput)
+        {
+            languageInput.value = defaultLanguage;
+        }
+
+        var roleInput = byId('transformCvRoleType');
+        if (roleInput)
+        {
+            roleInput.value = defaultRoleType;
+        }
+
+        var storeInput = byId('transformCvStore');
+        if (storeInput)
+        {
+            storeInput.checked = false;
+        }
     }
 
     function clearOptions(select)
@@ -98,6 +131,11 @@ var CandidateTransformCV = (function ()
 
         setStatus('', false);
         disableSubmit(false);
+        setDefaults();
+        currentJobId = '';
+        currentAttachmentId = '';
+        currentJobOrderId = '';
+        storeAttachment = false;
 
         var jobSearch = byId('transformCvJobSearch');
         if (jobSearch)
@@ -307,6 +345,13 @@ var CandidateTransformCV = (function ()
             return;
         }
 
+        currentAttachmentId = attachmentId;
+        currentJobOrderId = jobOrderId;
+        currentJobId = '';
+
+        var storeInput = byId('transformCvStore');
+        storeAttachment = (storeInput && storeInput.checked);
+
         var language = '';
         var roleType = '';
         var languageInput = byId('transformCvLanguage');
@@ -457,17 +502,23 @@ var CandidateTransformCV = (function ()
             if (status === 'COMPLETED')
             {
                 var url = getNodeValue(http.responseXML, 'cv_download_url');
+                var downloadMarkup = 'Completed.';
                 if (url !== '')
                 {
                     var safeUrl = url.replace(/"/g, '&quot;');
-                    setStatus('Completed. <a href="' + safeUrl + '" target="_blank">Download CV</a>', false);
+                    downloadMarkup = 'Completed. <a href="' + safeUrl + '" target="_blank">Download CV</a>';
                 }
-                else
-                {
-                    setStatus('Completed.', false);
-                }
-                disableSubmit(false);
                 stopPolling();
+
+                if (storeAttachment)
+                {
+                    setStatus(downloadMarkup + ' Saving attachment...', false);
+                    storeTransformedAttachment(downloadMarkup);
+                    return;
+                }
+
+                setStatus(downloadMarkup, false);
+                disableSubmit(false);
                 return;
             }
 
@@ -491,6 +542,82 @@ var CandidateTransformCV = (function ()
             }
 
             setStatus('Status: ' + status, false);
+        };
+
+        AJAX_callCATSFunction(
+            http,
+            'talentFitFlowTransform',
+            POSTData,
+            callBack,
+            0,
+            config.sessionCookie,
+            false,
+            false
+        );
+    }
+
+    function storeTransformedAttachment(downloadMarkup)
+    {
+        if (currentJobId === '' || currentAttachmentId === '' || currentJobOrderId === '')
+        {
+            setStatus(downloadMarkup + ' Save failed: missing selection.', true);
+            disableSubmit(false);
+            return;
+        }
+
+        var http = AJAX_getXMLHttpObject();
+        if (!http)
+        {
+            setStatus(downloadMarkup + ' Save failed: browser does not support AJAX.', true);
+            disableSubmit(false);
+            return;
+        }
+
+        var POSTData = '&action=store'
+            + '&candidateID=' + urlEncode(config.candidateID)
+            + '&attachmentID=' + urlEncode(currentAttachmentId)
+            + '&jobOrderID=' + urlEncode(currentJobOrderId)
+            + '&jobId=' + urlEncode(currentJobId);
+
+        var callBack = function ()
+        {
+            if (http.readyState != 4)
+            {
+                return;
+            }
+
+            if (!http.responseXML)
+            {
+                setStatus(downloadMarkup + ' Save failed.', true);
+                disableSubmit(false);
+                return;
+            }
+
+            var errorCode = getNodeValue(http.responseXML, 'errorcode');
+            if (errorCode !== '0')
+            {
+                var errorMessage = getNodeValue(http.responseXML, 'errormessage');
+                var safeMessage = (errorMessage !== '') ? escapeHTML(errorMessage) : 'Save failed.';
+                setStatus(downloadMarkup + ' ' + safeMessage, true);
+                disableSubmit(false);
+                return;
+            }
+
+            var attachmentName = getNodeValue(http.responseXML, 'attachment_filename');
+            var retrievalUrl = getNodeValue(http.responseXML, 'retrieval_url');
+            var message = downloadMarkup + ' Saved as attachment';
+            if (attachmentName !== '')
+            {
+                message += ': ' + escapeHTML(attachmentName);
+            }
+            if (retrievalUrl !== '')
+            {
+                var safeRetrievalUrl = retrievalUrl.replace(/"/g, '&quot;');
+                message += ' (<a href="' + safeRetrievalUrl + '" target="_blank">View attachment</a>)';
+            }
+
+            setStatus(message, false);
+            disableSubmit(false);
         };
 
         AJAX_callCATSFunction(

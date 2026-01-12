@@ -37,6 +37,11 @@ class TalentFitFlowClient
         return $this->_lastHttpStatus;
     }
 
+    public function getBaseUrl()
+    {
+        return $this->_baseUrl;
+    }
+
     /**
      * Submits a CV (and optional JD) for TalentFitFlow processing.
      *

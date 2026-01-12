@@ -36,6 +36,94 @@ function logTalentFitFlowError($message, $context = array())
     error_log($payload);
 }
 
+function rewriteTalentFitFlowDownloadUrl($downloadUrl, $baseUrl)
+{
+    $downloadUrl = trim((string) $downloadUrl);
+    $baseUrl = trim((string) $baseUrl);
+    if ($downloadUrl === '' || $baseUrl === '')
+    {
+        return $downloadUrl;
+    }
+
+    $downloadParts = parse_url($downloadUrl);
+    $baseParts = parse_url($baseUrl);
+    if ($downloadParts === false || $baseParts === false)
+    {
+        return $downloadUrl;
+    }
+
+    if (!isset($downloadParts['path']))
+    {
+        return $downloadUrl;
+    }
+
+    $host = isset($baseParts['host']) ? $baseParts['host'] : '';
+    if ($host === '')
+    {
+        return $downloadUrl;
+    }
+
+    $scheme = isset($baseParts['scheme']) ? $baseParts['scheme'] : 'https';
+    $port = isset($baseParts['port']) ? ':' . $baseParts['port'] : '';
+    $path = $downloadParts['path'];
+    $query = isset($downloadParts['query']) ? '?' . $downloadParts['query'] : '';
+    $fragment = isset($downloadParts['fragment']) ? '#' . $downloadParts['fragment'] : '';
+
+    return $scheme . '://' . $host . $port . $path . $query . $fragment;
+}
+
+function sanitizeTransformFilenameComponent($value)
+{
+    $value = trim((string) $value);
+    if ($value === '')
+    {
+        return '';
+    }
+
+    $value = preg_replace('/\s+/', '_', $value);
+    $value = preg_replace('/[^A-Za-z0-9_.-]/', '_', $value);
+    $value = preg_replace('/_+/', '_', $value);
+    $value = trim($value, '._');
+
+    return $value;
+}
+
+function buildTransformFilename($cvFilename, $jobOrderTitle)
+{
+    $cvBase = FileUtility::getFileWithoutExtension($cvFilename);
+    $cvBase = sanitizeTransformFilenameComponent($cvBase);
+    if ($cvBase === '')
+    {
+        $cvBase = 'CV';
+    }
+
+    $jobTitle = sanitizeTransformFilenameComponent($jobOrderTitle);
+
+    $baseName = 'CV_Transformation_' . $cvBase;
+    if ($jobTitle !== '')
+    {
+        $baseName .= '_' . $jobTitle;
+    }
+
+    $filename = $baseName . '.docx';
+
+    return FileUtility::makeSafeFilename($filename);
+}
+
+function buildTransformTempPath($filename)
+{
+    $filename = FileUtility::makeSafeFilename($filename);
+    $tempPath = CATS_TEMP_DIR . '/' . $filename;
+
+    if (file_exists($tempPath))
+    {
+        $baseName = FileUtility::getFileWithoutExtension($filename);
+        $tempPath = CATS_TEMP_DIR . '/' . FileUtility::makeSafeFilename($baseName . '_' . time() . '.docx');
+    }
+
+    return $tempPath;
+}
+
 $interface = new SecureAJAXInterface();
 
 if ($_SESSION['CATS']->getAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
@@ -107,7 +195,8 @@ if ($action === 'status')
     }
     if (isset($status['cv_download_url']))
     {
-        $output .= "    <cv_download_url>" . htmlspecialchars($status['cv_download_url'], ENT_QUOTES) . "</cv_download_url>\n";
+        $downloadUrl = rewriteTalentFitFlowDownloadUrl($status['cv_download_url'], $client->getBaseUrl());
+        $output .= "    <cv_download_url>" . htmlspecialchars($downloadUrl, ENT_QUOTES) . "</cv_download_url>\n";
     }
 
     $output .=
@@ -117,10 +206,19 @@ if ($action === 'status')
     die();
 }
 
-if ($action !== 'create')
+if ($action !== 'create' && $action !== 'store')
 {
     $interface->outputXMLErrorPage(-1, 'Invalid action.');
     die();
+}
+
+if ($action === 'store')
+{
+    if ($_SESSION['CATS']->getAccessLevel('candidates.createAttachment') < ACCESS_LEVEL_EDIT)
+    {
+        $interface->outputXMLErrorPage(-1, 'Invalid user level for action.');
+        die();
+    }
 }
 
 if (!$interface->isRequiredIDValid('candidateID'))
@@ -192,6 +290,123 @@ $jobOrder = $jobOrders->get($jobOrderID);
 if (empty($jobOrder))
 {
     $interface->outputXMLErrorPage(-1, 'Job order not found.');
+    die();
+}
+
+$jobId = '';
+if ($action === 'store')
+{
+    $jobId = isset($_REQUEST['jobId']) ? trim($_REQUEST['jobId']) : '';
+    if ($jobId === '')
+    {
+        $interface->outputXMLErrorPage(-1, 'Invalid job ID.');
+        die();
+    }
+
+    $status = $client->getTransformStatus($jobId);
+    if ($status === false)
+    {
+        logTalentFitFlowError('TalentFitFlow status failed', array(
+            'jobId' => $jobId,
+            'error' => $client->getLastError()
+        ));
+        $interface->outputXMLErrorPage(-1, $client->getLastError());
+        die();
+    }
+
+    if (!isset($status['status']) || $status['status'] !== 'COMPLETED')
+    {
+        $interface->outputXMLErrorPage(-1, 'Transform job is not completed.');
+        die();
+    }
+
+    if (empty($status['cv_download_url']))
+    {
+        $interface->outputXMLErrorPage(-1, 'Download URL is missing.');
+        die();
+    }
+
+    $downloadUrl = rewriteTalentFitFlowDownloadUrl($status['cv_download_url'], $client->getBaseUrl());
+    $filename = buildTransformFilename($attachment['originalFilename'], $jobOrder['title']);
+    $tempPath = buildTransformTempPath($filename);
+
+    $downloadResponse = $client->downloadTransformedCv($downloadUrl, $tempPath);
+    if ($downloadResponse === false)
+    {
+        logTalentFitFlowError('TalentFitFlow download failed', array(
+            'jobId' => $jobId,
+            'downloadUrl' => $downloadUrl,
+            'error' => $client->getLastError()
+        ));
+        $interface->outputXMLErrorPage(-1, $client->getLastError());
+        die();
+    }
+
+    $contentType = '';
+    if (isset($downloadResponse['headers']) && isset($downloadResponse['headers']['Content-Type']))
+    {
+        $contentType = $downloadResponse['headers']['Content-Type'];
+    }
+
+    $attachmentCreator = new AttachmentCreator($siteID);
+    $created = $attachmentCreator->createFromFile(
+        DATA_ITEM_CANDIDATE,
+        $candidateID,
+        $tempPath,
+        $filename,
+        $contentType,
+        true,
+        true
+    );
+
+    if (!$created)
+    {
+        if ($attachmentCreator->duplicatesOccurred())
+        {
+            $interface->outputXMLErrorPage(-1, 'Attachment already exists.');
+            die();
+        }
+
+        $errorMessage = $attachmentCreator->isError()
+            ? $attachmentCreator->getError()
+            : 'Failed to store attachment.';
+
+        logTalentFitFlowError('TalentFitFlow attachment create failed', array(
+            'jobId' => $jobId,
+            'candidateId' => $candidateID,
+            'attachmentId' => $attachmentID,
+            'jobOrderId' => $jobOrderID,
+            'error' => $errorMessage
+        ));
+
+        if (file_exists($tempPath))
+        {
+            @unlink($tempPath);
+        }
+
+        $interface->outputXMLErrorPage(-1, $errorMessage);
+        die();
+    }
+
+    $newAttachmentID = $attachmentCreator->getAttachmentID();
+    $newAttachment = $attachments->get($newAttachmentID);
+
+    $output =
+        "<data>\n" .
+        "    <errorcode>0</errorcode>\n" .
+        "    <errormessage></errormessage>\n" .
+        "    <attachment_id>" . htmlspecialchars($newAttachmentID, ENT_QUOTES) . "</attachment_id>\n" .
+        "    <attachment_filename>" . htmlspecialchars($filename, ENT_QUOTES) . "</attachment_filename>\n";
+
+    if (isset($newAttachment['retrievalURL']))
+    {
+        $output .= "    <retrieval_url>" . htmlspecialchars($newAttachment['retrievalURL'], ENT_QUOTES) . "</retrieval_url>\n";
+    }
+
+    $output .=
+        "</data>\n";
+
+    $interface->outputXMLPage($output);
     die();
 }
 
