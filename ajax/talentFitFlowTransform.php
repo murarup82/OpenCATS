@@ -455,6 +455,15 @@ if ($action === 'store')
     $tempPath = buildTransformTempPath($filename);
 
     $downloadResponse = $client->downloadTransformedCv($downloadUrl, $tempPath);
+    if ($downloadResponse === false && $client->getLastHttpStatus() == 404)
+    {
+        $retryStatus = $client->getTransformStatus($jobId);
+        if ($retryStatus !== false && isset($retryStatus['cv_download_url']))
+        {
+            $downloadUrl = rewriteTalentFitFlowDownloadUrl($retryStatus['cv_download_url'], $client->getBaseUrl());
+            $downloadResponse = $client->downloadTransformedCv($downloadUrl, $tempPath);
+        }
+    }
     if ($downloadResponse === false)
     {
         logTalentFitFlowError('TalentFitFlow download failed', array(

@@ -707,14 +707,28 @@ class CandidatesUI extends UserInterface
      */
     private function add($contents = '', $fields = array())
     {
+        $perfEnabled = (isset($_GET['perf']) && $_GET['perf'] === '1');
+        $perfStart = microtime(true);
+        $perfLast = $perfStart;
+
         $candidates = new Candidates($this->_siteID);
 
         /* Get possible sources. */
         $sourcesRS = $candidates->getPossibleSources();
         $sourcesString = ListEditor::getStringFromList($sourcesRS, 'name');
+        if ($perfEnabled)
+        {
+            error_log(sprintf('AddCandidate perf: sources %.3fms', (microtime(true) - $perfLast) * 1000));
+            $perfLast = microtime(true);
+        }
 
         /* Get extra fields. */
         $extraFieldRS = $candidates->extraFields->getValuesForAdd();
+        if ($perfEnabled)
+        {
+            error_log(sprintf('AddCandidate perf: extraFields %.3fms', (microtime(true) - $perfLast) * 1000));
+            $perfLast = microtime(true);
+        }
 
         /* Get passed variables. */
         $preassignedFields = $_GET;
@@ -724,6 +738,11 @@ class CandidatesUI extends UserInterface
 
         $gdprSettings = new GDPRSettings($this->_siteID);
         $gdprSettingsRS = $gdprSettings->getAll();
+        if ($perfEnabled)
+        {
+            error_log(sprintf('AddCandidate perf: gdprSettings %.3fms', (microtime(true) - $perfLast) * 1000));
+            $perfLast = microtime(true);
+        }
 
         $gdprExpirationYears = (int) $gdprSettingsRS[GDPRSettings::SETTING_KEY];
         if ($gdprExpirationYears <= 0) {
@@ -779,6 +798,11 @@ class CandidatesUI extends UserInterface
             $associatedAttachment = 0;
             $associatedAttachmentRS = array();
         }
+        if ($perfEnabled)
+        {
+            error_log(sprintf('AddCandidate perf: attachmentLookup %.3fms', (microtime(true) - $perfLast) * 1000));
+            $perfLast = microtime(true);
+        }
 
         /* Get preuploaded resume text, if any */
         if ($this->isRequiredIDValid('resumeTextID', $_GET, true)) {
@@ -799,9 +823,19 @@ class CandidatesUI extends UserInterface
         } else {
             $associatedFileResume = false;
         }
+        if ($perfEnabled)
+        {
+            error_log(sprintf('AddCandidate perf: preuploadedResume %.3fms', (microtime(true) - $perfLast) * 1000));
+            $perfLast = microtime(true);
+        }
 
         $EEOSettings = new EEOSettings($this->_siteID);
         $EEOSettingsRS = $EEOSettings->getAll();
+        if ($perfEnabled)
+        {
+            error_log(sprintf('AddCandidate perf: eeoSettings %.3fms', (microtime(true) - $perfLast) * 1000));
+            $perfLast = microtime(true);
+        }
 
 
         if (!eval(Hooks::get('CANDIDATE_ADD'))) return;
@@ -828,6 +862,11 @@ class CandidatesUI extends UserInterface
         ) {
             $parsingStatus['parseLimit'] = $parsingStatus['parseLimit'] - 1;
         }
+        if ($perfEnabled)
+        {
+            error_log(sprintf('AddCandidate perf: parsingStatus %.3fms', (microtime(true) - $perfLast) * 1000));
+            $perfLast = microtime(true);
+        }
 
         $this->_template->assign('parsingStatus', $parsingStatus);
         $this->_template->assign('isParsingEnabled', $isParsingEnabled);
@@ -850,6 +889,11 @@ class CandidatesUI extends UserInterface
          * APPLICABLE.
          */
         $this->_template->display('./modules/candidates/Add.tpl');
+        if ($perfEnabled)
+        {
+            error_log(sprintf('AddCandidate perf: render %.3fms', (microtime(true) - $perfLast) * 1000));
+            error_log(sprintf('AddCandidate perf: total %.3fms', (microtime(true) - $perfStart) * 1000));
+        }
     }
 
     public function checkParsingFunctions()
