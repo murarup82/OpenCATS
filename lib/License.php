@@ -715,12 +715,38 @@ class LicenseUtility
             return true;
         }
 
+        $cacheKey = 'parsingStatusCache';
+        $cacheTTL = 300;
+        $now = time();
+        if (isset($_SESSION['CATS']) && is_object($_SESSION['CATS']))
+        {
+            $cached = $_SESSION['CATS']->retrieveValueByName($cacheKey);
+            if (is_array($cached) && isset($cached['timestamp'], $cached['status']))
+            {
+                if (($now - (int) $cached['timestamp']) < $cacheTTL)
+                {
+                    return $cached['status'];
+                }
+            }
+        }
+
         $pu = new ParseUtility();
         $status = $pu->status(LICENSE_KEY);
 
         if (!$status || !is_array($status) || !count($status))
         {
-            return true;
+            $status = true;
+        }
+
+        if (isset($_SESSION['CATS']) && is_object($_SESSION['CATS']))
+        {
+            $_SESSION['CATS']->storeValueByName(
+                $cacheKey,
+                array(
+                    'timestamp' => $now,
+                    'status' => $status
+                )
+            );
         }
 
         return $status;

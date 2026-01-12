@@ -132,7 +132,20 @@ class ParseUtility
     public function status($key)
     {
         if (!CATSUtility::isSOAPEnabled()) return false;
-        $client = new SoapClient('wsdl/status.wsdl');
+        $context = stream_context_create(
+            array(
+                'http' => array(
+                    'timeout' => 3
+                )
+            )
+        );
+        $client = new SoapClient(
+            'wsdl/status.wsdl',
+            array(
+                'connection_timeout' => 3,
+                'stream_context' => $context
+            )
+        );
         if (!defined('CATS_TEST_MODE') || !CATS_TEST_MODE)
         {
             try
