@@ -81,31 +81,99 @@ function sanitizeTransformFilenameComponent($value)
     }
 
     $value = preg_replace('/\s+/', '_', $value);
-    $value = preg_replace('/[^A-Za-z0-9_.-]/', '_', $value);
+    $value = preg_replace('/[^A-Za-z0-9_.+-]/', '_', $value);
     $value = preg_replace('/_+/', '_', $value);
     $value = trim($value, '._');
 
     return $value;
 }
 
-function buildTransformFilename($cvFilename, $jobOrderTitle)
+function stripLeadingNumericPrefix($value)
 {
-    $cvBase = FileUtility::getFileWithoutExtension($cvFilename);
-    $cvBase = sanitizeTransformFilenameComponent($cvBase);
-    if ($cvBase === '')
+    $value = trim((string) $value);
+    if ($value === '')
     {
-        $cvBase = 'CV';
+        return '';
     }
 
-    $jobTitle = sanitizeTransformFilenameComponent($jobOrderTitle);
+    return preg_replace('/^\s*\d+(?:[.\/-]\d+)*\s*[.\-–—:]*\s*/', '', $value);
+}
 
-    $baseName = 'CV_Transformation_' . $cvBase;
+function buildCandidateCvFilename($candidate, $extension)
+{
+    $parts = array();
+    $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
+    $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
+
+    $firstName = sanitizeTransformFilenameComponent($firstName);
+    $lastName = sanitizeTransformFilenameComponent($lastName);
+
+    if ($firstName !== '')
+    {
+        $parts[] = $firstName;
+    }
+    if ($lastName !== '')
+    {
+        $parts[] = $lastName;
+    }
+
+    if (empty($parts) && isset($candidate['candidateID']))
+    {
+        $parts[] = 'Candidate_' . (int) $candidate['candidateID'];
+    }
+
+    $extension = trim((string) $extension);
+    if ($extension === '')
+    {
+        $extension = 'pdf';
+    }
+
+    $filename = 'CV_' . implode('_', $parts) . '.' . $extension;
+
+    return FileUtility::makeSafeFilename($filename);
+}
+
+function buildTransformFilename($candidate, $jobOrder)
+{
+    $parts = array('CV');
+
+    $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
+    $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
+    $firstName = sanitizeTransformFilenameComponent($firstName);
+    $lastName = sanitizeTransformFilenameComponent($lastName);
+    if ($firstName !== '')
+    {
+        $parts[] = $firstName;
+    }
+    if ($lastName !== '')
+    {
+        $parts[] = $lastName;
+    }
+
+    $jobTitle = isset($jobOrder['title']) ? $jobOrder['title'] : '';
     if ($jobTitle !== '')
     {
-        $baseName .= '_' . $jobTitle;
+        $jobTitle = html_entity_decode($jobTitle, ENT_QUOTES);
+        $jobTitle = stripLeadingNumericPrefix($jobTitle);
+        $jobTitle = sanitizeTransformFilenameComponent($jobTitle);
+        if ($jobTitle !== '')
+        {
+            $parts[] = $jobTitle;
+        }
     }
 
-    $filename = $baseName . '.docx';
+    $companyName = isset($jobOrder['companyName']) ? $jobOrder['companyName'] : '';
+    if ($companyName !== '')
+    {
+        $companyName = html_entity_decode($companyName, ENT_QUOTES);
+        $companyName = sanitizeTransformFilenameComponent($companyName);
+        if ($companyName !== '')
+        {
+            $parts[] = $companyName;
+        }
+    }
+
+    $filename = implode('_', $parts) . '.docx';
 
     return FileUtility::makeSafeFilename($filename);
 }
@@ -327,7 +395,7 @@ if ($action === 'store')
     }
 
     $downloadUrl = rewriteTalentFitFlowDownloadUrl($status['cv_download_url'], $client->getBaseUrl());
-    $filename = buildTransformFilename($attachment['originalFilename'], $jobOrder['title']);
+    $filename = buildTransformFilename($candidate, $jobOrder);
     $tempPath = buildTransformTempPath($filename);
 
     $downloadResponse = $client->downloadTransformedCv($downloadUrl, $tempPath);
@@ -453,12 +521,16 @@ if ($metadata === false)
     die();
 }
 
+$cvExtension = FileUtility::getFileExtension($attachment['originalFilename']);
+$cvFileName = buildCandidateCvFilename($candidate, $cvExtension);
+
 $options = array(
     'candidateId' => (string) $candidateID,
     'metadata' => $metadata,
     'language' => $language,
     'languageFolder' => $languageFolder,
-    'roleType' => $roleType
+    'roleType' => $roleType,
+    'cvFileName' => $cvFileName
 );
 if (!empty($jobOrder['companyID']))
 {

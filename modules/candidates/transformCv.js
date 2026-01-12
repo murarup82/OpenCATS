@@ -630,6 +630,11 @@ var CandidateTransformCV = (function ()
 
             setStatus(message, false);
             disableSubmit(false);
+            setTimeout(function ()
+            {
+                close();
+                window.location.reload();
+            }, 300);
         };
 
         AJAX_callCATSFunction(

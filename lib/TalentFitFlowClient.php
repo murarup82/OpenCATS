@@ -52,6 +52,7 @@ class TalentFitFlowClient
      * - jdFilePath (string) path to JD file
      * - jdText (string) job description text (UTF-8)
      * - candidateId (string)
+     * - cvFileName (string) override filename for cv_file
      * - metadata (string|array|object) JSON string or structure to encode
      * - language, languageFolder, roleType, companyId (strings)
      *
@@ -96,6 +97,7 @@ class TalentFitFlowClient
         $languageFolder = $this->_getOption($options, 'languageFolder');
         $roleType = $this->_getOption($options, 'roleType');
         $companyId = $this->_getOption($options, 'companyId');
+        $cvFileName = $this->_getOption($options, 'cvFileName');
         $metadata = $this->_normalizeMetadata($this->_getOptionValue($options, 'metadata'));
         if ($metadata === false)
         {
@@ -154,7 +156,7 @@ class TalentFitFlowClient
         $headers = $this->_buildSignedHeaders($timestamp, $signature);
 
         $postFields = array(
-            'cv_file' => $this->_createCurlFile($cvFilePath)
+            'cv_file' => $this->_createCurlFile($cvFilePath, $cvFileName)
         );
         if ($jdFilePath !== '')
         {
@@ -440,10 +442,14 @@ class TalentFitFlowClient
         );
     }
 
-    private function _createCurlFile($filePath)
+    private function _createCurlFile($filePath, $postName = '')
     {
         if (class_exists('CURLFile'))
         {
+            if ($postName !== '')
+            {
+                return new CURLFile($filePath, '', $postName);
+            }
             return new CURLFile($filePath);
         }
 
