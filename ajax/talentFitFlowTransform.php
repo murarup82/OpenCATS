@@ -99,6 +99,35 @@ function stripLeadingNumericPrefix($value)
     return preg_replace('/^\s*\d+(?:[.\/-]\d+)*\s*[.\-–—:]*\s*/', '', $value);
 }
 
+function normalizeJobTitleForFilename($jobTitle)
+{
+    $jobTitle = trim((string) $jobTitle);
+    if ($jobTitle === '')
+    {
+        return '';
+    }
+
+    $jobTitle = html_entity_decode($jobTitle, ENT_QUOTES);
+    $jobTitle = stripLeadingNumericPrefix($jobTitle);
+    $jobTitle = str_replace('&', ' and ', $jobTitle);
+    $jobTitle = str_replace(array('-', '–', '—', '/', '\\'), ' ', $jobTitle);
+    $jobTitle = str_replace(array('(', ')', '[', ']', '{', '}', ':', ';', ','), ' ', $jobTitle);
+    $jobTitle = preg_replace('/\s+/', ' ', $jobTitle);
+    $jobTitle = trim($jobTitle);
+
+    if ($jobTitle === '')
+    {
+        return '';
+    }
+
+    $jobTitle = preg_replace('/\s+/', '_', $jobTitle);
+    $jobTitle = preg_replace('/[^A-Za-z0-9_.+]/', '_', $jobTitle);
+    $jobTitle = preg_replace('/_+/', '_', $jobTitle);
+    $jobTitle = trim($jobTitle, '._');
+
+    return $jobTitle;
+}
+
 function buildCandidateCvFilename($candidate, $extension)
 {
     $parts = array();
@@ -135,31 +164,31 @@ function buildCandidateCvFilename($candidate, $extension)
 
 function buildTransformFilename($candidate, $jobOrder)
 {
-    $parts = array('CV');
-
+    $candidateParts = array();
     $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
     $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
     $firstName = sanitizeTransformFilenameComponent($firstName);
     $lastName = sanitizeTransformFilenameComponent($lastName);
     if ($firstName !== '')
     {
-        $parts[] = $firstName;
+        $candidateParts[] = $firstName;
     }
     if ($lastName !== '')
     {
-        $parts[] = $lastName;
+        $candidateParts[] = $lastName;
+    }
+    if (empty($candidateParts) && isset($candidate['candidateID']))
+    {
+        $candidateParts[] = 'Candidate_' . (int) $candidate['candidateID'];
     }
 
+    $filenameParts = array('CV_' . implode('_', $candidateParts));
+
     $jobTitle = isset($jobOrder['title']) ? $jobOrder['title'] : '';
+    $jobTitle = normalizeJobTitleForFilename($jobTitle);
     if ($jobTitle !== '')
     {
-        $jobTitle = html_entity_decode($jobTitle, ENT_QUOTES);
-        $jobTitle = stripLeadingNumericPrefix($jobTitle);
-        $jobTitle = sanitizeTransformFilenameComponent($jobTitle);
-        if ($jobTitle !== '')
-        {
-            $parts[] = $jobTitle;
-        }
+        $filenameParts[] = $jobTitle;
     }
 
     $companyName = isset($jobOrder['companyName']) ? $jobOrder['companyName'] : '';
@@ -169,11 +198,11 @@ function buildTransformFilename($candidate, $jobOrder)
         $companyName = sanitizeTransformFilenameComponent($companyName);
         if ($companyName !== '')
         {
-            $parts[] = $companyName;
+            $filenameParts[] = $companyName;
         }
     }
 
-    $filename = implode('_', $parts) . '.docx';
+    $filename = implode('-', $filenameParts) . '.docx';
 
     return FileUtility::makeSafeFilename($filename);
 }
@@ -547,6 +576,31 @@ else if ($jdText !== '')
 }
 
 $response = $client->createTransform($cvFilePath, $options);
+if ($response === false && $jdFilePath !== '' && $client->getLastHttpStatus() == 404)
+{
+    $fallbackJdText = strip_tags($jobOrder['description']);
+    if (trim($fallbackJdText) === '')
+    {
+        $fallbackJdText = $jobOrder['title'];
+    }
+
+    $fallbackOptions = $options;
+    unset($fallbackOptions['jdFilePath']);
+    if (trim($fallbackJdText) !== '')
+    {
+        $fallbackOptions['jdText'] = $fallbackJdText;
+    }
+
+    $response = $client->createTransform($cvFilePath, $fallbackOptions);
+    if ($response !== false)
+    {
+        logTalentFitFlowError('TalentFitFlow retried without JD file after 404', array(
+            'candidateId' => $candidateID,
+            'attachmentId' => $attachmentID,
+            'jobOrderId' => $jobOrderID
+        ));
+    }
+}
 if ($response === false)
 {
     logTalentFitFlowError('TalentFitFlow transform failed', array(
