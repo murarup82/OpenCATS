@@ -99,6 +99,35 @@ function stripLeadingNumericPrefix($value)
     return preg_replace('/^\s*\d+(?:[.\/-]\d+)*\s*[.\-–—:]*\s*/', '', $value);
 }
 
+function buildCandidateNameToken($candidate)
+{
+    $parts = array();
+    $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
+    $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
+
+    $firstName = sanitizeTransformFilenameComponent($firstName);
+    $lastName = sanitizeTransformFilenameComponent($lastName);
+
+    if ($firstName !== '')
+    {
+        $parts[] = $firstName;
+    }
+    if ($lastName !== '')
+    {
+        $parts[] = $lastName;
+    }
+    if (empty($parts) && isset($candidate['candidateID']))
+    {
+        $parts[] = 'Candidate_' . (int) $candidate['candidateID'];
+    }
+
+    $token = implode('_', $parts);
+    $token = preg_replace('/_+/', '_', $token);
+    $token = trim($token, '_');
+
+    return $token;
+}
+
 function normalizeJobTitleForFilename($jobTitle)
 {
     $jobTitle = trim((string) $jobTitle);
@@ -130,26 +159,7 @@ function normalizeJobTitleForFilename($jobTitle)
 
 function buildCandidateCvFilename($candidate, $extension)
 {
-    $parts = array();
-    $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
-    $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
-
-    $firstName = sanitizeTransformFilenameComponent($firstName);
-    $lastName = sanitizeTransformFilenameComponent($lastName);
-
-    if ($firstName !== '')
-    {
-        $parts[] = $firstName;
-    }
-    if ($lastName !== '')
-    {
-        $parts[] = $lastName;
-    }
-
-    if (empty($parts) && isset($candidate['candidateID']))
-    {
-        $parts[] = 'Candidate_' . (int) $candidate['candidateID'];
-    }
+    $token = buildCandidateNameToken($candidate);
 
     $extension = trim((string) $extension);
     if ($extension === '')
@@ -157,32 +167,15 @@ function buildCandidateCvFilename($candidate, $extension)
         $extension = 'pdf';
     }
 
-    $filename = 'CV_' . implode('_', $parts) . '.' . $extension;
+    $filename = 'CV_Avel_' . $token . '.' . $extension;
 
     return FileUtility::makeSafeFilename($filename);
 }
 
 function buildTransformFilename($candidate, $jobOrder)
 {
-    $candidateParts = array();
-    $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
-    $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
-    $firstName = sanitizeTransformFilenameComponent($firstName);
-    $lastName = sanitizeTransformFilenameComponent($lastName);
-    if ($firstName !== '')
-    {
-        $candidateParts[] = $firstName;
-    }
-    if ($lastName !== '')
-    {
-        $candidateParts[] = $lastName;
-    }
-    if (empty($candidateParts) && isset($candidate['candidateID']))
-    {
-        $candidateParts[] = 'Candidate_' . (int) $candidate['candidateID'];
-    }
-
-    $filenameParts = array('CV_' . implode('_', $candidateParts));
+    $token = buildCandidateNameToken($candidate);
+    $filenameParts = array('CV_Avel_' . $token);
 
     $jobTitle = isset($jobOrder['title']) ? $jobOrder['title'] : '';
     $jobTitle = normalizeJobTitleForFilename($jobTitle);
@@ -226,27 +219,22 @@ function buildTransformTempPath($filename)
     return $tempPath;
 }
 
-function buildAnalysisFilename($candidate, $jobOrder)
+function buildAnalysisFilename($candidate, $jobOrder, $matchScore = '')
 {
-    $candidateParts = array();
-    $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
-    $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
-    $firstName = sanitizeTransformFilenameComponent($firstName);
-    $lastName = sanitizeTransformFilenameComponent($lastName);
-    if ($firstName !== '')
+    $scorePrefix = trim((string) $matchScore);
+    if ($scorePrefix !== '' && is_numeric($scorePrefix))
     {
-        $candidateParts[] = $firstName;
+        $scorePrefix = 'Matchscore_' . (string) (int) round((float) $scorePrefix) . '%_';
     }
-    if ($lastName !== '')
+    else
     {
-        $candidateParts[] = $lastName;
-    }
-    if (empty($candidateParts) && isset($candidate['candidateID']))
-    {
-        $candidateParts[] = 'Candidate_' . (int) $candidate['candidateID'];
+        $scorePrefix = 'Matchscore_NA_';
     }
 
-    $filenameParts = array('CV_Analysis_' . implode('_', $candidateParts));
+    $token = buildCandidateNameToken($candidate);
+    $analysisBase = $scorePrefix . 'CV_Avel_Analysis_' . $token;
+
+    $filenameParts = array($analysisBase);
 
     $jobTitle = isset($jobOrder['title']) ? $jobOrder['title'] : '';
     $jobTitle = normalizeJobTitleForFilename($jobTitle);
@@ -438,7 +426,15 @@ if ($action === 'status')
 
                 if ($needCandidate || $needJob)
                 {
-                    $analysisFilename = buildAnalysisFilename($candidate, $jobOrder);
+                    $matchScore = '';
+                    if (isset($status['analysis']) && is_array($status['analysis']))
+                    {
+                        $matchScore = isset($status['analysis']['jd_compatibility']['match_score'])
+                            ? $status['analysis']['jd_compatibility']['match_score']
+                            : '';
+                    }
+
+                    $analysisFilename = buildAnalysisFilename($candidate, $jobOrder, $matchScore);
                     $analysisTempPath = buildAnalysisTempPath($analysisFilename);
 
                     $analysisResponse = $client->downloadAnalysisPdf($analysisPdfUrl, $analysisTempPath);
