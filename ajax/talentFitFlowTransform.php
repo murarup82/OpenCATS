@@ -413,6 +413,10 @@ if ($action === 'status')
         $analysisPdfUrl = isset($status['analysis_pdf']['download_url'])
             ? trim((string) $status['analysis_pdf']['download_url'])
             : '';
+        if ($analysisPdfUrl !== '')
+        {
+            $analysisPdfUrl = rewriteTalentFitFlowDownloadUrl($analysisPdfUrl, $client->getBaseUrl());
+        }
 
         if ($analysisPdfState === 'READY' && $analysisPdfUrl !== '' &&
             $interface->isRequiredIDValid('candidateID') &&
