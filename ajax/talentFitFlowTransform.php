@@ -215,10 +215,72 @@ function buildTransformTempPath($filename)
     if (file_exists($tempPath))
     {
         $baseName = FileUtility::getFileWithoutExtension($filename);
-        $tempPath = CATS_TEMP_DIR . '/' . FileUtility::makeSafeFilename($baseName . '_' . time() . '.docx');
+        $extension = FileUtility::getFileExtension($filename);
+        if ($extension === '')
+        {
+            $extension = 'tmp';
+        }
+        $tempPath = CATS_TEMP_DIR . '/' . FileUtility::makeSafeFilename($baseName . '_' . time() . '.' . $extension);
     }
 
     return $tempPath;
+}
+
+function buildAnalysisFilename($candidate, $jobOrder)
+{
+    $candidateParts = array();
+    $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
+    $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
+    $firstName = sanitizeTransformFilenameComponent($firstName);
+    $lastName = sanitizeTransformFilenameComponent($lastName);
+    if ($firstName !== '')
+    {
+        $candidateParts[] = $firstName;
+    }
+    if ($lastName !== '')
+    {
+        $candidateParts[] = $lastName;
+    }
+    if (empty($candidateParts) && isset($candidate['candidateID']))
+    {
+        $candidateParts[] = 'Candidate_' . (int) $candidate['candidateID'];
+    }
+
+    $filenameParts = array('CV_Analysis_' . implode('_', $candidateParts));
+
+    $jobTitle = isset($jobOrder['title']) ? $jobOrder['title'] : '';
+    $jobTitle = normalizeJobTitleForFilename($jobTitle);
+    if ($jobTitle !== '')
+    {
+        $filenameParts[] = $jobTitle;
+    }
+
+    $companyName = isset($jobOrder['companyName']) ? $jobOrder['companyName'] : '';
+    if ($companyName !== '')
+    {
+        $companyName = html_entity_decode($companyName, ENT_QUOTES);
+        $companyName = sanitizeTransformFilenameComponent($companyName);
+        if ($companyName !== '')
+        {
+            $filenameParts[] = $companyName;
+        }
+    }
+
+    $filename = implode('-', $filenameParts) . '.pdf';
+
+    return FileUtility::makeSafeFilename($filename);
+}
+
+function buildAnalysisTempPath($filename)
+{
+    $filename = FileUtility::makeSafeFilename($filename);
+    $tempDir = CATS_TEMP_DIR . '/' . FileUtility::makeRandomFilename('tff');
+    if (@mkdir($tempDir, 0700, true))
+    {
+        return $tempDir . '/' . $filename;
+    }
+
+    return buildTransformTempPath($filename);
 }
 
 function buildTalentFitFlowRequestLogContext($client, $cvFilePath, $cvFileName, $jdFilePath, $jdText, $candidateID, $jobOrderID, $jobOrder, $language, $roleType, $languageFolder)
@@ -246,6 +308,43 @@ function buildTalentFitFlowRequestLogContext($client, $cvFilePath, $cvFileName, 
     );
 
     return $context;
+}
+
+function getAnalysisAttachmentStatus($jobId)
+{
+    if (!isset($_SESSION['CATS']) || !is_object($_SESSION['CATS']))
+    {
+        return array('candidate' => false, 'job' => false);
+    }
+
+    $key = 'tffAnalysisAttached_' . $jobId;
+    $status = $_SESSION['CATS']->retrieveValueByName($key);
+    if (!is_array($status))
+    {
+        return array('candidate' => false, 'job' => false);
+    }
+
+    return array(
+        'candidate' => !empty($status['candidate']),
+        'job' => !empty($status['job'])
+    );
+}
+
+function setAnalysisAttachmentStatus($jobId, $candidateAttached, $jobAttached)
+{
+    if (!isset($_SESSION['CATS']) || !is_object($_SESSION['CATS']))
+    {
+        return;
+    }
+
+    $key = 'tffAnalysisAttached_' . $jobId;
+    $_SESSION['CATS']->storeValueByName(
+        $key,
+        array(
+            'candidate' => $candidateAttached,
+            'job' => $jobAttached
+        )
+    );
 }
 
 $interface = new SecureAJAXInterface();
@@ -303,6 +402,157 @@ if ($action === 'status')
         die();
     }
 
+    $analysisPdfState = '';
+    $analysisPdfAttached = 0;
+    $analysisPdfRetryAfter = '';
+    if (isset($status['analysis_pdf']) && is_array($status['analysis_pdf']))
+    {
+        $analysisPdfState = isset($status['analysis_pdf']['state'])
+            ? strtoupper(trim((string) $status['analysis_pdf']['state']))
+            : '';
+        $analysisPdfUrl = isset($status['analysis_pdf']['download_url'])
+            ? trim((string) $status['analysis_pdf']['download_url'])
+            : '';
+
+        if ($analysisPdfState === 'READY' && $analysisPdfUrl !== '' &&
+            $interface->isRequiredIDValid('candidateID') &&
+            $interface->isRequiredIDValid('jobOrderID'))
+        {
+            $candidateID = (int) $_REQUEST['candidateID'];
+            $jobOrderID = (int) $_REQUEST['jobOrderID'];
+
+            $candidates = new Candidates($interface->getSiteID());
+            $candidate = $candidates->get($candidateID);
+            $jobOrders = new JobOrders($interface->getSiteID());
+            $jobOrder = $jobOrders->get($jobOrderID);
+
+            if (!empty($candidate) && !empty($jobOrder))
+            {
+                $analysisStatus = getAnalysisAttachmentStatus($jobId);
+                $needCandidate = !$analysisStatus['candidate'];
+                $needJob = !$analysisStatus['job'];
+
+                if ($needCandidate || $needJob)
+                {
+                    $analysisFilename = buildAnalysisFilename($candidate, $jobOrder);
+                    $analysisTempPath = buildAnalysisTempPath($analysisFilename);
+
+                    $analysisResponse = $client->downloadAnalysisPdf($analysisPdfUrl, $analysisTempPath);
+                    if ($analysisResponse === false)
+                    {
+                        logTalentFitFlowError('TalentFitFlow analysis download failed', array(
+                            'jobId' => $jobId,
+                            'downloadUrl' => $analysisPdfUrl,
+                            'error' => $client->getLastError()
+                        ));
+                    }
+                    else if ((int) $analysisResponse['status'] === 202)
+                    {
+                        $analysisPdfState = 'PENDING';
+                        if (isset($analysisResponse['json']['retry_after_seconds']))
+                        {
+                            $analysisPdfRetryAfter = (string) $analysisResponse['json']['retry_after_seconds'];
+                        }
+                    }
+                    else
+                    {
+                        $contentType = '';
+                        if (isset($analysisResponse['headers']) && isset($analysisResponse['headers']['Content-Type']))
+                        {
+                            $contentType = $analysisResponse['headers']['Content-Type'];
+                        }
+
+                        $jobTempPath = '';
+                        if ($needCandidate && $needJob)
+                        {
+                            $jobTempPath = buildAnalysisTempPath($analysisFilename);
+                            if (!@copy($analysisTempPath, $jobTempPath))
+                            {
+                                logTalentFitFlowError('TalentFitFlow analysis copy failed', array(
+                                    'jobId' => $jobId,
+                                    'source' => $analysisTempPath,
+                                    'destination' => $jobTempPath
+                                ));
+                                $jobTempPath = '';
+                            }
+                        }
+
+                        if ($needCandidate)
+                        {
+                            $attachmentCreator = new AttachmentCreator($interface->getSiteID());
+                            $created = $attachmentCreator->createFromFile(
+                                DATA_ITEM_CANDIDATE,
+                                $candidateID,
+                                $analysisTempPath,
+                                $analysisFilename,
+                                $contentType,
+                                true,
+                                true
+                            );
+                            if ($created || $attachmentCreator->duplicatesOccurred())
+                            {
+                                $analysisStatus['candidate'] = true;
+                            }
+                            else
+                            {
+                                logTalentFitFlowError('TalentFitFlow analysis attach failed (candidate)', array(
+                                    'jobId' => $jobId,
+                                    'candidateId' => $candidateID,
+                                    'error' => $attachmentCreator->getError()
+                                ));
+                            }
+                        }
+                        else if (file_exists($analysisTempPath))
+                        {
+                            @unlink($analysisTempPath);
+                        }
+
+                        if ($needJob)
+                        {
+                            $jobPath = $needCandidate ? $jobTempPath : $analysisTempPath;
+                            if ($jobPath !== '' && file_exists($jobPath))
+                            {
+                                $attachmentCreator = new AttachmentCreator($interface->getSiteID());
+                                $created = $attachmentCreator->createFromFile(
+                                    DATA_ITEM_JOBORDER,
+                                    $jobOrderID,
+                                    $jobPath,
+                                    $analysisFilename,
+                                    $contentType,
+                                    true,
+                                    true
+                                );
+                                if ($created || $attachmentCreator->duplicatesOccurred())
+                                {
+                                    $analysisStatus['job'] = true;
+                                }
+                                else
+                                {
+                                    logTalentFitFlowError('TalentFitFlow analysis attach failed (job order)', array(
+                                        'jobId' => $jobId,
+                                        'jobOrderId' => $jobOrderID,
+                                        'error' => $attachmentCreator->getError()
+                                    ));
+                                }
+                            }
+                            else
+                            {
+                                logTalentFitFlowError('TalentFitFlow analysis temp file missing', array(
+                                    'jobId' => $jobId,
+                                    'jobOrderId' => $jobOrderID
+                                ));
+                            }
+                        }
+
+                        setAnalysisAttachmentStatus($jobId, $analysisStatus['candidate'], $analysisStatus['job']);
+                    }
+                }
+
+                $analysisPdfAttached = (int) ($analysisStatus['candidate'] && $analysisStatus['job']);
+            }
+        }
+    }
+
     $output =
         "<data>\n" .
         "    <errorcode>0</errorcode>\n" .
@@ -321,6 +571,15 @@ if ($action === 'status')
     {
         $downloadUrl = rewriteTalentFitFlowDownloadUrl($status['cv_download_url'], $client->getBaseUrl());
         $output .= "    <cv_download_url>" . htmlspecialchars($downloadUrl, ENT_QUOTES) . "</cv_download_url>\n";
+    }
+    if ($analysisPdfState !== '')
+    {
+        $output .= "    <analysis_pdf_state>" . htmlspecialchars($analysisPdfState, ENT_QUOTES) . "</analysis_pdf_state>\n";
+        $output .= "    <analysis_pdf_attached>" . $analysisPdfAttached . "</analysis_pdf_attached>\n";
+        if ($analysisPdfRetryAfter !== '')
+        {
+            $output .= "    <analysis_pdf_retry_after>" . htmlspecialchars($analysisPdfRetryAfter, ENT_QUOTES) . "</analysis_pdf_retry_after>\n";
+        }
     }
 
     $output .=

@@ -306,6 +306,60 @@ class TalentFitFlowClient
         return $response;
     }
 
+    /**
+     * Downloads the analysis PDF using the analysis_pdf download_url from the API.
+     *
+     * @param string $downloadUrl
+     * @param string $destinationPath Optional output path to save the file.
+     * @return array|false
+     */
+    public function downloadAnalysisPdf($downloadUrl, $destinationPath = '')
+    {
+        $this->_lastError = '';
+
+        $downloadUrl = trim((string) $downloadUrl);
+        if ($downloadUrl === '')
+        {
+            return $this->_setError('Download URL is required.');
+        }
+
+        $response = $this->_requestRaw(
+            'GET',
+            $downloadUrl,
+            array(),
+            null,
+            array(200, 202),
+            true
+        );
+
+        if ($response === false)
+        {
+            return false;
+        }
+
+        if ((int) $response['status'] === 202)
+        {
+            $data = json_decode($response['body'], true);
+            if ($data === null && function_exists('json_last_error') && json_last_error() !== JSON_ERROR_NONE)
+            {
+                return $this->_setError('Invalid JSON response from TalentFitFlow.');
+            }
+            $response['json'] = is_array($data) ? $data : array();
+            return $response;
+        }
+
+        if ($destinationPath !== '')
+        {
+            $bytesWritten = @file_put_contents($destinationPath, $response['body']);
+            if ($bytesWritten === false)
+            {
+                return $this->_setError('Failed to write downloaded analysis PDF.');
+            }
+        }
+
+        return $response;
+    }
+
     private function _resolveSetting($constantName, $overrideValue)
     {
         if ($overrideValue !== null)

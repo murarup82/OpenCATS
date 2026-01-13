@@ -472,6 +472,14 @@ var CandidateTransformCV = (function ()
         }
 
         var POSTData = '&action=status&jobId=' + urlEncode(currentJobId);
+        if (config.candidateID !== '')
+        {
+            POSTData += '&candidateID=' + urlEncode(config.candidateID);
+        }
+        if (currentJobOrderId !== '')
+        {
+            POSTData += '&jobOrderID=' + urlEncode(currentJobOrderId);
+        }
 
         var callBack = function ()
         {
@@ -508,6 +516,30 @@ var CandidateTransformCV = (function ()
                     var safeUrl = url.replace(/"/g, '&quot;');
                     downloadLink = '<a href="' + safeUrl + '" target="_blank">Download CV</a>';
                 }
+
+                var analysisMessage = '';
+                var analysisState = getNodeValue(http.responseXML, 'analysis_pdf_state');
+                var analysisAttached = getNodeValue(http.responseXML, 'analysis_pdf_attached');
+                if (analysisState === 'PENDING')
+                {
+                    analysisMessage = 'Analysis report generating...';
+                }
+                else if (analysisState === 'FAILED')
+                {
+                    analysisMessage = 'Analysis report failed.';
+                }
+                else if (analysisState === 'READY')
+                {
+                    if (analysisAttached === '1')
+                    {
+                        analysisMessage = 'Analysis PDF attached.';
+                    }
+                    else
+                    {
+                        analysisMessage = 'Analysis PDF ready.';
+                    }
+                }
+
                 stopPolling();
 
                 if (storeAttachment)
@@ -519,11 +551,25 @@ var CandidateTransformCV = (function ()
 
                 if (downloadLink !== '')
                 {
-                    setStatus('Download available: ' + downloadLink, false);
+                    if (analysisMessage !== '')
+                    {
+                        setStatus('Download available: ' + downloadLink + '<br />' + analysisMessage, false);
+                    }
+                    else
+                    {
+                        setStatus('Download available: ' + downloadLink, false);
+                    }
                 }
                 else
                 {
-                    setStatus('Completed.', false);
+                    if (analysisMessage !== '')
+                    {
+                        setStatus('Completed.<br />' + analysisMessage, false);
+                    }
+                    else
+                    {
+                        setStatus('Completed.', false);
+                    }
                 }
                 disableSubmit(false);
                 return;
