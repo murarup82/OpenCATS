@@ -39,6 +39,10 @@
                                         <label for="onlyHotCandidates">Only Hot Candidates</label>&nbsp;
                                     </td>
                                     <td valign="top" align="right" nowrap="nowrap">
+                                        <input type="checkbox" name="onlyGdprUnsigned" id="onlyGdprUnsigned" <?php if ($this->dataGrid->getFilterValue('GdprSigned') == '0'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('GdprSigned', '==', '\'0\''); ?>" />
+                                        <label for="onlyGdprUnsigned">GDPR Not Signed</label>&nbsp;
+                                    </td>
+                                    <td valign="top" align="right" nowrap="nowrap">
                                         <input type="checkbox" name="onlyActiveCandidates" id="onlyActiveCandidates" <?php if ($this->dataGrid->getFilterValue('IsActive') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsActive', '==', '\'1\''); ?>" />
                                         <label for="onlyActiveCandidates">Active Candidates</label>&nbsp;
                                     </td>

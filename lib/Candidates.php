@@ -2212,6 +2212,13 @@ class CandidatesDataGrid extends DataGrid
                 'filterable' => false,
                 'filterDescription' => 'Only Hot Candidates'
             ),
+            'GdprSigned' =>    array(
+                'select'    => '',
+                'filter'    => 'candidate.gdpr_signed',
+                'pagerOptional' => false,
+                'filterable' => false,
+                'filterDescription' => 'GDPR Signed = No'
+            ),
             'IsActive' =>      array(
                 'select'    => '',
                 'filter'    => 'candidate.is_active',
