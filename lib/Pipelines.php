@@ -952,6 +952,83 @@ class Pipelines
         return $this->_db->getAllAssoc($sql);
     }
 
+    public function getStatusHistory($candidateJobOrderID)
+    {
+        $sql = sprintf(
+            "SELECT
+                candidate_joborder_status_history.candidate_joborder_status_history_id AS historyID,
+                candidate_joborder_status_history.date AS dateRaw,
+                DATE_FORMAT(candidate_joborder_status_history.date, '%%Y-%%m-%%d %%H:%%i:%%s') AS dateEdit,
+                DATE_FORMAT(candidate_joborder_status_history.date, '%%m-%%d-%%y (%%h:%%i:%%s %%p)') AS dateDisplay,
+                candidate_joborder_status_history.status_from AS statusFromID,
+                candidate_joborder_status_history.status_to AS statusToID,
+                status_from.short_description AS statusFrom,
+                status_to.short_description AS statusTo,
+                candidate_joborder_status_history.comment_text AS commentText,
+                candidate_joborder_status_history.comment_is_system AS commentIsSystem,
+                candidate_joborder_status_history.rejection_reason_other AS rejectionReasonOther,
+                GROUP_CONCAT(DISTINCT rejection_reason.label ORDER BY rejection_reason.label SEPARATOR ', ') AS rejectionReasons,
+                candidate_joborder_status_history.edited_at AS editedAt,
+                DATE_FORMAT(candidate_joborder_status_history.edited_at, '%%m-%%d-%%y (%%h:%%i:%%s %%p)') AS editedAtDisplay,
+                candidate_joborder_status_history.edit_note AS editNote,
+                edited_by_user.first_name AS editedByFirstName,
+                edited_by_user.last_name AS editedByLastName
+            FROM
+                candidate_joborder_status_history
+            INNER JOIN candidate_joborder
+                ON candidate_joborder.candidate_id = candidate_joborder_status_history.candidate_id
+                AND candidate_joborder.joborder_id = candidate_joborder_status_history.joborder_id
+                AND candidate_joborder.site_id = candidate_joborder_status_history.site_id
+            LEFT JOIN candidate_joborder_status AS status_from
+                ON status_from.candidate_joborder_status_id = candidate_joborder_status_history.status_from
+            LEFT JOIN candidate_joborder_status AS status_to
+                ON status_to.candidate_joborder_status_id = candidate_joborder_status_history.status_to
+            LEFT JOIN status_history_rejection_reason
+                ON status_history_rejection_reason.status_history_id = candidate_joborder_status_history.candidate_joborder_status_history_id
+            LEFT JOIN rejection_reason
+                ON rejection_reason.rejection_reason_id = status_history_rejection_reason.rejection_reason_id
+            LEFT JOIN user AS edited_by_user
+                ON edited_by_user.user_id = candidate_joborder_status_history.edited_by
+            WHERE
+                candidate_joborder.candidate_joborder_id = %s
+            AND
+                candidate_joborder_status_history.site_id = %s
+            GROUP BY
+                candidate_joborder_status_history.candidate_joborder_status_history_id
+            ORDER BY
+                candidate_joborder_status_history.date DESC,
+                candidate_joborder_status_history.candidate_joborder_status_history_id DESC",
+            $this->_db->makeQueryInteger($candidateJobOrderID),
+            $this->_siteID
+        );
+
+        return $this->_db->getAllAssoc($sql);
+    }
+
+    public function updateStatusHistoryDate($historyID, $newDate, $editedBy, $editNote)
+    {
+        $sql = sprintf(
+            "UPDATE
+                candidate_joborder_status_history
+            SET
+                date = %s,
+                edited_at = NOW(),
+                edited_by = %s,
+                edit_note = %s
+            WHERE
+                candidate_joborder_status_history_id = %s
+            AND
+                site_id = %s",
+            $this->_db->makeQueryString($newDate),
+            $this->_db->makeQueryInteger($editedBy),
+            $this->_db->makeQueryString($editNote),
+            $this->_db->makeQueryInteger($historyID),
+            $this->_siteID
+        );
+
+        return $this->_db->query($sql);
+    }
+
 }
 
 ?>

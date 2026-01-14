@@ -36,6 +36,7 @@ function PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCook
 
     /* Build HTTP POST data. */
     var POSTData = '&candidateJobOrderID=' + urlEncode(candidateJobOrderID);
+    POSTData += '&htmlObjectID=' + urlEncode(htmlObjectID);
 
     /* Anonymous callback function triggered when HTTP response is received. */
     var callBack = function ()
@@ -58,6 +59,82 @@ function PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCook
         false,
         false
     );
+}
+
+function PipelineStatusHistoryEdit(historyID, currentDate, candidateJobOrderID, htmlObjectID, sessionCookie)
+{
+    var newDate = prompt('New timestamp (YYYY-MM-DD HH:MM:SS):', currentDate);
+    if (newDate === null)
+    {
+        return false;
+    }
+
+    newDate = newDate.replace(/^\s+|\s+$/g, '');
+    if (newDate === '')
+    {
+        alert('Timestamp is required.');
+        return false;
+    }
+
+    var editNote = prompt('Edit note (required):');
+    if (editNote === null)
+    {
+        return false;
+    }
+
+    editNote = editNote.replace(/^\s+|\s+$/g, '');
+    if (editNote === '')
+    {
+        alert('Edit note is required.');
+        return false;
+    }
+
+    var http = AJAX_getXMLHttpObject();
+    var POSTData = '&historyID=' + urlEncode(historyID);
+    POSTData += '&newDate=' + urlEncode(newDate);
+    POSTData += '&editNote=' + urlEncode(editNote);
+
+    var callBack = function ()
+    {
+        if (http.readyState != 4)
+        {
+            return;
+        }
+
+        if (!http.responseXML)
+        {
+            alert('An error occurred while receiving a response from the server.');
+            return;
+        }
+
+        var errorCodeNode = http.responseXML.getElementsByTagName('errorcode').item(0);
+        var errorMessageNode = http.responseXML.getElementsByTagName('errormessage').item(0);
+        if (!errorCodeNode.firstChild || errorCodeNode.firstChild.nodeValue != '0')
+        {
+            var errorMessage = 'An error occurred while updating the history timestamp.';
+            if (errorMessageNode.firstChild)
+            {
+                errorMessage += "\n\n" + errorMessageNode.firstChild.nodeValue;
+            }
+            alert(errorMessage);
+            return;
+        }
+
+        PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCookie);
+    };
+
+    AJAX_callCATSFunction(
+        http,
+        'editPipelineStatusHistory',
+        POSTData,
+        callBack,
+        0,
+        sessionCookie,
+        false,
+        false
+    );
+
+    return false;
 }
 
 function PipelineJobOrder_setLimitDefaultVars(sortBy, sortDirection, includeClosed)

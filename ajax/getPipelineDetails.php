@@ -41,9 +41,15 @@ if (!$interface->isRequiredIDValid('candidateJobOrderID', false))
 $siteID = $interface->getSiteID();
 
 $candidateJobOrderID = $_REQUEST['candidateJobOrderID'];
+$htmlObjectID = '';
+if (isset($_REQUEST['htmlObjectID']))
+{
+    $htmlObjectID = preg_replace('/[^A-Za-z0-9_]/', '', $_REQUEST['htmlObjectID']);
+}
 
 /* Get an array of the company's contacts data. */
 $pipelines = new Pipelines($siteID);
+$statusHistoryRS = $pipelines->getStatusHistory($candidateJobOrderID);
 $pipelineActivitiesRS = $pipelines->getPipelineDetails($candidateJobOrderID);
 
 foreach ($pipelineActivitiesRS as $rowIndex => $row)
@@ -55,7 +61,116 @@ foreach ($pipelineActivitiesRS as $rowIndex => $row)
 }
 
 /* Output HTML. */
-echo '<div class="noteUnsizedSpan">Activity History:</div>',
+$canEditHistory = ($_SESSION['CATS']->getAccessLevel('settings.editStatusHistory') >= ACCESS_LEVEL_SA);
+if ($htmlObjectID === '')
+{
+    $canEditHistory = false;
+}
+
+echo '<div class="noteUnsizedSpan">Status History:</div>',
+     '<table>';
+
+if (empty($statusHistoryRS))
+{
+    echo '<tr><td>No status history entries could be found.</td></tr>';
+}
+else
+{
+    foreach ($statusHistoryRS as $statusHistory)
+    {
+        $comment = trim($statusHistory['commentText']);
+        if ($comment === '')
+        {
+            $comment = '(No Comment)';
+        }
+
+        $statusFrom = $statusHistory['statusFrom'];
+        $statusTo = $statusHistory['statusTo'];
+        if ($statusFrom === null || $statusFrom === '')
+        {
+            $statusFrom = 'None';
+        }
+        if ($statusTo === null || $statusTo === '')
+        {
+            $statusTo = 'None';
+        }
+
+        echo '<tr>';
+        echo '<td style="padding-right: 6px; width: 160px;">',
+             htmlspecialchars($statusHistory['dateDisplay']),
+             '</td>';
+        echo '<td style="padding-right: 6px; width: 220px;">',
+             htmlspecialchars($statusFrom),
+             ' -> ',
+             htmlspecialchars($statusTo),
+             '</td>';
+        echo '<td style="padding-right: 6px;">',
+             htmlspecialchars($comment),
+             '<br />';
+
+        if (!empty($statusHistory['rejectionReasons']))
+        {
+            echo '<span class="noteUnsizedSpan">Rejection reasons: ',
+                 htmlspecialchars($statusHistory['rejectionReasons']),
+                 '</span><br />';
+        }
+
+        if (!empty($statusHistory['rejectionReasonOther']))
+        {
+            echo '<span class="noteUnsizedSpan">Other reason: ',
+                 htmlspecialchars($statusHistory['rejectionReasonOther']),
+                 '</span><br />';
+        }
+
+        if (!empty($statusHistory['editedAt']))
+        {
+            $editedByName = trim($statusHistory['editedByFirstName'] . ' ' . $statusHistory['editedByLastName']);
+            if ($editedByName === '')
+            {
+                $editedByName = 'Unknown';
+            }
+
+            $editNote = trim($statusHistory['editNote']);
+            if ($editNote === '')
+            {
+                $editNote = '(No edit note)';
+            }
+
+            echo '<span class="noteUnsizedSpan">Edited by ',
+                 htmlspecialchars($editedByName),
+                 ' on ',
+                 htmlspecialchars($statusHistory['editedAtDisplay']),
+                 ': ',
+                 htmlspecialchars($editNote),
+                 '</span><br />';
+        }
+
+        echo '</td>';
+
+        if ($canEditHistory)
+        {
+            echo '<td style="width: 60px; text-align: right;">',
+                 '<a href="javascript:void(0);" onclick="PipelineStatusHistoryEdit(',
+                 (int) $statusHistory['historyID'],
+                 ', \'',
+                 addslashes($statusHistory['dateEdit']),
+                 '\', ',
+                 (int) $candidateJobOrderID,
+                 ', \'',
+                 htmlspecialchars($htmlObjectID, ENT_QUOTES),
+                 '\', \'',
+                 $_SESSION['CATS']->getCookie(),
+                 '\');">Edit</a>',
+                 '</td>';
+        }
+
+        echo '</tr>';
+    }
+}
+
+echo '</table>',
+     '<br />',
+     '<div class="noteUnsizedSpan">Activity History:</div>',
      '<table>';
 
 if (empty($pipelineActivitiesRS))
