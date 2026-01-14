@@ -996,7 +996,7 @@ class JobOrdersDataGrid extends DataGrid
                                        'filterHaving'  => 'totalPipeline',
                                        'filterTypes'   => '===>=<'),
 
-            'New' => array('select'   => '(
+            'Allocated' => array('select'   => '(
                                                               SELECT
                                                                   COUNT(*)
                                                               FROM
@@ -1004,13 +1004,13 @@ class JobOrdersDataGrid extends DataGrid
                                                               WHERE
                                                                   joborder_id = joborder.joborder_id
                                                               AND
-                                                                  (status = '.PIPELINE_STATUS_NEW.' OR status = '.PIPELINE_STATUS_NOSTATUS.')
+                                                                  status = '.PIPELINE_STATUS_ALLOCATED.'
                                                               AND
                                                                   site_id = '.$this->_siteID.'
                                                           ) AS notContacted',
                                        'pagerRender'      => 'return $rsData[\'notContacted\'];',
                                        'sortableColumn'     => 'notContacted',
-                                       'columnHeaderText' => 'New',
+                                       'columnHeaderText' => 'AL',
                                        'pagerWidth'    => 25,
                                        'filterHaving'  => 'notContacted',
                                        'filterTypes'   => '===>=<'),
