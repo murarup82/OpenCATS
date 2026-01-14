@@ -28,6 +28,7 @@
 
 var _sortBy;
 var _sortDirection;
+var _includeClosed = 0;
 
 function PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCookie)
 {
@@ -59,21 +60,40 @@ function PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCook
     );
 }
 
-function PipelineJobOrder_setLimitDefaultVars(sortBy, sortDirection)
+function PipelineJobOrder_setLimitDefaultVars(sortBy, sortDirection, includeClosed)
 {
     _sortBy = sortBy;
     _sortDirection = sortDirection;
+    if (typeof includeClosed !== 'undefined')
+    {
+        _includeClosed = includeClosed;
+    }
+}
+
+function PipelineJobOrder_getIncludeClosed()
+{
+    var checkbox = document.getElementById('pipelineShowClosed');
+    if (checkbox)
+    {
+        _includeClosed = checkbox.checked ? 1 : 0;
+    }
+
+    return _includeClosed;
 }
 
 function PipelineJobOrder_changeLimit(joborderID, entriesPerPage, isPopup, htmlObjectID, sessionCookie, indicatorID, indexFile)
 {
-    PipelineJobOrder_populate(joborderID, 0, entriesPerPage, _sortBy, _sortDirection, isPopup, htmlObjectID, sessionCookie, indicatorID, indexFile)
+    PipelineJobOrder_populate(joborderID, 0, entriesPerPage, _sortBy, _sortDirection, isPopup, htmlObjectID, sessionCookie, indicatorID, indexFile, PipelineJobOrder_getIncludeClosed());
 }
 
 function PipelineJobOrder_populate(joborderID, page, entriesPerPage, sortBy,
-    sortDirection, isPopup, htmlObjectID, sessionCookie, indicatorID, indexFile)
+    sortDirection, isPopup, htmlObjectID, sessionCookie, indicatorID, indexFile, includeClosed)
 {
     var http = AJAX_getXMLHttpObject();
+    if (typeof includeClosed === 'undefined')
+    {
+        includeClosed = PipelineJobOrder_getIncludeClosed();
+    }
 
     /* Build HTTP POST data. */
     var POSTData = '&joborderID=' + joborderID;
@@ -83,6 +103,7 @@ function PipelineJobOrder_populate(joborderID, page, entriesPerPage, sortBy,
     POSTData += '&sortDirection=' + urlEncode(sortDirection);
     POSTData += '&indexFile=' + urlEncode(indexFile);
     POSTData += '&isPopup=' + urlEncode(isPopup);
+    POSTData += '&includeClosed=' + urlEncode(includeClosed);
 
     document.getElementById(indicatorID).style.display = '';
 

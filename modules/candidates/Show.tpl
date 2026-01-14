@@ -513,6 +513,13 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             <br />
 
             <p class="note">Job Orders for Candidates</p>
+            <p style="margin: 4px 0 8px 0;">
+                <label>
+                    <input type="checkbox" id="pipelineShowClosedCandidate" <?php if (!empty($this->showClosedPipeline)) echo('checked="checked"'); ?>
+                        onclick="window.location.href='<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>&amp;showClosed=' + (this.checked ? 1 : 0);" />
+                    Show Closed
+                </label>
+            </p>
             <table class="sortablepair">
                 <tr>
                     <th></th>
@@ -530,7 +537,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 </tr>
 
                 <?php foreach ($this->pipelinesRS as $rowNumber => $pipelinesData): ?>
-                    <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>" id="pipelineRow<?php echo($rowNumber); ?>">
+                    <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?><?php if ((int) $pipelinesData['isActive'] === 0) echo(' pipelineClosedRow'); ?>" id="pipelineRow<?php echo($rowNumber); ?>">
                         <td valign="top">
                             <span id="pipelineOpen<?php echo($rowNumber); ?>">
                                 <a href="javascript:void(0);" onclick="document.getElementById('pipelineDetails<?php echo($rowNumber); ?>').style.display=''; document.getElementById('pipelineClose<?php echo($rowNumber); ?>').style.display = ''; document.getElementById('pipelineOpen<?php echo($rowNumber); ?>').style.display = 'none'; PipelineDetails_populate(<?php echo($pipelinesData['candidateJobOrderID']); ?>, 'pipelineInner<?php echo($rowNumber); ?>', '<?php echo($this->sessionCookie); ?>');">
@@ -562,7 +569,12 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         <td valign="top"><?php $this->_($pipelinesData['ownerAbbrName']) ?></td>
                         <td valign="top"><?php $this->_($pipelinesData['dateCreated']) ?></td>
                         <td valign="top"><?php $this->_($pipelinesData['addedByAbbrName']) ?></td>
-                        <td valign="top" nowrap="nowrap"><?php $this->_($pipelinesData['status']) ?></td>
+                        <td valign="top" nowrap="nowrap">
+                            <?php $this->_($pipelinesData['status']) ?>
+                            <?php if ((int) $pipelinesData['isActive'] === 0): ?>
+                                <span class="pipelineClosedTag">Closed</span>
+                            <?php endif; ?>
+                        </td>
 <?php if (!$this->isPopup): ?>
                         <td align="center" nowrap="nowrap">
                             <?php eval(Hooks::get('CANDIDATE_TEMPLATE_SHOW_PIPELINE_ACTION')); ?>

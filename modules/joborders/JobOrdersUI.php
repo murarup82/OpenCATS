@@ -370,6 +370,12 @@ class JobOrdersUI extends UserInterface
 
         $jobOrderID = $_GET['jobOrderID'];
 
+        $showClosed = false;
+        if (isset($_GET['showClosed']) && ($_GET['showClosed'] == '1' || $_GET['showClosed'] === 'true'))
+        {
+            $showClosed = true;
+        }
+
 
         $jobOrders = new JobOrders($this->_siteID);
         $data = $jobOrders->get($jobOrderID);
@@ -523,6 +529,7 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('careerPortalEnabled', $careerPortalEnabled);
         $this->_template->assign('privledgedUser', $privledgedUser);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
+        $this->_template->assign('showClosedPipeline', $showClosed);
 
         if (!eval(Hooks::get('JO_SHOW'))) return;
 
@@ -1611,7 +1618,7 @@ class JobOrdersUI extends UserInterface
         if (!eval(Hooks::get('JO_ON_REMOVE_PIPELINE'))) return;
 
         $pipelines = new Pipelines($this->_siteID);
-        $pipelines->remove($candidateID, $jobOrderID);
+        $pipelines->remove($candidateID, $jobOrderID, $this->_userID);
 
         if (!eval(Hooks::get('JO_ON_REMOVE_PIPELINE_POST'))) return;
 

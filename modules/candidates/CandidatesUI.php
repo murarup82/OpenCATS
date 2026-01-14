@@ -553,7 +553,13 @@ class CandidatesUI extends UserInterface
             );
         }
         $pipelines = new Pipelines($this->_siteID);
-        $pipelinesRS = $pipelines->getCandidatePipeline($candidateID);
+        $showClosed = false;
+        if (isset($_GET['showClosed']) && ($_GET['showClosed'] == '1' || $_GET['showClosed'] === 'true'))
+        {
+            $showClosed = true;
+        }
+
+        $pipelinesRS = $pipelines->getCandidatePipeline($candidateID, $showClosed);
 
         $sessionCookie = $_SESSION['CATS']->getCookie();
 
@@ -678,6 +684,7 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('attachmentsRS', $attachmentsRS);
         $this->_template->assign('transformAttachments', $transformAttachments);
         $this->_template->assign('pipelinesRS', $pipelinesRS);
+        $this->_template->assign('showClosedPipeline', $showClosed);
         $this->_template->assign('activityRS', $activityRS);
         $this->_template->assign('calendarRS', $calendarRS);
         $this->_template->assign('extraFieldRS', $extraFieldRS);
@@ -1805,7 +1812,7 @@ class CandidatesUI extends UserInterface
         if (!eval(Hooks::get('CANDIDATE_REMOVE_FROM_PIPELINE_PRE'))) return;
 
         $pipelines = new Pipelines($this->_siteID);
-        $pipelines->remove($candidateID, $jobOrderID);
+        $pipelines->remove($candidateID, $jobOrderID, $this->_userID);
 
         if (!eval(Hooks::get('CANDIDATE_REMOVE_FROM_PIPELINE_POST'))) return;
 
@@ -2892,7 +2899,8 @@ class CandidatesUI extends UserInterface
                 $regardingID,
                 $statusID,
                 $email,
-                $customMessage
+                $customMessage,
+                $this->_userID
             );
 
             /* If status = placed, and open positions > 0, reduce number of open positions by one. */

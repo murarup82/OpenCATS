@@ -1377,3 +1377,18 @@ td.contentContainerOld {
 #emailPreview * {
     padding: 5px;
 }
+
+.pipelineClosedRow {
+    color: #777;
+}
+
+.pipelineClosedRow a {
+    color: #777;
+}
+
+.pipelineClosedTag {
+    color: #777;
+    font-size: 10px;
+    margin-left: 6px;
+    text-transform: uppercase;
+}

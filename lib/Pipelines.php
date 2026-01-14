@@ -61,7 +61,8 @@ class Pipelines
     {
         $sql = sprintf(
             "SELECT
-                COUNT(candidate_id) AS candidateIDCount
+                candidate_joborder_id AS candidateJobOrderID,
+                is_active AS isActive
             FROM
                 candidate_joborder
             WHERE
@@ -76,14 +77,47 @@ class Pipelines
         );
         $rs = $this->_db->getAssoc($sql);
 
-        if (empty($rs))
+        if (!empty($rs))
         {
-            return false;
-        }
+            if ((int) $rs['isActive'] === 0)
+            {
+                $sql = sprintf(
+                    "UPDATE
+                        candidate_joborder
+                    SET
+                        status = %s,
+                        is_active = 1,
+                        closed_at = NULL,
+                        closed_by = NULL,
+                        added_by = %s,
+                        date_modified = NOW()
+                    WHERE
+                        candidate_joborder_id = %s
+                    AND
+                        site_id = %s",
+                    $this->_db->makeQueryInteger(PIPELINE_STATUS_ALLOCATED),
+                    $this->_db->makeQueryInteger($userID),
+                    $this->_db->makeQueryInteger($rs['candidateJobOrderID']),
+                    $this->_siteID
+                );
+                $queryResult = $this->_db->query($sql);
+                if (!$queryResult)
+                {
+                    return false;
+                }
 
-        $count = $rs['candidateIDCount'];
-        if ($count > 0)
-        {
+                $this->addStatusHistory(
+                    $candidateID,
+                    $jobOrderID,
+                    PIPELINE_STATUS_ALLOCATED,
+                    PIPELINE_STATUS_NOSTATUS,
+                    'System: allocated on job association',
+                    1
+                );
+
+                return true;
+            }
+
             /* Candidate already exists in the pipeline. */
             return false;
         }
@@ -146,10 +180,13 @@ class Pipelines
      * @param integer job order ID
      * @return void
      */
-    public function remove($candidateID, $jobOrderID)
+    public function remove($candidateID, $jobOrderID, $userID = 0)
     {
         $sql = sprintf(
-            "DELETE FROM
+            "SELECT
+                candidate_joborder_id AS candidateJobOrderID,
+                status AS statusID
+            FROM
                 candidate_joborder
             WHERE
                 joborder_id = %s
@@ -161,19 +198,28 @@ class Pipelines
             $this->_db->makeQueryInteger($candidateID),
             $this->_siteID
         );
-        $this->_db->query($sql);
+        $rs = $this->_db->getAssoc($sql);
+        if (empty($rs))
+        {
+            return;
+        }
+
+        $candidateJobOrderID = $rs['candidateJobOrderID'];
 
         $sql = sprintf(
-            "DELETE FROM
-                candidate_joborder_status_history
+            "UPDATE
+                candidate_joborder
+            SET
+                is_active = 0,
+                closed_at = NOW(),
+                closed_by = %s,
+                date_modified = NOW()
             WHERE
-                joborder_id = %s
-            AND
-                candidate_id = %s
+                candidate_joborder_id = %s
             AND
                 site_id = %s",
-            $this->_db->makeQueryInteger($jobOrderID),
-            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($userID),
+            $this->_db->makeQueryInteger($candidateJobOrderID),
             $this->_siteID
         );
         $this->_db->query($sql);
@@ -184,16 +230,16 @@ class Pipelines
             $candidateID,
             'PIPELINE',
             $jobOrderID,
-            '(DELETE)',
-            '(USER) deleted candidate from pipeline for job order ' . $jobOrderID . '.'
+            '(CLOSE)',
+            '(USER) closed candidate pipeline entry for job order ' . $jobOrderID . '.'
         );
         $history->storeHistoryData(
             DATA_ITEM_JOBORDER,
             $jobOrderID,
             'PIPELINE',
             $candidateID,
-            '(DELETE)',
-            '(USER) deleted job order from pipeline for candidate ' . $candidateID . '.'
+            '(CLOSE)',
+            '(USER) closed job order pipeline entry for candidate ' . $candidateID . '.'
         );
     }
 
@@ -302,7 +348,7 @@ class Pipelines
 
     // FIXME: Document me.
     public function setStatus($candidateID, $jobOrderID, $statusID,
-                              $emailAddress, $emailText)
+                              $emailAddress, $emailText, $userID = 0)
     {
         /* Get existing status. */
         $sql = sprintf(
@@ -355,6 +401,44 @@ class Pipelines
             $this->_siteID
         );
         $this->_db->query($sql);
+
+        if ($statusID == PIPELINE_STATUS_REJECTED || $statusID == PIPELINE_STATUS_HIRED)
+        {
+            $sql = sprintf(
+                "UPDATE
+                    candidate_joborder
+                SET
+                    is_active = 0,
+                    closed_at = NOW(),
+                    closed_by = %s
+                WHERE
+                    candidate_joborder_id = %s
+                AND
+                    site_id = %s",
+                $this->_db->makeQueryInteger($userID),
+                $this->_db->makeQueryInteger($candidateJobOrderID),
+                $this->_siteID
+            );
+            $this->_db->query($sql);
+        }
+        else
+        {
+            $sql = sprintf(
+                "UPDATE
+                    candidate_joborder
+                SET
+                    is_active = 1,
+                    closed_at = NULL,
+                    closed_by = NULL
+                WHERE
+                    candidate_joborder_id = %s
+                AND
+                    site_id = %s",
+                $this->_db->makeQueryInteger($candidateJobOrderID),
+                $this->_siteID
+            );
+            $this->_db->query($sql);
+        }
 
         /* Add history. */
         $historyID = $this->addStatusHistory(
@@ -519,8 +603,14 @@ class Pipelines
      * @param integer candidate ID
      * @return array pipeline data
      */
-    public function getCandidatePipeline($candidateID)
+    public function getCandidatePipeline($candidateID, $includeClosed = false)
     {
+        $statusFilter = '';
+        if (!$includeClosed)
+        {
+            $statusFilter = 'AND candidate_joborder.is_active = 1';
+        }
+
         $sql = sprintf(
             "SELECT
                 company.company_id AS companyID,
@@ -545,6 +635,9 @@ class Pipelines
                 candidate_joborder_status.candidate_joborder_status_id AS statusID,
                 candidate_joborder_status.short_description AS status,
                 candidate_joborder.candidate_joborder_id AS candidateJobOrderID,
+                candidate_joborder.is_active AS isActive,
+                candidate_joborder.closed_at AS closedAt,
+                candidate_joborder.closed_by AS closedBy,
                 candidate_joborder.rating_value AS ratingValue,
                 owner_user.first_name AS ownerFirstName,
                 owner_user.last_name AS ownerLastName,
@@ -571,11 +664,13 @@ class Pipelines
             AND
                 joborder.site_id = %s
             AND
-                company.site_id = %s",
+                company.site_id = %s
+            %s",
             $this->_db->makeQueryInteger($candidateID),
             $this->_siteID,
             $this->_siteID,
-            $this->_siteID
+            $this->_siteID,
+            $statusFilter
         );
 
         return $this->_db->getAllAssoc($sql);
@@ -587,8 +682,15 @@ class Pipelines
      * @param integer job order ID
      * @return array pipeline data
      */
-    public function getJobOrderPipeline($jobOrderID, $orderBy = '')
+    public function getJobOrderPipeline($jobOrderID, $orderBy = '',
+                                        $includeClosed = false)
     {
+        $statusFilter = '';
+        if (!$includeClosed)
+        {
+            $statusFilter = 'AND candidate_joborder.is_active = 1';
+        }
+
         /* FIXME: CONCAT() stuff is a very ugly hack, but I don't think there
          * is a way to return multiple values from a subquery.
          */
@@ -602,6 +704,9 @@ class Pipelines
                 candidate.country AS country,
                 candidate.email1 AS candidateEmail,
                 candidate_joborder.status AS jobOrderStatus,
+                candidate_joborder.is_active AS isActive,
+                candidate_joborder.closed_at AS closedAt,
+                candidate_joborder.closed_by AS closedBy,
                 candidate.is_hot AS isHotCandidate,
                 DATE_FORMAT(
                     candidate_joborder.date_created, '%%m-%%d-%%y'
@@ -680,6 +785,7 @@ class Pipelines
                 candidate_joborder.site_id = %s
             AND
                 candidate.site_id = %s
+            %s
             GROUP BY
                 candidate_joborder.candidate_id
             %s",
@@ -691,6 +797,7 @@ class Pipelines
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_siteID,
             $this->_siteID,
+            $statusFilter,
             $orderBy
         );
 

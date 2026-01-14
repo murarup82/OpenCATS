@@ -378,6 +378,10 @@ use OpenCATS\UI\QuickActionMenu;
                     <option value="50" <?php if ($this->pipelineEntriesPerPage == 50): ?>selected<?php endif; ?>>50 entries</option>
                     <option value="99999" <?php if ($this->pipelineEntriesPerPage == 99999): ?>selected<?php endif; ?>>All entries</option>
                 </select>&nbsp;
+                <label style="margin-left: 10px;">
+                    <input type="checkbox" id="pipelineShowClosed" <?php if (!empty($this->showClosedPipeline)) echo('checked="checked"'); ?> onclick="PipelineJobOrder_populate(<?php $this->_($this->data['jobOrderID']); ?>, 0, <?php $this->_($this->pipelineEntriesPerPage); ?>, 'dateCreatedInt', 'desc', <?php if ($this->isPopup) echo(1); else echo(0); ?>, 'ajaxPipelineTable', '<?php echo($this->sessionCookie); ?>', 'ajaxPipelineTableIndicator', '<?php echo(CATSUtility::getIndexName()); ?>', PipelineJobOrder_getIncludeClosed());" />
+                    Show Closed
+                </label>
                 <span id="ajaxPipelineNavigation">
                 </span>&nbsp;
                 <img src="images/indicator.gif" alt="" id="ajaxPipelineTableIndicator" />
@@ -411,7 +415,7 @@ use OpenCATS\UI\QuickActionMenu;
 
             </script>
             <script type="text/javascript">
-                PipelineJobOrder_populate(<?php $this->_($this->data['jobOrderID']); ?>, 0, <?php $this->_($this->pipelineEntriesPerPage); ?>, 'dateCreatedInt', 'desc', <?php if ($this->isPopup) echo(1); else echo(0); ?>, 'ajaxPipelineTable', '<?php echo($this->sessionCookie); ?>', 'ajaxPipelineTableIndicator', '<?php echo(CATSUtility::getIndexName()); ?>');
+                PipelineJobOrder_populate(<?php $this->_($this->data['jobOrderID']); ?>, 0, <?php $this->_($this->pipelineEntriesPerPage); ?>, 'dateCreatedInt', 'desc', <?php if ($this->isPopup) echo(1); else echo(0); ?>, 'ajaxPipelineTable', '<?php echo($this->sessionCookie); ?>', 'ajaxPipelineTableIndicator', '<?php echo(CATSUtility::getIndexName()); ?>', <?php echo(!empty($this->showClosedPipeline) ? 1 : 0); ?>);
             </script>
 
             <?php if (!$this->isPopup): ?>
