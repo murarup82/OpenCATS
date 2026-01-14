@@ -151,7 +151,8 @@ class ImportantPipelineDashboard extends DataGrid
                     WHEN %s THEN 3
                     WHEN %s THEN 4
                     WHEN %s THEN 5
-                    ELSE 6
+                    WHEN %s THEN 6
+                    ELSE 7
                 END as statusSort,
                 candidate_joborder_status.short_description as status
             FROM
@@ -178,15 +179,17 @@ class ImportantPipelineDashboard extends DataGrid
             %s",
             $distinct,
             PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
-            PIPELINE_STATUS_CLIENT_DECISION_PENDING,
-            PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
-            PIPELINE_STATUS_UNDER_OFFER_NEGOTIATION,
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+            PIPELINE_STATUS_CUSTOMER_APPROVED,
+            PIPELINE_STATUS_AVEL_APPROVED,
+            PIPELINE_STATUS_OFFER_NEGOTIATION,
             PIPELINE_STATUS_OFFER_ACCEPTED,
             $this->_siteID,
             PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
-            PIPELINE_STATUS_CLIENT_DECISION_PENDING,
-            PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
-            PIPELINE_STATUS_UNDER_OFFER_NEGOTIATION,
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+            PIPELINE_STATUS_CUSTOMER_APPROVED,
+            PIPELINE_STATUS_AVEL_APPROVED,
+            PIPELINE_STATUS_OFFER_NEGOTIATION,
             PIPELINE_STATUS_OFFER_ACCEPTED,
             JobOrderStatuses::getOpenStatusSQL(),
             (strlen($whereSQL) > 0) ? ' AND ' . $whereSQL : '',

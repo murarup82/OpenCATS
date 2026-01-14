@@ -83,13 +83,14 @@ class Dashboard
             LEFT JOIN user ON
                 joborder.recruiter = user.user_id
             WHERE
-                status_to = 800
+                status_to = %s
             AND
                 candidate_joborder_status_history.site_id = %s
             ORDER BY 
                 datesort DESC
             LIMIT
                 10",
+            PIPELINE_STATUS_HIRED,
             $this->_siteID
         );
 
@@ -169,8 +170,8 @@ class Dashboard
             ",
             $select,
             PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
-            PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
-            PIPELINE_STATUS_ACTIVITY_STARTED,
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+            PIPELINE_STATUS_HIRED,
             $this->_siteID
         );
         

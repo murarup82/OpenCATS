@@ -99,12 +99,13 @@ class Statistics
             LEFT JOIN joborder
                 ON joborder.joborder_id = candidate_joborder_status_history.joborder_id
             WHERE
-                status_to = 400
+                status_to = %s
             AND
                 joborder.status IN %s
             AND
                 candidate_joborder_status_history.site_id = %s
             %s",
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             JobOrderStatuses::getStatisticsStatusSQL(),
             $this->_siteID,
             $criterion
@@ -130,10 +131,11 @@ class Statistics
             FROM
                 candidate_joborder_status_history
             WHERE
-                status_to = 800
+                status_to = %s
             AND
                 site_id = %s
             %s",
+            PIPELINE_STATUS_HIRED,
             $this->_siteID,
             $criterion
         );
@@ -238,7 +240,7 @@ class Statistics
                 joborder.title AS title,
                 joborder.company_id AS companyID,
                 SUM(
-                    IF(candidate_joborder_status_history.status_to = 400, 1, 0)
+                    IF(candidate_joborder_status_history.status_to = %s, 1, 0)
                 ) AS submittedCount,
                 CONCAT(
                     owner_user.first_name, ' ', owner_user.last_name
@@ -261,6 +263,7 @@ class Statistics
                 jobOrderID
             HAVING
                 submittedCount > 0",
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $criterion,
             JobOrderStatuses::getStatisticsStatusSQL(),
             $this->_siteID
@@ -309,7 +312,7 @@ class Statistics
             WHERE
                 candidate_joborder_status_history.joborder_id = %s
             AND
-                candidate_joborder_status_history.status_to = 400
+                candidate_joborder_status_history.status_to = %s
             %s
             AND
                 candidate.site_id = %s
@@ -321,6 +324,7 @@ class Statistics
                 candidate.last_name ASC,
                 candidate.first_name ASC",
             $jobOrderID,
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $criterion,
             $this->_siteID,
             $this->_siteID,
@@ -348,7 +352,7 @@ class Statistics
                 joborder.title AS title,
                 joborder.company_id AS companyID,
                 SUM(
-                    IF(candidate_joborder_status_history.status_to = 800, 1, 0)
+                    IF(candidate_joborder_status_history.status_to = %s, 1, 0)
                 ) AS submittedCount,
                 CONCAT(
                     owner_user.first_name, ' ', owner_user.last_name
@@ -371,6 +375,7 @@ class Statistics
                 jobOrderID
             HAVING
                 submittedCount > 0",
+            PIPELINE_STATUS_HIRED,
             $criterion,
             JobOrderStatuses::getStatisticsStatusSQL(),
             $this->_siteID
@@ -419,7 +424,7 @@ class Statistics
             WHERE
                 candidate_joborder_status_history.joborder_id = %s
             AND
-                candidate_joborder_status_history.status_to = 800
+                candidate_joborder_status_history.status_to = %s
             %s
             AND
                 candidate.site_id = %s
@@ -431,6 +436,7 @@ class Statistics
                 candidate.last_name ASC,
                 candidate.first_name ASC",
             $jobOrderID,
+            PIPELINE_STATUS_HIRED,
             $criterion,
             $this->_siteID,
             $this->_siteID,
@@ -556,8 +562,9 @@ class Statistics
             WHERE
                 candidate_joborder_status_history.site_id = %s
             AND
-                candidate_joborder_status_history.status_to = 400
+                candidate_joborder_status_history.status_to = %s
             %s",
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $this->_siteID,
             $criterion
         );
@@ -588,8 +595,9 @@ class Statistics
             WHERE
                 candidate_joborder_status_history.site_id = %s
             AND
-                candidate_joborder_status_history.status_to = 800
+                candidate_joborder_status_history.status_to = %s
             %s",
+            PIPELINE_STATUS_HIRED,
             $this->_siteID,
             $criterion
         );
@@ -679,10 +687,10 @@ class Statistics
             PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $this->_siteID,
             $this->_db->makeQueryInteger($jobOrderID),
-            PIPELINE_STATUS_ACTIVITY_STARTED,
+            PIPELINE_STATUS_HIRED,
             $this->_siteID,
             $this->_db->makeQueryInteger($jobOrderID),
-            PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW,
             $this->_siteID,
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_siteID
@@ -714,7 +722,7 @@ class Statistics
                 $statusChriterion = 'AND IF(candidate_joborder_status.candidate_joborder_id, 1, 0) = 1';
                 $join = 'LEFT JOIN candidate_joborder AS candidate_joborder_status
                             ON candidate_joborder_status.candidate_id = candidate.candidate_id
-                            AND candidate_joborder_status.status >= '.PIPELINE_STATUS_ACTIVITY_STARTED.'
+                            AND candidate_joborder_status.status = '.PIPELINE_STATUS_HIRED.'
                             AND candidate_joborder_status.site_id = '.$this->_siteID.'
                         ';
                 break;
@@ -723,7 +731,7 @@ class Statistics
                 $statusChriterion = 'AND IF(candidate_joborder_status.candidate_joborder_id, 1, 0) = 1';
                 $join = 'LEFT JOIN candidate_joborder AS candidate_joborder_status
                             ON candidate_joborder_status.candidate_id = candidate.candidate_id
-                            AND candidate_joborder_status.status = '.PIPELINE_STATUS_CLIENT_DECISION_PENDING.'
+                            AND candidate_joborder_status.status = '.PIPELINE_STATUS_REJECTED.'
                             AND candidate_joborder_status.site_id = '.$this->_siteID.'
                         ';
                 break;
@@ -898,17 +906,16 @@ class Statistics
         $sql = sprintf(
             "SELECT
                 COUNT(*) AS totalPipeline,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS noStatus,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS new,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS hrValidated,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS requireTechEvaluation,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS techValidated,
+                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS allocated,
+                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS deliveryValidated,
                 SUM(IF(candidate_joborder.status = %s, 1, 0)) AS proposedToCustomer,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS clientDecisionPending,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS approvedByCustomer,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS underOfferNegotiation,
+                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS customerInterview,
+                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS customerApproved,
+                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS avelApproved,
+                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS offerNegotiation,
                 SUM(IF(candidate_joborder.status = %s, 1, 0)) AS offerAccepted,
-                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS activityStarted
+                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS hired,
+                SUM(IF(candidate_joborder.status = %s, 1, 0)) AS rejected
             FROM
                 candidate_joborder
             LEFT JOIN joborder
@@ -918,17 +925,16 @@ class Statistics
             AND
                 joborder.status != 'Closed'
             %s",
-            PIPELINE_STATUS_NOSTATUS,
-            PIPELINE_STATUS_NEW,
-            PIPELINE_STATUS_HR_VALIDATED,
-            PIPELINE_STATUS_REQUIRE_TECH_EVAL,
-            PIPELINE_STATUS_TECH_VALIDATED,
+            PIPELINE_STATUS_ALLOCATED,
+            PIPELINE_STATUS_DELIVERY_VALIDATED,
             PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
-            PIPELINE_STATUS_CLIENT_DECISION_PENDING,
-            PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
-            PIPELINE_STATUS_UNDER_OFFER_NEGOTIATION,
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+            PIPELINE_STATUS_CUSTOMER_APPROVED,
+            PIPELINE_STATUS_AVEL_APPROVED,
+            PIPELINE_STATUS_OFFER_NEGOTIATION,
             PIPELINE_STATUS_OFFER_ACCEPTED,
-            PIPELINE_STATUS_ACTIVITY_STARTED,
+            PIPELINE_STATUS_HIRED,
+            PIPELINE_STATUS_REJECTED,
             $this->_siteID,
             ($jobOrderID != -1 ? "AND candidate_joborder.joborder_id = ".$jobOrderID : "")
         );
@@ -938,17 +944,16 @@ class Statistics
         {
             return array(
                 'totalPipeline' => 0,
-                'noStatus' => 0,
-                'new' => 0,
-                'hrValidated' => 0,
-                'requireTechEvaluation' => 0,
-                'techValidated' => 0,
+                'allocated' => 0,
+                'deliveryValidated' => 0,
                 'proposedToCustomer' => 0,
-                'clientDecisionPending' => 0,
-                'approvedByCustomer' => 0,
-                'underOfferNegotiation' => 0,
+                'customerInterview' => 0,
+                'customerApproved' => 0,
+                'avelApproved' => 0,
+                'offerNegotiation' => 0,
                 'offerAccepted' => 0,
-                'activityStarted' => 0
+                'hired' => 0,
+                'rejected' => 0
             );
         }
 

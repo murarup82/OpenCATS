@@ -462,7 +462,7 @@ class GraphsUI extends UserInterface
         }
         
         $graph = new pipelineStatisticsGraph(
-            $y, $x, $colorArray, $this->width, $this->height, "Proposed to Customer", "Approved by Customer/Project", "Activity Started", $view, $noData
+            $y, $x, $colorArray, $this->width, $this->height, "Proposed to Customer", "Customer Interview", "Hired", $view, $noData
         );
         
         $graph->draw();
@@ -482,46 +482,46 @@ class GraphsUI extends UserInterface
 
         $fullLabels = array(
             "Total Pipeline",
-            "New",
-            "HR Validated",
-            "Require Tech Evaluation",
-            "Tech Validated",
+            "Allocated",
+            "Delivery Validated",
             "Proposed to Customer",
-            "Client Decision Pending",
-            "Approved by Customer/Project",
-            "Under Offer Negotiation",
+            "Customer Interview",
+            "Customer Approved",
+            "Avel Approved",
+            "Offer Negotiation",
             "Offer Accepted",
-            "Activity Started"
+            "Hired",
+            "Rejected"
         );
 
         $compactLabels = array(
             "Total",
-            "|New",
-            "HR Validated",
-            "|Tech Eval",
-            "Tech Validated",
+            "|Allocated",
+            "Delivery Validated",
             "|Proposed",
-            "Client Decision Pending",
-            "|Approved",
-            "Under Offer",
-            "|Offer Accepted",
-            "Activity Started"
+            "Customer Interview",
+            "|Customer Approved",
+            "Avel Approved",
+            "|Offer Negotiation",
+            "Offer Accepted",
+            "|Hired",
+            "Rejected"
         );
 
         $y = ($this->width > 600) ? $fullLabels : $compactLabels;
 
         $x = array(
             $statisticsData['totalPipeline'],
-            $statisticsData['new'],
-            $statisticsData['hrValidated'],
-            $statisticsData['requireTechEvaluation'],
-            $statisticsData['techValidated'],
+            $statisticsData['allocated'],
+            $statisticsData['deliveryValidated'],
             $statisticsData['proposedToCustomer'],
-            $statisticsData['clientDecisionPending'],
-            $statisticsData['approvedByCustomer'],
-            $statisticsData['underOfferNegotiation'],
+            $statisticsData['customerInterview'],
+            $statisticsData['customerApproved'],
+            $statisticsData['avelApproved'],
+            $statisticsData['offerNegotiation'],
             $statisticsData['offerAccepted'],
-            $statisticsData['activityStarted']
+            $statisticsData['hired'],
+            $statisticsData['rejected']
         );
 
         $colorArray = array(
