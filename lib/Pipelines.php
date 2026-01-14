@@ -107,7 +107,7 @@ class Pipelines
                 %s,
                 %s,
                 %s,
-                100,
+                %s,
                 %s,
                 NOW(),
                 NOW()%s
@@ -116,6 +116,7 @@ class Pipelines
             $this->_siteID,
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger(PIPELINE_STATUS_ALLOCATED),
             $this->_db->makeQueryInteger($userID),
             $extraValues
         );
@@ -125,6 +126,15 @@ class Pipelines
         {
             return false;
         }
+
+        $this->addStatusHistory(
+            $candidateID,
+            $jobOrderID,
+            PIPELINE_STATUS_ALLOCATED,
+            PIPELINE_STATUS_NOSTATUS,
+            'System: allocated on job association',
+            1
+        );
 
         return true;
     }
@@ -457,7 +467,9 @@ class Pipelines
 
     // FIXME: Document me.
     public function addStatusHistory($candidateID, $jobOrderID, $statusToID,
-                                     $statusFromID)
+                                     $statusFromID, $commentText = '',
+                                     $commentIsSystem = 0,
+                                     $rejectionReasonOther = null)
     {
         $sql = sprintf(
             "INSERT INTO candidate_joborder_status_history (
@@ -466,7 +478,10 @@ class Pipelines
                 site_id,
                 date,
                 status_to,
-                status_from
+                status_from,
+                comment_text,
+                comment_is_system,
+                rejection_reason_other
             )
             VALUES (
                 %s,
@@ -474,13 +489,19 @@ class Pipelines
                 %s,
                 NOW(),
                 %s,
+                %s,
+                %s,
+                %s,
                 %s
             )",
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_db->makeQueryInteger($candidateID),
             $this->_siteID,
             $this->_db->makeQueryInteger($statusToID),
-            $this->_db->makeQueryInteger($statusFromID)
+            $this->_db->makeQueryInteger($statusFromID),
+            $this->_db->makeQueryStringOrNULL($commentText),
+            $this->_db->makeQueryInteger($commentIsSystem),
+            $this->_db->makeQueryStringOrNULL($rejectionReasonOther)
         );
 
         $queryResult = $this->_db->query($sql);
