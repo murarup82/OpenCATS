@@ -202,48 +202,48 @@ class ReportsUI extends UserInterface
         {
             case 'yesterday':
                 $period = TIME_PERIOD_YESTERDAY;
-                $reportTitle = 'Yesterday\'s Report';
+                $reportTitle = 'Yesterday\'s Hires';
                 break;
 
             case 'thisWeek':
                 $period = TIME_PERIOD_THISWEEK;
-                $reportTitle = 'This Week\'s Report';
+                $reportTitle = 'This Week\'s Hires';
                 break;
 
             case 'lastWeek':
                 $period = TIME_PERIOD_LASTWEEK;
-                $reportTitle = 'Last Week\'s Report';
+                $reportTitle = 'Last Week\'s Hires';
                 break;
 
             case 'thisMonth':
                 $period = TIME_PERIOD_THISMONTH;
-                $reportTitle = 'This Month\'s Report';
+                $reportTitle = 'This Month\'s Hires';
                 break;
 
             case 'lastMonth':
                 $period = TIME_PERIOD_LASTMONTH;
-                $reportTitle = 'Last Month\'s Report';
+                $reportTitle = 'Last Month\'s Hires';
                 break;
 
             case 'thisYear':
                 $period = TIME_PERIOD_THISYEAR;
-                $reportTitle = 'This Year\'s Report';
+                $reportTitle = 'This Year\'s Hires';
                 break;
 
             case 'lastYear':
                 $period = TIME_PERIOD_LASTYEAR;
-                $reportTitle = 'Last Year\'s Report';
+                $reportTitle = 'Last Year\'s Hires';
                 break;
 
             case 'toDate':
                 $period = TIME_PERIOD_TODATE;
-                $reportTitle = 'To Date Report';
+                $reportTitle = 'Total Hires';
                 break;
 
             case 'today':
             default:
                 $period = TIME_PERIOD_TODAY;
-                $reportTitle = 'Today\'s Report';
+                $reportTitle = 'Today\'s Hires';
                 break;
         }
 
