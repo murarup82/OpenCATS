@@ -222,6 +222,9 @@ CREATE TABLE `candidate_joborder` (
   `joborder_id` int(11) NOT NULL DEFAULT '0',
   `site_id` int(11) NOT NULL DEFAULT '0',
   `status` int(11) NOT NULL DEFAULT '0',
+  `is_active` int(1) NOT NULL DEFAULT '1',
+  `closed_at` datetime DEFAULT NULL,
+  `closed_by` int(11) DEFAULT NULL,
   `date_submitted` datetime DEFAULT NULL,
   `date_created` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
   `date_modified` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
@@ -261,10 +264,19 @@ insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_d
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (500,'Approved by Customer/Project',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (600,'Under Offer Negotiation',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (700,'Offer Accepted',0,0,1);
-insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (800,'Activity Started',0,1,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (800,'Hired',0,1,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (0,'No Status',0,0,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (650,'Client Decision Pending',0,0,1);
 insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (250,'Require Tech Evaluation',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9000,'Allocated',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9001,'Delivery Validated',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9002,'Proposed to Customer',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9003,'Customer Interview',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9004,'Customer Approved',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9005,'Avel Approved',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9006,'Offer Negotiation',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9007,'Offer Accepted',0,0,1);
+insert  into `candidate_joborder_status`(`candidate_joborder_status_id`,`short_description`,`can_be_scheduled`,`triggers_email`,`is_enabled`) values (9008,'Rejected',0,0,1);
 
 /*Table structure for table `candidate_joborder_status_history` */
 
@@ -275,7 +287,13 @@ CREATE TABLE `candidate_joborder_status_history` (
   `date` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
   `status_from` int(11) NOT NULL DEFAULT '0',
   `status_to` int(11) NOT NULL DEFAULT '0',
+  `comment_text` text COLLATE utf8_unicode_ci,
+  `comment_is_system` int(1) NOT NULL DEFAULT '0',
+  `rejection_reason_other` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `site_id` int(11) NOT NULL DEFAULT '0',
+  `edited_at` datetime DEFAULT NULL,
+  `edited_by` int(11) DEFAULT NULL,
+  `edit_note` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`candidate_joborder_status_history_id`),
   KEY `IDX_site_id` (`site_id`),
   KEY `IDX_status_to` (`status_to`),
@@ -286,6 +304,41 @@ CREATE TABLE `candidate_joborder_status_history` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*Data for the table `candidate_joborder_status_history` */
+
+/*Table structure for table `rejection_reason` */
+
+CREATE TABLE `rejection_reason` (
+  `rejection_reason_id` int(11) NOT NULL AUTO_INCREMENT,
+  `label` varchar(128) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `created_at` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
+  `updated_at` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
+  PRIMARY KEY (`rejection_reason_id`),
+  KEY `IDX_rejection_reason_label` (`label`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+/*Data for the table `rejection_reason` */
+
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (1,'FAILED SOFT SKILL','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (2,'FAILED TECH INTERVIEW','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (3,'NOT MATCHED / NO INTEREST','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (4,'ALREADY IN CUSTOMER DATABASE','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (5,'POSITION CLOSED','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (6,'FINANCIAL REASON','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (7,'WORKPLACE ENVIRONMENT','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (8,'ACCEPT ANOTHER OFFER','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (9,'PERSONAL REASONS','1000-01-01 00:00:00','1000-01-01 00:00:00');
+insert  into `rejection_reason`(`rejection_reason_id`,`label`,`created_at`,`updated_at`) values (10,'OTHER REASONS / NOT MENTIONED','1000-01-01 00:00:00','1000-01-01 00:00:00');
+
+/*Table structure for table `status_history_rejection_reason` */
+
+CREATE TABLE `status_history_rejection_reason` (
+  `status_history_id` int(11) NOT NULL,
+  `rejection_reason_id` int(11) NOT NULL,
+  PRIMARY KEY (`status_history_id`,`rejection_reason_id`),
+  KEY `IDX_rejection_reason_id` (`rejection_reason_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+/*Data for the table `status_history_rejection_reason` */
 
 /*Table structure for table `candidate_jobordrer_status_type` */
 
