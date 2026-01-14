@@ -184,6 +184,17 @@
                             <tr>
                                 <td>
                                     <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=rejectionReasons">
+                                        Rejection Reasons
+                                    </a>
+                                </td>
+                                <td>
+                                    Add or rename rejection reasons for pipeline status changes.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
                                     <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=talentFitFlowSettings">
                                         TalentFitFlow Integration
                                     </a>

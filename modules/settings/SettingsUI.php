@@ -622,6 +622,25 @@ class SettingsUI extends UserInterface
                 }
                 break;
 
+            case 'rejectionReasons':
+                if ($this->getUserAccessLevel('settings.rejectionReasons') < ACCESS_LEVEL_SA)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if ($this->isPostBack())
+                {
+                    if ($this->getUserAccessLevel('settings.rejectionReasons.POST') < ACCESS_LEVEL_SA)
+                    {
+                        CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    }
+                    $this->onRejectionReasons();
+                }
+                else
+                {
+                    $this->rejectionReasons();
+                }
+                break;
+
             case 'talentFitFlowSettings':
                 if ($this->getUserAccessLevel('settings.talentFitFlowSettings') < ACCESS_LEVEL_SA)
                 {
@@ -2068,6 +2087,112 @@ class SettingsUI extends UserInterface
         $gdprSettings->set('gdprExpirationYears', (string) (int) $expirationYears);
 
         CATSUtility::transferRelativeURI('m=settings&a=gdprSettings&saved=1');
+    }
+
+    private function rejectionReasons()
+    {
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Administration');
+        $this->_template->assign('rejectionReasons', $this->getRejectionReasonsList());
+        $this->_template->assign('saved', isset($_GET['saved']));
+        $this->_template->display('./modules/settings/RejectionReasons.tpl');
+    }
+
+    private function onRejectionReasons()
+    {
+        $action = $this->getTrimmedInput('action', $_POST);
+
+        if ($action === 'add')
+        {
+            $label = substr($this->getTrimmedInput('newLabel', $_POST), 0, 255);
+            if ($label === '')
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Reason label is required.');
+            }
+
+            $this->addRejectionReason($label);
+        }
+        else if ($action === 'update')
+        {
+            $reasonID = (int) $this->getTrimmedInput('reasonID', $_POST);
+            $label = substr($this->getTrimmedInput('label', $_POST), 0, 255);
+
+            if ($reasonID <= 0)
+            {
+                CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid rejection reason.');
+            }
+
+            if ($label === '')
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Reason label is required.');
+            }
+
+            $this->updateRejectionReason($reasonID, $label);
+        }
+        else
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid action.');
+        }
+
+        CATSUtility::transferRelativeURI('m=settings&a=rejectionReasons&saved=1');
+    }
+
+    private function getRejectionReasonsList()
+    {
+        $db = DatabaseConnection::getInstance();
+
+        $sql = sprintf(
+            "SELECT
+                rejection_reason_id AS rejectionReasonID,
+                label
+            FROM
+                rejection_reason
+            ORDER BY
+                rejection_reason_id"
+        );
+
+        return $db->getAllAssoc($sql);
+    }
+
+    private function addRejectionReason($label)
+    {
+        $db = DatabaseConnection::getInstance();
+
+        $sql = sprintf(
+            "INSERT INTO
+                rejection_reason
+            (
+                label,
+                created_at,
+                updated_at
+            ) VALUES (
+                %s,
+                NOW(),
+                NOW()
+            )",
+            $db->makeQueryString($label)
+        );
+
+        return $db->query($sql);
+    }
+
+    private function updateRejectionReason($reasonID, $label)
+    {
+        $db = DatabaseConnection::getInstance();
+
+        $sql = sprintf(
+            "UPDATE
+                rejection_reason
+            SET
+                label = %s,
+                updated_at = NOW()
+            WHERE
+                rejection_reason_id = %s",
+            $db->makeQueryString($label),
+            $db->makeQueryString($reasonID)
+        );
+
+        return $db->query($sql);
     }
 
     /*
