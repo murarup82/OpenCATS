@@ -182,7 +182,7 @@ class GraphsUI extends UserInterface
             $x = array(0, 0, 0, 0);
         }
 
-        $y = array('HR Validated', 'Proposed to Customer', 'Approved by Customer/Project', 'Activity Started');
+        $y = array('Total Pipeline', 'Proposed to Customer', 'Customer Interview', 'Hired');
 
         $colorArray[] = new LinearGradient(new Red, new White, 0);
         $colorArray[] = new LinearGradient(new DarkGreen, new White, 0);

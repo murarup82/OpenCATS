@@ -1951,9 +1951,8 @@ class CandidatesDataGrid extends DataGrid
 														AND attachment.data_item_type = ' . DATA_ITEM_CANDIDATE . '
                                                     LEFT JOIN candidate_joborder AS candidate_joborder_submitted
                                                         ON candidate_joborder_submitted.candidate_id = candidate.candidate_id
-                                                        AND candidate_joborder_submitted.status >= ' . PIPELINE_STATUS_PROPOSED_TO_CUSTOMER . '
-                                                        AND candidate_joborder_submitted.site_id = ' . $this->_siteID . '
-                                                        AND candidate_joborder_submitted.status != ' . PIPELINE_STATUS_CLIENT_DECISION_PENDING . ' LEFT JOIN candidate_duplicates 
+                                                        AND candidate_joborder_submitted.status IN (' . PIPELINE_STATUS_PROPOSED_TO_CUSTOMER . ', ' . PIPELINE_STATUS_CUSTOMER_INTERVIEW . ', ' . PIPELINE_STATUS_CUSTOMER_APPROVED . ', ' . PIPELINE_STATUS_AVEL_APPROVED . ', ' . PIPELINE_STATUS_OFFER_NEGOTIATION . ', ' . PIPELINE_STATUS_OFFER_ACCEPTED . ', ' . PIPELINE_STATUS_HIRED . ')
+                                                        AND candidate_joborder_submitted.site_id = ' . $this->_siteID . ' LEFT JOIN candidate_duplicates 
                                                         ON candidate.candidate_id = 
                                                         candidate_duplicates.new_candidate_id',
                 'pagerWidth'    => 100,

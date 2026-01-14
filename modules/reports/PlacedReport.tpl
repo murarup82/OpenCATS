@@ -10,7 +10,7 @@
         </tr>
     </table>
 
-    <p class="note">Placements</p>
+    <p class="note">Hires</p>
 
     <?php foreach ($this->placementsJobOrdersRS as $rowNumber => $placementsJobOrdersData): ?>
         <span style="font: normal normal bold 13px/130% Arial, Tahoma, sans-serif;"><?php $this->_($placementsJobOrdersData['title']) ?> at <?php $this->_($placementsJobOrdersData['companyName']) ?> (<?php $this->_($placementsJobOrdersData['ownerFullName']) ?>)</span>
@@ -20,7 +20,7 @@
                 <th align="left" nowrap="nowrap">First Name</th>
                 <th align="left" nowrap="nowrap">Last Name</th>
                 <th align="left" nowrap="nowrap">Candidate Owner</th>
-                <th align="left" nowrap="nowrap">Date Placed</th>
+                <th align="left" nowrap="nowrap">Date Hired</th>
             </tr>
 
             <?php foreach ($placementsJobOrdersData['placementsRS'] as $rowNumber => $placementsData): ?>

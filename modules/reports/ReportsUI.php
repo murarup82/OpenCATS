@@ -503,7 +503,7 @@ class ReportsUI extends UserInterface
         $pdf->SetFont($fontFace, '', 10);
         $pdf->Write(5, 'Total Candidates ');
         $pdf->SetTextColor(255, 0, 0);
-        $pdf->Write(5, 'HR Validated');
+        $pdf->Write(5, 'in Pipeline');
         $pdf->SetTextColor(0, 0, 0);
         $pdf->Write(5, ' by ' . $siteName . ": \n\n");
 
@@ -519,7 +519,7 @@ class ReportsUI extends UserInterface
         $pdf->SetFont($fontFace, '', 10);
         $pdf->Write(5, 'Total Candidates ');
         $pdf->SetTextColor(0, 0, 255);
-        $pdf->Write(5, 'Approved by Customer/Project');
+        $pdf->Write(5, 'Customer Interview');
         $pdf->SetTextColor(0, 0, 0);
         $pdf->Write(5, ' by ' . $companyName . ": \n\n");
 
@@ -527,7 +527,7 @@ class ReportsUI extends UserInterface
         $pdf->SetFont($fontFace, '', 10);
         $pdf->Write(5, 'Total Candidates ');
         $pdf->SetTextColor(255, 75, 0);
-        $pdf->Write(5, 'Activity Started');
+        $pdf->Write(5, 'Hired');
         $pdf->SetTextColor(0, 0, 0);
         $pdf->Write(5, ' at ' . $companyName . ": \n\n\n");
 
@@ -596,7 +596,7 @@ class ReportsUI extends UserInterface
                 break;
 
             case 'placed':
-                $labelStatus = ' Placed';
+                $labelStatus = ' Hired';
                 break;
 
             default:

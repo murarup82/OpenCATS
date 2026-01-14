@@ -1051,7 +1051,7 @@ class JobOrdersDataGrid extends DataGrid
                                      'filterHaving'  => 'pipeline',
                                      'filterTypes'   => '===>=<'),
 
-             'Approved by Customer/Project' =>       array('select'   => '(
+             'Customer Interview' =>       array('select'   => '(
                                                              SELECT
                                                                  COUNT(*)
                                                              FROM
@@ -1059,13 +1059,13 @@ class JobOrdersDataGrid extends DataGrid
                                                              WHERE
                                                                  joborder_id = joborder.joborder_id
                                                              AND
-                                                                 status_to = '.PIPELINE_STATUS_APPROVED_BY_CUSTOMER.'
+                                                                 status_to = '.PIPELINE_STATUS_CUSTOMER_INTERVIEW.'
                                                              AND
                                                                  site_id = '.$this->_siteID.'
                                                          ) AS approvedCount',
                                       'pagerRender'      => 'return $rsData[\'approvedCount\'];',
                                       'sortableColumn'     => 'approvedCount',
-                                      'columnHeaderText' => 'APC',
+                                      'columnHeaderText' => 'CI',
                                       'pagerWidth'    => 25,
                                       'filterHaving'  => 'approvedCount',
                                       'filterTypes'   => '===>=<'),
