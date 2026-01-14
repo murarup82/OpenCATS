@@ -384,16 +384,16 @@ class Pipelines
         $orderClause = sprintf(
             "FIELD(candidate_joborder_status_id, %s)",
             implode(',', array(
-                PIPELINE_STATUS_NEW,
-                PIPELINE_STATUS_HR_VALIDATED,
-                PIPELINE_STATUS_REQUIRE_TECH_EVAL,
-                PIPELINE_STATUS_TECH_VALIDATED,
+                PIPELINE_STATUS_ALLOCATED,
+                PIPELINE_STATUS_DELIVERY_VALIDATED,
                 PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
-                PIPELINE_STATUS_CLIENT_DECISION_PENDING,
-                PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
-                PIPELINE_STATUS_UNDER_OFFER_NEGOTIATION,
+                PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+                PIPELINE_STATUS_CUSTOMER_APPROVED,
+                PIPELINE_STATUS_AVEL_APPROVED,
+                PIPELINE_STATUS_OFFER_NEGOTIATION,
                 PIPELINE_STATUS_OFFER_ACCEPTED,
-                PIPELINE_STATUS_ACTIVITY_STARTED
+                PIPELINE_STATUS_HIRED,
+                PIPELINE_STATUS_REJECTED
             ))
         );
 
@@ -422,16 +422,16 @@ class Pipelines
         $orderClause = sprintf(
             "FIELD(candidate_joborder_status_id, %s)",
             implode(',', array(
-                PIPELINE_STATUS_NEW,
-                PIPELINE_STATUS_HR_VALIDATED,
-                PIPELINE_STATUS_REQUIRE_TECH_EVAL,
-                PIPELINE_STATUS_TECH_VALIDATED,
+                PIPELINE_STATUS_ALLOCATED,
+                PIPELINE_STATUS_DELIVERY_VALIDATED,
                 PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
-                PIPELINE_STATUS_CLIENT_DECISION_PENDING,
-                PIPELINE_STATUS_APPROVED_BY_CUSTOMER,
-                PIPELINE_STATUS_UNDER_OFFER_NEGOTIATION,
+                PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+                PIPELINE_STATUS_CUSTOMER_APPROVED,
+                PIPELINE_STATUS_AVEL_APPROVED,
+                PIPELINE_STATUS_OFFER_NEGOTIATION,
                 PIPELINE_STATUS_OFFER_ACCEPTED,
-                PIPELINE_STATUS_ACTIVITY_STARTED
+                PIPELINE_STATUS_HIRED,
+                PIPELINE_STATUS_REJECTED
             ))
         );
 
