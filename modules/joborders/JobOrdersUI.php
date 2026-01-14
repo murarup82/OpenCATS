@@ -1467,6 +1467,15 @@ class JobOrdersUI extends UserInterface
 
         $candidateID = $_GET['candidateID'];
         $jobOrderID  = $_GET['jobOrderID'];
+        $commentText = $this->getTrimmedInput('comment', $_GET);
+        if ($commentText === '')
+        {
+            CommonErrors::fatal(
+                COMMONERROR_MISSINGFIELDS,
+                $this,
+                'Removal comment is required.'
+            );
+        }
 
         $candidates = new Candidates($this->_siteID);
         $candidateData = $candidates->get($candidateID);
@@ -1566,6 +1575,13 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('isFinishedMode', false);
         $this->_template->assign('isJobOrdersMode', true);
         $this->_template->assign('activityTypes', $activityTypes);
+        $rejectionReasons = $this->getRejectionReasons();
+        $this->_template->assign('rejectionReasons', $rejectionReasons);
+        $this->_template->assign(
+            'rejectionOtherReasonId',
+            $this->getOtherRejectionReasonId($rejectionReasons)
+        );
+        $this->_template->assign('rejectedStatusId', PIPELINE_STATUS_REJECTED);
 
         if (!eval(Hooks::get('JO_ADD_ACTIVITY_CHANGE_STATUS'))) return;
 
@@ -1618,13 +1634,48 @@ class JobOrdersUI extends UserInterface
         if (!eval(Hooks::get('JO_ON_REMOVE_PIPELINE'))) return;
 
         $pipelines = new Pipelines($this->_siteID);
-        $pipelines->remove($candidateID, $jobOrderID, $this->_userID);
+        $pipelines->remove($candidateID, $jobOrderID, $this->_userID, $commentText);
 
         if (!eval(Hooks::get('JO_ON_REMOVE_PIPELINE_POST'))) return;
 
         CATSUtility::transferRelativeURI(
             'm=joborders&a=show&jobOrderID=' . $jobOrderID
         );
+    }
+
+    private function getRejectionReasons()
+    {
+        $db = DatabaseConnection::getInstance();
+        $sql = sprintf(
+            "SELECT
+                rejection_reason_id AS reasonID,
+                label
+            FROM
+                rejection_reason
+            ORDER BY
+                rejection_reason_id ASC"
+        );
+
+        $rs = $db->getAllAssoc($sql);
+        if (!is_array($rs))
+        {
+            return array();
+        }
+
+        return $rs;
+    }
+
+    private function getOtherRejectionReasonId($rejectionReasons)
+    {
+        foreach ($rejectionReasons as $reason)
+        {
+            if (strcasecmp($reason['label'], 'OTHER REASONS / NOT MENTIONED') === 0)
+            {
+                return (int) $reason['reasonID'];
+            }
+        }
+
+        return 0;
     }
 
     /*

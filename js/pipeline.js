@@ -153,3 +153,22 @@ function getSelected_candidates(){
 	}
 	return exportArray;
 }
+
+function PipelinePromptRemove(url)
+{
+    var comment = prompt('Removal comment (required):');
+    if (comment === null)
+    {
+        return false;
+    }
+
+    comment = comment.replace(/^\s+|\s+$/g, '');
+    if (comment === '')
+    {
+        alert('Comment is required.');
+        return false;
+    }
+
+    window.location.href = url + '&comment=' + encodeURIComponent(comment);
+    return false;
+}

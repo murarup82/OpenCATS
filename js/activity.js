@@ -599,6 +599,11 @@ function AS_onRegardingChange(statusesArray, jobOrdersArray, regardingSelectID,
         sendEmailCheckbox.checked = false;
         sendEmailSpan.style.display = 'none';
     }
+
+    if (typeof AS_refreshRejectionUI === 'function')
+    {
+        AS_refreshRejectionUI();
+    }
 }
 
 //FIXME: Document me.
@@ -680,6 +685,11 @@ function AS_onStatusChange(statusesArray, jobOrdersArray, regardingSelectID,
             }
         }
     }
+
+    if (typeof AS_refreshRejectionUI === 'function')
+    {
+        AS_refreshRejectionUI();
+    }
 }
 
 function replaceAll(templateString, findString, replaceString)
@@ -725,6 +735,11 @@ function AS_onChangeStatusChange(changeStatusCheckboxID, statusSelectID,
     {
         statusSelect.disabled = true;
         changeStatusSpanB.style.color = '#aaa';
+    }
+
+    if (typeof AS_refreshRejectionUI === 'function')
+    {
+        AS_refreshRejectionUI();
     }
 }
 

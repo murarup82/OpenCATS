@@ -13,6 +13,8 @@ function checkActivityForm(form)
     var errorMessage = '';
 
     errorMessage += checkEventTitle();
+    errorMessage += checkStatusComment();
+    errorMessage += checkRejectionReasons();
 
     if (errorMessage != '')
     {
@@ -44,6 +46,102 @@ function checkEventTitle()
     else
     {
         fieldLabel.style.color = '#000';
+    }
+
+    return errorMessage;
+}
+
+function checkStatusComment()
+{
+    var changeStatus = document.getElementById('changeStatus');
+    var statusComment = document.getElementById('statusComment');
+    var statusCommentLabel = document.getElementById('statusCommentLabel');
+    if (!changeStatus || !statusComment || !statusCommentLabel)
+    {
+        return '';
+    }
+
+    if (!changeStatus.checked)
+    {
+        statusCommentLabel.style.color = '#000';
+        return '';
+    }
+
+    if (statusComment.value.replace(/^\s+|\s+$/g, '') === '')
+    {
+        statusCommentLabel.style.color = '#ff0000';
+        return "    - You must enter a status comment.\n";
+    }
+
+    statusCommentLabel.style.color = '#000';
+    return '';
+}
+
+function checkRejectionReasons()
+{
+    if (typeof rejectedStatusID === 'undefined')
+    {
+        return '';
+    }
+
+    var changeStatus = document.getElementById('changeStatus');
+    var statusSelect = document.getElementById('statusID');
+    var reasonLabel = document.getElementById('rejectionReasonLabel');
+
+    if (!changeStatus || !statusSelect || !reasonLabel)
+    {
+        return '';
+    }
+
+    if (!changeStatus.checked || statusSelect.value != rejectedStatusID)
+    {
+        reasonLabel.style.color = '#000';
+        return '';
+    }
+
+    var reasonChecks = document.getElementsByName('rejectionReasonIDs[]');
+    var anyChecked = false;
+    var otherChecked = false;
+    for (var i = 0; i < reasonChecks.length; i++)
+    {
+        if (reasonChecks[i].checked)
+        {
+            anyChecked = true;
+            if (typeof rejectionOtherReasonID !== 'undefined' &&
+                reasonChecks[i].value == rejectionOtherReasonID)
+            {
+                otherChecked = true;
+            }
+        }
+    }
+
+    var errorMessage = '';
+    if (!anyChecked)
+    {
+        reasonLabel.style.color = '#ff0000';
+        errorMessage += "    - You must select at least one rejection reason.\n";
+    }
+    else
+    {
+        reasonLabel.style.color = '#000';
+    }
+
+    if (otherChecked)
+    {
+        var otherInput = document.getElementById('rejectionReasonOther');
+        var otherLabel = document.getElementById('rejectionReasonOtherLabel');
+        if (otherInput && otherLabel)
+        {
+            if (otherInput.value.replace(/^\s+|\s+$/g, '') === '')
+            {
+                otherLabel.style.color = '#ff0000';
+                errorMessage += "    - You must enter the other rejection reason.\n";
+            }
+            else
+            {
+                otherLabel.style.color = '#000';
+            }
+        }
     }
 
     return errorMessage;

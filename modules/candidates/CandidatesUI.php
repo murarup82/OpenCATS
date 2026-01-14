@@ -1712,6 +1712,13 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('emailDisabled', $emailDisabled);
         $this->_template->assign('isFinishedMode', false);
         $this->_template->assign('isJobOrdersMode', false);
+        $rejectionReasons = $this->getRejectionReasons();
+        $this->_template->assign('rejectionReasons', $rejectionReasons);
+        $this->_template->assign(
+            'rejectionOtherReasonId',
+            $this->getOtherRejectionReasonId($rejectionReasons)
+        );
+        $this->_template->assign('rejectedStatusId', PIPELINE_STATUS_REJECTED);
         $this->_template->display(
             './modules/candidates/AddActivityChangeStatusModal.tpl'
         );
@@ -1808,11 +1815,20 @@ class CandidatesUI extends UserInterface
 
         $candidateID = $_GET['candidateID'];
         $jobOrderID  = $_GET['jobOrderID'];
+        $commentText = $this->getTrimmedInput('comment', $_GET);
+        if ($commentText === '')
+        {
+            CommonErrors::fatal(
+                COMMONERROR_MISSINGFIELDS,
+                $this,
+                'Removal comment is required.'
+            );
+        }
 
         if (!eval(Hooks::get('CANDIDATE_REMOVE_FROM_PIPELINE_PRE'))) return;
 
         $pipelines = new Pipelines($this->_siteID);
-        $pipelines->remove($candidateID, $jobOrderID, $this->_userID);
+        $pipelines->remove($candidateID, $jobOrderID, $this->_userID, $commentText);
 
         if (!eval(Hooks::get('CANDIDATE_REMOVE_FROM_PIPELINE_POST'))) return;
 
@@ -2087,6 +2103,41 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('phoneNumberWildCardString', $phoneNumberWildCardString);
         $this->_template->assign('mode', $mode);
         $this->_template->display('./modules/candidates/Search.tpl');
+    }
+
+    private function getRejectionReasons()
+    {
+        $db = DatabaseConnection::getInstance();
+        $sql = sprintf(
+            "SELECT
+                rejection_reason_id AS reasonID,
+                label
+            FROM
+                rejection_reason
+            ORDER BY
+                rejection_reason_id ASC"
+        );
+
+        $rs = $db->getAllAssoc($sql);
+        if (!is_array($rs))
+        {
+            return array();
+        }
+
+        return $rs;
+    }
+
+    private function getOtherRejectionReasonId($rejectionReasons)
+    {
+        foreach ($rejectionReasons as $reason)
+        {
+            if (strcasecmp($reason['label'], 'OTHER REASONS / NOT MENTIONED') === 0)
+            {
+                return (int) $reason['reasonID'];
+            }
+        }
+
+        return 0;
     }
 
     /*
@@ -2866,6 +2917,59 @@ class CandidatesUI extends UserInterface
                 }
             }
 
+            $statusComment = $this->getTrimmedInput('statusComment', $_POST);
+            $rejectionReasonIDs = array();
+            $rejectionReasonOther = null;
+
+            if (isset($_POST['rejectionReasonIDs']) && is_array($_POST['rejectionReasonIDs']))
+            {
+                $rejectionReasonIDs = array_map('intval', $_POST['rejectionReasonIDs']);
+                $rejectionReasonIDs = array_values(array_filter($rejectionReasonIDs));
+            }
+
+            if ($statusChanged)
+            {
+                if ($statusComment === '')
+                {
+                    CommonErrors::fatalModal(
+                        COMMONERROR_MISSINGFIELDS,
+                        $this,
+                        'Status comment is required.'
+                    );
+                }
+
+                if ($statusID == PIPELINE_STATUS_REJECTED)
+                {
+                    if (empty($rejectionReasonIDs))
+                    {
+                        CommonErrors::fatalModal(
+                            COMMONERROR_MISSINGFIELDS,
+                            $this,
+                            'Select at least one rejection reason.'
+                        );
+                    }
+
+                    $otherReasonId = $this->getOtherRejectionReasonId(
+                        $this->getRejectionReasons()
+                    );
+                    if ($otherReasonId > 0 && in_array($otherReasonId, $rejectionReasonIDs))
+                    {
+                        $rejectionReasonOther = $this->getTrimmedInput(
+                            'rejectionReasonOther',
+                            $_POST
+                        );
+                        if ($rejectionReasonOther === '')
+                        {
+                            CommonErrors::fatalModal(
+                                COMMONERROR_MISSINGFIELDS,
+                                $this,
+                                'Other rejection reason is required.'
+                            );
+                        }
+                    }
+                }
+            }
+
             if ($statusChanged && $this->isChecked('triggerEmail', $_POST)) {
                 $customMessage = $this->getTrimmedInput('customMessage', $_POST);
 
@@ -2894,14 +2998,24 @@ class CandidatesUI extends UserInterface
             }
 
             /* Set the pipeline entry's status, but don't send e-mails for now. */
-            $pipelines->setStatus(
+            $historyID = $pipelines->setStatus(
                 $candidateID,
                 $regardingID,
                 $statusID,
                 $email,
                 $customMessage,
-                $this->_userID
+                $this->_userID,
+                $statusComment,
+                $rejectionReasonOther
             );
+
+            if ($statusID == PIPELINE_STATUS_REJECTED && $historyID > 0)
+            {
+                $pipelines->addStatusHistoryRejectionReasons(
+                    $historyID,
+                    $rejectionReasonIDs
+                );
+            }
 
             /* If status = placed, and open positions > 0, reduce number of open positions by one. */
             if ($statusID == PIPELINE_STATUS_ACTIVITY_STARTED && is_numeric($data['openingsAvailable']) && $data['openingsAvailable'] > 0) {
@@ -3110,6 +3224,13 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('isFinishedMode', true);
         $this->_template->assign('isJobOrdersMode', $isJobOrdersMode);
         $this->_template->assign('activityTypes', $activityTypes);
+        $rejectionReasons = $this->getRejectionReasons();
+        $this->_template->assign('rejectionReasons', $rejectionReasons);
+        $this->_template->assign(
+            'rejectionOtherReasonId',
+            $this->getOtherRejectionReasonId($rejectionReasons)
+        );
+        $this->_template->assign('rejectedStatusId', PIPELINE_STATUS_REJECTED);
         $this->_template->display(
             './modules/candidates/AddActivityChangeStatusModal.tpl'
         );

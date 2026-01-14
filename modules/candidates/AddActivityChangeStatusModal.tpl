@@ -40,6 +40,67 @@
     <?php foreach ($this->statusRS as $rowNumber => $statusData): ?>
        statusTriggersEmailArray[<?php echo($rowNumber); ?>] = <?php echo($statusData['triggersEmail']); ?>;
     <?php endforeach; ?>
+    rejectedStatusID = <?php echo(isset($this->rejectedStatusId) ? (int) $this->rejectedStatusId : 0); ?>;
+    rejectionOtherReasonID = <?php echo(isset($this->rejectionOtherReasonId) ? (int) $this->rejectionOtherReasonId : 0); ?>;
+
+    function AS_refreshRejectionUI()
+    {
+        var changeStatusCheckbox = document.getElementById('changeStatus');
+        var statusSelect = document.getElementById('statusID');
+        var statusCommentRow = document.getElementById('statusCommentTR');
+        var rejectionRow = document.getElementById('rejectionReasonTR');
+
+        var changeActive = (changeStatusCheckbox && changeStatusCheckbox.checked);
+        if (statusCommentRow)
+        {
+            statusCommentRow.style.display = changeActive ? '' : 'none';
+        }
+
+        var isRejected = changeActive &&
+            statusSelect && statusSelect.value == rejectedStatusID;
+        if (rejectionRow)
+        {
+            rejectionRow.style.display = isRejected ? '' : 'none';
+        }
+
+        AS_onRejectionReasonChange();
+    }
+
+    function AS_onRejectionReasonChange()
+    {
+        var otherDiv = document.getElementById('rejectionReasonOtherDiv');
+        var otherInput = document.getElementById('rejectionReasonOther');
+        if (!otherDiv || !otherInput)
+        {
+            return;
+        }
+
+        var isOtherSelected = false;
+        if (rejectionOtherReasonID > 0)
+        {
+            var reasonChecks = document.getElementsByName('rejectionReasonIDs[]');
+            for (var i = 0; i < reasonChecks.length; i++)
+            {
+                if (reasonChecks[i].checked && reasonChecks[i].value == rejectionOtherReasonID)
+                {
+                    isOtherSelected = true;
+                    break;
+                }
+            }
+        }
+
+        if (isOtherSelected)
+        {
+            otherDiv.style.display = '';
+            otherInput.disabled = false;
+        }
+        else
+        {
+            otherDiv.style.display = 'none';
+            otherInput.value = '';
+            otherInput.disabled = true;
+        }
+    }
 </script>
 
     <form name="changePipelineStatusForm" id="changePipelineStatusForm" action="<?php echo(CATSUtility::getIndexName()); ?>?m=<?php if ($this->isJobOrdersMode): ?>joborders<?php else: ?>candidates<?php endif; ?>&amp;a=addActivityChangeStatus<?php if ($this->onlyScheduleEvent): ?>&amp;onlyScheduleEvent=true<?php endif; ?>" method="post" onsubmit="return checkActivityForm(document.changePipelineStatusForm);" autocomplete="off">
@@ -112,6 +173,35 @@
                     <textarea style="height:135px; width:375px;" name="customMessage" id="customMessage" cols="50" class="inputbox"></textarea>
                 </td>
             </tr>
+            <tr id="statusCommentTR" style="display: none;">
+                <td class="tdVertical">
+                    <label id="statusCommentLabel" for="statusComment">Status Comment:</label>
+                </td>
+                <td class="tdData">
+                    <textarea name="statusComment" id="statusComment" cols="50" style="width:375px;" class="inputbox"></textarea>
+                </td>
+            </tr>
+            <?php if (!empty($this->rejectionReasons)): ?>
+            <tr id="rejectionReasonTR" style="display: none;">
+                <td class="tdVertical">
+                    <label id="rejectionReasonLabel">Rejection Reasons:</label>
+                </td>
+                <td class="tdData">
+                    <div style="margin-bottom: 4px;">
+                        <?php foreach ($this->rejectionReasons as $reason): ?>
+                            <label>
+                                <input type="checkbox" name="rejectionReasonIDs[]" value="<?php echo($reason['reasonID']); ?>" onclick="AS_onRejectionReasonChange();" />
+                                <?php $this->_($reason['label']); ?>
+                            </label><br />
+                        <?php endforeach; ?>
+                    </div>
+                    <div id="rejectionReasonOtherDiv" style="display: none;">
+                        <label id="rejectionReasonOtherLabel" for="rejectionReasonOther">Other Reason:</label><br />
+                        <input type="text" name="rejectionReasonOther" id="rejectionReasonOther" class="inputbox" style="width:360px;" disabled="disabled" />
+                    </div>
+                </td>
+            </tr>
+            <?php endif; ?>
            <tr id="addActivityTR" <?php if ($this->onlyScheduleEvent): ?>style="display:none;"<?php endif; ?>>
                 <td class="tdVertical">
                     <label id="addActivityLabel" for="addActivity">Activity:</label>
@@ -249,6 +339,13 @@
 <?php else: ?>
         <input type="button" class="button" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>');" />
 <?php endif; ?>
+
+<script type="text/javascript">
+    if (typeof AS_refreshRejectionUI === 'function')
+    {
+        AS_refreshRejectionUI();
+    }
+</script>
     </form>
 
     <script type="text/javascript">

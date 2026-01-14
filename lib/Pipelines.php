@@ -180,7 +180,8 @@ class Pipelines
      * @param integer job order ID
      * @return void
      */
-    public function remove($candidateID, $jobOrderID, $userID = 0)
+    public function remove($candidateID, $jobOrderID, $userID = 0,
+                           $commentText = '')
     {
         $sql = sprintf(
             "SELECT
@@ -223,6 +224,18 @@ class Pipelines
             $this->_siteID
         );
         $this->_db->query($sql);
+
+        if (!empty($commentText))
+        {
+            $this->addStatusHistory(
+                $candidateID,
+                $jobOrderID,
+                $rs['statusID'],
+                $rs['statusID'],
+                $commentText,
+                0
+            );
+        }
 
         $history = new History($this->_siteID);
         $history->storeHistoryData(
@@ -348,7 +361,8 @@ class Pipelines
 
     // FIXME: Document me.
     public function setStatus($candidateID, $jobOrderID, $statusID,
-                              $emailAddress, $emailText, $userID = 0)
+                              $emailAddress, $emailText, $userID = 0,
+                              $commentText = '', $rejectionReasonOther = null)
     {
         /* Get existing status. */
         $sql = sprintf(
@@ -442,7 +456,13 @@ class Pipelines
 
         /* Add history. */
         $historyID = $this->addStatusHistory(
-            $candidateID, $jobOrderID, $statusID, $oldStatusID
+            $candidateID,
+            $jobOrderID,
+            $statusID,
+            $oldStatusID,
+            $commentText,
+            0,
+            $rejectionReasonOther
         );
 
         /* Add auditing history. */
@@ -470,6 +490,8 @@ class Pipelines
                 true
             );
         }
+
+        return $historyID;
     }
 
     // FIXME: Document me.
@@ -595,6 +617,40 @@ class Pipelines
         }
 
         return $this->_db->getLastInsertID();
+    }
+
+    public function addStatusHistoryRejectionReasons($historyID, $reasonIDs)
+    {
+        if (empty($historyID) || empty($reasonIDs))
+        {
+            return;
+        }
+
+        $reasonIDs = array_unique($reasonIDs);
+        $values = array();
+        foreach ($reasonIDs as $reasonID)
+        {
+            $values[] = sprintf(
+                "(%s, %s)",
+                $this->_db->makeQueryInteger($historyID),
+                $this->_db->makeQueryInteger($reasonID)
+            );
+        }
+
+        if (empty($values))
+        {
+            return;
+        }
+
+        $sql = sprintf(
+            "INSERT INTO status_history_rejection_reason (
+                status_history_id,
+                rejection_reason_id
+            )
+            VALUES %s",
+            implode(', ', $values)
+        );
+        $this->_db->query($sql);
     }
 
     /**
