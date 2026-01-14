@@ -381,8 +381,8 @@ class ReportsUI extends UserInterface
 
         $reportParameters['dataSet1'] = $data['pipeline'];
         $reportParameters['dataSet2'] = $data['submitted'];
-        $reportParameters['dataSet3'] = $data['pipelineInterving'];
-        $reportParameters['dataSet4'] = $data['pipelinePlaced'];
+        $reportParameters['dataSet3'] = $data['pipelineInterviewing'];
+        $reportParameters['dataSet4'] = $data['pipelineHired'];
 
         $dataSet = array(
             $reportParameters['dataSet4'],

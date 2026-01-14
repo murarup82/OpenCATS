@@ -652,7 +652,7 @@ class Statistics
                         status_to = %s
                     AND
                         site_id = %s
-                ) AS pipelinePlaced,
+                ) AS pipelineHired,
                 (
                     SELECT
                         COUNT(*)
@@ -664,7 +664,7 @@ class Statistics
                         status_to = %s
                     AND
                         site_id = %s
-                ) AS pipelineInterving
+                ) AS pipelineInterviewing
             FROM
                 joborder
             LEFT JOIN company
