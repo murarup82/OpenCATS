@@ -199,11 +199,23 @@ if (!eval(Hooks::get('JO_AJAX_GET_PIPELINE'))) return;
     <?php if ($maxEntry < count($pipelinesRS)): ?>
         s += '&nbsp;&nbsp;<a href="javascript:void(0);" onclick="PipelineJobOrder_populate(<?php echo($jobOrderID); ?>, <?php echo($page + 1); ?>, <?php echo($entriesPerPage); ?>, <?php printSortLink($sortBy, "\'", false); ?>, <?php if ($isPopup) echo(1); else echo(0); ?>, \'ajaxPipelineTable\', \'<?php echo($_SESSION['CATS']->getCookie()); ?>\', \'ajaxPipelineTableIndicator\', \'<?php echo($indexFile); ?>\', PipelineJobOrder_getIncludeClosed());">Next Page &gt;</a>';
     <?php endif; ?>
+    var nav = document.getElementById('ajaxPipelineNavigation');
 	<?php if (count($pipelinesRS) <= 15): ?>
-        document.getElementById('ajaxPipelineControl').style.display='none';
+        if (nav)
+        {
+            nav.style.display = 'none';
+        }
+	<?php else: ?>
+        if (nav)
+        {
+            nav.style.display = '';
+        }
 	<?php endif; ?>
 
-    document.getElementById('ajaxPipelineNavigation').innerHTML = s;
+    if (nav)
+    {
+        nav.innerHTML = s;
+    }
 </script>
     <table class="notsortable" id="pipelineTable" width="100%">
     <tr>
