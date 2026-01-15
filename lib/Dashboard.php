@@ -51,11 +51,11 @@ class Dashboard
     }
 
     /**
-     * Returns an array of recent placements to display on the dashboard.
+     * Returns an array of recent hires to display on the dashboard.
      *
-     * @return array recent placements
+     * @return array recent hires
      */
-    public function getPlacements()
+    public function getHires()
     {
         $sql = sprintf(
             "SELECT
@@ -97,6 +97,11 @@ class Dashboard
         $rs = $this->_db->getAllAssoc($sql);
 
         return $rs;
+    }
+
+    public function getPlacements()
+    {
+        return $this->getHires();
     }
 
     /**

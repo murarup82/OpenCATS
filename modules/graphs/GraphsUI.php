@@ -119,7 +119,11 @@ class GraphsUI extends UserInterface
                     return;
 
                 case 'miniPlacementStatistics':
-                    $this->miniPlacementStatistics();
+                    $this->miniHireStatistics();
+                    return;
+
+                case 'miniHireStatistics':
+                    $this->miniHireStatistics();
                     return;
 
                 case 'miniJobOrderPipeline':
@@ -410,7 +414,7 @@ class GraphsUI extends UserInterface
     }
 
     //TODO: Document me.
-    private function miniPlacementStatistics()
+    private function miniHireStatistics()
     {
         if (isset($_GET['view']))
         {
@@ -467,6 +471,11 @@ class GraphsUI extends UserInterface
         
         $graph->draw();
         die();
+    }
+
+    private function miniPlacementStatistics()
+    {
+        $this->miniHireStatistics();
     }
     
 

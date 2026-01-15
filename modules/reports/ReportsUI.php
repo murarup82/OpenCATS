@@ -68,7 +68,11 @@ class ReportsUI extends UserInterface
                 break;
 
             case 'showPlacementReport':
-                $this->showPlacementReport();
+                $this->showHireReport();
+                break;
+
+            case 'showHireReport':
+                $this->showHireReport();
                 break;
 
             case 'customizeJobOrderReport':
@@ -128,16 +132,16 @@ class ReportsUI extends UserInterface
         $statisticsData['submissionsThisYear']  = $statistics->getSubmissionCount(TIME_PERIOD_THISYEAR);
         $statisticsData['submissionsLastYear']  = $statistics->getSubmissionCount(TIME_PERIOD_LASTYEAR);
 
-		/* Get placement statistics. */
-        $statisticsData['totalPlacements']     = $statistics->getPlacementCount(TIME_PERIOD_TODATE);
-        $statisticsData['placementsToday']     = $statistics->getPlacementCount(TIME_PERIOD_TODAY);
-        $statisticsData['placementsYesterday'] = $statistics->getPlacementCount(TIME_PERIOD_YESTERDAY);
-        $statisticsData['placementsThisWeek']  = $statistics->getPlacementCount(TIME_PERIOD_THISWEEK);
-        $statisticsData['placementsLastWeek']  = $statistics->getPlacementCount(TIME_PERIOD_LASTWEEK);
-        $statisticsData['placementsThisMonth'] = $statistics->getPlacementCount(TIME_PERIOD_THISMONTH);
-        $statisticsData['placementsLastMonth'] = $statistics->getPlacementCount(TIME_PERIOD_LASTMONTH);
-        $statisticsData['placementsThisYear']  = $statistics->getPlacementCount(TIME_PERIOD_THISYEAR);
-        $statisticsData['placementsLastYear']  = $statistics->getPlacementCount(TIME_PERIOD_LASTYEAR);
+		/* Get hire statistics. */
+        $statisticsData['totalHires']     = $statistics->getHireCount(TIME_PERIOD_TODATE);
+        $statisticsData['hiresToday']     = $statistics->getHireCount(TIME_PERIOD_TODAY);
+        $statisticsData['hiresYesterday'] = $statistics->getHireCount(TIME_PERIOD_YESTERDAY);
+        $statisticsData['hiresThisWeek']  = $statistics->getHireCount(TIME_PERIOD_THISWEEK);
+        $statisticsData['hiresLastWeek']  = $statistics->getHireCount(TIME_PERIOD_LASTWEEK);
+        $statisticsData['hiresThisMonth'] = $statistics->getHireCount(TIME_PERIOD_THISMONTH);
+        $statisticsData['hiresLastMonth'] = $statistics->getHireCount(TIME_PERIOD_LASTMONTH);
+        $statisticsData['hiresThisYear']  = $statistics->getHireCount(TIME_PERIOD_THISYEAR);
+        $statisticsData['hiresLastYear']  = $statistics->getHireCount(TIME_PERIOD_LASTYEAR);
 
         /* Get contact statistics. */
         $statisticsData['totalContacts']     = $statistics->getContactCount(TIME_PERIOD_TODATE);
@@ -265,7 +269,7 @@ class ReportsUI extends UserInterface
         $this->_template->display('./modules/reports/SubmissionReport.tpl');
     }
 
-    private function showPlacementReport()
+    private function showHireReport()
     {
         //FIXME: getTrimmedInput
         if (isset($_GET['period']) && !empty($_GET['period']))
@@ -328,21 +332,21 @@ class ReportsUI extends UserInterface
         }
 
         $statistics = new Statistics($this->_siteID);
-        $placementsJobOrdersRS = $statistics->getPlacementsJobOrders($period);
+        $hiresJobOrdersRS = $statistics->getHiresJobOrders($period);
 
-        foreach ($placementsJobOrdersRS as $rowIndex => $placementsJobOrdersData)
+        foreach ($hiresJobOrdersRS as $rowIndex => $hiresJobOrdersData)
         {
             /* Querys inside loops are bad, but I don't think there is any avoiding this. */
-            $placementsJobOrdersRS[$rowIndex]['placementsRS'] = $statistics->getPlacementsByJobOrder(
-                $period, $placementsJobOrdersData['jobOrderID'], $this->_siteID
+            $hiresJobOrdersRS[$rowIndex]['hiresRS'] = $statistics->getHiresByJobOrder(
+                $period, $hiresJobOrdersData['jobOrderID'], $this->_siteID
             );
         }
 
         if (!eval(Hooks::get('REPORTS_SHOW_SUBMISSION'))) return;
 
         $this->_template->assign('reportTitle', $reportTitle);
-        $this->_template->assign('placementsJobOrdersRS', $placementsJobOrdersRS);
-        $this->_template->display('./modules/reports/PlacedReport.tpl');
+        $this->_template->assign('hiresJobOrdersRS', $hiresJobOrdersRS);
+        $this->_template->display('./modules/reports/HiredReport.tpl');
     }
 
     private function customizeJobOrderReport()

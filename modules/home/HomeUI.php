@@ -97,7 +97,7 @@ class HomeUI extends UserInterface
         NewVersionCheck::getNews();
         
         $dashboard = new Dashboard($this->_siteID);
-        $placedRS = $dashboard->getPlacements();
+        $hiredRS = $dashboard->getHires();
         
         $calendar = new Calendar($this->_siteID);
         $upcomingEventsHTML = $calendar->getUpcomingEventsHTML(7, UPCOMING_FOR_DASHBOARD);
@@ -146,7 +146,7 @@ class HomeUI extends UserInterface
         $this->_template->assign('jobOrderOptions', $jobOrderOptions);
         
         $this->_template->assign('active', $this);
-        $this->_template->assign('placedRS', $placedRS);
+        $this->_template->assign('hiredRS', $hiredRS);
         $this->_template->assign('upcomingEventsHTML', $upcomingEventsHTML);
         $this->_template->assign('upcomingEventsFupHTML', $upcomingEventsFupHTML);
         $this->_template->assign('wildCardQuickSearch', '');

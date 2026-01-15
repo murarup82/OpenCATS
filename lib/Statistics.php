@@ -115,13 +115,13 @@ class Statistics
         return $rs['submissionCount'];
     }
 
-	/**
-     * Returns the total number of placements in the given period.
+    /**
+     * Returns the total number of hires in the given period.
      *
      * @param flag statistics period flag
      * @return integer candidate count
      */
-    public function getPlacementCount($period)
+    public function getHireCount($period)
     {
         $criterion = $this->makePeriodCriterion('date', $period);
 
@@ -142,6 +142,11 @@ class Statistics
         $rs = $this->_db->getAssoc($sql);
 
         return $rs['placementCount'];
+    }
+
+    public function getPlacementCount($period)
+    {
+        return $this->getHireCount($period);
     }
 
     /**
@@ -335,12 +340,12 @@ class Statistics
     }
     
     /**
-     * Returns all job orders with placements created in the given period.
+     * Returns all job orders with hires created in the given period.
      *
      * @param flag statistics period flag
      * @return integer candidate count
      */
-    public function getPlacementsJobOrders($period)
+    public function getHiresJobOrders($period)
     {
         $criterion = $this->makePeriodCriterion(
             'candidate_joborder_status_history.date', $period
@@ -383,15 +388,20 @@ class Statistics
 
         return $this->_db->getAllAssoc($sql);
     }
+
+    public function getPlacementsJobOrders($period)
+    {
+        return $this->getHiresJobOrders($period);
+    }
     
     /**
-     * Returns all placements for the specified job order created in the
+     * Returns all hires for the specified job order created in the
      * given period.
      *
      * @param flag statistics period flag
      * @return integer candidate count
      */
-    public function getPlacementsByJobOrder($period, $jobOrderID)
+    public function getHiresByJobOrder($period, $jobOrderID)
     {
         $criterion = $this->makePeriodCriterion(
             'candidate_joborder_status_history.date', $period
@@ -444,6 +454,11 @@ class Statistics
         );
 
         return $this->_db->getAllAssoc($sql);
+    }
+
+    public function getPlacementsByJobOrder($period, $jobOrderID)
+    {
+        return $this->getHiresByJobOrder($period, $jobOrderID);
     }
     
     // FIXME: Document me.
@@ -573,7 +588,7 @@ class Statistics
     }
 
 	// FIXME: Document me.
-    public function getPlacementsByPeriod($period)
+    public function getHiresByPeriod($period)
     {
         $criterion = $this->makePeriodCriterion(
             'candidate_joborder_status_history.date', $period
@@ -603,6 +618,11 @@ class Statistics
         );
 
         return $this->_db->getAllAssoc($sql);
+    }
+
+    public function getPlacementsByPeriod($period)
+    {
+        return $this->getHiresByPeriod($period);
     }
 
     // FIXME: Document me.

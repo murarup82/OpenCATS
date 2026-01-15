@@ -36,7 +36,7 @@
                                 <th align="left" style="font-size:11px;">Recruiter</th>
                                 <th align="left" style="font-size:11px;">Date</th>
                             </tr>
-                            <?php foreach($this->placedRS as $index => $data): ?>
+                            <?php foreach($this->hiredRS as $index => $data): ?>
                             <tr class="<?php TemplateUtility::printAlternatingRowClass($index); ?>">
                                 <td style="font-size:11px;"><a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($data['candidateID']); ?>"style="font-size:11px;" class="<?php echo($data['candidateClassName']); ?>"><?php $this->_($data['firstName']); ?> <?php $this->_($data['lastName']); ?></a></td>
                                 <td style="font-size:11px;"><a href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=show&amp;companyID=<?php echo($data['companyID']); ?>"  style="font-size:11px;" class="<?php echo($data['companyClassName']); ?>"><?php $this->_($data['companyName']); ?></td>
@@ -46,7 +46,7 @@
                             <?php endforeach; ?>
                         </table>
 
-                        <?php if (!count($this->placedRS)): ?>
+                        <?php if (!count($this->hiredRS)): ?>
                             <div style="height: 207px; border: 1px solid #c0c0c0; background: #E7EEFF url(images/nodata/dashboardNoHiresWhite.jpg);">
                                 &nbsp;
                             </div>
@@ -63,7 +63,7 @@
                             <area href="#" alt="Yearly" title="Yearly"
                                  shape="rect" coords="398,49,461,74" onclick="swapHomeGraph(<?php echo(DASHBOARD_GRAPH_YEARLY); ?>);" />
                         </map>
-                        <img src="<?php echo(CATSUtility::getIndexName()); ?>?m=graphs&amp;a=miniPlacementStatistics&amp;width=495&amp;height=230" id="homeGraph" onclick="" alt="Hiring Overview" usemap="#dashboardmap" border="0" />
+                        <img src="<?php echo(CATSUtility::getIndexName()); ?>?m=graphs&amp;a=miniHireStatistics&amp;width=495&amp;height=230" id="homeGraph" onclick="" alt="Hiring Overview" usemap="#dashboardmap" border="0" />
                     </td>
                 </tr>
             </table>

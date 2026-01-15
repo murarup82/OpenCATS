@@ -1,4 +1,4 @@
-<?php /* $Id: PlacedReport.tpl 2336 2007-04-14 22:01:51Z will $ */ ?>
+<?php /* $Id: HiredReport.tpl 2336 2007-04-14 22:01:51Z will $ */ ?>
 <?php TemplateUtility::printHeader($this->reportTitle); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
     <table>
@@ -12,8 +12,8 @@
 
     <p class="note">Hires</p>
 
-    <?php foreach ($this->placementsJobOrdersRS as $rowNumber => $placementsJobOrdersData): ?>
-        <span style="font: normal normal bold 13px/130% Arial, Tahoma, sans-serif;"><?php $this->_($placementsJobOrdersData['title']) ?> at <?php $this->_($placementsJobOrdersData['companyName']) ?> (<?php $this->_($placementsJobOrdersData['ownerFullName']) ?>)</span>
+    <?php foreach ($this->hiresJobOrdersRS as $rowNumber => $hiresJobOrdersData): ?>
+        <span style="font: normal normal bold 13px/130% Arial, Tahoma, sans-serif;"><?php $this->_($hiresJobOrdersData['title']) ?> at <?php $this->_($hiresJobOrdersData['companyName']) ?> (<?php $this->_($hiresJobOrdersData['ownerFullName']) ?>)</span>
         <br />
         <table class="sortable" width="925">
             <tr>
@@ -23,12 +23,12 @@
                 <th align="left" nowrap="nowrap">Date Hired</th>
             </tr>
 
-            <?php foreach ($placementsJobOrdersData['placementsRS'] as $rowNumber => $placementsData): ?>
+            <?php foreach ($hiresJobOrdersData['hiresRS'] as $rowNumber => $hiresData): ?>
                 <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
-                    <td valign="top" align="left"><?php $this->_($placementsData['firstName']) ?>&nbsp;</td>
-                    <td valign="top" align="left"><?php $this->_($placementsData['lastName']) ?>&nbsp;</td>
-                    <td valign="top" align="left"><?php $this->_($placementsData['ownerFullName']) ?>&nbsp;</td>
-                    <td valign="top" align="left"><?php $this->_($placementsData['dateSubmitted']) ?>&nbsp;</td>
+                    <td valign="top" align="left"><?php $this->_($hiresData['firstName']) ?>&nbsp;</td>
+                    <td valign="top" align="left"><?php $this->_($hiresData['lastName']) ?>&nbsp;</td>
+                    <td valign="top" align="left"><?php $this->_($hiresData['ownerFullName']) ?>&nbsp;</td>
+                    <td valign="top" align="left"><?php $this->_($hiresData['dateSubmitted']) ?>&nbsp;</td>
                 </tr>
             <?php endforeach; ?>
         </table>

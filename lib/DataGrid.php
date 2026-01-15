@@ -188,7 +188,7 @@ class DataGrid
      *      'filterHaving'     - Column to evaluate filters againts.  This uses the where clause.  Ex: candidateID
      *      'filterable'       - If set to false, will not show up in the DHTML filter area.  Defaults to true.
      *      'filterInList'     - Uses a %s IN (['filter']) clause rather than ['filter'] = %s clause.
-     *      'columnHeaderText' - If set, the column header will display this text rather than the column name. Ex:  'P' instead of 'Placed'.
+     *      'columnHeaderText' - If set, the column header will display this text rather than the column name. Ex:  'H' instead of 'Hired'.
      *      'exportColumnHeaderText' - If set, the column header will display this text rather than the column name
      *                           during CSV export.  Ex: 'id' instead of 'ID' corrects http://support.microsoft.com/kb/215591 .
      *      'where'            - Arbritraty WHERE constraint to add upon the inclusion of this column.
