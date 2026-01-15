@@ -1108,6 +1108,132 @@ class Pipelines
         return $rs;
     }
 
+    public function purgeHistory($candidateJobOrderID)
+    {
+        $sql = sprintf(
+            "SELECT
+                candidate_id AS candidateID,
+                joborder_id AS jobOrderID
+            FROM
+                candidate_joborder
+            WHERE
+                candidate_joborder_id = %s
+            AND
+                site_id = %s",
+            $this->_db->makeQueryInteger($candidateJobOrderID),
+            $this->_siteID
+        );
+        $rs = $this->_db->getAssoc($sql);
+        if (empty($rs))
+        {
+            return false;
+        }
+
+        $candidateID = $rs['candidateID'];
+        $jobOrderID = $rs['jobOrderID'];
+
+        $sql = sprintf(
+            "DELETE status_history_rejection_reason
+            FROM
+                status_history_rejection_reason
+            INNER JOIN candidate_joborder_status_history
+                ON candidate_joborder_status_history.candidate_joborder_status_history_id = status_history_rejection_reason.status_history_id
+            WHERE
+                candidate_joborder_status_history.candidate_id = %s
+            AND
+                candidate_joborder_status_history.joborder_id = %s
+            AND
+                candidate_joborder_status_history.site_id = %s",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_siteID
+        );
+        $this->_db->query($sql);
+
+        $sql = sprintf(
+            "DELETE FROM candidate_joborder_status_history
+            WHERE
+                candidate_id = %s
+            AND
+                joborder_id = %s
+            AND
+                site_id = %s",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_siteID
+        );
+        $this->_db->query($sql);
+
+        $sql = sprintf(
+            "DELETE FROM activity
+            WHERE
+                data_item_type = %s
+            AND
+                data_item_id = %s
+            AND
+                joborder_id = %s
+            AND
+                site_id = %s",
+            $this->_db->makeQueryInteger(DATA_ITEM_CANDIDATE),
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_siteID
+        );
+        $this->_db->query($sql);
+
+        $sql = sprintf(
+            "DELETE FROM history
+            WHERE
+                data_item_type = %s
+            AND
+                data_item_id = %s
+            AND
+                site_id = %s",
+            $this->_db->makeQueryInteger(DATA_ITEM_PIPELINE),
+            $this->_db->makeQueryInteger($candidateJobOrderID),
+            $this->_siteID
+        );
+        $this->_db->query($sql);
+
+        $candidateHistoryDescription = '(USER) closed candidate pipeline entry for job order ' . $jobOrderID . '.';
+        $sql = sprintf(
+            "DELETE FROM history
+            WHERE
+                data_item_type = %s
+            AND
+                data_item_id = %s
+            AND
+                site_id = %s
+            AND
+                description = %s",
+            $this->_db->makeQueryInteger(DATA_ITEM_CANDIDATE),
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_siteID,
+            $this->_db->makeQueryString($candidateHistoryDescription)
+        );
+        $this->_db->query($sql);
+
+        $jobOrderHistoryDescription = '(USER) closed job order pipeline entry for candidate ' . $candidateID . '.';
+        $sql = sprintf(
+            "DELETE FROM history
+            WHERE
+                data_item_type = %s
+            AND
+                data_item_id = %s
+            AND
+                site_id = %s
+            AND
+                description = %s",
+            $this->_db->makeQueryInteger(DATA_ITEM_JOBORDER),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_siteID,
+            $this->_db->makeQueryString($jobOrderHistoryDescription)
+        );
+        $this->_db->query($sql);
+
+        return true;
+    }
+
     public function updateStatusHistoryDate($historyID, $newDate, $editedBy, $editNote)
     {
         $sql = sprintf(

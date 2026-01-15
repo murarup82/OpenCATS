@@ -137,6 +137,59 @@ function PipelineStatusHistoryEdit(historyID, currentDate, candidateJobOrderID, 
     return false;
 }
 
+function PipelineHistoryPurge(candidateJobOrderID, htmlObjectID, sessionCookie)
+{
+    if (!confirm('This will permanently delete status and activity history for this candidate/job order. Continue?'))
+    {
+        return false;
+    }
+
+    var http = AJAX_getXMLHttpObject();
+    var POSTData = '&candidateJobOrderID=' + urlEncode(candidateJobOrderID);
+
+    var callBack = function ()
+    {
+        if (http.readyState != 4)
+        {
+            return;
+        }
+
+        if (!http.responseXML)
+        {
+            alert('An error occurred while receiving a response from the server.');
+            return;
+        }
+
+        var errorCodeNode = http.responseXML.getElementsByTagName('errorcode').item(0);
+        var errorMessageNode = http.responseXML.getElementsByTagName('errormessage').item(0);
+        if (!errorCodeNode.firstChild || errorCodeNode.firstChild.nodeValue != '0')
+        {
+            var errorMessage = 'An error occurred while purging pipeline history.';
+            if (errorMessageNode.firstChild)
+            {
+                errorMessage += "\n\n" + errorMessageNode.firstChild.nodeValue;
+            }
+            alert(errorMessage);
+            return;
+        }
+
+        PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCookie);
+    };
+
+    AJAX_callCATSFunction(
+        http,
+        'purgePipelineHistory',
+        POSTData,
+        callBack,
+        0,
+        sessionCookie,
+        false,
+        false
+    );
+
+    return false;
+}
+
 function PipelineJobOrder_setLimitDefaultVars(sortBy, sortDirection, includeClosed)
 {
     _sortBy = sortBy;

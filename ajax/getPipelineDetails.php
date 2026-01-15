@@ -67,7 +67,20 @@ if ($htmlObjectID === '')
     $canEditHistory = false;
 }
 
-echo '<div class="noteUnsizedSpan">Status History:</div>',
+echo '<div class="noteUnsizedSpan">Status History:';
+if ($canEditHistory)
+{
+    echo '<span style="float: right;">',
+         '<a href="javascript:void(0);" onclick="return PipelineHistoryPurge(',
+         (int) $candidateJobOrderID,
+         ', \'',
+         htmlspecialchars($htmlObjectID, ENT_QUOTES),
+         '\', \'',
+         $_SESSION['CATS']->getCookie(),
+         '\');">Purge History</a>',
+         '</span>';
+}
+echo '</div>',
      '<table>';
 
 if (empty($statusHistoryRS))
