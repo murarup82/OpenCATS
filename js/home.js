@@ -30,7 +30,7 @@ function swapHomeGraph(view)
 {
     var homeGraphImage = document.getElementById('homeGraph');
     
-    homeGraphImage.src = CATSIndexName + "?m=graphs&a=miniPlacementStatistics&width=495&height=230&view=" + view;
+    homeGraphImage.src = CATSIndexName + "?m=graphs&a=miniHireStatistics&width=495&height=230&view=" + view;
 }
 
 function swapFunnelGraph(view)

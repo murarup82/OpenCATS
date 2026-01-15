@@ -845,7 +845,7 @@ Scenario Outline: Reports module actions
   | DISABLED    | GET  | index.php?m=reports&a=graphView                    | not  |  
   | DISABLED    | GET  | index.php?m=reports&a=generateJobOrderReportPDF    | not  |
   | DISABLED    | GET  | index.php?m=reports&a=showSubmissionReport         | not  |
-  | DISABLED    | GET  | index.php?m=reports&a=showPlacementReport          | not  |
+  | DISABLED    | GET  | index.php?m=reports&a=showHireReport               | not  |
   | DISABLED    | GET  | index.php?m=reports&a=customizeJobOrderReport      | not  |
   | DISABLED    | GET  | index.php?m=reports&a=customizeEEOReport           | not  |
   | DISABLED    | GET  | index.php?m=reports&a=generateEEOReportPreview     | not  |
@@ -853,7 +853,7 @@ Scenario Outline: Reports module actions
   | READONLY    | GET  | index.php?m=reports&a=graphView                    |      |
   | READONLY    | GET  | index.php?m=reports&a=generateJobOrderReportPDF    |      |
   | READONLY    | GET  | index.php?m=reports&a=showSubmissionReport         |      |
-  | READONLY    | GET  | index.php?m=reports&a=showPlacementReport          |      |
+  | READONLY    | GET  | index.php?m=reports&a=showHireReport               |      |
   | READONLY    | GET  | index.php?m=reports&a=customizeJobOrderReport      |      |
   | READONLY    | GET  | index.php?m=reports&a=customizeEEOReport           |      |
   | READONLY    | GET  | index.php?m=reports&a=generateEEOReportPreview     |      |
@@ -861,7 +861,7 @@ Scenario Outline: Reports module actions
   | EDIT        | GET  | index.php?m=reports&a=graphView                    |      |
   | EDIT        | GET  | index.php?m=reports&a=generateJobOrderReportPDF    |      |
   | EDIT        | GET  | index.php?m=reports&a=showSubmissionReport         |      |
-  | EDIT        | GET  | index.php?m=reports&a=showPlacementReport          |      |
+  | EDIT        | GET  | index.php?m=reports&a=showHireReport               |      |
   | EDIT        | GET  | index.php?m=reports&a=customizeJobOrderReport      |      |
   | EDIT        | GET  | index.php?m=reports&a=customizeEEOReport           |      |
   | EDIT        | GET  | index.php?m=reports&a=generateEEOReportPreview     |      |
@@ -869,7 +869,7 @@ Scenario Outline: Reports module actions
   | DELETE      | GET  | index.php?m=reports&a=graphView                    |      |
   | DELETE      | GET  | index.php?m=reports&a=generateJobOrderReportPDF    |      |
   | DELETE      | GET  | index.php?m=reports&a=showSubmissionReport         |      |
-  | DELETE      | GET  | index.php?m=reports&a=showPlacementReport          |      |
+  | DELETE      | GET  | index.php?m=reports&a=showHireReport               |      |
   | DELETE      | GET  | index.php?m=reports&a=customizeJobOrderReport      |      |
   | DELETE      | GET  | index.php?m=reports&a=customizeEEOReport           |      |
   | DELETE      | GET  | index.php?m=reports&a=generateEEOReportPreview     |      |
@@ -877,7 +877,7 @@ Scenario Outline: Reports module actions
   | DEMO        | GET  | index.php?m=reports&a=graphView                    |      |
   | DEMO        | GET  | index.php?m=reports&a=generateJobOrderReportPDF    |      |
   | DEMO        | GET  | index.php?m=reports&a=showSubmissionReport         |      |
-  | DEMO        | GET  | index.php?m=reports&a=showPlacementReport          |      |
+  | DEMO        | GET  | index.php?m=reports&a=showHireReport               |      |
   | DEMO        | GET  | index.php?m=reports&a=customizeJobOrderReport      |      |
   | DEMO        | GET  | index.php?m=reports&a=customizeEEOReport           |      |
   | DEMO        | GET  | index.php?m=reports&a=generateEEOReportPreview     |      |
@@ -885,7 +885,7 @@ Scenario Outline: Reports module actions
   | ADMIN       | GET  | index.php?m=reports&a=graphView                    |      |
   | ADMIN       | GET  | index.php?m=reports&a=generateJobOrderReportPDF    |      |
   | ADMIN       | GET  | index.php?m=reports&a=showSubmissionReport         |      |
-  | ADMIN       | GET  | index.php?m=reports&a=showPlacementReport          |      |
+  | ADMIN       | GET  | index.php?m=reports&a=showHireReport               |      |
   | ADMIN       | GET  | index.php?m=reports&a=customizeJobOrderReport      |      |
   | ADMIN       | GET  | index.php?m=reports&a=customizeEEOReport           |      |
   | ADMIN       | GET  | index.php?m=reports&a=generateEEOReportPreview     |      |
@@ -893,7 +893,7 @@ Scenario Outline: Reports module actions
   | MULTI_ADMIN | GET  | index.php?m=reports&a=graphView                    |      |
   | MULTI_ADMIN | GET  | index.php?m=reports&a=generateJobOrderReportPDF    |      |
   | MULTI_ADMIN | GET  | index.php?m=reports&a=showSubmissionReport         |      |
-  | MULTI_ADMIN | GET  | index.php?m=reports&a=showPlacementReport          |      |
+  | MULTI_ADMIN | GET  | index.php?m=reports&a=showHireReport               |      |
   | MULTI_ADMIN | GET  | index.php?m=reports&a=customizeJobOrderReport      |      |
   | MULTI_ADMIN | GET  | index.php?m=reports&a=customizeEEOReport           |      |
   | MULTI_ADMIN | GET  | index.php?m=reports&a=generateEEOReportPreview     |      |
@@ -901,7 +901,7 @@ Scenario Outline: Reports module actions
   | ROOT        | GET  | index.php?m=reports&a=graphView                    |      |
   | ROOT        | GET  | index.php?m=reports&a=generateJobOrderReportPDF    |      |
   | ROOT        | GET  | index.php?m=reports&a=showSubmissionReport         |      |
-  | ROOT        | GET  | index.php?m=reports&a=showPlacementReport          |      |
+  | ROOT        | GET  | index.php?m=reports&a=showHireReport               |      |
   | ROOT        | GET  | index.php?m=reports&a=customizeJobOrderReport      |      |
   | ROOT        | GET  | index.php?m=reports&a=customizeEEOReport           |      |
   | ROOT        | GET  | index.php?m=reports&a=generateEEOReportPreview     |      |
