@@ -1651,7 +1651,25 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('active', $this);
         $this->_template->assign('candidateID', $candidateID);
         $this->_template->assign('jobOrderID', $jobOrderID);
+
+        if ($this->isPopupRequest())
+        {
+            $this->_template->display('./modules/joborders/RemoveFromPipelineModal.tpl');
+            return;
+        }
+
         $this->_template->display('./modules/joborders/RemoveFromPipeline.tpl');
+    }
+
+    private function isPopupRequest()
+    {
+        if (isset($_REQUEST['display']))
+        {
+            $display = strtolower(trim($_REQUEST['display']));
+            return ($display === 'popup' || $display === '1' || $display === 'true');
+        }
+
+        return false;
     }
 
     private function getRejectionReasons()
