@@ -31,6 +31,7 @@
  */
 
 include_once(LEGACY_ROOT . '/lib/History.php');
+include_once(LEGACY_ROOT . '/lib/ActivityEntries.php');
 
 /**
  *	Pipelines Library
@@ -259,6 +260,21 @@ class Pipelines
                 0
             );
         }
+
+        $activityNote = 'Candidate removed from job order.';
+        if (!empty($commentText))
+        {
+            $activityNote .= ' Comment: ' . $commentText;
+        }
+        $activityEntries = new ActivityEntries($this->_siteID);
+        $activityEntries->add(
+            $candidateID,
+            DATA_ITEM_CANDIDATE,
+            ACTIVITY_PIPELINE_UPDATE,
+            $activityNote,
+            $userID,
+            $jobOrderID
+        );
 
         $history = new History($this->_siteID);
         $history->storeHistoryData(

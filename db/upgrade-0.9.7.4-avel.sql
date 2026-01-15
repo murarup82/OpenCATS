@@ -57,3 +57,6 @@ VALUES
 UPDATE `candidate_joborder_status`
     SET `short_description` = 'Hired'
     WHERE `candidate_joborder_status_id` = 800;
+
+INSERT IGNORE INTO `activity_type` (`activity_type_id`, `short_description`)
+VALUES (400, 'Pipeline Update');

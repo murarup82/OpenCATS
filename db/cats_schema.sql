@@ -73,6 +73,7 @@ CREATE TABLE `activity_type` (
 insert  into `activity_type`(`activity_type_id`,`short_description`) values (100,'Phone Call');
 insert  into `activity_type`(`activity_type_id`,`short_description`) values (200,'E-Mail');
 insert  into `activity_type`(`activity_type_id`,`short_description`) values (300,'Video-Conf');
+insert  into `activity_type`(`activity_type_id`,`short_description`) values (400,'Pipeline Update');
 
 /*Table structure for table `attachment` */
 

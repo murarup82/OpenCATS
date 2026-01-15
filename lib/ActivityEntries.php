@@ -33,6 +33,7 @@
 define('ACTIVITY_PHONE_CALL', 100);
 define('ACTIVITY_EMAIL',      200);
 define('ACTIVITY_VIDEO_CONF', 300);
+define('ACTIVITY_PIPELINE_UPDATE', 400);
 
 /**
  * Candidates library.
