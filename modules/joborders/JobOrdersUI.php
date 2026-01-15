@@ -1453,28 +1453,31 @@ class JobOrdersUI extends UserInterface
 
     private function addActivityChangeStatus()
     {
+        $input = $_POST;
+        if (!$this->isRequiredIDValid('candidateID', $input))
+        {
+            $input = $_GET;
+        }
+
         /* Bail out if we don't have a valid candidate ID. */
-        if (!$this->isRequiredIDValid('candidateID', $_GET))
+        if (!$this->isRequiredIDValid('candidateID', $input))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
         /* Bail out if we don't have a valid job order ID. */
-        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        if (!$this->isRequiredIDValid('jobOrderID', $input))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
-        $candidateID = $_GET['candidateID'];
-        $jobOrderID  = $_GET['jobOrderID'];
-        $commentText = $this->getTrimmedInput('comment', $_GET);
+        $candidateID = $input['candidateID'];
+        $jobOrderID  = $input['jobOrderID'];
+        $commentText = $this->getTrimmedInput('comment', $input);
         if ($commentText === '')
         {
-            CommonErrors::fatal(
-                COMMONERROR_MISSINGFIELDS,
-                $this,
-                'Removal comment is required.'
-            );
+            $this->renderRemoveFromPipelineForm($candidateID, $jobOrderID);
+            return;
         }
 
         $candidates = new Candidates($this->_siteID);
@@ -1641,6 +1644,14 @@ class JobOrdersUI extends UserInterface
         CATSUtility::transferRelativeURI(
             'm=joborders&a=show&jobOrderID=' . $jobOrderID
         );
+    }
+
+    private function renderRemoveFromPipelineForm($candidateID, $jobOrderID)
+    {
+        $this->_template->assign('active', $this);
+        $this->_template->assign('candidateID', $candidateID);
+        $this->_template->assign('jobOrderID', $jobOrderID);
+        $this->_template->display('./modules/joborders/RemoveFromPipeline.tpl');
     }
 
     private function getRejectionReasons()
