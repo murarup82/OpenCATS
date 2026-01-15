@@ -15,7 +15,7 @@ include_once(LEGACY_ROOT . '/lib/Pipelines.php');
 
 $interface = new SecureAJAXInterface();
 
-if ($_SESSION['CATS']->getAccessLevel('settings.editStatusHistory') < ACCESS_LEVEL_SA)
+if ($_SESSION['CATS']->getAccessLevel('settings.editStatusHistory') < ACCESS_LEVEL_MULTI_SA)
 {
     $interface->outputXMLErrorPage(-1, ERROR_NO_PERMISSION);
     die();

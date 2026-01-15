@@ -928,6 +928,31 @@ switch ($action)
         $schema = @file_get_contents('db/upgrade-zipcodes.sql');
         MySQLQueryMultiple($schema);
 
+        $needsAvelUpgrade = false;
+        if (isset($tables['candidate_joborder']))
+        {
+            $rs = MySQLQuery("SHOW COLUMNS FROM candidate_joborder LIKE 'is_active'");
+            if (!$rs || mysqli_num_rows($rs) == 0)
+            {
+                $needsAvelUpgrade = true;
+            }
+        }
+
+        if (!$needsAvelUpgrade && isset($tables['candidate_joborder_status_history']))
+        {
+            $rs = MySQLQuery("SHOW COLUMNS FROM candidate_joborder_status_history LIKE 'comment_text'");
+            if (!$rs || mysqli_num_rows($rs) == 0)
+            {
+                $needsAvelUpgrade = true;
+            }
+        }
+
+        if ($needsAvelUpgrade)
+        {
+            $schema = @file_get_contents('db/upgrade-0.9.7.4-avel.sql');
+            MySQLQueryMultiple($schema);
+        }
+
         echo '<script type="text/javascript">Installpage_populate(\'a=resumeParsing\');</script>';
         break;
 

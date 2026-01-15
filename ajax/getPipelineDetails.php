@@ -61,7 +61,7 @@ foreach ($pipelineActivitiesRS as $rowIndex => $row)
 }
 
 /* Output HTML. */
-$canEditHistory = ($_SESSION['CATS']->getAccessLevel('settings.editStatusHistory') >= ACCESS_LEVEL_SA);
+$canEditHistory = ($_SESSION['CATS']->getAccessLevel('settings.editStatusHistory') >= ACCESS_LEVEL_MULTI_SA);
 if ($htmlObjectID === '')
 {
     $canEditHistory = false;

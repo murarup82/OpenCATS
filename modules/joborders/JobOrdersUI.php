@@ -1473,12 +1473,6 @@ class JobOrdersUI extends UserInterface
 
         $candidateID = $input['candidateID'];
         $jobOrderID  = $input['jobOrderID'];
-        $commentText = $this->getTrimmedInput('comment', $input);
-        if ($commentText === '')
-        {
-            $this->renderRemoveFromPipelineForm($candidateID, $jobOrderID);
-            return;
-        }
 
         $candidates = new Candidates($this->_siteID);
         $candidateData = $candidates->get($candidateID);
@@ -1618,21 +1612,32 @@ class JobOrdersUI extends UserInterface
      */
     private function onRemoveFromPipeline()
     {
+        $input = $_POST;
+        if (!$this->isRequiredIDValid('candidateID', $input))
+        {
+            $input = $_GET;
+        }
 
         /* Bail out if we don't have a valid candidate ID. */
-        if (!$this->isRequiredIDValid('candidateID', $_GET))
+        if (!$this->isRequiredIDValid('candidateID', $input))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
         /* Bail out if we don't have a valid job order ID. */
-        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        if (!$this->isRequiredIDValid('jobOrderID', $input))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
-        $candidateID = $_GET['candidateID'];
-        $jobOrderID  = $_GET['jobOrderID'];
+        $candidateID = $input['candidateID'];
+        $jobOrderID  = $input['jobOrderID'];
+        $commentText = $this->getTrimmedInput('comment', $input);
+        if ($commentText === '')
+        {
+            $this->renderRemoveFromPipelineForm($candidateID, $jobOrderID);
+            return;
+        }
 
         if (!eval(Hooks::get('JO_ON_REMOVE_PIPELINE'))) return;
 

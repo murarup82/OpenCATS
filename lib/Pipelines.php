@@ -49,6 +49,29 @@ class Pipelines
         $this->_db = DatabaseConnection::getInstance();
     }
 
+    private function normalizeStatusLabel($statusID, $label)
+    {
+        $map = array(
+            PIPELINE_STATUS_ALLOCATED => 'Allocated',
+            PIPELINE_STATUS_DELIVERY_VALIDATED => 'Delivery Validated',
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER => 'Proposed to Customer',
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW => 'Customer Interview',
+            PIPELINE_STATUS_CUSTOMER_APPROVED => 'Customer Approved',
+            PIPELINE_STATUS_AVEL_APPROVED => 'Avel Approved',
+            PIPELINE_STATUS_OFFER_NEGOTIATION => 'Offer Negotiation',
+            PIPELINE_STATUS_OFFER_ACCEPTED => 'Offer Accepted',
+            PIPELINE_STATUS_HIRED => 'Hired',
+            PIPELINE_STATUS_REJECTED => 'Rejected'
+        );
+
+        if (isset($map[$statusID]))
+        {
+            return $map[$statusID];
+        }
+
+        return $label;
+    }
+
 
     /**
      * Adds a candidate to the pipeline for a job order.
@@ -321,7 +344,13 @@ class Pipelines
             $this->_siteID
         );
 
-        return $this->_db->getAssoc($sql);
+        $rs = $this->_db->getAssoc($sql);
+        if (!empty($rs))
+        {
+            $rs['status'] = $this->normalizeStatusLabel($rs['statusID'], $rs['status']);
+        }
+
+        return $rs;
     }
 
     /**
@@ -523,12 +552,32 @@ class Pipelines
                 candidate_joborder_status
             WHERE
                 is_enabled = 1
+            AND
+                candidate_joborder_status_id IN (%s)
             ORDER BY
                 %s",
+            implode(',', array(
+                PIPELINE_STATUS_ALLOCATED,
+                PIPELINE_STATUS_DELIVERY_VALIDATED,
+                PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
+                PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+                PIPELINE_STATUS_CUSTOMER_APPROVED,
+                PIPELINE_STATUS_AVEL_APPROVED,
+                PIPELINE_STATUS_OFFER_NEGOTIATION,
+                PIPELINE_STATUS_OFFER_ACCEPTED,
+                PIPELINE_STATUS_HIRED,
+                PIPELINE_STATUS_REJECTED
+            )),
             $orderClause
         );
 
-        return $this->_db->getAllAssoc($sql);
+        $rs = $this->_db->getAllAssoc($sql);
+        foreach ($rs as $index => $row)
+        {
+            $rs[$index]['status'] = $this->normalizeStatusLabel($row['statusID'], $row['status']);
+        }
+
+        return $rs;
     }
 
     // FIXME: Document me.
@@ -562,13 +611,31 @@ class Pipelines
             WHERE
                 is_enabled = 1
             AND
-                candidate_joborder_status_id != 0
+                candidate_joborder_status_id IN (%s)
             ORDER BY
                 %s",
+            implode(',', array(
+                PIPELINE_STATUS_ALLOCATED,
+                PIPELINE_STATUS_DELIVERY_VALIDATED,
+                PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
+                PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+                PIPELINE_STATUS_CUSTOMER_APPROVED,
+                PIPELINE_STATUS_AVEL_APPROVED,
+                PIPELINE_STATUS_OFFER_NEGOTIATION,
+                PIPELINE_STATUS_OFFER_ACCEPTED,
+                PIPELINE_STATUS_HIRED,
+                PIPELINE_STATUS_REJECTED
+            )),
             $orderClause
         );
 
-        return $this->_db->getAllAssoc($sql);
+        $rs = $this->_db->getAllAssoc($sql);
+        foreach ($rs as $index => $row)
+        {
+            $rs[$index]['status'] = $this->normalizeStatusLabel($row['statusID'], $row['status']);
+        }
+
+        return $rs;
     }
 
     // FIXME: Document me.
@@ -729,7 +796,13 @@ class Pipelines
             $statusFilter
         );
 
-        return $this->_db->getAllAssoc($sql);
+        $rs = $this->_db->getAllAssoc($sql);
+        foreach ($rs as $index => $row)
+        {
+            $rs[$index]['status'] = $this->normalizeStatusLabel($row['statusID'], $row['status']);
+        }
+
+        return $rs;
     }
 
     /**
@@ -759,6 +832,7 @@ class Pipelines
                 candidate.last_name AS lastName,
                 candidate.country AS country,
                 candidate.email1 AS candidateEmail,
+                candidate_joborder.status AS statusID,
                 candidate_joborder.status AS jobOrderStatus,
                 candidate_joborder.is_active AS isActive,
                 candidate_joborder.closed_at AS closedAt,
@@ -857,7 +931,13 @@ class Pipelines
             $orderBy
         );
 
-        return $this->_db->getAllAssoc($sql);
+        $rs = $this->_db->getAllAssoc($sql);
+        foreach ($rs as $index => $row)
+        {
+            $rs[$index]['status'] = $this->normalizeStatusLabel($row['statusID'], $row['status']);
+        }
+
+        return $rs;
     }
 
     // FIXME: Document me.
@@ -1002,7 +1082,14 @@ class Pipelines
             $this->_siteID
         );
 
-        return $this->_db->getAllAssoc($sql);
+        $rs = $this->_db->getAllAssoc($sql);
+        foreach ($rs as $index => $row)
+        {
+            $rs[$index]['statusFrom'] = $this->normalizeStatusLabel($row['statusFromID'], $row['statusFrom']);
+            $rs[$index]['statusTo'] = $this->normalizeStatusLabel($row['statusToID'], $row['statusTo']);
+        }
+
+        return $rs;
     }
 
     public function updateStatusHistoryDate($historyID, $newDate, $editedBy, $editNote)
