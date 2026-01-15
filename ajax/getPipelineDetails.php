@@ -110,16 +110,16 @@ else
 
         if (!empty($statusHistory['rejectionReasons']))
         {
-            echo '<span class="noteUnsizedSpan">Rejection reasons: ',
+            echo '<div class="noteUnsizedSpan">Rejection reasons: ',
                  htmlspecialchars($statusHistory['rejectionReasons']),
-                 '</span><br />';
+                 '</div>';
         }
 
         if (!empty($statusHistory['rejectionReasonOther']))
         {
-            echo '<span class="noteUnsizedSpan">Other reason: ',
+            echo '<div class="noteUnsizedSpan">Other reason: ',
                  htmlspecialchars($statusHistory['rejectionReasonOther']),
-                 '</span><br />';
+                 '</div>';
         }
 
         if (!empty($statusHistory['editedAt']))
@@ -136,13 +136,13 @@ else
                 $editNote = '(No edit note)';
             }
 
-            echo '<span class="noteUnsizedSpan">Edited by ',
+            echo '<div class="noteUnsizedSpan">Edited by ',
                  htmlspecialchars($editedByName),
                  ' on ',
                  htmlspecialchars($statusHistory['editedAtDisplay']),
                  ': ',
                  htmlspecialchars($editNote),
-                 '</span><br />';
+                 '</div>';
         }
 
         echo '</td>';
