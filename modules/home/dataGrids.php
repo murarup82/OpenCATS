@@ -170,7 +170,7 @@ class ImportantPipelineDashboard extends DataGrid
             WHERE
                 candidate_joborder.site_id = %s
             AND
-                candidate_joborder.status IN (%s, %s, %s, %s, %s)
+                candidate_joborder.status IN (%s, %s, %s, %s, %s, %s)
             AND
                 joborder.status IN %s
             %s
