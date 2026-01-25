@@ -424,6 +424,19 @@ p.noteUnsized
     color: #666666;
 }
 
+.pipelineComment
+{
+    color: #0b2a5b;
+    font: normal normal normal 12px/140% Verdana, Tahoma, sans-serif;
+    margin-bottom: 4px;
+}
+
+.pipelineMeta
+{
+    color: #555555;
+    font: normal normal normal 11px/130% Verdana, Tahoma, sans-serif;
+}
+
 p.warning
 {
     background-image: url('images/orange_gradient.jpg');

@@ -11,7 +11,7 @@
                     <td width="3%">
                         <img src="images/candidate.gif" width="24" height="24" border="0" alt="Candidates" style="margin-top: 3px;" />&nbsp;
                     </td>
-                    <td><h2>Candidates: Remove from Job Order</h2></td>
+                    <td><h2>Candidates: Reject from Job Order</h2></td>
                </tr>
             </table>
 
@@ -21,7 +21,7 @@
                 <table class="editTable" width="560">
                     <tr>
                         <td class="tdVertical">
-                            <label for="comment">Removal Comment:</label>
+                            <label for="comment">Rejection Comment:</label>
                         </td>
                         <td class="tdData">
                             <textarea name="comment" id="comment" cols="50" rows="4" style="width:375px;" class="inputbox"></textarea>
@@ -30,7 +30,7 @@
                     <tr>
                         <td class="tdVertical"></td>
                         <td class="tdData">
-                            <input type="submit" class="button" value="Remove" />
+                            <input type="submit" class="button" value="Reject" />
                             &nbsp;
                             <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo((int) $this->candidateID); ?>">Cancel</a>
                         </td>

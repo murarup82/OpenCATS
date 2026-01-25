@@ -31,7 +31,7 @@ Feature: Access Level to objects check - sub pages (show, ...)
     And I should <addToPipeline> "Add Candidate to This Job Order"
     And I should <export> "Export"
     And I should <details> "Job Order Details"
-    And the page should <removeFromPipeline> contain "Remove from Job Order"
+    And the page should <removeFromPipeline> contain "Reject from Job Order"
     And the page should <setMatchingRating> contain "<map"
     And the page should <deleteAttachment> contain "index.php?m=joborders&amp;a=deleteAttachment"
 
@@ -67,7 +67,7 @@ Feature: Access Level to objects check - sub pages (show, ...)
      And I should <viewHistory> "View History"
      And I should <administrativeHideShow> "Administrative"
      And the page should <addToPipeline> contain "Add This Candidate to Job Order"
-     And the page should <removeFromPipeline> contain "Remove from Job Order"
+     And the page should <removeFromPipeline> contain "Reject from Job Order"
      And the page should <setMatchingRating> contain "<map"
      And the page should <deleteAttachment> contain "index.php?m=candidates&amp;a=deleteAttachment"
      #When I click on "arrow"

@@ -28,7 +28,7 @@ $result = $pipelines->purgeHistory($candidateJobOrderID);
 
 if (!$result)
 {
-    $interface->outputXMLErrorPage(-1, 'Failed to purge pipeline history.');
+    $interface->outputXMLErrorPage(-1, 'Failed to purge pipeline entry.');
     die();
 }
 

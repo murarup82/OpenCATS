@@ -139,7 +139,7 @@ function PipelineStatusHistoryEdit(historyID, currentDate, candidateJobOrderID, 
 
 function PipelineHistoryPurge(candidateJobOrderID, htmlObjectID, sessionCookie)
 {
-    if (!confirm('This will permanently delete status history for this candidate/job order. Continue?'))
+    if (!confirm('This will permanently delete this pipeline entry and its status history. Continue?'))
     {
         return false;
     }
@@ -164,7 +164,7 @@ function PipelineHistoryPurge(candidateJobOrderID, htmlObjectID, sessionCookie)
         var errorMessageNode = http.responseXML.getElementsByTagName('errormessage').item(0);
         if (!errorCodeNode.firstChild || errorCodeNode.firstChild.nodeValue != '0')
         {
-            var errorMessage = 'An error occurred while purging pipeline history.';
+            var errorMessage = 'An error occurred while purging the pipeline entry.';
             if (errorMessageNode.firstChild)
             {
                 errorMessage += "\n\n" + errorMessageNode.firstChild.nodeValue;
@@ -173,7 +173,29 @@ function PipelineHistoryPurge(candidateJobOrderID, htmlObjectID, sessionCookie)
             return;
         }
 
-        PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCookie);
+        var detailsContainer = document.getElementById(htmlObjectID);
+        var rowNumber = htmlObjectID.replace(/[^0-9]/g, '');
+        var removed = false;
+        if (rowNumber !== '')
+        {
+            var row = document.getElementById('pipelineRow' + rowNumber);
+            var detailsRow = document.getElementById('pipelineDetails' + rowNumber);
+            if (row && row.parentNode)
+            {
+                row.parentNode.removeChild(row);
+                removed = true;
+            }
+            if (detailsRow && detailsRow.parentNode)
+            {
+                detailsRow.parentNode.removeChild(detailsRow);
+                removed = true;
+            }
+        }
+
+        if (!removed && detailsContainer)
+        {
+            PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCookie);
+        }
     };
 
     AJAX_callCATSFunction(

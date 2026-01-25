@@ -229,11 +229,20 @@ class Pipelines
         }
 
         $candidateJobOrderID = $rs['candidateJobOrderID'];
+        $statusFromID = (int) $rs['statusID'];
+        $statusToID = PIPELINE_STATUS_REJECTED;
+        $rejectionReasonOther = null;
+        $rejectionReasonID = $this->getRejectionReasonIdByLabel('OTHER REASONS / NOT MENTIONED');
+        if ($rejectionReasonID <= 0)
+        {
+            $rejectionReasonOther = 'OTHER REASONS / NOT MENTIONED';
+        }
 
         $sql = sprintf(
             "UPDATE
                 candidate_joborder
             SET
+                status = %s,
                 is_active = 0,
                 closed_at = NOW(),
                 closed_by = %s,
@@ -242,22 +251,25 @@ class Pipelines
                 candidate_joborder_id = %s
             AND
                 site_id = %s",
+            $this->_db->makeQueryInteger($statusToID),
             $this->_db->makeQueryInteger($userID),
             $this->_db->makeQueryInteger($candidateJobOrderID),
             $this->_siteID
         );
         $this->_db->query($sql);
 
-        if (!empty($commentText))
+        $historyID = $this->addStatusHistory(
+            $candidateID,
+            $jobOrderID,
+            $statusToID,
+            $statusFromID,
+            $commentText,
+            0,
+            $rejectionReasonOther
+        );
+        if ($historyID > 0 && $rejectionReasonID > 0)
         {
-            $this->addStatusHistory(
-                $candidateID,
-                $jobOrderID,
-                $rs['statusID'],
-                $rs['statusID'],
-                $commentText,
-                0
-            );
+            $this->addStatusHistoryRejectionReasons($historyID, array($rejectionReasonID));
         }
 
         $history = new History($this->_siteID);
@@ -720,6 +732,27 @@ class Pipelines
         $this->_db->query($sql);
     }
 
+    private function getRejectionReasonIdByLabel($label)
+    {
+        $sql = sprintf(
+            "SELECT
+                rejection_reason_id AS reasonID
+            FROM
+                rejection_reason
+            WHERE
+                UPPER(label) = UPPER(%s)
+            LIMIT 1",
+            $this->_db->makeQueryString($label)
+        );
+        $rs = $this->_db->getAssoc($sql);
+        if (empty($rs))
+        {
+            return 0;
+        }
+
+        return (int) $rs['reasonID'];
+    }
+
     /**
      * Returns a candidate's pipeline.
      *
@@ -1175,6 +1208,17 @@ class Pipelines
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_siteID,
             $this->_db->makeQueryString($jobOrderHistoryDescription)
+        );
+        $this->_db->query($sql);
+
+        $sql = sprintf(
+            "DELETE FROM candidate_joborder
+            WHERE
+                candidate_joborder_id = %s
+            AND
+                site_id = %s",
+            $this->_db->makeQueryInteger($candidateJobOrderID),
+            $this->_siteID
         );
         $this->_db->query($sql);
 

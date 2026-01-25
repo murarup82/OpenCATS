@@ -324,7 +324,7 @@ if (!eval(Hooks::get('JO_AJAX_GET_PIPELINE'))) return;
                     <?php endif; ?>
                     <?php if ($_SESSION['CATS']->getAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_DELETE): ?>
                         <a href="<?php echo($indexFile); ?>?m=joborders&amp;a=removeFromPipeline&amp;jobOrderID=<?php echo($jobOrderID); ?>&amp;candidateID=<?php echo($pipelinesData['candidateID']); ?>" onclick="return PipelinePromptRemove('<?php echo($indexFile); ?>?m=joborders&amp;a=removeFromPipeline&amp;jobOrderID=<?php echo($jobOrderID); ?>&amp;candidateID=<?php echo($pipelinesData['candidateID']); ?>');">
-                            <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="remove" style="border: none;" title="Remove from Job Order"  />
+                            <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="reject" style="border: none;" title="Reject from Job Order"  />
                         </a>
                     <?php endif; ?>
                 <?php endif; ?>

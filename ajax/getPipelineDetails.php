@@ -68,7 +68,7 @@ if ($canEditHistory)
          htmlspecialchars($htmlObjectID, ENT_QUOTES),
          '\', \'',
          $_SESSION['CATS']->getCookie(),
-         '\');">Purge History</a>',
+         '\');">Purge Pipeline Entry</a>',
          '</span>';
 }
 echo '</div>',
@@ -83,10 +83,7 @@ else
     foreach ($statusHistoryRS as $statusHistory)
     {
         $comment = trim($statusHistory['commentText']);
-        if ($comment === '')
-        {
-            $comment = '(No Comment)';
-        }
+        $hasComment = ($comment !== '');
 
         $statusFrom = $statusHistory['statusFrom'];
         $statusTo = $statusHistory['statusTo'];
@@ -108,20 +105,24 @@ else
              ' -> ',
              htmlspecialchars($statusTo),
              '</td>';
-        echo '<td style="padding-right: 6px;">',
-             htmlspecialchars($comment),
-             '<br />';
+        echo '<td style="padding-right: 6px;">';
+        if ($hasComment)
+        {
+            echo '<div class="pipelineComment">',
+                 htmlspecialchars($comment),
+                 '</div>';
+        }
 
         if (!empty($statusHistory['rejectionReasons']))
         {
-            echo '<div class="noteUnsizedSpan">Rejection reasons: ',
+            echo '<div class="pipelineMeta">Rejection reasons: ',
                  htmlspecialchars($statusHistory['rejectionReasons']),
                  '</div>';
         }
 
         if (!empty($statusHistory['rejectionReasonOther']))
         {
-            echo '<div class="noteUnsizedSpan">Other reason: ',
+            echo '<div class="pipelineMeta">Other reason: ',
                  htmlspecialchars($statusHistory['rejectionReasonOther']),
                  '</div>';
         }
@@ -140,7 +141,7 @@ else
                 $editNote = '(No edit note)';
             }
 
-            echo '<div class="noteUnsizedSpan">Edited by ',
+            echo '<div class="pipelineMeta">Edited by ',
                  htmlspecialchars($editedByName),
                  ' on ',
                  htmlspecialchars($statusHistory['editedAtDisplay']),
