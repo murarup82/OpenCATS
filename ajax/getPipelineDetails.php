@@ -65,13 +65,13 @@ if ($canEditHistory)
     echo '<span style="float: right;">',
          '<a href="',
          htmlspecialchars($purgeURL, ENT_QUOTES),
-         '" onclick="return PipelineHistoryPurge(',
+         '" class="pipelinePurgeLink" data-candidate-joborder-id="',
          (int) $candidateJobOrderID,
-         ', \'',
+         '" data-html-object-id="',
          htmlspecialchars($htmlObjectID, ENT_QUOTES),
-         '\', \'',
+         '" data-session-cookie="',
          $_SESSION['CATS']->getCookie(),
-         '\');">Purge Pipeline Entry</a>',
+         '">Purge Pipeline Entry</a>',
          '</span>';
 }
 echo '</div>',

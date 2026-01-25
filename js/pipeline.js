@@ -61,6 +61,45 @@ function PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCook
     );
 }
 
+function PipelineHistoryPurge_handleClick(e)
+{
+    var eventObj = e || window.event;
+    var target = eventObj.target || eventObj.srcElement;
+    while (target && target.tagName && target.tagName.toLowerCase() !== 'a')
+    {
+        target = target.parentNode;
+    }
+
+    if (!target || !target.className || target.className.indexOf('pipelinePurgeLink') === -1)
+    {
+        return;
+    }
+
+    var candidateJobOrderID = target.getAttribute('data-candidate-joborder-id');
+    var htmlObjectID = target.getAttribute('data-html-object-id');
+    var sessionCookie = target.getAttribute('data-session-cookie');
+    if (candidateJobOrderID)
+    {
+        PipelineHistoryPurge(candidateJobOrderID, htmlObjectID, sessionCookie);
+    }
+
+    if (eventObj.preventDefault)
+    {
+        eventObj.preventDefault();
+    }
+    eventObj.returnValue = false;
+    return false;
+}
+
+if (document.addEventListener)
+{
+    document.addEventListener('click', PipelineHistoryPurge_handleClick, false);
+}
+else if (document.attachEvent)
+{
+    document.attachEvent('onclick', PipelineHistoryPurge_handleClick);
+}
+
 function PipelineStatusHistoryEdit(historyID, currentDate, candidateJobOrderID, htmlObjectID, sessionCookie)
 {
     var newDate = prompt('New timestamp (YYYY-MM-DD HH:MM:SS):', currentDate);
