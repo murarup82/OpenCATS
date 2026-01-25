@@ -61,8 +61,11 @@ if ($htmlObjectID === '')
 echo '<div class="noteUnsizedSpan">Status History:';
 if ($canEditHistory)
 {
+    $purgeURL = 'ajax.php?f=purgePipelineHistory&candidateJobOrderID=' . (int) $candidateJobOrderID;
     echo '<span style="float: right;">',
-         '<a href="javascript:void(0);" onclick="return PipelineHistoryPurge(',
+         '<a href="',
+         htmlspecialchars($purgeURL, ENT_QUOTES),
+         '" onclick="return PipelineHistoryPurge(',
          (int) $candidateJobOrderID,
          ', \'',
          htmlspecialchars($htmlObjectID, ENT_QUOTES),
