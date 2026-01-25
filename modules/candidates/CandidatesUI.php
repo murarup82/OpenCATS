@@ -1786,7 +1786,7 @@ class CandidatesUI extends UserInterface
         $candidateID = $input['candidateID'];
         $jobOrderID  = $input['jobOrderID'];
         $commentText = $this->getTrimmedInput('comment', $input);
-        if ($commentText === '')
+        if (!isset($input['comment']))
         {
             $this->renderRemoveFromPipelineForm($candidateID, $jobOrderID);
             return;
@@ -1798,6 +1798,16 @@ class CandidatesUI extends UserInterface
         $pipelines->remove($candidateID, $jobOrderID, $this->_userID, $commentText);
 
         if (!eval(Hooks::get('CANDIDATE_REMOVE_FROM_PIPELINE_POST'))) return;
+
+        if ($this->isPopupRequest())
+        {
+            echo '<html><head><script type="text/javascript">',
+                 'if (parent && parent.hidePopWinRefresh) { parent.hidePopWinRefresh(false); }',
+                 'else if (parent && parent.hidePopWin) { parent.hidePopWin(false); parent.location.reload(); }',
+                 'else { window.location.reload(); }',
+                 '</script></head><body></body></html>';
+            return;
+        }
 
         CATSUtility::transferRelativeURI(
             'm=candidates&a=show&candidateID=' . $candidateID

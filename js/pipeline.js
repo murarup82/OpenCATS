@@ -192,9 +192,16 @@ function PipelineHistoryPurge(candidateJobOrderID, htmlObjectID, sessionCookie)
             }
         }
 
-        if (!removed && detailsContainer)
+        if (!removed)
         {
-            PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCookie);
+            if (detailsContainer)
+            {
+                PipelineDetails_populate(candidateJobOrderID, htmlObjectID, sessionCookie);
+            }
+            else
+            {
+                window.location.reload();
+            }
         }
     };
 

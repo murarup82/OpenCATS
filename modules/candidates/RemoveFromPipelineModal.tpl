@@ -8,7 +8,7 @@
     <table class="editTable" width="500">
         <tr>
             <td class="tdVertical">
-                <label for="comment">Rejection Comment:</label>
+                <label for="comment">Rejection Comment (optional):</label>
             </td>
             <td class="tdData">
                 <textarea name="comment" id="comment" cols="50" rows="4" style="width:300px;" class="inputbox"></textarea>
