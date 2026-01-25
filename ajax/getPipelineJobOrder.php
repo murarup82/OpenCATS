@@ -257,11 +257,6 @@ if (!eval(Hooks::get('JO_AJAX_GET_PIPELINE'))) return;
                 Status
             </a>
         </th>
-        <th align="left" nowrap="nowrap">
-            <a href="javascript:void(0);" onclick="PipelineJobOrder_populate(<?php echo($jobOrderID); ?>, <?php echo($page); ?>, <?php echo($entriesPerPage); ?>, <?php printSortLink('lastActivity'); ?>, <?php if ($isPopup) echo(1); else echo(0); ?>, 'ajaxPipelineTable', '<?php echo($_SESSION['CATS']->getCookie()); ?>', 'ajaxPipelineTableIndicator', '<?php echo($indexFile); ?>', PipelineJobOrder_getIncludeClosed());">
-                Last Activity
-            </a>
-        </th>
 <?php if (!$isPopup): ?>
         <th align="center">Action</th>
 <?php endif; ?>
@@ -310,7 +305,6 @@ if (!eval(Hooks::get('JO_AJAX_GET_PIPELINE'))) return;
                     <span class="pipelineClosedTag">Closed</span>
                 <?php endif; ?>
             </td>
-            <td valign="top"><?php echo($pipelinesData['lastActivity']); ?></td>
 <?php if (!$isPopup): ?>
             <td align="center" nowrap="nowrap">
                 <?php if ($_SESSION['CATS']->getAccessLevel('pipelines.screening') >= ACCESS_LEVEL_EDIT && !$_SESSION['CATS']->hasUserCategory('sourcer')): ?>
@@ -325,7 +319,7 @@ if (!eval(Hooks::get('JO_AJAX_GET_PIPELINE'))) return;
                 <?php if (!isset($frozen)): ?>
                     <?php if ($_SESSION['CATS']->getAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT): ?>
                         <a href="#" onclick="showPopWin('<?php echo($indexFile); ?>?m=joborders&amp;a=addActivityChangeStatus&amp;jobOrderID=<?php echo($jobOrderID); ?>&amp;candidateID=<?php echo($pipelinesData['candidateID']); ?>', 600, 550, null); return false;">
-                            <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="" style="border: none;"  title="Log an Activity / Change Status" />
+                            <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="" style="border: none;"  title="Change Status" />
                         </a>
                     <?php endif; ?>
                     <?php if ($_SESSION['CATS']->getAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_DELETE): ?>
@@ -338,7 +332,7 @@ if (!eval(Hooks::get('JO_AJAX_GET_PIPELINE'))) return;
 <?php endif; ?>
         </tr>
         <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>" id="pipelineDetails<?php echo($rowNumber); ?>" style="display:none;">
-            <td colspan="11">
+            <td colspan="<?php echo($isPopup ? 10 : 11); ?>">
                 <center>
                     <table width="98%" border=1 class="detailsOutside" style="margin:5px;">
                         <tr>

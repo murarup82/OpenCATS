@@ -1301,16 +1301,6 @@ class JobOrdersUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to add candidate to job order.');
         }
 
-        $activityEntries = new ActivityEntries($this->_siteID);
-        $activityID = $activityEntries->add(
-            $candidateID,
-            DATA_ITEM_CANDIDATE,
-            400,
-            'Added candidate to job order.',
-            $this->_userID,
-            $jobOrderID
-        );
-
         $this->_template->assign('isFinishedMode', true);
         $this->_template->assign('jobOrderID', $jobOrderID);
         $this->_template->assign('candidateID', $candidateID);

@@ -31,7 +31,6 @@
  */
 
 include_once(LEGACY_ROOT . '/lib/History.php');
-include_once(LEGACY_ROOT . '/lib/ActivityEntries.php');
 
 /**
  *	Pipelines Library
@@ -260,21 +259,6 @@ class Pipelines
                 0
             );
         }
-
-        $activityNote = 'Candidate removed from job order.';
-        if (!empty($commentText))
-        {
-            $activityNote .= ' Comment: ' . $commentText;
-        }
-        $activityEntries = new ActivityEntries($this->_siteID);
-        $activityEntries->add(
-            $candidateID,
-            DATA_ITEM_CANDIDATE,
-            ACTIVITY_PIPELINE_UPDATE,
-            $activityNote,
-            $userID,
-            $jobOrderID
-        );
 
         $history = new History($this->_siteID);
         $history->storeHistoryData(
@@ -836,9 +820,6 @@ class Pipelines
             $statusFilter = 'AND candidate_joborder.is_active = 1';
         }
 
-        /* FIXME: CONCAT() stuff is a very ugly hack, but I don't think there
-         * is a way to return multiple values from a subquery.
-         */
         $sql = sprintf(
             "SELECT
                 IF(attachment_id, 1, 0) AS attachmentPresent,
@@ -863,38 +844,6 @@ class Pipelines
                 candidate_joborder.rating_value AS ratingValue,
                 owner_user.first_name AS ownerFirstName,
                 owner_user.last_name AS ownerLastName,
-                (
-                    SELECT
-                        CONCAT(
-                            '<strong>',
-                            DATE_FORMAT(activity.date_created, '%%m-%%d-%%y'),
-                            ' (',
-                            entered_by_user.first_name,
-                            ' ',
-                            entered_by_user.last_name,
-                            '):</strong> ',
-                            IF(
-                                ISNULL(activity.notes) OR activity.notes = '',
-                                '(No Notes)',
-                                activity.notes
-                            )
-                        )
-                    FROM
-                        activity
-                    LEFT JOIN activity_type
-                        ON activity.type = activity_type.activity_type_id
-                    LEFT JOIN user AS entered_by_user
-                        ON activity.entered_by = entered_by_user.user_id
-                    WHERE
-                        activity.data_item_id = candidate.candidate_id
-                    AND
-                        activity.data_item_type = %s
-                    AND
-                        activity.joborder_id = %s
-                    ORDER BY
-                        activity.date_created DESC
-                    LIMIT 1
-                ) AS lastActivity,
                 IF((
                     SELECT
                         COUNT(*)
@@ -935,8 +884,6 @@ class Pipelines
             GROUP BY
                 candidate_joborder.candidate_id
             %s",
-            DATA_ITEM_CANDIDATE,
-            $this->_db->makeQueryInteger($jobOrderID),
             $this->_db->makeQueryInteger($jobOrderID),
             PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
             $this->_siteID,

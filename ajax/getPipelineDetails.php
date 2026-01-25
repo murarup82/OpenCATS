@@ -50,15 +50,6 @@ if (isset($_REQUEST['htmlObjectID']))
 /* Get an array of the company's contacts data. */
 $pipelines = new Pipelines($siteID);
 $statusHistoryRS = $pipelines->getStatusHistory($candidateJobOrderID);
-$pipelineActivitiesRS = $pipelines->getPipelineDetails($candidateJobOrderID);
-
-foreach ($pipelineActivitiesRS as $rowIndex => $row)
-{
-    if (empty($pipelineActivitiesRS[$rowIndex]['notes']))
-    {
-        $pipelineActivitiesRS[$rowIndex]['notes'] = '(No Notes)';
-    }
-}
 
 /* Output HTML. */
 $canEditHistory = ($_SESSION['CATS']->getAccessLevel('settings.editStatusHistory') >= ACCESS_LEVEL_MULTI_SA);
@@ -177,36 +168,6 @@ else
                  '</td>';
         }
 
-        echo '</tr>';
-    }
-}
-
-echo '</table>',
-     '<br />',
-     '<div class="noteUnsizedSpan">Activity History:</div>',
-     '<table>';
-
-if (empty($pipelineActivitiesRS))
-{
-    echo '<tr><td>No activity entries could be found.</td></tr>';
-}
-else
-{
-    foreach ($pipelineActivitiesRS as $activity)
-    {
-
-        echo '<tr>';
-        echo '<td style="padding-right: 6px; width: 160px;">',
-             $activity['dateModified'],
-             '</td>';
-        echo '<td style="padding-right: 6px; width: 125px">(',
-             $activity['enteredByFirstName'],
-             ' ',
-             $activity['enteredByLastName'],
-             ')</td>';
-        echo '<td style="padding-right: 6px; width: 625px;">',
-             $activity['notes'],
-             '<br /></td>';
         echo '</tr>';
     }
 }

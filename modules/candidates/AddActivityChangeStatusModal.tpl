@@ -1,11 +1,17 @@
 <?php /* $Id: AddActivityChangeStatusModal.tpl 3799 2007-12-04 17:54:36Z brian $ */ ?>
 <?php if ($this->isJobOrdersMode): ?>
-    <?php TemplateUtility::printModalHeader('Job Orders', array('modules/candidates/activityvalidator.js', 'js/activity.js'), 'Job Orders: Log Activity'); ?>
+    <?php TemplateUtility::printModalHeader('Job Orders', array('modules/candidates/activityvalidator.js', 'js/activity.js'), 'Job Orders: Change Status'); ?>
 <?php elseif ($this->onlyScheduleEvent): ?>
     <?php TemplateUtility::printModalHeader('Candidates', array('modules/candidates/activityvalidator.js', 'js/activity.js'), 'Candidates: Schedule Event'); ?>
 <?php else: ?>
-    <?php TemplateUtility::printModalHeader('Candidates', array('modules/candidates/activityvalidator.js', 'js/activity.js'), 'Candidates: Log Activity'); ?>
+    <?php TemplateUtility::printModalHeader('Candidates', array('modules/candidates/activityvalidator.js', 'js/activity.js'), 'Candidates: Change Status'); ?>
 <?php endif; ?>
+
+<?php
+    $forceStatusChange = (!$this->onlyScheduleEvent && $this->selectedJobOrderID != -1);
+    $hideActivity = true;
+    $hideScheduleEvent = true;
+?>
 
 <?php if (!$this->isFinishedMode): ?>
 
@@ -139,11 +145,11 @@
                     <label id="statusIDLabel" for="statusID">Status:</label>
                 </td>
                 <td class="tdData">
-                    <input type="checkbox" name="changeStatus" id="changeStatus" style="margin-left: 0px" onclick="AS_onChangeStatusChange('changeStatus', 'statusID', 'changeStatusSpanB');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent): ?> disabled<?php endif; ?> />
+                    <input type="checkbox" name="changeStatus" id="changeStatus" style="margin-left: 0px" onclick="AS_onChangeStatusChange('changeStatus', 'statusID', 'changeStatusSpanB');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent): ?> disabled<?php endif; ?><?php if ($forceStatusChange): ?> checked="checked"<?php endif; ?> />
                     <span id="changeStatusSpanA"<?php if ($this->selectedJobOrderID == -1): ?> style="color: #aaaaaa;"<?php endif;?>>Change Status</span><br />
 
                     <div id="changeStatusDiv" style="margin-top: 4px;">
-                        <select id="statusID" name="statusID" class="inputbox" style="width: 150px;" onchange="AS_onStatusChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'sendEmailCheckTR', 'triggerEmailSpan', 'activityNote', 'activityTypeID', <?php if ($this->isJobOrdersMode): echo $this->selectedJobOrderID; else: ?>null<?php endif; ?>, 'customMessage', 'origionalCustomMessage', 'triggerEmail', statusesArrayString, jobOrdersArrayStringTitle, jobOrdersArrayStringCompany, statusTriggersEmailArray, 'emailIsDisabled');" disabled>
+                        <select id="statusID" name="statusID" class="inputbox" style="width: 150px;" onchange="AS_onStatusChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'sendEmailCheckTR', 'triggerEmailSpan', 'activityNote', 'activityTypeID', <?php if ($this->isJobOrdersMode): echo $this->selectedJobOrderID; else: ?>null<?php endif; ?>, 'customMessage', 'origionalCustomMessage', 'triggerEmail', statusesArrayString, jobOrdersArrayStringTitle, jobOrdersArrayStringCompany, statusTriggersEmailArray, 'emailIsDisabled');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent || !$forceStatusChange): ?> disabled<?php endif; ?>>
                             <option value="-1">(Select a Status)</option>
 
                             <?php if ($this->selectedStatusID == -1): ?>
@@ -156,7 +162,7 @@
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
-                        <span id="changeStatusSpanB" style="color: #aaaaaa;">&nbsp;*</span>&nbsp;&nbsp;
+                        <span id="changeStatusSpanB" style="color: <?php echo($forceStatusChange ? '#000' : '#aaaaaa'); ?>;">&nbsp;*</span>&nbsp;&nbsp;
                         <span id="triggerEmailSpan" style="display: none;"><input type="checkbox" name="triggerEmail" id="triggerEmail" onclick="AS_onSendEmailChange('triggerEmail', 'sendEmailCheckTR', 'visibleTR');" />Send E-Mail Notification to Candidate</span>
                     </div>
                 </td>
@@ -202,15 +208,15 @@
                 </td>
             </tr>
             <?php endif; ?>
-           <tr id="addActivityTR" <?php if ($this->onlyScheduleEvent): ?>style="display:none;"<?php endif; ?>>
+           <tr id="addActivityTR" <?php if ($this->onlyScheduleEvent || $hideActivity): ?>style="display:none;"<?php endif; ?>>
                 <td class="tdVertical">
                     <label id="addActivityLabel" for="addActivity">Activity:</label>
                 </td>
                 <td class="tdData">
-                    <input type="checkbox" name="addActivity" id="addActivity" style="margin-left: 0px;"<?php if (!$this->onlyScheduleEvent): ?> checked="checked"<?php endif; ?> onclick="AS_onAddActivityChange('addActivity', 'activityTypeID', 'activityNote', 'addActivitySpanA', 'addActivitySpanB');" />Log an Activity<br />
+                    <input type="checkbox" name="addActivity" id="addActivity" style="margin-left: 0px;"<?php if (!$this->onlyScheduleEvent && !$hideActivity): ?> checked="checked"<?php endif; ?><?php if ($hideActivity): ?> disabled="disabled"<?php endif; ?> onclick="AS_onAddActivityChange('addActivity', 'activityTypeID', 'activityNote', 'addActivitySpanA', 'addActivitySpanB');" />Log an Activity<br />
                     <div id="activityNoteDiv" style="margin-top: 4px;">
                         <span id="addActivitySpanA">Activity Type</span><br />
-                        <select id="activityTypeID" name="activityTypeID" class="inputbox" style="width: 150px; margin-bottom: 4px;">
+                        <select id="activityTypeID" name="activityTypeID" class="inputbox" style="width: 150px; margin-bottom: 4px;"<?php if ($hideActivity): ?> disabled="disabled"<?php endif; ?>>
                             <?php
                                 $isFirstActivityType = true;
                                 foreach ($this->activityTypes as $activityType):
@@ -221,17 +227,17 @@
                             <?php endforeach; ?>
                         </select><br />
                         <span id="addActivitySpanB">Activity Notes</span><br />
-                        <textarea name="activityNote" id="activityNote" cols="50" style="margin-bottom: 4px;" class="inputbox"></textarea>
+                        <textarea name="activityNote" id="activityNote" cols="50" style="margin-bottom: 4px;" class="inputbox"<?php if ($hideActivity): ?> disabled="disabled"<?php endif; ?>></textarea>
                     </div>
                 </td>
             </tr>
 
-            <tr id="scheduleEventTR">
+            <tr id="scheduleEventTR" <?php if ($hideScheduleEvent): ?>style="display:none;"<?php endif; ?>>
                 <td class="tdVertical">
                     <label id="scheduleEventLabel" for="scheduleEvent">Schedule Event:</label>
                 </td>
                 <td class="tdData">
-                    <input type="checkbox" name="scheduleEvent" id="scheduleEvent" style="margin-left: 0px; <?php if ($this->onlyScheduleEvent): ?>display:none;<?php endif; ?>" onclick="AS_onScheduleEventChange('scheduleEvent', 'scheduleEventDiv');"<?php if ($this->onlyScheduleEvent): ?> checked="checked"<?php endif; ?> /><?php if (!$this->onlyScheduleEvent): ?>Schedule Event<?php endif; ?>
+                    <input type="checkbox" name="scheduleEvent" id="scheduleEvent" style="margin-left: 0px; <?php if ($this->onlyScheduleEvent): ?>display:none;<?php endif; ?>" onclick="AS_onScheduleEventChange('scheduleEvent', 'scheduleEventDiv');"<?php if ($this->onlyScheduleEvent): ?> checked="checked"<?php endif; ?><?php if ($hideScheduleEvent): ?> disabled="disabled"<?php endif; ?> /><?php if (!$this->onlyScheduleEvent): ?>Schedule Event<?php endif; ?>
                     <div id="scheduleEventDiv" <?php if (!$this->onlyScheduleEvent): ?>style="display:none;"<?php endif; ?>>
                         <table style="border: none; margin: 0px; padding: 0px;">
                             <tr>
@@ -341,6 +347,11 @@
 <?php endif; ?>
 
 <script type="text/javascript">
+    if (<?php echo($forceStatusChange ? 'true' : 'false'); ?>)
+    {
+        AS_onChangeStatusChange('changeStatus', 'statusID', 'changeStatusSpanB');
+    }
+
     if (typeof AS_refreshRejectionUI === 'function')
     {
         AS_refreshRejectionUI();
@@ -349,7 +360,15 @@
     </form>
 
     <script type="text/javascript">
-        document.changePipelineStatusForm.activityNote.focus();
+        var changeStatus = document.getElementById('changeStatus');
+        if (changeStatus && changeStatus.checked)
+        {
+            var statusComment = document.getElementById('statusComment');
+            if (statusComment)
+            {
+                statusComment.focus();
+            }
+        }
     </script>
 
 <?php else: ?>

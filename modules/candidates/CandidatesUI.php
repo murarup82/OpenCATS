@@ -595,30 +595,6 @@ class CandidatesUI extends UserInterface
             );
         }
 
-        $activityEntries = new ActivityEntries($this->_siteID);
-        $activityRS = $activityEntries->getAllByDataItem($candidateID, DATA_ITEM_CANDIDATE);
-        if (!empty($activityRS)) {
-            foreach ($activityRS as $rowIndex => $row) {
-                if (empty($activityRS[$rowIndex]['notes'])) {
-                    $activityRS[$rowIndex]['notes'] = '(No Notes)';
-                }
-
-                if (
-                    empty($activityRS[$rowIndex]['jobOrderID']) ||
-                    empty($activityRS[$rowIndex]['regarding'])
-                ) {
-                    $activityRS[$rowIndex]['regarding'] = 'General';
-                }
-
-                $activityRS[$rowIndex]['enteredByAbbrName'] = StringUtility::makeInitialName(
-                    $activityRS[$rowIndex]['enteredByFirstName'],
-                    $activityRS[$rowIndex]['enteredByLastName'],
-                    false,
-                    LAST_NAME_MAXLEN
-                );
-            }
-        }
-
         /* Get upcoming calendar entries. */
         $calendarRS = $candidates->getUpcomingEvents($candidateID);
         if (!empty($calendarRS)) {
@@ -685,7 +661,6 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('transformAttachments', $transformAttachments);
         $this->_template->assign('pipelinesRS', $pipelinesRS);
         $this->_template->assign('showClosedPipeline', $showClosed);
-        $this->_template->assign('activityRS', $activityRS);
         $this->_template->assign('calendarRS', $calendarRS);
         $this->_template->assign('extraFieldRS', $extraFieldRS);
         $this->_template->assign('candidateID', $candidateID);
@@ -1568,7 +1543,6 @@ class CandidatesUI extends UserInterface
         if (!eval(Hooks::get('CANDIDATE_ADD_TO_PIPELINE_PRE'))) return;
 
         $pipelines = new Pipelines($this->_siteID);
-        $activityEntries = new ActivityEntries($this->_siteID);
 
         /* Drop candidate ID's who are already in the pipeline */
         $pipelinesRS = $pipelines->getJobOrderPipeline($jobOrderID);
@@ -1585,15 +1559,6 @@ class CandidatesUI extends UserInterface
             if (!$pipelines->add($candidateID, $jobOrderID, $this->_userID)) {
                 CommonErrors::fatalModal(COMMONERROR_RECORDERROR, $this, 'Failed to add candidate to Job Order.');
             }
-
-            $activityID = $activityEntries->add(
-                $candidateID,
-                DATA_ITEM_CANDIDATE,
-                400,
-                'Added candidate to job order.',
-                $this->_userID,
-                $jobOrderID
-            );
 
             if (!eval(Hooks::get('CANDIDATE_ADD_TO_PIPELINE_POST_IND'))) return;
         }
@@ -1685,8 +1650,8 @@ class CandidatesUI extends UserInterface
             $statusChangeTemplate
         );
 
-        /* Are we in "Only Schedule Event" mode? */
-        $onlyScheduleEvent = $this->isChecked('onlyScheduleEvent', $_GET);
+        /* Schedule-only mode is disabled. */
+        $onlyScheduleEvent = false;
 
         $calendar = new Calendar($this->_siteID);
         $calendarEventTypes = $calendar->getAllEventTypes();
@@ -3222,11 +3187,7 @@ class CandidatesUI extends UserInterface
             $eventScheduled = false;
         }
 
-        if (isset($_GET['onlyScheduleEvent'])) {
-            $onlyScheduleEvent = true;
-        } else {
-            $onlyScheduleEvent = false;
-        }
+        $onlyScheduleEvent = false;
 
         if (!$statusChanged && !$activityAdded && !$eventScheduled) {
             $changesMade = false;

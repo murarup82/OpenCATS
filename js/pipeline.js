@@ -139,7 +139,7 @@ function PipelineStatusHistoryEdit(historyID, currentDate, candidateJobOrderID, 
 
 function PipelineHistoryPurge(candidateJobOrderID, htmlObjectID, sessionCookie)
 {
-    if (!confirm('This will permanently delete status and activity history for this candidate/job order. Continue?'))
+    if (!confirm('This will permanently delete status history for this candidate/job order. Continue?'))
     {
         return false;
     }

@@ -31,22 +31,21 @@ Feature: Access Level to objects check - sub pages (show, ...)
     And I should <addToPipeline> "Add Candidate to This Job Order"
     And I should <export> "Export"
     And I should <details> "Job Order Details"
-    And the page should <logAnActivity> contain "Log an Activity"  
     And the page should <removeFromPipeline> contain "Remove from Job Order"
     And the page should <setMatchingRating> contain "<map"
     And the page should <deleteAttachment> contain "index.php?m=joborders&amp;a=deleteAttachment"
 
      
   Examples:
-     | accessLevel | addJobOrder | searchJobOrder | quickSearch | actionMenu  | addAttachment | generateReport | viewHistory | editJobOrder  | deleteJobOrder  | administrativeHideShow | addToPipeline | export | logAnActivity | removeFromPipeline | setMatchingRating | details | deleteAttachment |
-     | DISABLED    | not see     | not see        | not         | not         | not see       | not see        | not see     | not see       | not see         | not see                | not see       | not see|not            | not                | not               | not see | not              | 
-     | READONLY    | not see     | see            |             |             | not see       | see            | not see     | not see       | not see         | not see                | not see       | see    |not            | not                | not               | see     | not              |
-     | EDIT        | see         | see            |             |             | see           | see            | not see     | see           | not see         | not see                | see           | see    |               | not                |                   | see     | not              |
-     | DELETE      | see         | see            |             |             | see           | see            | not see     | see           | see             | not see                | see           | see    |               |                    |                   | see     |                  |
-     | DEMO        | see         | see            |             |             | see           | see            | see         | see           | see             | not see                | see           | see    |               |                    |                   | see     |                  |
-     | ADMIN       | see         | see            |             |             | see           | see            | see         | see           | see             | not see                | see           | see    |               |                    |                   | see     |                  |
-     | MULTI_ADMIN | see         | see            |             |             | see           | see            | see         | see           | see             | see                    | see           | see    |               |                    |                   | see     |                  |
-     | ROOT        | see         | see            |             |             | see           | see            | see         | see           | see             | see                    | see           | see    |               |                    |                   | see     |                  |
+     | accessLevel | addJobOrder | searchJobOrder | quickSearch | actionMenu  | addAttachment | generateReport | viewHistory | editJobOrder  | deleteJobOrder  | administrativeHideShow | addToPipeline | export | removeFromPipeline | setMatchingRating | details | deleteAttachment |
+     | DISABLED    | not see     | not see        | not         | not         | not see       | not see        | not see     | not see       | not see         | not see                | not see       | not see| not                | not               | not see | not              | 
+     | READONLY    | not see     | see            |             |             | not see       | see            | not see     | not see       | not see         | not see                | not see       | see    | not                | not               | see     | not              |
+     | EDIT        | see         | see            |             |             | see           | see            | not see     | see           | not see         | not see                | see           | see    | not                |                   | see     | not              |
+     | DELETE      | see         | see            |             |             | see           | see            | not see     | see           | see             | not see                | see           | see    |                    |                   | see     |                  |
+     | DEMO        | see         | see            |             |             | see           | see            | see         | see           | see             | not see                | see           | see    |                    |                   | see     |                  |
+     | ADMIN       | see         | see            |             |             | see           | see            | see         | see           | see             | not see                | see           | see    |                    |                   | see     |                  |
+     | MULTI_ADMIN | see         | see            |             |             | see           | see            | see         | see           | see             | see                    | see           | see    |                    |                   | see     |                  |
+     | ROOT        | see         | see            |             |             | see           | see            | see         | see           | see             | see                    | see           | see    |                    |                   | see     |                  |
   
   ####### CANDIDATES #######
   
@@ -62,18 +61,13 @@ Feature: Access Level to objects check - sub pages (show, ...)
      And the page should <quickSearch> contain "quickSearch"
      And the page should <actionMenu> contain "showHideSingleQuickActionMenu"
      And I should <details> "Candidate Details"
-     And I should <scheduleEvent> "Schedule Event"
      And I should <addAttachment> "Add Attachment"
      And I should <editCandidate> "Edit"
      And I should <deleteCandidate> "Delete"
      And I should <viewHistory> "View History"
      And I should <administrativeHideShow> "Administrative"
      And the page should <addToPipeline> contain "Add This Candidate to Job Order"
-     And I should <logAnActivity> "Log an Activity"
-     And the page should <logAnActivity2> contain "Log an Activity"  
      And the page should <removeFromPipeline> contain "Remove from Job Order"
-     And the page should <editActivity> contain "editActivity"
-     And the page should <deleteActivity> contain "deleteActivity"
      And the page should <setMatchingRating> contain "<map"
      And the page should <deleteAttachment> contain "index.php?m=candidates&amp;a=deleteAttachment"
      #When I click on "arrow"
@@ -81,15 +75,15 @@ Feature: Access Level to objects check - sub pages (show, ...)
      #And the page should <addToPipeline> contain "Add To Job Order"
      
    Examples:
-     | accessLevel | addCandidate | searchCandidate | quickSearch | actionMenu | addToList | details | scheduleEvent | addAttachment | editCandidate | deleteCandidate | viewHistory | administrativeHideShow | addToPipeline | logAnActivity2 | logAnActivity | removeFromPipeline | editActivity | deleteActivity | setMatchingRating | deleteAttachment |
-     | DISABLED    | not see      | not see         | not         | not        | not       | not see | not see       | not see       | not see       | not see         | not see     | not see                | not           | not            | not see       | not                | not          | not            | not                     | not              |
-     | READONLY    | not see      | see             |             |            |           | see     | not see       | not see       | not see       | not see         | not see     | not see                | not           | not            | not see       | not                | not          | not            | not                     | not              |
-     | EDIT        | see          | see             |             |            |           | see     | see           | see           | see           | not see         | not see     | not see                |               |                | see           | not                |              | not            |                         | not              |
-     | DELETE      | see          | see             |             |            |           | see     | see           | see           | see           | see             | not see     | not see                |               |                | see           |                    |              |                |                         |                  |
-     | DEMO        | see          | see             |             |            |           | see     | see           | see           | see           | see             | see         | not see                |               |                | see           |                    |              |                |                         |                  |
-     | ADMIN       | see          | see             |             |            |           | see     | see           | see           | see           | see             | see         | not see                |               |                | see           |                    |              |                |                         |                  |
-     | MULTI_ADMIN | see          | see             |             |            |           | see     | see           | see           | see           | see             | see         | see                    |               |                | see           |                    |              |                |                         |                  |
-     | ROOT        | see          | see             |             |            |           | see     | see           | see           | see           | see             | see         | see                    |               |                | see           |                    |              |                |                         |                  |
+     | accessLevel | addCandidate | searchCandidate | quickSearch | actionMenu | addToList | details | addAttachment | editCandidate | deleteCandidate | viewHistory | administrativeHideShow | addToPipeline | removeFromPipeline | setMatchingRating | deleteAttachment |
+     | DISABLED    | not see      | not see         | not         | not        | not       | not see | not see       | not see       | not see         | not see     | not see                | not           | not                | not               | not              |
+     | READONLY    | not see      | see             |             |            |           | see     | not see       | not see       | not see         | not see     | not see                | not           | not                | not               | not              |
+     | EDIT        | see          | see             |             |            |           | see     | see           | see           | not see         | not see     | not see                |               | not                |                   | not              |
+     | DELETE      | see          | see             |             |            |           | see     | see           | see           | see             | not see     | not see                |               |                    |                   |                  |
+     | DEMO        | see          | see             |             |            |           | see     | see           | see           | see             | see         | not see                |               |                    |                   |                  |
+     | ADMIN       | see          | see             |             |            |           | see     | see           | see           | see             | see         | not see                |               |                    |                   |                  |
+     | MULTI_ADMIN | see          | see             |             |            |           | see     | see           | see           | see             | see         | see                    |               |                    |                   |                  |
+     | ROOT        | see          | see             |             |            |           | see     | see           | see           | see             | see         | see                    |               |                    |                   |                  |
      
     ####### COMPANIES #######
 

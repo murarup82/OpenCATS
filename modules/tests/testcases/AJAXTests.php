@@ -842,33 +842,8 @@ class GetPipelineDetailsTest extends CATSAJAXTestCase
         );
         $this->runPageLoadAssertions(false);
 
-        /* There aren't any activity entries yet. */
-        $this->assertPattern('/Added candidate to job order./');
-
-        /* Add an activity. */
-        $this->addPipelineActivity(
-            $testCandidateID,
-            $testJobOrderID1,
-            ACTIVITY_PHONE_CALL,
-            'Test notes.'
-        );
-
-        /* POST the AJAX call to ajax.php. */
-        $this->post(
-            CATSUtility::getAbsoluteURI('ajax.php'),
-            array(
-                'f' => 'getPipelineDetails',
-                'candidateJobOrderID' => $candidateJobOrderID
-            )
-        );
-        $this->runPageLoadAssertions(false);
-
-        /* There should be activity entries now. */
-        $this->assertNoPattern('/<td>No activity entries could be found.<\/td>/');
-        $this->assertPattern('/>Test notes.</');
-        $this->assertPattern('/\(' . TESTER_FULLNAME . '\)/');
-        $this->assertPattern('/>Activity History:</');
-        $this->assertPattern('/' . date('m-d-y') . '/');
+        /* Status history table should be present. */
+        $this->assertPattern('/Status History:/');
 
         /* Delete the test candidate. */
         $this->deleteCandidate($testCandidateID);
