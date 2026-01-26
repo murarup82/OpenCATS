@@ -61,11 +61,13 @@ class KpisUI extends UserInterface
             $companyData[$company['companyID']] = array(
                 'companyID' => (int) $company['companyID'],
                 'companyName' => $company['name'],
-                'expectedConversion' => 0.0,
-                'expectedConversionDisplay' => '0%',
+                'expectedConversionMin' => null,
+                'expectedConversionMax' => null,
                 'newPositions' => 0,
                 'totalOpenPositions' => 0,
                 'fullPlanOpenings' => 0,
+                'expectedFilled' => 0.0,
+                'expectedInFullPlan' => 0.0,
                 'hasData' => false
             );
         }
@@ -73,7 +75,7 @@ class KpisUI extends UserInterface
         $expectedFieldName = strtolower(self::EXPECTED_CONVERSION_FIELD);
         $expectedRS = $db->getAllAssoc(sprintf(
             "SELECT
-                data_item_id AS companyID,
+                data_item_id AS jobOrderID,
                 value
             FROM
                 extra_field
@@ -84,31 +86,15 @@ class KpisUI extends UserInterface
             AND
                 LOWER(field_name) = %s",
             $db->makeQueryInteger($siteID),
-            DATA_ITEM_COMPANY,
+            DATA_ITEM_JOBORDER,
             $db->makeQueryString($expectedFieldName)
         ));
 
+        $conversionByJobOrder = array();
         foreach ($expectedRS as $row)
         {
-            $companyID = (int) $row['companyID'];
-            if (!isset($companyData[$companyID]))
-            {
-                $companyData[$companyID] = array(
-                    'companyID' => $companyID,
-                    'companyName' => '(Unknown)',
-                    'expectedConversion' => 0.0,
-                    'expectedConversionDisplay' => '0%',
-                    'newPositions' => 0,
-                    'totalOpenPositions' => 0,
-                    'fullPlanOpenings' => 0,
-                    'hasData' => false
-                );
-            }
-
             $percent = $this->parseExpectedConversion($row['value']);
-            $companyData[$companyID]['expectedConversion'] = $percent;
-            $companyData[$companyID]['expectedConversionDisplay'] = $this->formatPercent($percent);
-            $companyData[$companyID]['hasData'] = true;
+            $conversionByJobOrder[(int) $row['jobOrderID']] = $percent;
         }
 
         $jobOrdersRS = $db->getAllAssoc(sprintf(
@@ -185,16 +171,35 @@ class KpisUI extends UserInterface
                 $companyData[$companyID] = array(
                     'companyID' => $companyID,
                     'companyName' => '(Unknown)',
-                    'expectedConversion' => 0.0,
-                    'expectedConversionDisplay' => '0%',
+                    'expectedConversionMin' => null,
+                    'expectedConversionMax' => null,
                     'newPositions' => 0,
                     'totalOpenPositions' => 0,
                     'fullPlanOpenings' => 0,
+                    'expectedFilled' => 0.0,
+                    'expectedInFullPlan' => 0.0,
                     'hasData' => false
                 );
             }
 
             $companyData[$companyID]['hasData'] = true;
+
+            $conversion = 0.0;
+            if (isset($conversionByJobOrder[$jobOrder['jobOrderID']]))
+            {
+                $conversion = $conversionByJobOrder[$jobOrder['jobOrderID']];
+            }
+
+            if ($companyData[$companyID]['expectedConversionMin'] === null ||
+                $conversion < $companyData[$companyID]['expectedConversionMin'])
+            {
+                $companyData[$companyID]['expectedConversionMin'] = $conversion;
+            }
+            if ($companyData[$companyID]['expectedConversionMax'] === null ||
+                $conversion > $companyData[$companyID]['expectedConversionMax'])
+            {
+                $companyData[$companyID]['expectedConversionMax'] = $conversion;
+            }
 
             $plans = array();
             if (isset($plansByJobOrder[$jobOrder['jobOrderID']]))
@@ -251,6 +256,7 @@ class KpisUI extends UserInterface
 
             $companyData[$companyID]['totalOpenPositions'] += $openPositions;
             $companyData[$companyID]['fullPlanOpenings'] += $fullPlanOpenings;
+            $companyData[$companyID]['expectedFilled'] += ($openPositions * ($conversion / 100));
         }
 
         $rows = array();
@@ -268,16 +274,19 @@ class KpisUI extends UserInterface
                 continue;
             }
 
-            $conversion = $company['expectedConversion'];
-            $expectedFilled = (int) round($company['totalOpenPositions'] * ($conversion / 100));
-            $expectedInFullPlan = (int) round($company['fullPlanOpenings'] * ($conversion / 100));
+            $expectedFilled = (int) round($company['expectedFilled']);
+            $expectedInFullPlan = (int) $company['fullPlanOpenings'];
+            $conversionRange = $this->formatPercentRange(
+                $company['expectedConversionMin'],
+                $company['expectedConversionMax']
+            );
 
             $rows[] = array(
                 'companyID' => $company['companyID'],
                 'companyName' => $company['companyName'],
                 'newPositions' => $company['newPositions'],
                 'totalOpenPositions' => $company['totalOpenPositions'],
-                'expectedConversionDisplay' => $company['expectedConversionDisplay'],
+                'expectedConversionDisplay' => $conversionRange,
                 'expectedFilled' => $expectedFilled,
                 'expectedInFullPlan' => $expectedInFullPlan
             );
@@ -336,6 +345,21 @@ class KpisUI extends UserInterface
         }
 
         return $display . '%';
+    }
+
+    private function formatPercentRange($min, $max)
+    {
+        if ($min === null || $max === null)
+        {
+            return '0%';
+        }
+
+        if ($min == $max)
+        {
+            return $this->formatPercent($min);
+        }
+
+        return $this->formatPercent($min) . ' - ' . $this->formatPercent($max);
     }
 
     private function parsePlanDate($value)
