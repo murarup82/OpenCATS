@@ -10,6 +10,7 @@ include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 
 class KpisUI extends UserInterface
 {
+    const MONITORED_JOBORDER_FIELD = 'Monitored JO';
     const EXPECTED_CONVERSION_FIELD = 'Conversion Rate';
 
     public function __construct()
@@ -41,6 +42,18 @@ class KpisUI extends UserInterface
     {
         $db = DatabaseConnection::getInstance();
         $siteID = $this->_siteID;
+        $officialReports = true;
+        if (isset($_GET['officialReports']))
+        {
+            if ($_GET['officialReports'] == '0' || $_GET['officialReports'] === 'false')
+            {
+                $officialReports = false;
+            }
+            else
+            {
+                $officialReports = true;
+            }
+        }
 
         $companiesRS = $db->getAllAssoc(sprintf(
             "SELECT
@@ -94,6 +107,36 @@ class KpisUI extends UserInterface
         {
             $percent = $this->parseExpectedConversion($row['value']);
             $conversionByJobOrder[(int) $row['jobOrderID']] = $percent;
+        }
+
+        $monitoredJobOrders = array();
+        if ($officialReports)
+        {
+            $monitoredFieldName = strtolower(self::MONITORED_JOBORDER_FIELD);
+            $monitoredRS = $db->getAllAssoc(sprintf(
+                "SELECT
+                    data_item_id AS jobOrderID,
+                    value
+                FROM
+                    extra_field
+                WHERE
+                    site_id = %s
+                AND
+                    data_item_type = %s
+                AND
+                    LOWER(field_name) = %s",
+                $db->makeQueryInteger($siteID),
+                DATA_ITEM_JOBORDER,
+                $db->makeQueryString($monitoredFieldName)
+            ));
+
+            foreach ($monitoredRS as $row)
+            {
+                if ($this->isTruthyExtraField($row['value']))
+                {
+                    $monitoredJobOrders[(int) $row['jobOrderID']] = true;
+                }
+            }
         }
 
         $jobOrdersRS = $db->getAllAssoc(sprintf(
@@ -171,6 +214,12 @@ class KpisUI extends UserInterface
 
         foreach ($jobOrders as $jobOrder)
         {
+            if ($officialReports &&
+                !isset($monitoredJobOrders[$jobOrder['jobOrderID']]))
+            {
+                continue;
+            }
+
             $companyID = $jobOrder['companyID'];
             if (!isset($companyData[$companyID]))
             {
@@ -318,6 +367,8 @@ class KpisUI extends UserInterface
         $this->_template->assign('totals', $totals);
         $this->_template->assign('weekLabel', $weekLabel);
         $this->_template->assign('expectedConversionFieldName', self::EXPECTED_CONVERSION_FIELD);
+        $this->_template->assign('officialReports', $officialReports);
+        $this->_template->assign('monitoredJobOrderFieldName', self::MONITORED_JOBORDER_FIELD);
         $this->_template->display('./modules/kpis/Kpis.tpl');
     }
 
@@ -474,6 +525,12 @@ class KpisUI extends UserInterface
         }
 
         return $date->format('m-d-y');
+    }
+
+    private function isTruthyExtraField($value)
+    {
+        $value = strtolower(trim((string) $value));
+        return in_array($value, array('yes', '1', 'true', 'on'), true);
     }
 }
 

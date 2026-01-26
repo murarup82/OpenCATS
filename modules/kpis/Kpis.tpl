@@ -15,7 +15,15 @@
                 </tr>
             </table>
 
-            <p class="note">Company KPI summary (Week: <?php $this->_($this->weekLabel); ?>)</p>
+            <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>" style="margin-bottom: 6px;">
+                <input type="hidden" name="m" value="kpis" />
+                <input type="hidden" name="officialReports" value="0" />
+                <label for="officialReports" class="noteUnsizedSpan" style="margin-right: 10px;">
+                    <input type="checkbox" id="officialReports" name="officialReports" value="1"<?php if (!empty($this->officialReports)): ?> checked="checked"<?php endif; ?> onchange="this.form.submit();" />
+                    Official Reports
+                </label>
+                <span class="noteUnsizedSpan">Company KPI summary (Week: <?php $this->_($this->weekLabel); ?>)</span>
+            </form>
 
             <style type="text/css">
                 .kpiTable { width: 100%; border-collapse: collapse; }
@@ -68,7 +76,7 @@
                 </table>
             <?php endif; ?>
 
-            <p class="noteUnsizedSpan">Expected conversion is pulled from the job order extra field "<?php $this->_($this->expectedConversionFieldName); ?>" (empty = 0%). Expected filled is calculated per job order and summed by client. Expected in FT shows future openings from hiring plans.</p>
+            <p class="noteUnsizedSpan">Expected conversion is pulled from the job order extra field "<?php $this->_($this->expectedConversionFieldName); ?>" (empty = 0%). Expected filled is calculated per job order and summed by client. Expected in FT shows future openings from hiring plans. Official Reports limits job orders to "<?php $this->_($this->monitoredJobOrderFieldName); ?>" = Yes.</p>
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
