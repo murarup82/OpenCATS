@@ -116,6 +116,16 @@ class CandidatesUI extends UserInterface
 
                 break;
 
+            case 'saveSources':
+                if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT) {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if (!$this->isPostBack()) {
+                    CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid request.');
+                }
+                $this->onSaveSources();
+                break;
+
             case 'delete':
                 if ($this->getUserAccessLevel('candidates.delete') < ACCESS_LEVEL_DELETE) {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
@@ -1353,6 +1363,30 @@ class CandidatesUI extends UserInterface
 
         CATSUtility::transferRelativeURI(
             'm=candidates&a=show&candidateID=' . $candidateID
+        );
+    }
+
+    private function onSaveSources()
+    {
+        if (!$this->isRequiredIDValid('candidateID', $_POST)) {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
+        }
+
+        $candidateID = $_POST['candidateID'];
+        $sourceCSV = $this->getTrimmedInput('sourceCSV', $_POST);
+
+        $candidates = new Candidates($this->_siteID);
+        $sources = $candidates->getPossibleSources();
+        $sourcesDifferences = ListEditor::getDifferencesFromList(
+            $sources,
+            'name',
+            'sourceID',
+            $sourceCSV
+        );
+        $candidates->updatePossibleSources($sourcesDifferences);
+
+        CATSUtility::transferRelativeURI(
+            'm=candidates&a=edit&candidateID=' . $candidateID
         );
     }
 

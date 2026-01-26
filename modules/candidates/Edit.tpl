@@ -159,6 +159,7 @@
                             </select>
 
                             <input type="hidden" id="sourceCSV" name="sourceCSV" value="<?php $this->_($this->sourcesString); ?>" />
+                            <input type="button" class="button" value="Save Sources" onclick="return submitSourcesOnly();" style="margin-left: 6px;" />
                         </td>
                     </tr>
 
@@ -360,7 +361,25 @@
                 <input type="button" class="button" name="back"   id="back"   value="Back to Details" onclick="javascript:goToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>');" />
             </form>
 
+            <form id="saveSourcesForm" action="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=saveSources" method="post">
+                <input type="hidden" name="postback" value="postback" />
+                <input type="hidden" name="candidateID" value="<?php $this->_($this->data['candidateID']); ?>" />
+                <input type="hidden" id="sourceCSVSave" name="sourceCSV" value="" />
+            </form>
+
             <script type="text/javascript">
+                function submitSourcesOnly()
+                {
+                    var sourceCSV = document.getElementById('sourceCSV');
+                    var sourceSave = document.getElementById('sourceCSVSave');
+                    if (sourceCSV && sourceSave)
+                    {
+                        sourceSave.value = sourceCSV.value;
+                    }
+                    document.getElementById('saveSourcesForm').submit();
+                    return false;
+                }
+
                 document.editCandidateForm.firstName.focus();
             </script>
         </div>
