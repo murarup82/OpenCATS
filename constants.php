@@ -29,15 +29,16 @@
 
 $coreModules = array(
     'home'       => '1',
-    'activity'   => '2',
-    'joborders'  => '3',
-    'candidates' => '4',  
-    'companies'  => '5',
-    'contacts'   => '6',
-    'lists'      => '7',
-    'calendar'   => '8',
-    'reports'    => '9',
-    'settings'   => '10',
+    'kpis'       => '2',
+    'activity'   => '3',
+    'joborders'  => '4',
+    'candidates' => '5',
+    'companies'  => '6',
+    'contacts'   => '7',
+    'lists'      => '8',
+    'calendar'   => '9',
+    'reports'    => '10',
+    'settings'   => '11',
 );
 
 /* CATS Version */
