@@ -17,7 +17,7 @@
 
             <p class="noteUnsizedSpan">Job Order: <?php echo(htmlspecialchars($this->jobOrderTitle)); ?></p>
 
-            <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=editHiringPlan" method="post" onsubmit="syncHiringPlanDates();">
+            <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=editHiringPlan" method="post">
                 <input type="hidden" name="jobOrderID" value="<?php echo((int) $this->jobOrderID); ?>" />
                 <input type="hidden" name="postback" value="postback" />
                 <table class="editTable" width="100%">
@@ -30,24 +30,25 @@
                         <td class="tdVertical">Remove</td>
                     </tr>
 
+                    <tbody id="hiringPlanTableBody">
                     <?php $rowIndex = 0; ?>
                     <?php foreach ($this->hiringPlanRS as $planRow): ?>
-                        <tr>
+                        <tr id="hiringPlanRow<?php echo($rowIndex); ?>">
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="<?php echo((int) $planRow['planID']); ?>" />
-                                <input type="hidden" name="startDate[]" id="startDateValue<?php echo($rowIndex); ?>" value="<?php echo(htmlspecialchars($planRow['startDate'])); ?>" />
                                 <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
                                         DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['startDate'])); ?>', -1);
+                                    document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
                                 </script>
                             </td>
                             <td class="tdData">
-                                <input type="hidden" name="endDate[]" id="endDateValue<?php echo($rowIndex); ?>" value="<?php echo(htmlspecialchars($planRow['endDate'])); ?>" />
                                 <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
                                         DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['endDate'])); ?>', -1);
+                                    document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
                                 </script>
                             </td>
                             <td class="tdData">
@@ -64,29 +65,29 @@
                                 <input type="text" class="inputbox" name="notes[]" value="<?php echo(htmlspecialchars($planRow['notes'])); ?>" style="width: 240px;" />
                             </td>
                             <td class="tdData">
-                                <input type="checkbox" name="delete[]" value="<?php echo((int) $planRow['planID']); ?>" />
+                                <a href="#" onclick="return removeHiringPlanRow(<?php echo($rowIndex); ?>, <?php echo((int) $planRow['planID']); ?>);">Remove</a>
                             </td>
                         </tr>
                         <?php $rowIndex++; ?>
                     <?php endforeach; ?>
 
-                    <?php for ($i = 0; $i < 3; $i++): ?>
-                        <tr>
+                    <?php if (empty($this->hiringPlanRS)): ?>
+                        <tr id="hiringPlanRow<?php echo($rowIndex); ?>">
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="0" />
-                                <input type="hidden" name="startDate[]" id="startDateValue<?php echo($rowIndex); ?>" value="" />
                                 <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
                                         DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
+                                    document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
                                 </script>
                             </td>
                             <td class="tdData">
-                                <input type="hidden" name="endDate[]" id="endDateValue<?php echo($rowIndex); ?>" value="" />
                                 <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
                                         DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
+                                    document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
                                 </script>
                             </td>
                             <td class="tdData">
@@ -105,43 +106,94 @@
                             <td class="tdData"></td>
                         </tr>
                         <?php $rowIndex++; ?>
-                    <?php endfor; ?>
+                    <?php endif; ?>
+                    </tbody>
                 </table>
 
                 <input type="hidden" id="hiringPlanRowCount" value="<?php echo((int) $rowIndex); ?>" />
+                <div id="hiringPlanDeletedContainer"></div>
 
                 <p class="noteUnsizedSpan">Openings are auto-synced to the job order total. If no plan rows are saved, total openings will be 0.</p>
 
                 <input type="submit" class="button" value="Save Hiring Plan" />
                 &nbsp;
+                <input type="button" class="button" value="Add Row" onclick="addHiringPlanRow();" />
+                &nbsp;
                 <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $this->jobOrderID); ?>">Cancel</a>
             </form>
             <script type="text/javascript">
-                function syncHiringPlanDates()
+                function addHiringPlanRow()
                 {
-                    var count = parseInt(document.getElementById('hiringPlanRowCount').value, 10);
-                    if (isNaN(count))
+                    var tableBody = document.getElementById('hiringPlanTableBody');
+                    var rowCountInput = document.getElementById('hiringPlanRowCount');
+                    var rowIndex = parseInt(rowCountInput.value, 10);
+                    if (isNaN(rowIndex))
                     {
-                        return;
+                        rowIndex = 0;
                     }
 
-                    for (var i = 0; i < count; i++)
-                    {
-                        var startInput = document.getElementById('startDateInput' + i);
-                        var startValue = document.getElementById('startDateValue' + i);
-                        if (startInput && startValue)
-                        {
-                            startValue.value = startInput.value;
-                        }
+                    var row = document.createElement('tr');
+                    row.id = 'hiringPlanRow' + rowIndex;
+                    row.innerHTML =
+                        '<td class="tdData">' +
+                            '<input type="hidden" name="planID[]" value="0" />' +
+                            '<span id="startDatePicker' + rowIndex + '"></span>' +
+                        '</td>' +
+                        '<td class="tdData">' +
+                            '<span id="endDatePicker' + rowIndex + '"></span>' +
+                        '</td>' +
+                        '<td class="tdData">' +
+                            '<input type="text" class="inputbox" name="openings[]" value="" style="width: 60px;" />' +
+                        '</td>' +
+                        '<td class="tdData">' +
+                            '<select class="inputbox" name="priority[]" style="width: 60px;">' +
+                                '<option value="1" selected>1</option>' +
+                                '<option value="2">2</option>' +
+                                '<option value="3">3</option>' +
+                                '<option value="4">4</option>' +
+                                '<option value="5">5</option>' +
+                            '</select>' +
+                        '</td>' +
+                        '<td class="tdData">' +
+                            '<input type="text" class="inputbox" name="notes[]" value="" style="width: 240px;" />' +
+                        '</td>' +
+                        '<td class="tdData">' +
+                            '<a href="#" onclick="return removeHiringPlanRow(' + rowIndex + ', 0);">Remove</a>' +
+                        '</td>';
 
-                        var endInput = document.getElementById('endDateInput' + i);
-                        var endValue = document.getElementById('endDateValue' + i);
-                        if (endInput && endValue)
-                        {
-                            endValue.value = endInput.value;
-                        }
-                    }
+                    tableBody.appendChild(row);
+
+                    document.getElementById('startDatePicker' + rowIndex).innerHTML =
+                        DateInputForDOM('startDateInput' + rowIndex, false, 'MM-DD-YY', '', -1);
+                    document.getElementById('endDatePicker' + rowIndex).innerHTML =
+                        DateInputForDOM('endDateInput' + rowIndex, false, 'MM-DD-YY', '', -1);
+                    document.getElementById('startDateInput' + rowIndex).name = 'startDate[]';
+                    document.getElementById('endDateInput' + rowIndex).name = 'endDate[]';
+
+                    rowCountInput.value = rowIndex + 1;
                 }
+
+                function removeHiringPlanRow(rowIndex, planID)
+                {
+                    var row = document.getElementById('hiringPlanRow' + rowIndex);
+                    if (row && row.parentNode)
+                    {
+                        row.parentNode.removeChild(row);
+                    }
+
+                    if (planID && planID > 0)
+                    {
+                        var container = document.getElementById('hiringPlanDeletedContainer');
+                        var input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'delete[]';
+                        input.value = planID;
+                        container.appendChild(input);
+                    }
+
+                    return false;
+                }
+
             </script>
         </div>
     </div>

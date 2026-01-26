@@ -1040,7 +1040,7 @@ class JobOrdersUI extends UserInterface
             $priorityRaw = isset($priorities[$i]) ? trim($priorities[$i]) : '';
             $noteText = isset($notes[$i]) ? trim($notes[$i]) : '';
 
-            $hasData = ($openingsRaw !== '' || $startDate !== '' || $endDate !== '' || $noteText !== '' || $priorityRaw !== '');
+            $hasData = ($openingsRaw !== '' || $startDate !== '' || $endDate !== '' || $noteText !== '');
             if (!$hasData)
             {
                 continue;
