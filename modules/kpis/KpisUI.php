@@ -363,11 +363,14 @@ class KpisUI extends UserInterface
             }
 
             $companyData[$companyID]['totalOpenPositions'] += $openPositions;
-            $companyData[$companyID]['totalOpenPositionsLastWeek'] += $openPositionsPrev;
             $companyData[$companyID]['futureOpenings'] += $futureOpenings;
-            $companyData[$companyID]['futureOpeningsLastWeek'] += $futureOpeningsPrev;
             $companyData[$companyID]['expectedFilled'] += ($openPositions * ($conversion / 100));
-            $companyData[$companyID]['expectedFilledLastWeek'] += ($openPositionsPrev * ($conversion / 100));
+            if ($jobCreated !== null && $jobCreated <= $lastWeekEndPrev)
+            {
+                $companyData[$companyID]['totalOpenPositionsLastWeek'] += $openPositionsPrev;
+                $companyData[$companyID]['futureOpeningsLastWeek'] += $futureOpeningsPrev;
+                $companyData[$companyID]['expectedFilledLastWeek'] += ($openPositionsPrev * ($conversion / 100));
+            }
         }
 
         $rows = array();
