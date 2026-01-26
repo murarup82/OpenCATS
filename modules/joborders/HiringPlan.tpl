@@ -17,7 +17,7 @@
 
             <p class="noteUnsizedSpan">Job Order: <?php echo(htmlspecialchars($this->jobOrderTitle)); ?></p>
 
-            <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=editHiringPlan" method="post">
+            <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=editHiringPlan" method="post" onsubmit="return normalizeHiringPlanDates();">
                 <input type="hidden" name="jobOrderID" value="<?php echo((int) $this->jobOrderID); ?>" />
                 <input type="hidden" name="postback" value="postback" />
                 <table class="editTable" width="100%">
@@ -39,7 +39,7 @@
                                 <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['startDate'])); ?>', -1);
+                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YYYY', '<?php echo(addslashes($planRow['startDate'])); ?>', -1);
                                     document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
                                 </script>
                             </td>
@@ -47,7 +47,7 @@
                                 <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['endDate'])); ?>', -1);
+                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YYYY', '<?php echo(addslashes($planRow['endDate'])); ?>', -1);
                                     document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
                                 </script>
                             </td>
@@ -78,7 +78,7 @@
                                 <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
+                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YYYY', '', -1);
                                     document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
                                 </script>
                             </td>
@@ -86,7 +86,7 @@
                                 <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
+                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YYYY', '', -1);
                                     document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
                                 </script>
                             </td>
@@ -164,9 +164,9 @@
                     tableBody.appendChild(row);
 
                     document.getElementById('startDatePicker' + rowIndex).innerHTML =
-                        DateInputForDOM('startDateInput' + rowIndex, false, 'MM-DD-YY', '', -1);
+                        DateInputForDOM('startDateInput' + rowIndex, false, 'MM-DD-YYYY', '', -1);
                     document.getElementById('endDatePicker' + rowIndex).innerHTML =
-                        DateInputForDOM('endDateInput' + rowIndex, false, 'MM-DD-YY', '', -1);
+                        DateInputForDOM('endDateInput' + rowIndex, false, 'MM-DD-YYYY', '', -1);
                     document.getElementById('startDateInput' + rowIndex).name = 'startDate[]';
                     document.getElementById('endDateInput' + rowIndex).name = 'endDate[]';
 
@@ -192,6 +192,62 @@
                     }
 
                     return false;
+                }
+
+                function normalizeHiringPlanDates()
+                {
+                    var rowCountInput = document.getElementById('hiringPlanRowCount');
+                    var rowCount = 0;
+                    if (rowCountInput)
+                    {
+                        rowCount = parseInt(rowCountInput.value, 10);
+                        if (isNaN(rowCount))
+                        {
+                            rowCount = 0;
+                        }
+                    }
+
+                    for (var i = 0; i < rowCount; i++)
+                    {
+                        updateHiddenDate('startDateInput' + i);
+                        updateHiddenDate('endDateInput' + i);
+                    }
+
+                    return true;
+                }
+
+                function updateHiddenDate(baseID)
+                {
+                    var hiddenField = document.getElementById(baseID);
+                    if (!hiddenField)
+                    {
+                        return;
+                    }
+
+                    var monthField = document.getElementById(baseID + '_Month_ID');
+                    var dayField = document.getElementById(baseID + '_Day_ID');
+                    var yearField = document.getElementById(baseID + '_Year_ID');
+
+                    if (!monthField || !dayField || !yearField || monthField.value === '' || yearField.value === '')
+                    {
+                        hiddenField.value = '';
+                        return;
+                    }
+
+                    var monthValue = parseInt(monthField.value, 10);
+                    var dayValue = parseInt(dayField.value, 10);
+                    var yearValue = yearField.value;
+
+                    if (isNaN(monthValue) || isNaN(dayValue))
+                    {
+                        hiddenField.value = '';
+                        return;
+                    }
+
+                    monthValue += 1;
+                    var monthText = (monthValue < 10) ? '0' + monthValue : '' + monthValue;
+                    var dayText = (dayValue < 10) ? '0' + dayValue : '' + dayValue;
+                    hiddenField.value = monthText + '-' + dayText + '-' + yearValue;
                 }
 
             </script>
