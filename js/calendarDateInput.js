@@ -401,7 +401,7 @@ function displayMonthObject(ParentObject, DateYear, DateMonth, DateDay) {
    this.getDisplay = new Function('return document.getElementById(this.displayID)');
    this.dayHover = DayCellHover;
    this.goCurrent = new Function(ParentObject.objName + '.getCalendar().style.zIndex=++ZCounter;' + ParentObject.objName + '.setDisplayed(Today.getFullYear(),Today.getMonth());');
-   if (ParentObject.formNumber >= 0) this.getDisplay().innerHTML = this.fullName;
+   if (ParentObject.formNumber >= 0 || ParentObject.formNumber == -99) this.getDisplay().innerHTML = this.fullName;
 }
 
 // Object for the previous/next buttons
@@ -411,7 +411,7 @@ function neighborMonthObject(ParentObject, IDText, DateMS) {
    this.hover = new Function('C','O','NeighborHover(C,O,this)');
    this.getButton = new Function('return document.getElementById(this.buttonID)');
    this.go = new Function(ParentObject.objName + '.getCalendar().style.zIndex=++ZCounter;' + ParentObject.objName + '.setDisplayed(this.yearValue,this.monthIndex);');
-   if (ParentObject.formNumber >= 0) this.getButton().title = this.monthName;
+   if (ParentObject.formNumber >= 0 || ParentObject.formNumber == -99) this.getButton().title = this.monthName;
 }
 
 // Sets the currently-displayed month object
@@ -421,7 +421,7 @@ function SetDisplayedMonth(DispYear, DispMonth) {
    this.previous = new neighborMonthObject(this, 'Previous', this.displayed.date.getTime() - 86400000);
    this.next = new neighborMonthObject(this, 'Next', this.displayed.date.getTime() + (86400000 * (this.displayed.dayCount + 1)));
    // Creates the HTML for the calendar
-   if (this.formNumber >= 0) this.getDayTable().innerHTML = this.buildCalendar();
+   if (this.formNumber >= 0 || this.formNumber == -99) this.getDayTable().innerHTML = this.buildCalendar();
 }
 
 // Sets the current selected date

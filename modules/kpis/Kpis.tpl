@@ -31,6 +31,9 @@
                 .kpiTable td { border: 1px solid #d0d0d0; padding: 6px 8px; text-align: center; }
                 .kpiTable td.kpiClient { text-align: left; }
                 .kpiTable tfoot td { background: #f2f6fb; font-weight: bold; }
+                .kpiCandidateTable th { background: #075872; border-color: #075872; }
+                .kpiCandidateTable td.kpiLabel { text-align: left; }
+                .kpiCandidateTable td.kpiSource { color: #075872; }
             </style>
 
             <?php if (empty($this->kpiRows)): ?>
@@ -81,6 +84,42 @@
                             <td><?php if ($this->totalsDiff['expectedInFullPlan'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['expectedInFullPlan']); ?></td>
                         </tr>
                     </tfoot>
+                </table>
+            <?php endif; ?>
+
+            <?php if (empty($this->candidateSourceRows) && empty($this->candidateMetricRows)): ?>
+                <p class="warning">No candidate KPI data found.</p>
+            <?php else: ?>
+                <table class="kpiTable kpiCandidateTable" style="margin-top: 12px;">
+                    <thead>
+                        <tr>
+                            <th colspan="4">New Candidates</th>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th>This week</th>
+                            <th>Last week</th>
+                            <th>Delta vs LW</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($this->candidateSourceRows as $row): ?>
+                            <tr>
+                                <td class="kpiLabel kpiSource"><?php echo(htmlspecialchars($row['label'])); ?></td>
+                                <td><?php echo((int) $row['thisWeek']); ?></td>
+                                <td><?php echo((int) $row['lastWeek']); ?></td>
+                                <td><?php if ($row['delta'] > 0) echo('+'); ?><?php echo((int) $row['delta']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php foreach ($this->candidateMetricRows as $row): ?>
+                            <tr>
+                                <td class="kpiLabel"><?php echo(htmlspecialchars($row['label'])); ?></td>
+                                <td><?php echo((int) $row['thisWeek']); ?></td>
+                                <td><?php echo((int) $row['lastWeek']); ?></td>
+                                <td><?php if ($row['delta'] > 0) echo('+'); ?><?php echo((int) $row['delta']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
                 </table>
             <?php endif; ?>
 

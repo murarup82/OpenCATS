@@ -431,6 +431,88 @@ class KpisUI extends UserInterface
             'expectedInFullPlan' => $totals['expectedInFullPlan'] - $totalsLastWeek['expectedInFullPlan']
         );
 
+        $candidateSourceThisWeek = $this->getCandidateSourceCounts(
+            $db,
+            $siteID,
+            $weekStart,
+            $weekEnd,
+            $officialReports,
+            $monitoredJobOrders
+        );
+        $candidateSourceLastWeek = $this->getCandidateSourceCounts(
+            $db,
+            $siteID,
+            $weekStartPrev,
+            $weekEndPrev,
+            $officialReports,
+            $monitoredJobOrders
+        );
+        $candidateSourceRows = $this->buildCandidateSourceRows(
+            $candidateSourceThisWeek,
+            $candidateSourceLastWeek
+        );
+
+        $totalCandidatesThisWeek = $this->getCandidateTotalCount(
+            $db,
+            $siteID,
+            $weekStart,
+            $weekEnd,
+            $officialReports,
+            $monitoredJobOrders
+        );
+        $totalCandidatesLastWeek = $this->getCandidateTotalCount(
+            $db,
+            $siteID,
+            $weekStartPrev,
+            $weekEndPrev,
+            $officialReports,
+            $monitoredJobOrders
+        );
+
+        $statusCountsThisWeek = $this->getCandidateStatusCounts(
+            $db,
+            $siteID,
+            $weekStart,
+            $weekEnd,
+            $officialReports,
+            $monitoredJobOrders
+        );
+        $statusCountsLastWeek = $this->getCandidateStatusCounts(
+            $db,
+            $siteID,
+            $weekStartPrev,
+            $weekEndPrev,
+            $officialReports,
+            $monitoredJobOrders
+        );
+
+        $candidateMetricRows = array();
+        $candidateMetricRows[] = $this->buildCandidateMetricRow(
+            'Total Candidates',
+            $totalCandidatesThisWeek,
+            $totalCandidatesLastWeek
+        );
+        $candidateMetricRows[] = $this->buildCandidateMetricRow(
+            'Qualified Candidates',
+            $this->getStatusCount($statusCountsThisWeek, PIPELINE_STATUS_ALLOCATED),
+            $this->getStatusCount($statusCountsLastWeek, PIPELINE_STATUS_ALLOCATED)
+        );
+        $candidateMetricRows[] = $this->buildCandidateMetricRow(
+            'Candidates Submitted to Customer',
+            $this->getStatusCount($statusCountsThisWeek, PIPELINE_STATUS_PROPOSED_TO_CUSTOMER),
+            $this->getStatusCount($statusCountsLastWeek, PIPELINE_STATUS_PROPOSED_TO_CUSTOMER)
+        );
+        $candidateMetricRows[] = $this->buildCandidateMetricRow(
+            'Candidates Submitted to Interview',
+            $this->getStatusCount($statusCountsThisWeek, PIPELINE_STATUS_CUSTOMER_INTERVIEW),
+            $this->getStatusCount($statusCountsLastWeek, PIPELINE_STATUS_CUSTOMER_INTERVIEW)
+        );
+        $candidateMetricRows[] = $this->buildCandidateMetricRow(
+            'Candidates Validated by Customer',
+            $this->getStatusCount($statusCountsThisWeek, PIPELINE_STATUS_CUSTOMER_APPROVED),
+            $this->getStatusCount($statusCountsLastWeek, PIPELINE_STATUS_CUSTOMER_APPROVED)
+        );
+
         $weekLabel = $this->formatDateLabel($weekStart) . ' - ' . $this->formatDateLabel($weekEnd);
 
         $this->_template->assign('active', $this);
@@ -442,6 +524,8 @@ class KpisUI extends UserInterface
         $this->_template->assign('expectedConversionFieldName', self::EXPECTED_CONVERSION_FIELD);
         $this->_template->assign('officialReports', $officialReports);
         $this->_template->assign('monitoredJobOrderFieldName', self::MONITORED_JOBORDER_FIELD);
+        $this->_template->assign('candidateSourceRows', $candidateSourceRows);
+        $this->_template->assign('candidateMetricRows', $candidateMetricRows);
         $this->_template->display('./modules/kpis/Kpis.tpl');
     }
 
@@ -604,6 +688,237 @@ class KpisUI extends UserInterface
     {
         $value = strtolower(trim((string) $value));
         return in_array($value, array('yes', '1', 'true', 'on'), true);
+    }
+
+    private function getCandidateSourceCounts($db, $siteID, DateTime $start, DateTime $end, $officialReports, $monitoredJobOrders)
+    {
+        if ($officialReports && empty($monitoredJobOrders))
+        {
+            return array();
+        }
+
+        $joinFilter = '';
+        if ($officialReports)
+        {
+            $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+            $joinFilter = sprintf(
+                "AND EXISTS (
+                    SELECT 1
+                    FROM candidate_joborder AS cjo
+                    WHERE cjo.candidate_id = candidate.candidate_id
+                    AND cjo.site_id = %s
+                    AND cjo.joborder_id IN (%s)
+                )",
+                $db->makeQueryInteger($siteID),
+                $monitoredIDs
+            );
+        }
+
+        $sql = sprintf(
+            "SELECT
+                candidate.source AS source,
+                COUNT(DISTINCT candidate.candidate_id) AS candidateCount
+            FROM
+                candidate
+            WHERE
+                candidate.site_id = %s
+            AND
+                candidate.date_created >= %s
+            AND
+                candidate.date_created <= %s
+            AND
+                candidate.source IS NOT NULL
+            AND
+                TRIM(candidate.source) != ''
+            AND
+                LOWER(candidate.source) != '(none)'
+            %s
+            GROUP BY
+                candidate.source",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryString($start->format('Y-m-d H:i:s')),
+            $db->makeQueryString($end->format('Y-m-d H:i:s')),
+            $joinFilter
+        );
+
+        $rows = $db->getAllAssoc($sql);
+        $counts = array();
+        foreach ($rows as $row)
+        {
+            $counts[$row['source']] = (int) $row['candidateCount'];
+        }
+
+        return $counts;
+    }
+
+    private function getCandidateTotalCount($db, $siteID, DateTime $start, DateTime $end, $officialReports, $monitoredJobOrders)
+    {
+        if ($officialReports && empty($monitoredJobOrders))
+        {
+            return 0;
+        }
+
+        $joinFilter = '';
+        if ($officialReports)
+        {
+            $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+            $joinFilter = sprintf(
+                "AND EXISTS (
+                    SELECT 1
+                    FROM candidate_joborder AS cjo
+                    WHERE cjo.candidate_id = candidate.candidate_id
+                    AND cjo.site_id = %s
+                    AND cjo.joborder_id IN (%s)
+                )",
+                $db->makeQueryInteger($siteID),
+                $monitoredIDs
+            );
+        }
+
+        $sql = sprintf(
+            "SELECT
+                COUNT(DISTINCT candidate.candidate_id) AS candidateCount
+            FROM
+                candidate
+            WHERE
+                candidate.site_id = %s
+            AND
+                candidate.date_created >= %s
+            AND
+                candidate.date_created <= %s
+            %s",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryString($start->format('Y-m-d H:i:s')),
+            $db->makeQueryString($end->format('Y-m-d H:i:s')),
+            $joinFilter
+        );
+
+        $row = $db->getAssoc($sql);
+        if (empty($row))
+        {
+            return 0;
+        }
+
+        return (int) $row['candidateCount'];
+    }
+
+    private function getCandidateStatusCounts($db, $siteID, DateTime $start, DateTime $end, $officialReports, $monitoredJobOrders)
+    {
+        if ($officialReports && empty($monitoredJobOrders))
+        {
+            return array();
+        }
+
+        $statusIDs = array(
+            PIPELINE_STATUS_ALLOCATED,
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+            PIPELINE_STATUS_CUSTOMER_APPROVED
+        );
+
+        $joinFilter = '';
+        if ($officialReports)
+        {
+            $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+            $joinFilter = sprintf(
+                "AND joborder_id IN (%s)",
+                $monitoredIDs
+            );
+        }
+
+        $sql = sprintf(
+            "SELECT
+                status_to AS statusTo,
+                COUNT(*) AS statusCount
+            FROM
+                candidate_joborder_status_history
+            WHERE
+                site_id = %s
+            AND
+                date >= %s
+            AND
+                date <= %s
+            AND
+                status_to IN (%s)
+            %s
+            GROUP BY
+                status_to",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryString($start->format('Y-m-d H:i:s')),
+            $db->makeQueryString($end->format('Y-m-d H:i:s')),
+            $this->formatIntegerList($statusIDs),
+            $joinFilter
+        );
+
+        $rows = $db->getAllAssoc($sql);
+        $counts = array();
+        foreach ($rows as $row)
+        {
+            $counts[(int) $row['statusTo']] = (int) $row['statusCount'];
+        }
+
+        return $counts;
+    }
+
+    private function formatIntegerList($values)
+    {
+        $clean = array();
+        foreach ($values as $value)
+        {
+            $clean[] = (int) $value;
+        }
+
+        return implode(',', $clean);
+    }
+
+    private function buildCandidateSourceRows($thisWeek, $lastWeek)
+    {
+        $sources = array_keys($thisWeek);
+        $sources = array_merge($sources, array_keys($lastWeek));
+        $sources = array_values(array_unique($sources));
+        natcasesort($sources);
+
+        $rows = array();
+        foreach ($sources as $source)
+        {
+            $countThisWeek = isset($thisWeek[$source]) ? (int) $thisWeek[$source] : 0;
+            $countLastWeek = isset($lastWeek[$source]) ? (int) $lastWeek[$source] : 0;
+            if ($countThisWeek <= 1 && $countLastWeek <= 1)
+            {
+                continue;
+            }
+
+            $rows[] = $this->buildCandidateMetricRow(
+                $source,
+                $countThisWeek,
+                $countLastWeek
+            );
+        }
+
+        return $rows;
+    }
+
+    private function buildCandidateMetricRow($label, $thisWeek, $lastWeek)
+    {
+        $thisWeek = (int) $thisWeek;
+        $lastWeek = (int) $lastWeek;
+
+        return array(
+            'label' => $label,
+            'thisWeek' => $thisWeek,
+            'lastWeek' => $lastWeek,
+            'delta' => $thisWeek - $lastWeek
+        );
+    }
+
+    private function getStatusCount($counts, $statusID)
+    {
+        if (isset($counts[$statusID]))
+        {
+            return (int) $counts[$statusID];
+        }
+
+        return 0;
     }
 }
 
