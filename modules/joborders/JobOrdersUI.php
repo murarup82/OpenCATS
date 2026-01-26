@@ -923,6 +923,17 @@ class JobOrdersUI extends UserInterface
             $data['startDateMDY'] = $data['startDate'];
         }
 
+        if ($_SESSION['CATS']->isDateDMY())
+        {
+            $data['createdDateMDY'] = DateUtility::convert(
+                '-', $data['createdDate'], DATE_FORMAT_DDMMYY, DATE_FORMAT_MMDDYY
+            );
+        }
+        else
+        {
+            $data['createdDateMDY'] = $data['createdDate'];
+        }
+
         /* Get extra fields. */
         $extraFieldRS = $jobOrders->extraFields->getValuesForEdit($jobOrderID);
 
@@ -1166,6 +1177,52 @@ class JobOrdersUI extends UserInterface
             );
         }
 
+        $createdDate = $this->getTrimmedInput('createdDate', $_POST);
+        $createdTime = $this->getTrimmedInput('createdTime', $_POST);
+        $dateCreated = null;
+
+        if ($createdDate !== '' || $createdTime !== '')
+        {
+            if ($createdDate === '' || $createdTime === '')
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Created date and time are required.');
+            }
+
+            if (!DateUtility::validate('-', $createdDate, DATE_FORMAT_MMDDYY))
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid created date.');
+            }
+
+            $createdDate = DateUtility::convert(
+                '-', $createdDate, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD
+            );
+
+            if (!preg_match('/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i', $createdTime, $matches))
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid created time.');
+            }
+
+            $hour = (int) $matches[1];
+            $minute = (int) $matches[2];
+            $meridiem = strtoupper($matches[3]);
+
+            if ($hour < 1 || $hour > 12 || $minute > 59)
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid created time.');
+            }
+
+            if ($hour == 12)
+            {
+                $hour = 0;
+            }
+            if ($meridiem == 'PM')
+            {
+                $hour += 12;
+            }
+
+            $dateCreated = sprintf('%s %02d:%02d:00', $createdDate, $hour, $minute);
+        }
+
         /* Bail out if we received an invalid status. */
         /* FIXME: Check actual status codes. */
         if (!isset($_POST['status']) || empty($_POST['status']))
@@ -1299,7 +1356,7 @@ class JobOrdersUI extends UserInterface
         if (!$jobOrders->update($jobOrderID, $title, $companyJobID, $companyID, $contactID,
             $description, $notes, $duration, $maxRate, $type, $isHot,
             $openings, $openingsAvailable, $salary, $city, $state, $startDate, $status, $recruiter,
-            $owner, $public, $email, $emailAddress, $department, $questionnaireID))
+            $owner, $public, $email, $emailAddress, $department, $questionnaireID, $dateCreated))
         {
             CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to update job order.');
         }

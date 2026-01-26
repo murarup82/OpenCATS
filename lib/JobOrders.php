@@ -158,12 +158,13 @@ class JobOrders
      * @param string status
      * @param integer recruiter user
      * @param integer owner user
+     * @param string date created (YYYY-MM-DD HH:MM:SS) or null to keep existing
      * @return boolean True if successful; false otherwise.
      */
     public function update($jobOrderID, $title, $companyJobID, $companyID,
         $contactID, $description, $notes, $duration, $maxRate, $type, $isHot,
         $openings, $openingsAvailable, $salary, $city, $state, $startDate, $status, $recruiter,
-        $owner, $public, $email, $emailAddress, $department, $questionnaire = false)
+        $owner, $public, $email, $emailAddress, $department, $questionnaire = false, $dateCreated = null)
     {
         /* Get the department ID of the selected department. */
         // FIXME: Move this up to the UserInterface level. I don't like this
@@ -174,6 +175,12 @@ class JobOrders
         );
 
         // FIXME: Is the OrNULL usage below correct? Can these fields be NULL?
+        $dateCreatedSQL = '';
+        if ($dateCreated !== null)
+        {
+            $dateCreatedSQL = 'date_created      = ' . $this->_db->makeQueryString($dateCreated) . ",\n                ";
+        }
+
         $sql = sprintf(
             "UPDATE
                 joborder
@@ -199,6 +206,7 @@ class JobOrders
                 recruiter          = %s,
                 owner              = %s,
                 public             = %s,
+                %s
                 date_modified      = NOW(),
                 questionnaire_id   = %s
             WHERE
@@ -226,6 +234,7 @@ class JobOrders
             $this->_db->makeQueryInteger($recruiter),
             $this->_db->makeQueryInteger($owner),
             ($public ? '1' : '0'),
+            $dateCreatedSQL,
             // Questionnaire ID or NULL if none
             $questionnaire !== false ? $this->_db->makeQueryInteger($questionnaire) : 'NULL',
             $this->_db->makeQueryInteger($jobOrderID),
@@ -526,7 +535,13 @@ class JobOrders
                 joborder.company_department_id AS departmentID,
                 DATE_FORMAT(
                     joborder.start_date, '%%m-%%d-%%y'
-                ) AS startDate
+                ) AS startDate,
+                DATE_FORMAT(
+                    joborder.date_created, '%%m-%%d-%%y'
+                ) AS createdDate,
+                DATE_FORMAT(
+                    joborder.date_created, '%%h:%%i %%p'
+                ) AS createdTime
             FROM
                 joborder
             LEFT JOIN company

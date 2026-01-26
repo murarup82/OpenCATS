@@ -44,6 +44,22 @@
 
                     <tr>
                         <td class="tdVertical">
+                            <label id="createdDateLabel" for="createdDate">Created Date:</label>
+                        </td>
+                        <td class="tdData">
+                            <script type="text/javascript">DateInput('createdDate', true, 'MM-DD-YY', '<?php echo($this->data['createdDateMDY']); ?>', -1);</script>
+                        </td>
+
+                        <td class="tdVertical">
+                            <label id="createdTimeLabel" for="createdTime">Created Time:</label>
+                        </td>
+                        <td class="tdData">
+                            <input type="text" class="inputbox" id="createdTime" name="createdTime" value="<?php $this->_($this->data['createdTime']); ?>" style="width: 150px;" title="HH:MM AM/PM" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="tdVertical">
                             <label id="companyIDLabel" for="companyID">Company:</label>
                         </td>
 
