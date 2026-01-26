@@ -17,26 +17,38 @@
 
             <p class="noteUnsizedSpan">Job Order: <?php echo(htmlspecialchars($this->jobOrderTitle)); ?></p>
 
-            <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=editHiringPlan" method="post">
+            <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=editHiringPlan" method="post" onsubmit="syncHiringPlanDates();">
                 <input type="hidden" name="jobOrderID" value="<?php echo((int) $this->jobOrderID); ?>" />
+                <input type="hidden" name="postback" value="postback" />
                 <table class="editTable" width="100%">
                     <tr>
-                        <td class="tdVertical">Start Date (MM-DD-YY)</td>
-                        <td class="tdVertical">End Date (MM-DD-YY)</td>
+                        <td class="tdVertical">Start Date</td>
+                        <td class="tdVertical">End Date</td>
                         <td class="tdVertical">Openings</td>
                         <td class="tdVertical">Priority</td>
                         <td class="tdVertical">Notes</td>
                         <td class="tdVertical">Remove</td>
                     </tr>
 
+                    <?php $rowIndex = 0; ?>
                     <?php foreach ($this->hiringPlanRS as $planRow): ?>
                         <tr>
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="<?php echo((int) $planRow['planID']); ?>" />
-                                <input type="text" class="inputbox" name="startDate[]" value="<?php echo(htmlspecialchars($planRow['startDate'])); ?>" style="width: 110px;" />
+                                <input type="hidden" name="startDate[]" id="startDateValue<?php echo($rowIndex); ?>" value="<?php echo(htmlspecialchars($planRow['startDate'])); ?>" />
+                                <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
+                                <script type="text/javascript">
+                                    document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
+                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['startDate'])); ?>', -1);
+                                </script>
                             </td>
                             <td class="tdData">
-                                <input type="text" class="inputbox" name="endDate[]" value="<?php echo(htmlspecialchars($planRow['endDate'])); ?>" style="width: 110px;" />
+                                <input type="hidden" name="endDate[]" id="endDateValue<?php echo($rowIndex); ?>" value="<?php echo(htmlspecialchars($planRow['endDate'])); ?>" />
+                                <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
+                                <script type="text/javascript">
+                                    document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
+                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['endDate'])); ?>', -1);
+                                </script>
                             </td>
                             <td class="tdData">
                                 <input type="text" class="inputbox" name="openings[]" value="<?php echo((int) $planRow['openings']); ?>" style="width: 60px;" />
@@ -55,16 +67,27 @@
                                 <input type="checkbox" name="delete[]" value="<?php echo((int) $planRow['planID']); ?>" />
                             </td>
                         </tr>
+                        <?php $rowIndex++; ?>
                     <?php endforeach; ?>
 
                     <?php for ($i = 0; $i < 3; $i++): ?>
                         <tr>
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="0" />
-                                <input type="text" class="inputbox" name="startDate[]" value="" style="width: 110px;" />
+                                <input type="hidden" name="startDate[]" id="startDateValue<?php echo($rowIndex); ?>" value="" />
+                                <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
+                                <script type="text/javascript">
+                                    document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
+                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
+                                </script>
                             </td>
                             <td class="tdData">
-                                <input type="text" class="inputbox" name="endDate[]" value="" style="width: 110px;" />
+                                <input type="hidden" name="endDate[]" id="endDateValue<?php echo($rowIndex); ?>" value="" />
+                                <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
+                                <script type="text/javascript">
+                                    document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
+                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
+                                </script>
                             </td>
                             <td class="tdData">
                                 <input type="text" class="inputbox" name="openings[]" value="" style="width: 60px;" />
@@ -81,8 +104,11 @@
                             </td>
                             <td class="tdData"></td>
                         </tr>
+                        <?php $rowIndex++; ?>
                     <?php endfor; ?>
                 </table>
+
+                <input type="hidden" id="hiringPlanRowCount" value="<?php echo((int) $rowIndex); ?>" />
 
                 <p class="noteUnsizedSpan">Openings are auto-synced to the job order total. If no plan rows are saved, total openings will be 0.</p>
 
@@ -90,6 +116,33 @@
                 &nbsp;
                 <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $this->jobOrderID); ?>">Cancel</a>
             </form>
+            <script type="text/javascript">
+                function syncHiringPlanDates()
+                {
+                    var count = parseInt(document.getElementById('hiringPlanRowCount').value, 10);
+                    if (isNaN(count))
+                    {
+                        return;
+                    }
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        var startInput = document.getElementById('startDateInput' + i);
+                        var startValue = document.getElementById('startDateValue' + i);
+                        if (startInput && startValue)
+                        {
+                            startValue.value = startInput.value;
+                        }
+
+                        var endInput = document.getElementById('endDateInput' + i);
+                        var endValue = document.getElementById('endDateValue' + i);
+                        if (endInput && endValue)
+                        {
+                            endValue.value = endInput.value;
+                        }
+                    }
+                }
+            </script>
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>

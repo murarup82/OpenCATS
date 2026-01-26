@@ -1053,6 +1053,10 @@ class JobOrdersUI extends UserInterface
 
             if ($startDate !== '')
             {
+                if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $startDate))
+                {
+                    $startDate = substr($startDate, 0, 6) . substr($startDate, 8, 2);
+                }
                 if (!DateUtility::validate('-', $startDate, DATE_FORMAT_MMDDYY))
                 {
                     CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid start date.');
@@ -1068,6 +1072,10 @@ class JobOrdersUI extends UserInterface
 
             if ($endDate !== '')
             {
+                if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $endDate))
+                {
+                    $endDate = substr($endDate, 0, 6) . substr($endDate, 8, 2);
+                }
                 if (!DateUtility::validate('-', $endDate, DATE_FORMAT_MMDDYY))
                 {
                     CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid end date.');
