@@ -503,6 +503,30 @@ class JobOrdersUI extends UserInterface
 
         $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
         $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
+        if ($_SESSION['CATS']->isDateDMY())
+        {
+            foreach ($hiringPlanRS as $index => $planRow)
+            {
+                if ($planRow['startDate'] !== '')
+                {
+                    $hiringPlanRS[$index]['startDate'] = DateUtility::convert(
+                        '-',
+                        $planRow['startDate'],
+                        DATE_FORMAT_MMDDYY,
+                        DATE_FORMAT_DDMMYY
+                    );
+                }
+                if ($planRow['endDate'] !== '')
+                {
+                    $hiringPlanRS[$index]['endDate'] = DateUtility::convert(
+                        '-',
+                        $planRow['endDate'],
+                        DATE_FORMAT_MMDDYY,
+                        DATE_FORMAT_DDMMYY
+                    );
+                }
+            }
+        }
         $hiringPlanTotal = 0;
         foreach ($hiringPlanRS as $planRow)
         {
@@ -1014,11 +1038,36 @@ class JobOrdersUI extends UserInterface
 
         $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
         $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
+        if ($_SESSION['CATS']->isDateDMY())
+        {
+            foreach ($hiringPlanRS as $index => $planRow)
+            {
+                if ($planRow['startDate'] !== '')
+                {
+                    $hiringPlanRS[$index]['startDate'] = DateUtility::convert(
+                        '-',
+                        $planRow['startDate'],
+                        DATE_FORMAT_MMDDYY,
+                        DATE_FORMAT_DDMMYY
+                    );
+                }
+                if ($planRow['endDate'] !== '')
+                {
+                    $hiringPlanRS[$index]['endDate'] = DateUtility::convert(
+                        '-',
+                        $planRow['endDate'],
+                        DATE_FORMAT_MMDDYY,
+                        DATE_FORMAT_DDMMYY
+                    );
+                }
+            }
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('jobOrderID', $jobOrderID);
         $this->_template->assign('jobOrderTitle', $data['title']);
         $this->_template->assign('hiringPlanRS', $hiringPlanRS);
+        $this->_template->assign('isDateDMY', $_SESSION['CATS']->isDateDMY());
 
         $this->_template->display('./modules/joborders/HiringPlan.tpl');
     }
@@ -1031,6 +1080,7 @@ class JobOrdersUI extends UserInterface
         }
 
         $jobOrderID = $_POST['jobOrderID'];
+        $dateInputFormat = $_SESSION['CATS']->isDateDMY() ? DATE_FORMAT_DDMMYY : DATE_FORMAT_MMDDYY;
 
         $planIDs = isset($_POST['planID']) ? $_POST['planID'] : array();
         $startDates = isset($_POST['startDate']) ? $_POST['startDate'] : array();
@@ -1068,12 +1118,12 @@ class JobOrdersUI extends UserInterface
                 {
                     $startDate = substr($startDate, 0, 6) . substr($startDate, 8, 2);
                 }
-                if (!DateUtility::validate('-', $startDate, DATE_FORMAT_MMDDYY))
+                if (!DateUtility::validate('-', $startDate, $dateInputFormat))
                 {
                     CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid start date.');
                 }
                 $startDate = DateUtility::convert(
-                    '-', $startDate, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD
+                    '-', $startDate, $dateInputFormat, DATE_FORMAT_YYYYMMDD
                 );
             }
             else
@@ -1087,12 +1137,12 @@ class JobOrdersUI extends UserInterface
                 {
                     $endDate = substr($endDate, 0, 6) . substr($endDate, 8, 2);
                 }
-                if (!DateUtility::validate('-', $endDate, DATE_FORMAT_MMDDYY))
+                if (!DateUtility::validate('-', $endDate, $dateInputFormat))
                 {
                     CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid end date.');
                 }
                 $endDate = DateUtility::convert(
-                    '-', $endDate, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD
+                    '-', $endDate, $dateInputFormat, DATE_FORMAT_YYYYMMDD
                 );
             }
             else

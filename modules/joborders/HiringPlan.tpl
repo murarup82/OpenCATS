@@ -39,7 +39,13 @@
                                 <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YYYY', '<?php echo(addslashes($planRow['startDate'])); ?>', -1);
+                                        DateInputForDOM(
+                                            'startDateInput<?php echo($rowIndex); ?>',
+                                            false,
+                                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
+                                            '<?php echo(addslashes($planRow['startDate'])); ?>',
+                                            -1
+                                        );
                                     document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
                                 </script>
                             </td>
@@ -47,7 +53,13 @@
                                 <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YYYY', '<?php echo(addslashes($planRow['endDate'])); ?>', -1);
+                                        DateInputForDOM(
+                                            'endDateInput<?php echo($rowIndex); ?>',
+                                            false,
+                                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
+                                            '<?php echo(addslashes($planRow['endDate'])); ?>',
+                                            -1
+                                        );
                                     document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
                                 </script>
                             </td>
@@ -78,7 +90,13 @@
                                 <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YYYY', '', -1);
+                                        DateInputForDOM(
+                                            'startDateInput<?php echo($rowIndex); ?>',
+                                            false,
+                                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
+                                            '',
+                                            -1
+                                        );
                                     document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
                                 </script>
                             </td>
@@ -86,7 +104,13 @@
                                 <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YYYY', '', -1);
+                                        DateInputForDOM(
+                                            'endDateInput<?php echo($rowIndex); ?>',
+                                            false,
+                                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
+                                            '',
+                                            -1
+                                        );
                                     document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
                                 </script>
                             </td>
@@ -122,6 +146,8 @@
                 <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $this->jobOrderID); ?>">Cancel</a>
             </form>
             <script type="text/javascript">
+                var hiringPlanDateOrder = '<?php echo($this->isDateDMY ? 'DMY' : 'MDY'); ?>';
+
                 function addHiringPlanRow()
                 {
                     var tableBody = document.getElementById('hiringPlanTableBody');
@@ -164,9 +190,21 @@
                     tableBody.appendChild(row);
 
                     document.getElementById('startDatePicker' + rowIndex).innerHTML =
-                        DateInputForDOM('startDateInput' + rowIndex, false, 'MM-DD-YYYY', '', -1);
+                        DateInputForDOM(
+                            'startDateInput' + rowIndex,
+                            false,
+                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
+                            '',
+                            -1
+                        );
                     document.getElementById('endDatePicker' + rowIndex).innerHTML =
-                        DateInputForDOM('endDateInput' + rowIndex, false, 'MM-DD-YYYY', '', -1);
+                        DateInputForDOM(
+                            'endDateInput' + rowIndex,
+                            false,
+                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
+                            '',
+                            -1
+                        );
                     document.getElementById('startDateInput' + rowIndex).name = 'startDate[]';
                     document.getElementById('endDateInput' + rowIndex).name = 'endDate[]';
 
@@ -247,7 +285,14 @@
                     monthValue += 1;
                     var monthText = (monthValue < 10) ? '0' + monthValue : '' + monthValue;
                     var dayText = (dayValue < 10) ? '0' + dayValue : '' + dayValue;
-                    hiddenField.value = monthText + '-' + dayText + '-' + yearValue;
+                    if (hiringPlanDateOrder === 'DMY')
+                    {
+                        hiddenField.value = dayText + '-' + monthText + '-' + yearValue;
+                    }
+                    else
+                    {
+                        hiddenField.value = monthText + '-' + dayText + '-' + yearValue;
+                    }
                 }
 
             </script>
