@@ -72,6 +72,14 @@
                             <td><?php echo((int) $this->totals['expectedFilled']); ?></td>
                             <td><?php echo((int) $this->totals['expectedInFullPlan']); ?></td>
                         </tr>
+                        <tr>
+                            <td class="kpiClient">vs Last week</td>
+                            <td><?php if ($this->totalsDiff['newPositions'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['newPositions']); ?></td>
+                            <td><?php if ($this->totalsDiff['totalOpenPositions'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['totalOpenPositions']); ?></td>
+                            <td></td>
+                            <td><?php if ($this->totalsDiff['expectedFilled'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['expectedFilled']); ?></td>
+                            <td><?php if ($this->totalsDiff['expectedInFullPlan'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['expectedInFullPlan']); ?></td>
+                        </tr>
                     </tfoot>
                 </table>
             <?php endif; ?>

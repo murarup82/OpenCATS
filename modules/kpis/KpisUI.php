@@ -77,9 +77,13 @@ class KpisUI extends UserInterface
                 'expectedConversionMin' => null,
                 'expectedConversionMax' => null,
                 'newPositions' => 0,
+                'newPositionsLastWeek' => 0,
                 'totalOpenPositions' => 0,
+                'totalOpenPositionsLastWeek' => 0,
                 'futureOpenings' => 0,
+                'futureOpeningsLastWeek' => 0,
                 'expectedFilled' => 0.0,
+                'expectedFilledLastWeek' => 0.0,
                 'hasData' => false
             );
         }
@@ -212,6 +216,18 @@ class KpisUI extends UserInterface
         $windowEnd->modify('last day of this month');
         $windowEnd->setTime(23, 59, 59);
 
+        $weekStartPrev = clone $weekStart;
+        $weekStartPrev->modify('-7 days');
+        $weekEndPrev = clone $weekEnd;
+        $weekEndPrev->modify('-7 days');
+
+        $lastWeekEndPrev = clone $lastWeekEnd;
+        $lastWeekEndPrev->modify('-7 days');
+        $windowEndPrev = clone $lastWeekEndPrev;
+        $windowEndPrev->modify('+3 months');
+        $windowEndPrev->modify('last day of this month');
+        $windowEndPrev->setTime(23, 59, 59);
+
         foreach ($jobOrders as $jobOrder)
         {
             if ($officialReports &&
@@ -229,9 +245,13 @@ class KpisUI extends UserInterface
                     'expectedConversionMin' => null,
                     'expectedConversionMax' => null,
                     'newPositions' => 0,
+                    'newPositionsLastWeek' => 0,
                     'totalOpenPositions' => 0,
+                    'totalOpenPositionsLastWeek' => 0,
                     'futureOpenings' => 0,
+                    'futureOpeningsLastWeek' => 0,
                     'expectedFilled' => 0.0,
+                    'expectedFilledLastWeek' => 0.0,
                     'hasData' => false
                 );
             }
@@ -270,9 +290,12 @@ class KpisUI extends UserInterface
             }
 
             $activeOpenings = 0;
+            $activeOpeningsPrev = 0;
             $expiredOpenings = 0;
             $futureOpenings = 0;
+            $futureOpeningsPrev = 0;
             $windowOpenings = 0;
+            $windowOpeningsPrev = 0;
 
             foreach ($plans as $plan)
             {
@@ -285,9 +308,18 @@ class KpisUI extends UserInterface
                     $futureOpenings += $openings;
                 }
 
+                if ($this->isPlanFuture($startDate, $lastWeekEndPrev))
+                {
+                    $futureOpeningsPrev += $openings;
+                }
+
                 if ($this->isPlanActive($startDate, $endDate, $today))
                 {
                     $activeOpenings += $openings;
+                }
+                if ($this->isPlanActive($startDate, $endDate, $lastWeekEndPrev))
+                {
+                    $activeOpeningsPrev += $openings;
                 }
                 else if ($this->isPlanExpired($endDate, $today))
                 {
@@ -298,9 +330,14 @@ class KpisUI extends UserInterface
                 {
                     $windowOpenings += $openings;
                 }
+                if ($this->isPlanInWindow($startDate, $endDate, $lastWeekEndPrev, $windowEndPrev))
+                {
+                    $windowOpeningsPrev += $openings;
+                }
             }
 
             $openPositions = $windowOpenings;
+            $openPositionsPrev = $windowOpeningsPrev;
             $openingsAvailable = $jobOrder['openingsAvailable'];
             if ($openingsAvailable < 0)
             {
@@ -310,20 +347,37 @@ class KpisUI extends UserInterface
             {
                 $openPositions = $openingsAvailable;
             }
+            if ($openPositionsPrev > $openingsAvailable)
+            {
+                $openPositionsPrev = $openingsAvailable;
+            }
 
             $jobCreated = $this->parseDateTime($jobOrder['dateCreated']);
             if ($jobCreated !== null && $jobCreated >= $weekStart && $jobCreated <= $weekEnd)
             {
                 $companyData[$companyID]['newPositions'] += $activeOpenings;
             }
+            if ($jobCreated !== null && $jobCreated >= $weekStartPrev && $jobCreated <= $weekEndPrev)
+            {
+                $companyData[$companyID]['newPositionsLastWeek'] += $activeOpeningsPrev;
+            }
 
             $companyData[$companyID]['totalOpenPositions'] += $openPositions;
+            $companyData[$companyID]['totalOpenPositionsLastWeek'] += $openPositionsPrev;
             $companyData[$companyID]['futureOpenings'] += $futureOpenings;
+            $companyData[$companyID]['futureOpeningsLastWeek'] += $futureOpeningsPrev;
             $companyData[$companyID]['expectedFilled'] += ($openPositions * ($conversion / 100));
+            $companyData[$companyID]['expectedFilledLastWeek'] += ($openPositionsPrev * ($conversion / 100));
         }
 
         $rows = array();
         $totals = array(
+            'newPositions' => 0,
+            'totalOpenPositions' => 0,
+            'expectedFilled' => 0,
+            'expectedInFullPlan' => 0
+        );
+        $totalsLastWeek = array(
             'newPositions' => 0,
             'totalOpenPositions' => 0,
             'expectedFilled' => 0,
@@ -339,6 +393,8 @@ class KpisUI extends UserInterface
 
             $expectedFilled = (int) round($company['expectedFilled']);
             $expectedInFullPlan = (int) $company['futureOpenings'];
+            $expectedFilledLastWeek = (int) round($company['expectedFilledLastWeek']);
+            $expectedInFullPlanLastWeek = (int) $company['futureOpeningsLastWeek'];
             $conversionRange = $this->formatPercentRange(
                 $company['expectedConversionMin'],
                 $company['expectedConversionMax']
@@ -358,13 +414,27 @@ class KpisUI extends UserInterface
             $totals['totalOpenPositions'] += $company['totalOpenPositions'];
             $totals['expectedFilled'] += $expectedFilled;
             $totals['expectedInFullPlan'] += $expectedInFullPlan;
+
+            $totalsLastWeek['newPositions'] += $company['newPositionsLastWeek'];
+            $totalsLastWeek['totalOpenPositions'] += $company['totalOpenPositionsLastWeek'];
+            $totalsLastWeek['expectedFilled'] += $expectedFilledLastWeek;
+            $totalsLastWeek['expectedInFullPlan'] += $expectedInFullPlanLastWeek;
         }
+
+        $totalsDiff = array(
+            'newPositions' => $totals['newPositions'] - $totalsLastWeek['newPositions'],
+            'totalOpenPositions' => $totals['totalOpenPositions'] - $totalsLastWeek['totalOpenPositions'],
+            'expectedFilled' => $totals['expectedFilled'] - $totalsLastWeek['expectedFilled'],
+            'expectedInFullPlan' => $totals['expectedInFullPlan'] - $totalsLastWeek['expectedInFullPlan']
+        );
 
         $weekLabel = $this->formatDateLabel($weekStart) . ' - ' . $this->formatDateLabel($weekEnd);
 
         $this->_template->assign('active', $this);
         $this->_template->assign('kpiRows', $rows);
         $this->_template->assign('totals', $totals);
+        $this->_template->assign('totalsLastWeek', $totalsLastWeek);
+        $this->_template->assign('totalsDiff', $totalsDiff);
         $this->_template->assign('weekLabel', $weekLabel);
         $this->_template->assign('expectedConversionFieldName', self::EXPECTED_CONVERSION_FIELD);
         $this->_template->assign('officialReports', $officialReports);
