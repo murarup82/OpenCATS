@@ -10,7 +10,7 @@ include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 
 class KpisUI extends UserInterface
 {
-    const EXPECTED_CONVERSION_FIELD = 'Expected Conversion';
+    const EXPECTED_CONVERSION_FIELD = 'Conversion Rate';
 
     public function __construct()
     {
