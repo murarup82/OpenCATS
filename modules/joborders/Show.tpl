@@ -317,6 +317,50 @@ use OpenCATS\UI\QuickActionMenu;
                     </td>
                 </tr>
             </table>
+            <p class="note">
+                Hiring Plan
+                <?php if (!$this->isPopup && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT): ?>
+                    <span style="float:right;">
+                        <a href="<?php echo($this->hiringPlanLink); ?>">Edit Hiring Plan</a>
+                    </span>
+                <?php endif; ?>
+            </p>
+
+            <table class="detailsOutside">
+                <tr>
+                    <td>
+                        <table class="detailsInside">
+                            <?php if (empty($this->hiringPlanRS)): ?>
+                                <tr>
+                                    <td class="data">No hiring plan defined.</td>
+                                </tr>
+                            <?php else: ?>
+                                <tr>
+                                    <td class="vertical">Start Date</td>
+                                    <td class="vertical">End Date</td>
+                                    <td class="vertical">Openings</td>
+                                    <td class="vertical">Priority</td>
+                                    <td class="vertical">Notes</td>
+                                </tr>
+                                <?php foreach ($this->hiringPlanRS as $planRow): ?>
+                                    <tr>
+                                        <td class="data"><?php echo($planRow['startDate'] === '' ? '-' : htmlspecialchars($planRow['startDate'])); ?></td>
+                                        <td class="data"><?php echo($planRow['endDate'] === '' ? '-' : htmlspecialchars($planRow['endDate'])); ?></td>
+                                        <td class="data"><?php echo((int) $planRow['openings']); ?></td>
+                                        <td class="data"><?php echo((int) $planRow['priority']); ?></td>
+                                        <td class="data"><?php echo($planRow['notes'] === '' ? '-' : htmlspecialchars($planRow['notes'])); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <tr>
+                                    <td class="data" colspan="5">
+                                        Total planned openings: <?php echo((int) $this->hiringPlanTotal); ?>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </table>
+                    </td>
+                </tr>
+            </table>
 <?php if (!$this->isPopup): ?>
             <div id="actionbar">
                 <span style="float:left;">

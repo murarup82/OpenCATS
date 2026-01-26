@@ -157,7 +157,10 @@
                             <label id="openingsLabel" for="openings">Total Openings:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" tabindex="16" class="inputbox" id="openings" name="openings" value="<?php $this->_($this->data['openings']); ?>" style="width: 150px;" />&nbsp;*
+                            <input type="text" tabindex="16" class="inputbox" id="openings" name="openings" value="<?php $this->_($this->data['openings']); ?>" style="width: 150px;"<?php if ($this->hasHiringPlan): ?> readonly="readonly"<?php endif; ?> />&nbsp;*
+                            <?php if ($this->hasHiringPlan): ?>
+                                <span style="font-size: 11px; margin-left: 6px;">Auto-synced. <a href="<?php echo($this->hiringPlanLink); ?>">Edit Hiring Plan</a></span>
+                            <?php endif; ?>
                         </td>
                     </tr>
 

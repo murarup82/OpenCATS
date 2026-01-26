@@ -1388,6 +1388,59 @@ class CATSSchema
                     $db->query("ALTER TABLE candidate ADD INDEX IDX_site_id_email (site_id, email1(8))");
                 }
             ',
+            '366' => '
+                CREATE TABLE IF NOT EXISTS `joborder_hiring_plan` (
+                  `joborder_hiring_plan_id` int(11) NOT NULL auto_increment,
+                  `joborder_id` int(11) NOT NULL,
+                  `site_id` int(11) NOT NULL default 0,
+                  `start_date` date default NULL,
+                  `end_date` date default NULL,
+                  `openings` int(11) NOT NULL default 0,
+                  `priority` int(11) NOT NULL default 1,
+                  `notes` text default NULL,
+                  `date_created` datetime default NULL,
+                  `date_modified` datetime default NULL,
+                  `entered_by` int(11) default NULL,
+                  `modified_by` int(11) default NULL,
+                  PRIMARY KEY  (`joborder_hiring_plan_id`),
+                  KEY `IDX_joborder_site` (`joborder_id`, `site_id`)
+                ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+                INSERT INTO joborder_hiring_plan (
+                    joborder_id,
+                    site_id,
+                    start_date,
+                    end_date,
+                    openings,
+                    priority,
+                    notes,
+                    date_created,
+                    date_modified,
+                    entered_by,
+                    modified_by
+                )
+                SELECT
+                    joborder.joborder_id,
+                    joborder.site_id,
+                    NULL,
+                    NULL,
+                    joborder.openings,
+                    1,
+                    '',
+                    NOW(),
+                    NOW(),
+                    joborder.entered_by,
+                    joborder.entered_by
+                FROM
+                    joborder
+                WHERE
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM joborder_hiring_plan
+                        WHERE joborder_hiring_plan.joborder_id = joborder.joborder_id
+                        AND joborder_hiring_plan.site_id = joborder.site_id
+                    );
+            ',
 
         );
     }

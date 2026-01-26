@@ -31,6 +31,7 @@ include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 include_once(LEGACY_ROOT . '/lib/ResultSetUtility.php');
 include_once(LEGACY_ROOT . '/lib/DateUtility.php'); /* Depends on StringUtility. */
 include_once(LEGACY_ROOT . '/lib/JobOrders.php');
+include_once(LEGACY_ROOT . '/lib/JobOrderHiringPlans.php');
 include_once(LEGACY_ROOT . '/lib/Pipelines.php');
 include_once(LEGACY_ROOT . '/lib/Attachments.php');
 include_once(LEGACY_ROOT . '/lib/Companies.php');
@@ -142,6 +143,22 @@ class JobOrdersUI extends UserInterface
                 else
                 {
                     $this->edit();
+                }
+
+                break;
+
+            case 'editHiringPlan':
+                if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if ($this->isPostBack())
+                {
+                    $this->onEditHiringPlan();
+                }
+                else
+                {
+                    $this->editHiringPlan();
                 }
 
                 break;
@@ -484,6 +501,14 @@ class JobOrdersUI extends UserInterface
         $graphs = new graphs();
         $pipelineGraph = $graphs->miniJobOrderPipeline(450, 250, array($jobOrderID));
 
+        $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
+        $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
+        $hiringPlanTotal = 0;
+        foreach ($hiringPlanRS as $planRow)
+        {
+            $hiringPlanTotal += (int) $planRow['openings'];
+        }
+
         /* Get questionnaire information (if exists) */
         $questionnaireID = false;
         $questionnaireData = false;
@@ -521,6 +546,9 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('careerPortalURL', $careerPortalURL);
         $this->_template->assign('data', $data);
         $this->_template->assign('extraFieldRS', $extraFieldRS);
+        $this->_template->assign('hiringPlanRS', $hiringPlanRS);
+        $this->_template->assign('hiringPlanTotal', $hiringPlanTotal);
+        $this->_template->assign('hiringPlanLink', CATSUtility::getIndexName() . '?m=joborders&a=editHiringPlan&jobOrderID=' . $jobOrderID);
         $this->_template->assign('attachmentsRS', $attachmentsRS);
         $this->_template->assign('pipelineEntriesPerPage', $pipelineEntriesPerPage);
         $this->_template->assign('pipelineGraph', $pipelineGraph);
@@ -801,6 +829,9 @@ class JobOrdersUI extends UserInterface
         /* Update extra fields. */
         $jobOrders->extraFields->setValuesOnEdit($jobOrderID);
 
+        $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
+        $jobOrderHiringPlans->createDefaultPlan($jobOrderID, (int) $openings, $this->_userID);
+
         if (!eval(Hooks::get('JO_ON_ADD_POST'))) return;
 
         CATSUtility::transferRelativeURI(
@@ -945,10 +976,129 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('jobTypes', (new JobOrderTypes())->getAll());
         $this->_template->assign('jobOrderStatuses', (JobOrderStatuses::getAll()));
+        $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
+        $this->_template->assign('hasHiringPlan', ($jobOrderHiringPlans->getCount($jobOrderID) > 0));
+        $this->_template->assign('hiringPlanLink', CATSUtility::getIndexName() . '?m=joborders&a=editHiringPlan&jobOrderID=' . $jobOrderID);
 
         if (!eval(Hooks::get('JO_EDIT'))) return;
 
         $this->_template->display('./modules/joborders/Edit.tpl');
+    }
+
+    private function editHiringPlan()
+    {
+        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
+        }
+
+        $jobOrderID = $_GET['jobOrderID'];
+        $jobOrders = new JobOrders($this->_siteID);
+        $data = $jobOrders->get($jobOrderID);
+
+        if (empty($data))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified job order ID could not be found.');
+        }
+
+        $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
+        $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('jobOrderID', $jobOrderID);
+        $this->_template->assign('jobOrderTitle', $data['title']);
+        $this->_template->assign('hiringPlanRS', $hiringPlanRS);
+
+        $this->_template->display('./modules/joborders/HiringPlan.tpl');
+    }
+
+    private function onEditHiringPlan()
+    {
+        if (!$this->isRequiredIDValid('jobOrderID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
+        }
+
+        $jobOrderID = $_POST['jobOrderID'];
+
+        $planIDs = isset($_POST['planID']) ? $_POST['planID'] : array();
+        $startDates = isset($_POST['startDate']) ? $_POST['startDate'] : array();
+        $endDates = isset($_POST['endDate']) ? $_POST['endDate'] : array();
+        $openings = isset($_POST['openings']) ? $_POST['openings'] : array();
+        $priorities = isset($_POST['priority']) ? $_POST['priority'] : array();
+        $notes = isset($_POST['notes']) ? $_POST['notes'] : array();
+        $deleteIDs = isset($_POST['delete']) ? $_POST['delete'] : array();
+
+        $plans = array();
+        $rowCount = count($planIDs);
+        for ($i = 0; $i < $rowCount; $i++)
+        {
+            $planID = (int) $planIDs[$i];
+            $startDate = isset($startDates[$i]) ? trim($startDates[$i]) : '';
+            $endDate = isset($endDates[$i]) ? trim($endDates[$i]) : '';
+            $openingsRaw = isset($openings[$i]) ? trim($openings[$i]) : '';
+            $priorityRaw = isset($priorities[$i]) ? trim($priorities[$i]) : '';
+            $noteText = isset($notes[$i]) ? trim($notes[$i]) : '';
+
+            $hasData = ($openingsRaw !== '' || $startDate !== '' || $endDate !== '' || $noteText !== '' || $priorityRaw !== '');
+            if (!$hasData)
+            {
+                continue;
+            }
+
+            if ($openingsRaw === '' || !ctype_digit($openingsRaw))
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid openings.');
+            }
+
+            if ($startDate !== '')
+            {
+                if (!DateUtility::validate('-', $startDate, DATE_FORMAT_MMDDYY))
+                {
+                    CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid start date.');
+                }
+                $startDate = DateUtility::convert(
+                    '-', $startDate, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD
+                );
+            }
+            else
+            {
+                $startDate = null;
+            }
+
+            if ($endDate !== '')
+            {
+                if (!DateUtility::validate('-', $endDate, DATE_FORMAT_MMDDYY))
+                {
+                    CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid end date.');
+                }
+                $endDate = DateUtility::convert(
+                    '-', $endDate, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD
+                );
+            }
+            else
+            {
+                $endDate = null;
+            }
+
+            $priority = (int) $priorityRaw;
+
+            $plans[] = array(
+                'planID' => $planID,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'openings' => (int) $openingsRaw,
+                'priority' => $priority,
+                'notes' => $noteText
+            );
+        }
+
+        $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
+        $jobOrderHiringPlans->savePlans($jobOrderID, $plans, $deleteIDs, $this->_userID);
+
+        CATSUtility::transferRelativeURI(
+            'm=joborders&a=show&jobOrderID=' . $jobOrderID
+        );
     }
 
     /*
@@ -1043,6 +1193,15 @@ class JobOrdersUI extends UserInterface
         $recruiter         = $_POST['recruiter'];
         $openings          = $_POST['openings'];
         $openingsAvailable = $_POST['openingsAvailable'];
+        $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
+        if ($jobOrderHiringPlans->getCount($jobOrderID) > 0)
+        {
+            $openings = $jobOrderHiringPlans->getTotalOpenings($jobOrderID);
+            if ((int) $openingsAvailable > (int) $openings)
+            {
+                $openingsAvailable = $openings;
+            }
+        }
 
         /* Change ownership email? */
         if ($this->isChecked('ownershipChange', $_POST) && $owner > 0)

@@ -301,6 +301,19 @@ class JobOrders
         );
         $this->_db->query($sql);
 
+        /* Delete hiring plan entries. */
+        $sql = sprintf(
+            "DELETE FROM
+                joborder_hiring_plan
+            WHERE
+                joborder_id = %s
+            AND
+                site_id = %s",
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_siteID
+        );
+        $this->_db->query($sql);
+
         /* Delete pipeline history from candidate_joborder_status_history. */
         $sql = sprintf(
             "DELETE FROM
