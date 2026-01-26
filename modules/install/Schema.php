@@ -1426,7 +1426,7 @@ class CATSSchema
                     NULL,
                     joborder.openings,
                     1,
-                    '',
+                    \'\',
                     NOW(),
                     NOW(),
                     joborder.entered_by,
