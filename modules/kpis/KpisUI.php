@@ -65,9 +65,8 @@ class KpisUI extends UserInterface
                 'expectedConversionMax' => null,
                 'newPositions' => 0,
                 'totalOpenPositions' => 0,
-                'fullPlanOpenings' => 0,
+                'futureOpenings' => 0,
                 'expectedFilled' => 0.0,
-                'expectedInFullPlan' => 0.0,
                 'hasData' => false
             );
         }
@@ -163,6 +162,13 @@ class KpisUI extends UserInterface
         $weekEnd->modify('+6 days');
         $weekEnd->setTime(23, 59, 59);
 
+        $lastWeekEnd = new DateTime('last sunday');
+        $lastWeekEnd->setTime(23, 59, 59);
+        $windowEnd = clone $lastWeekEnd;
+        $windowEnd->modify('+3 months');
+        $windowEnd->modify('last day of this month');
+        $windowEnd->setTime(23, 59, 59);
+
         foreach ($jobOrders as $jobOrder)
         {
             $companyID = $jobOrder['companyID'];
@@ -175,9 +181,8 @@ class KpisUI extends UserInterface
                     'expectedConversionMax' => null,
                     'newPositions' => 0,
                     'totalOpenPositions' => 0,
-                    'fullPlanOpenings' => 0,
+                    'futureOpenings' => 0,
                     'expectedFilled' => 0.0,
-                    'expectedInFullPlan' => 0.0,
                     'hasData' => false
                 );
             }
@@ -217,7 +222,8 @@ class KpisUI extends UserInterface
 
             $activeOpenings = 0;
             $expiredOpenings = 0;
-            $fullPlanOpenings = 0;
+            $futureOpenings = 0;
+            $windowOpenings = 0;
 
             foreach ($plans as $plan)
             {
@@ -225,7 +231,10 @@ class KpisUI extends UserInterface
                 $endDate = $this->parsePlanDate($plan['endDate']);
                 $openings = (int) $plan['openings'];
 
-                $fullPlanOpenings += $openings;
+                if ($this->isPlanFuture($startDate, $today))
+                {
+                    $futureOpenings += $openings;
+                }
 
                 if ($this->isPlanActive($startDate, $endDate, $today))
                 {
@@ -235,9 +244,14 @@ class KpisUI extends UserInterface
                 {
                     $expiredOpenings += $openings;
                 }
+
+                if ($this->isPlanInWindow($startDate, $endDate, $lastWeekEnd, $windowEnd))
+                {
+                    $windowOpenings += $openings;
+                }
             }
 
-            $openPositions = $activeOpenings + $expiredOpenings;
+            $openPositions = $windowOpenings;
             $openingsAvailable = $jobOrder['openingsAvailable'];
             if ($openingsAvailable < 0)
             {
@@ -255,7 +269,7 @@ class KpisUI extends UserInterface
             }
 
             $companyData[$companyID]['totalOpenPositions'] += $openPositions;
-            $companyData[$companyID]['fullPlanOpenings'] += $fullPlanOpenings;
+            $companyData[$companyID]['futureOpenings'] += $futureOpenings;
             $companyData[$companyID]['expectedFilled'] += ($openPositions * ($conversion / 100));
         }
 
@@ -275,7 +289,7 @@ class KpisUI extends UserInterface
             }
 
             $expectedFilled = (int) round($company['expectedFilled']);
-            $expectedInFullPlan = (int) $company['fullPlanOpenings'];
+            $expectedInFullPlan = (int) $company['futureOpenings'];
             $conversionRange = $this->formatPercentRange(
                 $company['expectedConversionMin'],
                 $company['expectedConversionMax']
@@ -425,6 +439,31 @@ class KpisUI extends UserInterface
         }
 
         return ($endDate < $today);
+    }
+
+    private function isPlanFuture($startDate, DateTime $today)
+    {
+        if ($startDate === null)
+        {
+            return false;
+        }
+
+        return ($startDate > $today);
+    }
+
+    private function isPlanInWindow($startDate, $endDate, DateTime $windowStart, DateTime $windowEnd)
+    {
+        if ($endDate !== null && $endDate < $windowStart)
+        {
+            return false;
+        }
+
+        if ($startDate !== null && $startDate > $windowEnd)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private function formatDateLabel(DateTime $date)

@@ -68,7 +68,7 @@
                 </table>
             <?php endif; ?>
 
-            <p class="noteUnsizedSpan">Expected conversion is pulled from the job order extra field "<?php $this->_($this->expectedConversionFieldName); ?>" (empty = 0%). Expected filled is calculated per job order and summed by client. Expected in FT shows total openings from the full hiring plan.</p>
+            <p class="noteUnsizedSpan">Expected conversion is pulled from the job order extra field "<?php $this->_($this->expectedConversionFieldName); ?>" (empty = 0%). Expected filled is calculated per job order and summed by client. Expected in FT shows future openings from hiring plans.</p>
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
