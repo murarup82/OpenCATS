@@ -36,10 +36,20 @@
                         <tr id="hiringPlanRow<?php echo($rowIndex); ?>">
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="<?php echo((int) $planRow['planID']); ?>" />
-                                <input type="text" class="inputbox" name="startDate[]" value="<?php echo(htmlspecialchars($planRow['startDate'])); ?>" placeholder="YYYY-MM-DD" style="width: 140px;" />
+                                <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
+                                <script type="text/javascript">
+                                    document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
+                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['startDate'])); ?>', -1);
+                                    document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
+                                </script>
                             </td>
                             <td class="tdData">
-                                <input type="text" class="inputbox" name="endDate[]" value="<?php echo(htmlspecialchars($planRow['endDate'])); ?>" placeholder="YYYY-MM-DD" style="width: 140px;" />
+                                <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
+                                <script type="text/javascript">
+                                    document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
+                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['endDate'])); ?>', -1);
+                                    document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
+                                </script>
                             </td>
                             <td class="tdData">
                                 <input type="text" class="inputbox" name="openings[]" value="<?php echo((int) $planRow['openings']); ?>" style="width: 60px;" />
@@ -65,10 +75,20 @@
                         <tr id="hiringPlanRow<?php echo($rowIndex); ?>">
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="0" />
-                                <input type="text" class="inputbox" name="startDate[]" value="" placeholder="YYYY-MM-DD" style="width: 140px;" />
+                                <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
+                                <script type="text/javascript">
+                                    document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
+                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
+                                    document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
+                                </script>
                             </td>
                             <td class="tdData">
-                                <input type="text" class="inputbox" name="endDate[]" value="" placeholder="YYYY-MM-DD" style="width: 140px;" />
+                                <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
+                                <script type="text/javascript">
+                                    document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
+                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
+                                    document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
+                                </script>
                             </td>
                             <td class="tdData">
                                 <input type="text" class="inputbox" name="openings[]" value="" style="width: 60px;" />
@@ -117,10 +137,10 @@
                     row.innerHTML =
                         '<td class="tdData">' +
                             '<input type="hidden" name="planID[]" value="0" />' +
-                            '<input type="text" class="inputbox" name="startDate[]" value="" placeholder="YYYY-MM-DD" style="width: 140px;" />' +
+                            '<span id="startDatePicker' + rowIndex + '"></span>' +
                         '</td>' +
                         '<td class="tdData">' +
-                            '<input type="text" class="inputbox" name="endDate[]" value="" placeholder="YYYY-MM-DD" style="width: 140px;" />' +
+                            '<span id="endDatePicker' + rowIndex + '"></span>' +
                         '</td>' +
                         '<td class="tdData">' +
                             '<input type="text" class="inputbox" name="openings[]" value="" style="width: 60px;" />' +
@@ -142,6 +162,13 @@
                         '</td>';
 
                     tableBody.appendChild(row);
+
+                    document.getElementById('startDatePicker' + rowIndex).innerHTML =
+                        DateInputForDOM('startDateInput' + rowIndex, false, 'MM-DD-YY', '', -1);
+                    document.getElementById('endDatePicker' + rowIndex).innerHTML =
+                        DateInputForDOM('endDateInput' + rowIndex, false, 'MM-DD-YY', '', -1);
+                    document.getElementById('startDateInput' + rowIndex).name = 'startDate[]';
+                    document.getElementById('endDateInput' + rowIndex).name = 'endDate[]';
 
                     rowCountInput.value = rowIndex + 1;
                 }

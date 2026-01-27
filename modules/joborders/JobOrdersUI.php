@@ -1019,11 +1019,6 @@ class JobOrdersUI extends UserInterface
 
         $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
         $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
-        foreach ($hiringPlanRS as $index => $planRow)
-        {
-            $hiringPlanRS[$index]['startDate'] = $this->formatHiringPlanDateForInput($planRow['startDate']);
-            $hiringPlanRS[$index]['endDate'] = $this->formatHiringPlanDateForInput($planRow['endDate']);
-        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('jobOrderID', $jobOrderID);
