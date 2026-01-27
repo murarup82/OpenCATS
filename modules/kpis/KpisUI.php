@@ -666,6 +666,48 @@ class KpisUI extends UserInterface
             $this->getStatusCount($statusCountsLastWeek, PIPELINE_STATUS_CUSTOMER_APPROVED)
         );
 
+        $trendView = (isset($_GET['trendView']) && $_GET['trendView'] === 'monthly') ? 'monthly' : 'weekly';
+        $trendStart = $this->parseDateTime(isset($_GET['trendStart']) ? $_GET['trendStart'] : '');
+        $trendEnd = $this->parseDateTime(isset($_GET['trendEnd']) ? $_GET['trendEnd'] : '');
+        if ($trendEnd === null)
+        {
+            $trendEnd = new DateTime('today');
+        }
+        if ($trendStart === null)
+        {
+            $trendStart = clone $trendEnd;
+            $trendStart->modify('-6 months');
+        }
+        $trendStart->setTime(0, 0, 0);
+        $trendEnd->setTime(23, 59, 59);
+        if ($trendStart > $trendEnd)
+        {
+            $swap = $trendStart;
+            $trendStart = $trendEnd;
+            $trendEnd = $swap;
+        }
+
+        $candidateTrend = $this->getCandidateTrendData(
+            $db,
+            $siteID,
+            $trendStart,
+            $trendEnd,
+            $trendView,
+            $officialReports,
+            $monitoredJobOrders
+        );
+        $trendTitle = 'New Candidates (' . ucfirst($trendView) . ')';
+        $trendLabels = array_map('rawurlencode', $candidateTrend['labels']);
+        $trendLabelParam = implode(',', $trendLabels);
+        $trendDataParam = implode(',', $candidateTrend['data']);
+        $candidateTrendGraphURL = sprintf(
+            '%s?m=graphs&a=generic&title=%s&labels=%s&data=%s&width=900&height=240',
+            CATSUtility::getIndexName(),
+            rawurlencode($trendTitle),
+            $trendLabelParam,
+            $trendDataParam
+        );
+
         $weekLabel = $this->formatDateLabel($weekStart) . ' - ' . $this->formatDateLabel($weekEnd);
 
         $this->_template->assign('active', $this);
@@ -679,6 +721,10 @@ class KpisUI extends UserInterface
         $this->_template->assign('monitoredJobOrderFieldName', self::MONITORED_JOBORDER_FIELD);
         $this->_template->assign('candidateSourceRows', $candidateSourceRows);
         $this->_template->assign('candidateMetricRows', $candidateMetricRows);
+        $this->_template->assign('candidateTrendGraphURL', $candidateTrendGraphURL);
+        $this->_template->assign('candidateTrendView', $trendView);
+        $this->_template->assign('candidateTrendStart', $trendStart->format('Y-m-d'));
+        $this->_template->assign('candidateTrendEnd', $trendEnd->format('Y-m-d'));
         $this->_template->display('./modules/kpis/Kpis.tpl');
     }
 
@@ -984,16 +1030,23 @@ class KpisUI extends UserInterface
                 status_to AS statusTo,
                 COUNT(*) AS statusCount
             FROM
-                candidate_joborder_status_history
-            WHERE
-                site_id = %s
-            AND
-                date >= %s
-            AND
-                date <= %s
-            AND
-                status_to IN (%s)
-            %s
+                (
+                    SELECT DISTINCT
+                        candidate_id,
+                        joborder_id,
+                        status_to
+                    FROM
+                        candidate_joborder_status_history
+                    WHERE
+                        site_id = %s
+                    AND
+                        date >= %s
+                    AND
+                        date <= %s
+                    AND
+                        status_to IN (%s)
+                    %s
+                ) AS status_rows
             GROUP BY
                 status_to",
             $db->makeQueryInteger($siteID),
@@ -1011,6 +1064,119 @@ class KpisUI extends UserInterface
         }
 
         return $counts;
+    }
+
+    private function getCandidateTrendData($db, $siteID, DateTime $start, DateTime $end, $view, $officialReports, $monitoredJobOrders)
+    {
+        if ($officialReports && empty($monitoredJobOrders))
+        {
+            return array('labels' => array(), 'data' => array());
+        }
+
+        $joinFilter = '';
+        if ($officialReports)
+        {
+            $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+            $joinFilter = sprintf(
+                "AND EXISTS (
+                    SELECT 1
+                    FROM candidate_joborder AS cjo
+                    WHERE cjo.candidate_id = candidate.candidate_id
+                    AND cjo.site_id = %s
+                    AND cjo.joborder_id IN (%s)
+                )",
+                $db->makeQueryInteger($siteID),
+                $monitoredIDs
+            );
+        }
+
+        if ($view === 'monthly')
+        {
+            $sql = sprintf(
+                "SELECT
+                    DATE_FORMAT(candidate.date_created, '%%Y-%%m-01') AS periodKey,
+                    COUNT(DISTINCT candidate.candidate_id) AS total
+                FROM
+                    candidate
+                WHERE
+                    candidate.site_id = %s
+                AND
+                    candidate.date_created >= %s
+                AND
+                    candidate.date_created <= %s
+                %s
+                GROUP BY
+                    periodKey",
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryString($start->format('Y-m-d H:i:s')),
+                $db->makeQueryString($end->format('Y-m-d H:i:s')),
+                $joinFilter
+            );
+        }
+        else
+        {
+            $sql = sprintf(
+                "SELECT
+                    YEARWEEK(candidate.date_created, 1) AS periodKey,
+                    COUNT(DISTINCT candidate.candidate_id) AS total
+                FROM
+                    candidate
+                WHERE
+                    candidate.site_id = %s
+                AND
+                    candidate.date_created >= %s
+                AND
+                    candidate.date_created <= %s
+                %s
+                GROUP BY
+                    periodKey",
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryString($start->format('Y-m-d H:i:s')),
+                $db->makeQueryString($end->format('Y-m-d H:i:s')),
+                $joinFilter
+            );
+        }
+
+        $rows = $db->getAllAssoc($sql);
+        $counts = array();
+        foreach ($rows as $row)
+        {
+            $counts[(string) $row['periodKey']] = (int) $row['total'];
+        }
+
+        $labels = array();
+        $data = array();
+        if ($view === 'monthly')
+        {
+            $cursor = new DateTime($start->format('Y-m-01'));
+            $endCursor = new DateTime($end->format('Y-m-01'));
+            while ($cursor <= $endCursor)
+            {
+                $key = $cursor->format('Y-m-01');
+                $labels[] = $cursor->format('M Y');
+                $data[] = isset($counts[$key]) ? $counts[$key] : 0;
+                $cursor->modify('+1 month');
+            }
+        }
+        else
+        {
+            $cursor = clone $start;
+            $cursor->modify('monday this week');
+            $endCursor = clone $end;
+            $endCursor->modify('monday this week');
+            $labelPattern = $_SESSION['CATS']->isDateDMY() ? 'd/m' : 'm/d';
+            while ($cursor <= $endCursor)
+            {
+                $weekEnd = clone $cursor;
+                $weekEnd->modify('+6 days');
+                $key = $cursor->format('oW');
+                $labels[] = $cursor->format($labelPattern) . ' - ' . $weekEnd->format($labelPattern);
+                $data[] = isset($counts[$key]) ? $counts[$key] : 0;
+                $cursor->modify('+1 week');
+            }
+        }
+
+        return array('labels' => $labels, 'data' => $data);
     }
 
     private function formatIntegerList($values)

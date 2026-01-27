@@ -127,6 +127,31 @@
                 </table>
             <?php endif; ?>
 
+            <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>" style="margin-top: 12px;">
+                <input type="hidden" name="m" value="kpis" />
+                <input type="hidden" name="officialReports" value="<?php echo(!empty($this->officialReports) ? 1 : 0); ?>" />
+                <label class="noteUnsizedSpan" style="margin-right: 8px;">
+                    View:
+                    <select name="trendView" class="inputbox">
+                        <option value="weekly"<?php if ($this->candidateTrendView === 'weekly'): ?> selected<?php endif; ?>>Weekly</option>
+                        <option value="monthly"<?php if ($this->candidateTrendView === 'monthly'): ?> selected<?php endif; ?>>Monthly</option>
+                    </select>
+                </label>
+                <label class="noteUnsizedSpan" style="margin-right: 8px;">
+                    Start:
+                    <input type="date" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
+                </label>
+                <label class="noteUnsizedSpan" style="margin-right: 8px;">
+                    End:
+                    <input type="date" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
+                </label>
+                <input type="submit" class="button" value="Update" />
+            </form>
+
+            <div style="margin-top: 6px;">
+                <img src="<?php echo($this->candidateTrendGraphURL); ?>" alt="New Candidates Trend" />
+            </div>
+
             <p class="noteUnsizedSpan">Expected conversion is pulled from the job order extra field "<?php $this->_($this->expectedConversionFieldName); ?>" (empty = 0%). Filled positions count job order candidates currently in status "Hired". Expected filled and Expected in FC are reduced by filled positions and floored at 0. Expected in FC shows total planned openings (past, present, future) from hiring plans. Official Reports limits job orders to "<?php $this->_($this->monitoredJobOrderFieldName); ?>" = Yes.</p>
         </div>
     </div>
