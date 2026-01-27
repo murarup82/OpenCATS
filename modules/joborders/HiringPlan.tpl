@@ -17,7 +17,7 @@
 
             <p class="noteUnsizedSpan">Job Order: <?php echo(htmlspecialchars($this->jobOrderTitle)); ?></p>
 
-            <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=editHiringPlan" method="post" onsubmit="return normalizeHiringPlanDates();">
+            <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=editHiringPlan" method="post">
                 <input type="hidden" name="jobOrderID" value="<?php echo((int) $this->jobOrderID); ?>" />
                 <input type="hidden" name="postback" value="postback" />
                 <table class="editTable" width="100%">
@@ -36,32 +36,10 @@
                         <tr id="hiringPlanRow<?php echo($rowIndex); ?>">
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="<?php echo((int) $planRow['planID']); ?>" />
-                                <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
-                                <script type="text/javascript">
-                                    document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM(
-                                            'startDateInput<?php echo($rowIndex); ?>',
-                                            false,
-                                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
-                                            '<?php echo(addslashes($planRow['startDate'])); ?>',
-                                            -1
-                                        );
-                                    document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
-                                </script>
+                                <input type="date" class="inputbox" name="startDate[]" value="<?php echo(htmlspecialchars($planRow['startDate'])); ?>" style="width: 140px;" />
                             </td>
                             <td class="tdData">
-                                <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
-                                <script type="text/javascript">
-                                    document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM(
-                                            'endDateInput<?php echo($rowIndex); ?>',
-                                            false,
-                                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
-                                            '<?php echo(addslashes($planRow['endDate'])); ?>',
-                                            -1
-                                        );
-                                    document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
-                                </script>
+                                <input type="date" class="inputbox" name="endDate[]" value="<?php echo(htmlspecialchars($planRow['endDate'])); ?>" style="width: 140px;" />
                             </td>
                             <td class="tdData">
                                 <input type="text" class="inputbox" name="openings[]" value="<?php echo((int) $planRow['openings']); ?>" style="width: 60px;" />
@@ -87,32 +65,10 @@
                         <tr id="hiringPlanRow<?php echo($rowIndex); ?>">
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="0" />
-                                <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
-                                <script type="text/javascript">
-                                    document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM(
-                                            'startDateInput<?php echo($rowIndex); ?>',
-                                            false,
-                                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
-                                            '',
-                                            -1
-                                        );
-                                    document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
-                                </script>
+                                <input type="date" class="inputbox" name="startDate[]" value="" style="width: 140px;" />
                             </td>
                             <td class="tdData">
-                                <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
-                                <script type="text/javascript">
-                                    document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM(
-                                            'endDateInput<?php echo($rowIndex); ?>',
-                                            false,
-                                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
-                                            '',
-                                            -1
-                                        );
-                                    document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
-                                </script>
+                                <input type="date" class="inputbox" name="endDate[]" value="" style="width: 140px;" />
                             </td>
                             <td class="tdData">
                                 <input type="text" class="inputbox" name="openings[]" value="" style="width: 60px;" />
@@ -146,8 +102,6 @@
                 <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $this->jobOrderID); ?>">Cancel</a>
             </form>
             <script type="text/javascript">
-                var hiringPlanDateOrder = '<?php echo($this->isDateDMY ? 'DMY' : 'MDY'); ?>';
-
                 function addHiringPlanRow()
                 {
                     var tableBody = document.getElementById('hiringPlanTableBody');
@@ -163,10 +117,10 @@
                     row.innerHTML =
                         '<td class="tdData">' +
                             '<input type="hidden" name="planID[]" value="0" />' +
-                            '<span id="startDatePicker' + rowIndex + '"></span>' +
+                            '<input type="date" class="inputbox" name="startDate[]" value="" style="width: 140px;" />' +
                         '</td>' +
                         '<td class="tdData">' +
-                            '<span id="endDatePicker' + rowIndex + '"></span>' +
+                            '<input type="date" class="inputbox" name="endDate[]" value="" style="width: 140px;" />' +
                         '</td>' +
                         '<td class="tdData">' +
                             '<input type="text" class="inputbox" name="openings[]" value="" style="width: 60px;" />' +
@@ -188,25 +142,6 @@
                         '</td>';
 
                     tableBody.appendChild(row);
-
-                    document.getElementById('startDatePicker' + rowIndex).innerHTML =
-                        DateInputForDOM(
-                            'startDateInput' + rowIndex,
-                            false,
-                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
-                            '',
-                            -1
-                        );
-                    document.getElementById('endDatePicker' + rowIndex).innerHTML =
-                        DateInputForDOM(
-                            'endDateInput' + rowIndex,
-                            false,
-                            '<?php echo($this->isDateDMY ? 'DD-MM-YYYY' : 'MM-DD-YYYY'); ?>',
-                            '',
-                            -1
-                        );
-                    document.getElementById('startDateInput' + rowIndex).name = 'startDate[]';
-                    document.getElementById('endDateInput' + rowIndex).name = 'endDate[]';
 
                     rowCountInput.value = rowIndex + 1;
                 }
@@ -230,69 +165,6 @@
                     }
 
                     return false;
-                }
-
-                function normalizeHiringPlanDates()
-                {
-                    var rowCountInput = document.getElementById('hiringPlanRowCount');
-                    var rowCount = 0;
-                    if (rowCountInput)
-                    {
-                        rowCount = parseInt(rowCountInput.value, 10);
-                        if (isNaN(rowCount))
-                        {
-                            rowCount = 0;
-                        }
-                    }
-
-                    for (var i = 0; i < rowCount; i++)
-                    {
-                        updateHiddenDate('startDateInput' + i);
-                        updateHiddenDate('endDateInput' + i);
-                    }
-
-                    return true;
-                }
-
-                function updateHiddenDate(baseID)
-                {
-                    var hiddenField = document.getElementById(baseID);
-                    if (!hiddenField)
-                    {
-                        return;
-                    }
-
-                    var monthField = document.getElementById(baseID + '_Month_ID');
-                    var dayField = document.getElementById(baseID + '_Day_ID');
-                    var yearField = document.getElementById(baseID + '_Year_ID');
-
-                    if (!monthField || !dayField || !yearField || monthField.value === '' || yearField.value === '')
-                    {
-                        hiddenField.value = '';
-                        return;
-                    }
-
-                    var monthValue = parseInt(monthField.value, 10);
-                    var dayValue = parseInt(dayField.value, 10);
-                    var yearValue = yearField.value;
-
-                    if (isNaN(monthValue) || isNaN(dayValue))
-                    {
-                        hiddenField.value = '';
-                        return;
-                    }
-
-                    monthValue += 1;
-                    var monthText = (monthValue < 10) ? '0' + monthValue : '' + monthValue;
-                    var dayText = (dayValue < 10) ? '0' + dayValue : '' + dayValue;
-                    if (hiringPlanDateOrder === 'DMY')
-                    {
-                        hiddenField.value = dayText + '-' + monthText + '-' + yearValue;
-                    }
-                    else
-                    {
-                        hiddenField.value = monthText + '-' + dayText + '-' + yearValue;
-                    }
                 }
 
             </script>

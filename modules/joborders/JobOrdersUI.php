@@ -503,29 +503,10 @@ class JobOrdersUI extends UserInterface
 
         $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
         $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
-        if ($_SESSION['CATS']->isDateDMY())
+        foreach ($hiringPlanRS as $index => $planRow)
         {
-            foreach ($hiringPlanRS as $index => $planRow)
-            {
-                if ($planRow['startDate'] !== '')
-                {
-                    $hiringPlanRS[$index]['startDate'] = DateUtility::convert(
-                        '-',
-                        $planRow['startDate'],
-                        DATE_FORMAT_MMDDYY,
-                        DATE_FORMAT_DDMMYY
-                    );
-                }
-                if ($planRow['endDate'] !== '')
-                {
-                    $hiringPlanRS[$index]['endDate'] = DateUtility::convert(
-                        '-',
-                        $planRow['endDate'],
-                        DATE_FORMAT_MMDDYY,
-                        DATE_FORMAT_DDMMYY
-                    );
-                }
-            }
+            $hiringPlanRS[$index]['startDate'] = $this->formatHiringPlanDateForInput($planRow['startDate']);
+            $hiringPlanRS[$index]['endDate'] = $this->formatHiringPlanDateForInput($planRow['endDate']);
         }
         $hiringPlanTotal = 0;
         foreach ($hiringPlanRS as $planRow)
@@ -1067,7 +1048,6 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('jobOrderID', $jobOrderID);
         $this->_template->assign('jobOrderTitle', $data['title']);
         $this->_template->assign('hiringPlanRS', $hiringPlanRS);
-        $this->_template->assign('isDateDMY', $_SESSION['CATS']->isDateDMY());
 
         $this->_template->display('./modules/joborders/HiringPlan.tpl');
     }
@@ -1080,7 +1060,6 @@ class JobOrdersUI extends UserInterface
         }
 
         $jobOrderID = $_POST['jobOrderID'];
-        $dateInputFormat = $_SESSION['CATS']->isDateDMY() ? DATE_FORMAT_DDMMYY : DATE_FORMAT_MMDDYY;
 
         $planIDs = isset($_POST['planID']) ? $_POST['planID'] : array();
         $startDates = isset($_POST['startDate']) ? $_POST['startDate'] : array();
@@ -1112,43 +1091,8 @@ class JobOrdersUI extends UserInterface
                 CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid openings.');
             }
 
-            if ($startDate !== '')
-            {
-                if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $startDate))
-                {
-                    $startDate = substr($startDate, 0, 6) . substr($startDate, 8, 2);
-                }
-                if (!DateUtility::validate('-', $startDate, $dateInputFormat))
-                {
-                    CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid start date.');
-                }
-                $startDate = DateUtility::convert(
-                    '-', $startDate, $dateInputFormat, DATE_FORMAT_YYYYMMDD
-                );
-            }
-            else
-            {
-                $startDate = null;
-            }
-
-            if ($endDate !== '')
-            {
-                if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $endDate))
-                {
-                    $endDate = substr($endDate, 0, 6) . substr($endDate, 8, 2);
-                }
-                if (!DateUtility::validate('-', $endDate, $dateInputFormat))
-                {
-                    CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid end date.');
-                }
-                $endDate = DateUtility::convert(
-                    '-', $endDate, $dateInputFormat, DATE_FORMAT_YYYYMMDD
-                );
-            }
-            else
-            {
-                $endDate = null;
-            }
+            $startDate = $this->normalizeHiringPlanInputDate($startDate, 'start');
+            $endDate = $this->normalizeHiringPlanInputDate($endDate, 'end');
 
             $priority = (int) $priorityRaw;
 
@@ -1168,6 +1112,90 @@ class JobOrdersUI extends UserInterface
         CATSUtility::transferRelativeURI(
             'm=joborders&a=show&jobOrderID=' . $jobOrderID
         );
+    }
+
+    private function formatHiringPlanDateForInput($dateString)
+    {
+        $dateString = trim((string) $dateString);
+        if ($dateString === '')
+        {
+            return '';
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateString))
+        {
+            return $dateString;
+        }
+
+        if (DateUtility::validate('-', $dateString, DATE_FORMAT_MMDDYY))
+        {
+            return DateUtility::convert('-', $dateString, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD);
+        }
+
+        if (DateUtility::validate('-', $dateString, DATE_FORMAT_DDMMYY))
+        {
+            return DateUtility::convert('-', $dateString, DATE_FORMAT_DDMMYY, DATE_FORMAT_YYYYMMDD);
+        }
+
+        if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $dateString))
+        {
+            $parts = explode('-', $dateString);
+            if (count($parts) === 3)
+            {
+                $isDMY = $_SESSION['CATS']->isDateDMY();
+                $day = $isDMY ? $parts[0] : $parts[1];
+                $month = $isDMY ? $parts[1] : $parts[0];
+                $year = $parts[2];
+                return sprintf('%04d-%02d-%02d', (int) $year, (int) $month, (int) $day);
+            }
+        }
+
+        return $dateString;
+    }
+
+    private function normalizeHiringPlanInputDate($dateString, $label)
+    {
+        $dateString = trim((string) $dateString);
+        if ($dateString === '')
+        {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateString))
+        {
+            if (!DateUtility::validate('-', $dateString, DATE_FORMAT_YYYYMMDD))
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid ' . $label . ' date.');
+            }
+            return $dateString;
+        }
+
+        if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $dateString))
+        {
+            $parts = explode('-', $dateString);
+            if (count($parts) !== 3)
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid ' . $label . ' date.');
+            }
+            $isDMY = $_SESSION['CATS']->isDateDMY();
+            $day = $isDMY ? $parts[0] : $parts[1];
+            $month = $isDMY ? $parts[1] : $parts[0];
+            $year = $parts[2];
+            $isoDate = sprintf('%04d-%02d-%02d', (int) $year, (int) $month, (int) $day);
+            if (!DateUtility::validate('-', $isoDate, DATE_FORMAT_YYYYMMDD))
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid ' . $label . ' date.');
+            }
+            return $isoDate;
+        }
+
+        $dateInputFormat = $_SESSION['CATS']->isDateDMY() ? DATE_FORMAT_DDMMYY : DATE_FORMAT_MMDDYY;
+        if (!DateUtility::validate('-', $dateString, $dateInputFormat))
+        {
+            CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid ' . $label . ' date.');
+        }
+
+        return DateUtility::convert('-', $dateString, $dateInputFormat, DATE_FORMAT_YYYYMMDD);
     }
 
     /*
