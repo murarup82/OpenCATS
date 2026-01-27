@@ -1170,7 +1170,7 @@ class KpisUI extends UserInterface
                 $weekEnd = clone $cursor;
                 $weekEnd->modify('+6 days');
                 $key = $cursor->format('oW');
-                $labels[] = $cursor->format('y') . 'W' . $cursor->format('W');
+                $labels[] = substr($cursor->format('o'), -2) . 'W' . $cursor->format('W');
                 $data[] = isset($counts[$key]) ? $counts[$key] : 0;
                 $cursor->modify('+1 week');
             }
