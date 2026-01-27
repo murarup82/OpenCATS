@@ -1221,6 +1221,12 @@ class JobOrdersUI extends UserInterface
             return null;
         }
 
+        // Picker submissions are always MM-DD-YY regardless of locale.
+        if (DateUtility::validate('-', $dateString, DATE_FORMAT_MMDDYY))
+        {
+            return DateUtility::convert('-', $dateString, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD);
+        }
+
         $isoDate = $this->parseHiringPlanDateToISO($dateString);
         if ($isoDate === '')
         {
