@@ -1153,45 +1153,17 @@ class JobOrdersUI extends UserInterface
             return '';
         }
 
-        if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $dateString))
+        if (preg_match('/^(\\d{2})-(\\d{2})-(\\d{4})$/', $dateString, $matches))
         {
-            $parts = explode('-', $dateString);
-            if (count($parts) !== 3)
-            {
-                return '';
-            }
-
-            $part1 = (int) $parts[0];
-            $part2 = (int) $parts[1];
-            $year = (int) $parts[2];
-
-            if ($part1 > 12 && $part2 <= 12)
-            {
-                $day = $part1;
-                $month = $part2;
-            }
-            else if ($part2 > 12 && $part1 <= 12)
-            {
-                $month = $part1;
-                $day = $part2;
-            }
-            else if ($part1 > 12 && $part2 > 12)
-            {
-                return '';
-            }
-            else
-            {
-                $isDMY = $_SESSION['CATS']->isDateDMY();
-                $day = $isDMY ? $part1 : $part2;
-                $month = $isDMY ? $part2 : $part1;
-            }
-
+            // DateInputForDOM submissions are MDY (MM-DD-YYYY) regardless of locale.
+            $month = (int) $matches[1];
+            $day = (int) $matches[2];
+            $year = (int) $matches[3];
             $isoDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
             if (DateUtility::validate('-', $isoDate, DATE_FORMAT_YYYYMMDD))
             {
                 return $isoDate;
             }
-
             return '';
         }
 
@@ -1219,12 +1191,6 @@ class JobOrdersUI extends UserInterface
         if ($dateString === '')
         {
             return null;
-        }
-
-        // Picker submissions are always MM-DD-YY regardless of locale.
-        if (DateUtility::validate('-', $dateString, DATE_FORMAT_MMDDYY))
-        {
-            return DateUtility::convert('-', $dateString, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD);
         }
 
         $isoDate = $this->parseHiringPlanDateToISO($dateString);
