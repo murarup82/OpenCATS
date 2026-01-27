@@ -36,10 +36,10 @@
                         <tr id="hiringPlanRow<?php echo($rowIndex); ?>">
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="<?php echo((int) $planRow['planID']); ?>" />
-                                <input type="date" class="inputbox" name="startDate[]" value="<?php echo(htmlspecialchars($planRow['startDate'])); ?>" style="width: 140px;" />
+                                <input type="text" class="inputbox" name="startDate[]" value="<?php echo(htmlspecialchars($planRow['startDate'])); ?>" placeholder="YYYY-MM-DD" style="width: 140px;" />
                             </td>
                             <td class="tdData">
-                                <input type="date" class="inputbox" name="endDate[]" value="<?php echo(htmlspecialchars($planRow['endDate'])); ?>" style="width: 140px;" />
+                                <input type="text" class="inputbox" name="endDate[]" value="<?php echo(htmlspecialchars($planRow['endDate'])); ?>" placeholder="YYYY-MM-DD" style="width: 140px;" />
                             </td>
                             <td class="tdData">
                                 <input type="text" class="inputbox" name="openings[]" value="<?php echo((int) $planRow['openings']); ?>" style="width: 60px;" />
@@ -65,10 +65,10 @@
                         <tr id="hiringPlanRow<?php echo($rowIndex); ?>">
                             <td class="tdData">
                                 <input type="hidden" name="planID[]" value="0" />
-                                <input type="date" class="inputbox" name="startDate[]" value="" style="width: 140px;" />
+                                <input type="text" class="inputbox" name="startDate[]" value="" placeholder="YYYY-MM-DD" style="width: 140px;" />
                             </td>
                             <td class="tdData">
-                                <input type="date" class="inputbox" name="endDate[]" value="" style="width: 140px;" />
+                                <input type="text" class="inputbox" name="endDate[]" value="" placeholder="YYYY-MM-DD" style="width: 140px;" />
                             </td>
                             <td class="tdData">
                                 <input type="text" class="inputbox" name="openings[]" value="" style="width: 60px;" />
@@ -117,10 +117,10 @@
                     row.innerHTML =
                         '<td class="tdData">' +
                             '<input type="hidden" name="planID[]" value="0" />' +
-                            '<input type="date" class="inputbox" name="startDate[]" value="" style="width: 140px;" />' +
+                            '<input type="text" class="inputbox" name="startDate[]" value="" placeholder="YYYY-MM-DD" style="width: 140px;" />' +
                         '</td>' +
                         '<td class="tdData">' +
-                            '<input type="date" class="inputbox" name="endDate[]" value="" style="width: 140px;" />' +
+                            '<input type="text" class="inputbox" name="endDate[]" value="" placeholder="YYYY-MM-DD" style="width: 140px;" />' +
                         '</td>' +
                         '<td class="tdData">' +
                             '<input type="text" class="inputbox" name="openings[]" value="" style="width: 60px;" />' +
