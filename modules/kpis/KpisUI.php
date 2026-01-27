@@ -80,8 +80,10 @@ class KpisUI extends UserInterface
                 'newPositionsLastWeek' => 0,
                 'totalOpenPositions' => 0,
                 'totalOpenPositionsLastWeek' => 0,
-                'futureOpenings' => 0,
-                'futureOpeningsLastWeek' => 0,
+                'filledPositions' => 0,
+                'filledPositionsLastWeek' => 0,
+                'totalPlanOpenings' => 0,
+                'totalPlanOpeningsLastWeek' => 0,
                 'expectedFilled' => 0.0,
                 'expectedFilledLastWeek' => 0.0,
                 'hasData' => false
@@ -172,6 +174,75 @@ class KpisUI extends UserInterface
             );
         }
 
+        $filledByJobOrder = array();
+        $filledByJobOrderPrev = array();
+        $monitoredFilterHistory = '';
+        if (!empty($jobOrders))
+        {
+            if ($officialReports)
+            {
+                if (!empty($monitoredJobOrders))
+                {
+                    $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+                    $monitoredFilterHistory = sprintf('AND cjh.joborder_id IN (%s)', $monitoredIDs);
+                }
+                else
+                {
+                    $monitoredFilterHistory = 'AND 1 = 0';
+                }
+            }
+
+            $now = new DateTime();
+            $filledCurrentRS = $db->getAllAssoc(sprintf(
+                "SELECT
+                    last_status.joborder_id AS jobOrderID,
+                    COUNT(*) AS filledCount
+                FROM
+                    (
+                        SELECT
+                            cjh.candidate_id,
+                            cjh.joborder_id,
+                            MAX(cjh.date) AS maxDate
+                        FROM
+                            candidate_joborder_status_history AS cjh
+                        INNER JOIN joborder AS jo
+                            ON jo.joborder_id = cjh.joborder_id
+                            AND jo.site_id = cjh.site_id
+                        WHERE
+                            cjh.site_id = %s
+                        AND
+                            cjh.date <= %s
+                        AND
+                            jo.status IN %s
+                        %s
+                        GROUP BY
+                            cjh.candidate_id,
+                            cjh.joborder_id
+                    ) AS last_status
+                INNER JOIN candidate_joborder_status_history AS cjh
+                    ON cjh.candidate_id = last_status.candidate_id
+                    AND cjh.joborder_id = last_status.joborder_id
+                    AND cjh.date = last_status.maxDate
+                WHERE
+                    cjh.site_id = %s
+                AND
+                    cjh.status_to = %s
+                GROUP BY
+                    last_status.joborder_id",
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryString($now->format('Y-m-d H:i:s')),
+                JobOrderStatuses::getOpenStatusSQL(),
+                $monitoredFilterHistory,
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryInteger(PIPELINE_STATUS_HIRED)
+            ));
+
+            foreach ($filledCurrentRS as $row)
+            {
+                $filledByJobOrder[(int) $row['jobOrderID']] = (int) $row['filledCount'];
+            }
+        }
+
         $planRS = $db->getAllAssoc(sprintf(
             "SELECT
                 joborder_id AS jobOrderID,
@@ -228,6 +299,58 @@ class KpisUI extends UserInterface
         $windowEndPrev->modify('last day of this month');
         $windowEndPrev->setTime(23, 59, 59);
 
+        if (!empty($jobOrders))
+        {
+            $filledPrevRS = $db->getAllAssoc(sprintf(
+                "SELECT
+                    last_status.joborder_id AS jobOrderID,
+                    COUNT(*) AS filledCount
+                FROM
+                    (
+                        SELECT
+                            cjh.candidate_id,
+                            cjh.joborder_id,
+                            MAX(cjh.date) AS maxDate
+                        FROM
+                            candidate_joborder_status_history AS cjh
+                        INNER JOIN joborder AS jo
+                            ON jo.joborder_id = cjh.joborder_id
+                            AND jo.site_id = cjh.site_id
+                        WHERE
+                            cjh.site_id = %s
+                        AND
+                            cjh.date <= %s
+                        AND
+                            jo.status IN %s
+                        %s
+                        GROUP BY
+                            cjh.candidate_id,
+                            cjh.joborder_id
+                    ) AS last_status
+                INNER JOIN candidate_joborder_status_history AS cjh
+                    ON cjh.candidate_id = last_status.candidate_id
+                    AND cjh.joborder_id = last_status.joborder_id
+                    AND cjh.date = last_status.maxDate
+                WHERE
+                    cjh.site_id = %s
+                AND
+                    cjh.status_to = %s
+                GROUP BY
+                    last_status.joborder_id",
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryString($lastWeekEndPrev->format('Y-m-d H:i:s')),
+                JobOrderStatuses::getOpenStatusSQL(),
+                $monitoredFilterHistory,
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryInteger(PIPELINE_STATUS_HIRED)
+            ));
+
+            foreach ($filledPrevRS as $row)
+            {
+                $filledByJobOrderPrev[(int) $row['jobOrderID']] = (int) $row['filledCount'];
+            }
+        }
+
         foreach ($jobOrders as $jobOrder)
         {
             if ($officialReports &&
@@ -248,8 +371,10 @@ class KpisUI extends UserInterface
                     'newPositionsLastWeek' => 0,
                     'totalOpenPositions' => 0,
                     'totalOpenPositionsLastWeek' => 0,
-                    'futureOpenings' => 0,
-                    'futureOpeningsLastWeek' => 0,
+                    'filledPositions' => 0,
+                    'filledPositionsLastWeek' => 0,
+                    'totalPlanOpenings' => 0,
+                    'totalPlanOpeningsLastWeek' => 0,
                     'expectedFilled' => 0.0,
                     'expectedFilledLastWeek' => 0.0,
                     'hasData' => false
@@ -257,6 +382,18 @@ class KpisUI extends UserInterface
             }
 
             $companyData[$companyID]['hasData'] = true;
+
+            $filledPositions = 0;
+            if (isset($filledByJobOrder[$jobOrder['jobOrderID']]))
+            {
+                $filledPositions = (int) $filledByJobOrder[$jobOrder['jobOrderID']];
+            }
+            $filledPositionsPrev = 0;
+            if (isset($filledByJobOrderPrev[$jobOrder['jobOrderID']]))
+            {
+                $filledPositionsPrev = (int) $filledByJobOrderPrev[$jobOrder['jobOrderID']];
+            }
+            $companyData[$companyID]['filledPositions'] += $filledPositions;
 
             $conversion = 0.0;
             if (isset($conversionByJobOrder[$jobOrder['jobOrderID']]))
@@ -292,10 +429,9 @@ class KpisUI extends UserInterface
             $activeOpenings = 0;
             $activeOpeningsPrev = 0;
             $expiredOpenings = 0;
-            $futureOpenings = 0;
-            $futureOpeningsPrev = 0;
             $windowOpenings = 0;
             $windowOpeningsPrev = 0;
+            $totalPlanOpenings = 0;
 
             foreach ($plans as $plan)
             {
@@ -303,15 +439,7 @@ class KpisUI extends UserInterface
                 $endDate = $this->parsePlanDate($plan['endDate']);
                 $openings = (int) $plan['openings'];
 
-                if ($this->isPlanFuture($startDate, $today))
-                {
-                    $futureOpenings += $openings;
-                }
-
-                if ($this->isPlanFuture($startDate, $lastWeekEndPrev))
-                {
-                    $futureOpeningsPrev += $openings;
-                }
+                $totalPlanOpenings += $openings;
 
                 if ($this->isPlanActive($startDate, $endDate, $today))
                 {
@@ -363,13 +491,14 @@ class KpisUI extends UserInterface
             }
 
             $companyData[$companyID]['totalOpenPositions'] += $openPositions;
-            $companyData[$companyID]['futureOpenings'] += $futureOpenings;
+            $companyData[$companyID]['totalPlanOpenings'] += $totalPlanOpenings;
             $companyData[$companyID]['expectedFilled'] += ($openPositions * ($conversion / 100));
             if ($jobCreated !== null && $jobCreated <= $lastWeekEndPrev)
             {
                 $companyData[$companyID]['totalOpenPositionsLastWeek'] += $openPositionsPrev;
-                $companyData[$companyID]['futureOpeningsLastWeek'] += $futureOpeningsPrev;
+                $companyData[$companyID]['totalPlanOpeningsLastWeek'] += $totalPlanOpenings;
                 $companyData[$companyID]['expectedFilledLastWeek'] += ($openPositionsPrev * ($conversion / 100));
+                $companyData[$companyID]['filledPositionsLastWeek'] += $filledPositionsPrev;
             }
         }
 
@@ -377,12 +506,14 @@ class KpisUI extends UserInterface
         $totals = array(
             'newPositions' => 0,
             'totalOpenPositions' => 0,
+            'filledPositions' => 0,
             'expectedFilled' => 0,
             'expectedInFullPlan' => 0
         );
         $totalsLastWeek = array(
             'newPositions' => 0,
             'totalOpenPositions' => 0,
+            'filledPositions' => 0,
             'expectedFilled' => 0,
             'expectedInFullPlan' => 0
         );
@@ -394,10 +525,28 @@ class KpisUI extends UserInterface
                 continue;
             }
 
-            $expectedFilled = (int) round($company['expectedFilled']);
-            $expectedInFullPlan = (int) $company['futureOpenings'];
-            $expectedFilledLastWeek = (int) round($company['expectedFilledLastWeek']);
-            $expectedInFullPlanLastWeek = (int) $company['futureOpeningsLastWeek'];
+            $filledPositions = (int) $company['filledPositions'];
+            $filledPositionsLastWeek = (int) $company['filledPositionsLastWeek'];
+            $expectedFilled = (int) round($company['expectedFilled']) - $filledPositions;
+            if ($expectedFilled < 0)
+            {
+                $expectedFilled = 0;
+            }
+            $expectedInFullPlan = (int) $company['totalPlanOpenings'] - $filledPositions;
+            if ($expectedInFullPlan < 0)
+            {
+                $expectedInFullPlan = 0;
+            }
+            $expectedFilledLastWeek = (int) round($company['expectedFilledLastWeek']) - $filledPositionsLastWeek;
+            if ($expectedFilledLastWeek < 0)
+            {
+                $expectedFilledLastWeek = 0;
+            }
+            $expectedInFullPlanLastWeek = (int) $company['totalPlanOpeningsLastWeek'] - $filledPositionsLastWeek;
+            if ($expectedInFullPlanLastWeek < 0)
+            {
+                $expectedInFullPlanLastWeek = 0;
+            }
             $conversionRange = $this->formatPercentRange(
                 $company['expectedConversionMin'],
                 $company['expectedConversionMax']
@@ -408,6 +557,7 @@ class KpisUI extends UserInterface
                 'companyName' => $company['companyName'],
                 'newPositions' => $company['newPositions'],
                 'totalOpenPositions' => $company['totalOpenPositions'],
+                'filledPositions' => $filledPositions,
                 'expectedConversionDisplay' => $conversionRange,
                 'expectedFilled' => $expectedFilled,
                 'expectedInFullPlan' => $expectedInFullPlan
@@ -415,11 +565,13 @@ class KpisUI extends UserInterface
 
             $totals['newPositions'] += $company['newPositions'];
             $totals['totalOpenPositions'] += $company['totalOpenPositions'];
+            $totals['filledPositions'] += $filledPositions;
             $totals['expectedFilled'] += $expectedFilled;
             $totals['expectedInFullPlan'] += $expectedInFullPlan;
 
             $totalsLastWeek['newPositions'] += $company['newPositionsLastWeek'];
             $totalsLastWeek['totalOpenPositions'] += $company['totalOpenPositionsLastWeek'];
+            $totalsLastWeek['filledPositions'] += $filledPositionsLastWeek;
             $totalsLastWeek['expectedFilled'] += $expectedFilledLastWeek;
             $totalsLastWeek['expectedInFullPlan'] += $expectedInFullPlanLastWeek;
         }
@@ -427,6 +579,7 @@ class KpisUI extends UserInterface
         $totalsDiff = array(
             'newPositions' => $totals['newPositions'] - $totalsLastWeek['newPositions'],
             'totalOpenPositions' => $totals['totalOpenPositions'] - $totalsLastWeek['totalOpenPositions'],
+            'filledPositions' => $totals['filledPositions'] - $totalsLastWeek['filledPositions'],
             'expectedFilled' => $totals['expectedFilled'] - $totalsLastWeek['expectedFilled'],
             'expectedInFullPlan' => $totals['expectedInFullPlan'] - $totalsLastWeek['expectedInFullPlan']
         );

@@ -45,9 +45,10 @@
                             <th>Client</th>
                             <th>New positions this week</th>
                             <th>Total open positions</th>
+                            <th>Filled positions</th>
                             <th>Expected conversion</th>
                             <th>Expected filled</th>
-                            <th>Expected in FT</th>
+                            <th>Expected in FC</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -60,6 +61,7 @@
                                 </td>
                                 <td><?php echo((int) $row['newPositions']); ?></td>
                                 <td><?php echo((int) $row['totalOpenPositions']); ?></td>
+                                <td><?php echo((int) $row['filledPositions']); ?></td>
                                 <td><?php echo(htmlspecialchars($row['expectedConversionDisplay'])); ?></td>
                                 <td><?php echo((int) $row['expectedFilled']); ?></td>
                                 <td><?php echo((int) $row['expectedInFullPlan']); ?></td>
@@ -71,6 +73,7 @@
                             <td class="kpiClient">Total</td>
                             <td><?php echo((int) $this->totals['newPositions']); ?></td>
                             <td><?php echo((int) $this->totals['totalOpenPositions']); ?></td>
+                            <td><?php echo((int) $this->totals['filledPositions']); ?></td>
                             <td></td>
                             <td><?php echo((int) $this->totals['expectedFilled']); ?></td>
                             <td><?php echo((int) $this->totals['expectedInFullPlan']); ?></td>
@@ -79,6 +82,7 @@
                             <td class="kpiClient">vs Last week</td>
                             <td><?php if ($this->totalsDiff['newPositions'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['newPositions']); ?></td>
                             <td><?php if ($this->totalsDiff['totalOpenPositions'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['totalOpenPositions']); ?></td>
+                            <td><?php if ($this->totalsDiff['filledPositions'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['filledPositions']); ?></td>
                             <td></td>
                             <td><?php if ($this->totalsDiff['expectedFilled'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['expectedFilled']); ?></td>
                             <td><?php if ($this->totalsDiff['expectedInFullPlan'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['expectedInFullPlan']); ?></td>
@@ -123,7 +127,7 @@
                 </table>
             <?php endif; ?>
 
-            <p class="noteUnsizedSpan">Expected conversion is pulled from the job order extra field "<?php $this->_($this->expectedConversionFieldName); ?>" (empty = 0%). Expected filled is calculated per job order and summed by client. Expected in FT shows future openings from hiring plans. Official Reports limits job orders to "<?php $this->_($this->monitoredJobOrderFieldName); ?>" = Yes.</p>
+            <p class="noteUnsizedSpan">Expected conversion is pulled from the job order extra field "<?php $this->_($this->expectedConversionFieldName); ?>" (empty = 0%). Filled positions count job order candidates currently in status "Hired". Expected filled and Expected in FC are reduced by filled positions and floored at 0. Expected in FC shows total planned openings (past, present, future) from hiring plans. Official Reports limits job orders to "<?php $this->_($this->monitoredJobOrderFieldName); ?>" = Yes.</p>
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
