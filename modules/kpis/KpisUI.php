@@ -687,21 +687,22 @@ class KpisUI extends UserInterface
             $trendEnd = $swap;
         }
 
+        // Trend is for all candidates created in the database (not limited by official reports).
         $candidateTrend = $this->getCandidateTrendData(
             $db,
             $siteID,
             $trendStart,
             $trendEnd,
             $trendView,
-            $officialReports,
-            $monitoredJobOrders
+            false,
+            array()
         );
         $trendTitle = 'New Candidates (' . ucfirst($trendView) . ')';
         $trendLabels = array_map('rawurlencode', $candidateTrend['labels']);
         $trendLabelParam = implode(',', $trendLabels);
         $trendDataParam = implode(',', $candidateTrend['data']);
         $candidateTrendGraphURL = sprintf(
-            '%s?m=graphs&a=generic&title=%s&labels=%s&data=%s&width=900&height=240',
+            '%s?m=graphs&a=generic&title=%s&labels=%s&data=%s&width=900&height=240&showValues=1',
             CATSUtility::getIndexName(),
             rawurlencode($trendTitle),
             $trendLabelParam,
@@ -1164,13 +1165,12 @@ class KpisUI extends UserInterface
             $cursor->modify('monday this week');
             $endCursor = clone $end;
             $endCursor->modify('monday this week');
-            $labelPattern = $_SESSION['CATS']->isDateDMY() ? 'd/m' : 'm/d';
             while ($cursor <= $endCursor)
             {
                 $weekEnd = clone $cursor;
                 $weekEnd->modify('+6 days');
                 $key = $cursor->format('oW');
-                $labels[] = $cursor->format($labelPattern) . ' - ' . $weekEnd->format($labelPattern);
+                $labels[] = $cursor->format('y') . 'W' . $cursor->format('W');
                 $data[] = isset($counts[$key]) ? $counts[$key] : 0;
                 $cursor->modify('+1 week');
             }

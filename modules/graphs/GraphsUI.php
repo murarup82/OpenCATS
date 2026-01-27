@@ -389,7 +389,8 @@ class GraphsUI extends UserInterface
 
         $title = $this->getTrimmedInput('title', $_GET);
 
-        $graph = new GraphSimple($labels, $data, "DarkGreen", $title, $this->width, $this->height);
+        $showValues = (isset($_GET['showValues']) && ((int) $_GET['showValues'] === 1));
+        $graph = new GraphSimple($labels, $data, "DarkGreen", $title, $this->width, $this->height, $showValues);
 
         if (!eval(Hooks::get('GRAPH_GENERIC'))) return;
 

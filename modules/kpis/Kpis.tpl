@@ -151,6 +151,7 @@
             <div style="margin-top: 6px;">
                 <img src="<?php echo($this->candidateTrendGraphURL); ?>" alt="New Candidates Trend" />
             </div>
+            <p class="noteUnsizedSpan">Trend counts all candidates by creation date, regardless of Official Reports.</p>
 
             <p class="noteUnsizedSpan">Expected conversion is pulled from the job order extra field "<?php $this->_($this->expectedConversionFieldName); ?>" (empty = 0%). Filled positions count job order candidates currently in status "Hired". Expected filled and Expected in FC are reduced by filled positions and floored at 0. Expected in FC shows total planned openings (past, present, future) from hiring plans. Official Reports limits job orders to "<?php $this->_($this->monitoredJobOrderFieldName); ?>" = Yes.</p>
         </div>

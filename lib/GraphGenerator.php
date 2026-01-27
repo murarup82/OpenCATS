@@ -55,8 +55,9 @@ class GraphSimple
     private $xValues;
     private $color;
     private $title;
+    private $showValues;
 
-    public function __construct($xLabels, $xValues, $color, $title, $width, $height)
+    public function __construct($xLabels, $xValues, $color, $title, $width, $height, $showValues = false)
     {
         $this->xLabels = $xLabels;
         $this->xValues = $xValues;
@@ -64,6 +65,7 @@ class GraphSimple
         $this->title = $title;
         $this->width = $width;
         $this->height = $height;
+        $this->showValues = (bool) $showValues;
     }
 
     // FIXME: Document me.
@@ -95,6 +97,19 @@ class GraphSimple
         $plot->barBorder->hide(true);
         $plot->setBarGradient(new LinearGradient(new $this->color, new White, 0));
         $plot->setBarPadding(0.2, 0.2);
+        if ($this->showValues)
+        {
+            $labels = array();
+            foreach ($this->xValues as $value)
+            {
+                $labels[] = ($value != 0) ? $value : '';
+            }
+            $plot->label->set($labels);
+            $plot->label->setFont(new Tuffy(8));
+            $plot->label->setBackgroundColor(new Color(240, 240, 240, 15));
+            $plot->label->border->setColor(new Color(187, 187, 187, 15));
+            $plot->label->setPadding(4, 3, 1, 1);
+        }
 
         $group->axis->bottom->setLabelText($this->xLabels);
         $group->axis->bottom->label->setFont(new Tuffy(8));
