@@ -1019,29 +1019,10 @@ class JobOrdersUI extends UserInterface
 
         $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
         $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
-        if ($_SESSION['CATS']->isDateDMY())
+        foreach ($hiringPlanRS as $index => $planRow)
         {
-            foreach ($hiringPlanRS as $index => $planRow)
-            {
-                if ($planRow['startDate'] !== '')
-                {
-                    $hiringPlanRS[$index]['startDate'] = DateUtility::convert(
-                        '-',
-                        $planRow['startDate'],
-                        DATE_FORMAT_MMDDYY,
-                        DATE_FORMAT_DDMMYY
-                    );
-                }
-                if ($planRow['endDate'] !== '')
-                {
-                    $hiringPlanRS[$index]['endDate'] = DateUtility::convert(
-                        '-',
-                        $planRow['endDate'],
-                        DATE_FORMAT_MMDDYY,
-                        DATE_FORMAT_DDMMYY
-                    );
-                }
-            }
+            $hiringPlanRS[$index]['startDate'] = $this->formatHiringPlanDateForInput($planRow['startDate']);
+            $hiringPlanRS[$index]['endDate'] = $this->formatHiringPlanDateForInput($planRow['endDate']);
         }
 
         $this->_template->assign('active', $this);
