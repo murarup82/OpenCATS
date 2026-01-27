@@ -1021,8 +1021,9 @@ class JobOrdersUI extends UserInterface
         $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
         foreach ($hiringPlanRS as $index => $planRow)
         {
-            $hiringPlanRS[$index]['startDate'] = $this->formatHiringPlanDateForInput($planRow['startDate']);
-            $hiringPlanRS[$index]['endDate'] = $this->formatHiringPlanDateForInput($planRow['endDate']);
+            // DateInputForDOM expects MM-DD-YY, so normalize for the picker.
+            $hiringPlanRS[$index]['startDate'] = $this->formatHiringPlanDateForPicker($planRow['startDate']);
+            $hiringPlanRS[$index]['endDate'] = $this->formatHiringPlanDateForPicker($planRow['endDate']);
         }
 
         $this->_template->assign('active', $this);
@@ -1117,6 +1118,23 @@ class JobOrdersUI extends UserInterface
         return DateUtility::convert('-', $isoDate, DATE_FORMAT_YYYYMMDD, $outputFormat);
     }
 
+    private function formatHiringPlanDateForPicker($dateString)
+    {
+        $dateString = trim((string) $dateString);
+        if ($dateString === '')
+        {
+            return '';
+        }
+
+        $isoDate = $this->parseHiringPlanDateToISO($dateString);
+        if ($isoDate === '')
+        {
+            return '';
+        }
+
+        return DateUtility::convert('-', $isoDate, DATE_FORMAT_YYYYMMDD, DATE_FORMAT_MMDDYY);
+    }
+
     private function parseHiringPlanDateToISO($dateString)
     {
         $dateString = trim((string) $dateString);
@@ -1181,9 +1199,7 @@ class JobOrdersUI extends UserInterface
         $validDMY = DateUtility::validate('-', $dateString, DATE_FORMAT_DDMMYY);
         if ($validMDY && $validDMY)
         {
-            $useDMY = $_SESSION['CATS']->isDateDMY();
-            $dateFormat = $useDMY ? DATE_FORMAT_DDMMYY : DATE_FORMAT_MMDDYY;
-            return DateUtility::convert('-', $dateString, $dateFormat, DATE_FORMAT_YYYYMMDD);
+            return DateUtility::convert('-', $dateString, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD);
         }
         if ($validMDY)
         {
