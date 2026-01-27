@@ -17,12 +17,13 @@ class JobOrderHiringPlans
 
     public function getByJobOrder($jobOrderID)
     {
+        // Return raw ISO dates to avoid format ambiguities; UI handles display.
         $sql = sprintf(
             "SELECT
                 joborder_hiring_plan_id AS planID,
                 joborder_id AS jobOrderID,
-                DATE_FORMAT(start_date, '%%m-%%d-%%y') AS startDate,
-                DATE_FORMAT(end_date, '%%m-%%d-%%y') AS endDate,
+                start_date AS startDate,
+                end_date AS endDate,
                 openings,
                 priority,
                 notes

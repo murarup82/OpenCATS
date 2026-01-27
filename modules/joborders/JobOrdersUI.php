@@ -1054,6 +1054,7 @@ class JobOrdersUI extends UserInterface
 
         $plans = array();
         $rowCount = count($planIDs);
+        $debugHiringPlan = (defined('HIRING_PLAN_DEBUG') && HIRING_PLAN_DEBUG);
         for ($i = 0; $i < $rowCount; $i++)
         {
             $planID = (int) $planIDs[$i];
@@ -1074,8 +1075,38 @@ class JobOrdersUI extends UserInterface
                 CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid openings.');
             }
 
+            $startRaw = $startDate;
+            $endRaw = $endDate;
+            if ($debugHiringPlan)
+            {
+                error_log(
+                    'HiringPlan debug raw: ' . json_encode(array(
+                        'jobOrderID' => $jobOrderID,
+                        'row' => $i,
+                        'startRaw' => $startRaw,
+                        'endRaw' => $endRaw,
+                        'openingsRaw' => $openingsRaw,
+                        'priorityRaw' => $priorityRaw,
+                        'isDateDMY' => ($_SESSION['CATS']->isDateDMY() ? 1 : 0)
+                    ))
+                );
+            }
+
             $startDate = $this->normalizeHiringPlanInputDate($startDate, 'start');
             $endDate = $this->normalizeHiringPlanInputDate($endDate, 'end');
+            if ($debugHiringPlan)
+            {
+                error_log(
+                    'HiringPlan debug parsed: ' . json_encode(array(
+                        'jobOrderID' => $jobOrderID,
+                        'row' => $i,
+                        'startRaw' => $startRaw,
+                        'endRaw' => $endRaw,
+                        'startISO' => $startDate,
+                        'endISO' => $endDate
+                    ))
+                );
+            }
 
             $priority = (int) $priorityRaw;
             if ($priority < 1 || $priority > 5)
