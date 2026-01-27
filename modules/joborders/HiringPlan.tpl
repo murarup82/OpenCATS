@@ -39,16 +39,28 @@
                                 <span id="startDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['startDate'])); ?>', -1);
-                                    document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
+                                        DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', <?php echo(json_encode($planRow['startDate'])); ?>, -1);
+                                    var startInput<?php echo($rowIndex); ?> = document.getElementById('startDateInput<?php echo($rowIndex); ?>');
+                                    if (startInput<?php echo($rowIndex); ?>)
+                                    {
+                                        startInput<?php echo($rowIndex); ?>.name = 'startDate[]';
+                                        startInput<?php echo($rowIndex); ?>.setAttribute('data-testid', 'hiring-start-date');
+                                        startInput<?php echo($rowIndex); ?>.setAttribute('data-row', <?php echo((int) $rowIndex); ?>);
+                                    }
                                 </script>
                             </td>
                             <td class="tdData">
                                 <span id="endDatePicker<?php echo($rowIndex); ?>"></span>
                                 <script type="text/javascript">
                                     document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
-                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '<?php echo(addslashes($planRow['endDate'])); ?>', -1);
-                                    document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
+                                        DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', <?php echo(json_encode($planRow['endDate'])); ?>, -1);
+                                    var endInput<?php echo($rowIndex); ?> = document.getElementById('endDateInput<?php echo($rowIndex); ?>');
+                                    if (endInput<?php echo($rowIndex); ?>)
+                                    {
+                                        endInput<?php echo($rowIndex); ?>.name = 'endDate[]';
+                                        endInput<?php echo($rowIndex); ?>.setAttribute('data-testid', 'hiring-end-date');
+                                        endInput<?php echo($rowIndex); ?>.setAttribute('data-row', <?php echo((int) $rowIndex); ?>);
+                                    }
                                 </script>
                             </td>
                             <td class="tdData">
@@ -79,7 +91,13 @@
                                 <script type="text/javascript">
                                     document.getElementById('startDatePicker<?php echo($rowIndex); ?>').innerHTML =
                                         DateInputForDOM('startDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
-                                    document.getElementById('startDateInput<?php echo($rowIndex); ?>').name = 'startDate[]';
+                                    var startInput<?php echo($rowIndex); ?> = document.getElementById('startDateInput<?php echo($rowIndex); ?>');
+                                    if (startInput<?php echo($rowIndex); ?>)
+                                    {
+                                        startInput<?php echo($rowIndex); ?>.name = 'startDate[]';
+                                        startInput<?php echo($rowIndex); ?>.setAttribute('data-testid', 'hiring-start-date');
+                                        startInput<?php echo($rowIndex); ?>.setAttribute('data-row', <?php echo((int) $rowIndex); ?>);
+                                    }
                                 </script>
                             </td>
                             <td class="tdData">
@@ -87,7 +105,13 @@
                                 <script type="text/javascript">
                                     document.getElementById('endDatePicker<?php echo($rowIndex); ?>').innerHTML =
                                         DateInputForDOM('endDateInput<?php echo($rowIndex); ?>', false, 'MM-DD-YY', '', -1);
-                                    document.getElementById('endDateInput<?php echo($rowIndex); ?>').name = 'endDate[]';
+                                    var endInput<?php echo($rowIndex); ?> = document.getElementById('endDateInput<?php echo($rowIndex); ?>');
+                                    if (endInput<?php echo($rowIndex); ?>)
+                                    {
+                                        endInput<?php echo($rowIndex); ?>.name = 'endDate[]';
+                                        endInput<?php echo($rowIndex); ?>.setAttribute('data-testid', 'hiring-end-date');
+                                        endInput<?php echo($rowIndex); ?>.setAttribute('data-row', <?php echo((int) $rowIndex); ?>);
+                                    }
                                 </script>
                             </td>
                             <td class="tdData">
@@ -167,8 +191,20 @@
                         DateInputForDOM('startDateInput' + rowIndex, false, 'MM-DD-YY', '', -1);
                     document.getElementById('endDatePicker' + rowIndex).innerHTML =
                         DateInputForDOM('endDateInput' + rowIndex, false, 'MM-DD-YY', '', -1);
-                    document.getElementById('startDateInput' + rowIndex).name = 'startDate[]';
-                    document.getElementById('endDateInput' + rowIndex).name = 'endDate[]';
+                    var startInput = document.getElementById('startDateInput' + rowIndex);
+                    if (startInput)
+                    {
+                        startInput.name = 'startDate[]';
+                        startInput.setAttribute('data-testid', 'hiring-start-date');
+                        startInput.setAttribute('data-row', rowIndex);
+                    }
+                    var endInput = document.getElementById('endDateInput' + rowIndex);
+                    if (endInput)
+                    {
+                        endInput.name = 'endDate[]';
+                        endInput.setAttribute('data-testid', 'hiring-end-date');
+                        endInput.setAttribute('data-row', rowIndex);
+                    }
 
                     rowCountInput.value = rowIndex + 1;
                 }
