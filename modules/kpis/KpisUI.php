@@ -1321,7 +1321,10 @@ class KpisUI extends UserInterface
         }
 
         $deadline->setTime(0, 0, 0);
-        $diffDays = (int) $today->diff($deadline)->format('%r%a');
+        $todayMidnight = clone $today;
+        $todayMidnight->setTime(0, 0, 0);
+        $seconds = $deadline->getTimestamp() - $todayMidnight->getTimestamp();
+        $diffDays = (int) floor($seconds / 86400);
         $class = ($diffDays < 0) ? 'kpiDeadlineOverdue' : 'kpiDeadlineOk';
 
         return array('value' => $diffDays, 'class' => $class);
