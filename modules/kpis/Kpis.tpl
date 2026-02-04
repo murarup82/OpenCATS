@@ -40,6 +40,9 @@
                 .kpiAcceptanceOk { color: #1d7f3f; font-weight: bold; }
                 .kpiAcceptanceLow { color: #c0392b; font-weight: bold; }
                 .kpiAcceptanceZero { color: #000000; }
+                .kpiDelayOk { background: #cfeedd; }
+                .kpiDelayLate { background: #f5b2b2; }
+                .kpiDelayZero { background: #e0e0e0; }
             </style>
 
             <?php if (empty($this->kpiRows)): ?>
@@ -139,6 +142,40 @@
                     </tbody>
                 </table>
                 <p class="noteUnsizedSpan">Time to deadline uses "<?php $this->_($this->expectedCompletionFieldName); ?>" (date - today). Official Reports filter applies.</p>
+            <?php endif; ?>
+
+            <?php if (!empty($this->requestQualifiedRows)): ?>
+                <table class="kpiTable" style="margin-top: 12px;">
+                    <thead>
+                        <tr>
+                            <th colspan="5">(S) Request to qualified candidate (target < 3 days)</th>
+                        </tr>
+                        <tr>
+                            <th>Role</th>
+                            <th>Client</th>
+                            <th>Date demand received</th>
+                            <th>Date first qualified candidate submitted</th>
+                            <th>Days</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($this->requestQualifiedRows as $row): ?>
+                            <tr>
+                                <td>
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $row['jobOrderID']); ?>">
+                                        <?php echo(htmlspecialchars($row['title'])); ?>
+                                    </a>
+                                </td>
+                                <td><?php echo(htmlspecialchars($row['companyName'])); ?></td>
+                                <td><?php echo(htmlspecialchars($row['receivedDate'])); ?></td>
+                                <td><?php echo(htmlspecialchars($row['submittedDate'])); ?></td>
+                                <td<?php if (!empty($row['daysClass'])): ?> class="<?php echo(htmlspecialchars($row['daysClass'])); ?>"<?php endif; ?>>
+                                    <?php echo(htmlspecialchars($row['daysValue'])); ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             <?php endif; ?>
 
             <?php if (empty($this->candidateSourceRows) && empty($this->candidateMetricRows)): ?>

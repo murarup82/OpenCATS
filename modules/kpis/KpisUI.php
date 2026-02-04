@@ -5,6 +5,7 @@
  */
 
 include_once(LEGACY_ROOT . '/lib/CommonErrors.php');
+include_once(LEGACY_ROOT . '/lib/DateUtility.php');
 include_once(LEGACY_ROOT . '/lib/ExtraFields.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 include_once(LEGACY_ROOT . '/lib/Pager.php');
@@ -721,6 +722,7 @@ class KpisUI extends UserInterface
         );
 
         $jobOrderKpiRows = array();
+        $requestQualifiedRows = array();
         foreach ($jobOrders as $jobOrder)
         {
             if ($officialReports &&
@@ -759,6 +761,91 @@ class KpisUI extends UserInterface
                 'acceptanceRateClass' => $this->getAcceptanceRateClass($acceptanceRate['percent']),
                 'completionRate' => $this->formatCompletionRate($hiredCount, $openPositions)
             );
+        }
+
+        if (!empty($eligibleJobOrderIDs))
+        {
+            $firstSubmittedRS = $db->getAllAssoc(sprintf(
+                "SELECT
+                    joborder_id AS jobOrderID,
+                    MIN(date) AS firstSubmitted
+                FROM
+                    candidate_joborder_status_history
+                WHERE
+                    site_id = %s
+                AND
+                    joborder_id IN (%s)
+                AND
+                    status_to = %s
+                GROUP BY
+                    joborder_id",
+                $db->makeQueryInteger($siteID),
+                $this->formatIntegerList($eligibleJobOrderIDs),
+                $db->makeQueryInteger(PIPELINE_STATUS_PROPOSED_TO_CUSTOMER)
+            ));
+
+            $firstSubmittedByJobOrder = array();
+            foreach ($firstSubmittedRS as $row)
+            {
+                $firstSubmittedByJobOrder[(int) $row['jobOrderID']] = $row['firstSubmitted'];
+            }
+
+            foreach ($jobOrders as $jobOrder)
+            {
+                if ($officialReports &&
+                    !isset($monitoredJobOrders[$jobOrder['jobOrderID']]))
+                {
+                    continue;
+                }
+
+                $jobOrderID = $jobOrder['jobOrderID'];
+                $receivedDate = $this->parseDateTime($jobOrder['dateCreated']);
+                $receivedDisplay = $receivedDate ? $this->formatDateLabel($receivedDate) : '-';
+
+                $submittedRaw = isset($firstSubmittedByJobOrder[$jobOrderID]) ?
+                    $firstSubmittedByJobOrder[$jobOrderID] : '';
+                $submittedDate = $this->parseDateTime($submittedRaw);
+                $submittedDisplay = $submittedDate ? $this->formatDateLabel($submittedDate) : '-';
+
+                $daysValue = '-';
+                $daysClass = '';
+                if ($receivedDate !== null && $submittedDate !== null)
+                {
+                    $receivedDate->setTime(0, 0, 0);
+                    $submittedDate->setTime(0, 0, 0);
+                    $seconds = $submittedDate->getTimestamp() - $receivedDate->getTimestamp();
+                    $days = (int) floor($seconds / 86400);
+                    $daysValue = $days;
+                    if ($days === 0)
+                    {
+                        $daysClass = 'kpiDelayZero';
+                    }
+                    else if ($days <= 3)
+                    {
+                        $daysClass = 'kpiDelayOk';
+                    }
+                    else
+                    {
+                        $daysClass = 'kpiDelayLate';
+                    }
+                }
+
+                $companyName = '(Unknown)';
+                if (isset($companyData[$jobOrder['companyID']]['companyName']))
+                {
+                    $companyName = $companyData[$jobOrder['companyID']]['companyName'];
+                }
+
+                $requestQualifiedRows[] = array(
+                    'jobOrderID' => $jobOrderID,
+                    'title' => $jobOrder['title'],
+                    'companyName' => $companyName,
+                    'receivedDate' => $receivedDisplay,
+                    'submittedDate' => $submittedDisplay,
+                    'daysValue' => $daysValue,
+                    'daysClass' => $daysClass
+                );
+            }
         }
 
         $candidateSourceThisWeek = $this->getCandidateSourceCounts(
@@ -900,6 +987,7 @@ class KpisUI extends UserInterface
         $this->_template->assign('totalsLastWeek', $totalsLastWeek);
         $this->_template->assign('totalsDiff', $totalsDiff);
         $this->_template->assign('jobOrderKpiRows', $jobOrderKpiRows);
+        $this->_template->assign('requestQualifiedRows', $requestQualifiedRows);
         $this->_template->assign('weekLabel', $weekLabel);
         $this->_template->assign('expectedConversionFieldName', self::EXPECTED_CONVERSION_FIELD);
         $this->_template->assign('officialReports', $officialReports);
