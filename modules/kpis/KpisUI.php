@@ -1483,10 +1483,19 @@ class KpisUI extends UserInterface
 
         if (preg_match('/^\d{2}' . preg_quote($separator, '/') . '\d{2}' . preg_quote($separator, '/') . '\d{2}$/', $value))
         {
-            $format = $_SESSION['CATS']->isDateDMY() ? DATE_FORMAT_DDMMYY : DATE_FORMAT_MMDDYY;
-            if (DateUtility::validate($separator, $value, $format))
+            // Extra field dates are stored by DateInput as MM-DD-YY; prefer MDY, fall back to DMY.
+            if (DateUtility::validate($separator, $value, DATE_FORMAT_MMDDYY))
             {
-                $iso = DateUtility::convert($separator, $value, $format, DATE_FORMAT_YYYYMMDD);
+                $iso = DateUtility::convert($separator, $value, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD);
+                $date = DateTime::createFromFormat('Y-m-d', $iso);
+                if ($date instanceof DateTime)
+                {
+                    return $date;
+                }
+            }
+            if (DateUtility::validate($separator, $value, DATE_FORMAT_DDMMYY))
+            {
+                $iso = DateUtility::convert($separator, $value, DATE_FORMAT_DDMMYY, DATE_FORMAT_YYYYMMDD);
                 $date = DateTime::createFromFormat('Y-m-d', $iso);
                 if ($date instanceof DateTime)
                 {
@@ -1497,7 +1506,14 @@ class KpisUI extends UserInterface
 
         if (preg_match('/^\d{2}' . preg_quote($separator, '/') . '\d{2}' . preg_quote($separator, '/') . '\d{4}$/', $value))
         {
-            $format = $_SESSION['CATS']->isDateDMY() ? 'd' . $separator . 'm' . $separator . 'Y' : 'm' . $separator . 'd' . $separator . 'Y';
+            $format = 'm' . $separator . 'd' . $separator . 'Y';
+            $date = DateTime::createFromFormat($format, $value);
+            if ($date instanceof DateTime)
+            {
+                return $date;
+            }
+
+            $format = 'd' . $separator . 'm' . $separator . 'Y';
             $date = DateTime::createFromFormat($format, $value);
             if ($date instanceof DateTime)
             {
