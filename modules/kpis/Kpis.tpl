@@ -43,6 +43,7 @@
                 .kpiDelayOk { background: #cfeedd; }
                 .kpiDelayLate { background: #f5b2b2; }
                 .kpiDelayZero { background: #e0e0e0; }
+                .kpiInfoIcon { vertical-align: middle; margin-left: 4px; cursor: help; }
             </style>
 
             <?php if (empty($this->kpiRows)): ?>
@@ -55,12 +56,30 @@
                         </tr>
                         <tr>
                             <th>Client</th>
-                            <th>New positions this week</th>
-                            <th>Total open positions</th>
-                            <th>Filled positions</th>
-                            <th>Expected conversion</th>
-                            <th>Expected filled</th>
-                            <th>Expected in FC</th>
+                            <th>
+                                New positions this week
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Openings from active hiring plans for job orders created this week." />
+                            </th>
+                            <th>
+                                Total open positions
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Openings planned in the current hiring window, capped by openings available." />
+                            </th>
+                            <th>
+                                Filled positions
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Candidates currently in status &quot;Hired&quot; for open job orders." />
+                            </th>
+                            <th>
+                                Expected conversion
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Range of &quot;Conversion Rate&quot; extra field values for this client's open job orders (empty = 0%)." />
+                            </th>
+                            <th>
+                                Expected filled
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Sum of open positions x conversion rate, minus filled positions, floored at 0." />
+                            </th>
+                            <th>
+                                Expected in FC
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Total planned openings across all hiring plans, minus filled positions, floored at 0." />
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -111,12 +130,27 @@
                         </tr>
                         <tr>
                             <th>Role</th>
-                            <th>Time to deadline</th>
+                            <th>
+                                Time to deadline
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Expected Completion Date minus today (days). Negative = overdue; '-' = not set; gray = invalid date." />
+                            </th>
                             <th>Client</th>
-                            <th>Total open positions</th>
-                            <th>CVs submitted to client</th>
-                            <th>Acceptance rate</th>
-                            <th>Completion rate</th>
+                            <th>
+                                Total open positions
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Openings planned in the current hiring window, capped by openings available." />
+                            </th>
+                            <th>
+                                CVs submitted to client
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Distinct candidates in status &quot;Proposed to Customer&quot;." />
+                            </th>
+                            <th>
+                                Acceptance rate
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Accepted (submitted candidates who were later hired) / submitted." />
+                            </th>
+                            <th>
+                                Completion rate
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Hired / total open positions." />
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -153,9 +187,18 @@
                         <tr>
                             <th>Role</th>
                             <th>Client</th>
-                            <th>Date demand received</th>
-                            <th>Date first qualified candidate submitted</th>
-                            <th>Days</th>
+                            <th>
+                                Date demand received
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Job order created date." />
+                            </th>
+                            <th>
+                                Date first qualified candidate submitted
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="First date a candidate reached status &quot;Proposed to Customer&quot;." />
+                            </th>
+                            <th>
+                                Days
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Calendar days between demand received and first submission (target &lt; 3)." />
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
