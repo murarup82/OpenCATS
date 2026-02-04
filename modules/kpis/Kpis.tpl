@@ -34,6 +34,9 @@
                 .kpiCandidateTable th { background: #075872; border-color: #075872; }
                 .kpiCandidateTable td.kpiLabel { text-align: left; }
                 .kpiCandidateTable td.kpiSource { color: #075872; }
+                .kpiDeadlineOk { color: #1d7f3f; font-weight: bold; }
+                .kpiDeadlineOverdue { color: #c0392b; font-weight: bold; }
+                .kpiDeadlineUnknown { color: #666666; }
             </style>
 
             <?php if (empty($this->kpiRows)): ?>
@@ -91,6 +94,42 @@
                 </table>
             <?php endif; ?>
 
+            <?php if (!empty($this->jobOrderKpiRows)): ?>
+                <table class="kpiTable" style="margin-top: 12px;">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Time to deadline</th>
+                            <th>Client</th>
+                            <th>Total open positions</th>
+                            <th>CVs submitted to client</th>
+                            <th>Acceptance rate</th>
+                            <th>Completion rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($this->jobOrderKpiRows as $row): ?>
+                            <tr>
+                                <td>
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $row['jobOrderID']); ?>">
+                                        <?php echo(htmlspecialchars($row['title'])); ?>
+                                    </a>
+                                </td>
+                                <td<?php if (!empty($row['timeToDeadlineClass'])): ?> class="<?php echo(htmlspecialchars($row['timeToDeadlineClass'])); ?>"<?php endif; ?>>
+                                    <?php echo(htmlspecialchars($row['timeToDeadline'])); ?>
+                                </td>
+                                <td><?php echo(htmlspecialchars($row['companyName'])); ?></td>
+                                <td><?php echo((int) $row['totalOpenPositions']); ?></td>
+                                <td><?php echo((int) $row['submittedCount']); ?></td>
+                                <td><?php echo(htmlspecialchars($row['acceptanceRate'])); ?></td>
+                                <td><?php echo(htmlspecialchars($row['completionRate'])); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <p class="noteUnsizedSpan">Time to deadline uses "<?php $this->_($this->expectedCompletionFieldName); ?>" (date - today). Official Reports filter applies.</p>
+            <?php endif; ?>
+
             <?php if (empty($this->candidateSourceRows) && empty($this->candidateMetricRows)): ?>
                 <p class="warning">No candidate KPI data found.</p>
             <?php else: ?>
@@ -110,16 +149,40 @@
                         <?php foreach ($this->candidateSourceRows as $row): ?>
                             <tr>
                                 <td class="kpiLabel kpiSource"><?php echo(htmlspecialchars($row['label'])); ?></td>
-                                <td><?php echo((int) $row['thisWeek']); ?></td>
-                                <td><?php echo((int) $row['lastWeek']); ?></td>
+                                <td>
+                                    <?php if (!empty($row['thisWeekLink'])): ?>
+                                        <a href="<?php echo(htmlspecialchars($row['thisWeekLink'])); ?>"><?php echo((int) $row['thisWeek']); ?></a>
+                                    <?php else: ?>
+                                        <?php echo((int) $row['thisWeek']); ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($row['lastWeekLink'])): ?>
+                                        <a href="<?php echo(htmlspecialchars($row['lastWeekLink'])); ?>"><?php echo((int) $row['lastWeek']); ?></a>
+                                    <?php else: ?>
+                                        <?php echo((int) $row['lastWeek']); ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php if ($row['delta'] > 0) echo('+'); ?><?php echo((int) $row['delta']); ?></td>
                             </tr>
                         <?php endforeach; ?>
                         <?php foreach ($this->candidateMetricRows as $row): ?>
                             <tr>
                                 <td class="kpiLabel"><?php echo(htmlspecialchars($row['label'])); ?></td>
-                                <td><?php echo((int) $row['thisWeek']); ?></td>
-                                <td><?php echo((int) $row['lastWeek']); ?></td>
+                                <td>
+                                    <?php if (!empty($row['thisWeekLink'])): ?>
+                                        <a href="<?php echo(htmlspecialchars($row['thisWeekLink'])); ?>"><?php echo((int) $row['thisWeek']); ?></a>
+                                    <?php else: ?>
+                                        <?php echo((int) $row['thisWeek']); ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($row['lastWeekLink'])): ?>
+                                        <a href="<?php echo(htmlspecialchars($row['lastWeekLink'])); ?>"><?php echo((int) $row['lastWeek']); ?></a>
+                                    <?php else: ?>
+                                        <?php echo((int) $row['lastWeek']); ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php if ($row['delta'] > 0) echo('+'); ?><?php echo((int) $row['delta']); ?></td>
                             </tr>
                         <?php endforeach; ?>
