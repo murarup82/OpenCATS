@@ -37,6 +37,9 @@
                 .kpiDeadlineOk { color: #1d7f3f; font-weight: bold; }
                 .kpiDeadlineOverdue { color: #c0392b; font-weight: bold; }
                 .kpiDeadlineUnknown { color: #666666; }
+                .kpiAcceptanceOk { color: #1d7f3f; font-weight: bold; }
+                .kpiAcceptanceLow { color: #c0392b; font-weight: bold; }
+                .kpiAcceptanceZero { color: #000000; }
             </style>
 
             <?php if (empty($this->kpiRows)): ?>
@@ -44,6 +47,9 @@
             <?php else: ?>
                 <table class="kpiTable">
                     <thead>
+                        <tr>
+                            <th colspan="7">Positions Open</th>
+                        </tr>
                         <tr>
                             <th>Client</th>
                             <th>New positions this week</th>
@@ -98,6 +104,9 @@
                 <table class="kpiTable" style="margin-top: 12px;">
                     <thead>
                         <tr>
+                            <th colspan="7">(Q) Client Interview : Acceptance</th>
+                        </tr>
+                        <tr>
                             <th>Role</th>
                             <th>Time to deadline</th>
                             <th>Client</th>
@@ -121,7 +130,9 @@
                                 <td><?php echo(htmlspecialchars($row['companyName'])); ?></td>
                                 <td><?php echo((int) $row['totalOpenPositions']); ?></td>
                                 <td><?php echo((int) $row['submittedCount']); ?></td>
-                                <td><?php echo(htmlspecialchars($row['acceptanceRate'])); ?></td>
+                                <td<?php if (!empty($row['acceptanceRateClass'])): ?> class="<?php echo(htmlspecialchars($row['acceptanceRateClass'])); ?>"<?php endif; ?>>
+                                    <?php echo(htmlspecialchars($row['acceptanceRate'])); ?>
+                                </td>
                                 <td><?php echo(htmlspecialchars($row['completionRate'])); ?></td>
                             </tr>
                         <?php endforeach; ?>

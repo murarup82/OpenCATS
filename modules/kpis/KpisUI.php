@@ -745,6 +745,8 @@ class KpisUI extends UserInterface
                 $companyName = $companyData[$jobOrder['companyID']]['companyName'];
             }
 
+            $acceptanceRate = $this->formatAcceptanceRate($acceptedCount, $submittedCount);
+
             $jobOrderKpiRows[] = array(
                 'jobOrderID' => $jobOrderID,
                 'title' => $jobOrder['title'],
@@ -753,7 +755,8 @@ class KpisUI extends UserInterface
                 'timeToDeadlineClass' => $deadlineDisplay['class'],
                 'totalOpenPositions' => $openPositions,
                 'submittedCount' => $submittedCount,
-                'acceptanceRate' => $this->formatAcceptanceRate($acceptedCount, $submittedCount),
+                'acceptanceRate' => $acceptanceRate['display'],
+                'acceptanceRateClass' => $this->getAcceptanceRateClass($acceptanceRate['percent']),
                 'completionRate' => $this->formatCompletionRate($hiredCount, $openPositions)
             );
         }
@@ -1311,7 +1314,7 @@ class KpisUI extends UserInterface
             return array('value' => '-', 'class' => '');
         }
 
-        $deadline = $this->parseDateTime($value);
+        $deadline = $this->parseExtraFieldDate($value);
         if ($deadline === null)
         {
             return array('value' => $value, 'class' => 'kpiDeadlineUnknown');
@@ -1324,17 +1327,20 @@ class KpisUI extends UserInterface
         return array('value' => $diffDays, 'class' => $class);
     }
 
-    private function formatAcceptanceRate($hiredCount, $submittedCount)
+    private function formatAcceptanceRate($acceptedCount, $submittedCount)
     {
-        $hiredCount = (int) $hiredCount;
+        $acceptedCount = (int) $acceptedCount;
         $submittedCount = (int) $submittedCount;
         if ($submittedCount <= 0)
         {
-            return '0';
+            return array('display' => '0%', 'percent' => 0);
         }
 
-        $percent = (int) round(($hiredCount / $submittedCount) * 100);
-        return sprintf('%d/%d - %d%%', $hiredCount, $submittedCount, $percent);
+        $percent = (int) round(($acceptedCount / $submittedCount) * 100);
+        return array(
+            'display' => sprintf('%d/%d - %d%%', $acceptedCount, $submittedCount, $percent),
+            'percent' => $percent
+        );
     }
 
     private function formatCompletionRate($hiredCount, $totalOpenPositions)
@@ -1348,6 +1354,74 @@ class KpisUI extends UserInterface
 
         $percent = (int) round(($hiredCount / $totalOpenPositions) * 100);
         return $percent . '%';
+    }
+
+    private function getAcceptanceRateClass($percent)
+    {
+        if ($percent <= 0)
+        {
+            return 'kpiAcceptanceZero';
+        }
+        if ($percent >= 50)
+        {
+            return 'kpiAcceptanceOk';
+        }
+
+        return 'kpiAcceptanceLow';
+    }
+
+    private function parseExtraFieldDate($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '')
+        {
+            return null;
+        }
+
+        $separator = (strpos($value, '/') !== false) ? '/' : '-';
+        $normalized = str_replace('/', '-', $value);
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $normalized))
+        {
+            $date = DateTime::createFromFormat('Y-m-d', $normalized);
+            if ($date instanceof DateTime)
+            {
+                return $date;
+            }
+        }
+
+        if (preg_match('/^\d{2}' . preg_quote($separator, '/') . '\d{2}' . preg_quote($separator, '/') . '\d{2}$/', $value))
+        {
+            $format = $_SESSION['CATS']->isDateDMY() ? DATE_FORMAT_DDMMYY : DATE_FORMAT_MMDDYY;
+            if (DateUtility::validate($separator, $value, $format))
+            {
+                $iso = DateUtility::convert($separator, $value, $format, DATE_FORMAT_YYYYMMDD);
+                $date = DateTime::createFromFormat('Y-m-d', $iso);
+                if ($date instanceof DateTime)
+                {
+                    return $date;
+                }
+            }
+        }
+
+        if (preg_match('/^\d{2}' . preg_quote($separator, '/') . '\d{2}' . preg_quote($separator, '/') . '\d{4}$/', $value))
+        {
+            $format = $_SESSION['CATS']->isDateDMY() ? 'd' . $separator . 'm' . $separator . 'Y' : 'm' . $separator . 'd' . $separator . 'Y';
+            $date = DateTime::createFromFormat($format, $value);
+            if ($date instanceof DateTime)
+            {
+                return $date;
+            }
+        }
+
+        try
+        {
+            return new DateTime($value);
+        }
+        catch (Exception $e)
+        {
+            return null;
+        }
     }
 
     private function parsePlanDate($value)
