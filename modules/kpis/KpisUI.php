@@ -589,16 +589,16 @@ class KpisUI extends UserInterface
             $siteID,
             $weekStart,
             $weekEnd,
-            $officialReports,
-            $monitoredJobOrders
+            false,
+            array()
         );
         $candidateSourceLastWeek = $this->getCandidateSourceCounts(
             $db,
             $siteID,
             $weekStartPrev,
             $weekEndPrev,
-            $officialReports,
-            $monitoredJobOrders
+            false,
+            array()
         );
         $candidateSourceRows = $this->buildCandidateSourceRows(
             $candidateSourceThisWeek,
@@ -610,16 +610,16 @@ class KpisUI extends UserInterface
             $siteID,
             $weekStart,
             $weekEnd,
-            $officialReports,
-            $monitoredJobOrders
+            false,
+            array()
         );
         $totalCandidatesLastWeek = $this->getCandidateTotalCount(
             $db,
             $siteID,
             $weekStartPrev,
             $weekEndPrev,
-            $officialReports,
-            $monitoredJobOrders
+            false,
+            array()
         );
 
         $statusCountsThisWeek = $this->getCandidateStatusCounts(
@@ -641,12 +641,17 @@ class KpisUI extends UserInterface
 
         $candidateMetricRows = array();
         $candidateMetricRows[] = $this->buildCandidateMetricRow(
-            'Total Candidates',
+            'Sourced Candidates',
+            $this->getSourcedCandidatesCount($db, $siteID, $weekStart),
+            $this->getSourcedCandidatesCount($db, $siteID, $weekStartPrev)
+        );
+        $candidateMetricRows[] = $this->buildCandidateMetricRow(
+            'Qualified Candidates',
             $totalCandidatesThisWeek,
             $totalCandidatesLastWeek
         );
         $candidateMetricRows[] = $this->buildCandidateMetricRow(
-            'Qualified Candidates',
+            'Candidates Associated to a Job Order',
             $this->getStatusCount($statusCountsThisWeek, PIPELINE_STATUS_ALLOCATED),
             $this->getStatusCount($statusCountsLastWeek, PIPELINE_STATUS_ALLOCATED)
         );
@@ -916,7 +921,12 @@ class KpisUI extends UserInterface
 
         $sql = sprintf(
             "SELECT
-                candidate.source AS source,
+                CASE
+                    WHEN candidate.source IS NULL THEN 'N/A'
+                    WHEN TRIM(candidate.source) = '' THEN 'N/A'
+                    WHEN LOWER(TRIM(candidate.source)) = '(none)' THEN 'N/A'
+                    ELSE candidate.source
+                END AS source,
                 COUNT(DISTINCT candidate.candidate_id) AS candidateCount
             FROM
                 candidate
@@ -926,15 +936,9 @@ class KpisUI extends UserInterface
                 candidate.date_created >= %s
             AND
                 candidate.date_created <= %s
-            AND
-                candidate.source IS NOT NULL
-            AND
-                TRIM(candidate.source) != ''
-            AND
-                LOWER(candidate.source) != '(none)'
             %s
             GROUP BY
-                candidate.source",
+                source",
             $db->makeQueryInteger($siteID),
             $db->makeQueryString($start->format('Y-m-d H:i:s')),
             $db->makeQueryString($end->format('Y-m-d H:i:s')),
@@ -1000,6 +1004,35 @@ class KpisUI extends UserInterface
         }
 
         return (int) $row['candidateCount'];
+    }
+
+    private function getSourcedCandidatesCount($db, $siteID, DateTime $weekStart)
+    {
+        $weekYear = (int) $weekStart->format('o');
+        $weekNumber = (int) $weekStart->format('W');
+
+        $row = $db->getAssoc(sprintf(
+            "SELECT
+                sourced_count AS sourcedCount
+            FROM
+                sourcing_weekly
+            WHERE
+                site_id = %s
+            AND
+                week_year = %s
+            AND
+                week_number = %s",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryInteger($weekYear),
+            $db->makeQueryInteger($weekNumber)
+        ));
+
+        if (empty($row))
+        {
+            return 0;
+        }
+
+        return (int) $row['sourcedCount'];
     }
 
     private function getCandidateStatusCounts($db, $siteID, DateTime $start, DateTime $end, $officialReports, $monitoredJobOrders)
@@ -1202,7 +1235,7 @@ class KpisUI extends UserInterface
         {
             $countThisWeek = isset($thisWeek[$source]) ? (int) $thisWeek[$source] : 0;
             $countLastWeek = isset($lastWeek[$source]) ? (int) $lastWeek[$source] : 0;
-            if ($countThisWeek <= 1 && $countLastWeek <= 1)
+            if ($countThisWeek <= 0 && $countLastWeek <= 0)
             {
                 continue;
             }
