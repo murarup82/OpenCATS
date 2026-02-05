@@ -875,6 +875,8 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('associatedFileResume', $associatedFileResume);
         $this->_template->assign('EEOSettingsRS', $EEOSettingsRS);
         $this->_template->assign('gdprSettingsRS', $gdprSettingsRS);
+        $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
+        $this->_template->assign('currentUserID', $_SESSION['CATS']->getUserID());
         $this->_template->assign('isModal', false);
 
         /* REMEMBER TO ALSO UPDATE JobOrdersUI::addCandidateModal() IF

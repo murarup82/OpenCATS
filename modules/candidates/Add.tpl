@@ -1,8 +1,8 @@
 <?php /* $Id: Add.tpl 3746 2007-11-28 20:28:21Z andrew $ */ ?>
 <?php if ($this->isModal): ?>
-    <?php TemplateUtility::printModalHeader('Candidates', array('modules/candidates/validator.js', 'js/addressParser.js', 'js/listEditor.js',  'js/candidate.js', 'js/candidateParser.js'), 'Add New Candidate to this Job Order'); ?>
+    <?php TemplateUtility::printModalHeader('Candidates', array('modules/candidates/validator.js', 'js/addressParser.js', 'js/listEditor.js',  'js/candidate.js', 'js/candidateParser.js', 'modules/candidates/addCandidateAiAssist.js'), 'Add New Candidate to this Job Order'); ?>
 <?php else: ?>
-    <?php TemplateUtility::printHeader('Candidates', array('modules/candidates/validator.js', 'js/addressParser.js', 'js/listEditor.js',  'js/candidate.js', 'js/candidateParser.js')); ?>
+    <?php TemplateUtility::printHeader('Candidates', array('modules/candidates/validator.js', 'js/addressParser.js', 'js/listEditor.js',  'js/candidate.js', 'js/candidateParser.js', 'modules/candidates/addCandidateAiAssist.js')); ?>
     <?php TemplateUtility::printHeaderBlock(); ?>
     <?php TemplateUtility::printTabs($this->active, $this->subActive); ?>
 
@@ -88,6 +88,21 @@
                                             <input type="file" id="documentFile" name="documentFile" onchange="documentFileChange();" size="<?php if ($this->isModal): ?>20<?php else: ?>40<?php endif; ?>" />
                                             <input type="button" id="documentLoad" value="Upload" onclick="loadDocumentFileContents();" disabled />
                                             &nbsp;
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td valign="top" align="right" colspan="2" style="padding-top: 4px;">
+                                            <input type="button" class="button" id="aiPrefillButton" value="AI Prefill" onclick="AddCandidateAiAssist.submit();" />
+                                            <label style="margin-left: 6px; font-size: 11px;">
+                                                <input type="checkbox" id="aiPrefillConsent" />
+                                                I confirm candidate consent
+                                            </label>
+                                            <input type="button" class="button" id="aiPrefillUndo" value="Undo AI Prefill" onclick="AddCandidateAiAssist.undo();" style="display: none; margin-left: 6px;" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td valign="top" align="left" colspan="2">
+                                            <div id="aiPrefillStatus" style="margin-top: 6px;"></div>
                                         </td>
                                     </tr>
                                     <tr>
@@ -468,6 +483,13 @@
     <?php if(isset($this->preassignedFields['phoneCell']) || isset($this->preassignedFields['phoneCell'])): ?>
         checkEmailAlreadyInSystem(urlDecode("<?php if(isset($this->preassignedFields['phoneCell'])) echo(urlencode($this->preassignedFields['phoneCell'])); else if(isset($this->preassignedFields['phoneCell'])) echo(urlencode($this->preassignedFields['phoneCell'])); ?>"));
     <?php endif; ?>
+    if (typeof AddCandidateAiAssist !== 'undefined')
+    {
+        AddCandidateAiAssist.configure({
+            sessionCookie: '<?php echo($this->sessionCookie); ?>',
+            actor: '<?php echo($this->currentUserID); ?>'
+        });
+    }
 </script>
 
 <?php if ($this->isModal): ?>

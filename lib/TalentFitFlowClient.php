@@ -201,6 +201,144 @@ class TalentFitFlowClient
     }
 
     /**
+     * Submits a CV for TalentFitFlow candidate parsing.
+     *
+     * Required options:
+     * - consent (string) JSON consent payload.
+     *
+     * Optional options:
+     * - requestedFields (string) JSON array or CSV
+     * - language, companyId, candidateId, idempotencyKey (strings)
+     *
+     * @return array|false
+     */
+    public function createCandidateParse($cvFilePath, $options = array())
+    {
+        $this->_lastError = '';
+
+        if (!$this->isConfigured())
+        {
+            return $this->_setError('TalentFitFlow is not configured.');
+        }
+
+        if (!is_string($cvFilePath) || $cvFilePath === '' || !is_readable($cvFilePath))
+        {
+            return $this->_setError('CV file is missing or unreadable.');
+        }
+
+        $consent = $this->_getOptionValue($options, 'consent');
+        if ($consent === null || trim((string) $consent) === '')
+        {
+            return $this->_setError('Consent is required.');
+        }
+        $consent = trim((string) $consent);
+
+        $requestedFields = $this->_getOption($options, 'requestedFields');
+        $language = $this->_getOption($options, 'language');
+        $companyId = $this->_getOption($options, 'companyId');
+        $candidateId = $this->_getOption($options, 'candidateId');
+        $idempotencyKey = $this->_getOption($options, 'idempotencyKey');
+
+        $timestamp = $this->_getTimestamp();
+        $cvHash = hash_file('sha256', $cvFilePath);
+        if ($cvHash === false)
+        {
+            return $this->_setError('Failed to hash CV file.');
+        }
+
+        /*
+         * Candidate parse signing must preserve empty segments:
+         * {ts}.{cvHash}...{candidateId}.{language}..{companyId}
+         * (9 segments, 8 separators including a trailing dot).
+         */
+        $payload = implode(
+            '.',
+            array(
+                $timestamp,
+                $cvHash,
+                '',
+                '',
+                $candidateId,
+                $language,
+                '',
+                $companyId,
+                ''
+            )
+        );
+
+        $signature = $this->_signPayload($payload);
+        $headers = $this->_buildSignedHeaders($timestamp, $signature);
+
+        $postFields = array(
+            'cv_file' => $this->_createCurlFile($cvFilePath),
+            'consent' => $consent
+        );
+        if ($requestedFields !== '')
+        {
+            $postFields['requested_fields'] = $requestedFields;
+        }
+        if ($language !== '')
+        {
+            $postFields['language'] = $language;
+        }
+        if ($companyId !== '')
+        {
+            $postFields['companyId'] = $companyId;
+        }
+        if ($candidateId !== '')
+        {
+            $postFields['candidate_id'] = $candidateId;
+        }
+        if ($idempotencyKey !== '')
+        {
+            $postFields['idempotency_key'] = $idempotencyKey;
+        }
+
+        return $this->_requestJson(
+            'POST',
+            '/api/integrations/opencats/candidate-parse/v1',
+            $headers,
+            $postFields,
+            array(200, 202)
+        );
+    }
+
+    /**
+     * Retrieves status for a TalentFitFlow candidate parse job.
+     *
+     * @param string $jobId
+     * @return array|false
+     */
+    public function getCandidateParseStatus($jobId)
+    {
+        $this->_lastError = '';
+
+        if (!$this->isConfigured())
+        {
+            return $this->_setError('TalentFitFlow is not configured.');
+        }
+
+        $jobId = trim((string) $jobId);
+        if ($jobId === '')
+        {
+            return $this->_setError('Job ID is required.');
+        }
+
+        $timestamp = $this->_getTimestamp();
+        $payload = $timestamp . '.' . $jobId;
+        $signature = $this->_signPayload($payload);
+        $headers = $this->_buildSignedHeaders($timestamp, $signature);
+
+        return $this->_requestJson(
+            'GET',
+            '/api/integrations/opencats/candidate-parse/v1/' . rawurlencode($jobId),
+            $headers,
+            null,
+            array(200)
+        );
+    }
+
+    /**
      * Retrieves status for a TalentFitFlow transform job.
      *
      * @param string $jobId
@@ -574,7 +712,35 @@ class TalentFitFlowClient
         if (!in_array($status, $expectedStatusCodes, true))
         {
             $body = $includeHeaders ? substr($response, $headerSize) : $response;
-            return $this->_setError('Unexpected HTTP status ' . $status . ' from TalentFitFlow: ' . $body);
+            $message = '';
+
+            $decoded = json_decode($body, true);
+            if (is_array($decoded))
+            {
+                if (isset($decoded['error_message']) && $decoded['error_message'] !== '')
+                {
+                    $message = (string) $decoded['error_message'];
+                    if (isset($decoded['error_code']) && $decoded['error_code'] !== '')
+                    {
+                        $message = (string) $decoded['error_code'] . ': ' . $message;
+                    }
+                }
+                else if (isset($decoded['error']) && $decoded['error'] !== '')
+                {
+                    $message = (string) $decoded['error'];
+                }
+                else if (isset($decoded['error_code']) && $decoded['error_code'] !== '')
+                {
+                    $message = (string) $decoded['error_code'];
+                }
+            }
+
+            if ($message === '')
+            {
+                $message = $body;
+            }
+
+            return $this->_setError('Unexpected HTTP status ' . $status . ' from TalentFitFlow: ' . $message);
         }
 
         if ($includeHeaders)

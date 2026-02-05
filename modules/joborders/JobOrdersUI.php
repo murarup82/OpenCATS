@@ -1735,6 +1735,8 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('associatedFileResume', false);
         $this->_template->assign('EEOSettingsRS', $EEOSettingsRS);
         $this->_template->assign('gdprSettingsRS', $gdprSettingsRS);
+        $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
+        $this->_template->assign('currentUserID', $_SESSION['CATS']->getUserID());
 
         if (!eval(Hooks::get('JO_ADD_CANDIDATE_MODAL'))) return;
 
