@@ -271,18 +271,18 @@ class TemplateUtility
             return '';
         }
 
-        return ' class="ui2 ui2-theme-avel"';
+        return ' class="ui2 ui2-theme-avel ui2-page"';
     }
 
     private static function _getDefaultUI2Enabled()
     {
         return array(
             'candidates' => true,
-            'joborders'  => true,
-            'companies'  => true,
-            'contacts'   => true,
-            'settings'   => true,
-            'reports'    => true
+            'joborders' => true,
+            'companies' => true,
+            'contacts' => true,
+            'settings' => true,
+            'reports' => true
         );
     }
 

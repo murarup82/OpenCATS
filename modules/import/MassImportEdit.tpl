@@ -5,7 +5,7 @@
 <script src='http://resfly.com/js/resumeParserValidation.js' type='text/javascript' language='javascript'></script>
 <link rel="stylesheet" type="text/css" href="modules/import/MassImport.css" />
     <div id="main">
-        <div id="contents">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
             <div style="width: 910px; padding: 20px 5px 0 5px;">
                 <div id="mainContainer" style="padding-left: 15px; padding-right: 15px;">
                     <div class="infoBar">
@@ -302,3 +302,4 @@
     setTimeout('checkCopyBlocks()', 1);
     </script>
 <?php TemplateUtility::printFooter(); ?>
+

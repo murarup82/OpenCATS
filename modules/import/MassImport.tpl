@@ -4,7 +4,7 @@
 <?php TemplateUtility::printTabs($this->active, '', 'settings'); ?>
 <link rel="stylesheet" type="text/css" href="modules/import/MassImport.css" />
     <div id="main">
-        <div id="contents">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
             <div style="width: 880px; padding: 15px;">
                 <table cellpadding="0" cellspacing="0" border="0" width="100%">
                     <tr>
@@ -71,3 +71,4 @@
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
+

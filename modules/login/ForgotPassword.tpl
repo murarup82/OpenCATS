@@ -16,7 +16,7 @@
         <span id="mainLogo">OpenCATS</span>
     </div>
 
-    <div id="contents">
+    <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
         <div id="login">
             <?php if (!empty($this->message)): ?>
                 <div>
@@ -68,3 +68,4 @@
     </div>
     </body>
 </html>
+

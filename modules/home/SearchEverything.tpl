@@ -4,7 +4,7 @@
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
         <?php TemplateUtility::printQuickSearch($this->wildCardQuickSearch); ?>
-        <div id="contents">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
             <table>
                 <tr>
                     <td width="3%">
@@ -195,3 +195,4 @@
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
+

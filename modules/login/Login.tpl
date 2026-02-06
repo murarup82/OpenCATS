@@ -26,7 +26,7 @@
 	&nbsp;</p>
 
 
-        <div id="contents">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
             <div id="login">
                 <div id="loginText">
                     <div class="ctr">
@@ -133,3 +133,4 @@
         <?php TemplateUtility::printCookieTester(); ?>
     </body>
 </html>
+

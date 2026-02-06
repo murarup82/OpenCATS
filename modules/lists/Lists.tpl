@@ -5,7 +5,7 @@
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
 
-        <div id="contents"<?php echo !$this->dataGrid->getNumberOfRows() ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->dataGrid->getNumberOfRows() ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->dataGrid->getNumberOfRows()): ?>
             <table width="100%">
                 <tr>
@@ -78,3 +78,4 @@
     </div>
 
 <?php TemplateUtility::printFooter(); ?>
+

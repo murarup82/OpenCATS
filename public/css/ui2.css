@@ -295,6 +295,60 @@
     background-image: none !important;
 }
 
+.ui2 table.sortable,
+.ui2 table.sortablepair,
+.ui2 table.dataGrid,
+.ui2 table.editTable,
+.ui2 table.detailsOutside,
+.ui2 table.detailsInside {
+    background: var(--ui2-bg);
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-md);
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: var(--ui2-shadow-1);
+}
+
+.ui2 table.sortable th,
+.ui2 table.sortablepair th,
+.ui2 table.dataGrid th,
+.ui2 table.editTable th {
+    background: var(--ui2-bg-subtle);
+    color: var(--ui2-text);
+    font-size: 12px;
+    padding: 8px;
+    border-bottom: var(--ui2-border-width) solid var(--ui2-border);
+    text-align: left;
+}
+
+.ui2 table.sortable td,
+.ui2 table.sortablepair td,
+.ui2 table.dataGrid td,
+.ui2 table.editTable td,
+.ui2 table.detailsOutside td,
+.ui2 table.detailsInside td {
+    padding: 6px 8px;
+    border-bottom: var(--ui2-border-width) solid var(--ui2-border);
+}
+
+.ui2 table.sortable tr:last-child td,
+.ui2 table.sortablepair tr:last-child td,
+.ui2 table.dataGrid tr:last-child td,
+.ui2 table.editTable tr:last-child td {
+    border-bottom: none;
+}
+
+.ui2 .ui2-details-table {
+    border: none;
+    box-shadow: none;
+}
+
+.ui2 .ui2-details-table td,
+.ui2 .ui2-details-table th {
+    border-bottom: none;
+    padding: 4px 0;
+}
+
 .ui2 .ui2-button,
 .ui2 input[type="button"],
 .ui2 input[type="submit"],

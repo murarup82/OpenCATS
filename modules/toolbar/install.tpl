@@ -4,7 +4,7 @@
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
         <?php TemplateUtility::printQuickSearch(''); ?>
-        <div id="contents" style="text-align:center;">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?> style="text-align:center;">
             <!-- CATS FIREFOX TOOLBAR INSTALLER -->
             <h2>
                 <img src="images/search.gif" width="24" height="24" border="0" alt="Firefox Toolbar" style="margin-top: 3px;" />
@@ -84,3 +84,4 @@
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
+

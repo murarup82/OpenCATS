@@ -5,7 +5,7 @@
     <div id="main" class="home">
         <?php TemplateUtility::printQuickSearch(); ?>
 
-        <div id="contents" style="padding-top: 10px;">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?> style="padding-top: 10px;">
 
             <table>
                 <tr>
@@ -121,3 +121,4 @@
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
+

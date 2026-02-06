@@ -4,7 +4,7 @@
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
-        <div id="contents"<?php echo !$this->numActivities ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->numActivities ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->numActivities): ?>
             <table width="100%">
                 <tr>
@@ -61,3 +61,4 @@
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
+

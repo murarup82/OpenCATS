@@ -28,7 +28,7 @@ div.friendlyErrorMessage {
     <div id="main">
         <?php if (!$this->modal) TemplateUtility::printQuickSearch(); ?>
 
-        <div id="contents">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
             <table style="padding: 25px;">
                 <tr>
                     <?php if (!$this->modal): ?>
@@ -60,3 +60,4 @@ div.friendlyErrorMessage {
 <?php if (!$this->modal): ?>
 <?php TemplateUtility::printFooter(); ?>
 <?php endif; ?>
+
