@@ -452,7 +452,18 @@ function toggleHideShowControls(md5InstanceName)
     else 
     {
         ColumnBox.style.display = 'block';
-        ColumnBox.style.left = docjslib_getRealLeft(cellHideShow) + 'px';
+        var left = docjslib_getRealLeft(cellHideShow);
+        ColumnBox.style.left = left + 'px';
+
+        var viewportWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0;
+        var scrollX = window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0;
+        var maxLeft = scrollX + viewportWidth - ColumnBox.offsetWidth - 8;
+
+        if (viewportWidth && left > maxLeft)
+        {
+            left = Math.max(scrollX + 8, maxLeft);
+            ColumnBox.style.left = left + 'px';
+        }
         helpShim.style.display = 'block';
         helpShim.style.zIndex = 1;
         helpShim.style.left = docjslib_getRealLeft(ColumnBox) + 'px';

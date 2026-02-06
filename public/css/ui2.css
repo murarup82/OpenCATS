@@ -632,6 +632,46 @@
     pointer-events: auto;
 }
 
+.ui2 div[id^="ColumnBox"] {
+    background: var(--ui2-bg);
+    border: 1px solid var(--ui2-border);
+    border-radius: var(--ui2-radius-md);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    padding: 10px 12px;
+    max-height: 280px;
+    overflow: auto;
+    color: var(--ui2-text);
+    font-size: 13px;
+}
+
+.ui2 div[id^="ColumnBox"] > span {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ui2-muted);
+    margin-bottom: 8px;
+}
+
+.ui2 div[id^="ColumnBox"] a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: var(--ui2-radius-sm);
+    text-decoration: none;
+    color: var(--ui2-text);
+    line-height: 1.3;
+}
+
+.ui2 div[id^="ColumnBox"] a:hover {
+    background: var(--ui2-primary-weak);
+}
+
+.ui2 div[id^="ColumnBox"] img {
+    flex-shrink: 0;
+}
+
 .ui2 .ui2-datatable-filters {
     display: flex;
     flex-wrap: wrap;
