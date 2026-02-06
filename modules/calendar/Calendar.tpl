@@ -13,11 +13,18 @@
                     </td>
                     <td><h2>Calendar</h2></td>
                     <td align="right" nowrap="nowrap">
-                        <?php if ($this->userIsSuperUser == 1): ?>
-                            <input type="checkbox" name="hideNonPublic" id="hideNonPublic" onclick="refreshView();" <?php if ($this->superUserActive): ?>checked<?php endif; ?>/>Show Entries from Other Users
-                        <?php else: ?>
-                            <input type="checkbox" style="display:none;" name="hideNonPublic" id="hideNonPublic" onclick="" />
-                        <?php endif; ?>
+                        <div class="ui2-inline" style="justify-content: flex-end; width: 100%;">
+                            <input type="button" class="ui2-button ui2-button--secondary" value="Today" onclick="goToToday();" />
+                            <input type="button" class="ui2-button ui2-button--secondary" value="Add Event" onclick="userCalendarAddEvent();" />
+                            <input type="button" class="ui2-button ui2-button--secondary" value="My Upcoming Events" onclick="calendarUpcomingEvents();" />
+                        </div>
+                        <div style="margin-top: 6px;">
+                            <?php if ($this->userIsSuperUser == 1): ?>
+                                <input type="checkbox" name="hideNonPublic" id="hideNonPublic" onclick="refreshView();" <?php if ($this->superUserActive): ?>checked<?php endif; ?>/>Show Entries from Other Users
+                            <?php else: ?>
+                                <input type="checkbox" style="display:none;" name="hideNonPublic" id="hideNonPublic" onclick="" />
+                            <?php endif; ?>
+                        </div>
                     </td>
                 </tr>
             </table>

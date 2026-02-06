@@ -16,6 +16,20 @@
             </table>
 
             <p class="note">Reports</p>
+            <?php
+                $showEEOReportLink = false;
+                $EEOSettings = new EEOSettings($_SESSION['CATS']->getSiteID());
+                $EEOSettingsRS = $EEOSettings->getAll();
+                if (!empty($EEOSettingsRS) && $EEOSettingsRS['enabled'] == 1)
+                {
+                    $showEEOReportLink = true;
+                }
+            ?>
+            <?php if ($showEEOReportLink): ?>
+                <div style="margin: 6px 0 12px 0;">
+                    <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=reports&amp;a=customizeEEOReport">EEO Reports</a>
+                </div>
+            <?php endif; ?>
 
             <table border="0" width="925">
                 <tr>

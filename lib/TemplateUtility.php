@@ -901,9 +901,11 @@ class TemplateUtility
     {
         $indexName = CATSUtility::getIndexName();
         $modules = ModuleUtility::getModules();
-        $itemsByModule = array();
+        $itemsByKey = array();
         $username  = $_SESSION['CATS']->getUsername();
         $fullName  = $_SESSION['CATS']->getFullName();
+        $currentModuleName = ($active !== null) ? $active->getModuleName() : '';
+        $currentAction = isset($_REQUEST['a']) ? $_REQUEST['a'] : '';
 
         if (strpos($username, '@'.$_SESSION['CATS']->getSiteID()) !== false &&
             substr($username, strpos($username, '@'.$_SESSION['CATS']->getSiteID())) ==
@@ -957,29 +959,18 @@ class TemplateUtility
                 $tabText = substr($tabText, 0, $alPosition);
             }
 
-            $isActive = false;
-            if ($active !== null && $moduleName == $active->getModuleName())
-            {
-                $isActive = true;
-            }
-            if ($moduleName == $forceHighlight)
-            {
-                $isActive = true;
-            }
-
             $item = array(
                 'label' => $tabText,
                 'href' => $indexName . '?m=' . $moduleName,
-                'active' => $isActive,
                 'module' => $moduleName
             );
 
-            $itemsByModule[$moduleName] = $item;
+            $itemsByKey[$moduleName] = $item;
         }
 
         echo '<nav class="ui2-sidebar" aria-label="Primary">', "\n";
         echo '<div class="ui2-sidebar-logo">', "\n";
-        echo '<img src="images/applicationLogo.jpg" alt="OpenCATS" />', "\n";
+        echo '<a href="', $indexName, '?m=home"><img src="images/applicationLogo.jpg" alt="OpenCATS" /></a>', "\n";
         echo '</div>', "\n";
         $iconMap = array(
             'home' => 'home',
@@ -996,11 +987,23 @@ class TemplateUtility
             'settings' => 'settings'
         );
 
+        if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_DEMO)
+        {
+            $itemsByKey['settings_admin'] = array(
+                'label' => 'Administration',
+                'href' => $indexName . '?m=settings&amp;a=administration',
+                'module' => 'settings',
+                'action' => 'administration',
+                'icon' => 'settings'
+            );
+        }
+
         $groups = array(
+            array('label' => 'Overview', 'modules' => array('home', 'activity')),
             array('label' => 'Core Recruiting', 'modules' => array('candidates', 'joborders', 'companies', 'contacts')),
             array('label' => 'Sourcing & Lists', 'modules' => array('sourcing', 'lists')),
             array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports')),
-            array('label' => 'Planning & Admin', 'modules' => array('calendar', 'settings'))
+            array('label' => 'Planning & Admin', 'modules' => array('calendar', 'settings', 'settings_admin'))
         );
 
         foreach ($groups as $group)
@@ -1008,9 +1011,9 @@ class TemplateUtility
             $groupItems = array();
             foreach ($group['modules'] as $moduleName)
             {
-                if (isset($itemsByModule[$moduleName]))
+                if (isset($itemsByKey[$moduleName]))
                 {
-                    $groupItems[] = $itemsByModule[$moduleName];
+                    $groupItems[] = $itemsByKey[$moduleName];
                 }
             }
 
@@ -1024,8 +1027,25 @@ class TemplateUtility
 
             foreach ($groupItems as $item)
             {
-                $class = 'ui2-sidebar-link' . ($item['active'] ? ' is-active' : '');
-                $iconKey = isset($iconMap[$item['module']]) ? $iconMap[$item['module']] : 'default';
+                $isActive = false;
+                if ($item['module'] === $forceHighlight)
+                {
+                    $isActive = true;
+                }
+                else if ($item['module'] === $currentModuleName)
+                {
+                    if (isset($item['action']))
+                    {
+                        $isActive = ($currentAction === $item['action']);
+                    }
+                    else
+                    {
+                        $isActive = !($item['module'] === 'settings' && $currentAction === 'administration');
+                    }
+                }
+
+                $class = 'ui2-sidebar-link' . ($isActive ? ' is-active' : '');
+                $iconKey = isset($item['icon']) ? $item['icon'] : (isset($iconMap[$item['module']]) ? $iconMap[$item['module']] : 'default');
                 echo '<a class="', $class, '" href="', $item['href'], '"><span class="ui2-sidebar-icon ui2-sidebar-icon--', $iconKey, '" aria-hidden="true"></span>', $item['label'], '</a>', "\n";
             }
 

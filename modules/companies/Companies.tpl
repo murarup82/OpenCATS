@@ -58,6 +58,23 @@
                         <input type="checkbox" name="onlyHotCompanies" id="onlyHotCompanies" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
                         Only Hot Companies
                     </label>
+                    <?php
+                        $showMyCompanyLink = false;
+                        if (isset($_SESSION['CATS']) && $_SESSION['CATS']->isHrMode() &&
+                            $this->getUserAccessLevel('companies.internalPostings') >= ACCESS_LEVEL_READ)
+                        {
+                            include_once(LEGACY_ROOT . '/lib/Companies.php');
+                            $companies = new Companies($_SESSION['CATS']->getSiteID());
+                            $defaultCompanyID = $companies->getDefaultCompany();
+                            if ($defaultCompanyID !== false)
+                            {
+                                $showMyCompanyLink = true;
+                            }
+                        }
+                    ?>
+                    <?php if ($showMyCompanyLink): ?>
+                        <a class="ui2-button ui2-button--secondary" href="<?php echo CATSUtility::getIndexName(); ?>?m=companies&amp;a=internalPostings">Go To My Company</a>
+                    <?php endif; ?>
                 </div>
             </form>
 

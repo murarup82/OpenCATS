@@ -59,6 +59,9 @@
                         <input type="checkbox" name="onlyHotCompanies" id="onlyHotContacts" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
                         Only Hot Contacts
                     </label>
+                    <?php if ($this->getUserAccessLevel('contacts.showColdCallList') >= ACCESS_LEVEL_READ): ?>
+                        <a class="ui2-button ui2-button--secondary" href="<?php echo CATSUtility::getIndexName(); ?>?m=contacts&amp;a=showColdCallList">Cold Call List</a>
+                    <?php endif; ?>
                 </div>
             </form>
 
