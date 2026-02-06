@@ -87,47 +87,6 @@ use OpenCATS\UI\QuickActionMenu;
                 </table>
             <?php endif; ?>
 
-            <?php
-                $summaryTitle = $this->data['title'];
-                $summaryCompany = $this->data['companyName'];
-                $summaryLocation = $this->data['cityAndState'];
-                $summaryStatus = $this->data['status'];
-                $summaryOpenings = $this->data['openings'];
-                $summaryRecruiter = $this->data['recruiterFullName'];
-                $summaryTitle = ($summaryTitle !== '') ? $summaryTitle : '-';
-                $summaryCompany = ($summaryCompany !== '') ? $summaryCompany : '-';
-                $summaryLocation = ($summaryLocation !== '') ? $summaryLocation : '-';
-                $summaryStatus = ($summaryStatus !== '') ? $summaryStatus : '-';
-                $summaryOpenings = ($summaryOpenings !== '') ? $summaryOpenings : '-';
-                $summaryRecruiter = ($summaryRecruiter !== '') ? $summaryRecruiter : '-';
-            ?>
-            <div class="ui2-summary">
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Title</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryTitle); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Company</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryCompany); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Location</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryLocation); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Status</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryStatus); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Openings</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryOpenings); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Recruiter</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryRecruiter); ?></div>
-                </div>
-            </div>
-
             <div class="ui2-grid">
                 <div class="ui2-col-main">
                     <div class="ui2-card ui2-card--section">

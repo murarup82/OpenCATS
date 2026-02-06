@@ -96,6 +96,31 @@ class TemplateUtility
      */
     public static function printHeaderBlock($showTopRight = true)
     {
+        if (self::isUI2Enabled())
+        {
+            $username  = $_SESSION['CATS']->getUsername();
+            $siteName  = $_SESSION['CATS']->getSiteName();
+            $fullName  = $_SESSION['CATS']->getFullName();
+            $indexName = CATSUtility::getIndexName();
+
+            if (strpos($username, '@'.$_SESSION['CATS']->getSiteID()) !== false &&
+                substr($username, strpos($username, '@'.$_SESSION['CATS']->getSiteID())) ==
+                '@'.$_SESSION['CATS']->getSiteID() )
+            {
+               $username = str_replace('@'.$_SESSION['CATS']->getSiteID(), '', $username);
+            }
+
+            echo '<div class="ui2-topbar">', "\n";
+            echo '<div class="ui2-topbar-left">', htmlspecialchars($siteName), '</div>', "\n";
+            echo '<div class="ui2-topbar-right">', "\n";
+            echo '<span class="ui2-topbar-user">', htmlspecialchars($fullName), ' &lt;', htmlspecialchars($username), '&gt;</span>', "\n";
+            echo '<a class="ui2-topbar-link" href="', $indexName, '?m=logout">Logout</a>', "\n";
+            echo '</div>', "\n";
+            echo '</div>', "\n";
+
+            return;
+        }
+
         $username     = $_SESSION['CATS']->getUsername();
         $siteName     = $_SESSION['CATS']->getSiteName();
         $fullName     = $_SESSION['CATS']->getFullName();
@@ -277,19 +302,7 @@ class TemplateUtility
 
     private static function _getDefaultUI2Enabled()
     {
-        return array(
-            'home' => true,
-            'candidates' => true,
-            'joborders' => true,
-            'companies' => true,
-            'contacts' => true,
-            'activity' => true,
-            'lists' => true,
-            'calendar' => true,
-            'sourcing' => true,
-            'settings' => true,
-            'reports' => true
-        );
+        return true;
     }
 
     /**
@@ -661,6 +674,12 @@ class TemplateUtility
      */
     public static function printTabs($active, $subActive = '', $forceHighlight = '')
     {
+        if (self::isUI2Enabled())
+        {
+            self::_printSidebarNavigation($active, $forceHighlight);
+            return;
+        }
+
         /* Special tab behaviors:
          *
          * Tab text = 'something*al=somenumber' where somenumber is an access level -

@@ -43,41 +43,6 @@ use OpenCATS\UI\QuickActionMenu;
 
             <p class="note">Contact Details</p>
 
-            <?php
-                $summaryName = trim($this->data['firstName'].' '.$this->data['lastName']);
-                $summaryCompany = $this->data['companyName'];
-                $summaryTitle = $this->data['title'];
-                $summaryPhone = $this->data['phoneCell'];
-                $summaryEmail = $this->data['email1'];
-                $summaryName = ($summaryName !== '') ? $summaryName : '-';
-                $summaryCompany = ($summaryCompany !== '') ? $summaryCompany : '-';
-                $summaryTitle = ($summaryTitle !== '') ? $summaryTitle : '-';
-                $summaryPhone = ($summaryPhone !== '') ? $summaryPhone : '-';
-                $summaryEmail = ($summaryEmail !== '') ? $summaryEmail : '-';
-            ?>
-            <div class="ui2-summary">
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Name</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryName); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Company</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryCompany); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Title</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryTitle); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Phone</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryPhone); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Email</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryEmail); ?></div>
-                </div>
-            </div>
-
             <div class="ui2-grid">
                 <div class="ui2-col-main">
                     <div class="ui2-card ui2-card--section">

@@ -87,41 +87,6 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 <p class="warning">This Candidate is hidden.  Only CATS Administrators can view it or search for it.  To make it visible by the site users, click <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0" style="font-weight:bold;">Here.</a></p>
             <?php endif; ?>
 
-            <?php
-                $summaryName = trim($this->data['firstName'].' '.$this->data['lastName']);
-                $summaryRole = trim($this->data['keySkills']);
-                $summaryLocation = trim($this->data['city'] . ($this->data['city'] && $this->data['country'] ? ', ' : '') . $this->data['country']);
-                $summaryAvailability = trim($this->data['dateAvailable']);
-                $summaryEmployer = trim($this->data['currentEmployer']);
-                $summarySeniority = '';
-                foreach ($this->extraFieldRS as $extraField)
-                {
-                    if (strcasecmp(trim($extraField['fieldName']), 'Seniority') === 0)
-                    {
-                        $summarySeniority = strip_tags($extraField['display']);
-                        break;
-                    }
-                }
-                $summaryItems = array(
-                    array('label' => 'Name', 'value' => ($summaryName !== '' ? $summaryName : '-')),
-                    array('label' => 'Role / Key Skills', 'value' => $summaryRole),
-                    array('label' => 'Location', 'value' => $summaryLocation),
-                    array('label' => 'Seniority', 'value' => $summarySeniority),
-                    array('label' => 'Current Employer', 'value' => $summaryEmployer),
-                    array('label' => 'Availability', 'value' => $summaryAvailability)
-                );
-            ?>
-
-            <div class="ui2-summary-strip">
-                <?php foreach ($summaryItems as $summaryItem): ?>
-                    <?php if ($summaryItem['value'] === '') continue; ?>
-                    <div class="ui2-summary-chip">
-                        <div class="ui2-summary-chip-label"><?php $this->_($summaryItem['label']); ?></div>
-                        <div class="ui2-summary-chip-value"><?php $this->_($summaryItem['value']); ?></div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-
             <div class="ui2-grid">
                 <div class="ui2-col-main">
                     <div class="ui2-card ui2-card--section">
