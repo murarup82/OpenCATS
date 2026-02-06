@@ -727,7 +727,7 @@ function DateInput(DateName, Required, DateFormat, DefaultDate, TabIndex)
         writeln('</select>');
         writeln('<td style="padding: 0px 3px 0px 0px; margin: 0px;"><a' + initialStatus + ' id="' + DateName + '_ID_Link" href="javascript:' + objectName + '.show();" onmouseover="return ' + objectName + '.iconHover(true);" onmouseout="return ' + objectName + '.iconHover(false);"><img src="' + ImageURL + '" style="vertical-align: middle; border: none;" title="Calendar" /></a>&nbsp;');
 
-        writeln('<span id="' + DateName + '_ID" style="position: absolute; visibility: hidden; width: ' + (CellWidth * 7) + 'px; background-color: ' + CalBGColor + '; border: 1px solid dimgray;" onmouseover="' + objectName + '.handleTimer(true);" onmouseout="' + objectName + '.handleTimer(false);">');
+        writeln('<span id="' + DateName + '_ID" class="calendarDatePopup" style="position: absolute; visibility: hidden; width: ' + (CellWidth * 7) + 'px; background-color: ' + CalBGColor + '; border: 1px solid dimgray;" onmouseover="' + objectName + '.handleTimer(true);" onmouseout="' + objectName + '.handleTimer(false);">');
 
         writeln('<table width="' + (CellWidth * 7) + '" cellspacing="0" cellpadding="1">');
 
@@ -885,7 +885,7 @@ function DateInputForDOM(DateName, Required, DateFormat, DefaultDate, TabIndex)
     outCode += ('</select>');
     outCode += ('<td style="padding: 0px 3px 0px 0px; margin: 0px;"><a' + initialStatus + ' id="' + DateName + '_ID_Link" href="javascript:' + objectName + '.show();" onmouseover="return ' + objectName + '.iconHover(true);" onmouseout="return ' + objectName + '.iconHover(false);"><img src="' + ImageURL + '" style="vertical-align: middle; border: none;" title="Calendar" /></a>&nbsp;');
 
-    outCode += ('<span id="' + DateName + '_ID" style="position: absolute; visibility: hidden; width: ' + (CellWidth * 7) + 'px; background-color: ' + CalBGColor + '; border: 1px solid dimgray;" onmouseover="' + objectName + '.handleTimer(true);" onmouseout="' + objectName + '.handleTimer(false);">');
+    outCode += ('<span id="' + DateName + '_ID" class="calendarDatePopup" style="position: absolute; visibility: hidden; width: ' + (CellWidth * 7) + 'px; background-color: ' + CalBGColor + '; border: 1px solid dimgray;" onmouseover="' + objectName + '.handleTimer(true);" onmouseout="' + objectName + '.handleTimer(false);">');
 
     outCode += ('<table width="' + (CellWidth * 7) + '" cellspacing="0" cellpadding="1">');
 
