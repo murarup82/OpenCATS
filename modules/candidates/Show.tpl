@@ -4,9 +4,9 @@ use OpenCATS\UI\CandidateQuickActionMenu;
 use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 ?>
 <?php if ($this->isPopup): ?>
-    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/transformCv.js')); ?>
+    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js')); ?>
 <?php else: ?>
-    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/quickAction-duplicates.js', 'modules/candidates/transformCv.js')); ?>
+    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/quickAction-duplicates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js')); ?>
     
     <?php TemplateUtility::printHeaderBlock(); ?>
     <?php TemplateUtility::printTabs($this->active); ?>
@@ -417,6 +417,17 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <div class="ui2-card ui2-card--section">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">GDPR</div>
+                            <?php if (!$this->isPopup && $this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA): ?>
+                                <div class="ui2-card-actions">
+                                    <button
+                                        id="gdprSendRequest"
+                                        type="button"
+                                        class="ui2-button ui2-button--secondary"
+                                        <?php if ($this->gdprSendDisabled): ?>disabled="disabled"<?php endif; ?>
+                                        <?php if ($this->gdprSendDisabledReason !== ''): ?>data-disabled-reason="<?php echo(htmlspecialchars($this->gdprSendDisabledReason, ENT_QUOTES)); ?>" title="<?php echo(htmlspecialchars($this->gdprSendDisabledReason, ENT_QUOTES)); ?>"<?php endif; ?>
+                                    >Send GDPR request</button>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <table class="detailsInside ui2-details-table">
                             <tr>
@@ -433,7 +444,33 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                     <?php endif; ?>
                                 </td>
                             </tr>
+                            <tr>
+                                <td class="vertical">Latest Request Status:</td>
+                                <td class="data"><?php $this->_($this->gdprLatestRequest['status']); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">Request Created:</td>
+                                <td class="data"><?php $this->_($this->gdprLatestRequest['createdAt']); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">Email Sent:</td>
+                                <td class="data"><?php $this->_($this->gdprLatestRequest['emailSentAt']); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">Link Expires:</td>
+                                <td class="data"><?php $this->_($this->gdprLatestRequest['expiresAt']); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">Deleted At:</td>
+                                <td class="data"><?php $this->_($this->gdprLatestRequest['deletedAt']); ?></td>
+                            </tr>
                         </table>
+                        <?php if (!empty($this->gdprDeletionRequired)): ?>
+                            <div class="ui2-ai-status" style="margin-top: 8px; color: #b00000; border-left-color: #b00000;">
+                                Deletion required (candidate declined).
+                            </div>
+                        <?php endif; ?>
+                        <div id="gdprCandidateStatus" class="ui2-ai-status" style="display: none; margin-top: 8px;"></div>
                     </div>
                     <div class="ui2-card ui2-card--section">
                         <div class="ui2-card-header">
@@ -698,6 +735,17 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 <?php if (!$this->isPopup): ?>
         </div>
     </div>
+
+    <script type="text/javascript">
+        if (typeof GDPRCandidateRequest !== 'undefined')
+        {
+            GDPRCandidateRequest.configure({
+                sessionCookie: '<?php echo($this->sessionCookie); ?>',
+                candidateID: '<?php echo($this->candidateID); ?>'
+            });
+            GDPRCandidateRequest.bind();
+        }
+    </script>
 
 <?php endif; ?>
 	

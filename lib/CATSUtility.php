@@ -220,18 +220,38 @@ class CATSUtility
     public static function getAbsoluteURI($relativePath = '')
     {
         //FIXME: This causes problems on IIS. Check forums for reporters. bradoyler and one more...
-        if (!isset($_SERVER['HTTPS']) || empty($_SERVER['HTTPS']) ||
-            strtolower($_SERVER['HTTPS']) != 'on')
+        $scheme = 'http';
+        $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && !empty($_SERVER['HTTP_X_FORWARDED_PROTO']))
         {
-            $absoluteURI  = 'http://';
+            $forwardedProto = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])[0]));
+            if ($forwardedProto === 'http' || $forwardedProto === 'https')
+            {
+                $scheme = $forwardedProto;
+            }
         }
-        else
+        else if (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on')
         {
-            $absoluteURI  = 'https://';
+            $scheme = 'https';
+        }
+        else if (isset($_SERVER['HTTPS']) && !empty($_SERVER['HTTPS']) &&
+            strtolower($_SERVER['HTTPS']) == 'on')
+        {
+            $scheme = 'https';
         }
 
-        $absoluteURI .= $_SERVER['HTTP_HOST']
-            . str_replace('\\', '/', dirname($_SERVER['PHP_SELF'])) . '/';
+        if (isset($_SERVER['HTTP_X_FORWARDED_HOST']) && !empty($_SERVER['HTTP_X_FORWARDED_HOST']))
+        {
+            $forwardedHost = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_HOST'])[0]);
+            if ($forwardedHost !== '')
+            {
+                $host = $forwardedHost;
+            }
+        }
+
+        $absoluteURI  = $scheme . '://';
+        $absoluteURI .= $host . str_replace('\\', '/', dirname($_SERVER['PHP_SELF'])) . '/';
 
         // This breaks stuff. FIXME http://www.catsone.com/bugs/?do=details&task_id=72
         // if (!eval(Hooks::get('CATS_UTILITY_GET_INDEX_URL'))) return;

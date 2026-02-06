@@ -29,6 +29,7 @@ class GDPRRequestsDataGrid extends DataGrid
             array('name' => 'Expires', 'width' => 80),
             array('name' => 'Sent', 'width' => 80),
             array('name' => 'Decision', 'width' => 110),
+            array('name' => 'Deleted', 'width' => 80),
             array('name' => 'Latest', 'width' => 60),
             array('name' => 'Actions', 'width' => 260)
         );
@@ -97,6 +98,11 @@ EOT;
                 'pagerRender' => 'if (!empty($rsData[\'acceptedAt\'])) { return \'Accepted \' . $rsData[\'acceptedAt\']; } if (!empty($rsData[\'declinedAt\'])) { return \'Declined \' . $rsData[\'declinedAt\']; } return \'--\';',
                 'sortableColumn' => 'decisionSort',
                 'pagerWidth' => 110
+            ),
+            'Deleted' => array(
+                'pagerRender' => 'return !empty($rsData[\'deletedAtFormatted\']) ? $rsData[\'deletedAtFormatted\'] : \'--\';',
+                'sortableColumn' => 'deletedAtSort',
+                'pagerWidth' => 80
             ),
             'Latest' => array(
                 'pagerRender' => 'return ($rsData[\'isLatest\'] == 1) ? \'Yes\' : \'\';',
@@ -176,7 +182,8 @@ EOT;
                 DATE_FORMAT(r.accepted_at, '%%m-%%d-%%y') AS acceptedAt,
                 r.declined_at AS declinedAtSort,
                 DATE_FORMAT(r.declined_at, '%%m-%%d-%%y') AS declinedAt,
-                r.deleted_at AS deletedAt,
+                r.deleted_at AS deletedAtSort,
+                DATE_FORMAT(r.deleted_at, '%%m-%%d-%%y') AS deletedAtFormatted,
                 c.first_name AS firstName,
                 c.last_name AS lastName,
                 c.email1 AS email1,

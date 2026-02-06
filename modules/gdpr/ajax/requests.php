@@ -31,13 +31,6 @@ if ($action === '')
     die();
 }
 
-if (!$interface->isRequiredIDValid('requestID'))
-{
-    $interface->outputXMLErrorPage(-1, 'Invalid request ID.');
-    die();
-}
-
-$requestID = (int) $_REQUEST['requestID'];
 $db = DatabaseConnection::getInstance();
 $siteID = $interface->getSiteID();
 $userID = $interface->getUserID();
@@ -93,6 +86,50 @@ function fetchLatestRequestID($db, $siteID, $candidateID)
     }
 
     return (int) $row['latestRequestID'];
+}
+
+function fetchLatestRequestRow($db, $siteID, $candidateID)
+{
+    $sql = sprintf(
+        "SELECT
+            request_id AS requestID,
+            status,
+            expires_at AS expiresAt,
+            deleted_at AS deletedAt
+         FROM
+            candidate_gdpr_requests
+         WHERE
+            site_id = %s
+            AND candidate_id = %s
+         ORDER BY
+            request_id DESC
+         LIMIT 1",
+        $db->makeQueryInteger($siteID),
+        $db->makeQueryInteger($candidateID)
+    );
+
+    return $db->getAssoc($sql);
+}
+
+function fetchCandidateRow($db, $siteID, $candidateID)
+{
+    $sql = sprintf(
+        "SELECT
+            candidate_id AS candidateID,
+            first_name AS firstName,
+            last_name AS lastName,
+            email1 AS email1
+         FROM
+            candidate
+         WHERE
+            candidate_id = %s
+            AND site_id = %s
+         LIMIT 1",
+        $db->makeQueryInteger($candidateID),
+        $db->makeQueryInteger($siteID)
+    );
+
+    return $db->getAssoc($sql);
 }
 
 function formatExpiryDate($timestamp)
@@ -194,6 +231,131 @@ function sendConsentEmail($siteID, $userID, $email, $firstName, $lastName, $link
     return array(true, '');
 }
 
+function createNewRequestAndSend($db, $siteID, $userID, $candidateID, $email, $firstName, $lastName)
+{
+    $token = bin2hex(random_bytes(16));
+    $tokenHash = hash('sha256', $token);
+    $link = CATSUtility::getAbsoluteURI('gdpr/consent.php?t=' . $token);
+
+    $db->query(sprintf(
+        "UPDATE candidate_gdpr_requests
+         SET
+            status = 'EXPIRED',
+            expires_at = NOW()
+         WHERE
+            site_id = %s
+            AND candidate_id = %s
+            AND status IN ('CREATED','SENT')
+            AND deleted_at IS NULL",
+        $db->makeQueryInteger($siteID),
+        $db->makeQueryInteger($candidateID)
+    ));
+
+    $db->query(sprintf(
+        "INSERT INTO candidate_gdpr_requests
+            (site_id, candidate_id, token_hash, status, created_at, email_sent_at, expires_at, sent_by_user_id)
+         VALUES
+            (%s, %s, %s, 'SENT', NOW(), NOW(), DATE_ADD(NOW(), INTERVAL %s DAY), %s)",
+        $db->makeQueryInteger($siteID),
+        $db->makeQueryInteger($candidateID),
+        $db->makeQueryString($tokenHash),
+        $db->makeQueryInteger(GDPR_CONSENT_LINK_DAYS),
+        $db->makeQueryInteger($userID)
+    ));
+
+    $newRequestID = $db->getLastInsertID();
+    $requestExpires = formatExpiryDate(time() + (GDPR_CONSENT_LINK_DAYS * 86400));
+
+    list($emailSent, $errorMessage) = sendConsentEmail(
+        $siteID,
+        $userID,
+        $email,
+        $firstName,
+        $lastName,
+        $link,
+        $requestExpires
+    );
+
+    if (!$emailSent)
+    {
+        $db->query(sprintf(
+            "UPDATE candidate_gdpr_requests
+             SET
+                status = 'CREATED',
+                email_sent_at = NULL,
+                sent_by_user_id = NULL
+             WHERE
+                request_id = %s
+                AND site_id = %s",
+            $db->makeQueryInteger($newRequestID),
+            $db->makeQueryInteger($siteID)
+        ));
+
+        return array(false, $errorMessage, $newRequestID);
+    }
+
+    return array(true, '', $newRequestID);
+}
+
+if ($action === 'sendCandidate')
+{
+    if (!$interface->isRequiredIDValid('candidateID'))
+    {
+        $interface->outputXMLErrorPage(-1, 'Invalid candidate ID.');
+        die();
+    }
+
+    $candidateID = (int) $_REQUEST['candidateID'];
+    $candidateRow = fetchCandidateRow($db, $siteID, $candidateID);
+    if (empty($candidateRow))
+    {
+        $interface->outputXMLErrorPage(-1, 'Candidate not found.');
+        die();
+    }
+
+    if (empty($candidateRow['email1']))
+    {
+        $interface->outputXMLErrorPage(-1, 'Candidate email is missing.');
+        die();
+    }
+
+    $latestRequestRow = fetchLatestRequestRow($db, $siteID, $candidateID);
+    if (
+        !empty($latestRequestRow) &&
+        $latestRequestRow['status'] === 'DECLINED' &&
+        empty($latestRequestRow['deletedAt'])
+    ) {
+        $interface->outputXMLErrorPage(-1, 'Candidate declined; delete required.');
+        die();
+    }
+
+    list($emailSent, $errorMessage) = createNewRequestAndSend(
+        $db,
+        $siteID,
+        $userID,
+        $candidateID,
+        $candidateRow['email1'],
+        $candidateRow['firstName'],
+        $candidateRow['lastName']
+    );
+
+    if (!$emailSent)
+    {
+        $interface->outputXMLErrorPage(-1, $errorMessage);
+        die();
+    }
+
+    $interface->outputXMLSuccessPage('Sent.');
+    die();
+}
+
+if (!$interface->isRequiredIDValid('requestID'))
+{
+    $interface->outputXMLErrorPage(-1, 'Invalid request ID.');
+    die();
+}
+
+$requestID = (int) $_REQUEST['requestID'];
 $request = fetchRequestRow($db, $siteID, $requestID);
 if (empty($request))
 {
@@ -318,64 +480,18 @@ if ($action === 'create')
         die();
     }
 
-    $token = bin2hex(random_bytes(16));
-    $tokenHash = hash('sha256', $token);
-    $link = CATSUtility::getAbsoluteURI('gdpr/consent.php?t=' . $token);
-
-    $db->query(sprintf(
-        "UPDATE candidate_gdpr_requests
-         SET
-            status = 'EXPIRED',
-            expires_at = NOW()
-         WHERE
-            site_id = %s
-            AND candidate_id = %s
-            AND status IN ('CREATED','SENT')
-            AND deleted_at IS NULL",
-        $db->makeQueryInteger($siteID),
-        $db->makeQueryInteger($candidateID)
-    ));
-
-    $db->query(sprintf(
-        "INSERT INTO candidate_gdpr_requests
-            (site_id, candidate_id, token_hash, status, created_at, email_sent_at, expires_at, sent_by_user_id)
-         VALUES
-            (%s, %s, %s, 'SENT', NOW(), NOW(), DATE_ADD(NOW(), INTERVAL %s DAY), %s)",
-        $db->makeQueryInteger($siteID),
-        $db->makeQueryInteger($candidateID),
-        $db->makeQueryString($tokenHash),
-        $db->makeQueryInteger(GDPR_CONSENT_LINK_DAYS),
-        $db->makeQueryInteger($userID)
-    ));
-
-    $newRequestID = $db->getLastInsertID();
-    $requestExpires = formatExpiryDate(time() + (GDPR_CONSENT_LINK_DAYS * 86400));
-
-    list($emailSent, $errorMessage) = sendConsentEmail(
+    list($emailSent, $errorMessage) = createNewRequestAndSend(
+        $db,
         $siteID,
         $userID,
+        $candidateID,
         $request['email1'],
         $request['firstName'],
-        $request['lastName'],
-        $link,
-        $requestExpires
+        $request['lastName']
     );
 
     if (!$emailSent)
     {
-        $db->query(sprintf(
-            "UPDATE candidate_gdpr_requests
-             SET
-                status = 'CREATED',
-                email_sent_at = NULL,
-                sent_by_user_id = NULL
-             WHERE
-                request_id = %s
-                AND site_id = %s",
-            $db->makeQueryInteger($newRequestID),
-            $db->makeQueryInteger($siteID)
-        ));
-
         $interface->outputXMLErrorPage(-1, $errorMessage);
         die();
     }

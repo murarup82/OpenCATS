@@ -507,6 +507,81 @@ class CandidatesUI extends UserInterface
             $data['gdprExpirationDateDisplay'] = $data['gdprExpirationDate'];
         }
 
+        $gdprLatestRequest = array(
+            'hasRequest' => false,
+            'status' => 'None',
+            'createdAt' => '--',
+            'emailSentAt' => '--',
+            'expiresAt' => '--',
+            'deletedAt' => '--',
+            'rawStatus' => '',
+            'requestID' => 0
+        );
+        $gdprDeletionRequired = false;
+        $gdprSendDisabled = false;
+        $gdprSendDisabledReason = '';
+
+        $db = DatabaseConnection::getInstance();
+        $gdprLatestRequestRow = $db->getAssoc(sprintf(
+            "SELECT
+                request_id AS requestID,
+                status,
+                created_at AS createdAt,
+                email_sent_at AS emailSentAt,
+                expires_at AS expiresAt,
+                deleted_at AS deletedAt
+             FROM
+                candidate_gdpr_requests
+             WHERE
+                site_id = %s
+                AND candidate_id = %s
+             ORDER BY
+                request_id DESC
+             LIMIT 1",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($candidateID)
+        ));
+
+        if (!empty($gdprLatestRequestRow))
+        {
+            $gdprLatestRequest['hasRequest'] = true;
+            $gdprLatestRequest['requestID'] = (int) $gdprLatestRequestRow['requestID'];
+            $gdprLatestRequest['rawStatus'] = $gdprLatestRequestRow['status'];
+
+            $statusDisplay = $gdprLatestRequestRow['status'];
+            if (
+                in_array($gdprLatestRequestRow['status'], array('CREATED', 'SENT'), true) &&
+                !empty($gdprLatestRequestRow['expiresAt']) &&
+                strtotime($gdprLatestRequestRow['expiresAt']) <= time()
+            ) {
+                $statusDisplay = 'EXPIRED';
+            }
+            $gdprLatestRequest['status'] = $statusDisplay;
+            $gdprLatestRequest['createdAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['createdAt']);
+            $gdprLatestRequest['emailSentAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['emailSentAt']);
+            $gdprLatestRequest['expiresAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['expiresAt']);
+            $gdprLatestRequest['deletedAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['deletedAt']);
+
+            if (
+                $gdprLatestRequestRow['status'] === 'DECLINED' &&
+                empty($gdprLatestRequestRow['deletedAt'])
+            ) {
+                $gdprDeletionRequired = true;
+            }
+        }
+
+        if (empty($data['email1']))
+        {
+            $gdprSendDisabled = true;
+            $gdprSendDisabledReason = 'Candidate email is missing.';
+        }
+
+        if ($gdprDeletionRequired)
+        {
+            $gdprSendDisabled = true;
+            $gdprSendDisabledReason = 'Candidate declined; delete required.';
+        }
+
         $attachments = new Attachments($this->_siteID);
         $attachmentsRS = $attachments->getAll(
             DATA_ITEM_CANDIDATE,
@@ -682,6 +757,10 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('tagsRS', $tags->getAll());
         $this->_template->assign('assignedTags', $tags->getCandidateTagsTitle($candidateID));
         $this->_template->assign('lists', $lists);
+        $this->_template->assign('gdprLatestRequest', $gdprLatestRequest);
+        $this->_template->assign('gdprDeletionRequired', $gdprDeletionRequired);
+        $this->_template->assign('gdprSendDisabled', $gdprSendDisabled);
+        $this->_template->assign('gdprSendDisabledReason', $gdprSendDisabledReason);
 
         $this->_template->display('./modules/candidates/Show.tpl');
 
@@ -888,6 +967,23 @@ class CandidatesUI extends UserInterface
             error_log(sprintf('AddCandidate perf: render %.3fms', (microtime(true) - $perfLast) * 1000));
             error_log(sprintf('AddCandidate perf: total %.3fms', (microtime(true) - $perfStart) * 1000));
         }
+    }
+
+    private function formatGdprRequestDate($dateValue)
+    {
+        if (empty($dateValue) || $dateValue === '0000-00-00 00:00:00')
+        {
+            return '--';
+        }
+
+        $timestamp = strtotime($dateValue);
+        if ($timestamp <= 0)
+        {
+            return '--';
+        }
+
+        $format = $_SESSION['CATS']->isDateDMY() ? 'd-m-Y' : 'm-d-Y';
+        return DateUtility::getAdjustedDate($format, $timestamp);
     }
 
     public function checkParsingFunctions()
