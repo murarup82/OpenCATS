@@ -641,6 +641,11 @@ var AddCandidateAiAssist = (function ()
                 locationConfidence = 0;
             }
 
+            if (typeof locationValue === 'undefined')
+            {
+                locationValue = candidate.location;
+            }
+
             if (typeof locationValue === 'string')
             {
                 changed = applyCandidateValue(
@@ -678,11 +683,26 @@ var AddCandidateAiAssist = (function ()
             }
             else if (typeof locationValue === 'object' && locationValue !== null)
             {
+                if (!locationCountryName && locationValue.country_name)
+                {
+                    locationCountryName = locationValue.country_name;
+                }
+
                 if (locationValue.address)
                 {
                     changed = applyCandidateValue(
                         'address',
                         coerceValue(locationValue.address),
+                        locationConfidence,
+                        'Address',
+                        suggestions
+                    ) || changed;
+                }
+                else if (locationValue.raw)
+                {
+                    changed = applyCandidateValue(
+                        'address',
+                        coerceValue(locationValue.raw),
                         locationConfidence,
                         'Address',
                         suggestions
@@ -698,7 +718,7 @@ var AddCandidateAiAssist = (function ()
                         suggestions
                     ) || changed;
                 }
-                if (locationValue.country)
+                if (!locationCountryName && locationValue.country)
                 {
                     changed = applyCandidateValue(
                         'country',
