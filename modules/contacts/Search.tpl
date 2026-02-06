@@ -3,9 +3,8 @@
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active, $this->subActive); ?>
     <div id="main">
-        <?php TemplateUtility::printQuickSearch(); ?>
-
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
+            <div class="ui2-page-header">
             <div class="ui2-datatable-toolbar">
                 <div class="ui2-datatable-title">
                     <div class="ui2-datatable-title-row">
@@ -42,6 +41,7 @@
                     </table>
                 </div>
                 <div class="ui2-datatable-actions"></div>
+            </div>
             </div>
 
             <script type="text/javascript">

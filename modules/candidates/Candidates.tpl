@@ -10,108 +10,109 @@
     div.addMassImportButton:hover { background: #4172E3 url(images/nodata/addMassImport-o.jpg); cursor: pointer; width: 337px; height: 67px; }
     </style>
     <div id="main">
-        <?php TemplateUtility::printQuickSearch(); ?>
-
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->totalCandidates ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->totalCandidates): ?>
-            <div class="ui2-datatable-toolbar">
-                <div class="ui2-datatable-title">
-                    <div class="ui2-datatable-title-row">
-                        <img src="images/candidate.gif" width="24" height="24" alt="Candidates" style="border: none; margin-top: 3px;" />
-                        <div>
-                            <h2>Candidates: Home</h2>
-                            <div class="ui2-datatable-meta">
-                                Candidates - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?> (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
+            <div class="ui2-page-header">
+                <div class="ui2-datatable-toolbar ui2-datatable-toolbar--no-search">
+                    <div class="ui2-datatable-title">
+                        <div class="ui2-datatable-title-row">
+                            <img src="images/candidate.gif" width="24" height="24" alt="Candidates" style="border: none; margin-top: 3px;" />
+                            <div>
+                                <h2>Candidates: Home</h2>
+                                <div class="ui2-datatable-meta">
+                                    Candidates - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?> (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="ui2-datatable-search">
-                    <form class="ui2-datatable-search-form" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
-                        <input type="hidden" name="m" value="candidates" />
-                        <input type="hidden" name="a" value="search" />
-                        <input type="hidden" name="mode" value="searchByFullName" />
-                        <input type="text" name="wildCardString" class="ui2-input ui2-datatable-search-input" placeholder="Search candidates..." />
-                        <button type="submit" class="ui2-button ui2-button--secondary">Search</button>
-                    </form>
-                </div>
-                <div class="ui2-datatable-actions">
-                    <?php if ($this->getUserAccessLevel('candidates.add') >= ACCESS_LEVEL_EDIT): ?>
-                        <a class="ui2-button ui2-button--primary" href="<?php echo CATSUtility::getIndexName(); ?>?m=candidates&amp;a=add">Add Candidate</a>
-                    <?php endif; ?>
-                    <?php $this->dataGrid->drawShowFilterControl(); ?>
-                    <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
-                </div>
-            </div>
-
-            <form name="candidatesViewSelectorForm" id="candidatesViewSelectorForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get">
-                <input type="hidden" name="m" value="candidates" />
-                <input type="hidden" name="a" value="listByView" />
-                <div class="ui2-datatable-filters">
-                    <div class="ui2-datatable-nav">
-                        <?php $this->dataGrid->printNavigation(false); ?>
+                    <div class="ui2-datatable-actions">
+                        <div class="ui2-header-utilities">
+                            <form class="ui2-header-search" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
+                                <input type="hidden" name="m" value="candidates" />
+                                <input type="hidden" name="a" value="search" />
+                                <input type="hidden" name="mode" value="searchByFullName" />
+                                <input type="text" name="wildCardString" class="ui2-input" placeholder="Search candidates..." />
+                                <button type="submit" class="ui2-button ui2-button--secondary">Search</button>
+                            </form>
+                            <?php TemplateUtility::printRecentDropdown('candidates'); ?>
+                        </div>
+                        <?php if ($this->getUserAccessLevel('candidates.add') >= ACCESS_LEVEL_EDIT): ?>
+                            <a class="ui2-button ui2-button--primary" href="<?php echo CATSUtility::getIndexName(); ?>?m=candidates&amp;a=add">Add Candidate</a>
+                        <?php endif; ?>
+                        <?php $this->dataGrid->drawShowFilterControl(); ?>
+                        <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
                     </div>
-                    <label class="ui2-inline">
-                        <input type="checkbox" name="onlyMyCandidates" id="onlyMyCandidates" <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('OwnerID', '==',  $this->userID); ?>" />
-                        Only My Candidates
-                    </label>
-                    <label class="ui2-inline" for="onlyHotCandidates">
-                        <input type="checkbox" name="onlyHotCandidates" id="onlyHotCandidates" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
-                        Only Hot Candidates
-                    </label>
-                    <label class="ui2-inline" for="onlyGdprUnsigned">
-                        <input type="checkbox" name="onlyGdprUnsigned" id="onlyGdprUnsigned" <?php if ($this->dataGrid->getFilterValue('GdprSigned') == '0'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('GdprSigned', '==', '\'0\''); ?>" />
-                        GDPR Not Signed
-                    </label>
-                    <label class="ui2-inline" for="onlyActiveCandidates">
-                        <input type="checkbox" name="onlyActiveCandidates" id="onlyActiveCandidates" <?php if ($this->dataGrid->getFilterValue('IsActive') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsActive', '==', '\'1\''); ?>" />
-                        Active Candidates
-                    </label>
-                    <div class="ui2-datatable-tagfilter">
-                        <a href="javascript:void(0);" id="exportBoxLink<?= $md5InstanceName ?>" onclick="toggleHideShowControls('<?= $md5InstanceName ?>-tags'); return false;">Filter by tag</a>
-                        <div id="tagsContainer" style="position:relative">
-                        <div class="ajaxSearchResults" id="ColumnBox<?= $md5InstanceName ?>-tags" align="left"  style="position:absolute;width:200px;right:0<?= isset($this->globalStyle)?$this->globalStyle:"" ?>">
-                            <table width="100%"><tr><td style="font-weight:bold; color:#000000;">Tag list</td>
-                            <td align="right">
-                                <input type="button" onclick="applyTagFilter()" value="Save&amp;Close" />
-                                <input type="button" onclick="document.getElementById('ColumnBox<?= $md5InstanceName?>').style.display='none';" value="Close" />
-                            </td>
-                            </tr></table>
+                </div>
+
+                <form name="candidatesViewSelectorForm" id="candidatesViewSelectorForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get">
+                    <input type="hidden" name="m" value="candidates" />
+                    <input type="hidden" name="a" value="listByView" />
+                    <div class="ui2-datatable-filters">
+                        <div class="ui2-datatable-nav">
+                            <?php $this->dataGrid->printNavigation(false); ?>
+                        </div>
+                        <label class="ui2-inline">
+                            <input type="checkbox" name="onlyMyCandidates" id="onlyMyCandidates" <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('OwnerID', '==',  $this->userID); ?>" />
+                            Only My Candidates
+                        </label>
+                        <label class="ui2-inline" for="onlyHotCandidates">
+                            <input type="checkbox" name="onlyHotCandidates" id="onlyHotCandidates" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
+                            Only Hot Candidates
+                        </label>
+                        <label class="ui2-inline" for="onlyGdprUnsigned">
+                            <input type="checkbox" name="onlyGdprUnsigned" id="onlyGdprUnsigned" <?php if ($this->dataGrid->getFilterValue('GdprSigned') == '0'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('GdprSigned', '==', '\'0\''); ?>" />
+                            GDPR Not Signed
+                        </label>
+                        <label class="ui2-inline" for="onlyActiveCandidates">
+                            <input type="checkbox" name="onlyActiveCandidates" id="onlyActiveCandidates" <?php if ($this->dataGrid->getFilterValue('IsActive') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsActive', '==', '\'1\''); ?>" />
+                            Active Candidates
+                        </label>
+                        <div class="ui2-datatable-tagfilter">
+                            <a href="javascript:void(0);" id="exportBoxLink<?= $md5InstanceName ?>" onclick="toggleHideShowControls('<?= $md5InstanceName ?>-tags'); return false;">Filter by tag</a>
+                            <div id="tagsContainer" style="position:relative">
+                            <div class="ajaxSearchResults" id="ColumnBox<?= $md5InstanceName ?>-tags" align="left"  style="position:absolute;width:200px;right:0<?= isset($this->globalStyle)?$this->globalStyle:"" ?>">
+                                <table width="100%"><tr><td style="font-weight:bold; color:#000000;">Tag list</td>
+                                <td align="right">
+                                    <input type="button" onclick="applyTagFilter()" value="Save&amp;Close" />
+                                    <input type="button" onclick="document.getElementById('ColumnBox<?= $md5InstanceName?>').style.display='none';" value="Close" />
+                                </td>
+                                </tr></table>
 
 
-                            <ul>
-                            <script type="text/javascript">
-                            function applyTagFilter(){
-                                var arrValues=[];
-                                var tags=document.getElementsByName('candidate_tags[]');
-                                for(var el in tags){
-                                    if (tags[el].checked) arrValues.push(tags[el].value);
-                                };
+                                <ul>
+                                <script type="text/javascript">
+                                function applyTagFilter(){
+                                    var arrValues=[];
+                                    var tags=document.getElementsByName('candidate_tags[]');
+                                    for(var el in tags){
+                                        if (tags[el].checked) arrValues.push(tags[el].value);
+                                    };
 
-                                <?php echo $this->dataGrid->getJSAddFilter('Tags', '=#',  "arrValues.join('/')")?>;
-                            }
-                            </script>
-                            <?php $i=1;
+                                    <?php echo $this->dataGrid->getJSAddFilter('Tags', '=#',  "arrValues.join('/')")?>;
+                                }
+                                </script>
+                                <?php $i=1;
 
-                            function drw($data, $id){
-                                global $i;
-                                foreach($data as $k => $v){
-                                    if ($v['tag_parent_id'] == $id){
-                                        ?><li><input type="checkbox" name="candidate_tags[]" id="checkbox<?= $i ?>" value="<?= $v['tag_id'] ?>"><label for="checkbox<?= $i++ ?>"><?= $v['tag_title'] ?></label></li><?php
-                                        echo "\n<ul>";
-                                        drw($data, $v['tag_id']);
-                                        echo "\n</ul>";
+                                function drw($data, $id){
+                                    global $i;
+                                    foreach($data as $k => $v){
+                                        if ($v['tag_parent_id'] == $id){
+                                            ?><li><input type="checkbox" name="candidate_tags[]" id="checkbox<?= $i ?>" value="<?= $v['tag_id'] ?>"><label for="checkbox<?= $i++ ?>"><?= $v['tag_title'] ?></label></li><?php
+                                            echo "\n<ul>";
+                                            drw($data, $v['tag_id']);
+                                            echo "\n</ul>";
+                                        }
                                     }
                                 }
-                            }
-                            drw($this->tagsRS, '');
-                            ?></ul>
+                                drw($this->tagsRS, '');
+                                ?></ul>
+                            </div>
+                            </div>
+                            <span style="display:none;" id="ajaxTableIndicator<?= $md5InstanceName ?>"><img src="images/indicator_small.gif" alt="" /></span>
                         </div>
-                        </div>
-                        <span style="display:none;" id="ajaxTableIndicator<?= $md5InstanceName ?>"><img src="images/indicator_small.gif" alt="" /></span>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
 
             <?php if ($this->topLog != ''): ?>
             <div style="margin: 20px 0px 20px 0px;">

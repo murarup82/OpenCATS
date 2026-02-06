@@ -3,9 +3,8 @@
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
-        <?php TemplateUtility::printQuickSearch(); ?>
-
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
+            <div class="ui2-page-header">
             <div class="ui2-datatable-toolbar">
                 <div class="ui2-datatable-title">
                     <div class="ui2-datatable-title-row">
@@ -22,10 +21,14 @@
                 </div>
                 <div class="ui2-datatable-search"></div>
                 <div class="ui2-datatable-actions">
+                    <div class="ui2-header-utilities">
+                        <?php TemplateUtility::printRecentDropdown('lists'); ?>
+                    </div>
                     <a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="deleteListFromListView(<?php $this->_($this->listRS['savedListID']); ?>, <?php $this->_($this->listRS['numberEntries']); ?>);">Delete List</a>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
                 </div>
+            </div>
             </div>
 
             <div class="ui2-datatable-filterarea">

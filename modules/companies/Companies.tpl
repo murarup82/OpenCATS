@@ -7,10 +7,9 @@
     div.addCompaniesButton:hover { background: #4172E3 url(images/nodata/companiesButton-o.jpg); cursor: pointer; width: 337px; height: 67px; }
     </style>
     <div id="main">
-        <?php TemplateUtility::printQuickSearch(); ?>
-
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <div class="ui2-datatable-toolbar">
+            <div class="ui2-page-header">
+            <div class="ui2-datatable-toolbar ui2-datatable-toolbar--no-search">
                 <div class="ui2-datatable-title">
                     <div class="ui2-datatable-title-row">
                         <img src="images/companies.gif" width="24" height="24" border="0" alt="Companies" style="margin-top: 3px;" />
@@ -25,16 +24,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="ui2-datatable-search">
-                    <form class="ui2-datatable-search-form" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
-                        <input type="hidden" name="m" value="companies" />
-                        <input type="hidden" name="a" value="search" />
-                        <input type="hidden" name="mode" value="searchByName" />
-                        <input type="text" name="wildCardString" class="ui2-input ui2-datatable-search-input" placeholder="Search companies..." />
-                        <button type="submit" class="ui2-button ui2-button--secondary">Search</button>
-                    </form>
-                </div>
                 <div class="ui2-datatable-actions">
+                    <div class="ui2-header-utilities">
+                        <form class="ui2-header-search" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
+                            <input type="hidden" name="m" value="companies" />
+                            <input type="hidden" name="a" value="search" />
+                            <input type="hidden" name="mode" value="searchByName" />
+                            <input type="text" name="wildCardString" class="ui2-input" placeholder="Search companies..." />
+                            <button type="submit" class="ui2-button ui2-button--secondary">Search</button>
+                        </form>
+                        <?php TemplateUtility::printRecentDropdown('companies'); ?>
+                    </div>
                     <?php if ($this->getUserAccessLevel('companies.add') >= ACCESS_LEVEL_EDIT): ?>
                         <a class="ui2-button ui2-button--primary" href="<?php echo CATSUtility::getIndexName(); ?>?m=companies&amp;a=add">Add Company</a>
                     <?php endif; ?>
@@ -77,6 +77,7 @@
                     <?php endif; ?>
                 </div>
             </form>
+            </div>
 
             <?php if ($this->errMessage != ''): ?>
             <div id="errorMessage" style="padding: 25px 0px 25px 0px; border-top: 1px solid #800000; border-bottom: 1px solid #800000; background-color: #f7f7f7;margin-bottom: 15px;">

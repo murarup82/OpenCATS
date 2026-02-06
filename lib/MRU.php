@@ -162,6 +162,57 @@ class MRU
     }
 
     /**
+     * Returns MRU entries as an array for custom rendering.
+     *
+     * @param integer maximum number of entries to return (0 for no limit)
+     * @return array
+     */
+    public function getEntries($limit = 0)
+    {
+        /* Locally initiated because the MRU object is stored in the session,
+        and database references can not be stored in the session. */
+        $db = DatabaseConnection::getInstance();
+
+        $limit = intval($limit);
+        $limitSQL = '';
+        if ($limit > 0)
+        {
+            $limitSQL = sprintf(' LIMIT %d', $limit);
+        }
+
+        $sql = sprintf(
+            "SELECT
+                data_item_text as dataItemText,
+                url as URL
+            FROM
+                mru
+            WHERE
+                site_id = %s
+            AND
+                user_id = %s
+            ORDER BY
+                mru_id DESC%s",
+            $this->_siteID,
+            $this->_userID,
+            $limitSQL
+        );
+
+        $rs = $db->getAllAssoc($sql);
+
+        foreach ($rs as $rowIndex => $row)
+        {
+            if (mb_strlen($row['dataItemText']) > MRU_ITEM_LENGTH)
+            {
+                $rs[$rowIndex]['dataItemText'] = mb_substr(
+                    $row['dataItemText'], 0, MRU_ITEM_LENGTH
+                ) . "..";
+            }
+        }
+
+        return $rs;
+    }
+
+    /**
      * Removes an existing MRU entry.
      *
      * @param flag data item type

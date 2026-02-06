@@ -277,7 +277,7 @@ class TemplateUtility
             return '';
         }
 
-        return ' class="ui2 ui2-theme-avel ui2-page"';
+        return ' class="ui2 ui2-theme-avel ui2-page ui2-page-header-auto"';
     }
 
     private static function _getDefaultUI2Enabled()
@@ -339,24 +339,37 @@ class TemplateUtility
      */
     public static function printQuickSearch($wildCardString = '')
     {
+        $isUI2 = self::isUI2Enabled();
+        $module = isset($_GET['m']) ? $_GET['m'] : '';
+        $action = isset($_GET['a']) ? $_GET['a'] : '';
+        $isQuickSearchPage = ($module === 'home' && $action === 'quickSearch');
+
+        if ($isUI2 && !$isQuickSearchPage)
+        {
+            return;
+        }
+
         /* Get the formatted MRU list from Session. */
-        $MRU = $_SESSION['CATS']->getMRU()->getFormatted();
+        $MRU = $isUI2 ? '' : $_SESSION['CATS']->getMRU()->getFormatted();
         $indexName = CATSUtility::getIndexName();
 
         /* MRU List */
-        echo '<div id="MRUPanel">', "\n";
-        echo '<div id="MRUBlock">', "\n";
-
-        if (!empty($MRU))
+        if (!$isUI2)
         {
-            echo '<span class="MRUTitle">Recent:&nbsp;</span>&nbsp;', $MRU, "\n";
-        }
-        else
-        {
-            echo '<span class="MRUTitle"></span>&nbsp;', "\n";
-        }
+            echo '<div id="MRUPanel">', "\n";
+            echo '<div id="MRUBlock">', "\n";
 
-        echo '</div>', "\n\n";
+            if (!empty($MRU))
+            {
+                echo '<span class="MRUTitle">Recent:&nbsp;</span>&nbsp;', $MRU, "\n";
+            }
+            else
+            {
+                echo '<span class="MRUTitle"></span>&nbsp;', "\n";
+            }
+
+            echo '</div>', "\n\n";
+        }
 
         /* Quick Search */
         echo '<form id="quickSearchForm" action="', $indexName,
@@ -383,6 +396,62 @@ class TemplateUtility
         echo '</div>', "\n";
         echo '</form>', "\n";
         echo '</div>', "\n";
+    }
+
+    /**
+     * Prints a module-scoped Recent dropdown (MRU) for UI2 headers.
+     *
+     * @param string $module
+     * @param integer $limit
+     * @param string $label
+     * @return void
+     */
+    public static function printRecentDropdown($module, $limit = 7, $label = 'Recent')
+    {
+        $entries = $_SESSION['CATS']->getMRU()->getEntries();
+        $filtered = array();
+        $moduleToken = '?m=' . $module;
+        $moduleTokenAlt = '&amp;m=' . $module;
+
+        foreach ($entries as $entry)
+        {
+            if (strpos($entry['URL'], $moduleToken) !== false ||
+                strpos($entry['URL'], $moduleTokenAlt) !== false)
+            {
+                $filtered[] = $entry;
+                if (count($filtered) >= $limit)
+                {
+                    break;
+                }
+            }
+        }
+
+        $safeModule = htmlspecialchars($module, ENT_QUOTES);
+        $safeLabel = htmlspecialchars($label, ENT_QUOTES);
+
+        echo '<details class="ui2-recent" id="ui2-recent-', $safeModule, '">', "\n";
+        echo '    <summary class="ui2-button ui2-button--secondary ui2-recent-toggle">', $safeLabel,
+             '<span class="ui2-recent-caret">v</span></summary>', "\n";
+        echo '    <div class="ui2-recent-menu">', "\n";
+
+        if (empty($filtered))
+        {
+            echo '        <div class="ui2-recent-empty">No recent items</div>', "\n";
+        }
+        else
+        {
+            echo '        <ul class="ui2-recent-list">', "\n";
+            foreach ($filtered as $entry)
+            {
+                echo '            <li><a href="', $entry['URL'], '">',
+                     htmlspecialchars($entry['dataItemText'], ENT_QUOTES),
+                     '</a></li>', "\n";
+            }
+            echo '        </ul>', "\n";
+        }
+
+        echo '    </div>', "\n";
+        echo '</details>', "\n";
     }
 
     /**

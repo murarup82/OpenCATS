@@ -7,78 +7,79 @@
     div.addJobOrderButton:hover { background: #4172E3 url(images/nodata/jobOrdersButton-o.jpg); cursor: pointer; width: 337px; height: 67px; }
     </style>
     <div id="main">
-        <?php TemplateUtility::printQuickSearch(); ?>
-
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->totalJobOrders ? ' style="background-color: #E6EEFF; padding: 0;"' : ''; ?>>
             <?php if ($this->totalJobOrders): ?>
-            <div class="ui2-datatable-toolbar">
-                <div class="ui2-datatable-title">
-                    <div class="ui2-datatable-title-row">
-                        <img src="images/job_orders.gif" width="24" height="24" border="0" alt="Job Orders" style="margin-top: 3px;" />
-                        <div>
-                            <h2>Job Orders: Home</h2>
-                            <div class="ui2-datatable-meta">
-                                Job Orders - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?>
-                                (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
-                                (<?php if ($this->dataGrid->getFilterValue('Status') != '') echo ($this->dataGrid->getFilterValue('Status')); else echo ('All'); ?>)
-                                <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>(Only My Job Orders)<?php endif; ?>
-                                <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>(Only Hot Job Orders)<?php endif; ?>
+            <div class="ui2-page-header">
+                <div class="ui2-datatable-toolbar ui2-datatable-toolbar--no-search">
+                    <div class="ui2-datatable-title">
+                        <div class="ui2-datatable-title-row">
+                            <img src="images/job_orders.gif" width="24" height="24" border="0" alt="Job Orders" style="margin-top: 3px;" />
+                            <div>
+                                <h2>Job Orders: Home</h2>
+                                <div class="ui2-datatable-meta">
+                                    Job Orders - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?>
+                                    (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
+                                    (<?php if ($this->dataGrid->getFilterValue('Status') != '') echo ($this->dataGrid->getFilterValue('Status')); else echo ('All'); ?>)
+                                    <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>(Only My Job Orders)<?php endif; ?>
+                                    <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>(Only Hot Job Orders)<?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="ui2-datatable-search">
-                    <form class="ui2-datatable-search-form" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
-                        <input type="hidden" name="m" value="joborders" />
-                        <input type="hidden" name="a" value="search" />
-                        <input type="hidden" name="mode" value="searchByJobTitle" />
-                        <input type="text" name="wildCardString" class="ui2-input ui2-datatable-search-input" placeholder="Search job orders..." />
-                        <button type="submit" class="ui2-button ui2-button--secondary">Search</button>
-                    </form>
-                </div>
-                <div class="ui2-datatable-actions">
-                    <?php if ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT): ?>
-                        <a class="ui2-button ui2-button--primary" href="javascript:void(0);" onclick="showPopWin('<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=addJobOrderPopup', 400, 250, null); return false;">Add Job Order</a>
-                    <?php endif; ?>
-                    <?php $this->dataGrid->drawShowFilterControl(); ?>
-                    <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
-                </div>
-            </div>
-
-            <?php TemplateUtility::printPopupContainer(); ?>
-
-            <form name="jobOrdersViewSelectorForm" id="jobOrdersViewSelectorForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get">
-                <input type="hidden" name="m" value="joborders" />
-                <input type="hidden" name="a" value="list" />
-                <div class="ui2-datatable-filters">
-                    <div class="ui2-datatable-nav">
-                        <?php $this->dataGrid->printNavigation(false); ?>
+                    <div class="ui2-datatable-actions">
+                        <div class="ui2-header-utilities">
+                            <form class="ui2-header-search" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
+                                <input type="hidden" name="m" value="joborders" />
+                                <input type="hidden" name="a" value="search" />
+                                <input type="hidden" name="mode" value="searchByJobTitle" />
+                                <input type="text" name="wildCardString" class="ui2-input" placeholder="Search job orders..." />
+                                <button type="submit" class="ui2-button ui2-button--secondary">Search</button>
+                            </form>
+                            <?php TemplateUtility::printRecentDropdown('joborders'); ?>
+                        </div>
+                        <?php if ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT): ?>
+                            <a class="ui2-button ui2-button--primary" href="javascript:void(0);" onclick="showPopWin('<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=addJobOrderPopup', 400, 250, null); return false;">Add Job Order</a>
+                        <?php endif; ?>
+                        <?php $this->dataGrid->drawShowFilterControl(); ?>
+                        <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
                     </div>
-                    <label class="ui2-inline">
-                        Status
-                        <select name="view" id="view" onchange="<?php echo($this->dataGrid->getJSAddFilter('Status', '==', 'this.value', 'true')); ?>" class="selectBox">
-                            <?php
-                                foreach($this->jobOrderFilters as $filter){
-                                    echo '<option value="'.$filter.'"';
-                                    if($this->dataGrid->getFilterValue('Status') == $filter){
-                                        echo ' selected="selected"';
-                                    }
-                                    echo ">".$filter."</option>";
-                                }
-                            ?>
-                            <option value=""<?php if ($this->dataGrid->getFilterValue('Status') == ''): ?> selected="selected"<?php endif; ?>>All</option>
-                        </select>
-                    </label>
-                    <label class="ui2-inline" for="onlyMyJobOrders">
-                        <input type="checkbox" name="onlyMyJobOrders" id="onlyMyJobOrders" <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('OwnerID', '==',  $this->userID); ?>" />
-                        Only My Job Orders
-                    </label>
-                    <label class="ui2-inline" for="onlyHotJobOrders">
-                        <input type="checkbox" name="onlyHotJobOrders" id="onlyHotJobOrders" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
-                        Only Hot Job Orders
-                    </label>
                 </div>
-            </form>
+
+                <?php TemplateUtility::printPopupContainer(); ?>
+
+                <form name="jobOrdersViewSelectorForm" id="jobOrdersViewSelectorForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get">
+                    <input type="hidden" name="m" value="joborders" />
+                    <input type="hidden" name="a" value="list" />
+                    <div class="ui2-datatable-filters">
+                        <div class="ui2-datatable-nav">
+                            <?php $this->dataGrid->printNavigation(false); ?>
+                        </div>
+                        <label class="ui2-inline">
+                            Status
+                            <select name="view" id="view" onchange="<?php echo($this->dataGrid->getJSAddFilter('Status', '==', 'this.value', 'true')); ?>" class="selectBox">
+                                <?php
+                                    foreach($this->jobOrderFilters as $filter){
+                                        echo '<option value="'.$filter.'"';
+                                        if($this->dataGrid->getFilterValue('Status') == $filter){
+                                            echo ' selected="selected"';
+                                        }
+                                        echo ">".$filter."</option>";
+                                    }
+                                ?>
+                                <option value=""<?php if ($this->dataGrid->getFilterValue('Status') == ''): ?> selected="selected"<?php endif; ?>>All</option>
+                            </select>
+                        </label>
+                        <label class="ui2-inline" for="onlyMyJobOrders">
+                            <input type="checkbox" name="onlyMyJobOrders" id="onlyMyJobOrders" <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('OwnerID', '==',  $this->userID); ?>" />
+                            Only My Job Orders
+                        </label>
+                        <label class="ui2-inline" for="onlyHotJobOrders">
+                            <input type="checkbox" name="onlyHotJobOrders" id="onlyHotJobOrders" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
+                            Only Hot Job Orders
+                        </label>
+                    </div>
+                </form>
+            </div>
             <?php endif; ?>
 
             <?php if ($this->errMessage != ''): ?>

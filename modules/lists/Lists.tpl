@@ -3,10 +3,9 @@
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
-        <?php TemplateUtility::printQuickSearch(); ?>
-
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->dataGrid->getNumberOfRows() ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->dataGrid->getNumberOfRows()): ?>
+            <div class="ui2-page-header">
             <div class="ui2-datatable-toolbar">
                 <div class="ui2-datatable-title">
                     <div class="ui2-datatable-title-row">
@@ -21,9 +20,13 @@
                 </div>
                 <div class="ui2-datatable-search"></div>
                 <div class="ui2-datatable-actions">
+                    <div class="ui2-header-utilities">
+                        <?php TemplateUtility::printRecentDropdown('lists'); ?>
+                    </div>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
                 </div>
+            </div>
             </div>
 
             <div class="ui2-datatable-filterarea">

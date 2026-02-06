@@ -3,9 +3,9 @@
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
-        <?php TemplateUtility::printQuickSearch(); ?>
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->numActivities ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->numActivities): ?>
+            <div class="ui2-page-header">
             <div class="ui2-datatable-toolbar">
                 <div class="ui2-datatable-title">
                     <div class="ui2-datatable-title-row">
@@ -32,6 +32,7 @@
                 <div class="ui2-datatable-nav">
                     <?php $this->dataGrid->printNavigation(false); ?>
                 </div>
+            </div>
             </div>
 
             <div class="ui2-datatable-filterarea">

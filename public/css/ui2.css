@@ -66,7 +66,7 @@
     width: 210px;
     height: 100vh;
     background: var(--ui2-sidebar-bg, var(--ui2-primary, #2a3a42));
-    border-right: var(--ui2-border-width, 1px) solid var(--ui2-border, #d6dce1);
+    border-right: var(--ui2-border-width, 1px) solid rgba(255, 255, 255, 0.12);
     padding: 12px 12px 16px 12px;
     overflow-y: auto;
     z-index: 10;
@@ -97,11 +97,11 @@
 }
 
 .ui2-sidebar-group-title {
-    font-size: 10px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.7);
-    padding: 2px 10px 4px 10px;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 4px 10px 6px 10px;
 }
 
 .ui2-sidebar-group--bottom {
@@ -119,14 +119,14 @@
     border-radius: var(--ui2-radius-sm, 4px);
     color: var(--ui2-sidebar-text, #ffffff);
     text-decoration: none;
-    font-size: 15px;
-    line-height: 1.2;
+    font-size: 16px;
+    line-height: 1.25;
 }
 
 .ui2-sidebar-icon {
     width: 16px;
     height: 16px;
-    margin-right: 8px;
+    margin-right: 10px;
     flex-shrink: 0;
     background-repeat: no-repeat;
     background-position: center;
@@ -487,6 +487,38 @@
     margin-bottom: var(--ui2-space-2);
 }
 
+.ui2 .ui2-datatable-toolbar--no-search {
+    grid-template-columns: minmax(220px, 1fr) auto;
+}
+
+.ui2 .ui2-page-header {
+    background: #f8fafc;
+    border: 1px solid var(--ui2-border);
+    border-radius: var(--ui2-radius-md);
+    padding: var(--ui2-space-3);
+    margin-bottom: var(--ui2-space-3);
+}
+
+.ui2.ui2-page-header-auto > table:first-of-type:not(.editTable):not(.detailsOutside):not(.detailsInside):not(.sortable):not(.dataGrid):not(.searchTable):not(.attachmentsTable) {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid var(--ui2-border);
+    border-radius: var(--ui2-radius-md);
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: var(--ui2-space-3);
+}
+
+.ui2.ui2-page-header-auto > table:first-of-type td {
+    padding: 8px 10px;
+}
+
+.ui2.ui2-page-header-auto > table:first-of-type h2 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--ui2-text);
+}
+
 .ui2 .ui2-datatable-title-row {
     display: flex;
     align-items: center;
@@ -515,12 +547,92 @@
     justify-content: flex-end;
 }
 
+.ui2 .ui2-header-utilities {
+    display: flex;
+    align-items: center;
+    gap: var(--ui2-space-2);
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.ui2 .ui2-header-search {
+    display: flex;
+    align-items: center;
+    gap: var(--ui2-space-2);
+}
+
+.ui2 .ui2-header-search .ui2-input {
+    width: 220px;
+}
+
+.ui2 .ui2-recent {
+    position: relative;
+}
+
+.ui2 .ui2-recent summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.ui2 .ui2-recent summary::-webkit-details-marker {
+    display: none;
+}
+
+.ui2 .ui2-recent-caret {
+    margin-left: 6px;
+    font-size: 10px;
+    line-height: 1;
+}
+
+.ui2 .ui2-recent-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 220px;
+    background: var(--ui2-bg);
+    border: 1px solid var(--ui2-border);
+    border-radius: var(--ui2-radius-md);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    padding: 6px;
+    z-index: 50;
+    display: none;
+}
+
+.ui2 .ui2-recent[open] .ui2-recent-menu {
+    display: block;
+}
+
+.ui2 .ui2-recent-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ui2 .ui2-recent-list li a {
+    display: block;
+    padding: 6px 8px;
+    border-radius: var(--ui2-radius-sm);
+    text-decoration: none;
+    color: var(--ui2-text);
+}
+
+.ui2 .ui2-recent-list li a:hover {
+    background: var(--ui2-primary-weak);
+    color: var(--ui2-text);
+}
+
+.ui2 .ui2-recent-empty {
+    padding: 6px 8px;
+    color: var(--ui2-muted);
+    font-size: 12px;
+}
+
 .ui2 .ui2-datatable-filters {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--ui2-space-2);
-    margin: 6px 0 12px 0;
+    margin: 6px 0 0 0;
 }
 
 .ui2 .ui2-datatable-nav {
@@ -557,19 +669,27 @@
 }
 
 .ui2 .ui2-datatable-card table.sortable th,
+.ui2 .ui2-datatable-card table.dataGrid th {
+    padding: 10px 12px;
+    border-bottom: var(--ui2-border-width) solid var(--ui2-border);
+    vertical-align: middle;
+}
+
 .ui2 .ui2-datatable-card table.sortable td,
-.ui2 .ui2-datatable-card table.dataGrid th,
 .ui2 .ui2-datatable-card table.dataGrid td {
     padding: 10px 12px;
     border-bottom: var(--ui2-border-width) solid var(--ui2-border);
     vertical-align: middle;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.ui2 .ui2-datatable-card table.sortable td,
-.ui2 .ui2-datatable-card table.dataGrid td {
-    white-space: nowrap;
+.ui2 .ui2-datatable-card table.sortable thead th,
+.ui2 .ui2-datatable-card table.dataGrid thead th,
+.ui2 .ui2-datatable-card table.sortable th[id^="cellHideShow"],
+.ui2 .ui2-datatable-card table.dataGrid th[id^="cellHideShow"] {
+    overflow: visible;
 }
 
 .ui2 .ui2-datatable-card table.sortable tbody tr:nth-child(even) td,
@@ -612,7 +732,7 @@
 
 .ui2 .ui2-datatable-card--avel table.sortable tbody tr:hover td,
 .ui2 .ui2-datatable-card--avel table.dataGrid tbody tr:hover td {
-    background: var(--ui2-accent-weak);
+    background: rgba(0, 151, 189, 0.08);
 }
 
 .ui2 .ui2-datatable-card--avel table.sortable th:first-child,
@@ -641,12 +761,30 @@
 .ui2 .ui2-datatable-card--avel table.dataGrid td:nth-last-child(-n + 3) {
     color: var(--ui2-muted);
     font-size: 12px;
+    font-weight: 400;
+    opacity: 0.8;
 }
 
 .ui2 .ui2-datatable-card--avel table.sortable th:nth-last-child(-n + 3),
 .ui2 .ui2-datatable-card--avel table.dataGrid th:nth-last-child(-n + 3) {
     font-weight: 600;
     color: #f2f6f8;
+}
+
+.ui2 .ui2-datatable-actions a.button,
+.ui2 .ui2-datatable-actions input.button,
+.ui2 .ui2-datatable-actions button.button {
+    background: var(--ui2-bg);
+    border: 1px solid var(--ui2-border);
+    color: var(--ui2-text);
+    box-shadow: none;
+}
+
+.ui2 .ui2-datatable-actions a.button:hover,
+.ui2 .ui2-datatable-actions input.button:hover,
+.ui2 .ui2-datatable-actions button.button:hover {
+    background: var(--ui2-bg-subtle);
+    border-color: var(--ui2-border);
 }
 
 .ui2 .ui2-datatable-card--avel table.sortable tbody tr td a,
