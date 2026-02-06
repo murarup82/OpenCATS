@@ -134,6 +134,7 @@ if ($action === 'create')
         $interface->outputXMLErrorPage(-1, $client->getLastError());
         die();
     }
+    logTalentFitFlowCandidateParseError('TalentFitFlow candidate parse create response', $response);
 
     $candidateJson = normalizeTalentFitFlowJson(
         isset($response['candidate']) ? $response['candidate'] : null
@@ -198,6 +199,7 @@ if ($action === 'status')
         }
         die();
     }
+    logTalentFitFlowCandidateParseError('TalentFitFlow candidate parse status response', $status);
 
     $candidateJson = normalizeTalentFitFlowJson(
         isset($status['candidate']) ? $status['candidate'] : null
