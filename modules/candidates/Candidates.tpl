@@ -12,7 +12,7 @@
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
 
-        <div id="contents"<?php echo !$this->totalCandidates ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->totalCandidates ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->totalCandidates): ?>
             <table width="100%">
                 <tr>
@@ -178,3 +178,4 @@
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
+

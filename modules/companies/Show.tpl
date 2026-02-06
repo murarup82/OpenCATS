@@ -15,7 +15,7 @@ use OpenCATS\UI\QuickActionMenu;
             $contactsRSWCCount = count($contactsRSWC);
         ?>
 
-        <div id="contents">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
             <table>
                 <tr>
                     <td width="3%">
@@ -418,3 +418,4 @@ use OpenCATS\UI\QuickActionMenu;
     </div>
 
 <?php TemplateUtility::printFooter(); ?>
+

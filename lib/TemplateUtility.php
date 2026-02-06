@@ -201,6 +201,92 @@ class TemplateUtility
     }
 
     /**
+     * Determines if UI2 should be enabled for the current request/module.
+     *
+     * @param string|null $module
+     * @param string|null $action
+     * @return bool
+     */
+    public static function isUI2Enabled($module = null, $action = null)
+    {
+        if ($module === null)
+        {
+            $module = isset($_REQUEST['m']) ? $_REQUEST['m'] : '';
+        }
+
+        if ($action === null)
+        {
+            $action = isset($_REQUEST['a']) ? $_REQUEST['a'] : '';
+        }
+
+        if (defined('UI2_ENABLED'))
+        {
+            $enabled = UI2_ENABLED;
+        }
+        else
+        {
+            $enabled = self::_getDefaultUI2Enabled();
+        }
+
+        if ($enabled === true)
+        {
+            return true;
+        }
+
+        if ($enabled === false || $module === '')
+        {
+            return false;
+        }
+
+        if (is_array($enabled))
+        {
+            if (!isset($enabled[$module]))
+            {
+                return false;
+            }
+
+            if ($enabled[$module] === true)
+            {
+                return true;
+            }
+
+            if (is_array($enabled[$module]) && $action !== '')
+            {
+                return in_array($action, $enabled[$module], true);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns the UI2 wrapper class attribute for template usage.
+     *
+     * @return string
+     */
+    public static function getUI2WrapperAttribute()
+    {
+        if (!self::isUI2Enabled())
+        {
+            return '';
+        }
+
+        return ' class="ui2 ui2-theme-avel"';
+    }
+
+    private static function _getDefaultUI2Enabled()
+    {
+        return array(
+            'candidates' => true,
+            'joborders'  => true,
+            'companies'  => true,
+            'contacts'   => true,
+            'settings'   => true,
+            'reports'    => true
+        );
+    }
+
+    /**
      * Prints the time zone selection dropdown list.
      *
      * @param integer ID and name attributes of the time zone select input

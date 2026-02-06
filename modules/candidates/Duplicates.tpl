@@ -23,7 +23,7 @@
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
 
-        <div id="contents"<?php echo !$this->totalDuplicates ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->totalDuplicates ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->totalDuplicates): ?>
             <table width="100%">
                 <tr>
@@ -160,3 +160,4 @@
 
     <div id="bottomShadow"></div>
 <?php TemplateUtility::printFooter(); ?>
+

@@ -17,7 +17,7 @@
         <span id="subMainLogo">Applicant Tracking System</span>
     </div>
 
-    <div id="contents">
+    <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
         <div id="login" style="width: 500px;">
             <?php if (!empty($this->message)): ?>
                 <div>
@@ -142,3 +142,4 @@
     </div>
     </body>
 </html>
+

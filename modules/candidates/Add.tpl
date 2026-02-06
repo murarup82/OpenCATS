@@ -9,11 +9,10 @@
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
 
-        <div id="contents">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
 
 <?php endif; ?>
 
-            <div class="ui2 ui2-theme-avel">
             <?php if (!$this->isModal): ?>
             <table>
                 <tr>
@@ -475,7 +474,6 @@
                 <?php endif; ?>
             </form>
                 </div>
-            </div>
 
 <script type="text/javascript">
     document.addCandidateForm.firstName.focus();
@@ -502,3 +500,4 @@
     </div>
 <?php TemplateUtility::printFooter(); ?>
 <?php endif; ?>
+

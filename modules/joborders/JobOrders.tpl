@@ -9,7 +9,7 @@
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
 
-        <div id="contents"<?php echo !$this->totalJobOrders ? ' style="background-color: #E6EEFF; padding: 0;"' : ''; ?>>
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->totalJobOrders ? ' style="background-color: #E6EEFF; padding: 0;"' : ''; ?>>
             <?php if ($this->totalJobOrders): ?>
             <table width="100%">
                 <tr>
@@ -132,3 +132,4 @@
     </div>
 
 <?php TemplateUtility::printFooter(); ?>
+

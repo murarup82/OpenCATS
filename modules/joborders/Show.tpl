@@ -12,7 +12,7 @@ use OpenCATS\UI\QuickActionMenu;
             <?php TemplateUtility::printQuickSearch(); ?>
 <?php endif; ?>
 
-        <div id="contents">
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
             <table>
                 <tr>
                     <td width="3%">
@@ -473,3 +473,4 @@ use OpenCATS\UI\QuickActionMenu;
 
 <?php endif; ?>
 <?php TemplateUtility::printFooter(); ?>
+

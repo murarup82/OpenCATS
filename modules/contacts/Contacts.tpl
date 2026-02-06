@@ -9,7 +9,7 @@
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
 
-        <div id="contents"<?php echo !$this->totalContacts ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
+        <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->totalContacts ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->totalContacts): ?>
             <table width="100%">
                 <tr>
@@ -113,3 +113,4 @@
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
+

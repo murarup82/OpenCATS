@@ -44,6 +44,29 @@
     font-weight: 600;
 }
 
+.ui2 h1,
+.ui2 h2,
+.ui2 h3,
+.ui2 h4,
+.ui2 h5 {
+    color: var(--ui2-primary);
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.ui2 p.note,
+.ui2 p.noteUnsized {
+    font-size: var(--ui2-font-size-sm);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ui2-primary);
+    margin: 12px 0 8px 0;
+    padding: 6px 10px;
+    background: var(--ui2-bg-subtle);
+    border-left: 3px solid var(--ui2-accent);
+}
+
 .ui2 .ui2-card {
     background: var(--ui2-bg);
     border: var(--ui2-border-width) solid var(--ui2-border);
