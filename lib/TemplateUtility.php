@@ -1195,6 +1195,7 @@ class TemplateUtility
         echo '<script type="text/javascript">CATSIndexName = "'.CATSUtility::getIndexName().'";</script>', "\n";
 
        $headIncludes[] = 'main.css';
+       $headIncludes[] = 'ui2.css';
 
         foreach ($headIncludes as $key => $filename)
         {

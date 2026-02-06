@@ -1,0 +1,72 @@
+.ui2 {
+    --ui2-font: "IBM Plex Sans", "Segoe UI", Tahoma, sans-serif;
+    --ui2-font-size-1: 12px;
+    --ui2-font-size-2: 13px;
+    --ui2-space-1: 4px;
+    --ui2-space-2: 8px;
+    --ui2-space-3: 12px;
+    --ui2-space-4: 16px;
+    --ui2-color-text: #1f2a37;
+    --ui2-color-muted: #5b6776;
+    --ui2-color-border: #d6d9de;
+    --ui2-color-surface: #ffffff;
+    --ui2-color-accent: #0f6fff;
+    --ui2-color-accent-hover: #0b58c4;
+    --ui2-color-accent-soft: #e6f0ff;
+    --ui2-radius-1: 6px;
+    --ui2-radius-2: 10px;
+    --ui2-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.08);
+
+    font-family: var(--ui2-font);
+    color: var(--ui2-color-text);
+}
+
+.ui2 .ui2-button {
+    -webkit-appearance: none;
+    appearance: none;
+    border: 1px solid var(--ui2-color-accent);
+    background: var(--ui2-color-accent);
+    color: #ffffff;
+    padding: 6px 12px;
+    font-size: var(--ui2-font-size-2);
+    border-radius: var(--ui2-radius-1);
+    box-shadow: var(--ui2-shadow-1);
+    cursor: pointer;
+    line-height: 1.2;
+}
+
+.ui2 .ui2-button:hover {
+    background: var(--ui2-color-accent-hover);
+    border-color: var(--ui2-color-accent-hover);
+}
+
+.ui2 .ui2-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ui2 .ui2-button--secondary {
+    background: var(--ui2-color-surface);
+    color: var(--ui2-color-text);
+    border-color: var(--ui2-color-border);
+}
+
+.ui2 .ui2-button--secondary:hover {
+    background: #f4f6f8;
+    border-color: #c9cdd3;
+}
+
+.ui2 .ui2-status {
+    font-size: var(--ui2-font-size-1);
+    color: var(--ui2-color-muted);
+    background: var(--ui2-color-surface);
+    border: 1px solid var(--ui2-color-border);
+    border-radius: var(--ui2-radius-1);
+    padding: var(--ui2-space-2) var(--ui2-space-3);
+}
+
+.ui2 .ui2-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui2-space-2);
+}

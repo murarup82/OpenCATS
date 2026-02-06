@@ -77,6 +77,7 @@
 
                         <td rowspan="12" align="center" valign="top">
                             <?php if ($this->isParsingEnabled): ?>
+                                <div class="ui2">
                                 <input type="hidden" name="loadDocument" id="loadDocument" value="" />
                                 <input type="hidden" name="parseDocument" id="parseDocument" value="" />
                                 <input type="hidden" name="documentTempFile" id="documentTempFile" value="<?php echo (isset($this->preassignedFields['documentTempFile']) ? $this->preassignedFields['documentTempFile'] : ''); ?>" />
@@ -92,17 +93,17 @@
                                     </tr>
                                     <tr>
                                         <td valign="top" align="right" colspan="2" style="padding-top: 4px;">
-                                            <input type="button" class="button" id="aiPrefillButton" value="AI Prefill" onclick="AddCandidateAiAssist.submit();" />
+                                            <input type="button" class="button ui2-button" id="aiPrefillButton" value="AI Prefill" onclick="AddCandidateAiAssist.submit();" />
                                             <label style="margin-left: 6px; font-size: 11px;">
                                                 <input type="checkbox" id="aiPrefillConsent" />
                                                 I confirm candidate consent
                                             </label>
-                                            <input type="button" class="button" id="aiPrefillUndo" value="Undo AI Prefill" onclick="AddCandidateAiAssist.undo();" style="display: none; margin-left: 6px;" />
+                                            <input type="button" class="button ui2-button ui2-button--secondary" id="aiPrefillUndo" value="Undo AI Prefill" onclick="AddCandidateAiAssist.undo();" style="display: none; margin-left: 6px;" />
                                         </td>
                                     </tr>
                                     <tr>
                                         <td valign="top" align="left" colspan="2">
-                                            <div id="aiPrefillStatus" style="margin-top: 6px;"></div>
+                                            <div id="aiPrefillStatus" class="ui2-status" style="margin-top: 6px;"></div>
                                         </td>
                                     </tr>
                                     <tr>
@@ -132,6 +133,7 @@
                                         </td>
                                     </tr>
                                 </table>
+                                </div>
                             <?php else: ?>
                                 <?php if (PARSING_ENABLED &&
                                     count($this->parsingStatus) &&
