@@ -672,6 +672,15 @@
     flex-shrink: 0;
 }
 
+.ui2 .ui2-attachment-bar {
+    display: flex;
+    align-items: center;
+}
+
+.ui2 .ui2-attachment-bar table {
+    width: 100%;
+}
+
 .ui2 .ui2-datatable-filters {
     display: flex;
     flex-wrap: wrap;
@@ -1097,7 +1106,19 @@
 }
 
 .ui2 select[id$="Year"],
+.ui2 select[id$="_Year_ID"],
 .ui2 select[name$="Year"] {
+    min-width: 90px;
+}
+
+.ui2 input.calendarDateInput {
+    height: 34px;
+    padding: 6px 10px;
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-sm);
+    background: var(--ui2-bg);
+    color: var(--ui2-text);
+    font-size: var(--ui2-font-size-xs);
     min-width: 90px;
 }
 

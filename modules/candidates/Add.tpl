@@ -113,14 +113,14 @@
                                     <tr>
                                         <td valign="top" align="left" colspan="2">
                                             <?php if (isset($this->preassignedFields['documentTempFile']) && ($tempFile = $this->preassignedFields['documentTempFile']) != ''): ?>
-                                            <div id="showAttachmentDetails" style="height: 20px; background-color: #e0e0e0; width: 500px; margin: 1px 0 5px 0; padding: 0 3px 0 5px;">
+                                            <div id="showAttachmentDetails" class="ui2-attachment-bar" style="min-height: 34px; height: auto; background-color: #e0e0e0; width: 500px; margin: 1px 0 5px 0; padding: 4px 6px;">
                                                 <table cellpadding="0" cellspacing="0" border="0" width="100%">
                                                     <tr>
-                                                        <td align="left" valign="top" nowrap="nowrap" style="font-size: 11px;">
+                                                        <td align="left" valign="middle" nowrap="nowrap" style="font-size: 11px;">
                                                             <img src="images/parser/attachment.gif" border="0" style="padding-top: 3px;" />
                                                             Attachment: <span style="font-weight: bold;"><?php echo $tempFile; ?></span>
                                                         </td>
-                                                        <td align="right" valign="top" nowrap="nowrap" style="font-size: 11px;">
+                                                        <td align="right" valign="middle" nowrap="nowrap" style="font-size: 11px;">
                                                             <a href="javascript:void(0);" onclick="removeDocumentFile();" class="ui2-button ui2-button--danger">(remove)</a>
                                                         </td>
                                                     </tr>

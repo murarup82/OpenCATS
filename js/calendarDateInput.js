@@ -17,6 +17,7 @@ var PrevURL = 'images/prev.gif';
 var CalBGColor = 'white';
 var TopRowBGColor = 'buttonface';
 var DayBGColor = 'lightgrey';
+var YearSelectRange = 5; // Years +/- from current year for the year dropdown
 
 // Global variables
 var ZCounter = 100;
@@ -32,6 +33,40 @@ with (document) {
    writeln('select.calendarDateInput {letter-spacing:.06em;font-family:Verdana,Sans-Serif;font-size:11px;}');
    writeln('input.calendarDateInput {letter-spacing:.06em;font-family:Verdana,Sans-Serif;font-size:11px;}');
    writeln('</style>');
+}
+
+function GetYearRange(CurrentYear, PickedYear) {
+   var minYear = CurrentYear - YearSelectRange;
+   var maxYear = CurrentYear + YearSelectRange;
+   if (PickedYear < minYear) minYear = PickedYear;
+   if (PickedYear > maxYear) maxYear = PickedYear;
+   return {min: minYear, max: maxYear};
+}
+
+function BuildYearOptions(CurrentYear, PickedYear) {
+   var range = GetYearRange(CurrentYear, PickedYear);
+   var optionsHTML = '';
+   for (var y = range.min; y <= range.max; y++) {
+      var selected = (PickedYear == y) ? ' selected="selected"' : '';
+      optionsHTML += '<option value="' + y + '"' + selected + '>' + y + '</option>';
+   }
+   return optionsHTML;
+}
+
+function EnsureYearOption(YearList, YearValue) {
+   if (!YearList || !YearList.tagName || YearList.tagName.toLowerCase() != 'select') return;
+   var options = YearList.options;
+   for (var i = 0; i < options.length; i++) {
+      if (parseInt(options[i].value, 10) == YearValue) return;
+   }
+   var newOption = new Option(YearValue, YearValue);
+   for (var j = 0; j < options.length; j++) {
+      if (parseInt(options[j].value, 10) > YearValue) {
+         options.add(newOption, options[j]);
+         return;
+      }
+   }
+   options.add(newOption);
 }
 
 // Only allows certain keys to be used in the date field
@@ -148,8 +183,8 @@ function PickDisplayDay(ClickedDay) {
    }
    this.setPicked(this.displayed.yearValue, this.displayed.monthIndex, ClickedDay);
    // Change the year, if necessary
-   YearField.value = this.picked.yearPad;
-   YearField.defaultValue = YearField.value;
+   EnsureYearOption(YearField, this.picked.yearValue);
+   YearField.value = this.picked.yearValue;
 }
 
 // Builds the HTML for the calendar days
@@ -332,6 +367,17 @@ function CheckYearInput(YearField) {
    }
 }
 
+function CheckYearSelect(YearList) {
+   if (YearList.value == '') return;
+   if (this.isShowing()) {
+      this.resetTimer();
+      this.getCalendar().style.zIndex = ++ZCounter;
+   }
+   var NewYear = parseInt(YearList.value, 10);
+   var NewDay = FixDayList(this.getDayList(), GetDayCount(NewYear, this.picked.monthIndex));
+   this.setPicked(NewYear, this.picked.monthIndex, NewDay);
+}
+
 // Holds characteristics about a date
 function dateObject() {
    if (Function.call) { // Used when 'call' method of the Function object is supported
@@ -458,6 +504,7 @@ function calendarObject(DateName, DateFormat, DefaultDate) {
    this.setDisplayed = SetDisplayedMonth;
    this.checkYear = CheckYearInput;
    this.fixYear = FixYearInput;
+   this.changeYear = CheckYearSelect;
    this.changeMonth = CheckMonthChange;
    this.changeDay = CheckDayChange;
    this.resetTimer = CalTimerReset;
@@ -675,7 +722,9 @@ function DateInput(DateName, Required, DateFormat, DefaultDate, TabIndex)
         writeln('</td>');
 
         writeln('<td style="padding: 0px 3px 0px 0px; margin: 0px;">');
-        writeln('<input' + tabIndexC + initialStatus + ' class="calendarDateInput" type="text" id="' + DateName + '_Year_ID" size="' + object.picked.yearPad.length + '" maxlength="' + object.picked.yearPad.length + '" title="Year" value="' + object.picked.yearPad + '" onKeyPress="return YearDigitsOnly(event);" onkeyup="' + objectName + '.checkYear(this);" onBlur="' + objectName + '.fixYear(this);" />');
+        writeln('<select' + tabIndexC + initialStatus + ' class="calendarDateInput" id="' + DateName + '_Year_ID" onchange="' + objectName + '.changeYear(this);">');
+        writeln(BuildYearOptions(Today.getFullYear(), object.picked.yearValue));
+        writeln('</select>');
         writeln('<td style="padding: 0px 3px 0px 0px; margin: 0px;"><a' + initialStatus + ' id="' + DateName + '_ID_Link" href="javascript:' + objectName + '.show();" onmouseover="return ' + objectName + '.iconHover(true);" onmouseout="return ' + objectName + '.iconHover(false);"><img src="' + ImageURL + '" style="vertical-align: middle; border: none;" title="Calendar" /></a>&nbsp;');
 
         writeln('<span id="' + DateName + '_ID" style="position: absolute; visibility: hidden; width: ' + (CellWidth * 7) + 'px; background-color: ' + CalBGColor + '; border: 1px solid dimgray;" onmouseover="' + objectName + '.handleTimer(true);" onmouseout="' + objectName + '.handleTimer(false);">');
@@ -831,7 +880,9 @@ function DateInputForDOM(DateName, Required, DateFormat, DefaultDate, TabIndex)
     outCode += ('</td>');
 
     outCode += ('<td style="padding: 0px 3px 0px 0px; margin: 0px;">');
-    outCode += ('<input' + tabIndexC + initialStatus + ' class="calendarDateInput" type="text" id="' + DateName + '_Year_ID" size="' + object.picked.yearPad.length + '" maxlength="' + object.picked.yearPad.length + '" title="Year" value="' + object.picked.yearPad + '" onKeyPress="return YearDigitsOnly(event);" onkeyup="' + objectName + '.checkYear(this);" onBlur="' + objectName + '.fixYear(this);" />');
+    outCode += ('<select' + tabIndexC + initialStatus + ' class="calendarDateInput" id="' + DateName + '_Year_ID" onchange="' + objectName + '.changeYear(this);">');
+    outCode += BuildYearOptions(Today.getFullYear(), object.picked.yearValue);
+    outCode += ('</select>');
     outCode += ('<td style="padding: 0px 3px 0px 0px; margin: 0px;"><a' + initialStatus + ' id="' + DateName + '_ID_Link" href="javascript:' + objectName + '.show();" onmouseover="return ' + objectName + '.iconHover(true);" onmouseout="return ' + objectName + '.iconHover(false);"><img src="' + ImageURL + '" style="vertical-align: middle; border: none;" title="Calendar" /></a>&nbsp;');
 
     outCode += ('<span id="' + DateName + '_ID" style="position: absolute; visibility: hidden; width: ' + (CellWidth * 7) + 'px; background-color: ' + CalBGColor + '; border: 1px solid dimgray;" onmouseover="' + objectName + '.handleTimer(true);" onmouseout="' + objectName + '.handleTimer(false);">');
@@ -938,11 +989,18 @@ function SetDateInputDate(DateName, DateFormat, NewDate)
     dayList.selectedIndex = (day - 1);
 
     /* Set the year. */
-    var yearString = (year % 100) + '';
-    if (yearString.length == 1)
+    if (yearField && yearField.tagName && yearField.tagName.toLowerCase() == 'select')
     {
-        yearString = '0' + yearString;
+        EnsureYearOption(yearField, year);
+        yearField.value = year;
     }
-
-    yearField.value = yearString;
+    else
+    {
+        var yearString = (year % 100) + '';
+        if (yearString.length == 1)
+        {
+            yearString = '0' + yearString;
+        }
+        yearField.value = yearString;
+    }
 }
