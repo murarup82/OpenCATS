@@ -49,10 +49,6 @@ var GDPRCandidateRequest = (function ()
         var status = byId(config.statusId);
         if (!status)
         {
-            if (message)
-            {
-                alert(message);
-            }
             return;
         }
 
@@ -111,7 +107,9 @@ var GDPRCandidateRequest = (function ()
             }
 
             setStatus('GDPR request sent.', false);
-            window.location.reload();
+            window.setTimeout(function () {
+                window.location.reload();
+            }, 700);
         };
 
         if (button)
