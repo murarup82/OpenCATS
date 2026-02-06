@@ -278,11 +278,267 @@ var AddCandidateAiAssist = (function ()
         return false;
     }
 
+    function normalizeLabel(text)
+    {
+        var value = safeTrim(text || '');
+        value = value.replace(/:$/, '');
+        value = value.replace(/\s+/g, ' ');
+        return value.toLowerCase();
+    }
+
+    function findExtraFieldControl(labelText)
+    {
+        var labels = document.getElementsByTagName('label');
+        var target = normalizeLabel(labelText);
+        var i;
+
+        for (i = 0; i < labels.length; i++)
+        {
+            var label = labels[i];
+            if (!label || !label.id || label.id.indexOf('extraFieldLbl') !== 0)
+            {
+                continue;
+            }
+
+            if (normalizeLabel(label.textContent || label.innerText) !== target)
+            {
+                continue;
+            }
+
+            var index = label.id.replace('extraFieldLbl', '');
+            var fieldId = 'extraField' + index;
+            var control = byId(fieldId);
+            if (control)
+            {
+                return { type: control.tagName.toLowerCase(), control: control };
+            }
+
+            var checkbox = byId('extraFieldCB' + index);
+            if (checkbox)
+            {
+                return { type: 'checkbox', control: checkbox, hidden: byId(fieldId) };
+            }
+
+            var radios = document.getElementsByName(fieldId);
+            if (radios && radios.length)
+            {
+                return { type: 'radio', radios: radios };
+            }
+        }
+
+        return null;
+    }
+
+    function normalizeOptionLabel(value)
+    {
+        return safeTrim(value || '').toLowerCase().replace(/\s+/g, '');
+    }
+
+    function setSelectValue(select, desiredLabel)
+    {
+        if (!select)
+        {
+            return false;
+        }
+
+        var desired = normalizeOptionLabel(desiredLabel);
+        if (desired === '')
+        {
+            return false;
+        }
+
+        var i;
+        for (i = 0; i < select.options.length; i++)
+        {
+            var option = select.options[i];
+            if (!option)
+            {
+                continue;
+            }
+
+            if (normalizeOptionLabel(option.value) === desired ||
+                normalizeOptionLabel(option.text) === desired)
+            {
+                select.value = option.value;
+                select.setAttribute('data-ai-prefilled', '1');
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function setExtraFieldDefault(labelText, value, suggestions)
+    {
+        var extra = findExtraFieldControl(labelText);
+        if (!extra || !extra.control && !extra.radios)
+        {
+            return false;
+        }
+
+        if (extra.type === 'select')
+        {
+            if (isFieldEmpty(extra.control))
+            {
+                if (setSelectValue(extra.control, value))
+                {
+                    return true;
+                }
+                suggestions.push(labelText + ': ' + value + ' (option not found)');
+            }
+            return false;
+        }
+
+        if (extra.type === 'textarea' || extra.type === 'input')
+        {
+            if (isFieldEmpty(extra.control))
+            {
+                applyValue(extra.control, value);
+                return true;
+            }
+            return false;
+        }
+
+        if (extra.type === 'checkbox' && extra.hidden)
+        {
+            if (isFieldEmpty(extra.hidden))
+            {
+                extra.control.checked = true;
+                extra.hidden.value = value;
+                extra.hidden.setAttribute('data-ai-prefilled', '1');
+                return true;
+            }
+            return false;
+        }
+
+        if (extra.type === 'radio' && extra.radios)
+        {
+            var desired = normalizeOptionLabel(value);
+            var i;
+            for (i = 0; i < extra.radios.length; i++)
+            {
+                if (normalizeOptionLabel(extra.radios[i].value) === desired)
+                {
+                    extra.radios[i].checked = true;
+                    extra.radios[i].setAttribute('data-ai-prefilled', '1');
+                    return true;
+                }
+            }
+            suggestions.push(labelText + ': ' + value + ' (option not found)');
+            return false;
+        }
+
+        return false;
+    }
+
+    function parseLocationString(value)
+    {
+        if (value === '')
+        {
+            return null;
+        }
+
+        var parts = value.split(',');
+        if (parts.length < 2)
+        {
+            return null;
+        }
+
+        var city = safeTrim(parts[parts.length - 2]);
+        var country = safeTrim(parts[parts.length - 1]);
+
+        if (city === '' && country === '')
+        {
+            return null;
+        }
+
+        return {
+            city: city,
+            country: country
+        };
+    }
+
+    function extractSeniorityYears(text)
+    {
+        if (text === '')
+        {
+            return null;
+        }
+
+        var pattern = /(\d+)\s*\+?\s*(?:years?|yrs?|yoe)/gi;
+        var match;
+        var maxYears = null;
+        while ((match = pattern.exec(text)) !== null)
+        {
+            var years = parseInt(match[1], 10);
+            if (!isNaN(years))
+            {
+                if (maxYears === null || years > maxYears)
+                {
+                    maxYears = years;
+                }
+            }
+        }
+
+        return maxYears;
+    }
+
+    function mapSeniority(years)
+    {
+        if (years === null)
+        {
+            return '';
+        }
+
+        if (years <= 1)
+        {
+            return 'Entry Level (0-1year)';
+        }
+        if (years <= 3)
+        {
+            return 'Junior (1-3 years)';
+        }
+        if (years <= 5)
+        {
+            return 'Middle (3-5 years)';
+        }
+        if (years <= 7)
+        {
+            return 'Senior(5-7 years)';
+        }
+        return 'Expert( 7 years)';
+    }
+
+    function extractMissionCustomer(text)
+    {
+        if (text === '')
+        {
+            return '';
+        }
+
+        var missionMatch = text.match(/mission[:\s-]+([^.;\n]+)/i);
+        var customerMatch = text.match(/(customer|client)[:\s-]+([^.;\n]+)/i);
+        var parts = [];
+
+        if (missionMatch && missionMatch[1])
+        {
+            parts.push('Mission: ' + safeTrim(missionMatch[1]));
+        }
+        if (customerMatch && customerMatch[2])
+        {
+            parts.push('Customer: ' + safeTrim(customerMatch[2]));
+        }
+
+        return parts.join(' | ');
+    }
+
     function applyCandidateData(candidate, status, warnings)
     {
         var suggestions = [];
         var changed = false;
         var formattedWarnings = [];
+        var usedCurrentEmployer = false;
+        var usedEmploymentRecent = false;
 
         if (warnings && warnings.length)
         {
@@ -374,10 +630,16 @@ var AddCandidateAiAssist = (function ()
             ) || changed;
         }
 
-        if (candidate.location && typeof candidate.location.value !== 'undefined')
+        if (candidate.location)
         {
             var locationValue = candidate.location.value;
             var locationConfidence = candidate.location.confidence;
+            var locationCountryName = candidate.location.country_name;
+
+            if (typeof locationConfidence === 'undefined')
+            {
+                locationConfidence = 0;
+            }
 
             if (typeof locationValue === 'string')
             {
@@ -388,6 +650,31 @@ var AddCandidateAiAssist = (function ()
                     'Address',
                     suggestions
                 ) || changed;
+
+                var parsedLocation = parseLocationString(locationValue);
+                if (parsedLocation)
+                {
+                    if (parsedLocation.city !== '')
+                    {
+                        changed = applyCandidateValue(
+                            'city',
+                            parsedLocation.city,
+                            locationConfidence,
+                            'City',
+                            suggestions
+                        ) || changed;
+                    }
+                    if (parsedLocation.country !== '')
+                    {
+                        changed = applyCandidateValue(
+                            'country',
+                            parsedLocation.country,
+                            locationConfidence,
+                            'Country',
+                            suggestions
+                        ) || changed;
+                    }
+                }
             }
             else if (typeof locationValue === 'object' && locationValue !== null)
             {
@@ -421,6 +708,17 @@ var AddCandidateAiAssist = (function ()
                         suggestions
                     ) || changed;
                 }
+            }
+
+            if (locationCountryName)
+            {
+                changed = applyCandidateValue(
+                    'country',
+                    coerceValue(locationCountryName),
+                    locationConfidence,
+                    'Country',
+                    suggestions
+                ) || changed;
             }
         }
 
@@ -502,6 +800,163 @@ var AddCandidateAiAssist = (function ()
                 }
             }
         }
+
+        var summaryText = '';
+        if (candidate.summary && typeof candidate.summary.value !== 'undefined')
+        {
+            summaryText = coerceValue(candidate.summary.value);
+        }
+
+        var currentEmployerEl = byId('currentEmployer');
+        var hasCurrentEmployerSource = (candidate.current_employer && typeof candidate.current_employer.value !== 'undefined');
+        var hasEmploymentRecent = (candidate.employment_recent && isArray(candidate.employment_recent) && candidate.employment_recent.length > 0);
+
+        if (hasCurrentEmployerSource && currentEmployerEl && isFieldEmpty(currentEmployerEl))
+        {
+            if (applyCandidateValue(
+                'currentEmployer',
+                coerceValue(candidate.current_employer.value),
+                candidate.current_employer.confidence,
+                'Current Employer',
+                suggestions
+            ))
+            {
+                usedCurrentEmployer = true;
+            }
+        }
+
+        if (!usedCurrentEmployer && hasEmploymentRecent && currentEmployerEl && isFieldEmpty(currentEmployerEl))
+        {
+            var entry = candidate.employment_recent[0];
+            if (entry)
+            {
+                var parts = [];
+                var hadPart = false;
+
+                if (entry.company && entry.company.value)
+                {
+                    if (parseFloat(entry.company.confidence) >= 0.85)
+                    {
+                        parts.push(coerceValue(entry.company.value));
+                        hadPart = true;
+                    }
+                    else
+                    {
+                        suggestions.push('Current Employer Company: ' + coerceValue(entry.company.value) + ' (confidence ' + parseFloat(entry.company.confidence).toFixed(2) + ')');
+                    }
+                }
+                if (entry.client && entry.client.value)
+                {
+                    if (parseFloat(entry.client.confidence) >= 0.85)
+                    {
+                        parts.push(coerceValue(entry.client.value));
+                        hadPart = true;
+                    }
+                    else
+                    {
+                        suggestions.push('Current Employer Client: ' + coerceValue(entry.client.value) + ' (confidence ' + parseFloat(entry.client.confidence).toFixed(2) + ')');
+                    }
+                }
+                if (entry.title && entry.title.value)
+                {
+                    if (parseFloat(entry.title.confidence) >= 0.85)
+                    {
+                        parts.push(coerceValue(entry.title.value));
+                        hadPart = true;
+                    }
+                    else
+                    {
+                        suggestions.push('Current Employer Title: ' + coerceValue(entry.title.value) + ' (confidence ' + parseFloat(entry.title.confidence).toFixed(2) + ')');
+                    }
+                }
+
+                if (hadPart)
+                {
+                    applyValue(currentEmployerEl, parts.join(' | '));
+                    changed = true;
+                    usedEmploymentRecent = true;
+                }
+            }
+        }
+
+        if (!hasCurrentEmployerSource && !hasEmploymentRecent && currentEmployerEl && isFieldEmpty(currentEmployerEl))
+        {
+            var missionCustomer = extractMissionCustomer(summaryText);
+            if (missionCustomer !== '')
+            {
+                applyValue(currentEmployerEl, missionCustomer);
+                changed = true;
+            }
+        }
+
+        var senioritySet = false;
+        if (candidate.seniority_band && typeof candidate.seniority_band.value !== 'undefined')
+        {
+            var bandValue = coerceValue(candidate.seniority_band.value);
+            var bandConfidence = parseFloat(candidate.seniority_band.confidence);
+            if (isNaN(bandConfidence))
+            {
+                bandConfidence = 0;
+            }
+
+            var bandMap = {
+                'entry level': 'Entry Level (0-1year)',
+                'junior': 'Junior (1-3 years)',
+                'middle': 'Middle (3-5 years)',
+                'senior': 'Senior(5-7 years)',
+                'expert': 'Expert( 7 years)'
+            };
+            var mapped = bandMap[normalizeLabel(bandValue)];
+            if (mapped && bandConfidence >= 0.85)
+            {
+                senioritySet = setExtraFieldDefault('Seniority', mapped, suggestions) || senioritySet;
+            }
+            else if (mapped)
+            {
+                suggestions.push('Seniority: ' + mapped + ' (confidence ' + bandConfidence.toFixed(2) + ')');
+            }
+        }
+
+        if (!senioritySet)
+        {
+            var experienceYears = null;
+            var experienceConfidence = 0;
+            if (candidate.experience_years && typeof candidate.experience_years.value !== 'undefined')
+            {
+                experienceYears = parseFloat(candidate.experience_years.value);
+                experienceConfidence = parseFloat(candidate.experience_years.confidence);
+                if (isNaN(experienceYears))
+                {
+                    experienceYears = null;
+                }
+                if (isNaN(experienceConfidence))
+                {
+                    experienceConfidence = 0;
+                }
+            }
+
+            if (experienceYears !== null && experienceConfidence >= 0.85)
+            {
+                var mappedExperience = mapSeniority(experienceYears);
+                if (mappedExperience !== '')
+                {
+                    senioritySet = setExtraFieldDefault('Seniority', mappedExperience, suggestions) || senioritySet;
+                }
+            }
+        }
+
+        if (!senioritySet)
+        {
+            var seniorityYears = extractSeniorityYears(summaryText);
+            var seniorityLabel = mapSeniority(seniorityYears);
+            if (seniorityLabel !== '')
+            {
+                changed = setExtraFieldDefault('Seniority', seniorityLabel, suggestions) || changed;
+            }
+        }
+
+        changed = setExtraFieldDefault('Notice Period', 'regular notice (20days)', suggestions) || changed;
+        changed = setExtraFieldDefault('Preferred Work Model', 'Hybrid Office 3-4 Days', suggestions) || changed;
 
         var warningMessage = '';
         if (formattedWarnings.length)
@@ -679,7 +1134,7 @@ var AddCandidateAiAssist = (function ()
         }
 
         var consentJson = buildConsentJson(config.actor);
-        var requestedFields = '["first_name","last_name","email","phone","location","skills","summary"]';
+        var requestedFields = '["first_name","last_name","email","phone","location","country_name","skills","summary","experience_years","seniority_band","current_employer","employment_recent"]';
         var idempotencyKey = safeTrim(tempFile.value);
 
         var POSTData = '&action=create'
