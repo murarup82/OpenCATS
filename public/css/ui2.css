@@ -35,6 +35,13 @@
 
 .ui2-body {
     background: var(--ui2-bg, #ffffff);
+    padding: 0;
+    margin: 0;
+}
+
+.ui2-sidebar-enabled #headerBlock,
+.ui2-sidebar-enabled #header {
+    display: none;
 }
 
 .ui2-sidebar-enabled #main {
@@ -44,6 +51,7 @@
     background: transparent;
     border: none;
     padding-top: 0;
+    margin-top: 0;
 }
 
 .ui2-sidebar-enabled #contents {
@@ -53,10 +61,10 @@
 
 .ui2-sidebar {
     position: fixed;
-    top: var(--ui2-topbar-height, 44px);
+    top: 0;
     left: 0;
     width: 210px;
-    height: calc(100vh - var(--ui2-topbar-height, 44px));
+    height: 100vh;
     background: var(--ui2-sidebar-bg, var(--ui2-primary, #2a3a42));
     border-right: var(--ui2-border-width, 1px) solid var(--ui2-border, #d6dce1);
     padding: 12px 12px 16px 12px;
@@ -68,7 +76,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 0 12px 0;
+    padding: 6px 0 8px 0;
 }
 
 .ui2-sidebar-logo img {
@@ -82,20 +90,37 @@
     gap: 4px;
 }
 
+.ui2-sidebar-group + .ui2-sidebar-group {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.ui2-sidebar-group-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 2px 10px 4px 10px;
+}
+
 .ui2-sidebar-group--bottom {
     margin-top: 14px;
     padding-top: 12px;
     border-top: var(--ui2-border-width, 1px) solid var(--ui2-border, #d6dce1);
 }
 
-.ui2-sidebar-link {
+.ui2-sidebar-link,
+.ui2-sidebar-link:link,
+.ui2-sidebar-link:visited {
     display: flex;
     align-items: center;
-    padding: 10px 12px;
+    padding: 12px 12px;
     border-radius: var(--ui2-radius-sm, 4px);
     color: var(--ui2-sidebar-text, #ffffff);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 15px;
+    line-height: 1.2;
 }
 
 .ui2-sidebar-icon {
@@ -119,6 +144,7 @@
 .ui2-sidebar-icon--activity { background-image: url('../images/activities.gif'); }
 .ui2-sidebar-icon--calendar { background-image: url('../images/calendar.gif'); }
 .ui2-sidebar-icon--sourcing { background-image: url('../images/careers_search.gif'); }
+.ui2-sidebar-icon--kpis { background-image: url('../images/reports.gif'); }
 .ui2-sidebar-icon--reports { background-image: url('../images/reportsSmall.gif'); }
 .ui2-sidebar-icon--settings { background-image: url('../images/settings.gif'); }
 .ui2-sidebar-icon--default { background-image: url('../images/bullet_black.gif'); }
@@ -135,6 +161,23 @@
     padding-left: 7px;
 }
 
+.ui2-sidebar-user {
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--ui2-sidebar-text, #ffffff);
+    opacity: 0.9;
+}
+
+.ui2-sidebar-user span {
+    opacity: 0.75;
+    font-size: 11px;
+}
+
+.ui2-sidebar-link--utility {
+    margin-top: 6px;
+}
+
 @media (max-width: 1100px) {
     .ui2-sidebar {
         display: none;
@@ -146,39 +189,6 @@
     }
 }
 
-.ui2-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    height: var(--ui2-topbar-height, 44px);
-    padding: 8px 16px;
-    box-sizing: border-box;
-    border-bottom: var(--ui2-border-width, 1px) solid var(--ui2-border, #d6dce1);
-    background: var(--ui2-bg, #ffffff);
-    color: var(--ui2-text, #1f2933);
-    font-size: 13px;
-}
-
-.ui2-topbar-left {
-    font-weight: 600;
-    color: var(--ui2-primary, #2a3a42);
-}
-
-.ui2-topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.ui2-topbar-link {
-    color: var(--ui2-primary, #2a3a42);
-    text-decoration: none;
-}
-
-.ui2-topbar-link:hover {
-    text-decoration: underline;
-}
 
 .ui2 label {
     font-size: 12px;

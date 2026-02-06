@@ -98,26 +98,6 @@ class TemplateUtility
     {
         if (self::isUI2Enabled())
         {
-            $username  = $_SESSION['CATS']->getUsername();
-            $siteName  = $_SESSION['CATS']->getSiteName();
-            $fullName  = $_SESSION['CATS']->getFullName();
-            $indexName = CATSUtility::getIndexName();
-
-            if (strpos($username, '@'.$_SESSION['CATS']->getSiteID()) !== false &&
-                substr($username, strpos($username, '@'.$_SESSION['CATS']->getSiteID())) ==
-                '@'.$_SESSION['CATS']->getSiteID() )
-            {
-               $username = str_replace('@'.$_SESSION['CATS']->getSiteID(), '', $username);
-            }
-
-            echo '<div class="ui2-topbar">', "\n";
-            echo '<div class="ui2-topbar-left">', htmlspecialchars($siteName), '</div>', "\n";
-            echo '<div class="ui2-topbar-right">', "\n";
-            echo '<span class="ui2-topbar-user">', htmlspecialchars($fullName), ' &lt;', htmlspecialchars($username), '&gt;</span>', "\n";
-            echo '<a class="ui2-topbar-link" href="', $indexName, '?m=logout">Logout</a>', "\n";
-            echo '</div>', "\n";
-            echo '</div>', "\n";
-
             return;
         }
 
@@ -921,8 +901,16 @@ class TemplateUtility
     {
         $indexName = CATSUtility::getIndexName();
         $modules = ModuleUtility::getModules();
-        $primaryItems = array();
-        $settingsItem = null;
+        $itemsByModule = array();
+        $username  = $_SESSION['CATS']->getUsername();
+        $fullName  = $_SESSION['CATS']->getFullName();
+
+        if (strpos($username, '@'.$_SESSION['CATS']->getSiteID()) !== false &&
+            substr($username, strpos($username, '@'.$_SESSION['CATS']->getSiteID())) ==
+            '@'.$_SESSION['CATS']->getSiteID() )
+        {
+           $username = str_replace('@'.$_SESSION['CATS']->getSiteID(), '', $username);
+        }
 
         foreach ($modules as $moduleName => $parameters)
         {
@@ -986,21 +974,13 @@ class TemplateUtility
                 'module' => $moduleName
             );
 
-            if ($moduleName == 'settings')
-            {
-                $settingsItem = $item;
-            }
-            else
-            {
-                $primaryItems[] = $item;
-            }
+            $itemsByModule[$moduleName] = $item;
         }
 
         echo '<nav class="ui2-sidebar" aria-label="Primary">', "\n";
         echo '<div class="ui2-sidebar-logo">', "\n";
         echo '<img src="images/applicationLogo.jpg" alt="OpenCATS" />', "\n";
         echo '</div>', "\n";
-        echo '<div class="ui2-sidebar-group">', "\n";
         $iconMap = array(
             'home' => 'home',
             'candidates' => 'candidates',
@@ -1011,26 +991,51 @@ class TemplateUtility
             'activity' => 'activity',
             'calendar' => 'calendar',
             'sourcing' => 'sourcing',
+            'kpis' => 'kpis',
             'reports' => 'reports',
             'settings' => 'settings'
         );
 
-        foreach ($primaryItems as $item)
-        {
-            $class = 'ui2-sidebar-link' . ($item['active'] ? ' is-active' : '');
-            $iconKey = isset($iconMap[$item['module']]) ? $iconMap[$item['module']] : 'default';
-            echo '<a class="', $class, '" href="', $item['href'], '"><span class="ui2-sidebar-icon ui2-sidebar-icon--', $iconKey, '" aria-hidden="true"></span>', $item['label'], '</a>', "\n";
-        }
-        echo '</div>', "\n";
+        $groups = array(
+            array('label' => 'Core Recruiting', 'modules' => array('candidates', 'joborders', 'companies', 'contacts')),
+            array('label' => 'Sourcing & Lists', 'modules' => array('sourcing', 'lists')),
+            array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports')),
+            array('label' => 'Planning & Admin', 'modules' => array('calendar', 'settings'))
+        );
 
-        if (!empty($settingsItem))
+        foreach ($groups as $group)
         {
-            echo '<div class="ui2-sidebar-group ui2-sidebar-group--bottom">', "\n";
-            $class = 'ui2-sidebar-link' . ($settingsItem['active'] ? ' is-active' : '');
-            $iconKey = isset($iconMap[$settingsItem['module']]) ? $iconMap[$settingsItem['module']] : 'settings';
-            echo '<a class="', $class, '" href="', $settingsItem['href'], '"><span class="ui2-sidebar-icon ui2-sidebar-icon--', $iconKey, '" aria-hidden="true"></span>', $settingsItem['label'], '</a>', "\n";
+            $groupItems = array();
+            foreach ($group['modules'] as $moduleName)
+            {
+                if (isset($itemsByModule[$moduleName]))
+                {
+                    $groupItems[] = $itemsByModule[$moduleName];
+                }
+            }
+
+            if (empty($groupItems))
+            {
+                continue;
+            }
+
+            echo '<div class="ui2-sidebar-group">', "\n";
+            echo '<div class="ui2-sidebar-group-title">', htmlspecialchars($group['label']), '</div>', "\n";
+
+            foreach ($groupItems as $item)
+            {
+                $class = 'ui2-sidebar-link' . ($item['active'] ? ' is-active' : '');
+                $iconKey = isset($iconMap[$item['module']]) ? $iconMap[$item['module']] : 'default';
+                echo '<a class="', $class, '" href="', $item['href'], '"><span class="ui2-sidebar-icon ui2-sidebar-icon--', $iconKey, '" aria-hidden="true"></span>', $item['label'], '</a>', "\n";
+            }
+
             echo '</div>', "\n";
         }
+
+        echo '<div class="ui2-sidebar-group ui2-sidebar-group--bottom">', "\n";
+        echo '<div class="ui2-sidebar-user">', htmlspecialchars($fullName), '<br /><span>', htmlspecialchars($username), '</span></div>', "\n";
+        echo '<a class="ui2-sidebar-link ui2-sidebar-link--utility" href="', $indexName, '?m=logout"><span class="ui2-sidebar-icon ui2-sidebar-icon--default" aria-hidden="true"></span>Logout</a>', "\n";
+        echo '</div>', "\n";
         echo '</nav>', "\n";
     }
 
