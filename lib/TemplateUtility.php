@@ -64,7 +64,8 @@ class TemplateUtility
     public static function printHeader($pageTitle, $headIncludes = array())
     {
         self::_printCommonHeader($pageTitle, $headIncludes);
-        echo '<body style="background: #fff">', "\n";
+        $bodyClass = self::isUI2Enabled() ? ' class="ui2-body ui2-sidebar-enabled"' : ' class="ui2-body"';
+        echo '<body', $bodyClass, ' style="background: #fff">', "\n";
         self::_printQuickActionMenuHolder();
         self::printPopupContainer();
     }
@@ -79,7 +80,7 @@ class TemplateUtility
     public static function printModalHeader($pageTitle, $headIncludes = array(), $title = '')
     {
         self::_printCommonHeader($pageTitle, $headIncludes);
-        echo '<body style="background: #eee;">', "\n";
+        echo '<body class="ui2-body" style="background: #eee;">', "\n";
         if ($title != '')
         {
             $title = str_replace('\'', '\\\'', $title);
@@ -277,10 +278,15 @@ class TemplateUtility
     private static function _getDefaultUI2Enabled()
     {
         return array(
+            'home' => true,
             'candidates' => true,
             'joborders' => true,
             'companies' => true,
             'contacts' => true,
+            'activity' => true,
+            'lists' => true,
+            'calendar' => true,
+            'sourcing' => true,
             'settings' => true,
             'reports' => true
         );
@@ -878,6 +884,135 @@ class TemplateUtility
         }
         echo '</ul>', "\n";
         echo '</div>', "\n";
+
+        if (self::isUI2Enabled())
+        {
+            self::_printSidebarNavigation($active, $forceHighlight);
+        }
+    }
+
+    /**
+     * Prints the left sidebar navigation for UI2.
+     *
+     * @param UserInterface active module interface
+     * @param string module name to forcibly highlight
+     * @return void
+     */
+    private static function _printSidebarNavigation($active, $forceHighlight = '')
+    {
+        $indexName = CATSUtility::getIndexName();
+        $modules = ModuleUtility::getModules();
+        $primaryItems = array();
+        $settingsItem = null;
+
+        foreach ($modules as $moduleName => $parameters)
+        {
+            $tabText = $parameters[1];
+
+            if (empty($tabText))
+            {
+                continue;
+            }
+
+            if ($_SESSION['CATS']->isHrMode() && $tabText == 'Companies')
+            {
+                $tabText = 'My Company';
+            }
+
+            if ($tabText == 'Home')
+            {
+                $tabText = 'Dashboard';
+            }
+
+            $displayTab = true;
+            if (!eval(Hooks::get('TEMPLATE_UTILITY_EVALUATE_TAB_VISIBLE'))) return;
+
+            if (!$displayTab)
+            {
+                continue;
+            }
+
+            $alPosition = strpos($tabText, "*al=");
+            if ($alPosition !== false)
+            {
+                $al = substr($tabText, $alPosition + 4);
+                $soPosition = strpos($al, "@");
+                $soName = '';
+                if ($soPosition !== false)
+                {
+                    $soName = substr($al, $soPosition + 1);
+                    $al = substr($al, 0, $soPosition);
+                }
+                if ($_SESSION['CATS']->getAccessLevel($soName) < $al && !$_SESSION['CATS']->isDemo())
+                {
+                    continue;
+                }
+                $tabText = substr($tabText, 0, $alPosition);
+            }
+
+            $isActive = false;
+            if ($active !== null && $moduleName == $active->getModuleName())
+            {
+                $isActive = true;
+            }
+            if ($moduleName == $forceHighlight)
+            {
+                $isActive = true;
+            }
+
+            $item = array(
+                'label' => $tabText,
+                'href' => $indexName . '?m=' . $moduleName,
+                'active' => $isActive,
+                'module' => $moduleName
+            );
+
+            if ($moduleName == 'settings')
+            {
+                $settingsItem = $item;
+            }
+            else
+            {
+                $primaryItems[] = $item;
+            }
+        }
+
+        echo '<nav class="ui2-sidebar" aria-label="Primary">', "\n";
+        echo '<div class="ui2-sidebar-logo">', "\n";
+        echo '<img src="images/applicationLogo.jpg" alt="OpenCATS" />', "\n";
+        echo '</div>', "\n";
+        echo '<div class="ui2-sidebar-group">', "\n";
+        $iconMap = array(
+            'home' => 'home',
+            'candidates' => 'candidates',
+            'joborders' => 'joborders',
+            'companies' => 'companies',
+            'contacts' => 'contacts',
+            'lists' => 'lists',
+            'activity' => 'activity',
+            'calendar' => 'calendar',
+            'sourcing' => 'sourcing',
+            'reports' => 'reports',
+            'settings' => 'settings'
+        );
+
+        foreach ($primaryItems as $item)
+        {
+            $class = 'ui2-sidebar-link' . ($item['active'] ? ' is-active' : '');
+            $iconKey = isset($iconMap[$item['module']]) ? $iconMap[$item['module']] : 'default';
+            echo '<a class="', $class, '" href="', $item['href'], '"><span class="ui2-sidebar-icon ui2-sidebar-icon--', $iconKey, '" aria-hidden="true"></span>', $item['label'], '</a>', "\n";
+        }
+        echo '</div>', "\n";
+
+        if (!empty($settingsItem))
+        {
+            echo '<div class="ui2-sidebar-group ui2-sidebar-group--bottom">', "\n";
+            $class = 'ui2-sidebar-link' . ($settingsItem['active'] ? ' is-active' : '');
+            $iconKey = isset($iconMap[$settingsItem['module']]) ? $iconMap[$settingsItem['module']] : 'settings';
+            echo '<a class="', $class, '" href="', $settingsItem['href'], '"><span class="ui2-sidebar-icon ui2-sidebar-icon--', $iconKey, '" aria-hidden="true"></span>', $settingsItem['label'], '</a>', "\n";
+            echo '</div>', "\n";
+        }
+        echo '</nav>', "\n";
     }
 
     /**

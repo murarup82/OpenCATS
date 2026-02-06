@@ -5,21 +5,30 @@
     <div id="main">
         <?php TemplateUtility::printQuickSearch(); ?>
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <table width="100%">
-                <tr>
-                    <td width="3%">
-                        <img src="images/activities.gif" width="24" height="24" alt="Activities" style="border: none; margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Activities</h2></td>
-                    <td align="right">
-                      <?php echo($this->quickLinks); ?>
-                    </td>
-                </tr>
-            </table>
+            <div class="ui2-datatable-toolbar">
+                <div class="ui2-datatable-title">
+                    <div class="ui2-datatable-title-row">
+                        <img src="images/activities.gif" width="24" height="24" alt="Activities" style="border: none; margin-top: 3px;" />
+                        <div>
+                            <h2>Activities</h2>
+                            <div class="ui2-datatable-meta">
+                                <?php if (!empty($this->startDate)): ?>
+                                    Activities on <?php echo($this->startDate['month'].'/'.$this->startDate['day'].'/'.$this->startDate['year']); ?>
+                                <?php else: ?>
+                                    Activity Log
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui2-datatable-search"></div>
+                <div class="ui2-datatable-actions">
+                    <?php echo($this->quickLinks); ?>
+                </div>
+            </div>
 
             <?php if (!empty($this->rs)): ?>
-                <p class="note">Activities on <?php echo($this->startDate['month'].'/'.$this->startDate['day'].'/'.$this->startDate['year'])?></p>
-
+                <div class="ui2-card ui2-datatable-card ui2-datatable-card--avel">
                  <table id="activityTable" class="sortable" width="100%" onmouseover="javascript:trackTableHighlight(event)">
                     <tr>
                         <th align="left" width="60" nowrap="nowrap">
@@ -80,12 +89,13 @@
                                 <?php echo($activityData['notes']); ?>
                             </td>
 
-                            <td align="left" valign="top">
-                                <?php $this->_($activityData['enteredByAbbrName']); ?>
-                            </td>
-                        </tr>
+                        <td align="left" valign="top">
+                            <?php $this->_($activityData['enteredByAbbrName']); ?>
+                        </td>
+                    </tr>
                     <?php endforeach ?>
                 </table>
+                </div>
                 <?php $this->pager->printNavigation(); ?>
             <?php elseif ($this->isResultsMode): ?>
                 <p class="note">No activities found on <?php echo($this->startDate['month'] . '/' . $this->startDate['day'] . '/' . $this->startDate['year']); ?></p>

@@ -89,10 +89,10 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 
             <?php
                 $summaryName = trim($this->data['firstName'].' '.$this->data['lastName']);
-                $summaryRole = $this->data['keySkills'];
+                $summaryRole = trim($this->data['keySkills']);
                 $summaryLocation = trim($this->data['city'] . ($this->data['city'] && $this->data['country'] ? ', ' : '') . $this->data['country']);
-                $summaryAvailability = $this->data['dateAvailable'];
-                $summaryEmployer = $this->data['currentEmployer'];
+                $summaryAvailability = trim($this->data['dateAvailable']);
+                $summaryEmployer = trim($this->data['currentEmployer']);
                 $summarySeniority = '';
                 foreach ($this->extraFieldRS as $extraField)
                 {
@@ -102,39 +102,24 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         break;
                     }
                 }
-                $summaryName = ($summaryName !== '') ? $summaryName : '-';
-                $summaryRole = ($summaryRole !== '') ? $summaryRole : '-';
-                $summaryLocation = ($summaryLocation !== '') ? $summaryLocation : '-';
-                $summarySeniority = ($summarySeniority !== '') ? $summarySeniority : '-';
-                $summaryAvailability = ($summaryAvailability !== '') ? $summaryAvailability : '-';
-                $summaryEmployer = ($summaryEmployer !== '') ? $summaryEmployer : '-';
+                $summaryItems = array(
+                    array('label' => 'Name', 'value' => ($summaryName !== '' ? $summaryName : '-')),
+                    array('label' => 'Role / Key Skills', 'value' => $summaryRole),
+                    array('label' => 'Location', 'value' => $summaryLocation),
+                    array('label' => 'Seniority', 'value' => $summarySeniority),
+                    array('label' => 'Current Employer', 'value' => $summaryEmployer),
+                    array('label' => 'Availability', 'value' => $summaryAvailability)
+                );
             ?>
 
-            <div class="ui2-summary">
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Name</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryName); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Key Skills/Role</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryRole); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Location</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryLocation); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Seniority</div>
-                    <div class="ui2-summary-value"><?php $this->_($summarySeniority); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Availability</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryAvailability); ?></div>
-                </div>
-                <div class="ui2-summary-item">
-                    <div class="ui2-summary-label">Current Employer</div>
-                    <div class="ui2-summary-value"><?php $this->_($summaryEmployer); ?></div>
-                </div>
+            <div class="ui2-summary-strip">
+                <?php foreach ($summaryItems as $summaryItem): ?>
+                    <?php if ($summaryItem['value'] === '') continue; ?>
+                    <div class="ui2-summary-chip">
+                        <div class="ui2-summary-chip-label"><?php $this->_($summaryItem['label']); ?></div>
+                        <div class="ui2-summary-chip-value"><?php $this->_($summaryItem['value']); ?></div>
+                    </div>
+                <?php endforeach; ?>
             </div>
 
             <div class="ui2-grid">

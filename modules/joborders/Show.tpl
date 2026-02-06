@@ -512,9 +512,9 @@ use OpenCATS\UI\QuickActionMenu;
             </script>
             </div>
             </div>
+<?php if (!$this->isPopup): ?>
         </div>
     </div>
-
 <?php endif; ?>
 <?php TemplateUtility::printFooter(); ?>
 

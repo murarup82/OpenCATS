@@ -16,3 +16,20 @@
     font-size: 14px;
     line-height: 1.4;
 }
+
+.ui2-body.ui2-sidebar-enabled {
+    --ui2-primary: #00425B;
+    --ui2-primary-weak: #D6EEF6;
+    --ui2-accent: #0097BD;
+    --ui2-accent-weak: #38B1CC;
+    --ui2-bg: #ffffff;
+    --ui2-bg-subtle: #F2F4F6;
+    --ui2-text: #1f2933;
+    --ui2-muted: #4C5A61;
+    --ui2-border: #D1D9DE;
+    --ui2-radius-sm: 2px;
+    --ui2-radius-md: 4px;
+    --ui2-radius-lg: 6px;
+    font-family: Lato, Arial, sans-serif;
+    --ui2-sidebar-top: 96px;
+}

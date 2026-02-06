@@ -33,6 +33,137 @@
     box-sizing: border-box;
 }
 
+.ui2-body {
+    background: var(--ui2-bg, #ffffff);
+}
+
+.ui2-sidebar-enabled #main {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+    box-sizing: border-box;
+}
+
+.ui2-sidebar {
+    position: fixed;
+    top: var(--ui2-sidebar-top, 92px);
+    left: 0;
+    width: 210px;
+    height: calc(100vh - var(--ui2-sidebar-top, 92px));
+    background: var(--ui2-bg, #ffffff);
+    border-right: var(--ui2-border-width, 1px) solid var(--ui2-border, #d6dce1);
+    padding: 12px 12px 16px 12px;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.ui2-sidebar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0 12px 0;
+}
+
+.ui2-sidebar-logo img {
+    max-width: 160px;
+    height: auto;
+}
+
+.ui2-sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ui2-sidebar-group--bottom {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: var(--ui2-border-width, 1px) solid var(--ui2-border, #d6dce1);
+}
+
+.ui2-sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: var(--ui2-radius-sm, 4px);
+    color: var(--ui2-text, #1f2933);
+    text-decoration: none;
+    font-size: var(--ui2-font-size-sm, 13px);
+}
+
+.ui2-sidebar-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.9;
+}
+
+.ui2-sidebar-icon--home { background-image: url('../images/home.gif'); }
+.ui2-sidebar-icon--candidates { background-image: url('../images/candidate.gif'); }
+.ui2-sidebar-icon--joborders { background-image: url('../images/job_orders.gif'); }
+.ui2-sidebar-icon--companies { background-image: url('../images/companies.gif'); }
+.ui2-sidebar-icon--contacts { background-image: url('../images/contact.gif'); }
+.ui2-sidebar-icon--lists { background-image: url('../images/cp_listing.jpg'); }
+.ui2-sidebar-icon--activity { background-image: url('../images/activities.gif'); }
+.ui2-sidebar-icon--calendar { background-image: url('../images/calendar.gif'); }
+.ui2-sidebar-icon--sourcing { background-image: url('../images/careers_search.gif'); }
+.ui2-sidebar-icon--reports { background-image: url('../images/reportsSmall.gif'); }
+.ui2-sidebar-icon--settings { background-image: url('../images/settings.gif'); }
+.ui2-sidebar-icon--default { background-image: url('../images/bullet_black.gif'); }
+
+.ui2-sidebar-enabled #header {
+    height: 1.6em;
+}
+
+.ui2-sidebar-enabled #header ul#primary {
+    font-size: 11px;
+}
+
+.ui2-sidebar-enabled #header ul#primary a.inactive,
+.ui2-sidebar-enabled #header ul#primary a.active {
+    height: 18px;
+    width: 72px;
+    line-height: 20px;
+    margin-top: 2px;
+    background-size: 100% 100%;
+}
+
+.ui2-sidebar-enabled #header ul#primary a.active {
+    height: 20px;
+    line-height: 22px;
+}
+
+.ui2-sidebar-enabled #header ul#secondary {
+    font-size: 11px;
+    bottom: -1.6em;
+}
+
+.ui2-sidebar-link:hover {
+    background: var(--ui2-bg-subtle, #f4f6f8);
+    color: var(--ui2-primary, #2a3a42);
+}
+
+.ui2-sidebar-link.is-active {
+    background: var(--ui2-primary-weak, #e6ebef);
+    color: var(--ui2-primary, #2a3a42);
+    border-left: 3px solid var(--ui2-accent, #2e7ea4);
+    padding-left: 7px;
+}
+
+@media (max-width: 1100px) {
+    .ui2-sidebar {
+        display: none;
+    }
+
+    .ui2-sidebar-enabled #main {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
 .ui2 label {
     font-size: 12px;
     color: var(--ui2-muted);
@@ -149,6 +280,34 @@
 }
 
 .ui2 .ui2-summary-value {
+    font-weight: 600;
+    color: var(--ui2-text);
+}
+
+.ui2 .ui2-summary-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 0 12px 0;
+    margin-bottom: var(--ui2-space-3);
+}
+
+.ui2 .ui2-summary-chip {
+    background: var(--ui2-bg-subtle);
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-sm);
+    padding: 6px 10px;
+    min-width: 140px;
+}
+
+.ui2 .ui2-summary-chip-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ui2-muted);
+}
+
+.ui2 .ui2-summary-chip-value {
     font-weight: 600;
     color: var(--ui2-text);
 }
@@ -385,6 +544,78 @@
 .ui2 .ui2-datatable-card table.sortable tbody tr:hover td,
 .ui2 .ui2-datatable-card table.dataGrid tbody tr:hover td {
     background: var(--ui2-primary-weak);
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable thead th,
+.ui2 .ui2-datatable-card--avel table.dataGrid thead th {
+    background: var(--ui2-primary);
+    color: #ffffff;
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable thead th a,
+.ui2 .ui2-datatable-card--avel table.dataGrid thead th a {
+    color: #ffffff;
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable th,
+.ui2 .ui2-datatable-card--avel table.sortable td,
+.ui2 .ui2-datatable-card--avel table.dataGrid th,
+.ui2 .ui2-datatable-card--avel table.dataGrid td {
+    padding: 8px 10px;
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable tbody tr td,
+.ui2 .ui2-datatable-card--avel table.dataGrid tbody tr td {
+    background: var(--ui2-bg);
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable tbody tr:nth-child(even) td,
+.ui2 .ui2-datatable-card--avel table.dataGrid tbody tr:nth-child(even) td {
+    background: var(--ui2-bg);
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable tbody tr:hover td,
+.ui2 .ui2-datatable-card--avel table.dataGrid tbody tr:hover td {
+    background: var(--ui2-accent-weak);
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable th:first-child,
+.ui2 .ui2-datatable-card--avel table.sortable td:first-child,
+.ui2 .ui2-datatable-card--avel table.dataGrid th:first-child,
+.ui2 .ui2-datatable-card--avel table.dataGrid td:first-child {
+    width: 40px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable td:first-child img,
+.ui2 .ui2-datatable-card--avel table.dataGrid td:first-child img {
+    vertical-align: middle;
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable td:nth-child(2),
+.ui2 .ui2-datatable-card--avel table.sortable td:nth-child(3),
+.ui2 .ui2-datatable-card--avel table.dataGrid td:nth-child(2),
+.ui2 .ui2-datatable-card--avel table.dataGrid td:nth-child(3) {
+    font-weight: 600;
+    color: var(--ui2-primary);
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable td:nth-last-child(-n + 3),
+.ui2 .ui2-datatable-card--avel table.dataGrid td:nth-last-child(-n + 3) {
+    color: var(--ui2-muted);
+    font-size: 12px;
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable th:nth-last-child(-n + 3),
+.ui2 .ui2-datatable-card--avel table.dataGrid th:nth-last-child(-n + 3) {
+    font-weight: 600;
+    color: #f2f6f8;
+}
+
+.ui2 .ui2-datatable-card--avel table.sortable tbody tr td a,
+.ui2 .ui2-datatable-card--avel table.dataGrid tbody tr td a {
+    color: inherit;
 }
 
 .ui2 .ui2-datatable-card table.sortable th:first-child,

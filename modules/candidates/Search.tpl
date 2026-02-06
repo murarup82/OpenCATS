@@ -59,7 +59,7 @@
                     <p class="note">Search Results</p>
                 <?php endif; ?>
 
-                <div class="ui2-card ui2-datatable-card">
+                <div class="ui2-card ui2-datatable-card ui2-datatable-card--avel">
                     <table class="sortable">
                         <thead>
                             <tr>
@@ -151,7 +151,7 @@
 
                 <?php if (!empty($this->rs)): ?>
                     <?php echo($this->exportForm['header']); ?>
-                    <div class="ui2-card ui2-datatable-card">
+                    <div class="ui2-card ui2-datatable-card ui2-datatable-card--avel">
                     <table class="sortable" width="100%" onmouseover="javascript:trackTableHighlight(event)">
                         <tr>
                             <th nowrap>&nbsp;</th>

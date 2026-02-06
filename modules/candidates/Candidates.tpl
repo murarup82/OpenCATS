@@ -138,7 +138,7 @@
             <div class="ui2-datatable-filterarea">
                 <?php $this->dataGrid->drawFilterArea(); ?>
             </div>
-            <div class="ui2-card ui2-datatable-card">
+            <div class="ui2-card ui2-datatable-card ui2-datatable-card--avel">
                 <?php $this->dataGrid->draw();  ?>
             </div>
 
