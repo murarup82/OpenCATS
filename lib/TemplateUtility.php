@@ -1067,12 +1067,23 @@ class TemplateUtility
             );
         }
 
+        if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
+        {
+            $itemsByKey['gdpr_consents'] = array(
+                'label' => 'GDPR Consents',
+                'href' => $indexName . '?m=gdpr&amp;a=requests',
+                'module' => 'gdpr',
+                'action' => 'requests',
+                'icon' => 'settings'
+            );
+        }
+
         $groups = array(
             array('label' => 'Overview', 'modules' => array('home', 'activity')),
             array('label' => 'Core Recruiting', 'modules' => array('candidates', 'joborders', 'companies', 'contacts')),
             array('label' => 'Sourcing & Lists', 'modules' => array('sourcing', 'lists')),
             array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports')),
-            array('label' => 'Planning & Admin', 'modules' => array('calendar', 'settings', 'settings_admin'))
+            array('label' => 'Planning & Admin', 'modules' => array('calendar', 'gdpr_consents', 'settings', 'settings_admin'))
         );
 
         foreach ($groups as $group)

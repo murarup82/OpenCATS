@@ -196,6 +196,10 @@
     font-weight: 400;
 }
 
+.ui2 .ui2-muted {
+    color: var(--ui2-muted);
+}
+
 .ui2 .tdVertical label {
     color: var(--ui2-primary);
     font-weight: 600;
