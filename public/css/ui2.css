@@ -25,6 +25,7 @@
 
     color: var(--ui2-text);
     font-size: var(--ui2-font-size-xs);
+    line-height: 1.4;
 }
 
 .ui2,
@@ -33,7 +34,8 @@
 }
 
 .ui2 label {
-    font-size: var(--ui2-font-size-xxs);
+    font-size: 12px;
+    color: var(--ui2-muted);
 }
 
 .ui2 .ui2-card {
@@ -46,6 +48,17 @@
 
 .ui2 .ui2-card--subtle {
     background: var(--ui2-bg);
+}
+
+.ui2 table,
+.ui2 .editTable,
+.ui2 .editTable td,
+.ui2 .editTable th,
+.ui2 .note,
+.ui2 .noteUnsized,
+.ui2 .tdVertical,
+.ui2 .tdData {
+    background-image: none !important;
 }
 
 .ui2 .ui2-button,
@@ -97,7 +110,32 @@
     border-radius: var(--ui2-radius-sm);
     background: var(--ui2-bg);
     color: var(--ui2-text);
-    padding: 5px 8px;
+    padding: 6px 10px;
+    font-size: var(--ui2-font-size-xs);
+}
+
+.ui2 .ui2-input,
+.ui2 .ui2-select {
+    height: 34px;
+}
+
+.ui2 input.inputbox,
+.ui2 select.inputbox {
+    height: 34px;
+    padding: 6px 10px;
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-sm);
+    background: var(--ui2-bg);
+    color: var(--ui2-text);
+    font-size: var(--ui2-font-size-xs);
+}
+
+.ui2 textarea.inputbox {
+    padding: 8px 10px;
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-sm);
+    background: var(--ui2-bg);
+    color: var(--ui2-text);
     font-size: var(--ui2-font-size-xs);
 }
 
@@ -135,6 +173,9 @@
     text-transform: uppercase;
     color: var(--ui2-primary);
     margin: 0 0 8px 0;
+    padding: 6px 10px;
+    background: var(--ui2-bg-subtle);
+    border-left: 3px solid var(--ui2-accent);
 }
 
 .ui2 .ui2-ai-status {

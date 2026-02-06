@@ -11,6 +11,10 @@
 
         <div id="contents">
 
+<?php endif; ?>
+
+            <div class="ui2 ui2-theme-avel">
+            <?php if (!$this->isModal): ?>
             <table>
                 <tr>
                     <td width="3%">
@@ -19,10 +23,8 @@
                     <td><h2>Candidates: Add Candidate</h2></td>
                 </tr>
             </table>
+            <?php endif; ?>
 
-<?php endif; ?>
-
-            <div class="ui2 ui2-theme-avel">
                 <div class="ui2-card ui2-card--subtle">
             <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?> ui2-section-title">Basic Information</p>
 
@@ -96,7 +98,7 @@
                                         <td valign="top" align="right" colspan="2" style="padding-top: 4px;">
                                             <span class="ui2-inline">
                                                 <input type="button" class="button ui2-button" id="aiPrefillButton" value="AI Prefill" onclick="AddCandidateAiAssist.submit();" />
-                                                <label style="font-size: 11px;">
+                                                <label>
                                                     <input type="checkbox" id="aiPrefillConsent" />
                                                     I confirm candidate consent
                                                 </label>
@@ -469,9 +471,6 @@
                         </td>
                     </tr>
                 </table>
-                </div>
-            </div>
-
                 <input type="submit" tabindex="<?php echo($tabIndex++); ?>" class="button" value="Add Candidate" />&nbsp;
                 <input type="reset"  tabindex="<?php echo($tabIndex++); ?>" class="button" value="Reset" />&nbsp;
                 <?php if ($this->isModal): ?>
@@ -480,6 +479,8 @@
                     <input type="button" tabindex="<?php echo($tabIndex++); ?>" class="button" value="Back to Candidates" onclick="javascript:goToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates');" />
                 <?php endif; ?>
             </form>
+                </div>
+            </div>
 
 <script type="text/javascript">
     document.addCandidateForm.firstName.focus();
