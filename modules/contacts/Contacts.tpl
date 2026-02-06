@@ -11,36 +11,56 @@
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->totalContacts ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->totalContacts): ?>
-            <table width="100%">
-                <tr>
-                    <td width="3%">
-                        <img src="images/contact.gif" width="24" height="24" border="0" alt="Contacts" style="margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Contacts: Home</h2></td>
-                    <td align="right">
-                        <form name="contactsViewSelectorForm" id="contactsViewSelectorForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get">
-                            <input type="hidden" name="m" value="contacts" />
-                            <input type="hidden" name="a" value="listByView" />
+            <div class="ui2-datatable-toolbar">
+                <div class="ui2-datatable-title">
+                    <div class="ui2-datatable-title-row">
+                        <img src="images/contact.gif" width="24" height="24" border="0" alt="Contacts" style="margin-top: 3px;" />
+                        <div>
+                            <h2>Contacts: Home</h2>
+                            <div class="ui2-datatable-meta">
+                                Contacts - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?>
+                                (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
+                                <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>(Only My Contacts)<?php endif; ?>
+                                <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>(Only Hot Contacts)<?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui2-datatable-search">
+                    <form class="ui2-datatable-search-form" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
+                        <input type="hidden" name="m" value="contacts" />
+                        <input type="hidden" name="a" value="search" />
+                        <input type="hidden" name="mode" value="searchByFullName" />
+                        <input type="text" name="wildCardString" class="ui2-input ui2-datatable-search-input" placeholder="Search contacts..." />
+                        <button type="submit" class="ui2-button ui2-button--secondary">Search</button>
+                    </form>
+                </div>
+                <div class="ui2-datatable-actions">
+                    <?php if ($this->getUserAccessLevel('contacts.add') >= ACCESS_LEVEL_EDIT): ?>
+                        <a class="ui2-button" href="<?php echo CATSUtility::getIndexName(); ?>?m=contacts&amp;a=add">Add Contact</a>
+                    <?php endif; ?>
+                    <?php $this->dataGrid->drawShowFilterControl(); ?>
+                    <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
+                </div>
+            </div>
 
-                            <table class="viewSelector">
-                                <tr>
-                                    <td valign="top" align="right" nowrap="nowrap">
-                                        <?php $this->dataGrid->printNavigation(false); ?>
-                                    </td>
-                                    <td valign="top" align="right" nowrap="nowrap">
-                                        <input type="checkbox" name="onlyMyCompanies" id="onlyMyContacts" <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('OwnerID', '==',  $this->userID); ?>" />
-                                        <label for="onlyMyContacts">Only My Contacts</label>&nbsp;
-                                    </td>
-                                    <td valign="top" align="right" nowrap="nowrap">
-                                        <input type="checkbox" name="onlyHotCompanies" id="onlyHotContacts" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
-                                        <label for="onlyHotContacts">Only Hot Contacts</label>&nbsp;
-                                    </td>
-                                </tr>
-                            </table>
-                        </form>
-                    </td>
-                </tr>
-            </table>
+            <form name="contactsViewSelectorForm" id="contactsViewSelectorForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get">
+                <input type="hidden" name="m" value="contacts" />
+                <input type="hidden" name="a" value="listByView" />
+                <div class="ui2-datatable-filters">
+                    <div class="ui2-datatable-nav">
+                        <?php $this->dataGrid->printNavigation(false); ?>
+                    </div>
+                    <label class="ui2-inline" for="onlyMyContacts">
+                        <input type="checkbox" name="onlyMyCompanies" id="onlyMyContacts" <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('OwnerID', '==',  $this->userID); ?>" />
+                        Only My Contacts
+                    </label>
+                    <label class="ui2-inline" for="onlyHotContacts">
+                        <input type="checkbox" name="onlyHotCompanies" id="onlyHotContacts" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
+                        Only Hot Contacts
+                    </label>
+                </div>
+            </form>
 
             <?php if ($this->errMessage != ''): ?>
             <div id="errorMessage" style="padding: 25px 0px 25px 0px; border-top: 1px solid #800000; border-bottom: 1px solid #800000; background-color: #f7f7f7;margin-bottom: 15px;">
@@ -58,29 +78,20 @@
             </div>
             <?php endif; ?>
 
-            <p class="note">
-                <span style="float:left;">
-                    Contacts - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?>
-                    (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
-                    <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>(Only My Contacts)<?php endif; ?>
-                    <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>(Only Hot Contacts)<?php endif; ?>
-                </span>
-                <span style="float:right;">
-                    <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
-                    <?php $this->dataGrid->drawShowFilterControl(); ?>
-                </span>&nbsp;
-            </p>
+            <div class="ui2-datatable-filterarea">
+                <?php $this->dataGrid->drawFilterArea(); ?>
+            </div>
+            <div class="ui2-card ui2-datatable-card">
+                <?php $this->dataGrid->draw();  ?>
+            </div>
 
-            <?php $this->dataGrid->drawFilterArea(); ?>
-            <?php $this->dataGrid->draw();  ?>
-
-            <div style="display:block;">
-                <span style="float:left;">
+            <div class="ui2-datatable-footer">
+                <div class="ui2-datatable-footer-left">
                     <?php $this->dataGrid->printActionArea(); ?>
-                </span>
-                <span style="float:right;">
+                </div>
+                <div class="ui2-datatable-footer-right">
                     <?php $this->dataGrid->printNavigation(true); ?>
-                </span>&nbsp;
+                </div>
             </div>
 
             <?php else: ?>

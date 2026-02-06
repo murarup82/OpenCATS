@@ -6,36 +6,48 @@
         <?php TemplateUtility::printQuickSearch(); ?>
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->numActivities ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->numActivities): ?>
-            <table width="100%">
-                <tr>
-                    <td width="3%">
-                        <img src="images/activities.gif" width="24" height="24" alt="Activities" style="border: none; margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Activities</h2></td>
-                    <td align="right">
-                        <?php $this->dataGrid->printNavigation(false); ?>&nbsp;&nbsp;<?php echo($this->quickLinks); ?>
-                    </td>
-                </tr>
-            </table>
-
-            <p class="note">
-                <span style="float:left;">Activities - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?></span>
-                <span style="float:right;">
-                    <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
+            <div class="ui2-datatable-toolbar">
+                <div class="ui2-datatable-title">
+                    <div class="ui2-datatable-title-row">
+                        <img src="images/activities.gif" width="24" height="24" alt="Activities" style="border: none; margin-top: 3px;" />
+                        <div>
+                            <h2>Activities</h2>
+                            <div class="ui2-datatable-meta">
+                                Activities - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?>
+                                (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui2-datatable-search">
+                    <?php echo($this->quickLinks); ?>
+                </div>
+                <div class="ui2-datatable-actions">
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
-                </span>&nbsp;
-            </p>
+                    <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
+                </div>
+            </div>
 
-            <?php $this->dataGrid->drawFilterArea(); ?>
-            <?php $this->dataGrid->draw();  ?>
+            <div class="ui2-datatable-filters">
+                <div class="ui2-datatable-nav">
+                    <?php $this->dataGrid->printNavigation(false); ?>
+                </div>
+            </div>
 
-            <div style="display:block;">
-                <span style="float:left;">
+            <div class="ui2-datatable-filterarea">
+                <?php $this->dataGrid->drawFilterArea(); ?>
+            </div>
+            <div class="ui2-card ui2-datatable-card">
+                <?php $this->dataGrid->draw();  ?>
+            </div>
+
+            <div class="ui2-datatable-footer">
+                <div class="ui2-datatable-footer-left">
                     <?php $this->dataGrid->printActionArea(); ?>
-                </span>
-                <span style="float:right;">
+                </div>
+                <div class="ui2-datatable-footer-right">
                     <?php $this->dataGrid->printNavigation(true); ?>
-                </span>&nbsp;
+                </div>
             </div>
 
             <?php else: ?>

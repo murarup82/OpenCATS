@@ -6,39 +6,42 @@
         <?php TemplateUtility::printQuickSearch(); ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <table>
-                <tr>
-                    <td width="3%">
-                        <img src="images/job_orders.gif" width="24" height="24" border="0" alt="Job Orders" style="margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Job Orders: Search Job Orders</h2></td>
-                </tr>
-            </table>
+            <div class="ui2-datatable-toolbar">
+                <div class="ui2-datatable-title">
+                    <div class="ui2-datatable-title-row">
+                        <img src="images/job_orders.gif" width="24" height="24" border="0" alt="Job Orders" style="margin-top: 3px;" />
+                        <div>
+                            <h2>Job Orders: Search Job Orders</h2>
+                            <div class="ui2-datatable-meta">Search Job Orders</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui2-datatable-search">
+                    <table class="searchTable" id="searchTable">
+                        <tr>
+                            <td>
+                                <form name="searchForm" id="searchForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
+                                    <input type="hidden" name="m" id="moduleName" value="joborders" />
+                                    <input type="hidden" name="a" id="moduleAction" value="search" />
+                                    <input type="hidden" name="getback" id="getback" value="getback" />
 
-            <p class="note">Search Job Orders</p>
+                                    <?php TemplateUtility::printSavedSearch($this->savedSearchRS); ?>
 
-            <table class="searchTable" id="searchTable">
-                <tr>
-                    <td>
-                        <form name="searchForm" id="searchForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
-                            <input type="hidden" name="m" id="moduleName" value="joborders" />
-                            <input type="hidden" name="a" id="moduleAction" value="search" />
-                            <input type="hidden" name="getback" id="getback" value="getback" />
-
-                            <?php TemplateUtility::printSavedSearch($this->savedSearchRS); ?>
-
-                            <label id="searchModeLabel" for="searchMode">Search By:</label>&nbsp;
-                            <select id="searchMode" name="mode" onclick="advancedSearchConsider();" class="selectBox">
-                                <option value="searchByJobTitle"<?php if ($this->mode == "searchByJobTitle"): ?> selected="selected"<?php endif; ?>>Job Title</option>
-                                <option value="searchByCompanyName"<?php if ($this->mode == "searchByCompanyName"): ?> selected="selected"<?php endif; ?>>Company Name</option>
-                            </select>&nbsp;
-                            <input type="text" class="inputbox" id="searchText" name="wildCardString" value="<?php if (!empty($this->wildCardString)) echo(urldecode($this->wildCardString)); ?>" style="width:250px" />&nbsp;*&nbsp;
-                            <input type="submit" class="button" id="searchJobOrders" name="searchJobOrders" value="Search" />
-                            <?php TemplateUtility::printAdvancedSearch('searchByKeySkills,searchByResume'); ?>
-                        </form>
-                    </td>
-                </tr>
-            </table>
+                                    <label id="searchModeLabel" for="searchMode">Search By:</label>&nbsp;
+                                    <select id="searchMode" name="mode" onclick="advancedSearchConsider();" class="selectBox">
+                                        <option value="searchByJobTitle"<?php if ($this->mode == "searchByJobTitle"): ?> selected="selected"<?php endif; ?>>Job Title</option>
+                                        <option value="searchByCompanyName"<?php if ($this->mode == "searchByCompanyName"): ?> selected="selected"<?php endif; ?>>Company Name</option>
+                                    </select>&nbsp;
+                                    <input type="text" class="inputbox" id="searchText" name="wildCardString" value="<?php if (!empty($this->wildCardString)) echo(urldecode($this->wildCardString)); ?>" style="width:250px" />&nbsp;*&nbsp;
+                                    <input type="submit" class="button" id="searchJobOrders" name="searchJobOrders" value="Search" />
+                                    <?php TemplateUtility::printAdvancedSearch('searchByKeySkills,searchByResume'); ?>
+                                </form>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="ui2-datatable-actions"></div>
+            </div>
 
             <script type="text/javascript">
                 document.searchForm.wildCardString.focus();
@@ -51,6 +54,7 @@
                 <?php if (!empty($this->rs)): ?>
                     <?php echo($this->exportForm['header']); ?>
 
+                    <div class="ui2-card ui2-datatable-card">
                     <table class="sortable" width="100%" onmouseover="javascript:trackTableHighlight(event)">
                         <tr>
                             <th></th>
@@ -107,6 +111,7 @@
                             </tr>
                         <?php endforeach; ?>
                     </table>
+                    </div>
                     <?php echo($this->exportForm['footer']); ?>
                     <?php echo($this->exportForm['menu']); ?>
                 <?php else: ?>

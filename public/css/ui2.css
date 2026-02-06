@@ -284,6 +284,193 @@
     font-size: 12px;
 }
 
+.ui2 .ui2-datatable-toolbar {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(260px, 1fr) auto;
+    gap: var(--ui2-space-3);
+    align-items: center;
+    margin-bottom: var(--ui2-space-2);
+}
+
+.ui2 .ui2-datatable-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--ui2-space-2);
+}
+
+.ui2 .ui2-datatable-meta {
+    font-size: 12px;
+    color: var(--ui2-muted);
+}
+
+.ui2 .ui2-datatable-search-form {
+    display: flex;
+    align-items: center;
+    gap: var(--ui2-space-2);
+}
+
+.ui2 .ui2-datatable-search-input {
+    width: 260px;
+}
+
+.ui2 .ui2-datatable-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--ui2-space-2);
+    justify-content: flex-end;
+}
+
+.ui2 .ui2-datatable-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui2-space-2);
+    margin: 6px 0 12px 0;
+}
+
+.ui2 .ui2-datatable-nav {
+    margin-right: var(--ui2-space-2);
+}
+
+.ui2 .ui2-datatable-filterarea {
+    margin-bottom: var(--ui2-space-3);
+}
+
+.ui2 .ui2-datatable-card {
+    padding: 0;
+}
+
+.ui2 .ui2-datatable-card table.sortable,
+.ui2 .ui2-datatable-card table.dataGrid {
+    width: 100%;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+.ui2 .ui2-datatable-card table.sortable thead th,
+.ui2 .ui2-datatable-card table.dataGrid thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--ui2-bg-subtle);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
+.ui2 .ui2-datatable-card table.sortable th,
+.ui2 .ui2-datatable-card table.sortable td,
+.ui2 .ui2-datatable-card table.dataGrid th,
+.ui2 .ui2-datatable-card table.dataGrid td {
+    padding: 10px 12px;
+    border-bottom: var(--ui2-border-width) solid var(--ui2-border);
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ui2 .ui2-datatable-card table.sortable td,
+.ui2 .ui2-datatable-card table.dataGrid td {
+    white-space: nowrap;
+}
+
+.ui2 .ui2-datatable-card table.sortable tbody tr:nth-child(even) td,
+.ui2 .ui2-datatable-card table.dataGrid tbody tr:nth-child(even) td {
+    background: var(--ui2-bg-subtle);
+}
+
+.ui2 .ui2-datatable-card table.sortable tbody tr:hover td,
+.ui2 .ui2-datatable-card table.dataGrid tbody tr:hover td {
+    background: var(--ui2-primary-weak);
+}
+
+.ui2 .ui2-datatable-card table.sortable th:first-child,
+.ui2 .ui2-datatable-card table.sortable td:first-child,
+.ui2 .ui2-datatable-card table.dataGrid th:first-child,
+.ui2 .ui2-datatable-card table.dataGrid td:first-child {
+    text-align: center;
+    width: 44px;
+}
+
+.ui2 .ui2-datatable-footer {
+    display: flex;
+    align-items: center;
+    gap: var(--ui2-space-2);
+    margin-top: var(--ui2-space-3);
+}
+
+.ui2 .ui2-datatable-footer-right {
+    margin-left: auto;
+}
+
+.ui2 .ui2-datatable-footer a,
+.ui2 .ui2-datatable-nav a,
+.ui2 .ui2-datatable-actions a.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-sm);
+    background: var(--ui2-bg);
+    color: var(--ui2-text);
+    text-decoration: none;
+}
+
+.ui2 .ui2-datatable-footer a:hover,
+.ui2 .ui2-datatable-nav a:hover,
+.ui2 .ui2-datatable-actions a.button:hover {
+    background: var(--ui2-bg-subtle);
+    border-color: var(--ui2-accent);
+}
+
+.ui2 .filterAreaFieldSet {
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-md);
+    background: var(--ui2-bg);
+    padding: 10px 12px;
+}
+
+.ui2 .filterAreaLegend {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ui2-muted);
+    padding: 0 6px;
+}
+
+.ui2 .filterAreaFieldSet .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-sm);
+    background: var(--ui2-bg);
+    color: var(--ui2-text);
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+}
+
+.ui2 .filterAreaFieldSet .button:hover {
+    border-color: var(--ui2-accent);
+    color: var(--ui2-primary);
+}
+
+@media (max-width: 980px) {
+    .ui2 .ui2-datatable-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .ui2 .ui2-datatable-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
 .ui2 table,
 .ui2 .editTable,
 .ui2 .editTable td,

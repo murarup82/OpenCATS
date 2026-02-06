@@ -7,47 +7,37 @@
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->dataGrid->getNumberOfRows() ? ' style="background-color: #E6EEFF; padding: 0px;"' : ''; ?>>
             <?php if ($this->dataGrid->getNumberOfRows()): ?>
-            <table width="100%">
-                <tr>
-                    <td width="3%">
-                        <img src="images/job_orders.gif" width="24" height="24" border="0" alt="Job Orders" style="margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Lists: Home</h2></td>
-                    <td align="right">
-                        <form name="jobOrdersViewSelectorForm" id="jobOrdersViewSelectorForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get">
-                            <input type="hidden" name="m" value="joborders" />
-                            <input type="hidden" name="a" value="list" />
-
-                            <table class="viewSelector">
-                                <tr>
-                                    <td>
-                                    </td>
-                                 </tr>
-                            </table>
-                        </form>
-                    </td>
-                </tr>
-            </table>
-
-            <p class="note">
-                <span style="float:left;">Lists  -
-                    Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?> (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
-                </span>
-                <span style="float:right;">
+            <div class="ui2-datatable-toolbar">
+                <div class="ui2-datatable-title">
+                    <div class="ui2-datatable-title-row">
+                        <img src="images/job_orders.gif" width="24" height="24" border="0" alt="Job Orders" style="margin-top: 3px;" />
+                        <div>
+                            <h2>Lists: Home</h2>
+                            <div class="ui2-datatable-meta">
+                                Lists - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?> (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui2-datatable-search"></div>
+                <div class="ui2-datatable-actions">
+                    <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
-                </span>&nbsp;
-            </p>
+                </div>
+            </div>
 
-            <?php $this->dataGrid->drawFilterArea(); ?>
-            <?php $this->dataGrid->draw();  ?>
+            <div class="ui2-datatable-filterarea">
+                <?php $this->dataGrid->drawFilterArea(); ?>
+            </div>
+            <div class="ui2-card ui2-datatable-card">
+                <?php $this->dataGrid->draw();  ?>
+            </div>
 
-            <div style="display:block;">
-                <span style="float:left;">
-
-                </span>
-                <span style="float:right;">
+            <div class="ui2-datatable-footer">
+                <div class="ui2-datatable-footer-left"></div>
+                <div class="ui2-datatable-footer-right">
                     <?php $this->dataGrid->printNavigation(true); ?>
-                </span>&nbsp;
+                </div>
             </div>
             <?php else: ?>
 

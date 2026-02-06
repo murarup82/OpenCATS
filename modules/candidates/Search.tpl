@@ -6,42 +6,45 @@
         <?php TemplateUtility::printQuickSearch(); ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <table>
-                <tr>
-                    <td width="3%">
-                        <img src="images/candidate.gif" width="24" height="24" border="0" alt="Candidates" style="margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Candidates: Search Candidates</h2></td>
-                </tr>
-            </table>
+            <div class="ui2-datatable-toolbar">
+                <div class="ui2-datatable-title">
+                    <div class="ui2-datatable-title-row">
+                        <img src="images/candidate.gif" width="24" height="24" border="0" alt="Candidates" style="margin-top: 3px;" />
+                        <div>
+                            <h2>Candidates: Search Candidates</h2>
+                            <div class="ui2-datatable-meta">Search Candidates</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui2-datatable-search">
+                    <table class="searchTable" id="searchTable ">
+                        <tr>
+                            <td>
+                                <form name="searchForm" id="searchForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
+                                    <input type="hidden" name="m" id="moduleName" value="candidates" />
+                                    <input type="hidden" name="a" id="moduleAction" value="search" />
+                                    <input type="hidden" name="getback" id="getback" value="getback" />
 
-            <p class="note">Search Candidates</p>
+                                    <?php TemplateUtility::printSavedSearch($this->savedSearchRS); ?>
 
-            <table class="searchTable" id="searchTable ">
-                <tr>
-                    <td>
-                        <form name="searchForm" id="searchForm" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
-                            <input type="hidden" name="m" id="moduleName" value="candidates" />
-                            <input type="hidden" name="a" id="moduleAction" value="search" />
-                            <input type="hidden" name="getback" id="getback" value="getback" />
-
-                            <?php TemplateUtility::printSavedSearch($this->savedSearchRS); ?>
-
-                            <label id="searchModeLabel" for="searchMode">Search By:</label>&nbsp;
-                            <select id="searchMode" name="mode" onclick="advancedSearchConsider();" class="selectBox">
-                                <option value="searchByFullName"<?php if ($this->mode == "searchByFullName"): ?> selected<?php endif; ?>>Candidate Name</option>
-                                <option value="searchByResume"<?php if ($this->mode == "searchByResume" || empty($this->mode)): ?> selected<?php endif; ?>>Resume Keywords</option>
-                                <option value="searchByKeySkills"<?php if ($this->mode == "searchByKeySkills"): ?> selected<?php endif; ?>>Key Skills</option>
-                                <option value="searchByCity"<?php if ($this->mode == "searchByCity"): ?> selected<?php endif; ?>>City</option>
-                                <option value="phoneNumber"<?php if ($this->mode == "phoneNumber"): ?> selected<?php endif; ?>>Phone Number</option>
-                            </select>&nbsp;
-                            <input type="text" class="inputbox" id="searchText" name="wildCardString" value="<?php if (!empty($this->wildCardString)) $this->_($this->wildCardString); ?>" style="width:250px" />&nbsp;*&nbsp;
-                            <input type="submit" class="button" id="searchCandidates" name="searchCandidates" value="Search" />
-                            <?php TemplateUtility::printAdvancedSearch('searchByKeySkills,searchByResume'); ?>
-                        </form>
-                    </td>
-                </tr>
-            </table>
+                                    <label id="searchModeLabel" for="searchMode">Search By:</label>&nbsp;
+                                    <select id="searchMode" name="mode" onclick="advancedSearchConsider();" class="selectBox">
+                                        <option value="searchByFullName"<?php if ($this->mode == "searchByFullName"): ?> selected<?php endif; ?>>Candidate Name</option>
+                                        <option value="searchByResume"<?php if ($this->mode == "searchByResume" || empty($this->mode)): ?> selected<?php endif; ?>>Resume Keywords</option>
+                                        <option value="searchByKeySkills"<?php if ($this->mode == "searchByKeySkills"): ?> selected<?php endif; ?>>Key Skills</option>
+                                        <option value="searchByCity"<?php if ($this->mode == "searchByCity"): ?> selected<?php endif; ?>>City</option>
+                                        <option value="phoneNumber"<?php if ($this->mode == "phoneNumber"): ?> selected<?php endif; ?>>Phone Number</option>
+                                    </select>&nbsp;
+                                    <input type="text" class="inputbox" id="searchText" name="wildCardString" value="<?php if (!empty($this->wildCardString)) $this->_($this->wildCardString); ?>" style="width:250px" />&nbsp;*&nbsp;
+                                    <input type="submit" class="button" id="searchCandidates" name="searchCandidates" value="Search" />
+                                    <?php TemplateUtility::printAdvancedSearch('searchByKeySkills,searchByResume'); ?>
+                                </form>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="ui2-datatable-actions"></div>
+            </div>
 
             <script type="text/javascript">
                 document.searchForm.wildCardString.focus();
@@ -56,85 +59,86 @@
                     <p class="note">Search Results</p>
                 <?php endif; ?>
 
-                <table class="sortable">
-                    <thead>
-                        <tr>
-                            <th nowrap>&nbsp;</th>
-                            <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('firstName', 'First Name'); ?>
-                            </th>
-                            <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('lastName', 'Last Name'); ?>
-                            </th>
-                            <th align="left" nowrap="nowrap">Resume</th>
-                            <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('city', 'City'); ?>
-                            </th>
-                            <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('country', 'Country'); ?>
-                            </th>
-                            <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('dateCreatedSort', 'Created'); ?>
-                            </th>
-                            <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('dateModifiedSort', 'Modified'); ?>
-                            </th>
-                            <th align="left" nowrap="nowrap">
-                                <?php $this->pager->printSortLink('ownerSort', 'Owner'); ?>
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <?php if (!empty($this->rs)): ?>
-                        <?php foreach ($this->rs as $rowNumber => $data): ?>
-                            <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
-                                <?php if ($data['candidateID'] > 0): ?>
-                                    <td valign="top" nowrap>
-                                        <input type="checkbox" id="checked_<?php echo($data['candidateID']); echo($data['attachmentID']); ?>" name="checked_<?php echo($data['candidateID']); ?>" />
-                                        <a href="javascript:void(0);" onClick="window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($data['candidateID']); ?>')" title="View in New Window">
-                                            <img src="images/new_window.gif" class="abstop" alt="(Preview)" border="0" width="15" height="15" />
-                                        </a>
-                                    </td>
-                                    <td valign="top">
-                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($data['candidateID']); ?>">
-                                            <?php $this->_($data['firstName']); ?>
-                                        </a>
-                                    </td>
-                                    <td valign="top">
-                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($data['candidateID']); ?>">
-                                            <?php $this->_($data['lastName']); ?>
-                                        </a>
-                                    </td>
-                                <?php else: ?>
-                                    <td>&nbsp;</td>
-                                    <td valign="top" nowrap="nowrap">
-                                    </td>
-                                    <td valign="top" colspan="2">
-                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=add&amp;attachmentID=<?php $this->_($data['attachmentID']); ?>">
-                                            <img src="images/candidate_tiny.gif" width="16" height="16" border="0" class="absmiddle" alt="" title="Create Candidate Profile" />
-                                        </a>
-                                        &nbsp;Bulk Resume
-                                    </td>
-                                <?php endif; ?>
-                                <td valign="top">
-                                    <a href="#" onclick="window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=viewResume&amp;wildCardString=<?php $this->_(urlencode($this->wildCardString)); ?>&amp;attachmentID=<?php $this->_($data['attachmentID']); ?>', 'viewResume', 'scrollbars=1,width=700,height=600')">
-                                        <img src="images/resume_preview_inline.gif" class="abstop" alt="(Preview)" border="0" width="15" height="15" />
-                                    </a>&nbsp;
-                                    <?php echo($data['excerpt']); ?>
-                                </td>
-                                <td valign="top"><?php $this->_($data['city']); ?></td>
-                                <td valign="top"><?php $this->_($data['country']); ?></td>
-                                <td valign="top"><?php $this->_($data['dateCreated']); ?></td>
-                                <td valign="top"><?php $this->_($data['dateModified']); ?></td>
-                                <td valign="top" nowrap="nowrap"><?php $this->_($data['ownerAbbrName']); ?>&nbsp;</td>
+                <div class="ui2-card ui2-datatable-card">
+                    <table class="sortable">
+                        <thead>
+                            <tr>
+                                <th nowrap>&nbsp;</th>
+                                <th align="left" nowrap="nowrap">
+                                    <?php $this->pager->printSortLink('firstName', 'First Name'); ?>
+                                </th>
+                                <th align="left" nowrap="nowrap">
+                                    <?php $this->pager->printSortLink('lastName', 'Last Name'); ?>
+                                </th>
+                                <th align="left" nowrap="nowrap">Resume</th>
+                                <th align="left" nowrap="nowrap">
+                                    <?php $this->pager->printSortLink('city', 'City'); ?>
+                                </th>
+                                <th align="left" nowrap="nowrap">
+                                    <?php $this->pager->printSortLink('country', 'Country'); ?>
+                                </th>
+                                <th align="left" nowrap="nowrap">
+                                    <?php $this->pager->printSortLink('dateCreatedSort', 'Created'); ?>
+                                </th>
+                                <th align="left" nowrap="nowrap">
+                                    <?php $this->pager->printSortLink('dateModifiedSort', 'Modified'); ?>
+                                </th>
+                                <th align="left" nowrap="nowrap">
+                                    <?php $this->pager->printSortLink('ownerSort', 'Owner'); ?>
+                                </th>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="8">No matching entries found.</td>
-                        </tr>
-                    <?php endif; ?>
-                </table>
+                        </thead>
+                        <?php if (!empty($this->rs)): ?>
+                            <?php foreach ($this->rs as $rowNumber => $data): ?>
+                                <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
+                                    <?php if ($data['candidateID'] > 0): ?>
+                                        <td valign="top" nowrap>
+                                            <input type="checkbox" id="checked_<?php echo($data['candidateID']); echo($data['attachmentID']); ?>" name="checked_<?php echo($data['candidateID']); ?>" />
+                                            <a href="javascript:void(0);" onClick="window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($data['candidateID']); ?>')" title="View in New Window">
+                                                <img src="images/new_window.gif" class="abstop" alt="(Preview)" border="0" width="15" height="15" />
+                                            </a>
+                                        </td>
+                                        <td valign="top">
+                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($data['candidateID']); ?>">
+                                                <?php $this->_($data['firstName']); ?>
+                                            </a>
+                                        </td>
+                                        <td valign="top">
+                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php $this->_($data['candidateID']); ?>">
+                                                <?php $this->_($data['lastName']); ?>
+                                            </a>
+                                        </td>
+                                    <?php else: ?>
+                                        <td>&nbsp;</td>
+                                        <td valign="top" nowrap="nowrap">
+                                        </td>
+                                        <td valign="top" colspan="2">
+                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=add&amp;attachmentID=<?php $this->_($data['attachmentID']); ?>">
+                                                <img src="images/candidate_tiny.gif" width="16" height="16" border="0" class="absmiddle" alt="" title="Create Candidate Profile" />
+                                            </a>
+                                            &nbsp;Bulk Resume
+                                        </td>
+                                    <?php endif; ?>
+                                    <td valign="top">
+                                        <a href="#" onclick="window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=viewResume&amp;wildCardString=<?php $this->_(urlencode($this->wildCardString)); ?>&amp;attachmentID=<?php $this->_($data['attachmentID']); ?>', 'viewResume', 'scrollbars=1,width=700,height=600')">
+                                            <img src="images/resume_preview_inline.gif" class="abstop" alt="(Preview)" border="0" width="15" height="15" />
+                                        </a>&nbsp;
+                                        <?php echo($data['excerpt']); ?>
+                                    </td>
+                                    <td valign="top"><?php $this->_($data['city']); ?></td>
+                                    <td valign="top"><?php $this->_($data['country']); ?></td>
+                                    <td valign="top"><?php $this->_($data['dateCreated']); ?></td>
+                                    <td valign="top"><?php $this->_($data['dateModified']); ?></td>
+                                    <td valign="top" nowrap="nowrap"><?php $this->_($data['ownerAbbrName']); ?>&nbsp;</td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8">No matching entries found.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </table>
+                </div>
                 <?php echo($this->exportForm['footer']); ?>
                 <?php echo($this->exportForm['menu']); ?>
                 <?php if (!empty($this->rs)): ?>
@@ -147,6 +151,7 @@
 
                 <?php if (!empty($this->rs)): ?>
                     <?php echo($this->exportForm['header']); ?>
+                    <div class="ui2-card ui2-datatable-card">
                     <table class="sortable" width="100%" onmouseover="javascript:trackTableHighlight(event)">
                         <tr>
                             <th nowrap>&nbsp;</th>
@@ -208,6 +213,7 @@
                             </tr>
                         <?php endforeach; ?>
                     </table>
+                    </div>
                     <?php echo($this->exportForm['footer']); ?>
                     <?php echo($this->exportForm['menu']); ?>
                 <?php else: ?>

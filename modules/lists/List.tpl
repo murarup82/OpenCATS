@@ -6,41 +6,42 @@
         <?php TemplateUtility::printQuickSearch(); ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <table width="100%">
-                <tr>
-                    <td width="3%">
-                        <img src="images/job_orders.gif" width="24" height="24" border="0" alt="Job Orders" style="margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Lists: <?php $this->_($this->listRS['description']); ?></h2></td>
-                    <td align="right">
-                        <!--<a href="javascript:void(0);" onclick="" style="text-decoration:none;"><img src="images/actions/add_job_order.gif" border="0">&nbsp;Duplicate List&nbsp;&nbsp;&nbsp;-->
-                        <!--<a href="javascript:void(0);" onclick="" style="text-decoration:none;"><img src="images/actions/edit.gif" border="0">&nbsp;Rename List&nbsp;&nbsp;&nbsp;-->
-                        <a href="javascript:void(0);" onclick="deleteListFromListView(<?php $this->_($this->listRS['savedListID']); ?>, <?php $this->_($this->listRS['numberEntries']); ?>);" style="text-decoration:none;"><img src="images/actions/delete.gif" border="0">&nbsp;Delete List</a>
-                    </td>
-                </tr>
-            </table>
-
-            <p class="note">
-                <span style="float:left;"><?php $this->_($this->listRS['description']); ?>  - 
-                    Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?>
-                    (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
-                </span>
-                <span style="float:right;">
-                    <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
+            <div class="ui2-datatable-toolbar">
+                <div class="ui2-datatable-title">
+                    <div class="ui2-datatable-title-row">
+                        <img src="images/job_orders.gif" width="24" height="24" border="0" alt="Job Orders" style="margin-top: 3px;" />
+                        <div>
+                            <h2>Lists: <?php $this->_($this->listRS['description']); ?></h2>
+                            <div class="ui2-datatable-meta">
+                                <?php $this->_($this->listRS['description']); ?> -
+                                Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?>
+                                (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui2-datatable-search"></div>
+                <div class="ui2-datatable-actions">
+                    <a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="deleteListFromListView(<?php $this->_($this->listRS['savedListID']); ?>, <?php $this->_($this->listRS['numberEntries']); ?>);">Delete List</a>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
-                </span>&nbsp;
-            </p>
+                    <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
+                </div>
+            </div>
 
-            <?php $this->dataGrid->drawFilterArea(); ?>
-            <?php $this->dataGrid->draw();  ?>
+            <div class="ui2-datatable-filterarea">
+                <?php $this->dataGrid->drawFilterArea(); ?>
+            </div>
+            <div class="ui2-card ui2-datatable-card">
+                <?php $this->dataGrid->draw();  ?>
+            </div>
 
-            <div style="display:block;">
-                <span style="float:left;">
+            <div class="ui2-datatable-footer">
+                <div class="ui2-datatable-footer-left">
                     <?php $this->dataGrid->printActionArea(); ?>
-                </span>
-                <span style="float:right;">
+                </div>
+                <div class="ui2-datatable-footer-right">
                     <?php $this->dataGrid->printNavigation(true); ?>
-                </span>&nbsp;
+                </div>
             </div>
 
         </div>
