@@ -17,7 +17,7 @@
         <tr>
             <td class="tdVertical"></td>
             <td class="tdData">
-                <input type="submit" class="button" value="Reject" />
+                <input type="submit" class="button ui2-button--danger" value="Reject" />
                 &nbsp;
                 <a href="javascript:void(0);" onclick="hidePopWin();">Cancel</a>
             </td>

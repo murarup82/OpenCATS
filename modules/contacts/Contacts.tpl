@@ -37,7 +37,7 @@
                 </div>
                 <div class="ui2-datatable-actions">
                     <?php if ($this->getUserAccessLevel('contacts.add') >= ACCESS_LEVEL_EDIT): ?>
-                        <a class="ui2-button" href="<?php echo CATSUtility::getIndexName(); ?>?m=contacts&amp;a=add">Add Contact</a>
+                        <a class="ui2-button ui2-button--primary" href="<?php echo CATSUtility::getIndexName(); ?>?m=contacts&amp;a=add">Add Contact</a>
                     <?php endif; ?>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>

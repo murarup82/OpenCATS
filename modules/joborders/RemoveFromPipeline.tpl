@@ -30,7 +30,7 @@
                     <tr>
                         <td class="tdVertical"></td>
                         <td class="tdData">
-                            <input type="submit" class="button" value="Reject" />
+                            <input type="submit" class="button ui2-button--danger" value="Reject" />
                             &nbsp;
                             <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $this->jobOrderID); ?>">Cancel</a>
                         </td>

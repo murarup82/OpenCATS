@@ -460,7 +460,7 @@
                                     <?php foreach($data['RS'] as $rsIndex => $rsData): ?>
                                         <tr class="<?php TemplateUtility::printAlternatingRowClass($rsIndex); ?>" id="table<?php echo($index); ?>row<?php echo($rsIndex); ?>">
                                             <td>
-                                                <a href="javascript:void(0);" onclick="deleteRow<?php echo($index); ?>(<?php echo($rsIndex); ?>, urlDecode('<?php echo(urlencode($rsData['fieldName'])); ?>'));"  style="padding:0px;">
+                                                <a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="deleteRow<?php echo($index); ?>(<?php echo($rsIndex); ?>, urlDecode('<?php echo(urlencode($rsData['fieldName'])); ?>'));" style="padding:0px;">
                                                     <img src="images/actions/delete.gif" border="0" style="padding:0px;"/>
                                                 </a>
                                                 <a href="javascript:void(0);" onclick="swapRows<?php echo($index); ?>(<?php echo($rsIndex); ?>, <?php echo($rsIndex-1); ?>);"  style="padding:0px;">

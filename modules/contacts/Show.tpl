@@ -22,21 +22,31 @@ use OpenCATS\UI\QuickActionMenu;
                             </tr>
                         </table>
                     </div>
+                    <?php
+                        $showContactDangerActions =
+                            ($this->getUserAccessLevel('contacts.delete') >= ACCESS_LEVEL_DELETE);
+                    ?>
                     <div class="ui2-header-actions">
-                        <?php if ($this->getUserAccessLevel('contacts.edit') >= ACCESS_LEVEL_EDIT): ?>
-                            <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=edit&amp;contactID=<?php echo($this->contactID); ?>">
-                                <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($this->getUserAccessLevel('contacts.delete') >= ACCESS_LEVEL_DELETE): ?>
-                            <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=delete&amp;contactID=<?php echo($this->contactID); ?>" onclick="javascript:return confirm('Delete this candidate?');">
-                                <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($this->privledgedUser): ?>
-                            <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=300&amp;dataItemID=<?php echo($this->contactID); ?>">
-                                <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
-                            </a>
+                        <div class="ui2-action-group">
+                            <?php if ($this->getUserAccessLevel('contacts.edit') >= ACCESS_LEVEL_EDIT): ?>
+                                <a id="edit_link" class="ui2-button ui2-button--primary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=edit&amp;contactID=<?php echo($this->contactID); ?>">
+                                    <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />Edit
+                                </a>
+                            <?php endif; ?>
+                            <?php if ($this->privledgedUser): ?>
+                                <a id="history_link" class="ui2-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=300&amp;dataItemID=<?php echo($this->contactID); ?>">
+                                    <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />View History
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($showContactDangerActions): ?>
+                            <div class="ui2-action-group ui2-action-group--danger">
+                                <?php if ($this->getUserAccessLevel('contacts.delete') >= ACCESS_LEVEL_DELETE): ?>
+                                    <a id="delete_link" class="ui2-button ui2-button--danger" href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=delete&amp;contactID=<?php echo($this->contactID); ?>" onclick="javascript:return confirm('Delete this candidate?');">
+                                        <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />Delete
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -290,7 +300,7 @@ use OpenCATS\UI\QuickActionMenu;
                                 </a>
                             <?php endif; ?>
                             <?php if ($this->getUserAccessLevel('contacts.deleteActivity') >= ACCESS_LEVEL_EDIT): ?>
-                                <a href="#" id="deleteActivity<?php echo($activityData['activityID']); ?>" onclick="Activity_deleteEntry(<?php echo($activityData['activityID']); ?>, '<?php echo($this->sessionCookie); ?>'); return false;">
+                                <a href="#" id="deleteActivity<?php echo($activityData['activityID']); ?>" class="ui2-button ui2-button--danger" onclick="Activity_deleteEntry(<?php echo($activityData['activityID']); ?>, '<?php echo($this->sessionCookie); ?>'); return false;">
                                     <img src="images/actions/delete.gif" width="16" height="16" alt="" class="absmiddle" border="0" title="Delete"/>
                                 </a>
                             <?php endif; ?>

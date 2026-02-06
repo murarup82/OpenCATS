@@ -44,7 +44,7 @@ input.userAddField:focus { background-color: #D7E0F5; border: 1px solid #666666;
                 <?php endif; ?>
             </td>
             <td class="userColumn<?php echo $shade ? '1' : '2'; ?>" nowrap="nowrap"><?php echo $user ? $user['email'] : '&nbsp;'; ?></td>
-            <td class="userColumn<?php echo $shade ? '1' : '2'; ?>" nowrap="nowrap"><?php echo $user && intval($user['accessLevel']) < ACCESS_LEVEL_SA ? '<a href="javascript:void(0);" onclick="deleteUser(' . $user['userID'] . ');">Delete</a>' : '&nbsp;'; ?></td>
+            <td class="userColumn<?php echo $shade ? '1' : '2'; ?>" nowrap="nowrap"><?php echo $user && intval($user['accessLevel']) < ACCESS_LEVEL_SA ? '<a href="javascript:void(0);" onclick="deleteUser(' . $user['userID'] . ');" class="ui2-button ui2-button--danger">Delete</a>' : '&nbsp;'; ?></td>
         </tr>
         <?php $shade = !$shade; ?>
     <?php endfor; ?>

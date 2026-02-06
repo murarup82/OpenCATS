@@ -121,7 +121,7 @@
                                                             Attachment: <span style="font-weight: bold;"><?php echo $tempFile; ?></span>
                                                         </td>
                                                         <td align="right" valign="top" nowrap="nowrap" style="font-size: 11px;">
-                                                            <a href="javascript:void(0);" onclick="removeDocumentFile();">(remove)</a>
+                                                            <a href="javascript:void(0);" onclick="removeDocumentFile();" class="ui2-button ui2-button--danger">(remove)</a>
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -257,7 +257,7 @@
                                     <?php else: ?>
                                         <input type="file" id="file" name="file" size="21" tabindex="<?php echo($tabIndex++); ?>" <?php if($this->associatedTextResume !== false): ?>disabled<?php endif; ?> /> &nbsp;
                                     <?php endif; ?>
-                                    <a href="javascript:void(0);" onclick="if (document.getElementById('textResumeTD').style.display != '') { document.getElementById('textResumeTD').style.display = ''; document.getElementById('file').disabled=true; } else { document.getElementById('textResumeTD').style.display='none'; document.getElementById('file').disabled = false; }">
+                                    <a href="javascript:void(0);" onclick="if (document.getElementById('textResumeTD').style.display != '') { document.getElementById('textResumeTD').style.display = ''; document.getElementById('file').disabled=true; } else { document.getElementById('textResumeTD').style.display='none'; document.getElementById('file').disabled = false; }" class="ui2-button">
                                         <img src="images/package_editors.gif" style="margin:0px; padding:0px;"  class="absmiddle" alt="" border="0" title="Copy / Paste Resume" />
                                     </a>
                                 </nobr>

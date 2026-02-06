@@ -208,42 +208,42 @@ div.questionContainerPlainJane { }
                                                                     <?php $actionTaken = true; ?>
                                                                     <tr>
                                                                         <td class="questionColumnText"><span id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionSource">Add to <b>source</b>, &quot;<?php echo $actionSource; ?>&quot;.</span></td>
-                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionSourceDelete" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
+                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionSourceDelete" class="ui2-button ui2-button--danger" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
                                                                     </tr>
                                                                 <?php endif; ?>
                                                                 <?php if (($actionNotes = $answer['actionNotes']) != ''): ?>
                                                                     <?php $actionTaken = true; ?>
                                                                     <tr>
                                                                         <td class="questionColumnText"><span id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionNotes">Add to <b>notes</b>, &quot;<?php echo $actionNotes; ?>&quot;.</span></td>
-                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionNotesDelete" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
+                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionNotesDelete" class="ui2-button ui2-button--danger" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
                                                                     </tr>
                                                                 <?php endif; ?>
                                                                 <?php if ($actionIsHot = $answer['actionIsHot']): ?>
                                                                     <?php $actionTaken = true; ?>
                                                                     <tr>
                                                                         <td class="questionColumnText"><span id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionIsHot">Mark the candidate as <span style="color: #800000"><b>hot</b></span>.</span></td>
-                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionIsHotDelete" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
+                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionIsHotDelete" class="ui2-button ui2-button--danger" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
                                                                     </tr>
                                                                 <?php endif; ?>
                                                                 <?php if (!($actionIsActive = $answer['actionIsActive'])): ?>
                                                                     <?php $actionTaken = true; ?>
                                                                     <tr>
                                                                         <td class="questionColumnText"><span id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionIsActive">Mark the candidate as <b>inactive</b> and eliminate from searches.</span></td>
-                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionIsActiveDelete" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
+                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionIsActiveDelete" class="ui2-button ui2-button--danger" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
                                                                     </tr>
                                                                 <?php endif; ?>
                                                                 <?php if ($actionCanRelocate = $answer['actionCanRelocate']): ?>
                                                                     <?php $actionTaken = true; ?>
                                                                     <tr>
                                                                         <td class="questionColumnText"><span id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionCanRelocate">Mark that the candidate is able to relocate.</span></td>
-                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionCanRelocateDelete" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
+                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionCanRelocateDelete" class="ui2-button ui2-button--danger" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
                                                                     </tr>
                                                                 <?php endif; ?>
                                                                 <?php if (($actionKeySkills = $answer['actionKeySkills']) != ''): ?>
                                                                     <?php $actionTaken = true; ?>
                                                                     <tr>
                                                                         <td class="questionColumnText"><span id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionKeySkills">Add to <b>key skills</b>, &quot;<?php echo $actionKeySkills; ?>&quot;.</span></td>
-                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionKeySkillsDelete" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
+                                                                        <td align="right" class="questionColumnText"><a id="question<?php echo $questionIndex; ?>Answer<?php echo $answerIndex; ?>ActionKeySkillsDelete" class="ui2-button ui2-button--danger" href="javascript:void(0);" onclick="toggleDeleteAction(this);">(delete)</a></td>
                                                                     </tr>
                                                                 <?php endif; ?>
 

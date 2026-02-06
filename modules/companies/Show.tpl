@@ -28,21 +28,31 @@ use OpenCATS\UI\QuickActionMenu;
                            </tr>
                         </table>
                     </div>
+                    <?php
+                        $showCompanyDangerActions =
+                            ($this->getUserAccessLevel('companies.delete') >= ACCESS_LEVEL_DELETE && $this->data['defaultCompany'] != 1);
+                    ?>
                     <div class="ui2-header-actions">
-                        <?php if ($this->getUserAccessLevel('companies.edit') >= ACCESS_LEVEL_EDIT): ?>
-                            <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=edit&amp;companyID=<?php echo($this->companyID); ?>">
-                                <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($this->getUserAccessLevel('companies.delete') >= ACCESS_LEVEL_DELETE && $this->data['defaultCompany'] != 1): ?>
-                            <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=delete&amp;companyID=<?php echo($this->companyID); ?>" onclick="javascript:return confirm('Delete this company?');">
-                                <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($this->privledgedUser): ?>
-                            <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=200&amp;dataItemID=<?php echo($this->companyID); ?>">
-                                <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
-                            </a>
+                        <div class="ui2-action-group">
+                            <?php if ($this->getUserAccessLevel('companies.edit') >= ACCESS_LEVEL_EDIT): ?>
+                                <a id="edit_link" class="ui2-button ui2-button--primary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=edit&amp;companyID=<?php echo($this->companyID); ?>">
+                                    <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />Edit
+                                </a>
+                            <?php endif; ?>
+                            <?php if ($this->privledgedUser): ?>
+                                <a id="history_link" class="ui2-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=200&amp;dataItemID=<?php echo($this->companyID); ?>">
+                                    <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />View History
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($showCompanyDangerActions): ?>
+                            <div class="ui2-action-group ui2-action-group--danger">
+                                <?php if ($this->getUserAccessLevel('companies.delete') >= ACCESS_LEVEL_DELETE && $this->data['defaultCompany'] != 1): ?>
+                                    <a id="delete_link" class="ui2-button ui2-button--danger" href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=delete&amp;companyID=<?php echo($this->companyID); ?>" onclick="javascript:return confirm('Delete this company?');">
+                                        <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />Delete
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -200,7 +210,7 @@ use OpenCATS\UI\QuickActionMenu;
                             <td><?php $this->_($attachmentsData['dateCreated']) ?></td>
                             <td>
                                 <?php if ($this->getUserAccessLevel('companies.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=deleteAttachment&amp;companyID=<?php echo($this->companyID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>"  title="Delete" onclick="javascript:return confirm('Delete this attachment?');">
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=deleteAttachment&amp;companyID=<?php echo($this->companyID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" class="ui2-button ui2-button--danger" title="Delete" onclick="javascript:return confirm('Delete this attachment?');">
                                         <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
                                     </a>
                                 <?php endif; ?>

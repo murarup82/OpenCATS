@@ -44,40 +44,52 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         </table>
                     </div>
                     <?php if (!$this->isPopup): ?>
+                        <?php
+                            $showCandidateDangerActions =
+                                ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE) ||
+                                ($this->getUserAccessLevel('candidates.administrativeHideShow') >= ACCESS_LEVEL_MULTI_SA) ||
+                                ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA);
+                        ?>
                         <div class="ui2-header-actions">
-                            <?php if ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT): ?>
-                                <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=edit&amp;candidateID=<?php echo($this->candidateID); ?>">
-                                    <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
-                                </a>
-                            <?php endif; ?>
-                            <?php if ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE): ?>
-                                <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=delete&amp;candidateID=<?php echo($this->candidateID); ?>" onclick="javascript:return confirm('Delete this candidate?');">
-                                    <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
-                                </a>
-                            <?php endif; ?>
-                            <?php if ($this->privledgedUser): ?>
-                                <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=100&amp;dataItemID=<?php echo($this->candidateID); ?>">
-                                    <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
-                                </a>
-                            <?php endif; ?>
-                            <a id="transform_cv_link" href="#" onclick="CandidateTransformCV.open(); return false;">
-                                <img src="images/parser/transfer.gif" width="16" height="16" class="absmiddle" alt="transform" border="0" />&nbsp;Transform CV
-                            </a>
-                            <?php if ($this->getUserAccessLevel('candidates.administrativeHideShow') >= ACCESS_LEVEL_MULTI_SA): ?>
-                                <?php if ($this->data['isAdminHidden'] == 1): ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0">
-                                        <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Administrative Show
-                                    </a>
-                                    <?php else: ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=1">
-                                        <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Administrative Hide
+                            <div class="ui2-action-group">
+                                <?php if ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT): ?>
+                                    <a id="edit_link" class="ui2-button ui2-button--primary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=edit&amp;candidateID=<?php echo($this->candidateID); ?>">
+                                        <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />Edit
                                     </a>
                                 <?php endif; ?>
-                            <?php endif; ?>
-                            <?php if ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA): ?>
-                                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=linkDuplicate&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
-                                    <img src="images/actions/duplicates.png" width="16" height="16" class="absmiddle" alt="add duplicate" border="0" />&nbsp;Link duplicate
+                                <?php if ($this->privledgedUser): ?>
+                                    <a id="history_link" class="ui2-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=100&amp;dataItemID=<?php echo($this->candidateID); ?>">
+                                        <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />View History
+                                    </a>
+                                <?php endif; ?>
+                                <a id="transform_cv_link" class="ui2-button" href="#" onclick="CandidateTransformCV.open(); return false;">
+                                    <img src="images/parser/transfer.gif" width="16" height="16" class="absmiddle" alt="transform" border="0" />Transform CV
                                 </a>
+                            </div>
+                            <?php if ($showCandidateDangerActions): ?>
+                                <div class="ui2-action-group ui2-action-group--danger">
+                                    <?php if ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE): ?>
+                                        <a id="delete_link" class="ui2-button ui2-button--danger" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=delete&amp;candidateID=<?php echo($this->candidateID); ?>" onclick="javascript:return confirm('Delete this candidate?');">
+                                            <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />Delete
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if ($this->getUserAccessLevel('candidates.administrativeHideShow') >= ACCESS_LEVEL_MULTI_SA): ?>
+                                        <?php if ($this->data['isAdminHidden'] == 1): ?>
+                                            <a class="ui2-button ui2-button--danger" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0">
+                                                <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />Administrative Show
+                                            </a>
+                                        <?php else: ?>
+                                            <a class="ui2-button ui2-button--danger" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=1">
+                                                <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />Administrative Hide
+                                            </a>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                    <?php if ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA): ?>
+                                        <a class="ui2-button ui2-button--danger" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=linkDuplicate&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
+                                            <img src="images/actions/duplicates.png" width="16" height="16" class="absmiddle" alt="add duplicate" border="0" />Link duplicate
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -218,7 +230,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <td style="text-align:center;" class="vertical">
                                             <?php if (!$this->isPopup): ?>
                                                 <?php if ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment&amp;candidateID=<?php echo($this->candidateID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" onclick="javascript:return confirm('Delete this attachment?');">
+                                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment&amp;candidateID=<?php echo($this->candidateID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" class="ui2-button ui2-button--danger" onclick="javascript:return confirm('Delete this attachment?');">
                                                         <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" title="Delete" />
                                                     </a>
                                                 <?php endif; ?>
@@ -378,7 +390,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <td>
                                             <?php if (!$this->isPopup): ?>
                                                 <?php if ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment&amp;candidateID=<?php echo($this->candidateID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" onclick="javascript:return confirm('Delete this attachment?');">
+                                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment&amp;candidateID=<?php echo($this->candidateID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" class="ui2-button ui2-button--danger" onclick="javascript:return confirm('Delete this attachment?');">
                                                         <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" title="Delete" />
                                                     </a>
                                                 <?php endif; ?>
@@ -463,7 +475,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             <?php if (!$this->isPopup){ ?>
                                 <?php if ($this->getUserAccessLevel('candidates.addCandidateTags') >= ACCESS_LEVEL_EDIT){ ?>
                                     <div class="ui2-card-actions">
-                                        <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addCandidateTags&amp;candidateID=<?php echo($this->candidateID); ?>', 400, 125, null); return false;">
+                                        <a class="ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addCandidateTags&amp;candidateID=<?php echo($this->candidateID); ?>', 400, 125, null); return false;">
                                             Add/Remove
                                         </a>
                                     </div>
@@ -509,7 +521,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 <select id="transformCvJobOrder" style="width: 300px;">
                                     <option value="">Type to search...</option>
                                 </select>
-                                <input type="button" class="button" id="transformCvNext" value="Next 50" onclick="CandidateTransformCV.loadNext();" style="margin-left: 6px;" />
+                                <input type="button" class="button ui2-button--secondary" id="transformCvNext" value="Next 50" onclick="CandidateTransformCV.loadNext();" style="margin-left: 6px;" />
                             </div>
                         </td>
                     </tr>
@@ -532,8 +544,8 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     </tr>
                 </table>
                 <div style="margin-top: 10px;">
-                    <input type="button" class="button" id="transformCvSubmit" value="Submit" onclick="CandidateTransformCV.submit();" />
-                    <input type="button" class="button" value="Cancel" onclick="CandidateTransformCV.close();" />
+                    <input type="button" class="button ui2-button--primary" id="transformCvSubmit" value="Submit" onclick="CandidateTransformCV.submit();" />
+                    <input type="button" class="button ui2-button--secondary" value="Cancel" onclick="CandidateTransformCV.close();" />
                 </div>
                 <div id="transformCvStatus" style="margin-top: 8px;"></div>
             </div>
@@ -640,7 +652,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 </a>
                             <?php endif; ?>
                             <?php if ($this->getUserAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_DELETE): ?>
-                                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=removeFromPipeline&amp;candidateID=<?php echo($this->candidateID); ?>&amp;jobOrderID=<?php echo($pipelinesData['jobOrderID']); ?>"  onclick="return PipelinePromptRemove('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=removeFromPipeline&amp;candidateID=<?php echo($this->candidateID); ?>&amp;jobOrderID=<?php echo($pipelinesData['jobOrderID']); ?>');">
+                                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=removeFromPipeline&amp;candidateID=<?php echo($this->candidateID); ?>&amp;jobOrderID=<?php echo($pipelinesData['jobOrderID']); ?>" class="ui2-button ui2-button--danger" onclick="return PipelinePromptRemove('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=removeFromPipeline&amp;candidateID=<?php echo($this->candidateID); ?>&amp;jobOrderID=<?php echo($pipelinesData['jobOrderID']); ?>');">
                                     <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="" border="0" title="Reject from Job Order"/>
                                 </a>
                             <?php endif; ?>

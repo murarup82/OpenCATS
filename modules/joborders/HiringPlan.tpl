@@ -77,7 +77,7 @@
                                 <input type="text" class="inputbox" name="notes[]" value="<?php echo(htmlspecialchars($planRow['notes'])); ?>" style="width: 240px;" />
                             </td>
                             <td class="tdData">
-                                <a href="#" onclick="return removeHiringPlanRow(<?php echo($rowIndex); ?>, <?php echo((int) $planRow['planID']); ?>);">Remove</a>
+                                <a href="#" class="ui2-button ui2-button--danger" onclick="return removeHiringPlanRow(<?php echo($rowIndex); ?>, <?php echo((int) $planRow['planID']); ?>);">Remove</a>
                             </td>
                         </tr>
                         <?php $rowIndex++; ?>

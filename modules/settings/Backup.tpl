@@ -52,7 +52,7 @@
                                     </td>
                                     <td><?php $this->_($attachmentsData['dateCreated']) ?></td>
                                     <td>
-                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=deleteBackup" title="Delete" onclick="javascript:return confirm('Delete this backup?');">
+                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=deleteBackup" class="ui2-button ui2-button--danger" title="Delete" onclick="javascript:return confirm('Delete this backup?');">
                                             <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
                                         </a>
                                     </td>

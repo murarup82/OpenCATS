@@ -15,7 +15,7 @@
                     <td align="right" nowrap="nowrap">
                         <div class="ui2-inline" style="justify-content: flex-end; width: 100%;">
                             <input type="button" class="ui2-button ui2-button--secondary" value="Today" onclick="goToToday();" />
-                            <input type="button" class="ui2-button ui2-button--secondary" value="Add Event" onclick="userCalendarAddEvent();" />
+                            <input type="button" class="ui2-button ui2-button--primary" value="Add Event" onclick="userCalendarAddEvent();" />
                             <input type="button" class="ui2-button ui2-button--secondary" value="My Upcoming Events" onclick="calendarUpcomingEvents();" />
                         </div>
                         <div style="margin-top: 6px;">
@@ -342,7 +342,7 @@
                                         <div style="text-align: center;">
                                             <input type="submit" class="button" name="submit" value="Save" />
                                             <?php if ($this->getUserAccessLevel('calendar.deleteEvent') >= ACCESS_LEVEL_DELETE): ?>
-                                                <input type="button" class="button" name="delete" value="Delete" onclick="confirmDeleteEntry();" />
+                                                <input type="button" class="button ui2-button--danger" name="delete" value="Delete" onclick="confirmDeleteEntry();" />
                                             <?php endif; ?>
                                         </div>
                                     </form>

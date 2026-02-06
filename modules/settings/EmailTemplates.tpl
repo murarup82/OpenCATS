@@ -132,7 +132,7 @@
                                                 <tr>
                                                     <td>
                                                         <input type="text" name="emailTemplateTitle" value="<?php echo($data['emailTemplateTitle']); ?>"/>
-                                                        <input type="button" value="Delete Template" onclick="window.location='index.php?m=settings&a=deleteEmailTemplate&id=<?php echo $data['emailTemplateID']?>'">
+                                                        <input type="button" class="button ui2-button--danger" value="Delete Template" onclick="window.location='index.php?m=settings&a=deleteEmailTemplate&id=<?php echo $data['emailTemplateID']?>'">
                                                     </td>
                                                 </tr>
                                                 <?php endif; ?>

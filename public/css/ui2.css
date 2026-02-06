@@ -263,24 +263,34 @@
     justify-content: flex-end;
 }
 
+.ui2 .ui2-action-group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui2-space-2);
+}
+
+.ui2 .ui2-action-group--danger {
+    padding-left: var(--ui2-space-2);
+    margin-left: var(--ui2-space-2);
+    border-left: 1px solid var(--ui2-border);
+}
+
 .ui2 .ui2-header-actions a,
-.ui2 .ui2-card-actions a {
+.ui2 .ui2-card-actions a,
+.ui2 a.ui2-button,
+.ui2 a.button {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
-    border: var(--ui2-border-width) solid var(--ui2-border);
-    border-radius: var(--ui2-radius-sm);
-    background: var(--ui2-bg);
-    color: var(--ui2-text);
     text-decoration: none;
 }
 
-.ui2 .ui2-header-actions a:hover,
-.ui2 .ui2-card-actions a:hover {
-    background: var(--ui2-bg-subtle);
-    border-color: var(--ui2-accent);
-    color: var(--ui2-primary);
+.ui2 .ui2-header-actions img,
+.ui2 .ui2-card-actions img,
+.ui2 .ui2-button img {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
 }
 
 .ui2 .ui2-summary {
@@ -794,6 +804,7 @@
 }
 
 .ui2 .ui2-button,
+.ui2 a.button,
 .ui2 input[type="button"],
 .ui2 input[type="submit"],
 .ui2 input[type="reset"],
@@ -805,31 +816,32 @@
 }
 
 .ui2 .ui2-button,
+.ui2 a.button,
 .ui2 input[type="button"],
-.ui2 input[type="submit"],
 .ui2 input[type="reset"],
 .ui2 button {
     -webkit-appearance: none;
     appearance: none;
-    border: 1px solid var(--ui2-accent);
-    background: var(--ui2-accent);
-    color: #ffffff;
+    border: 1px solid var(--ui2-border);
+    background: var(--ui2-bg);
+    color: var(--ui2-text);
     height: 34px;
     line-height: 34px;
     padding: 0 12px;
     font-size: var(--ui2-font-size-sm);
+    font-weight: 500;
     border-radius: var(--ui2-radius-sm);
     box-shadow: var(--ui2-shadow-1);
     cursor: pointer;
 }
 
 .ui2 .ui2-button:hover,
+.ui2 a.button:hover,
 .ui2 input[type="button"]:hover,
-.ui2 input[type="submit"]:hover,
 .ui2 input[type="reset"]:hover,
 .ui2 button:hover {
-    background: var(--ui2-primary);
-    border-color: var(--ui2-primary);
+    background: var(--ui2-bg-subtle);
+    border-color: var(--ui2-accent);
 }
 
 .ui2 .ui2-button:disabled,
@@ -854,6 +866,39 @@
 .ui2 button.ui2-button--secondary:hover {
     background: var(--ui2-bg-subtle);
     border-color: var(--ui2-border);
+}
+
+.ui2 .ui2-button--primary,
+.ui2 input[type="submit"],
+.ui2 input.ui2-button--primary,
+.ui2 button.ui2-button--primary {
+    background: var(--ui2-accent);
+    border-color: var(--ui2-accent);
+    color: #ffffff;
+}
+
+.ui2 .ui2-button--primary:hover,
+.ui2 input[type="submit"]:hover,
+.ui2 input.ui2-button--primary:hover,
+.ui2 button.ui2-button--primary:hover {
+    background: var(--ui2-primary);
+    border-color: var(--ui2-primary);
+}
+
+.ui2 .ui2-button--danger,
+.ui2 input.ui2-button--danger,
+.ui2 button.ui2-button--danger {
+    background: var(--ui2-bg);
+    color: var(--ui2-text);
+    border-color: var(--ui2-border);
+}
+
+.ui2 .ui2-button--danger:hover,
+.ui2 input.ui2-button--danger:hover,
+.ui2 button.ui2-button--danger:hover {
+    background: #ffecec;
+    border-color: #c0392b;
+    color: #7a1c14;
 }
 
 .ui2 select,

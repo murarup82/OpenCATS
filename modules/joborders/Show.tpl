@@ -26,40 +26,51 @@ use OpenCATS\UI\QuickActionMenu;
                         </table>
                     </div>
                     <?php if (!$this->isPopup): ?>
+                        <?php
+                            $showJobOrderDangerActions =
+                                ($this->getUserAccessLevel('joborders.delete') >= ACCESS_LEVEL_DELETE) ||
+                                ($this->getUserAccessLevel('joborders.hidden') >= ACCESS_LEVEL_MULTI_SA);
+                        ?>
                         <div class="ui2-header-actions">
-                            <?php if ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT): ?>
-                                <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=edit&amp;jobOrderID=<?php echo($this->jobOrderID); ?>">
-                                    <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
-                                </a>
-                            <?php endif; ?>
-                            <?php if ($this->getUserAccessLevel('joborders.delete') >= ACCESS_LEVEL_DELETE): ?>
-                                <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=delete&amp;jobOrderID=<?php echo($this->jobOrderID); ?>" onclick="javascript:return confirm('Delete this job order?');">
-                                    <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
-                                </a>
-                            <?php endif; ?>
-                            <?php if ($this->getUserAccessLevel('joborders.hidden') >= ACCESS_LEVEL_MULTI_SA): ?>
-                                <?php if ($this->data['isAdminHidden'] == 1): ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=administrativeHideShow&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;state=0">
-                                        <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Administrative Show
-                                    </a>
-                                    <?php else: ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=administrativeHideShow&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;state=1">
-                                        <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Administrative Hide
+                            <div class="ui2-action-group">
+                                <?php if ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT): ?>
+                                    <a id="edit_link" class="ui2-button ui2-button--primary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=edit&amp;jobOrderID=<?php echo($this->jobOrderID); ?>">
+                                        <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />Edit
                                     </a>
                                 <?php endif; ?>
-                            <?php endif; ?>
-                            <?php if (!empty($this->data['public']) && $this->careerPortalEnabled): ?>
-                                <a id="public_link" href="<?php echo(CATSUtility::getAbsoluteURI()); ?>careers/<?php echo(CATSUtility::getIndexName()); ?>?p=showJob&amp;ID=<?php echo($this->jobOrderID); ?>">
-                                    <img src="images/public.gif" width="16" height="16" class="absmiddle" alt="Online Application" border="0" />&nbsp;Online Application
+                                <?php if (!empty($this->data['public']) && $this->careerPortalEnabled): ?>
+                                    <a id="public_link" class="ui2-button" href="<?php echo(CATSUtility::getAbsoluteURI()); ?>careers/<?php echo(CATSUtility::getIndexName()); ?>?p=showJob&amp;ID=<?php echo($this->jobOrderID); ?>">
+                                        <img src="images/public.gif" width="16" height="16" class="absmiddle" alt="Online Application" border="0" />Online Application
+                                    </a>
+                                <?php endif; ?>
+                                <a id="report_link" class="ui2-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=reports&amp;a=customizeJobOrderReport&amp;jobOrderID=<?php echo($this->jobOrderID); ?>">
+                                    <img src="images/reportsSmall.gif" width="16" height="16" class="absmiddle" alt="report" border="0" />Generate Report
                                 </a>
-                            <?php endif; ?>
-                            <a id="report_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=reports&amp;a=customizeJobOrderReport&amp;jobOrderID=<?php echo($this->jobOrderID); ?>">
-                                <img src="images/reportsSmall.gif" width="16" height="16" class="absmiddle" alt="report" border="0" />&nbsp;Generate Report
-                            </a>
-                            <?php if ($this->privledgedUser): ?>
-                                <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=400&amp;dataItemID=<?php echo($this->jobOrderID); ?>">
-                                    <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
-                                </a>
+                                <?php if ($this->privledgedUser): ?>
+                                    <a id="history_link" class="ui2-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=400&amp;dataItemID=<?php echo($this->jobOrderID); ?>">
+                                        <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />View History
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($showJobOrderDangerActions): ?>
+                                <div class="ui2-action-group ui2-action-group--danger">
+                                    <?php if ($this->getUserAccessLevel('joborders.delete') >= ACCESS_LEVEL_DELETE): ?>
+                                        <a id="delete_link" class="ui2-button ui2-button--danger" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=delete&amp;jobOrderID=<?php echo($this->jobOrderID); ?>" onclick="javascript:return confirm('Delete this job order?');">
+                                            <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />Delete
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if ($this->getUserAccessLevel('joborders.hidden') >= ACCESS_LEVEL_MULTI_SA): ?>
+                                        <?php if ($this->data['isAdminHidden'] == 1): ?>
+                                            <a class="ui2-button ui2-button--danger" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=administrativeHideShow&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;state=0">
+                                                <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />Administrative Show
+                                            </a>
+                                        <?php else: ?>
+                                            <a class="ui2-button ui2-button--danger" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=administrativeHideShow&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;state=1">
+                                                <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />Administrative Hide
+                                            </a>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -77,8 +88,8 @@ use OpenCATS\UI\QuickActionMenu;
                         <td class="tdVertical">
                             This Job Order is <?php $this->_($this->data['status']); ?> and can not be modified.
                            <?php if ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT): ?>
-                               <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=edit&amp;jobOrderID=<?php echo($this->jobOrderID); ?>">
-                                   <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
+                               <a id="edit_link" class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=edit&amp;jobOrderID=<?php echo($this->jobOrderID); ?>">
+                                   <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />Edit
                                </a>
                                the Job Order to make it Active.&nbsp;&nbsp;
                            <?php endif; ?>
@@ -302,7 +313,7 @@ use OpenCATS\UI\QuickActionMenu;
                                                 <td>
                                                     <?php if (!$this->isPopup): ?>
                                                         <?php if ($this->getUserAccessLevel('joborders.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=deleteAttachment&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>"  title="Delete" onclick="javascript:return confirm('Delete this attachment?');">
+                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=deleteAttachment&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" class="ui2-button ui2-button--danger" title="Delete" onclick="javascript:return confirm('Delete this attachment?');">
                                                                 <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
                                                             </a>
                                                         <?php endif; ?>

@@ -113,10 +113,10 @@ function editTag(id){
 												}
 											
 											?>
-											<li id="id_li_tag_<?= $data['tag_id'] ?>"><a href="javascript:;" onclick="doDelete(<?= $tag_parent_id ?>);"><img src="images/actions/delete.gif"/></a> <?= $data['tag_title'] ?><ul>
+											<li id="id_li_tag_<?= $data['tag_id'] ?>"><a href="javascript:;" class="ui2-button ui2-button--danger" onclick="doDelete(<?= $tag_parent_id ?>);"><img src="images/actions/delete.gif"/></a> <?= $data['tag_title'] ?><ul>
 											<?php } else {  ?>
 											<li id="id_li_tag_<?= $data['tag_id'] ?>">
-												<a href="javascript:;" onclick="doDelete(<?= $data['tag_id'] ?>);"><img src="images/actions/delete.gif" /></a>
+												<a href="javascript:;" class="ui2-button ui2-button--danger" onclick="doDelete(<?= $data['tag_id'] ?>);"><img src="images/actions/delete.gif" /></a>
 												<div id="id_tag_<?= $data['tag_id'] ?>">
 													<a href="javascript:;" onclick="editTag(<?= $data['tag_id'] ?>);"><?= $data['tag_title'] ?></a><div></div>
 												</div>

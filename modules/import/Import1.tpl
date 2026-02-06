@@ -107,7 +107,7 @@
                             <input type="button" value="Rescan Documents" name="rescan" id="rescanButton" class="button" onclick="document.location.href='<?php echo CATSUtility::getIndexName(); ?>?m=import&a=importBulkResumes';" />
                         </td>
                         <td>
-                            <input type="button" value="Delete Documents" name="delete" id="deleteButton" class="button" onclick="if (confirm('This will delete all searchable attachments that have not been associated with candidates. This action cannot be undone. Are you sure you want to continue?')) document.location.href='<?php echo CATSUtility::getIndexName(); ?>?m=import&a=deleteBulkResumes';" />
+                            <input type="button" value="Delete Documents" name="delete" id="deleteButton" class="button ui2-button--danger" onclick="if (confirm('This will delete all searchable attachments that have not been associated with candidates. This action cannot be undone. Are you sure you want to continue?')) document.location.href='<?php echo CATSUtility::getIndexName(); ?>?m=import&a=deleteBulkResumes';" />
                         </td>
                     </tr>
                 </table>

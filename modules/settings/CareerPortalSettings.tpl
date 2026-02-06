@@ -246,7 +246,7 @@
                                     <input type="button" class="button" value="Full Screen Preview" onclick="fullScreenPreview();" />
                                     <input type="button" class="button" value="Edit" id="buttonEdit" onclick="window.location.href='<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=careerPortalTemplateEdit&amp;templateName='+encodeURI(usingID);" />
                                     <input type="button" class="button" value="Edit" id="buttonEditDefault" onclick="showEditDefaultInput();" style="display: none;" />
-                                    <input type="button" class="button" value="Delete" id="buttonDelete" onclick="showDeleteInput();" />
+                                    <input type="button" class="button ui2-button--danger" value="Delete" id="buttonDelete" onclick="showDeleteInput();" />
                                     <input type="button" class="button" value="Duplicate" onclick="showDuplicateInput();" />
                                     <input type="button" class="button" value="Set as Active" onclick="setAsActive();" />
                                     <form name="setAsActiveForm" id="setAsActiveForm" action="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=onCareerPortalTweak&amp;p=setAsActive" method="post">

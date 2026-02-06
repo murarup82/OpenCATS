@@ -107,7 +107,7 @@
                                     <br />
                                     <br />
                                     Processing resume <span id="processingResumeNumber"></span> / <?php echo(count($this->foundFiles)); ?>...<br /><br />
-                                    <input class="button" type="button" value="Abort" id="back" onclick="abortImport=true;">&nbsp;
+                                    <input class="button ui2-button--danger" type="button" value="Abort" id="back" onclick="abortImport=true;">&nbsp;
                                 </span>
                             <?php endif; ?>
                             <br />

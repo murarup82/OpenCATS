@@ -38,7 +38,7 @@
                 </div>
                 <div class="ui2-datatable-actions">
                     <?php if ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT): ?>
-                        <a class="ui2-button" href="javascript:void(0);" onclick="showPopWin('<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=addJobOrderPopup', 400, 250, null); return false;">Add Job Order</a>
+                        <a class="ui2-button ui2-button--primary" href="javascript:void(0);" onclick="showPopWin('<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=addJobOrderPopup', 400, 250, null); return false;">Add Job Order</a>
                     <?php endif; ?>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>

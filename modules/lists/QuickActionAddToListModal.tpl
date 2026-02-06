@@ -23,7 +23,7 @@
                             <input class="inputbox" style="width:220px; padding-left:5px; margin-top:2px;" value="<?php $this->_($data['description']); ?>" id="savedListRowInput<?php echo($data['savedListID']); ?>">
                         </span>
                         <span style="float:right; padding-right:25px;">
-                            <a href="javascript:void(0);" onclick="deleteListRow(<?php echo($data['savedListID']); ?>, '<?php echo($this->sessionCookie); ?>', <?php echo($data['numberEntries']); ?>);" style="text-decoration:none;"><img src="images/actions/delete.gif" border="0">&nbsp;Delete</a>&nbsp;
+                            <a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="deleteListRow(<?php echo($data['savedListID']); ?>, '<?php echo($this->sessionCookie); ?>', <?php echo($data['numberEntries']); ?>);" style="text-decoration:none;"><img src="images/actions/delete.gif" border="0">&nbsp;Delete</a>&nbsp;
                             <a href="javascript:void(0);" onclick="saveListRow(<?php echo($data['savedListID']); ?>, '<?php echo($this->sessionCookie); ?>');" style="text-decoration:none;"><img src="images/actions/screen.gif" border="0">&nbsp;Save</a>
                         </span>
                     </div>

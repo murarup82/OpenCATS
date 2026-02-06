@@ -22,7 +22,7 @@
                 </div>
                 <div class="ui2-datatable-search"></div>
                 <div class="ui2-datatable-actions">
-                    <a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="deleteListFromListView(<?php $this->_($this->listRS['savedListID']); ?>, <?php $this->_($this->listRS['numberEntries']); ?>);">Delete List</a>
+                    <a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="deleteListFromListView(<?php $this->_($this->listRS['savedListID']); ?>, <?php $this->_($this->listRS['numberEntries']); ?>);">Delete List</a>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
                 </div>
