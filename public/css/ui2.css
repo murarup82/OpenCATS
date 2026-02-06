@@ -627,6 +627,11 @@
     font-size: 12px;
 }
 
+.ui2 .ajaxSearchResults {
+    z-index: 100001;
+    pointer-events: auto;
+}
+
 .ui2 .ui2-datatable-filters {
     display: flex;
     flex-wrap: wrap;
