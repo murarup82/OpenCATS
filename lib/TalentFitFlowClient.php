@@ -155,6 +155,21 @@ class TalentFitFlowClient
         $signature = $this->_signPayload($payload);
         $headers = $this->_buildSignedHeaders($timestamp, $signature);
 
+        $endpointPath = '/api/integrations/opencats/candidate-parse/v1';
+        $resolvedUrl = $this->_buildUrl($endpointPath);
+        $baseUrl = $this->_baseUrl;
+        $hasApiSuffix = (preg_match('#/api$#i', $baseUrl) === 1);
+        $hasTrailingSlash = (substr($baseUrl, -1) === '/');
+        error_log(
+            'TFF candidate-parse request: ' .
+            'method=POST, url=' . $resolvedUrl .
+            ', baseUrl=' . $baseUrl .
+            ', baseUrlHasApiSuffix=' . ($hasApiSuffix ? '1' : '0') .
+            ', baseUrlHasTrailingSlash=' . ($hasTrailingSlash ? '1' : '0') .
+            ', endpointPath=' . $endpointPath .
+            ', headers=' . implode('; ', $headers)
+        );
+
         $postFields = array(
             'cv_file' => $this->_createCurlFile($cvFilePath, $cvFileName)
         );
@@ -296,7 +311,7 @@ class TalentFitFlowClient
 
         return $this->_requestJson(
             'POST',
-            '/api/integrations/opencats/candidate-parse/v1',
+            $endpointPath,
             $headers,
             $postFields,
             array(200, 202)
