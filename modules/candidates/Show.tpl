@@ -15,38 +15,135 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 <?php endif; ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <table>
-                <tr>
-                    <td width="3%">
-                        <img src="images/candidate.gif" width="24" height="24" border="0" alt="Candidates" style="margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Candidates: Candidate Details
-                        <?php if($_SESSION['CATS']->getAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA): ?>    
-                            <?php if(!empty($this->data['isDuplicate'])): ?>
-                                <img src="images/wf_error.gif" alt="duplicate_warning" width="20" height="20" border="0" title="Possible duplicate" />
-                                <?php foreach($this->data['isDuplicate'] as $item): ?>
-                                    <?php echo '<a href='.CATSUtility::getIndexName().'?m=candidates&amp;a=show&amp;candidateID='.$item['duplicateTo'].' target=_blank>Duplicate</a>' ?>
-                                    <?php TemplateUtility::printSingleQuickActionMenu(new CandidateDuplicateQuickActionMenu(
-                                        DATA_ITEM_DUPLICATE,
-                                        $this->data['candidateID'],
-                                        $_SESSION['CATS']->getAccessLevel('candidates.duplicates'),
-                                        urlencode(CATSUtility::getIndexName().'?m=candidates&a=merge&oldCandidateID='.$item['duplicateTo'].'&newCandidateID='.$this->data['candidateID']),
-                                        urlencode(CATSUtility::getIndexName().'?m=candidates&a=removeDuplicity&oldCandidateID='.$item['duplicateTo'].'&newCandidateID='.$this->data['candidateID']
-                                    ))); ?>
-                                <?php endforeach; ?>
+            <div class="ui2-page">
+                <div class="ui2-header">
+                    <div class="ui2-header-title">
+                        <table>
+                            <tr>
+                                <td width="3%">
+                                    <img src="images/candidate.gif" width="24" height="24" border="0" alt="Candidates" style="margin-top: 3px;" />&nbsp;
+                                </td>
+                                <td><h2>Candidates: Candidate Details
+                                    <?php if($_SESSION['CATS']->getAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA): ?>
+                                        <?php if(!empty($this->data['isDuplicate'])): ?>
+                                            <img src="images/wf_error.gif" alt="duplicate_warning" width="20" height="20" border="0" title="Possible duplicate" />
+                                            <?php foreach($this->data['isDuplicate'] as $item): ?>
+                                                <?php echo '<a href='.CATSUtility::getIndexName().'?m=candidates&amp;a=show&amp;candidateID='.$item['duplicateTo'].' target=_blank>Duplicate</a>' ?>
+                                                <?php TemplateUtility::printSingleQuickActionMenu(new CandidateDuplicateQuickActionMenu(
+                                                    DATA_ITEM_DUPLICATE,
+                                                    $this->data['candidateID'],
+                                                    $_SESSION['CATS']->getAccessLevel('candidates.duplicates'),
+                                                    urlencode(CATSUtility::getIndexName().'?m=candidates&a=merge&oldCandidateID='.$item['duplicateTo'].'&newCandidateID='.$this->data['candidateID']),
+                                                    urlencode(CATSUtility::getIndexName().'?m=candidates&a=removeDuplicity&oldCandidateID='.$item['duplicateTo'].'&newCandidateID='.$this->data['candidateID']
+                                                ))); ?>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </h2></td>
+                           </tr>
+                        </table>
+                    </div>
+                    <?php if (!$this->isPopup): ?>
+                        <div class="ui2-header-actions">
+                            <?php if ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT): ?>
+                                <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=edit&amp;candidateID=<?php echo($this->candidateID); ?>">
+                                    <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
+                                </a>
                             <?php endif; ?>
-                        <?php endif; ?>
-                    </h2></td>
-               </tr>
-            </table>
-
-            <p class="note">Candidate Details</p>
+                            <?php if ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE): ?>
+                                <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=delete&amp;candidateID=<?php echo($this->candidateID); ?>" onclick="javascript:return confirm('Delete this candidate?');">
+                                    <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
+                                </a>
+                            <?php endif; ?>
+                            <?php if ($this->privledgedUser): ?>
+                                <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=100&amp;dataItemID=<?php echo($this->candidateID); ?>">
+                                    <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
+                                </a>
+                            <?php endif; ?>
+                            <a id="transform_cv_link" href="#" onclick="CandidateTransformCV.open(); return false;">
+                                <img src="images/parser/transfer.gif" width="16" height="16" class="absmiddle" alt="transform" border="0" />&nbsp;Transform CV
+                            </a>
+                            <?php if ($this->getUserAccessLevel('candidates.administrativeHideShow') >= ACCESS_LEVEL_MULTI_SA): ?>
+                                <?php if ($this->data['isAdminHidden'] == 1): ?>
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0">
+                                        <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Administrative Show
+                                    </a>
+                                    <?php else: ?>
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=1">
+                                        <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Administrative Hide
+                                    </a>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            <?php if ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA): ?>
+                                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=linkDuplicate&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
+                                    <img src="images/actions/duplicates.png" width="16" height="16" class="absmiddle" alt="add duplicate" border="0" />&nbsp;Link duplicate
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
             <?php if ($this->data['isAdminHidden'] == 1): ?>
                 <p class="warning">This Candidate is hidden.  Only CATS Administrators can view it or search for it.  To make it visible by the site users, click <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0" style="font-weight:bold;">Here.</a></p>
             <?php endif; ?>
 
-            <table class="detailsOutside">
+            <?php
+                $summaryName = trim($this->data['firstName'].' '.$this->data['lastName']);
+                $summaryRole = $this->data['keySkills'];
+                $summaryLocation = trim($this->data['city'] . ($this->data['city'] && $this->data['country'] ? ', ' : '') . $this->data['country']);
+                $summaryAvailability = $this->data['dateAvailable'];
+                $summaryEmployer = $this->data['currentEmployer'];
+                $summarySeniority = '';
+                foreach ($this->extraFieldRS as $extraField)
+                {
+                    if (strcasecmp(trim($extraField['fieldName']), 'Seniority') === 0)
+                    {
+                        $summarySeniority = strip_tags($extraField['display']);
+                        break;
+                    }
+                }
+                $summaryName = ($summaryName !== '') ? $summaryName : '-';
+                $summaryRole = ($summaryRole !== '') ? $summaryRole : '-';
+                $summaryLocation = ($summaryLocation !== '') ? $summaryLocation : '-';
+                $summarySeniority = ($summarySeniority !== '') ? $summarySeniority : '-';
+                $summaryAvailability = ($summaryAvailability !== '') ? $summaryAvailability : '-';
+                $summaryEmployer = ($summaryEmployer !== '') ? $summaryEmployer : '-';
+            ?>
+
+            <div class="ui2-summary">
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Name</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryName); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Key Skills/Role</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryRole); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Location</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryLocation); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Seniority</div>
+                    <div class="ui2-summary-value"><?php $this->_($summarySeniority); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Availability</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryAvailability); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Current Employer</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryEmployer); ?></div>
+                </div>
+            </div>
+
+            <div class="ui2-grid">
+                <div class="ui2-col-main">
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Candidate Details</div>
+                        </div>
+                        <table class="detailsOutside ui2-details-table">
                 <tr style="vertical-align:top;">
                     <?php $profileImage = false; ?>
                     <?php foreach ($this->attachmentsRS as $rowNumber => $attachmentsData): ?>
@@ -59,7 +156,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <?php else: ?>
                         </td><td width="50%" height="100%">
                     <?php endif; ?>
-                        <table class="detailsInside" height="100%">
+                        <table class="detailsInside ui2-details-table" height="100%">
                             <tr>
                                 <td class="vertical">Name:</td>
                                 <td class="data">
@@ -92,21 +189,6 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 <td class="data"><?php $this->_($this->data['bestTimeToCall']); ?></td>
                             </tr>
                             <tr>
-                                <td class="vertical">GDPR Signed:</td>
-                                <td class="data"><?php $this->_($this->data['gdprSignedText']); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="vertical">GDPR Expiration Date:</td>
-                                <td class="data">
-                                    <?php if (!empty($this->data['gdprExpirationDateDisplay'])): ?>
-                                        <?php $this->_($this->data['gdprExpirationDateDisplay']); ?>
-                                    <?php else: ?>
-                                        Not set
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-
-                            <tr>
                                 <td class="vertical">Address:</td>
                                 <td class="data"><?php echo(nl2br(htmlspecialchars($this->data['address']))); ?></td>
                             </tr>
@@ -118,11 +200,6 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             <tr>
                                 <td class="vertical">Country:</td>
                                 <td class="data"><?php $this->_($this->data['country']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Source:</td>
-                                <td class="data"><?php $this->_($this->data['source']); ?></td>
                             </tr>
 
                             <?php for ($i = 0; $i < intval(count($this->extraFieldRS)/2); $i++): ?>
@@ -144,7 +221,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <?php else: ?>
                         </td><td width="50%" height="100%" valign="top">
                     <?php endif; ?>
-                        <table class="detailsInside" height="100%">
+                        <table class="detailsInside ui2-details-table" height="100%">
                             <tr>
                                 <td class="vertical">Date Available:</td>
                                 <td class="data"><?php $this->_($this->data['dateAvailable']); ?></td>
@@ -173,26 +250,6 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             <tr>
                                 <td class="vertical">Desired Pay:</td>
                                 <td class="data"><?php $this->_($this->data['desiredPay']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Pipeline:</td>
-                                <td class="data"><?php $this->_($this->data['pipeline']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Proposed to Customer:</td>
-                                <td class="data"><?php $this->_($this->data['submitted']); ?></td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Created:</td>
-                                <td class="data"><?php $this->_($this->data['dateCreated']); ?> (<?php $this->_($this->data['enteredByFullName']); ?>)</td>
-                            </tr>
-
-                            <tr>
-                                <td class="vertical">Owner:</td>
-                                <td class="data"><?php $this->_($this->data['ownerFullName']); ?></td>
                             </tr>
 
                             <?php for ($i = (intval(count($this->extraFieldRS))/2); $i < (count($this->extraFieldRS)); $i++): ?>
@@ -234,12 +291,17 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <?php endforeach; ?>
                 </tr>
             </table>
+                    </div>
 
             <?php if($this->EEOSettingsRS['enabled'] == 1): ?>
-                <table class="detailsOutside">
+                <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card-header">
+                        <div class="ui2-card-title">EEO Information</div>
+                    </div>
+                <table class="detailsOutside ui2-details-table">
                     <tr>
                         <td>
-                            <table class="detailsInside">
+                            <table class="detailsInside ui2-details-table">
                                 <?php for ($i = 0; $i < intval(count($this->EEOValues)/2); $i++): ?>
                                     <tr>
                                         <td class="vertical"><?php $this->_($this->EEOValues[$i]['fieldName']); ?>:</td>
@@ -257,7 +319,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         <?php else: ?>
                             </td><td width="50%" height="100%" valign="top">
                         <?php endif; ?>
-                            <table class="detailsInside">
+                            <table class="detailsInside ui2-details-table">
                                 <?php for ($i = (intval(count($this->EEOValues))/2); $i < intval(count($this->EEOValues)); $i++): ?>
                                     <tr>
                                         <td class="vertical"><?php $this->_($this->EEOValues[$i]['fieldName']); ?>:</td>
@@ -272,12 +334,13 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         </td>
                     </tr>
                 </table>
+                </div>
             <?php endif; ?>
-
-            <table class="detailsOutside">
-                <tr>
-                    <td>
-                        <table class="detailsInside">
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Misc Notes</div>
+                        </div>
+                        <table class="detailsInside ui2-details-table">
                             <tr>
                                 <td valign="top" class="vertical">Misc. Notes:</td>
                                 <?php if ($this->isShortNotes): ?>
@@ -342,107 +405,134 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             </tr>
                             <?php endif; ?>
 
-                            <tr>
-                                <td valign="top" class="vertical">Attachments:</td>
-                                <td valign="top" class="data">
-                                    <table class="attachmentsTable">
-                                        <?php foreach ($this->attachmentsRS as $rowNumber => $attachmentsData): ?>
-                                            <?php if ($attachmentsData['isProfileImage'] != '1'): ?>
-                                                <tr>
-                                                    <td>
-                                                        <?php echo $attachmentsData['retrievalLink']; ?>
-                                                            <img src="<?php $this->_($attachmentsData['attachmentIcon']) ?>" alt="" width="16" height="16" border="0" />
-                                                            &nbsp;
-                                                            <?php $this->_($attachmentsData['originalFilename']) ?>
-                                                        </a>
-                                                    </td>
-                                                    <td><?php echo($attachmentsData['previewLink']); ?></td>
-                                                    <td><?php $this->_($attachmentsData['dateCreated']) ?></td>
-                                                    <td>
-                                                        <?php if (!$this->isPopup): ?>
-                                                            <?php if ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                                                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment&amp;candidateID=<?php echo($this->candidateID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" onclick="javascript:return confirm('Delete this attachment?');">
-                                                                    <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" title="Delete" />
-                                                                </a>
-                                                            <?php endif; ?>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    </table>
-                                    <?php if (!$this->isPopup): ?>
-                                        <?php if ($this->getUserAccessLevel('candidates.createAttachment') >= ACCESS_LEVEL_EDIT): ?>
-                                            <?php if (isset($this->attachmentLinkHTML)): ?>
-                                                <?php echo($this->attachmentLinkHTML); ?>
-                                            <?php else: ?>
-                                                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=createAttachment&amp;candidateID=<?php echo($this->candidateID); ?>', 400, 125, null); return false;">
-                                            <?php endif; ?>
-                                                <img src="images/paperclip_add.gif" width="16" height="16" border="0" alt="Add Attachment" class="absmiddle" />&nbsp;Add Attachment
+                        </table>
+                    </div>
+
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Attachments</div>
+                        </div>
+                        <table class="attachmentsTable ui2-attachments-table">
+                            <?php foreach ($this->attachmentsRS as $rowNumber => $attachmentsData): ?>
+                                <?php if ($attachmentsData['isProfileImage'] != '1'): ?>
+                                    <tr>
+                                        <td>
+                                            <?php echo $attachmentsData['retrievalLink']; ?>
+                                                <img src="<?php $this->_($attachmentsData['attachmentIcon']) ?>" alt="" width="16" height="16" border="0" />
+                                                &nbsp;
+                                                <?php $this->_($attachmentsData['originalFilename']) ?>
                                             </a>
-                                        <?php endif; ?>
+                                        </td>
+                                        <td><?php echo($attachmentsData['previewLink']); ?></td>
+                                        <td><?php $this->_($attachmentsData['dateCreated']) ?></td>
+                                        <td>
+                                            <?php if (!$this->isPopup): ?>
+                                                <?php if ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
+                                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment&amp;candidateID=<?php echo($this->candidateID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" onclick="javascript:return confirm('Delete this attachment?');">
+                                                        <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" title="Delete" />
+                                                    </a>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </table>
+                        <?php if (!$this->isPopup): ?>
+                            <?php if ($this->getUserAccessLevel('candidates.createAttachment') >= ACCESS_LEVEL_EDIT): ?>
+                                <?php if (isset($this->attachmentLinkHTML)): ?>
+                                    <?php echo($this->attachmentLinkHTML); ?>
+                                <?php else: ?>
+                                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=createAttachment&amp;candidateID=<?php echo($this->candidateID); ?>', 400, 125, null); return false;">
+                                <?php endif; ?>
+                                    <img src="images/paperclip_add.gif" width="16" height="16" border="0" alt="Add Attachment" class="absmiddle" />&nbsp;Add Attachment
+                                </a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="ui2-col-side">
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">GDPR</div>
+                        </div>
+                        <table class="detailsInside ui2-details-table">
+                            <tr>
+                                <td class="vertical">GDPR Signed:</td>
+                                <td class="data"><?php $this->_($this->data['gdprSignedText']); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">GDPR Expiration Date:</td>
+                                <td class="data">
+                                    <?php if (!empty($this->data['gdprExpirationDateDisplay'])): ?>
+                                        <?php $this->_($this->data['gdprExpirationDateDisplay']); ?>
+                                    <?php else: ?>
+                                        Not set
                                     <?php endif; ?>
                                 </td>
                             </tr>
+                        </table>
+                    </div>
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Ownership</div>
+                        </div>
+                        <table class="detailsInside ui2-details-table">
                             <tr>
-                                <td valign="top" class="vertical">Tags:
-                                    <?php if (!$this->isPopup){ ?>
-                                        <?php if ($this->getUserAccessLevel('candidates.addCandidateTags') >= ACCESS_LEVEL_EDIT){ ?>
-                                                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addCandidateTags&amp;candidateID=<?php echo($this->candidateID); ?>', 400, 125, null); return false;">
-                                                Add/Remove
-                                            </a>
-                                        <?php } ?>
-                                    <?php } ?>
-
-                                </td>
-                                <td valign="top" class="data"><?= implode(', ',$this->assignedTags) ?>
-                                </td>
+                                <td class="vertical">Created:</td>
+                                <td class="data"><?php $this->_($this->data['dateCreated']); ?> (<?php $this->_($this->data['enteredByFullName']); ?>)</td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">Owner:</td>
+                                <td class="data"><?php $this->_($this->data['ownerFullName']); ?></td>
                             </tr>
                         </table>
-                    </td>
-                </tr>
-            </table>
+                    </div>
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Pipeline &amp; Source</div>
+                        </div>
+                        <table class="detailsInside ui2-details-table">
+                            <tr>
+                                <td class="vertical">Pipeline:</td>
+                                <td class="data"><?php $this->_($this->data['pipeline']); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">Proposed to Customer:</td>
+                                <td class="data"><?php $this->_($this->data['submitted']); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="vertical">Source:</td>
+                                <td class="data"><?php $this->_($this->data['source']); ?></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Tags</div>
+                            <?php if (!$this->isPopup){ ?>
+                                <?php if ($this->getUserAccessLevel('candidates.addCandidateTags') >= ACCESS_LEVEL_EDIT){ ?>
+                                    <div class="ui2-card-actions">
+                                        <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addCandidateTags&amp;candidateID=<?php echo($this->candidateID); ?>', 400, 125, null); return false;">
+                                            Add/Remove
+                                        </a>
+                                    </div>
+                                <?php } ?>
+                            <?php } ?>
+                        </div>
+                        <div class="ui2-taglist">
+                            <?php if (!empty($this->assignedTags)): ?>
+                                <?php foreach ($this->assignedTags as $tag): ?>
+                                    <span><?php $this->_($tag); ?></span>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <span>None</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <?php if (!$this->isPopup): ?>
-            <?php if ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT): ?>
-                <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=edit&amp;candidateID=<?php echo($this->candidateID); ?>">
-                    <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-            <?php if ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE): ?>
-                <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=delete&amp;candidateID=<?php echo($this->candidateID); ?>" onclick="javascript:return confirm('Delete this candidate?');">
-                    <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-            <?php if ($this->privledgedUser): ?>
-                <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=100&amp;dataItemID=<?php echo($this->candidateID); ?>">
-                    <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-            <a id="transform_cv_link" href="#" onclick="CandidateTransformCV.open(); return false;">
-                <img src="images/parser/transfer.gif" width="16" height="16" class="absmiddle" alt="transform" border="0" />&nbsp;Transform CV
-            </a>
-            &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php if ($this->getUserAccessLevel('candidates.administrativeHideShow') >= ACCESS_LEVEL_MULTI_SA): ?>
-                <?php if ($this->data['isAdminHidden'] == 1): ?>
-                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0">
-                        <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Administrative Show
-                    </a>
-                    <?php else: ?>
-                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=1">
-                        <img src="images/resume_preview_inline.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Administrative Hide
-                    </a>
-                <?php endif; ?>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-            <?php if ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA): ?>
-                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=linkDuplicate&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
-                    <img src="images/actions/duplicates.png" width="16" height="16" class="absmiddle" alt="add duplicate" border="0" />&nbsp;Link duplicate
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
             <div id="transformCvOverlay" style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background: #000; opacity: 0.25; z-index: 1000;"></div>
             <div id="transformCvModal" style="display: none; position: fixed; left: 50%; top: 20%; width: 460px; margin-left: -230px; background: #fff; border: 1px solid #666; padding: 12px; z-index: 1001;">
                 <div style="font-weight: bold; margin-bottom: 8px;">Transform CV</div>
@@ -507,15 +597,27 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             <br clear="all" />
             <br />
 
-            <p class="note">Job Orders for Candidates</p>
-            <p style="margin: 4px 0 8px 0;">
-                <label>
-                    <input type="checkbox" id="pipelineShowClosedCandidate" <?php if (!empty($this->showClosedPipeline)) echo('checked="checked"'); ?>
-                        onclick="window.location.href='<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>&amp;showClosed=' + (this.checked ? 1 : 0);" />
-                    Show Closed
-                </label>
-            </p>
-            <table class="sortablepair">
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Job Orders for Candidates</div>
+                    <?php if (!$this->isPopup): ?>
+                        <?php if ($this->getUserAccessLevel('candidates.considerForJobSearch') >= ACCESS_LEVEL_EDIT): ?>
+                            <div class="ui2-card-actions">
+                                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=considerForJobSearch&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
+                                    <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="Add to Job Order" border="0" />&nbsp;Add This Candidate to Job Order
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+                <p style="margin: 4px 0 8px 0;">
+                    <label>
+                        <input type="checkbox" id="pipelineShowClosedCandidate" <?php if (!empty($this->showClosedPipeline)) echo('checked="checked"'); ?>
+                            onclick="window.location.href='<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>&amp;showClosed=' + (this.checked ? 1 : 0);" />
+                        Show Closed
+                    </label>
+                </p>
+                <table class="sortablepair ui2-table">
                 <tr>
                     <th></th>
                     <th align="left">Match</th>
@@ -611,14 +713,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 
                 <?php endforeach; ?>
             </table>
-
-<?php if (!$this->isPopup): ?>
-            <?php if ($this->getUserAccessLevel('candidates.considerForJobSearch') >= ACCESS_LEVEL_EDIT): ?>
-                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=considerForJobSearch&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
-                    <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="Add to Job Order" border="0" />&nbsp;Add This Candidate to Job Order
-                </a>
-            <?php endif; ?>
-<?php endif; ?>
+            </div>
             <br clear="all" />
             <br />
 
@@ -636,6 +731,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     </tr>
                 <?php endforeach; ?>
             </table>
+            </div>
 
 <?php if (!$this->isPopup): ?>
         </div>

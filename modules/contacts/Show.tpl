@@ -10,21 +10,81 @@ use OpenCATS\UI\QuickActionMenu;
         <?php TemplateUtility::printQuickSearch(); ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <table>
-                <tr>
-                    <td width="3%">
-                        <img src="images/contact.gif" width="24" height="24" border="0" alt="Contacts" style="margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Contacts: Contact Details</h2></td>
-                </tr>
-            </table>
+            <div class="ui2-page">
+                <div class="ui2-header">
+                    <div class="ui2-header-title">
+                        <table>
+                            <tr>
+                                <td width="3%">
+                                    <img src="images/contact.gif" width="24" height="24" border="0" alt="Contacts" style="margin-top: 3px;" />&nbsp;
+                                </td>
+                                <td><h2>Contacts: Contact Details</h2></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="ui2-header-actions">
+                        <?php if ($this->getUserAccessLevel('contacts.edit') >= ACCESS_LEVEL_EDIT): ?>
+                            <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=edit&amp;contactID=<?php echo($this->contactID); ?>">
+                                <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
+                            </a>
+                        <?php endif; ?>
+                        <?php if ($this->getUserAccessLevel('contacts.delete') >= ACCESS_LEVEL_DELETE): ?>
+                            <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=delete&amp;contactID=<?php echo($this->contactID); ?>" onclick="javascript:return confirm('Delete this candidate?');">
+                                <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
+                            </a>
+                        <?php endif; ?>
+                        <?php if ($this->privledgedUser): ?>
+                            <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=300&amp;dataItemID=<?php echo($this->contactID); ?>">
+                                <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
 
             <p class="note">Contact Details</p>
 
-            <table class="detailsOutside">
-                <tr style="vertical-align:top;">
-                    <td width="50%" height="100%">
-                        <table class="detailsInside" height="100%">
+            <?php
+                $summaryName = trim($this->data['firstName'].' '.$this->data['lastName']);
+                $summaryCompany = $this->data['companyName'];
+                $summaryTitle = $this->data['title'];
+                $summaryPhone = $this->data['phoneCell'];
+                $summaryEmail = $this->data['email1'];
+                $summaryName = ($summaryName !== '') ? $summaryName : '-';
+                $summaryCompany = ($summaryCompany !== '') ? $summaryCompany : '-';
+                $summaryTitle = ($summaryTitle !== '') ? $summaryTitle : '-';
+                $summaryPhone = ($summaryPhone !== '') ? $summaryPhone : '-';
+                $summaryEmail = ($summaryEmail !== '') ? $summaryEmail : '-';
+            ?>
+            <div class="ui2-summary">
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Name</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryName); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Company</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryCompany); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Title</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryTitle); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Phone</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryPhone); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Email</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryEmail); ?></div>
+                </div>
+            </div>
+
+            <div class="ui2-grid">
+                <div class="ui2-col-main">
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Contact Details</div>
+                        </div>
+                        <table class="detailsInside ui2-details-table" height="100%">
                             <tr>
                                 <td class="vertical">Name:</td>
                                 <td class="data">
@@ -78,10 +138,14 @@ use OpenCATS\UI\QuickActionMenu;
                               </tr>
                             <?php endfor; ?>
                         </table>
-                    </td>
-
-                    <td width="50%" height="100%">
-                        <table class="detailsInside" height="100%">
+                    </div>
+                </div>
+                <div class="ui2-col-side">
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Ownership &amp; Reporting</div>
+                        </div>
+                        <table class="detailsInside ui2-details-table" height="100%">
                             <tr>
                                 <td class="vertical">Reports To:</td>
                                 <td class="data">
@@ -133,78 +197,61 @@ use OpenCATS\UI\QuickActionMenu;
                                 </tr>
                             <?php endfor; ?>
                         </table>
-                    </td>
-                </tr>
-            </table>
+                    </div>
+                </div>
+            </div>
 
-            <table class="detailsOutside">
-                <tr>
-                    <td>
-                        <table class="detailsInside">
-                            <tr>
-                                <td valign="top" class="vertical">Misc. Notes:</td>
-                                <?php if ($this->isShortNotes): ?>
-                                    <td id="shortNotes" style="display:block;" class="data">
-                                        <?php echo($this->data['shortNotes']); ?><span class="moreText">...</span>&nbsp;
-                                        <p><a href="#" class="moreText" onclick="toggleNotes(); return false;">[More]</a></p>
-                                    </td>
-                                    <td id="fullNotes" style="display:none;" class="data">
-                                        <?php echo($this->data['notes']); ?>&nbsp;
-                                        <p><a href="#" class="moreText" onclick="toggleNotes(); return false;">[Less]</a></p>
-                                    </td>
-                                <?php else: ?>
-                                    <td id="shortNotes" style="display:block;" class="data">
-                                        <?php echo($this->data['notes']); ?>
-                                    </td>
-                                <?php endif; ?>
-                            </tr>
-                            <tr>
-                                <td valign="top" class="vertical">Upcoming Events:</td>
-                                <td id="shortNotes" style="display:block;" class="data">
-                                <?php foreach ($this->calendarRS as $rowNumber => $calendarData): ?>
-                                    <div>
-                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=calendar&amp;view=DAYVIEW&amp;month=<?php echo($calendarData['month']); ?>&amp;year=20<?php echo($calendarData['year']); ?>&amp;day=<?php echo($calendarData['day']); ?>&amp;showEvent=<?php echo($calendarData['eventID']); ?>">
-                                            <img src="<?php $this->_($calendarData['typeImage']) ?>" alt="" border="0">
-                                            <?php $this->_($calendarData['dateShow']) ?>:
-                                            <?php $this->_($calendarData['title']); ?>
-                                        </a>
-                                    </div>
-                                <?php endforeach; ?>
-                                <?php if ($this->getUserAccessLevel('contacts.addActivityScheduleEvent') >= ACCESS_LEVEL_EDIT): ?>
-                                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=addActivityScheduleEvent&amp;contactID=<?php echo($this->contactID); ?>&amp;onlyScheduleEvent=true', 600, 200, null); return false;">
-                                        <img src="images/calendar_add.gif" width="16" height="16" border="0" alt="Schedule Event" class="absmiddle" />&nbsp;Schedule Event
-                                    </a>
-                                <?php endif; ?>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-            <?php if ($this->getUserAccessLevel('contacts.edit') >= ACCESS_LEVEL_EDIT): ?>
-                <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=edit&amp;contactID=<?php echo($this->contactID); ?>">
-                    <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-            <?php if ($this->getUserAccessLevel('contacts.delete') >= ACCESS_LEVEL_DELETE): ?>
-                <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=delete&amp;contactID=<?php echo($this->contactID); ?>" onclick="javascript:return confirm('Delete this candidate?');">
-                    <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-            <?php if ($this->privledgedUser): ?>
-                <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=300&amp;dataItemID=<?php echo($this->contactID); ?>">
-                    <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Notes &amp; Events</div>
+                </div>
+                <table class="detailsInside ui2-details-table">
+                    <tr>
+                        <td valign="top" class="vertical">Misc. Notes:</td>
+                        <?php if ($this->isShortNotes): ?>
+                            <td id="shortNotes" style="display:block;" class="data">
+                                <?php echo($this->data['shortNotes']); ?><span class="moreText">...</span>&nbsp;
+                                <p><a href="#" class="moreText" onclick="toggleNotes(); return false;">[More]</a></p>
+                            </td>
+                            <td id="fullNotes" style="display:none;" class="data">
+                                <?php echo($this->data['notes']); ?>&nbsp;
+                                <p><a href="#" class="moreText" onclick="toggleNotes(); return false;">[Less]</a></p>
+                            </td>
+                        <?php else: ?>
+                            <td id="shortNotes" style="display:block;" class="data">
+                                <?php echo($this->data['notes']); ?>
+                            </td>
+                        <?php endif; ?>
+                    </tr>
+                    <tr>
+                        <td valign="top" class="vertical">Upcoming Events:</td>
+                        <td id="shortNotes" style="display:block;" class="data">
+                        <?php foreach ($this->calendarRS as $rowNumber => $calendarData): ?>
+                            <div>
+                                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=calendar&amp;view=DAYVIEW&amp;month=<?php echo($calendarData['month']); ?>&amp;year=20<?php echo($calendarData['year']); ?>&amp;day=<?php echo($calendarData['day']); ?>&amp;showEvent=<?php echo($calendarData['eventID']); ?>">
+                                    <img src="<?php $this->_($calendarData['typeImage']) ?>" alt="" border="0">
+                                    <?php $this->_($calendarData['dateShow']) ?>:
+                                    <?php $this->_($calendarData['title']); ?>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if ($this->getUserAccessLevel('contacts.addActivityScheduleEvent') >= ACCESS_LEVEL_EDIT): ?>
+                            <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=addActivityScheduleEvent&amp;contactID=<?php echo($this->contactID); ?>&amp;onlyScheduleEvent=true', 600, 200, null); return false;">
+                                <img src="images/calendar_add.gif" width="16" height="16" border="0" alt="Schedule Event" class="absmiddle" />&nbsp;Schedule Event
+                            </a>
+                        <?php endif; ?>
+                        </td>
+                    </tr>
+                </table>
+            </div>
             <br clear="all" />
             <br />
 
-            <p class="note">Job Orders</p>
-            <table class="sortable">
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Job Orders</div>
+                </div>
+            <table class="sortable ui2-table">
                 <tr>
                     <th align="left" width="200">Title</th>
                     <th align="left" width="15">Type</th>
@@ -239,11 +286,22 @@ use OpenCATS\UI\QuickActionMenu;
                     </tr>
                 <?php endforeach; ?>
             </table>
+            </div>
             <br clear="all" />
             <br />
 
-            <p class="note">Activity</p>
-            <table id="activityTable" class="sortable">
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Activity</div>
+                    <?php if ($this->getUserAccessLevel('contacts.logActivityScheduleEvent') >= ACCESS_LEVEL_EDIT): ?>
+                        <div class="ui2-card-actions">
+                            <a href="#" id="addActivityLink" title="Log an Activity / Schedule Event" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=addActivityScheduleEvent&amp;contactID=<?php echo($this->contactID); ?>', 600, 375, null); return false;">
+                                <img src="images/new_activity_inline.gif" width="16" height="16" class="absmiddle" title="Log an Activity / Schedule Event" alt="Log an Activity / Schedule Event" border="0" />&nbsp;Log Activity / Schedule Event
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <table id="activityTable" class="sortable ui2-table">
                 <tr>
                     <th align="left" width="125">Date</th>
                     <th align="left" width="90">Type</th>
@@ -276,12 +334,9 @@ use OpenCATS\UI\QuickActionMenu;
                 <?php endforeach; ?>
             </table>
             <div id="addActivityDiv">
-                <?php if ($this->getUserAccessLevel('contacts.logActivityScheduleEvent') >= ACCESS_LEVEL_EDIT): ?>
-                    <a href="#" id="addActivityLink" title="Log an Activity / Schedule Event" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=addActivityScheduleEvent&amp;contactID=<?php echo($this->contactID); ?>', 600, 375, null); return false;">
-                        <img src="images/new_activity_inline.gif" width="16" height="16" class="absmiddle" title="Log an Activity / Schedule Event" alt="Log an Activity / Schedule Event" border="0" />&nbsp;Log an Activity / Schedule Event
-                    </a>
-                <?php endif; ?>
                 <img src="images/indicator2.gif" id="addActivityIndicator" alt="" style="visibility: hidden; margin-left: 5px;" height="16" width="16" />
+            </div>
+            </div>
             </div>
         </div>
     </div>

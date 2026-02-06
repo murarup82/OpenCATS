@@ -16,21 +16,81 @@ use OpenCATS\UI\QuickActionMenu;
         ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <table>
-                <tr>
-                    <td width="3%">
-                        <img src="images/companies.gif" width="24" height="24" border="0" alt="Companies" style="margin-top: 3px;" />&nbsp;
-                    </td>
-                    <td><h2>Companies: Company Details</h2></td>
-               </tr>
-            </table>
+            <div class="ui2-page">
+                <div class="ui2-header">
+                    <div class="ui2-header-title">
+                        <table>
+                            <tr>
+                                <td width="3%">
+                                    <img src="images/companies.gif" width="24" height="24" border="0" alt="Companies" style="margin-top: 3px;" />&nbsp;
+                                </td>
+                                <td><h2>Companies: Company Details</h2></td>
+                           </tr>
+                        </table>
+                    </div>
+                    <div class="ui2-header-actions">
+                        <?php if ($this->getUserAccessLevel('companies.edit') >= ACCESS_LEVEL_EDIT): ?>
+                            <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=edit&amp;companyID=<?php echo($this->companyID); ?>">
+                                <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
+                            </a>
+                        <?php endif; ?>
+                        <?php if ($this->getUserAccessLevel('companies.delete') >= ACCESS_LEVEL_DELETE && $this->data['defaultCompany'] != 1): ?>
+                            <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=delete&amp;companyID=<?php echo($this->companyID); ?>" onclick="javascript:return confirm('Delete this company?');">
+                                <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
+                            </a>
+                        <?php endif; ?>
+                        <?php if ($this->privledgedUser): ?>
+                            <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=200&amp;dataItemID=<?php echo($this->companyID); ?>">
+                                <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
 
             <p class="note">Company Details</p>
 
-            <table class="detailsOutside">
-                <tr style="vertical-align:top;">
-                    <td width="50%" height="100%">
-                        <table class="detailsInside" height="100%">
+            <?php
+                $summaryName = $this->data['name'];
+                $summaryPhone = $this->data['phone'];
+                $summaryLocation = $this->data['cityAndState'];
+                $summaryOwner = $this->data['ownerFullName'];
+                $summaryCreated = $this->data['dateCreated'];
+                $summaryName = ($summaryName !== '') ? $summaryName : '-';
+                $summaryPhone = ($summaryPhone !== '') ? $summaryPhone : '-';
+                $summaryLocation = ($summaryLocation !== '') ? $summaryLocation : '-';
+                $summaryOwner = ($summaryOwner !== '') ? $summaryOwner : '-';
+                $summaryCreated = ($summaryCreated !== '') ? $summaryCreated : '-';
+            ?>
+            <div class="ui2-summary">
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Name</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryName); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Phone</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryPhone); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Location</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryLocation); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Owner</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryOwner); ?></div>
+                </div>
+                <div class="ui2-summary-item">
+                    <div class="ui2-summary-label">Created</div>
+                    <div class="ui2-summary-value"><?php $this->_($summaryCreated); ?></div>
+                </div>
+            </div>
+
+            <div class="ui2-grid">
+                <div class="ui2-col-main">
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Company Details</div>
+                        </div>
+                        <table class="detailsInside ui2-details-table" height="100%">
                             <tr>
                                 <td class="vertical">Name:</td>
                                 <td class="data">
@@ -68,10 +128,14 @@ use OpenCATS\UI\QuickActionMenu;
 
                             <!-- /CONTACT INFO -->
                        </table>
-                    </td>
-
-                    <td width="50%" height="100%">
-                        <table class="detailsInside" height="100%">
+                    </div>
+                </div>
+                <div class="ui2-col-side">
+                    <div class="ui2-card ui2-card--section">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Ownership &amp; Billing</div>
+                        </div>
+                        <table class="detailsInside ui2-details-table" height="100%">
                         <!-- CONTACT INFO -->
 
                             <tr>
@@ -128,118 +192,109 @@ use OpenCATS\UI\QuickActionMenu;
 
                         <!-- /CONTACT INFO -->
                         </table>
-                    </td>
-                </tr>
-            </table>
+                    </div>
+                </div>
+            </div>
 
             <!-- CONTACT INFO -->
             <?php if (count($this->departmentsRS) > 0): ?>
-                <table class="detailsOutside">
-                    <tr>
-                        <td>
-                            <table class="detailsInside">
-                                <tr>
-                                    <td valign="top" class="vertical">Departments:</td>
-                                    <td valign="top" class="data">
-                                        <?php foreach ($this->departmentsRS as $departmentRecord): ?>
-                                            <?php $this->_($departmentRecord['name']); ?>
-                                            <br />
-                                        <?php endforeach; ?>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
+                <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card-header">
+                        <div class="ui2-card-title">Departments</div>
+                    </div>
+                    <table class="detailsInside ui2-details-table">
+                        <tr>
+                            <td valign="top" class="vertical">Departments:</td>
+                            <td valign="top" class="data">
+                                <?php foreach ($this->departmentsRS as $departmentRecord): ?>
+                                    <?php $this->_($departmentRecord['name']); ?>
+                                    <br />
+                                <?php endforeach; ?>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             <?php endif; ?>
             <!-- /CONTACT INFO -->
 
             <!-- CONTACT INFO -->
-            <table class="detailsOutside">
-                <tr>
-                    <td>
-                        <table class="detailsInside">
-                            <tr>
-                                <td valign="top" class="vertical">Attachments:</td>
-                                <td valign="top" class="data">
-                                    <table class="attachmentsTable">
-                                        <?php foreach ($this->attachmentsRS as $rowNumber => $attachmentsData): ?>
-                                            <tr>
-                                                <td>
-                                                    <?php echo $attachmentsData['retrievalLink']; ?>
-                                                        <img src="<?php $this->_($attachmentsData['attachmentIcon']) ?>" alt="" width="16" height="16" border="0" />
-                                                        &nbsp;
-                                                        <?php $this->_($attachmentsData['originalFilename']) ?>
-                                                    </a>
-                                                </td>
-                                                <td><?php $this->_($attachmentsData['dateCreated']) ?></td>
-                                                <td>
-                                                    <?php if ($this->getUserAccessLevel('companies.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=deleteAttachment&amp;companyID=<?php echo($this->companyID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>"  title="Delete" onclick="javascript:return confirm('Delete this attachment?');">
-                                                            <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
-                                                        </a>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </table>
-                                    <?php if ($this->getUserAccessLevel('companies.createAttachment') >= ACCESS_LEVEL_EDIT): ?>
-                                            <?php if (isset($this->attachmentLinkHTML)): ?>
-                                                <?php echo($this->attachmentLinkHTML); ?>
-                                            <?php else: ?>
-                                                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=createAttachment&amp;companyID=<?php echo($this->companyID); ?>', 400, 125, null); return false;">
-                                            <?php endif; ?>
-                                            <img src="images/paperclip_add.gif" width="16" height="16" border="0" alt="add attachment" class="absmiddle" />&nbsp;Add Attachment
-                                        </a>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td valign="top" class="vertical">Misc. Notes:</td>
-                                <?php if ($this->isShortNotes): ?>
-                                    <td id="shortNotes" style="display:block;" class="data">
-                                        <?php echo($this->data['shortNotes']); ?><span class="moreText">...</span>&nbsp;
-                                        <p><a href="#" class="moreText" onclick="toggleNotes(); return false;">[More]</a></p>
-                                    </td>
-                                    <td id="fullNotes" style="display:none;" class="data">
-                                        <?php echo($this->data['notes']); ?>&nbsp;
-                                        <p><a href="#" class="moreText" onclick="toggleNotes(); return false;">[Less]</a></p>
-                                    </td>
-                                <?php else: ?>
-                                    <td id="shortNotes" style="display:block;" class="data">
-                                        <?php echo($this->data['notes']); ?>
-                                    </td>
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Attachments</div>
+                </div>
+                <table class="attachmentsTable ui2-attachments-table">
+                    <?php foreach ($this->attachmentsRS as $rowNumber => $attachmentsData): ?>
+                        <tr>
+                            <td>
+                                <?php echo $attachmentsData['retrievalLink']; ?>
+                                    <img src="<?php $this->_($attachmentsData['attachmentIcon']) ?>" alt="" width="16" height="16" border="0" />
+                                    &nbsp;
+                                    <?php $this->_($attachmentsData['originalFilename']) ?>
+                                </a>
+                            </td>
+                            <td><?php $this->_($attachmentsData['dateCreated']) ?></td>
+                            <td>
+                                <?php if ($this->getUserAccessLevel('companies.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=deleteAttachment&amp;companyID=<?php echo($this->companyID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>"  title="Delete" onclick="javascript:return confirm('Delete this attachment?');">
+                                        <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
+                                    </a>
                                 <?php endif; ?>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+                <?php if ($this->getUserAccessLevel('companies.createAttachment') >= ACCESS_LEVEL_EDIT): ?>
+                        <?php if (isset($this->attachmentLinkHTML)): ?>
+                            <?php echo($this->attachmentLinkHTML); ?>
+                        <?php else: ?>
+                            <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=createAttachment&amp;companyID=<?php echo($this->companyID); ?>', 400, 125, null); return false;">
+                        <?php endif; ?>
+                        <img src="images/paperclip_add.gif" width="16" height="16" border="0" alt="add attachment" class="absmiddle" />&nbsp;Add Attachment
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Misc Notes</div>
+                </div>
+                <table class="detailsInside ui2-details-table">
+                    <tr>
+                        <td valign="top" class="vertical">Misc. Notes:</td>
+                        <?php if ($this->isShortNotes): ?>
+                            <td id="shortNotes" style="display:block;" class="data">
+                                <?php echo($this->data['shortNotes']); ?><span class="moreText">...</span>&nbsp;
+                                <p><a href="#" class="moreText" onclick="toggleNotes(); return false;">[More]</a></p>
+                            </td>
+                            <td id="fullNotes" style="display:none;" class="data">
+                                <?php echo($this->data['notes']); ?>&nbsp;
+                                <p><a href="#" class="moreText" onclick="toggleNotes(); return false;">[Less]</a></p>
+                            </td>
+                        <?php else: ?>
+                            <td id="shortNotes" style="display:block;" class="data">
+                                <?php echo($this->data['notes']); ?>
+                            </td>
+                        <?php endif; ?>
+                    </tr>
+                </table>
+            </div>
             <!-- /CONTACT INFO -->
 
-            <?php if ($this->getUserAccessLevel('companies.edit') >= ACCESS_LEVEL_EDIT): ?>
-                <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=edit&amp;companyID=<?php echo($this->companyID); ?>">
-                    <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />&nbsp;Edit
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-            <?php if ($this->getUserAccessLevel('companies.delete') >= ACCESS_LEVEL_DELETE && $this->data['defaultCompany'] != 1): ?>
-                <a id="delete_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=delete&amp;companyID=<?php echo($this->companyID); ?>" onclick="javascript:return confirm('Delete this company?');">
-                    <img src="images/actions/delete.gif" width="16" height="16" class="absmiddle" alt="delete" border="0" />&nbsp;Delete
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
-            <?php if ($this->privledgedUser): ?>
-                <a id="history_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=200&amp;dataItemID=<?php echo($this->companyID); ?>">
-                    <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />&nbsp;View History
-                </a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-            <?php endif; ?>
             <br clear="all" />
             <br />
 
-            <p class="note">Job Orders</p>
-            <table class="sortable">
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Job Orders</div>
+                    <?php if ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT): ?>
+                        <div class="ui2-card-actions">
+                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=add&amp;selected_company_id=<?php echo($this->companyID); ?>" title="Add Job Order">
+                                <img src="images/actions/job_order.gif" width="16" height="16" class="absmiddle" alt="New Job Order" border="0" />&nbsp;Add Job Order
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <table class="sortable ui2-table">
                 <tr>
                     <th align="left" width="30" nowrap="nowrap">ID</th>
                     <th align="left" width="200">Title</th>
@@ -290,18 +345,23 @@ use OpenCATS\UI\QuickActionMenu;
                     </tr>
                 <?php endif; ?>
             </table>
-
-            <?php if ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT): ?>
-                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=add&amp;selected_company_id=<?php echo($this->companyID); ?>" title="Add Job Order">
-                    <img src="images/actions/job_order.gif" width="16" height="16" class="absmiddle" alt="New Job Order" border="0" />&nbsp;Add Job Order
-                </a>
-            <?php endif; ?>
+            </div>
             <br clear="all" />
             <br />
 
             <!-- CONTACT INFO -->
-            <p class="note">Contacts</p>
-            <table class="sortable">
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Contacts</div>
+                    <?php if ($this->getUserAccessLevel('contacts.add') >= ACCESS_LEVEL_EDIT): ?>
+                        <div class="ui2-card-actions">
+                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=add&amp;selected_company_id=<?php echo($this->companyID); ?>" title="Add Contact">
+                                <img src="images/actions/add_contact.gif" width="16" height="16" class="absmiddle" alt="add contact" border="0" title="Add Contact"/>&nbsp;Add Contact
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <table class="sortable ui2-table">
                 <tr>
                     <th align="left" nowrap="nowrap">First Name</th>
                     <th align="left" nowrap="nowrap">Last Name</th>
@@ -396,12 +456,6 @@ use OpenCATS\UI\QuickActionMenu;
                 <?php endif; ?>
 
             </table>
-
-            <?php if ($this->getUserAccessLevel('contacts.add') >= ACCESS_LEVEL_EDIT): ?>
-                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=add&amp;selected_company_id=<?php echo($this->companyID); ?>" title="Add Contact">
-                    <img src="images/actions/add_contact.gif" width="16" height="16" class="absmiddle" alt="add contact" border="0" title="Add Contact"/>&nbsp;Add Contact
-                </a>
-            <?php endif; ?>
             <?php if ($contactsRSWCCount != $contactsRSCount) : ?>
                 &nbsp;
                 <a href="javascript:void(0)" id="linkShowAll" onclick="javascript:for (i = 0; i< <?php echo($contactsRSWCCount); ?>; i++) document.getElementById('ContactsDefault'+i).style.display='none'; for (i = 0; i< <?php echo($contactsRSCount); ?>; i++) document.getElementById('ContactsFull'+i).style.display=''; document.getElementById('linkShowAll').style.display='none'; document.getElementById('linkHideSome').style.display='';">
@@ -413,7 +467,9 @@ use OpenCATS\UI\QuickActionMenu;
                     &nbsp;Hide contacts who have left (<?php echo($contactsRSCount - $contactsRSWCCount); ?>)
                 </a>
             <?php endif; ?>
+            </div>
             <!-- /CONTACT INFO -->
+            </div>
         </div>
     </div>
 
