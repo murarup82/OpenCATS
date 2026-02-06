@@ -22,7 +22,9 @@
 
 <?php endif; ?>
 
-            <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?>">Basic Information</p>
+            <div class="ui2 ui2-theme-avel">
+                <div class="ui2-card ui2-card--subtle">
+            <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?> ui2-section-title">Basic Information</p>
 
             <table style="font-weight:bold; border: 1px solid #000; background-color: #ffed1a; padding:5px; display:none; margin-bottom:7px;" width="100%" id="candidateAlreadyInSystemTable">
                 <tr>
@@ -72,12 +74,11 @@
                             <label id="firstNameLabel" for="firstName">First Name:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" tabindex="1" name="firstName" id="firstName" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['firstName'])) $this->_($this->preassignedFields['firstName']); ?>" />&nbsp;*
+                            <input type="text" tabindex="1" name="firstName" id="firstName" class="inputbox ui2-input ui2-input--md" value="<?php if(isset($this->preassignedFields['firstName'])) $this->_($this->preassignedFields['firstName']); ?>" />&nbsp;*
                         </td>
 
                         <td rowspan="12" align="center" valign="top">
                             <?php if ($this->isParsingEnabled): ?>
-                                <div class="ui2">
                                 <input type="hidden" name="loadDocument" id="loadDocument" value="" />
                                 <input type="hidden" name="parseDocument" id="parseDocument" value="" />
                                 <input type="hidden" name="documentTempFile" id="documentTempFile" value="<?php echo (isset($this->preassignedFields['documentTempFile']) ? $this->preassignedFields['documentTempFile'] : ''); ?>" />
@@ -93,17 +94,19 @@
                                     </tr>
                                     <tr>
                                         <td valign="top" align="right" colspan="2" style="padding-top: 4px;">
-                                            <input type="button" class="button ui2-button" id="aiPrefillButton" value="AI Prefill" onclick="AddCandidateAiAssist.submit();" />
-                                            <label style="margin-left: 6px; font-size: 11px;">
-                                                <input type="checkbox" id="aiPrefillConsent" />
-                                                I confirm candidate consent
-                                            </label>
-                                            <input type="button" class="button ui2-button ui2-button--secondary" id="aiPrefillUndo" value="Undo AI Prefill" onclick="AddCandidateAiAssist.undo();" style="display: none; margin-left: 6px;" />
+                                            <span class="ui2-inline">
+                                                <input type="button" class="button ui2-button" id="aiPrefillButton" value="AI Prefill" onclick="AddCandidateAiAssist.submit();" />
+                                                <label style="font-size: 11px;">
+                                                    <input type="checkbox" id="aiPrefillConsent" />
+                                                    I confirm candidate consent
+                                                </label>
+                                                <input type="button" class="button ui2-button ui2-button--secondary" id="aiPrefillUndo" value="Undo AI Prefill" onclick="AddCandidateAiAssist.undo();" style="display: none;" />
+                                            </span>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td valign="top" align="left" colspan="2">
-                                            <div id="aiPrefillStatus" class="ui2-status" style="margin-top: 6px;"></div>
+                                            <div id="aiPrefillStatus" class="ui2-ai-status" style="margin-top: 6px;"></div>
                                         </td>
                                     </tr>
                                     <tr>
@@ -133,7 +136,6 @@
                                         </td>
                                     </tr>
                                 </table>
-                                </div>
                             <?php else: ?>
                                 <?php if (PARSING_ENABLED &&
                                     count($this->parsingStatus) &&
@@ -161,7 +163,7 @@
                             <label id="lastNameLabel" for="lastName">Last Name:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" tabindex="2" name="lastName" id="lastName" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['lastName'])) $this->_($this->preassignedFields['lastName']); ?>" />&nbsp;*
+                            <input type="text" tabindex="2" name="lastName" id="lastName" class="inputbox ui2-input ui2-input--md" value="<?php if(isset($this->preassignedFields['lastName'])) $this->_($this->preassignedFields['lastName']); ?>" />&nbsp;*
                         </td>
                     </tr>
 
@@ -170,7 +172,7 @@
                             <label id="emailLabel" for="email1">E-Mail:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" tabindex="3" name="email1" id="email1" class="inputbox" style="width: 150px" value="<?php if(isset($this->preassignedFields['email'])) $this->_($this->preassignedFields['email']); elseif (isset($this->preassignedFields['email1'])) $this->_($this->preassignedFields['email1']); ?>" onchange="checkEmailAlreadyInSystem(this.value);" />
+                            <input type="text" tabindex="3" name="email1" id="email1" class="inputbox ui2-input ui2-input--lg" value="<?php if(isset($this->preassignedFields['email'])) $this->_($this->preassignedFields['email']); elseif (isset($this->preassignedFields['email1'])) $this->_($this->preassignedFields['email1']); ?>" onchange="checkEmailAlreadyInSystem(this.value);" />
                         </td>
                     </tr>
                     
@@ -180,7 +182,7 @@
                             <label id="phoneCellLabel" for="phoneCell">Cell Phone:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" tabindex="7" name="phoneCell" id="phoneCell" class="inputbox" style="width: 150px;" value="<?php if (isset($this->preassignedFields['phoneCell'])) $this->_($this->preassignedFields['phoneCell']); ?>" onchange="checkPhoneAlreadyInSystem(this.value);" />
+                            <input type="text" tabindex="7" name="phoneCell" id="phoneCell" class="inputbox ui2-input ui2-input--md" value="<?php if (isset($this->preassignedFields['phoneCell'])) $this->_($this->preassignedFields['phoneCell']); ?>" onchange="checkPhoneAlreadyInSystem(this.value);" />
                         </td>
                     </tr>
                     <tr>
@@ -188,7 +190,7 @@
                             <label id="addressLabel" for="address">Address:</label>
                         </td>
                         <td class="tdData">
-                            <textarea tabindex="9" name="address" id="address" rows="2" cols="40" class="inputbox" style="width: 150px"><?php if(isset($this->preassignedFields['address'])) $this->_($this->preassignedFields['address']); if(isset($this->preassignedFields['address2'])) $this->_("\n" . $this->preassignedFields['address2']); ?></textarea>
+                            <textarea tabindex="9" name="address" id="address" rows="2" cols="40" class="inputbox ui2-input ui2-input--lg"><?php if(isset($this->preassignedFields['address'])) $this->_($this->preassignedFields['address']); if(isset($this->preassignedFields['address2'])) $this->_("\n" . $this->preassignedFields['address2']); ?></textarea>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="images/indicator2.gif" id="addressParserIndicator" alt="" style="visibility: hidden; margin-left: 10px;" height="16" width="16" />
                         </td>
                     </tr>
@@ -246,7 +248,7 @@
                 </table>
 
                 <?php if (!$this->isParsingEnabled || $this->associatedAttachment != 0): ?>
-                <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?>" style="margin-top: 5px;">Resume</p>
+                <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?> ui2-section-title" style="margin-top: 5px;">Resume</p>
 
                 <table class="editTable">
                     <tr>
@@ -294,7 +296,7 @@
                 <?php endif; ?>
 
                 <?php if($this->EEOSettingsRS['enabled'] == 1): ?>
-                    <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?>" style="margin-top: 5px;">EEO Information</p>
+                    <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?> ui2-section-title" style="margin-top: 5px;">EEO Information</p>
                     <table class="editTable">
                          <?php if ($this->EEOSettingsRS['genderTracking'] == 1): ?>
                              <tr>
@@ -361,7 +363,7 @@
                     <br />
                 <?php endif; ?>
 
-                <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?>" style="margin-top: 5px;">Other</p>
+                <p class="note<?php if ($this->isModal): ?>Unsized<?php endif; ?> ui2-section-title" style="margin-top: 5px;">Other</p>
                 <table class="editTable">
 
                     <?php for ($i = 0; $i < count($this->extraFieldRS); $i++): ?>
@@ -454,7 +456,7 @@
                             <label id="keySkillsLabel" for="keySkills">Key Skills:</label>
                         </td>
                         <td class="tdData">
-                            <input type="text" class="inputbox" tabindex="<?php echo($tabIndex++); ?>" name="keySkills" id="keySkills" style="width: 400px;" value="<?php if (isset($this->preassignedFields['keySkills'])) $this->_($this->preassignedFields['keySkills']); ?>" />
+                            <input type="text" class="inputbox ui2-input ui2-input--lg" tabindex="<?php echo($tabIndex++); ?>" name="keySkills" id="keySkills" value="<?php if (isset($this->preassignedFields['keySkills'])) $this->_($this->preassignedFields['keySkills']); ?>" />
                         </td>
                     </tr>
 
@@ -463,10 +465,12 @@
                             <label id="notesLabel" for="notes">Misc. Notes:</label>
                         </td>
                         <td class="tdData">
-                            <textarea class="inputbox" tabindex="<?php echo($tabIndex++); ?>" name="notes" id="notes" rows="5" cols="40" style="width: 400px;"><?php if (isset($this->preassignedFields['notes'])) $this->_($this->preassignedFields['notes']); ?></textarea>
+                            <textarea class="inputbox ui2-textarea ui2-textarea--lg" tabindex="<?php echo($tabIndex++); ?>" name="notes" id="notes" rows="5" cols="40"><?php if (isset($this->preassignedFields['notes'])) $this->_($this->preassignedFields['notes']); ?></textarea>
                         </td>
                     </tr>
                 </table>
+                </div>
+            </div>
 
                 <input type="submit" tabindex="<?php echo($tabIndex++); ?>" class="button" value="Add Candidate" />&nbsp;
                 <input type="reset"  tabindex="<?php echo($tabIndex++); ?>" class="button" value="Reset" />&nbsp;
