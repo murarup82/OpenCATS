@@ -96,7 +96,7 @@
                                     </tr>
                                     <tr>
                                         <td valign="top" align="right" colspan="2" style="padding-top: 4px;">
-                                            <span class="ui2-inline">
+                                            <span class="ui2-inline ui2-ai-toolbar">
                                                 <input type="button" class="button ui2-button" id="aiPrefillButton" value="AI Prefill" onclick="AddCandidateAiAssist.submit();" />
                                                 <label>
                                                     <input type="checkbox" id="aiPrefillConsent" />
@@ -130,11 +130,6 @@
                                             <?php endif; ?>
                                             <textarea class="inputbox" tabindex="90" name="documentText" id="documentText" rows="5" cols="40" onmousemove="documentCheck();" onchange="documentCheck();" onmousedown="documentCheck();" onkeypress="documentCheck();" style="width: <?php if ($this->isModal): ?>320<?php else: ?>500<?php endif; ?>px; height: 210px; padding: 3px;"><?php echo $this->contents; ?></textarea>
                                             <br/>
-                                            <div style="color: #666666; text-align: center;">
-                                            (<b>hint:</b> you may also paste the resume contents)
-                                            <br /><br />
-                                            Need to upload multiple resumes? <a href="<?php echo CATSUtility::getIndexName(); ?>?m=import&a=massImport">Click here!</a>
-                                            </div>
                                         </td>
                                     </tr>
                                 </table>

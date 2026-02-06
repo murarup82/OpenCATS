@@ -36,6 +36,12 @@
 .ui2 label {
     font-size: 12px;
     color: var(--ui2-muted);
+    font-weight: 400;
+}
+
+.ui2 .tdVertical label {
+    color: var(--ui2-primary);
+    font-weight: 600;
 }
 
 .ui2 .ui2-card {
@@ -62,13 +68,21 @@
 }
 
 .ui2 .ui2-button,
+.ui2 input[type="button"],
+.ui2 input[type="submit"],
+.ui2 input[type="reset"],
+.ui2 button,
 .ui2 .ui2-input,
 .ui2 .ui2-select,
 .ui2 .ui2-textarea {
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.ui2 .ui2-button {
+.ui2 .ui2-button,
+.ui2 input[type="button"],
+.ui2 input[type="submit"],
+.ui2 input[type="reset"],
+.ui2 button {
     -webkit-appearance: none;
     appearance: none;
     border: 1px solid var(--ui2-accent);
@@ -82,25 +96,48 @@
     line-height: 1.2;
 }
 
-.ui2 .ui2-button:hover {
+.ui2 .ui2-button:hover,
+.ui2 input[type="button"]:hover,
+.ui2 input[type="submit"]:hover,
+.ui2 input[type="reset"]:hover,
+.ui2 button:hover {
     background: var(--ui2-primary);
     border-color: var(--ui2-primary);
 }
 
-.ui2 .ui2-button:disabled {
+.ui2 .ui2-button:disabled,
+.ui2 input[type="button"]:disabled,
+.ui2 input[type="submit"]:disabled,
+.ui2 input[type="reset"]:disabled,
+.ui2 button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
-.ui2 .ui2-button--secondary {
+.ui2 .ui2-button--secondary,
+.ui2 input.ui2-button--secondary,
+.ui2 button.ui2-button--secondary {
     background: var(--ui2-bg);
     color: var(--ui2-text);
     border-color: var(--ui2-border);
 }
 
-.ui2 .ui2-button--secondary:hover {
+.ui2 .ui2-button--secondary:hover,
+.ui2 input.ui2-button--secondary:hover,
+.ui2 button.ui2-button--secondary:hover {
     background: var(--ui2-bg-subtle);
     border-color: var(--ui2-border);
+}
+
+.ui2 select,
+.ui2 select.inputbox {
+    height: 34px;
+    padding: 6px 10px;
+    border: var(--ui2-border-width) solid var(--ui2-border);
+    border-radius: var(--ui2-radius-sm);
+    background: var(--ui2-bg);
+    color: var(--ui2-text);
+    font-size: var(--ui2-font-size-xs);
 }
 
 .ui2 .ui2-input,
@@ -166,6 +203,12 @@
     gap: var(--ui2-space-2);
 }
 
+.ui2 .ui2-ai-toolbar {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
 .ui2 .ui2-section-title {
     font-size: var(--ui2-font-size-sm);
     font-weight: 700;
@@ -184,4 +227,8 @@
     background: var(--ui2-bg-subtle);
     border-left: 3px solid var(--ui2-accent);
     padding: 6px 10px;
+}
+
+.ui2 img[src*="calendar.gif"] {
+    vertical-align: middle;
 }
