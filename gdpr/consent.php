@@ -44,6 +44,77 @@ function getClientUA()
     return substr($_SERVER['HTTP_USER_AGENT'], 0, 255);
 }
 
+function normalizeLang($lang, $allowed)
+{
+    if ($lang === null) return '';
+    $lang = strtolower(trim($lang));
+    if ($lang === '') return '';
+    if (strpos($lang, '-') !== false)
+    {
+        $lang = substr($lang, 0, 2);
+    }
+    if (in_array($lang, $allowed, true))
+    {
+        return $lang;
+    }
+    return '';
+}
+
+function parseAcceptLanguage($header, $allowed)
+{
+    if (empty($header)) return '';
+    $parts = explode(',', $header);
+    $scores = array();
+    foreach ($parts as $part)
+    {
+        $part = trim($part);
+        if ($part === '') continue;
+        $segments = explode(';', $part);
+        $langTag = strtolower(trim($segments[0]));
+        $q = 1.0;
+        if (isset($segments[1]) && strpos(trim($segments[1]), 'q=') === 0)
+        {
+            $qValue = substr(trim($segments[1]), 2);
+            $q = (float) $qValue;
+        }
+        $base = substr($langTag, 0, 2);
+        if (!in_array($base, $allowed, true))
+        {
+            continue;
+        }
+        if (!isset($scores[$base]) || $q > $scores[$base])
+        {
+            $scores[$base] = $q;
+        }
+    }
+    if (empty($scores)) return '';
+    arsort($scores);
+    foreach ($scores as $lang => $score)
+    {
+        return $lang;
+    }
+    return '';
+}
+
+function getNoticeForLang($db, $siteID, $lang)
+{
+    $sql = sprintf(
+        "SELECT
+            title,
+            body_text AS bodyText
+         FROM
+            gdpr_notice
+         WHERE
+            site_id = %s
+            AND lang = %s
+         LIMIT 1",
+        $db->makeQueryInteger($siteID),
+        $db->makeQueryString($lang)
+    );
+
+    return $db->getAssoc($sql);
+}
+
 function renderConsentPage($vars)
 {
     $template = new Template();
@@ -150,6 +221,41 @@ function resolveRequestState($request)
 $state = resolveRequestState($request);
 $isActive = $state['active'];
 
+$allowedLangs = array('ro', 'en', 'fr');
+$langParam = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang']))
+{
+    $langParam = normalizeLang($_POST['lang'], $allowedLangs);
+}
+else if (isset($_GET['lang']))
+{
+    $langParam = normalizeLang($_GET['lang'], $allowedLangs);
+}
+$langHeader = parseAcceptLanguage(isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '', $allowedLangs);
+$currentLang = 'en';
+if ($langParam !== '')
+{
+    $currentLang = $langParam;
+}
+else if ($langHeader !== '')
+{
+    $currentLang = $langHeader;
+}
+
+$notice = getNoticeForLang($db, $request['siteID'], $currentLang);
+if (empty($notice) && $currentLang !== 'en')
+{
+    $notice = getNoticeForLang($db, $request['siteID'], 'en');
+    $currentLang = 'en';
+}
+if (empty($notice))
+{
+    $notice = array(
+        'title' => 'GDPR Consent',
+        'bodyText' => ''
+    );
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET')
 {
     if (!$isActive)
@@ -180,7 +286,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET')
         renderConsentPage(array(
             'title' => $title,
             'message' => $message,
-            'showForm' => false
+            'showForm' => false,
+            'siteName' => $request['siteName'],
+            'token' => $token,
+            'currentLang' => $currentLang,
+            'noticeTitle' => $notice['title'],
+            'noticeBody' => $notice['bodyText']
         ));
     }
 
@@ -189,7 +300,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET')
         'message' => '',
         'showForm' => true,
         'token' => $token,
-        'siteName' => $request['siteName']
+        'siteName' => $request['siteName'],
+        'currentLang' => $currentLang,
+        'noticeTitle' => $notice['title'],
+        'noticeBody' => $notice['bodyText']
     ));
 }
 
@@ -200,7 +314,12 @@ if ($action !== 'accept' && $action !== 'decline')
     renderConsentPage(array(
         'title' => 'Invalid Request',
         'message' => 'Invalid request.',
-        'showForm' => false
+        'showForm' => false,
+        'siteName' => $request['siteName'],
+        'token' => $token,
+        'currentLang' => $currentLang,
+        'noticeTitle' => $notice['title'],
+        'noticeBody' => $notice['bodyText']
     ));
 }
 
@@ -232,7 +351,12 @@ if (!$isActive)
     renderConsentPage(array(
         'title' => $title,
         'message' => $message,
-        'showForm' => false
+        'showForm' => false,
+        'siteName' => $request['siteName'],
+        'token' => $token,
+        'currentLang' => $currentLang,
+        'noticeTitle' => $notice['title'],
+        'noticeBody' => $notice['bodyText']
     ));
 }
 
@@ -264,7 +388,12 @@ if ($action === 'accept')
         renderConsentPage(array(
             'title' => 'Already Processed',
             'message' => 'This consent request is no longer active.',
-            'showForm' => false
+            'showForm' => false,
+            'siteName' => $request['siteName'],
+            'token' => $token,
+            'currentLang' => $currentLang,
+            'noticeTitle' => $notice['title'],
+            'noticeBody' => $notice['bodyText']
         ));
     }
 
@@ -296,7 +425,12 @@ if ($action === 'accept')
     renderConsentPage(array(
         'title' => 'Consent Recorded',
         'message' => 'Thank you. Your consent has been recorded.',
-        'showForm' => false
+        'showForm' => false,
+        'siteName' => $request['siteName'],
+        'token' => $token,
+        'currentLang' => $currentLang,
+        'noticeTitle' => $notice['title'],
+        'noticeBody' => $notice['bodyText']
     ));
 }
 
@@ -325,13 +459,23 @@ if ($action === 'decline')
         renderConsentPage(array(
             'title' => 'Already Processed',
             'message' => 'This consent request is no longer active.',
-            'showForm' => false
+            'showForm' => false,
+            'siteName' => $request['siteName'],
+            'token' => $token,
+            'currentLang' => $currentLang,
+            'noticeTitle' => $notice['title'],
+            'noticeBody' => $notice['bodyText']
         ));
     }
 
     renderConsentPage(array(
         'title' => 'Consent Declined',
         'message' => 'Your consent has been declined.',
-        'showForm' => false
+        'showForm' => false,
+        'siteName' => $request['siteName'],
+        'token' => $token,
+        'currentLang' => $currentLang,
+        'noticeTitle' => $notice['title'],
+        'noticeBody' => $notice['bodyText']
     ));
 }

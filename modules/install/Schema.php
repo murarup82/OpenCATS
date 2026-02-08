@@ -1558,6 +1558,65 @@ class CATSSchema
                 );
                 $db->query($sql);
             ',
+            '370' => 'PHP:
+                $tables = $db->getAllAssoc("SHOW TABLES LIKE \'gdpr_notice\'");
+                if (empty($tables))
+                {
+                    $db->query(
+                        "CREATE TABLE gdpr_notice (
+                            notice_id INT AUTO_INCREMENT PRIMARY KEY,
+                            site_id INT NOT NULL,
+                            lang ENUM(\'ro\',\'en\',\'fr\') NOT NULL,
+                            title VARCHAR(255) NOT NULL,
+                            body_text MEDIUMTEXT NOT NULL,
+                            updated_at DATETIME NOT NULL,
+                            UNIQUE KEY uniq_site_lang (site_id, lang)
+                        )"
+                    );
+                }
+
+                $noticeRo = "În Avel Technologies, ne dorim să fim în contact cu cei mai talentați oameni tehnici\r\ndin industrie.\r\nPentru a putea să te informăm cu privire la rolurile disponibile atât acum, câtși pe\r\nviitor, te rugăm să ne dai acceptul tău pentru prelucrarea datelor tale cu caracter\r\npersonal. Astfel, vom putea să te ținem la curent cu cele mai noi oportunități de\r\ncolaborare cu noi, cele mai interesante proiecte, job-uri promovate de echipa HR,\r\ntechnical tips și evenimente organizate.\r\nReguli Aplicabile\r\nÎn contextul activităților de recrutare și selecție de personal pe care le desfășurăm, vă\r\nfacem cunoscut faptul că, de la momentul primului nostru contact, indiferent dacă\r\nacesta este telefonic, prin email, Skype, WhatsApp, prin intermediul unei platforme\r\nspecializate de recrutare/HR, al transmiterii CV-ului dumneavoastră ori a unei scrisori\r\nde intenție către compania Avel Technologies prin orice modalitate de comunicare a\r\nacestor documente, compania va prelucra informații cu caracter personal de natură să\r\nidentifice o anumită persoană, precum și date cu caracter personal care nu sunt\r\nsusceptibile de a duce la identificarea unei persoane.\r\nAstfel, de informații pot consta în informații referitoare la numele și prenumele dvs.,\r\nadresa de domiciliu și adresa de corespondență, adresa de e-mail, număr de telefon, ID\r\nSkype, data nașterii, vârsta, studii absolvite, alte calificări, competențe, poză, experiența\r\nanterioară de muncă, experiență de voluntariat, interese personale, referințe\r\nprofesionale, date privind deținerea permisului de conducere, alte date pe care le-ați\r\ntransmis către noi prin CV ori scrisoare de intenție, precum și datele pe care le-ați făcut\r\npublice pe platforme precum Facebook și LinkedIn.\r\nDe asemenea, datele transmise de dumneavoastră către noi pot fi împărtășite cu\r\nclienți sau potențiali clienți ai companiei noastre în situația în care recrutarea este\r\npentru un proiect specific ce presupune colaborarea cu aceștia.\r\nNu în ultimul rând, este posibil să cerem referințe de la foști angajatori, demers pe care\r\nuzual îl desfășurăm în etapele finale ale procesului de recrutare și selecție de personal.\r\nCopyright Avel Technologies - Restricted Distribution - info@aveltechnologies.com\r\nVă aducem la cunoștință că datele astfel obținute, în baza consimțământului\r\ndumneavoastră, le vom stoca în condiții de siguranță pentru o perioadă de maxim 3 ani,\r\nsolicitându-vă periodic reactualizarea acestora. De asemenea, puteți solicita\r\nreactualizarea datelor dvs. oricând considerați necesar. Totodată, vă puteți retrage\r\noricând dorit consimțământul cu privire la prelucrarea acestor date de către noi, prin\r\nsimpla transmitere a unei solicitări în acest sens, prin e-mail la adresa\r\ndpo@aveltechonologies.com sau la sediul firmei, la adresa str. Octavian Goga nr. 5, bl.\r\n8, ap. 803, loc. Selimbar, jud. Sibiu.\r\nPentru mai multe detalii te rugăm să accesezi pagina noastră\r\noficială: https://aveltechnologies.com/privacy-policy/";
+
+                $noticeEn = "Hello,\r\nAt Avel Technologies, we want to stay connected with the most talented technical\r\nprofessionals in the industry.\r\nTo be able to inform you about the roles available now and in the future, we kindly ask\r\nfor your consent to process your personal data. This will allow us to keep you updated\r\non the latest collaboration opportunities with us, the most exciting projects, job\r\nopenings promoted by the HR team, technical tips, and organized events.\r\n\r\nApplicable Rules\r\nIn the context of our recruitment and selection activities, we inform you that from the\r\nmoment of our first contact—whether by phone, email, Skype, WhatsApp, through a\r\nspecialized recruitment/HR platform, by receiving your CV or a cover letter by any\r\nmeans—Avel Technologies will process personal data that may identify a person, as well\r\nas personal data that is not likely to lead to the identification of a person.\r\n\r\nPlease note that the data obtained with your consent will be securely stored for a\r\nmaximum period of 3 years, during which we will periodically ask you to update your\r\ninformation. You may also request updates to your data at any time you deem\r\nnecessary. Furthermore, you can withdraw your consent for the processing of this data\r\nat any time by simply sending a request via email to dpo@aveltechnologies.com or by\r\nmail to our company headquarters: str. Octavian Goga nr. 5, bl. 8, ap. 803, Selimbar,\r\nSibiu County.\r\n\r\nFor more details, please visit our official page:\r\nhttps://aveltechnologies.com/";
+
+                $noticeFr = "Bonjour,\r\nChez Avel Technologies Roumanie, nous souhaitons rester en contact avec les\r\nprofessionnels techniques les plus talentueux du secteur.\r\nAfin de pouvoir vous informer sur les postes disponibles actuellement, ainsi que sur\r\nceux à venir, nous vous prions de bien vouloir nous donner votre consentement pour le\r\ntraitement de vos données personnelles. Cela nous permettra de vous tenir informé\r\ndes dernières opportunités de collaboration avec nous, des projets les plus\r\nintéressants, des offres d\'emploi promues par l\'équipe RH, de conseils techniques, ainsi\r\nque des événements organisés.\r\nRègles applicables\r\nDans le cadre de nos activités de recrutement et de sélection, nous vous informons\r\nqu\'à partir du moment de notre premier contact — que ce soit par téléphone, par\r\ne-mail, via Skype, WhatsApp, une plateforme spécialisée en recrutement/RH, ou par\r\nl’envoi de votre CV ou lettre de motivation à Avel Technologies par tout moyen de\r\ncommunication — notre société traitera des informations à caractère personnel\r\npermettant d’identifier une personne, ainsi que des données personnelles qui ne\r\npermettent pas une identification directe.\r\nCes informations peuvent inclure : votre nom et prénom, adresse de domicile et de\r\ncorrespondance, adresse e-mail, numéro de téléphone, identifiant Skype, date de\r\nnaissance, âge, diplômes obtenus, autres qualifications, compétences, photo,\r\nexpériences professionnelles antérieures, expériences de bénévolat, centres d’intérêt,\r\nréférences professionnelles, données concernant le permis de conduire, ainsi que\r\ntoutes autres informations transmises via votre CV ou lettre de motivation. Nous\r\npourrons également utiliser les données que vous avez rendues publiques sur des\r\nplateformes telles que Facebook ou LinkedIn.\r\nLes données que vous nous transmettez peuvent également être partagées avec nos\r\nclients ou clients potentiels dans le cas d’un recrutement pour un projet spécifique\r\nnécessitant une collaboration avec eux.\r\nCopyright Avel Technologies - Restricted Distribution - info@aveltechnologies.com\r\nEnfin, il est possible que nous demandions des références à vos anciens employeurs,\r\ndémarche que nous effectuons généralement dans les phases finales du processus de\r\nrecrutement et de sélection.\r\nNous vous informons que, avec votre consentement, les données collectées seront\r\nstockées en toute sécurité pour une durée maximale de 3 ans, avec des demandes\r\npériodiques de mise à jour. Vous pouvez également demander une mise à jour de vos\r\ndonnées à tout moment. Par ailleurs, vous pouvez à tout moment retirer votre\r\nconsentement au traitement de vos données en nous envoyant simplement une\r\ndemande à l’adresse suivante : dpo@aveltechnologies.com ou à notre siège social, à\r\nl’adresse suivante : str. Octavian Goga nr. 5, bl. 8, ap. 803, Selimbar, département de\r\nSibiu.\r\nPour plus d\'informations, veuillez consulter notre page officielle :\r\nhttps://aveltechnologies.com/privacy-policy/";
+
+                $sql = sprintf(
+                    "INSERT INTO gdpr_notice (site_id, lang, title, body_text, updated_at)
+                     SELECT s.site_id, \'ro\', \'Consimțământ GDPR – Avel Technologies\', %s, NOW()
+                     FROM site s
+                     WHERE NOT EXISTS (
+                        SELECT 1 FROM gdpr_notice n
+                        WHERE n.site_id = s.site_id AND n.lang = \'ro\'
+                     )",
+                    $db->makeQueryString($noticeRo)
+                );
+                $db->query($sql);
+
+                $sql = sprintf(
+                    "INSERT INTO gdpr_notice (site_id, lang, title, body_text, updated_at)
+                     SELECT s.site_id, \'en\', \'GDPR Consent – Avel Technologies\', %s, NOW()
+                     FROM site s
+                     WHERE NOT EXISTS (
+                        SELECT 1 FROM gdpr_notice n
+                        WHERE n.site_id = s.site_id AND n.lang = \'en\'
+                     )",
+                    $db->makeQueryString($noticeEn)
+                );
+                $db->query($sql);
+
+                $sql = sprintf(
+                    "INSERT INTO gdpr_notice (site_id, lang, title, body_text, updated_at)
+                     SELECT s.site_id, \'fr\', \'Consentement RGPD – Avel Technologies\', %s, NOW()
+                     FROM site s
+                     WHERE NOT EXISTS (
+                        SELECT 1 FROM gdpr_notice n
+                        WHERE n.site_id = s.site_id AND n.lang = \'fr\'
+                     )",
+                    $db->makeQueryString($noticeFr)
+                );
+                $db->query($sql);
+            ',
 
         );
     }
