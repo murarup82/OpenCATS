@@ -445,6 +445,16 @@ class CandidatesUI extends UserInterface
             $candidateID = $candidates->getIDByEmail($_GET['email']);
         }
 
+        $gdprFlashMessage = '';
+        if (isset($_GET['gdpr']))
+        {
+            $gdprStatus = $this->getTrimmedInput('gdpr', $_GET);
+            if ($gdprStatus === 'sent')
+            {
+                $gdprFlashMessage = 'GDPR request sent.';
+            }
+        }
+
         $data = $candidates->getWithDuplicity($candidateID);
 
         /* Bail out if we got an empty result set. */
@@ -761,6 +771,7 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('gdprDeletionRequired', $gdprDeletionRequired);
         $this->_template->assign('gdprSendDisabled', $gdprSendDisabled);
         $this->_template->assign('gdprSendDisabledReason', $gdprSendDisabledReason);
+        $this->_template->assign('gdprFlashMessage', $gdprFlashMessage);
 
         $this->_template->display('./modules/candidates/Show.tpl');
 

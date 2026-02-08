@@ -108,7 +108,16 @@ var GDPRCandidateRequest = (function ()
 
             setStatus('GDPR request sent.', false);
             window.setTimeout(function () {
-                window.location.reload();
+                var url = window.location.href;
+                if (url.indexOf('gdpr=') === -1)
+                {
+                    url += (url.indexOf('?') === -1 ? '?' : '&') + 'gdpr=sent';
+                }
+                else
+                {
+                    url = url.replace(/([?&])gdpr=[^&]*/i, '$1gdpr=sent');
+                }
+                window.location.href = url;
             }, 700);
         };
 

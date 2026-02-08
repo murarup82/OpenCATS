@@ -470,7 +470,9 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 Deletion required (candidate declined).
                             </div>
                         <?php endif; ?>
-                        <div id="gdprCandidateStatus" class="ui2-ai-status" style="display: none; margin-top: 8px;"></div>
+                        <div id="gdprCandidateStatus" class="ui2-ai-status" style="margin-top: 8px; <?php if (empty($this->gdprFlashMessage)) echo 'display: none;'; ?>">
+                            <?php if (!empty($this->gdprFlashMessage)) $this->_($this->gdprFlashMessage); ?>
+                        </div>
                     </div>
                     <div class="ui2-card ui2-card--section">
                         <div class="ui2-card-header">
@@ -745,6 +747,19 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             });
             GDPRCandidateRequest.bind();
         }
+        <?php if (!empty($this->gdprFlashMessage)): ?>
+        if (window.history && typeof window.history.replaceState === 'function')
+        {
+            var url = window.location.href;
+            if (url.indexOf('gdpr=') !== -1)
+            {
+                url = url.replace(/([?&])gdpr=[^&]*&?/i, '$1');
+                url = url.replace(/[?&]$/, '');
+                url = url.replace('?&', '?');
+                window.history.replaceState(null, document.title, url);
+            }
+        }
+        <?php endif; ?>
     </script>
 
 <?php endif; ?>
