@@ -35,6 +35,20 @@ $db = DatabaseConnection::getInstance();
 $siteID = $interface->getSiteID();
 $userID = $interface->getUserID();
 
+function logGdprEvent($message, $context = array())
+{
+    $payload = array_merge(
+        array(
+            'action' => isset($context['action']) ? $context['action'] : '',
+            'siteID' => isset($context['siteID']) ? $context['siteID'] : '',
+            'userID' => isset($context['userID']) ? $context['userID'] : '',
+        ),
+        $context
+    );
+
+    error_log('GDPR request | ' . $message . ' | ' . json_encode($payload));
+}
+
 function fetchRequestRow($db, $siteID, $requestID)
 {
     $sql = sprintf(
@@ -299,8 +313,10 @@ function createNewRequestAndSend($db, $siteID, $userID, $candidateID, $email, $f
 
 if ($action === 'sendCandidate')
 {
+    logGdprEvent('sendCandidate: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID));
     if (!$interface->isRequiredIDValid('candidateID'))
     {
+        logGdprEvent('sendCandidate: invalid candidate ID', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID));
         $interface->outputXMLErrorPage(-1, 'Invalid candidate ID.');
         die();
     }
@@ -309,12 +325,14 @@ if ($action === 'sendCandidate')
     $candidateRow = fetchCandidateRow($db, $siteID, $candidateID);
     if (empty($candidateRow))
     {
+        logGdprEvent('sendCandidate: candidate not found', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate not found.');
         die();
     }
 
     if (empty($candidateRow['email1']))
     {
+        logGdprEvent('sendCandidate: missing email', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate email is missing.');
         die();
     }
@@ -325,6 +343,7 @@ if ($action === 'sendCandidate')
         $latestRequestRow['status'] === 'DECLINED' &&
         empty($latestRequestRow['deletedAt'])
     ) {
+        logGdprEvent('sendCandidate: declined requires deletion', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate declined; delete required.');
         die();
     }
@@ -341,16 +360,19 @@ if ($action === 'sendCandidate')
 
     if (!$emailSent)
     {
+        logGdprEvent('sendCandidate: email send failed', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID, 'error' => $errorMessage));
         $interface->outputXMLErrorPage(-1, $errorMessage);
         die();
     }
 
+    logGdprEvent('sendCandidate: success', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
     $interface->outputXMLSuccessPage('Sent.');
     die();
 }
 
 if (!$interface->isRequiredIDValid('requestID'))
 {
+    logGdprEvent('request action: invalid request ID', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID));
     $interface->outputXMLErrorPage(-1, 'Invalid request ID.');
     die();
 }
@@ -359,6 +381,7 @@ $requestID = (int) $_REQUEST['requestID'];
 $request = fetchRequestRow($db, $siteID, $requestID);
 if (empty($request))
 {
+    logGdprEvent('request action: not found', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID));
     $interface->outputXMLErrorPage(-1, 'Request not found.');
     die();
 }
@@ -370,26 +393,31 @@ $isExpired = (!empty($request['expiresAt']) && strtotime($request['expiresAt']) 
 
 if ($action === 'resend')
 {
+    logGdprEvent('resend: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
     if (!$isLatest)
     {
+        logGdprEvent('resend: not latest', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Only the latest request can be resent.');
         die();
     }
 
     if (empty($request['candidateExists']))
     {
+        logGdprEvent('resend: candidate missing', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate no longer exists.');
         die();
     }
 
     if (!in_array($request['status'], array('CREATED', 'SENT')) || $isExpired || !empty($request['deletedAt']))
     {
+        logGdprEvent('resend: not active', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID, 'status' => $request['status']));
         $interface->outputXMLErrorPage(-1, 'Request is not active.');
         die();
     }
 
     if (empty($request['email1']))
     {
+        logGdprEvent('resend: missing email', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate email is missing.');
         die();
     }
@@ -439,6 +467,7 @@ if ($action === 'resend')
 
     if (!$emailSent)
     {
+        logGdprEvent('resend: email send failed', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID, 'error' => $errorMessage));
         $db->query(sprintf(
             "UPDATE candidate_gdpr_requests
              SET
@@ -456,26 +485,31 @@ if ($action === 'resend')
         die();
     }
 
+    logGdprEvent('resend: success', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
     $interface->outputXMLSuccessPage('Resent.');
     die();
 }
 
 if ($action === 'create')
 {
+    logGdprEvent('create: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
     if (!$isLatest)
     {
+        logGdprEvent('create: not latest', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Only the latest request can be extended.');
         die();
     }
 
     if (empty($request['candidateExists']))
     {
+        logGdprEvent('create: candidate missing', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate no longer exists.');
         die();
     }
 
     if (empty($request['email1']))
     {
+        logGdprEvent('create: missing email', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate email is missing.');
         die();
     }
@@ -492,24 +526,29 @@ if ($action === 'create')
 
     if (!$emailSent)
     {
+        logGdprEvent('create: email send failed', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID, 'error' => $errorMessage));
         $interface->outputXMLErrorPage(-1, $errorMessage);
         die();
     }
 
+    logGdprEvent('create: success', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
     $interface->outputXMLSuccessPage('Created.');
     die();
 }
 
 if ($action === 'expire')
 {
+    logGdprEvent('expire: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
     if (!$isLatest)
     {
+        logGdprEvent('expire: not latest', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Only the latest request can be expired.');
         die();
     }
 
     if (!in_array($request['status'], array('CREATED', 'SENT')) || $isExpired)
     {
+        logGdprEvent('expire: not active', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID, 'status' => $request['status']));
         $interface->outputXMLErrorPage(-1, 'Request is not active.');
         die();
     }
@@ -526,26 +565,31 @@ if ($action === 'expire')
         $db->makeQueryInteger($siteID)
     ));
 
+    logGdprEvent('expire: success', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
     $interface->outputXMLSuccessPage('Expired.');
     die();
 }
 
 if ($action === 'delete')
 {
+    logGdprEvent('delete: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
     if (!$isLatest)
     {
+        logGdprEvent('delete: not latest', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Only the latest request can be deleted.');
         die();
     }
 
     if ($request['status'] !== 'DECLINED' || !empty($request['deletedAt']))
     {
+        logGdprEvent('delete: not eligible', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID, 'status' => $request['status']));
         $interface->outputXMLErrorPage(-1, 'Candidate is not marked for deletion.');
         die();
     }
 
     if (empty($request['candidateExists']))
     {
+        logGdprEvent('delete: candidate missing', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate no longer exists.');
         die();
     }
@@ -627,10 +671,13 @@ if ($action === 'delete')
     $db->query('COMMIT');
     $db->setInTransaction(false);
 
+    logGdprEvent('delete: success', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
     $interface->outputXMLSuccessPage('Deleted.');
     die();
 }
 
+$logContext = array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => isset($requestID) ? $requestID : null);
+logGdprEvent('unknown action', $logContext);
 $interface->outputXMLErrorPage(-1, 'Unknown action.');
 
 ?>
