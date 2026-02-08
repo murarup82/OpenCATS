@@ -122,7 +122,8 @@ class Mailer
      * @return boolean Was the message successfully sent to all recipients?
      */
     public function sendToOne($recipient, $subject, $body, $isHTML = false,
-        $logMessage = true, $replyTo = array(), $wrapLinesAt = 78)
+        $logMessage = true, $replyTo = array(), $wrapLinesAt = 78,
+        $signature = true)
     {
         return $this->send(
             array($this->_settings['fromAddress'], ''),
@@ -133,7 +134,7 @@ class Mailer
             $logMessage,
             $replyTo,
             $wrapLinesAt,
-            true
+            $signature
         );
     }
 
@@ -157,7 +158,8 @@ class Mailer
      * @return boolean Was the message successfully sent to all recipients?
      */
     public function sendToMany($recipients, $subject, $body, $isHTML = false,
-        $logMessage = true, $replyTo = array(), $wrapLinesAt = 78)
+        $logMessage = true, $replyTo = array(), $wrapLinesAt = 78,
+        $signature = true)
     {
         return $this->send(
             array($this->_settings['fromAddress'], ''),
@@ -168,7 +170,7 @@ class Mailer
             $logMessage,
             $replyTo,
             $wrapLinesAt,
-            true
+            $signature
         );
     }
 

@@ -74,6 +74,12 @@ define('SETTINGS_CAREER_PORTAL', 4);
 define('SETTINGS_GDPR',          5);
 define('SETTINGS_TALENTFITFLOW', 6);
 
+/* GDPR test-only hard delete toggle. */
+if (!defined('GDPR_ALLOW_HARD_DELETE'))
+{
+    define('GDPR_ALLOW_HARD_DELETE', false);
+}
+
 /* Access level flags. */
 define('ACCESS_LEVEL_DELETED',  -100);
 define('ACCESS_LEVEL_DISABLED', 0);

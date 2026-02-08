@@ -115,6 +115,11 @@ var GDPRRequests = (function ()
             return confirm('Delete candidate data? This cannot be undone.');
         }
 
+        if (action === 'deleteRequest')
+        {
+            return confirm('Delete this GDPR request row? This is for test cleanup only.');
+        }
+
         if (action === 'expire')
         {
             return confirm('Expire this request now?');

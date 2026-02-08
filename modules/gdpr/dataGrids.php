@@ -54,6 +54,10 @@ class GDPRRequestsDataGrid extends DataGrid
                     $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="GDPRRequests.action(\'delete\', ' . $rsData['requestID'] . ');">Delete Candidate Data</a>';
                 }
             }
+            if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_MULTI_SA)
+            {
+                $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="GDPRRequests.action(\'deleteRequest\', ' . $rsData['requestID'] . ');">Delete (test)</a>';
+            }
             if (empty($actions))
             {
                 return '<span class="ui2-muted">--</span>';

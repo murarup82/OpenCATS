@@ -189,28 +189,39 @@ function buildConsentEmail($firstName, $lastName, $siteName, $link, $requestExpi
 
         if ($body !== '')
         {
-            $body = str_replace('%CANDIDATE_NAME%', htmlspecialchars($fullName), $body);
-            $body = str_replace('%CANDFULLNAME%', htmlspecialchars($fullName), $body);
-            $body = str_replace('%CANDFIRSTNAME%', htmlspecialchars($safeName), $body);
-            $body = str_replace('%CANDIDATEFIRSTNAME%', htmlspecialchars($safeName), $body);
-            $body = str_replace('%CONSENT_LINK%', htmlspecialchars($link), $body);
-            $body = str_replace('%CONSENTLINK%', htmlspecialchars($link), $body);
-            $body = str_replace('%REQUEST_EXPIRES%', htmlspecialchars($requestExpires), $body);
+            $body = str_replace('%CANDIDATE_NAME%', $fullName, $body);
+            $body = str_replace('%CANDFULLNAME%', $fullName, $body);
+            $body = str_replace('%CANDFIRSTNAME%', $safeName, $body);
+            $body = str_replace('%CANDIDATEFIRSTNAME%', $safeName, $body);
+            $body = str_replace('%CONSENT_LINK%', $link, $body);
+            $body = str_replace('%CONSENTLINK%', $link, $body);
+            $body = str_replace('%REQUEST_EXPIRES%', $requestExpires, $body);
         }
     }
 
     if (trim($body) === '')
     {
-        $body = '';
-        $body .= '<p>Hello ' . htmlspecialchars($safeName) . ',</p>';
-        $body .= '<p>Please review and respond to our GDPR consent request by clicking the link below:</p>';
-        $body .= '<p><a href="' . htmlspecialchars($link) . '">' . htmlspecialchars($link) . '</a></p>';
+        $body = "* This is an automated message. Please do not reply. *\n";
+        $body .= "%DATETIME%\n\n";
+        $body .= "Hello " . $safeName . ",\n\n";
+        $body .= "To continue processing your application and storing your personal data,\n";
+        $body .= "we need your consent in accordance with GDPR regulations.\n\n";
+        $body .= "Please review and respond by clicking the link below:\n";
+        $body .= $link . "\n\n";
         if ($requestExpires !== '')
         {
-            $body .= '<p>This link expires on ' . htmlspecialchars($requestExpires) . '.</p>';
+            $body .= "This link will expire on " . $requestExpires . ".\n\n";
         }
-        $body .= '<p>Thank you,<br />' . htmlspecialchars($siteName) . '</p>';
+        $body .= "Thank you,\n\n";
+        $body .= $siteName;
     }
+
+    $body = strip_tags($body);
+    $body = str_replace(array("\\r\\n", "\\n", "\\r"), "\n", $body);
+    $body = str_replace(array("\r\n", "\r"), "\n", $body);
+    $dateFormat = $_SESSION['CATS']->isDateDMY() ? 'd-m-Y' : 'm-d-Y';
+    $body = str_replace('%DATETIME%', DateUtility::getAdjustedDate($dateFormat . ' g:i A'), $body);
+    $body = str_replace('%SITENAME%', $siteName, $body);
 
     return array($subject, $body);
 }
@@ -233,8 +244,11 @@ function sendConsentEmail($siteID, $userID, $email, $firstName, $lastName, $link
         array($email, ''),
         $subject,
         $body,
+        false,
         true,
-        true
+        array(),
+        78,
+        false
     );
 
     if (!$status)
@@ -309,6 +323,37 @@ function createNewRequestAndSend($db, $siteID, $userID, $candidateID, $email, $f
     }
 
     return array(true, '', $newRequestID);
+}
+
+function isHardDeleteAllowed($requestRow)
+{
+    if (defined('GDPR_ALLOW_HARD_DELETE') && GDPR_ALLOW_HARD_DELETE === true)
+    {
+        return true;
+    }
+
+    $email = '';
+    if (isset($requestRow['email1']))
+    {
+        $email = strtolower(trim($requestRow['email1']));
+    }
+
+    if ($email === '')
+    {
+        return false;
+    }
+
+    if (strpos($email, '+test') !== false)
+    {
+        return true;
+    }
+
+    if (substr($email, -10) === '@gmail.com')
+    {
+        return true;
+    }
+
+    return false;
 }
 
 if ($action === 'sendCandidate')
@@ -390,6 +435,37 @@ $candidateID = (int) $request['candidateID'];
 $latestRequestID = fetchLatestRequestID($db, $siteID, $candidateID);
 $isLatest = ($latestRequestID === $requestID);
 $isExpired = (!empty($request['expiresAt']) && strtotime($request['expiresAt']) <= time());
+
+if ($action === 'deleteRequest')
+{
+    logGdprEvent('deleteRequest: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
+    if ($_SESSION['CATS']->getAccessLevel('settings.administration') < ACCESS_LEVEL_MULTI_SA)
+    {
+        logGdprEvent('deleteRequest: permission denied', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID));
+        $interface->outputXMLErrorPage(-1, 'You do not have permission to hard delete GDPR requests.');
+        die();
+    }
+
+    if (!isHardDeleteAllowed($request))
+    {
+        logGdprEvent('deleteRequest: hard delete disabled', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID));
+        $interface->outputXMLErrorPage(-1, 'Hard delete disabled outside test mode.');
+        die();
+    }
+
+    $db->query(sprintf(
+        "DELETE FROM candidate_gdpr_requests
+         WHERE
+            request_id = %s
+            AND site_id = %s",
+        $db->makeQueryInteger($requestID),
+        $db->makeQueryInteger($siteID)
+    ));
+
+    logGdprEvent('deleteRequest: success', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
+    $interface->outputXMLSuccessPage('Deleted request.');
+    die();
+}
 
 if ($action === 'resend')
 {

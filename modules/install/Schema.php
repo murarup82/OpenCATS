@@ -1507,7 +1507,7 @@ class CATSSchema
                 }
             ',
             '368' => 'PHP:
-                $defaultBody = "* This is an auto-generated message. Please do not reply. *\r\n%DATETIME%\r\n\r\nHello %CANDIDATE_NAME%,\r\n\r\nPlease review and respond to our GDPR consent request by visiting the link below:\r\n%CONSENT_LINK%\r\n\r\nThis link expires on %REQUEST_EXPIRES%.\r\n\r\nThank you,\r\n%SITENAME%";
+                $defaultBody = "* This is an automated message. Please do not reply. *\r\n%DATETIME%\r\n\r\nHello %CANDIDATE_NAME%,\r\n\r\nTo continue processing your application and storing your personal data,\r\nwe need your consent in accordance with GDPR regulations.\r\n\r\nPlease review and respond by clicking the link below:\r\n%CONSENT_LINK%\r\n\r\nThis link will expire on %REQUEST_EXPIRES%.\r\n\r\nThank you,\r\n\r\nAvel Technologies Team";
                 $possibleVariables = "%DATETIME%%SITENAME%%USERFULLNAME%%USERMAIL%%CANDIDATE_NAME%%CANDFIRSTNAME%%CANDFULLNAME%%CONSENT_LINK%%REQUEST_EXPIRES%";
 
                 $sql = sprintf(
@@ -1538,6 +1538,22 @@ class CATSSchema
                             AND t.tag = \'GDPR_CONSENT\'
                         )",
                     $db->makeQueryString($defaultBody),
+                    $db->makeQueryString($possibleVariables)
+                );
+                $db->query($sql);
+            ',
+            '369' => 'PHP:
+                $updatedBody = "* This is an automated message. Please do not reply. *\r\n%DATETIME%\r\n\r\nHello %CANDIDATE_NAME%,\r\n\r\nTo continue processing your application and storing your personal data,\r\nwe need your consent in accordance with GDPR regulations.\r\n\r\nPlease review and respond by clicking the link below:\r\n%CONSENT_LINK%\r\n\r\nThis link will expire on %REQUEST_EXPIRES%.\r\n\r\nThank you,\r\n\r\nAvel Technologies Team";
+                $possibleVariables = "%DATETIME%%SITENAME%%USERFULLNAME%%USERMAIL%%CANDIDATE_NAME%%CANDFIRSTNAME%%CANDFULLNAME%%CONSENT_LINK%%REQUEST_EXPIRES%";
+                $sql = sprintf(
+                    "UPDATE email_template
+                     SET
+                        title = \'GDPR Consent Request\',
+                        text = %s,
+                        possible_variables = %s
+                     WHERE
+                        tag = \'GDPR_CONSENT\'",
+                    $db->makeQueryString($updatedBody),
                     $db->makeQueryString($possibleVariables)
                 );
                 $db->query($sql);
