@@ -123,8 +123,10 @@ function testEmailSettings(sessionCookie)
         var errorMessageNode = http.responseXML.getElementsByTagName('errormessage').item(0);
         if (!errorCodeNode.firstChild || errorCodeNode.firstChild.nodeValue != '0')
         {
+            var messageText = errorMessageNode.firstChild.nodeValue;
+            messageText = messageText.replace(/\n/g, '<br />');
             testOutput.innerHTML = '<span style="color: #ff0000"><br />An error occurred.<br /><br />'
-                + errorMessageNode.firstChild.nodeValue + '</span>';
+                + messageText + '</span>';
         }
         else
         {

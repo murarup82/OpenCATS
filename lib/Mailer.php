@@ -66,6 +66,8 @@ class Mailer
     private $_siteID;
     private $_userID;
     private $_db;
+    private $_smtpDebugLog = array();
+    private $_smtpDebugToErrorLog = false;
 
 
     public function __construct($siteID, $userID = -1)
@@ -238,6 +240,16 @@ class Mailer
                 $this->_mailer->AddReplyTo($replyTo[0], $replyTo[1]);
             }
             $this->_mailer->CharSet = 'UTF-8';
+            if ($this->_smtpDebugToErrorLog)
+            {
+                error_log('SMTP send params | ' . json_encode(array(
+                    'host' => $this->_mailer->Host,
+                    'port' => $this->_mailer->Port,
+                    'secure' => $this->_mailer->SMTPSecure,
+                    'auth' => $this->_mailer->SMTPAuth,
+                    'timeout' => $this->_mailer->Timeout
+                )));
+            }
             if (!$this->_mailer->Send())
             {
                 $failedRecipients[] = array(
@@ -288,6 +300,47 @@ class Mailer
     public function getError()
     {
         return $this->_errorMessage;
+    }
+
+    /**
+     * Enable PHPMailer SMTP debug output and capture it for diagnostics.
+     *
+     * @param integer Debug level (0-4).
+     * @return void
+     */
+    public function enableSMTPDebug($level = 2)
+    {
+        $this->_smtpDebugLog = array();
+        $this->_mailer->SMTPDebug = $level;
+
+        $self = $this;
+        $this->_mailer->Debugoutput = function ($str, $level) use ($self)
+        {
+            $self->_smtpDebugLog[] = '[' . $level . '] ' . $str;
+        };
+    }
+
+    /**
+     * Enable PHPMailer SMTP debug output to PHP error_log (no UI output).
+     *
+     * @param integer Debug level (0-4).
+     * @return void
+     */
+    public function enableSMTPDebugToErrorLog($level = 2)
+    {
+        $this->_smtpDebugToErrorLog = true;
+        $this->_mailer->SMTPDebug = $level;
+        $this->_mailer->Debugoutput = 'error_log';
+    }
+
+    /**
+     * Return captured SMTP debug log lines.
+     *
+     * @return array
+     */
+    public function getSMTPDebugLog()
+    {
+        return $this->_smtpDebugLog;
     }
 
     /**
