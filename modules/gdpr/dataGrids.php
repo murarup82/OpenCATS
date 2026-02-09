@@ -29,6 +29,10 @@ class GDPRRequestsDataGrid extends DataGrid
             array('name' => 'Expires', 'width' => 80),
             array('name' => 'Sent', 'width' => 80),
             array('name' => 'Decision', 'width' => 110),
+            array('name' => 'Accepted', 'width' => 80),
+            array('name' => 'Accepted IP', 'width' => 110),
+            array('name' => 'Lang', 'width' => 60),
+            array('name' => 'Notice Ver', 'width' => 110),
             array('name' => 'Deleted', 'width' => 80),
             array('name' => 'Latest', 'width' => 60),
             array('name' => 'Actions', 'width' => 260)
@@ -101,6 +105,26 @@ EOT;
             'Decision' => array(
                 'pagerRender' => 'if (!empty($rsData[\'acceptedAt\'])) { return \'Accepted \' . $rsData[\'acceptedAt\']; } if (!empty($rsData[\'declinedAt\'])) { return \'Declined \' . $rsData[\'declinedAt\']; } return \'--\';',
                 'sortableColumn' => 'decisionSort',
+                'pagerWidth' => 110
+            ),
+            'Accepted' => array(
+                'pagerRender' => 'return !empty($rsData[\'acceptedAt\']) ? $rsData[\'acceptedAt\'] : \'--\';',
+                'sortableColumn' => 'acceptedAtSort',
+                'pagerWidth' => 80
+            ),
+            'Accepted IP' => array(
+                'pagerRender' => 'return !empty($rsData[\'acceptedIP\']) ? htmlspecialchars($rsData[\'acceptedIP\']) : \'--\';',
+                'sortableColumn' => 'acceptedIP',
+                'pagerWidth' => 110
+            ),
+            'Lang' => array(
+                'pagerRender' => 'return !empty($rsData[\'acceptedLang\']) ? htmlspecialchars($rsData[\'acceptedLang\']) : \'--\';',
+                'sortableColumn' => 'acceptedLang',
+                'pagerWidth' => 60
+            ),
+            'Notice Ver' => array(
+                'pagerRender' => 'if (empty($rsData[\'noticeVersion\'])) { return \'--\'; } $full = $rsData[\'noticeVersion\']; $short = substr($full, 0, 8); if (strlen($full) > 8) { $short .= \'...\'; } return \'<span title="\' . htmlspecialchars($full) . \'">\' . htmlspecialchars($short) . \'</span>\';',
+                'sortableColumn' => 'noticeVersion',
                 'pagerWidth' => 110
             ),
             'Deleted' => array(
@@ -184,6 +208,9 @@ EOT;
                 DATE_FORMAT(r.expires_at, '%%m-%%d-%%y') AS expiresAt,
                 r.accepted_at AS acceptedAtSort,
                 DATE_FORMAT(r.accepted_at, '%%m-%%d-%%y') AS acceptedAt,
+                r.accepted_ip AS acceptedIP,
+                r.accepted_lang AS acceptedLang,
+                r.notice_version AS noticeVersion,
                 r.declined_at AS declinedAtSort,
                 DATE_FORMAT(r.declined_at, '%%m-%%d-%%y') AS declinedAt,
                 r.deleted_at AS deletedAtSort,

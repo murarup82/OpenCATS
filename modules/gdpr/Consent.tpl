@@ -57,6 +57,7 @@
             <form method="post" action="consent.php">
                 <input type="hidden" name="t" value="<?php $this->_($this->token); ?>" />
                 <input type="hidden" name="lang" value="<?php echo(isset($this->currentLang) ? htmlspecialchars($this->currentLang) : 'en'); ?>" />
+                <input type="hidden" name="noticeVersion" value="<?php echo(isset($this->noticeVersion) ? htmlspecialchars($this->noticeVersion) : ''); ?>" />
                 <div class="gdpr-actions">
                     <button type="submit" name="action" value="accept" class="primary">Accept</button>
                     <button type="submit" name="action" value="decline" class="secondary">Decline</button>

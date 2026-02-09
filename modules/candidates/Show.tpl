@@ -470,6 +470,11 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 Deletion required (candidate declined).
                             </div>
                         <?php endif; ?>
+                        <?php if (!empty($this->gdprLegacyConsent)): ?>
+                            <div class="ui2-ai-status" style="margin-top: 8px;">
+                                Legacy consent recorded in candidate profile (no request record).
+                            </div>
+                        <?php endif; ?>
                         <div id="gdprCandidateStatus" class="ui2-ai-status" style="margin-top: 8px; <?php if (empty($this->gdprFlashMessage)) echo 'display: none;'; ?>">
                             <?php if (!empty($this->gdprFlashMessage)) $this->_($this->gdprFlashMessage); ?>
                         </div>

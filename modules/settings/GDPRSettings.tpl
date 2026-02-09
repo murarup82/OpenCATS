@@ -34,6 +34,12 @@
 
                             <br /><br />
 
+                            <label for="gdprFromAddress">GDPR consent From address (optional):</label><br />
+                            <input type="text" name="gdprFromAddress" id="gdprFromAddress" value="<?php $this->_($this->gdprSettings['gdprConsentFromAddress']); ?>" style="width: 260px;" />
+                            <span class="noteUnsized">If blank, the default mailer From address is used.</span>
+
+                            <br /><br />
+
                             <input type="submit" class="button" value="Save Settings" />
                             <input type="button" class="button" value="Back" onclick="document.location.href='<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=administration';" />
                         </form>

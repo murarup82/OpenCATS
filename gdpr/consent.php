@@ -255,6 +255,19 @@ if (empty($notice))
         'bodyText' => ''
     );
 }
+$noticeTitle = isset($notice['title']) ? trim($notice['title']) : '';
+$noticeBody = isset($notice['bodyText']) ? $notice['bodyText'] : '';
+$normalizedBody = preg_replace("/\r\n|\r/", "\n", trim($noticeBody));
+$noticeVersion = hash('sha256', $noticeTitle . "\n\n" . $normalizedBody);
+$postedNoticeVersion = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['noticeVersion']))
+{
+    $posted = strtolower(trim($_POST['noticeVersion']));
+    if (preg_match('/^[a-f0-9]{64}$/', $posted))
+    {
+        $postedNoticeVersion = $posted;
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET')
 {
@@ -291,7 +304,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET')
             'token' => $token,
             'currentLang' => $currentLang,
             'noticeTitle' => $notice['title'],
-            'noticeBody' => $notice['bodyText']
+            'noticeBody' => $notice['bodyText'],
+            'noticeVersion' => $noticeVersion
         ));
     }
 
@@ -303,7 +317,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET')
         'siteName' => $request['siteName'],
         'currentLang' => $currentLang,
         'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText']
+        'noticeBody' => $notice['bodyText'],
+        'noticeVersion' => $noticeVersion
     ));
 }
 
@@ -319,7 +334,8 @@ if ($action !== 'accept' && $action !== 'decline')
         'token' => $token,
         'currentLang' => $currentLang,
         'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText']
+        'noticeBody' => $notice['bodyText'],
+        'noticeVersion' => $noticeVersion
     ));
 }
 
@@ -356,7 +372,8 @@ if (!$isActive)
         'token' => $token,
         'currentLang' => $currentLang,
         'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText']
+        'noticeBody' => $notice['bodyText'],
+        'noticeVersion' => $noticeVersion
     ));
 }
 
@@ -371,7 +388,9 @@ if ($action === 'accept')
             status = 'ACCEPTED',
             accepted_at = NOW(),
             accepted_ip = %s,
-            accepted_ua = %s
+            accepted_ua = %s,
+            accepted_lang = %s,
+            notice_version = %s
          WHERE
             request_id = %s
             AND status IN ('CREATED','SENT')
@@ -379,6 +398,8 @@ if ($action === 'accept')
             AND (expires_at IS NULL OR expires_at > NOW())",
         $db->makeQueryStringOrNULL($ip),
         $db->makeQueryStringOrNULL($ua),
+        $db->makeQueryStringOrNULL($currentLang),
+        $db->makeQueryStringOrNULL($postedNoticeVersion !== '' ? $postedNoticeVersion : null),
         $db->makeQueryInteger($request['requestID'])
     );
     $db->query($updateSQL);
@@ -393,7 +414,8 @@ if ($action === 'accept')
             'token' => $token,
             'currentLang' => $currentLang,
             'noticeTitle' => $notice['title'],
-            'noticeBody' => $notice['bodyText']
+            'noticeBody' => $notice['bodyText'],
+            'noticeVersion' => $noticeVersion
         ));
     }
 
@@ -430,7 +452,8 @@ if ($action === 'accept')
         'token' => $token,
         'currentLang' => $currentLang,
         'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText']
+        'noticeBody' => $notice['bodyText'],
+        'noticeVersion' => $noticeVersion
     ));
 }
 
@@ -464,7 +487,8 @@ if ($action === 'decline')
             'token' => $token,
             'currentLang' => $currentLang,
             'noticeTitle' => $notice['title'],
-            'noticeBody' => $notice['bodyText']
+            'noticeBody' => $notice['bodyText'],
+            'noticeVersion' => $noticeVersion
         ));
     }
 
@@ -476,6 +500,7 @@ if ($action === 'decline')
         'token' => $token,
         'currentLang' => $currentLang,
         'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText']
+        'noticeBody' => $notice['bodyText'],
+        'noticeVersion' => $noticeVersion
     ));
 }

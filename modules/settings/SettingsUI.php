@@ -48,6 +48,7 @@ include_once(LEGACY_ROOT . '/lib/ImportUtility.php');
 include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/Tags.php');
 include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
+include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
 eval(Hooks::get('XML_FEED_SUBMISSION_SETTINGS_HEADERS'));
@@ -2079,12 +2080,19 @@ class SettingsUI extends UserInterface
         $gdprSettings = new GDPRSettings($this->_siteID);
 
         $expirationYears = $this->getTrimmedInput('gdprExpirationYears', $_POST);
+        $gdprFromAddress = trim($this->getTrimmedInput('gdprFromAddress', $_POST));
 
         if (!ctype_digit((string) $expirationYears) || (int) $expirationYears <= 0) {
             CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'Expiration must be a positive whole number of years.');
         }
 
+        if ($gdprFromAddress !== '' && !StringUtility::isEmailAddress($gdprFromAddress))
+        {
+            CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'GDPR from address is not a valid email address.');
+        }
+
         $gdprSettings->set('gdprExpirationYears', (string) (int) $expirationYears);
+        $gdprSettings->set(GDPRSettings::SETTING_FROM_ADDRESS, $gdprFromAddress);
 
         CATSUtility::transferRelativeURI('m=settings&a=gdprSettings&saved=1');
     }

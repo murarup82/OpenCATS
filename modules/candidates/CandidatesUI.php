@@ -530,6 +530,7 @@ class CandidatesUI extends UserInterface
         $gdprDeletionRequired = false;
         $gdprSendDisabled = false;
         $gdprSendDisabledReason = '';
+        $gdprLegacyConsent = false;
 
         $db = DatabaseConnection::getInstance();
         $gdprLatestRequestRow = $db->getAssoc(sprintf(
@@ -579,17 +580,26 @@ class CandidatesUI extends UserInterface
                 $gdprDeletionRequired = true;
             }
         }
-
-        if (empty($data['email1']))
+        else if ((int) $data['gdprSigned'] === 1)
         {
-            $gdprSendDisabled = true;
-            $gdprSendDisabledReason = 'Candidate email is missing.';
+            $gdprLegacyConsent = true;
+            $gdprLatestRequest['status'] = 'LEGACY (Signed)';
         }
 
         if ($gdprDeletionRequired)
         {
             $gdprSendDisabled = true;
             $gdprSendDisabledReason = 'Candidate declined; delete required.';
+        }
+        else if ((int) $data['gdprSigned'] === 1)
+        {
+            $gdprSendDisabled = true;
+            $gdprSendDisabledReason = 'GDPR already signed.';
+        }
+        else if (empty($data['email1']))
+        {
+            $gdprSendDisabled = true;
+            $gdprSendDisabledReason = 'Candidate email is missing.';
         }
 
         $attachments = new Attachments($this->_siteID);
@@ -771,6 +781,7 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('gdprDeletionRequired', $gdprDeletionRequired);
         $this->_template->assign('gdprSendDisabled', $gdprSendDisabled);
         $this->_template->assign('gdprSendDisabledReason', $gdprSendDisabledReason);
+        $this->_template->assign('gdprLegacyConsent', $gdprLegacyConsent);
         $this->_template->assign('gdprFlashMessage', $gdprFlashMessage);
 
         $this->_template->display('./modules/candidates/Show.tpl');

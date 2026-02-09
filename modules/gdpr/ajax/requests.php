@@ -10,6 +10,8 @@ include_once(LEGACY_ROOT . '/lib/EmailTemplates.php');
 include_once(LEGACY_ROOT . '/lib/CATSUtility.php');
 include_once(LEGACY_ROOT . '/lib/Site.php');
 include_once(LEGACY_ROOT . '/lib/DateUtility.php');
+include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
+include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 
 if (!defined('GDPR_CONSENT_LINK_DAYS'))
 {
@@ -132,7 +134,8 @@ function fetchCandidateRow($db, $siteID, $candidateID)
             candidate_id AS candidateID,
             first_name AS firstName,
             last_name AS lastName,
-            email1 AS email1
+            email1 AS email1,
+            gdpr_signed AS gdprSigned
          FROM
             candidate
          WHERE
@@ -240,6 +243,17 @@ function sendConsentEmail($siteID, $userID, $email, $firstName, $lastName, $link
     list($subject, $body) = buildConsentEmail($firstName, $lastName, $siteName, $link, $requestExpires, $templateRow);
 
     $mailer = new Mailer($siteID, $userID);
+    $gdprSettings = new GDPRSettings($siteID);
+    $gdprSettingsRS = $gdprSettings->getAll();
+    $gdprFromAddress = '';
+    if (isset($gdprSettingsRS[GDPRSettings::SETTING_FROM_ADDRESS]))
+    {
+        $gdprFromAddress = trim($gdprSettingsRS[GDPRSettings::SETTING_FROM_ADDRESS]);
+    }
+    if ($gdprFromAddress !== '' && StringUtility::isEmailAddress($gdprFromAddress))
+    {
+        $mailer->overrideSetting('fromAddress', $gdprFromAddress);
+    }
     $status = $mailer->sendToOne(
         array($email, ''),
         $subject,
@@ -263,6 +277,7 @@ function createNewRequestAndSend($db, $siteID, $userID, $candidateID, $email, $f
 {
     $token = bin2hex(random_bytes(16));
     $tokenHash = hash('sha256', $token);
+    $emailHash = hash('sha256', strtolower(trim($email)));
     $link = CATSUtility::getAbsoluteURI('gdpr/consent.php?t=' . $token);
 
     $db->query(sprintf(
@@ -281,14 +296,15 @@ function createNewRequestAndSend($db, $siteID, $userID, $candidateID, $email, $f
 
     $db->query(sprintf(
         "INSERT INTO candidate_gdpr_requests
-            (site_id, candidate_id, token_hash, status, created_at, email_sent_at, expires_at, sent_by_user_id)
+            (site_id, candidate_id, token_hash, status, created_at, email_sent_at, expires_at, sent_by_user_id, email_to_hash)
          VALUES
-            (%s, %s, %s, 'SENT', NOW(), NOW(), DATE_ADD(NOW(), INTERVAL %s DAY), %s)",
+            (%s, %s, %s, 'SENT', NOW(), NOW(), DATE_ADD(NOW(), INTERVAL %s DAY), %s, %s)",
         $db->makeQueryInteger($siteID),
         $db->makeQueryInteger($candidateID),
         $db->makeQueryString($tokenHash),
         $db->makeQueryInteger(GDPR_CONSENT_LINK_DAYS),
-        $db->makeQueryInteger($userID)
+        $db->makeQueryInteger($userID),
+        $db->makeQueryString($emailHash)
     ));
 
     $newRequestID = $db->getLastInsertID();
@@ -379,6 +395,13 @@ if ($action === 'sendCandidate')
     {
         logGdprEvent('sendCandidate: missing email', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate email is missing.');
+        die();
+    }
+
+    if (!empty($candidateRow['gdprSigned']))
+    {
+        logGdprEvent('sendCandidate: gdpr already signed', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
+        $interface->outputXMLErrorPage(-1, 'GDPR already signed.');
         die();
     }
 
@@ -498,6 +521,7 @@ if ($action === 'resend')
         die();
     }
 
+    $emailHash = hash('sha256', strtolower(trim($request['email1'])));
     $token = bin2hex(random_bytes(16));
     $tokenHash = hash('sha256', $token);
     $link = CATSUtility::getAbsoluteURI('gdpr/consent.php?t=' . $token);
@@ -509,13 +533,15 @@ if ($action === 'resend')
             status = 'SENT',
             email_sent_at = NOW(),
             expires_at = IF(expires_at IS NULL OR expires_at <= NOW(), DATE_ADD(NOW(), INTERVAL %s DAY), expires_at),
-            sent_by_user_id = %s
+            sent_by_user_id = %s,
+            email_to_hash = %s
          WHERE
             request_id = %s
             AND site_id = %s",
         $db->makeQueryString($tokenHash),
         $db->makeQueryInteger(GDPR_CONSENT_LINK_DAYS),
         $db->makeQueryInteger($userID),
+        $db->makeQueryString($emailHash),
         $db->makeQueryInteger($requestID),
         $db->makeQueryInteger($siteID)
     ));

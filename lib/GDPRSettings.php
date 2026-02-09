@@ -8,6 +8,7 @@
 class GDPRSettings
 {
     const SETTING_KEY = 'gdprExpirationYears';
+    const SETTING_FROM_ADDRESS = 'gdprConsentFromAddress';
 
     private static $_schemaChecked = false;
 
@@ -61,7 +62,8 @@ class GDPRSettings
     public function getAll()
     {
         $settings = array(
-            self::SETTING_KEY => '2'
+            self::SETTING_KEY => '2',
+            self::SETTING_FROM_ADDRESS => ''
         );
 
         $sql = sprintf(
@@ -85,6 +87,9 @@ class GDPRSettings
             if ($row['setting'] == self::SETTING_KEY) {
                 $settings[self::SETTING_KEY] = $row['value'];
                 $hasExpirationSetting = true;
+            }
+            else if ($row['setting'] == self::SETTING_FROM_ADDRESS) {
+                $settings[self::SETTING_FROM_ADDRESS] = $row['value'];
             }
         }
 
