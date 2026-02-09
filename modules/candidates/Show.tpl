@@ -448,6 +448,20 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 <td class="vertical">Latest Request Status:</td>
                                 <td class="data"><?php $this->_($this->gdprLatestRequest['status']); ?></td>
                             </tr>
+                            <?php if (!empty($this->gdprLegacyConsent)): ?>
+                                <tr>
+                                    <td class="vertical">Legacy Proof:</td>
+                                    <td class="data">
+                                        <?php if (!empty($this->gdprLegacyProof['link'])): ?>
+                                            <a href="<?php echo(htmlspecialchars($this->gdprLegacyProof['link'], ENT_QUOTES)); ?>" target="_blank">
+                                                <?php echo(!empty($this->gdprLegacyProof['fileName']) ? htmlspecialchars($this->gdprLegacyProof['fileName']) : 'View PDF'); ?>
+                                            </a>
+                                        <?php else: ?>
+                                            --
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                             <tr>
                                 <td class="vertical">Request Created:</td>
                                 <td class="data"><?php $this->_($this->gdprLatestRequest['createdAt']); ?></td>
@@ -473,6 +487,11 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         <?php if (!empty($this->gdprLegacyConsent)): ?>
                             <div class="ui2-ai-status" style="margin-top: 8px;">
                                 Legacy consent recorded in candidate profile (no request record).
+                            </div>
+                        <?php endif; ?>
+                        <?php if (!empty($this->gdprLegacyProofWarning)): ?>
+                            <div class="ui2-ai-status" style="margin-top: 8px; color: #b00000; border-left-color: #b00000;">
+                                Signed = Yes but no proof attachment on file - action required.
                             </div>
                         <?php endif; ?>
                         <div id="gdprCandidateStatus" class="ui2-ai-status" style="margin-top: 8px; <?php if (empty($this->gdprFlashMessage)) echo 'display: none;'; ?>">

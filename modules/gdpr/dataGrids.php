@@ -33,6 +33,7 @@ class GDPRRequestsDataGrid extends DataGrid
             array('name' => 'Accepted IP', 'width' => 110),
             array('name' => 'Lang', 'width' => 60),
             array('name' => 'Notice Hash', 'width' => 110),
+            array('name' => 'Proof', 'width' => 120),
             array('name' => 'Deleted', 'width' => 80),
             array('name' => 'Latest', 'width' => 60),
             array('name' => 'Actions', 'width' => 260)
@@ -45,7 +46,14 @@ class GDPRRequestsDataGrid extends DataGrid
             $isLatest = ($rsData['isLatest'] == 1);
             $hasCandidate = !empty($rsData['candidateExists']);
             $isExpired = ($rsData['isExpired'] == 1);
-            if ($isLatest && $hasCandidate)
+            if ($rsData['isLegacy'] == 1)
+            {
+                if ($hasCandidate)
+                {
+                    $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="GDPRRequests.actionCandidate(\'createLegacy\', ' . $rsData['candidateID'] . ');">Create New</a>';
+                }
+            }
+            else if ($isLatest && $hasCandidate)
             {
                 if (in_array($rsData['status'], array('CREATED', 'SENT')) && !$isExpired)
                 {
@@ -58,7 +66,7 @@ class GDPRRequestsDataGrid extends DataGrid
                     $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="GDPRRequests.action(\'delete\', ' . $rsData['requestID'] . ');">Delete Candidate Data</a>';
                 }
             }
-            if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_MULTI_SA)
+            if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_MULTI_SA && $rsData['isLegacy'] != 1 && !empty($rsData['requestID']))
             {
                 $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="GDPRRequests.action(\'deleteRequest\', ' . $rsData['requestID'] . ');">Delete (test)</a>';
             }
@@ -83,7 +91,7 @@ EOT;
                 'pagerWidth' => 200
             ),
             'Status' => array(
-                'pagerRender' => '$label = $rsData[\'status\']; if ($rsData[\'isExpired\'] == 1 && ($rsData[\'status\'] == \'CREATED\' || $rsData[\'status\'] == \'SENT\')) { $label = \'EXPIRED\'; } return $label;',
+                'pagerRender' => '$label = $rsData[\'status\']; if ($rsData[\'isExpired\'] == 1 && ($rsData[\'status\'] == \'CREATED\' || $rsData[\'status\'] == \'SENT\')) { $label = \'EXPIRED\'; } if ($rsData[\'status\'] == \'LEGACY\') { $needsAction = ($rsData[\'legacyProofStatus\'] == \'PROOF_MISSING\' || $rsData[\'legacyProofStatus\'] == \'UNKNOWN\'); if ($needsAction) { $label .= \' <span style="color:#b00000; font-weight:bold;">Action required</span>\'; } } return $label;',
                 'sortableColumn' => 'status',
                 'pagerWidth' => 90
             ),
@@ -103,7 +111,7 @@ EOT;
                 'pagerWidth' => 80
             ),
             'Decision' => array(
-                'pagerRender' => 'if (!empty($rsData[\'acceptedAt\'])) { return \'Accepted \' . $rsData[\'acceptedAt\']; } if (!empty($rsData[\'declinedAt\'])) { return \'Declined \' . $rsData[\'declinedAt\']; } return \'--\';',
+                'pagerRender' => 'if ($rsData[\'status\'] == \'LEGACY\') { if ($rsData[\'legacyProofStatus\'] == \'PROOF_FOUND\') { return \'Legacy (proof attached)\'; } return \'Legacy (no proof on file)\'; } if (!empty($rsData[\'acceptedAt\'])) { return \'Accepted \' . $rsData[\'acceptedAt\']; } if (!empty($rsData[\'declinedAt\'])) { return \'Declined \' . $rsData[\'declinedAt\']; } return \'--\';',
                 'sortableColumn' => 'decisionSort',
                 'pagerWidth' => 110
             ),
@@ -127,6 +135,11 @@ EOT;
                 'pagerRender' => 'if (empty($rsData[\'noticeVersion\'])) { return \'--\'; } $full = $rsData[\'noticeVersion\']; $short = substr($full, 0, 8); if (strlen($full) > 8) { $short .= \'...\'; } return \'<span title="\' . htmlspecialchars($full) . \'">\' . htmlspecialchars($short) . \'</span>\';',
                 'sortableColumn' => 'noticeVersion',
                 'pagerWidth' => 110
+            ),
+            'Proof' => array(
+                'pagerRender' => 'if (!empty($rsData[\'proofAttachmentID\']) && !empty($rsData[\'proofDirName\'])) { $hash = md5($rsData[\'proofDirName\']); $label = !empty($rsData[\'proofFilename\']) ? htmlspecialchars($rsData[\'proofFilename\']) : \'View PDF\'; return \'<a href="\' . CATSUtility::getIndexName() . \'?m=attachments&amp;a=getAttachment&amp;id=\' . $rsData[\'proofAttachmentID\'] . \'&amp;directoryNameHash=\' . urlencode($hash) . \'" target="_blank">\' . $label . \'</a>\'; } return \'--\';',
+                'sortableColumn' => 'proofAttachmentID',
+                'pagerWidth' => 120
             ),
             'Deleted' => array(
                 'pagerRender' => 'return !empty($rsData[\'deletedAtFormatted\']) ? $rsData[\'deletedAtFormatted\'] : \'--\';',
@@ -154,15 +167,31 @@ EOT;
     {
         $db = DatabaseConnection::getInstance();
 
-        $filters = array();
+        $filtersRequest = array();
+        $filtersLegacy = array();
+        $includeRequests = true;
+        $includeLegacy = true;
 
         if (isset($_GET['status']) && $_GET['status'] !== '')
         {
             $status = trim($_GET['status']);
-            $allowed = array('CREATED', 'SENT', 'ACCEPTED', 'DECLINED', 'EXPIRED', 'CANCELED');
+            $allowed = array('CREATED', 'SENT', 'ACCEPTED', 'DECLINED', 'EXPIRED', 'CANCELED', 'LEGACY');
             if (in_array($status, $allowed, true))
             {
-                $filters[] = 'r.status = ' . $db->makeQueryString($status);
+                if ($status === 'LEGACY')
+                {
+                    $includeRequests = false;
+                }
+                else if ($status === 'EXPIRED')
+                {
+                    $includeLegacy = false;
+                    $filtersRequest[] = "(r.status IN ('CREATED','SENT') AND r.expires_at IS NOT NULL AND r.expires_at <= NOW())";
+                }
+                else
+                {
+                    $includeLegacy = false;
+                    $filtersRequest[] = 'r.status = ' . $db->makeQueryString($status);
+                }
             }
         }
 
@@ -171,7 +200,8 @@ EOT;
             $days = (int) $_GET['expiring'];
             if ($days > 0)
             {
-                $filters[] = sprintf(
+                $includeLegacy = false;
+                $filtersRequest[] = sprintf(
                     '(r.expires_at IS NOT NULL AND r.expires_at > NOW() AND r.expires_at <= DATE_ADD(NOW(), INTERVAL %s DAY))',
                     $db->makeQueryInteger($days)
                 );
@@ -182,37 +212,56 @@ EOT;
         {
             $search = trim($_GET['search']);
             $searchSQL = $db->makeQueryString('%' . $search . '%');
-            $filters[] = '(CONCAT(c.first_name, \' \', c.last_name) LIKE ' . $searchSQL . ' OR c.email1 LIKE ' . $searchSQL . ')';
+            $searchFilter = '(CONCAT(c.first_name, \' \', c.last_name) LIKE ' . $searchSQL . ' OR c.email1 LIKE ' . $searchSQL . ')';
+            $filtersRequest[] = $searchFilter;
+            $filtersLegacy[] = $searchFilter;
         }
 
         if (isset($_GET['needsDeletion']) && $_GET['needsDeletion'] !== '')
         {
-            $filters[] = '(latest.latestRequestID = r.request_id AND r.status = \'DECLINED\' AND r.deleted_at IS NULL AND c.candidate_id IS NOT NULL)';
+            $includeLegacy = false;
+            $filtersRequest[] = '(latest.latestRequestID = r.request_id AND r.status = \'DECLINED\' AND r.deleted_at IS NULL AND c.candidate_id IS NOT NULL)';
         }
 
         if (isset($_GET['candidateID']) && ctype_digit((string) $_GET['candidateID']))
         {
-            $filters[] = 'r.candidate_id = ' . $db->makeQueryInteger((int) $_GET['candidateID']);
+            $candidateID = (int) $_GET['candidateID'];
+            $filtersRequest[] = 'r.candidate_id = ' . $db->makeQueryInteger($candidateID);
+            $filtersLegacy[] = 'c.candidate_id = ' . $db->makeQueryInteger($candidateID);
         }
 
         if (isset($_GET['dateFrom']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['dateFrom']))
         {
-            $filters[] = 'r.created_at >= ' . $db->makeQueryString($_GET['dateFrom'] . ' 00:00:00');
+            $includeLegacy = false;
+            $filtersRequest[] = 'r.created_at >= ' . $db->makeQueryString($_GET['dateFrom'] . ' 00:00:00');
         }
 
         if (isset($_GET['dateTo']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['dateTo']))
         {
-            $filters[] = 'r.created_at <= ' . $db->makeQueryString($_GET['dateTo'] . ' 23:59:59');
+            $includeLegacy = false;
+            $filtersRequest[] = 'r.created_at <= ' . $db->makeQueryString($_GET['dateTo'] . ' 23:59:59');
         }
 
-        $filterSQL = '';
-        if (!empty($filters))
+        if (!$includeRequests && !$includeLegacy)
         {
-            $filterSQL = ' AND ' . implode(' AND ', $filters);
+            $includeRequests = true;
+            $filtersRequest[] = '1=0';
         }
 
-        $sql = sprintf(
-            "SELECT SQL_CALC_FOUND_ROWS %s
+        $requestFilterSQL = '';
+        if (!empty($filtersRequest))
+        {
+            $requestFilterSQL = ' AND ' . implode(' AND ', $filtersRequest);
+        }
+
+        $legacyFilterSQL = '';
+        if (!empty($filtersLegacy))
+        {
+            $legacyFilterSQL = ' AND ' . implode(' AND ', $filtersLegacy);
+        }
+
+        $requestSQL = sprintf(
+            "SELECT
                 r.request_id AS requestID,
                 r.candidate_id AS candidateID,
                 r.status AS status,
@@ -245,6 +294,12 @@ EOT;
                 latest.latestRequestID AS latestRequestID,
                 CASE WHEN latest.latestRequestID = r.request_id THEN 1 ELSE 0 END AS isLatest,
                 CASE WHEN r.expires_at IS NOT NULL AND r.expires_at <= NOW() THEN 1 ELSE 0 END AS isExpired,
+                0 AS isLegacy,
+                NULL AS legacyProofStatus,
+                NULL AS legacyProofAttachmentID,
+                NULL AS proofAttachmentID,
+                NULL AS proofDirName,
+                NULL AS proofFilename,
                 %s
             FROM
                 candidate_gdpr_requests r
@@ -263,16 +318,98 @@ EOT;
             %s
             WHERE
                 r.site_id = %s
-            %s
+            %s",
+            $selectSQL,
+            $joinSQL,
+            $this->_siteID,
+            $requestFilterSQL
+        );
+
+        $legacySQL = sprintf(
+            "SELECT
+                0 AS requestID,
+                c.candidate_id AS candidateID,
+                'LEGACY' AS status,
+                c.date_created AS createdAtSort,
+                DATE_FORMAT(c.date_created, '%%m-%%d-%%y') AS createdAt,
+                NULL AS sentAtSort,
+                NULL AS sentAt,
+                NULL AS expiresAtSort,
+                NULL AS expiresAt,
+                NULL AS acceptedAtSort,
+                NULL AS acceptedAt,
+                NULL AS acceptedIP,
+                NULL AS acceptedLang,
+                NULL AS noticeVersion,
+                NULL AS declinedAtSort,
+                NULL AS declinedAt,
+                NULL AS deletedAtSort,
+                NULL AS deletedAtFormatted,
+                c.first_name AS firstName,
+                c.last_name AS lastName,
+                c.email1 AS email1,
+                c.candidate_id AS candidateExists,
+                c.last_name AS candidateLastName,
+                c.email1 AS candidateEmail,
+                0 AS decisionSort,
+                0 AS latestRequestID,
+                1 AS isLatest,
+                0 AS isExpired,
+                1 AS isLegacy,
+                c.gdpr_legacy_proof_status AS legacyProofStatus,
+                c.gdpr_legacy_proof_attachment_id AS legacyProofAttachmentID,
+                a.attachment_id AS proofAttachmentID,
+                a.directory_name AS proofDirName,
+                a.original_filename AS proofFilename,
+                %s
+            FROM
+                candidate c
+            LEFT JOIN attachment a
+                ON a.attachment_id = c.gdpr_legacy_proof_attachment_id
+                AND a.site_id = c.site_id
+            WHERE
+                c.site_id = %s
+                AND c.gdpr_signed = 1
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM candidate_gdpr_requests r2
+                    WHERE r2.site_id = c.site_id
+                    AND r2.candidate_id = c.candidate_id
+                )
+            %s",
+            $selectSQL,
+            $this->_siteID,
+            $legacyFilterSQL
+        );
+
+        $queries = array();
+        if ($includeRequests)
+        {
+            $queries[] = $requestSQL;
+        }
+        if ($includeLegacy)
+        {
+            $queries[] = $legacySQL;
+        }
+        if (empty($queries))
+        {
+            $queries[] = $requestSQL;
+        }
+
+        $unionSQL = implode("\nUNION ALL\n", $queries);
+
+        $sql = sprintf(
+            "SELECT SQL_CALC_FOUND_ROWS %s
+                *
+            FROM (
+                %s
+            ) gdpr
             %s
             %s
             %s",
             $distinct,
-            $selectSQL,
-            $joinSQL,
-            $this->_siteID,
-            (strlen($whereSQL) > 0) ? ' AND ' . $whereSQL : '',
-            $filterSQL,
+            $unionSQL,
+            (strlen($whereSQL) > 0) ? ' WHERE ' . $whereSQL : '',
             (strlen($havingSQL) > 0) ? ' HAVING ' . $havingSQL : '',
             $orderSQL . ' ' . $limitSQL
         );

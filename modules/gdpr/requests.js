@@ -58,7 +58,7 @@ var GDPRRequests = (function ()
         status.style.color = isError ? '#b00000' : '#0f5132';
     }
 
-    function requestAction(action, requestID)
+    function requestActionWithParams(action, extraParams)
     {
         var http = AJAX_getXMLHttpObject();
         if (!http)
@@ -67,8 +67,11 @@ var GDPRRequests = (function ()
             return;
         }
 
-        var POSTData = '&action=' + urlEncode(action)
-            + '&requestID=' + urlEncode(requestID);
+        var POSTData = '&action=' + urlEncode(action);
+        if (extraParams)
+        {
+            POSTData += extraParams;
+        }
 
         var callBack = function ()
         {
@@ -108,6 +111,11 @@ var GDPRRequests = (function ()
         );
     }
 
+    function requestAction(action, requestID)
+    {
+        requestActionWithParams(action, '&requestID=' + urlEncode(requestID));
+    }
+
     function confirmAction(action)
     {
         if (action === 'delete')
@@ -125,6 +133,11 @@ var GDPRRequests = (function ()
             return confirm('Expire this request now?');
         }
 
+        if (action === 'scanLegacy')
+        {
+            return confirm('Scan legacy GDPR proofs now? This may take some time.');
+        }
+
         return true;
     }
 
@@ -136,6 +149,26 @@ var GDPRRequests = (function ()
         }
 
         requestAction(actionName, requestID);
+    }
+
+    function actionCandidate(actionName, candidateID)
+    {
+        if (!confirmAction(actionName))
+        {
+            return;
+        }
+
+        requestActionWithParams(actionName, '&candidateID=' + urlEncode(candidateID));
+    }
+
+    function scanLegacy()
+    {
+        if (!confirmAction('scanLegacy'))
+        {
+            return;
+        }
+
+        requestActionWithParams('scanLegacy', '');
     }
 
     function configure(newConfig)
@@ -153,6 +186,8 @@ var GDPRRequests = (function ()
 
     return {
         configure: configure,
-        action: action
+        action: action,
+        actionCandidate: actionCandidate,
+        scanLegacy: scanLegacy
     };
 })();

@@ -531,6 +531,13 @@ class CandidatesUI extends UserInterface
         $gdprSendDisabled = false;
         $gdprSendDisabledReason = '';
         $gdprLegacyConsent = false;
+        $gdprLegacyProof = array(
+            'status' => 'UNKNOWN',
+            'attachmentID' => 0,
+            'link' => '',
+            'fileName' => ''
+        );
+        $gdprLegacyProofWarning = false;
 
         $db = DatabaseConnection::getInstance();
         $gdprLatestRequestRow = $db->getAssoc(sprintf(
@@ -584,6 +591,31 @@ class CandidatesUI extends UserInterface
         {
             $gdprLegacyConsent = true;
             $gdprLatestRequest['status'] = 'LEGACY (Signed)';
+        }
+
+        if (isset($data['gdprLegacyProofStatus']) && $data['gdprLegacyProofStatus'] !== '')
+        {
+            $gdprLegacyProof['status'] = $data['gdprLegacyProofStatus'];
+        }
+
+        if (!empty($data['gdprLegacyProofAttachmentID']))
+        {
+            $gdprLegacyProof['attachmentID'] = (int) $data['gdprLegacyProofAttachmentID'];
+            $attachmentsLookup = new Attachments($this->_siteID);
+            $proofAttachment = $attachmentsLookup->get($gdprLegacyProof['attachmentID']);
+            if (!empty($proofAttachment) && !empty($proofAttachment['retrievalURL']))
+            {
+                $gdprLegacyProof['link'] = $proofAttachment['retrievalURL'];
+                $gdprLegacyProof['fileName'] = $proofAttachment['originalFilename'];
+            }
+        }
+
+        if (!$gdprLatestRequest['hasRequest'] && (int) $data['gdprSigned'] === 1)
+        {
+            if ($gdprLegacyProof['status'] === 'PROOF_MISSING' || $gdprLegacyProof['status'] === 'UNKNOWN')
+            {
+                $gdprLegacyProofWarning = true;
+            }
         }
 
         if ($gdprDeletionRequired)
@@ -782,6 +814,8 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('gdprSendDisabled', $gdprSendDisabled);
         $this->_template->assign('gdprSendDisabledReason', $gdprSendDisabledReason);
         $this->_template->assign('gdprLegacyConsent', $gdprLegacyConsent);
+        $this->_template->assign('gdprLegacyProof', $gdprLegacyProof);
+        $this->_template->assign('gdprLegacyProofWarning', $gdprLegacyProofWarning);
         $this->_template->assign('gdprFlashMessage', $gdprFlashMessage);
 
         $this->_template->display('./modules/candidates/Show.tpl');

@@ -18,6 +18,21 @@ if (!defined('GDPR_CONSENT_LINK_DAYS'))
     define('GDPR_CONSENT_LINK_DAYS', 30);
 }
 
+if (!defined('GDPR_LEGACY_PROOF_PATTERNS'))
+{
+    define('GDPR_LEGACY_PROOF_PATTERNS', array('acord prelucrare', 'gdpr', 'consent', 'prelucrare date'));
+}
+
+function getLegacyProofPatterns()
+{
+    if (defined('GDPR_LEGACY_PROOF_PATTERNS') && is_array(GDPR_LEGACY_PROOF_PATTERNS))
+    {
+        return GDPR_LEGACY_PROOF_PATTERNS;
+    }
+
+    return array('acord prelucrare', 'gdpr', 'consent', 'prelucrare date');
+}
+
 $interface = new SecureAJAXInterface();
 
 if ($_SESSION['CATS']->getAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
@@ -435,6 +450,157 @@ if ($action === 'sendCandidate')
 
     logGdprEvent('sendCandidate: success', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
     $interface->outputXMLSuccessPage('Sent.');
+    die();
+}
+
+if ($action === 'createLegacy')
+{
+    logGdprEvent('createLegacy: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID));
+    if (!$interface->isRequiredIDValid('candidateID'))
+    {
+        logGdprEvent('createLegacy: invalid candidate ID', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID));
+        $interface->outputXMLErrorPage(-1, 'Invalid candidate ID.');
+        die();
+    }
+
+    $candidateID = (int) $_REQUEST['candidateID'];
+    $candidateRow = fetchCandidateRow($db, $siteID, $candidateID);
+    if (empty($candidateRow))
+    {
+        logGdprEvent('createLegacy: candidate not found', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
+        $interface->outputXMLErrorPage(-1, 'Candidate not found.');
+        die();
+    }
+
+    if (empty($candidateRow['email1']))
+    {
+        logGdprEvent('createLegacy: missing email', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
+        $interface->outputXMLErrorPage(-1, 'Candidate email is missing.');
+        die();
+    }
+
+    list($emailSent, $errorMessage) = createNewRequestAndSend(
+        $db,
+        $siteID,
+        $userID,
+        $candidateID,
+        $candidateRow['email1'],
+        $candidateRow['firstName'],
+        $candidateRow['lastName']
+    );
+
+    if (!$emailSent)
+    {
+        logGdprEvent('createLegacy: email send failed', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID, 'error' => $errorMessage));
+        $interface->outputXMLErrorPage(-1, $errorMessage);
+        die();
+    }
+
+    logGdprEvent('createLegacy: success', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
+    $interface->outputXMLSuccessPage('Sent.');
+    die();
+}
+
+if ($action === 'scanLegacy')
+{
+    logGdprEvent('scanLegacy: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID));
+
+    $patterns = getLegacyProofPatterns();
+    $patternClauses = array();
+    foreach ($patterns as $pattern)
+    {
+        $pattern = strtolower(trim($pattern));
+        if ($pattern === '')
+        {
+            continue;
+        }
+        $like = $db->makeQueryString('%' . $pattern . '%');
+        $patternClauses[] = 'LOWER(a.original_filename) LIKE ' . $like;
+        $patternClauses[] = 'LOWER(a.title) LIKE ' . $like;
+    }
+
+    if (empty($patternClauses))
+    {
+        $interface->outputXMLErrorPage(-1, 'No patterns configured.');
+        die();
+    }
+
+    $candidates = $db->getAllAssoc(sprintf(
+        "SELECT
+            candidate_id AS candidateID
+         FROM
+            candidate
+         WHERE
+            site_id = %s
+            AND gdpr_signed = 1
+            AND (gdpr_legacy_proof_status IS NULL OR gdpr_legacy_proof_status = 'UNKNOWN')",
+        $db->makeQueryInteger($siteID)
+    ));
+
+    $scanned = 0;
+    $found = 0;
+    $missing = 0;
+
+    foreach ($candidates as $row)
+    {
+        $candidateID = (int) $row['candidateID'];
+        $scanned++;
+
+        $attachmentRow = $db->getAssoc(sprintf(
+            "SELECT
+                a.attachment_id AS attachmentID
+             FROM
+                attachment a
+             WHERE
+                a.site_id = %s
+                AND a.data_item_type = %s
+                AND a.data_item_id = %s
+                AND LOWER(a.original_filename) LIKE '%%.pdf'
+                AND (%s)
+             ORDER BY
+                a.date_created DESC
+             LIMIT 1",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryInteger(DATA_ITEM_CANDIDATE),
+            $db->makeQueryInteger($candidateID),
+            implode(' OR ', $patternClauses)
+        ));
+
+        if (!empty($attachmentRow) && !empty($attachmentRow['attachmentID']))
+        {
+            $found++;
+            $db->query(sprintf(
+                "UPDATE candidate
+                 SET
+                    gdpr_legacy_proof_status = 'PROOF_FOUND',
+                    gdpr_legacy_proof_attachment_id = %s
+                 WHERE
+                    candidate_id = %s
+                    AND site_id = %s",
+                $db->makeQueryInteger($attachmentRow['attachmentID']),
+                $db->makeQueryInteger($candidateID),
+                $db->makeQueryInteger($siteID)
+            ));
+        }
+        else
+        {
+            $missing++;
+            $db->query(sprintf(
+                "UPDATE candidate
+                 SET
+                    gdpr_legacy_proof_status = 'PROOF_MISSING',
+                    gdpr_legacy_proof_attachment_id = NULL
+                 WHERE
+                    candidate_id = %s
+                    AND site_id = %s",
+                $db->makeQueryInteger($candidateID),
+                $db->makeQueryInteger($siteID)
+            ));
+        }
+    }
+
+    logGdprEvent('scanLegacy: complete', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'scanned' => $scanned, 'found' => $found, 'missing' => $missing));
+    $interface->outputXMLSuccessPage(sprintf('Scan complete. Scanned %d, proof found %d, missing %d.', $scanned, $found, $missing));
     die();
 }
 

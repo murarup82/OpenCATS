@@ -1685,6 +1685,24 @@ class CATSSchema
                     $db->query("ALTER TABLE candidate_gdpr_requests ADD COLUMN email_to_hash CHAR(64) DEFAULT NULL");
                 }
             ',
+            '374' => 'PHP:
+                $columns = $db->getAllAssoc("SHOW COLUMNS FROM candidate");
+                $columnNames = array();
+                foreach ($columns as $column)
+                {
+                    $columnNames[$column["Field"]] = true;
+                }
+
+                if (!isset($columnNames["gdpr_legacy_proof_attachment_id"]))
+                {
+                    $db->query("ALTER TABLE candidate ADD COLUMN gdpr_legacy_proof_attachment_id INT(11) DEFAULT NULL");
+                }
+
+                if (!isset($columnNames["gdpr_legacy_proof_status"]))
+                {
+                    $db->query("ALTER TABLE candidate ADD COLUMN gdpr_legacy_proof_status ENUM('UNKNOWN','PROOF_FOUND','PROOF_MISSING') NOT NULL DEFAULT 'UNKNOWN'");
+                }
+            ',
 
         );
     }

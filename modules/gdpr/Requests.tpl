@@ -30,6 +30,7 @@
                     <div class="ui2-inline">
                         <button type="button" class="ui2-button" onclick="gdprExport('csv');">Export CSV</button>
                         <button type="button" class="ui2-button ui2-button--secondary" onclick="gdprExport('pdf');">Export PDF</button>
+                        <button type="button" class="ui2-button ui2-button--secondary" onclick="gdprScanLegacy();">Scan Legacy Proofs</button>
                     </div>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
@@ -105,6 +106,12 @@
         actionField.value = prevAction;
         formatField.value = '';
         form.target = prevTarget;
+    }
+
+    function gdprScanLegacy()
+    {
+        if (typeof GDPRRequests === 'undefined') return;
+        GDPRRequests.scanLegacy();
     }
 </script>
 <?php TemplateUtility::printFooter(); ?>

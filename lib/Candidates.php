@@ -563,6 +563,8 @@ class Candidates
                     candidate.gdpr_expiration_date, '%%m-%%d-%%y'
                 ) AS gdprExpirationDate,
                 candidate.gdpr_expiration_date AS gdprExpirationDateISO,
+                candidate.gdpr_legacy_proof_status AS gdprLegacyProofStatus,
+                candidate.gdpr_legacy_proof_attachment_id AS gdprLegacyProofAttachmentID,
                 candidate.is_admin_hidden AS isAdminHidden,
                 DATE_FORMAT(
                     candidate.date_created, '%%m-%%d-%%y (%%h:%%i %%p)'
