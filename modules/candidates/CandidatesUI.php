@@ -598,9 +598,72 @@ class CandidatesUI extends UserInterface
             $gdprLegacyProof['status'] = $data['gdprLegacyProofStatus'];
         }
 
+        if ($gdprLegacyProof['status'] === 'PROOF_FOUND' && empty($data['gdprLegacyProofAttachmentID']))
+        {
+            $gdprLegacyProof['status'] = 'UNKNOWN';
+        }
+
+        if (!$gdprLatestRequest['hasRequest'] && (int) $data['gdprSigned'] === 1)
+        {
+            if ($gdprLegacyProof['status'] === 'UNKNOWN' || $gdprLegacyProof['status'] === '')
+            {
+                $legacyMatch = $this->findLegacyGdprProofAttachment($candidateID);
+                if (!empty($legacyMatch['attachmentID']))
+                {
+                    $gdprLegacyProof['status'] = 'PROOF_FOUND';
+                    $gdprLegacyProof['attachmentID'] = (int) $legacyMatch['attachmentID'];
+
+                    $db->query(sprintf(
+                        "UPDATE candidate
+                         SET
+                            gdpr_legacy_proof_status = 'PROOF_FOUND',
+                            gdpr_legacy_proof_attachment_id = %s
+                         WHERE
+                            candidate_id = %s
+                            AND site_id = %s",
+                        $db->makeQueryInteger($gdprLegacyProof['attachmentID']),
+                        $db->makeQueryInteger($candidateID),
+                        $db->makeQueryInteger($this->_siteID)
+                    ));
+                }
+                else
+                {
+                    $gdprLegacyProof['status'] = 'PROOF_MISSING';
+                    $gdprLegacyProof['attachmentID'] = 0;
+
+                    $db->query(sprintf(
+                        "UPDATE candidate
+                         SET
+                            gdpr_legacy_proof_status = 'PROOF_MISSING',
+                            gdpr_legacy_proof_attachment_id = NULL
+                         WHERE
+                            candidate_id = %s
+                            AND site_id = %s",
+                        $db->makeQueryInteger($candidateID),
+                        $db->makeQueryInteger($this->_siteID)
+                    ));
+                }
+
+                if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
+                {
+                    error_log('GDPR legacy proof lookup | ' . json_encode(array(
+                        'candidateID' => $candidateID,
+                        'attachments' => $legacyMatch['attachments'],
+                        'normalized' => $legacyMatch['normalized'],
+                        'matchedFilename' => $legacyMatch['matchedFilename'],
+                        'matchedPattern' => $legacyMatch['matchedPattern']
+                    )));
+                }
+            }
+        }
+
         if (!empty($data['gdprLegacyProofAttachmentID']))
         {
             $gdprLegacyProof['attachmentID'] = (int) $data['gdprLegacyProofAttachmentID'];
+        }
+
+        if (!empty($gdprLegacyProof['attachmentID']))
+        {
             $attachmentsLookup = new Attachments($this->_siteID);
             $proofAttachment = $attachmentsLookup->get($gdprLegacyProof['attachmentID']);
             if (!empty($proofAttachment) && !empty($proofAttachment['retrievalURL']))
@@ -1040,6 +1103,97 @@ class CandidatesUI extends UserInterface
 
         $format = $_SESSION['CATS']->isDateDMY() ? 'd-m-Y' : 'm-d-Y';
         return DateUtility::getAdjustedDate($format, $timestamp);
+    }
+
+    private function normalizeLegacyGdprText($value)
+    {
+        $value = strtolower(trim($value));
+
+        $map = array(
+            'ă' => 'a', 'â' => 'a', 'î' => 'i', 'ș' => 's', 'ş' => 's', 'ț' => 't', 'ţ' => 't',
+            'á' => 'a', 'à' => 'a', 'ä' => 'a', 'ã' => 'a', 'å' => 'a',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'í' => 'i', 'ì' => 'i', 'ï' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'ö' => 'o', 'ô' => 'o', 'õ' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'ü' => 'u',
+            'ç' => 'c'
+        );
+
+        $value = strtr($value, $map);
+        $value = str_replace(array('_', '-'), ' ', $value);
+        $value = preg_replace('/\s+/', ' ', $value);
+
+        return trim($value);
+    }
+
+    private function findLegacyGdprProofAttachment($candidateID)
+    {
+        $db = DatabaseConnection::getInstance();
+        $siteID = $this->_siteID;
+
+        $sql = sprintf(
+            "SELECT
+                attachment_id AS attachmentID,
+                original_filename AS originalFilename
+             FROM
+                attachment
+             WHERE
+                site_id = %s
+                AND data_item_type = %s
+                AND data_item_id = %s
+                AND LOWER(original_filename) LIKE '%%.pdf'
+             ORDER BY
+                date_created DESC",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryInteger(DATA_ITEM_CANDIDATE),
+            $db->makeQueryInteger($candidateID)
+        );
+
+        $rows = $db->getAllAssoc($sql);
+        $patterns = array('acord prelucrare', 'gdpr', 'consent', 'prelucrare date');
+
+        $normalizedPatterns = array();
+        foreach ($patterns as $pattern)
+        {
+            $normalizedPatterns[] = $this->normalizeLegacyGdprText($pattern);
+        }
+
+        $matchedAttachmentID = 0;
+        $matchedFilename = '';
+        $matchedPattern = '';
+        $attachmentNames = array();
+        $normalizedNames = array();
+
+        foreach ($rows as $row)
+        {
+            if (empty($row['originalFilename']))
+            {
+                continue;
+            }
+
+            $attachmentNames[] = $row['originalFilename'];
+            $normalizedName = $this->normalizeLegacyGdprText($row['originalFilename']);
+            $normalizedNames[] = $normalizedName;
+
+            foreach ($normalizedPatterns as $pattern)
+            {
+                if ($pattern !== '' && strpos($normalizedName, $pattern) !== false)
+                {
+                    $matchedAttachmentID = (int) $row['attachmentID'];
+                    $matchedFilename = $row['originalFilename'];
+                    $matchedPattern = $pattern;
+                    break 2;
+                }
+            }
+        }
+
+        return array(
+            'attachmentID' => $matchedAttachmentID,
+            'matchedFilename' => $matchedFilename,
+            'matchedPattern' => $matchedPattern,
+            'attachments' => $attachmentNames,
+            'normalized' => $normalizedNames
+        );
     }
 
     public function checkParsingFunctions()

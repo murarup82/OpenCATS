@@ -355,7 +355,7 @@ class GDPRUI extends UserInterface
                 $pdf->Ln(2);
             }
 
-            $pdf->Output('D', 'gdpr_audit_report.pdf');
+            $pdf->Output('gdpr_audit_report.pdf', 'D');
             exit;
         }
 
