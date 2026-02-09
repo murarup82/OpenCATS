@@ -32,7 +32,7 @@ class GDPRRequestsDataGrid extends DataGrid
             array('name' => 'Accepted', 'width' => 80),
             array('name' => 'Accepted IP', 'width' => 110),
             array('name' => 'Lang', 'width' => 60),
-            array('name' => 'Notice Ver', 'width' => 110),
+            array('name' => 'Notice Hash', 'width' => 110),
             array('name' => 'Deleted', 'width' => 80),
             array('name' => 'Latest', 'width' => 60),
             array('name' => 'Actions', 'width' => 260)
@@ -113,7 +113,8 @@ EOT;
                 'pagerWidth' => 80
             ),
             'Accepted IP' => array(
-                'pagerRender' => 'return !empty($rsData[\'acceptedIP\']) ? htmlspecialchars($rsData[\'acceptedIP\']) : \'--\';',
+                'pagerRender' => '$ip = trim($rsData[\'acceptedIP\']); if ($ip === \'\') { return \'--\'; } if (strpos($ip, \'.\') !== false) { $parts = explode(\'.\', $ip); if (count($parts) === 4) { $parts[3] = \'xxx\'; return htmlspecialchars(implode(\'.\', $parts)); } } if (strpos($ip, \':\') !== false) { $parts = explode(\':\', $ip); $parts[count($parts) - 1] = \'xxxx\'; return htmlspecialchars(implode(\':\', $parts)); } return htmlspecialchars($ip);',
+                'exportRender' => 'return $rsData[\'acceptedIP\'];',
                 'sortableColumn' => 'acceptedIP',
                 'pagerWidth' => 110
             ),
@@ -122,7 +123,7 @@ EOT;
                 'sortableColumn' => 'acceptedLang',
                 'pagerWidth' => 60
             ),
-            'Notice Ver' => array(
+            'Notice Hash' => array(
                 'pagerRender' => 'if (empty($rsData[\'noticeVersion\'])) { return \'--\'; } $full = $rsData[\'noticeVersion\']; $short = substr($full, 0, 8); if (strlen($full) > 8) { $short .= \'...\'; } return \'<span title="\' . htmlspecialchars($full) . \'">\' . htmlspecialchars($short) . \'</span>\';',
                 'sortableColumn' => 'noticeVersion',
                 'pagerWidth' => 110
@@ -187,6 +188,21 @@ EOT;
         if (isset($_GET['needsDeletion']) && $_GET['needsDeletion'] !== '')
         {
             $filters[] = '(latest.latestRequestID = r.request_id AND r.status = \'DECLINED\' AND r.deleted_at IS NULL AND c.candidate_id IS NOT NULL)';
+        }
+
+        if (isset($_GET['candidateID']) && ctype_digit((string) $_GET['candidateID']))
+        {
+            $filters[] = 'r.candidate_id = ' . $db->makeQueryInteger((int) $_GET['candidateID']);
+        }
+
+        if (isset($_GET['dateFrom']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['dateFrom']))
+        {
+            $filters[] = 'r.created_at >= ' . $db->makeQueryString($_GET['dateFrom'] . ' 00:00:00');
+        }
+
+        if (isset($_GET['dateTo']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['dateTo']))
+        {
+            $filters[] = 'r.created_at <= ' . $db->makeQueryString($_GET['dateTo'] . ' 23:59:59');
         }
 
         $filterSQL = '';
