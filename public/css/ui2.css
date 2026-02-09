@@ -1290,3 +1290,147 @@
 .ui2 img[src*="calendar.gif"] {
     vertical-align: middle;
 }
+
+.ui2.ui2-login {
+    --avel-blue: #0b5cab;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f6f8fb;
+    padding: 24px;
+}
+
+.ui2.ui2-login #contents,
+.ui2.ui2-login #login {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    text-align: left;
+}
+
+.ui2.ui2-login #loginText {
+    width: 100%;
+    float: none;
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.ui2.ui2-login #formBlock {
+    float: none;
+    width: 100%;
+    height: auto;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.ui2.ui2-login #subFormBlock {
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+
+.ui2.ui2-login .ui2-login-card {
+    width: 420px;
+    max-width: 100%;
+    background: #fff;
+    border: 1px solid #e6eaf0;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.10);
+    padding: 28px;
+}
+
+.ui2.ui2-login .ui2-login-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.ui2.ui2-login .ui2-login-logo {
+    height: 44px;
+    width: auto;
+}
+
+.ui2.ui2-login .ui2-login-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0b2a3a;
+}
+
+.ui2.ui2-login .ui2-input {
+    width: 100%;
+    height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #cfd8e3;
+    border-radius: 10px;
+    font-size: 14px;
+    margin: 0 0 12px 0;
+    background: #fff;
+}
+
+.ui2.ui2-login .ui2-input:focus {
+    outline: none;
+    border-color: var(--avel-blue, #0b5cab);
+    box-shadow: 0 0 0 3px rgba(11, 92, 171, 0.18);
+    background: #fff;
+}
+
+.ui2.ui2-login .ui2-btn {
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.ui2.ui2-login .ui2-btn-primary {
+    background: var(--avel-blue, #0b5cab);
+    color: #fff;
+}
+
+.ui2.ui2-login .ui2-btn-primary:hover {
+    filter: brightness(0.95);
+}
+
+.ui2.ui2-login .ui2-btn-secondary {
+    background: #fff;
+    border-color: #cfd8e3;
+    color: #0b2a3a;
+}
+
+.ui2.ui2-login .ui2-login-card .version {
+    color: #6b7a90;
+    font-size: 12px;
+    display: inline-block;
+    margin-top: 8px;
+}
+
+.ui2.ui2-login .ui2-login-error {
+    background: #fff5f5;
+    border: 1px solid #ffd6d6;
+    color: #8a1f1f;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+
+.ui2.ui2-login .ui2-login-footer {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 12px;
+    color: #6b7a90;
+}
+
+.ui2.ui2-login .ui2-login-footer a {
+    color: var(--avel-blue, #0b5cab);
+    text-decoration: none;
+}
+
+.ui2.ui2-login .ui2-login-footer a:hover {
+    text-decoration: underline;
+}
