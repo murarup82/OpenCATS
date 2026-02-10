@@ -13,6 +13,18 @@
     $hideScheduleEvent = true;
 ?>
 
+<?php if (!empty($this->refreshParentOnClose)): ?>
+<script type="text/javascript">
+    window.onunload = function ()
+    {
+        if (window.parent && window.parent.location)
+        {
+            window.parent.location.reload();
+        }
+    };
+</script>
+<?php endif; ?>
+
 <?php if (!$this->isFinishedMode): ?>
 
 <script type="text/javascript">
@@ -112,6 +124,9 @@
     <form name="changePipelineStatusForm" id="changePipelineStatusForm" action="<?php echo(CATSUtility::getIndexName()); ?>?m=<?php if ($this->isJobOrdersMode): ?>joborders<?php else: ?>candidates<?php endif; ?>&amp;a=addActivityChangeStatus<?php if ($this->onlyScheduleEvent): ?>&amp;onlyScheduleEvent=true<?php endif; ?>" method="post" onsubmit="return checkActivityForm(document.changePipelineStatusForm);" autocomplete="off">
         <input type="hidden" name="postback" id="postback" value="postback" />
         <input type="hidden" id="candidateID" name="candidateID" value="<?php echo($this->candidateID); ?>" />
+        <?php if (!empty($this->enforceOwner)): ?>
+        <input type="hidden" id="enforceOwner" name="enforceOwner" value="1" />
+        <?php endif; ?>
 <?php if ($this->isJobOrdersMode): ?>
         <input type="hidden" id="regardingID" name="regardingID" value="<?php echo($this->selectedJobOrderID); ?>" />
 <?php endif; ?>

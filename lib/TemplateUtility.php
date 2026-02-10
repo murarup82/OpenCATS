@@ -1043,6 +1043,7 @@ class TemplateUtility
         echo '</div>', "\n";
         $iconMap = array(
             'home' => 'home',
+            'dashboard' => 'home',
             'candidates' => 'candidates',
             'joborders' => 'joborders',
             'companies' => 'companies',
@@ -1079,7 +1080,7 @@ class TemplateUtility
         }
 
         $groups = array(
-            array('label' => 'Overview', 'modules' => array('home', 'activity')),
+            array('label' => 'Overview', 'modules' => array('home', 'dashboard', 'activity')),
             array('label' => 'Core Recruiting', 'modules' => array('candidates', 'joborders', 'companies', 'contacts')),
             array('label' => 'Sourcing & Lists', 'modules' => array('sourcing', 'lists')),
             array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports')),

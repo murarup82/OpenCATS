@@ -3294,6 +3294,19 @@ class CandidatesUI extends UserInterface
         }
 
         $candidateID = $_POST['candidateID'];
+        $enforceOwner = ((int) $this->getTrimmedInput('enforceOwner', $_POST) === 1);
+
+        if ($enforceOwner && $regardingID > 0)
+        {
+            $jobOrders = new JobOrders($this->_siteID);
+            $jobOrderData = $jobOrders->get($regardingID);
+            $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+
+            if (empty($jobOrderData) || ((int) $jobOrderData['owner'] !== (int) $this->_userID && !$isAdmin))
+            {
+                $this->fatalModal('You do not have permission to change status for this job order.');
+            }
+        }
 
         if (!eval(Hooks::get('CANDIDATE_ON_ADD_ACTIVITY_CHANGE_STATUS_PRE'))) return;
 

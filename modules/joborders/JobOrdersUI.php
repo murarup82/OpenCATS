@@ -1806,6 +1806,20 @@ class JobOrdersUI extends UserInterface
 
         $candidateID = $input['candidateID'];
         $jobOrderID  = $input['jobOrderID'];
+        $enforceOwner = ((int) $this->getTrimmedInput('enforceOwner', $input) === 1);
+        $refreshParentOnClose = ((int) $this->getTrimmedInput('refreshParent', $input) === 1);
+
+        if ($enforceOwner)
+        {
+            $jobOrders = new JobOrders($this->_siteID);
+            $jobOrderData = $jobOrders->get($jobOrderID);
+            $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+
+            if (empty($jobOrderData) || ((int) $jobOrderData['owner'] !== (int) $this->_userID && !$isAdmin))
+            {
+                CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'You do not have permission to change status for this job order.');
+            }
+        }
 
         $candidates = new Candidates($this->_siteID);
         $candidateData = $candidates->get($candidateID);
@@ -1912,6 +1926,8 @@ class JobOrdersUI extends UserInterface
             $this->getOtherRejectionReasonId($rejectionReasons)
         );
         $this->_template->assign('rejectedStatusId', PIPELINE_STATUS_REJECTED);
+        $this->_template->assign('enforceOwner', $enforceOwner ? 1 : 0);
+        $this->_template->assign('refreshParentOnClose', $refreshParentOnClose ? 1 : 0);
 
         if (!eval(Hooks::get('JO_ADD_ACTIVITY_CHANGE_STATUS'))) return;
 
