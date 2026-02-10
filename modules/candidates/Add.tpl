@@ -30,12 +30,25 @@
             <table style="font-weight:bold; border: 1px solid #000; background-color: #ffed1a; padding:5px; display:none; margin-bottom:7px;" width="100%" id="candidateAlreadyInSystemTable">
                 <tr>
                     <td class="tdVertical">
-                        This profile may already be in the system.&nbsp;&nbsp;Possible duplicate candidate profile:&nbsp;&nbsp;
-                        <a href="javascript:void(0);" onclick="window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID='+candidateIsAlreadyInSystemID);">
-                            <img src="images/new_window.gif" border="0" />
-                            <img src="images/candidate_small.gif" border="0" />
-                            <span id="candidateAlreadyInSystemName"></span>
-                        </a>
+                        <div id="candidateAlreadyInSystemSimple">
+                            This profile may already be in the system.&nbsp;&nbsp;Possible duplicate candidate profile:&nbsp;&nbsp;
+                            <a href="javascript:void(0);" onclick="window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID='+candidateIsAlreadyInSystemID);">
+                                <img src="images/new_window.gif" border="0" />
+                                <img src="images/candidate_small.gif" border="0" />
+                                <span id="candidateAlreadyInSystemName"></span>
+                            </a>
+                        </div>
+                        <div id="dupCheckBanner" style="display: none;">
+                            <div id="dupCheckTitle"></div>
+                            <div id="dupCheckMessage"></div>
+                            <div id="dupCheckTable" style="display: none;"></div>
+                            <div id="dupCheckActions">
+                                <input type="button" class="button ui2-button--secondary" id="dupCheckReview" value="Review matches" />
+                                <input type="button" class="button ui2-button--primary" id="dupCheckContinue" value="Continue anyway" />
+                                <input type="button" class="button ui2-button--secondary" id="dupCheckOpenExisting" value="Open existing" />
+                                <input type="button" class="button ui2-button--secondary" id="dupCheckCancel" value="Cancel" />
+                            </div>
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -52,6 +65,7 @@
                 <?php endif; ?>
                 <input type="hidden" name="postback" id="postback" value="postback" />
                 <input type="hidden" name="dup_check_override" id="dupCheckOverride" value="0" />
+                <input type="hidden" name="dup_soft_override" id="dupSoftOverride" value="0" />
 
                 <table class="editTable">
                     <?php if ($this->isParsingEnabled): ?>
@@ -477,62 +491,23 @@
                 </div>
 
             <style type="text/css">
-                #dupCheckOverlay {
+                #dupCheckBanner {
                     display: none;
-                    position: fixed;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: #000;
-                    opacity: 0.3;
-                    z-index: 1000;
                 }
-                #dupCheckModal {
-                    display: none;
-                    position: fixed;
-                    left: 50%;
-                    top: 12%;
-                    width: 760px;
-                    max-width: 92%;
-                    margin-left: -380px;
-                    background: #fff;
-                    border: 1px solid #666;
-                    padding: 12px;
-                    z-index: 1001;
-                    box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+                #dupCheckTitle {
+                    font-weight: bold;
+                    margin-bottom: 4px;
                 }
                 #dupCheckMessage {
-                    margin: 6px 0 10px 0;
+                    margin: 6px 0;
                 }
-                #dupCheckConfirmRow {
-                    margin: 10px 0;
+                #dupCheckTable {
+                    margin-top: 6px;
                 }
                 #dupCheckActions {
-                    margin-top: 10px;
+                    margin-top: 8px;
                 }
             </style>
-            <div id="dupCheckOverlay"></div>
-            <div id="dupCheckModal">
-                <div class="ui2-card ui2-card--section">
-                    <div class="ui2-card-header">
-                        <div class="ui2-card-title" id="dupCheckTitle">Possible duplicate found</div>
-                    </div>
-                    <div id="dupCheckMessage"></div>
-                    <div id="dupCheckTable"></div>
-                    <div id="dupCheckConfirmRow" style="display: none;">
-                        <label>
-                            <input type="checkbox" id="dupCheckConfirm" />
-                            I confirm I want to create a duplicate candidate.
-                        </label>
-                    </div>
-                    <div id="dupCheckActions">
-                        <input type="button" class="button ui2-button--primary" id="dupCheckContinue" value="Continue" />
-                        <input type="button" class="button ui2-button--secondary" id="dupCheckOpenExisting" value="Open existing" />
-                        <input type="button" class="button ui2-button--secondary" id="dupCheckCancel" value="Cancel" />
-                    </div>
-                </div>
-            </div>
 
 <script type="text/javascript">
     document.addCandidateForm.firstName.focus();

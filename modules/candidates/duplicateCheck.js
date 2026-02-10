@@ -1,4 +1,4 @@
-/*
+﻿/*
  * CATS
  * Candidate Duplicate Check (Pre-save)
  */
@@ -7,16 +7,16 @@ var CandidateDuplicateCheck = (function ()
 {
     var config = {
         sessionCookie: '',
-        isAdmin: false,
         formId: 'addCandidateForm',
-        overrideId: 'dupCheckOverride',
-        overlayId: 'dupCheckOverlay',
-        modalId: 'dupCheckModal',
+        hardOverrideId: 'dupCheckOverride',
+        softOverrideId: 'dupSoftOverride',
+        bannerTableId: 'candidateAlreadyInSystemTable',
+        simpleBannerId: 'candidateAlreadyInSystemSimple',
+        bannerId: 'dupCheckBanner',
         titleId: 'dupCheckTitle',
         messageId: 'dupCheckMessage',
         tableId: 'dupCheckTable',
-        confirmRowId: 'dupCheckConfirmRow',
-        confirmId: 'dupCheckConfirm',
+        reviewId: 'dupCheckReview',
         continueId: 'dupCheckContinue',
         openId: 'dupCheckOpenExisting',
         cancelId: 'dupCheckCancel'
@@ -24,7 +24,8 @@ var CandidateDuplicateCheck = (function ()
 
     var state = {
         checking: false,
-        lastMatches: []
+        lastMatches: [],
+        lastType: ''
     };
 
     function byId(id)
@@ -82,37 +83,71 @@ var CandidateDuplicateCheck = (function ()
         return false;
     }
 
-    function resetOverride()
+    function resetHardOverride()
     {
-        var override = byId(config.overrideId);
+        var override = byId(config.hardOverrideId);
         if (override)
         {
             override.value = '0';
         }
     }
 
-    function showModal()
+    function getSoftOverride()
     {
-        var overlay = byId(config.overlayId);
-        var modal = byId(config.modalId);
-        if (overlay) overlay.style.display = '';
-        if (modal) modal.style.display = '';
+        var override = byId(config.softOverrideId);
+        if (!override)
+        {
+            return false;
+        }
+        return (override.value === '1');
     }
 
-    function hideModal()
+    function setSoftOverride(enabled)
     {
-        var overlay = byId(config.overlayId);
-        var modal = byId(config.modalId);
-        if (overlay) overlay.style.display = 'none';
-        if (modal) modal.style.display = 'none';
+        var override = byId(config.softOverrideId);
+        if (override)
+        {
+            override.value = enabled ? '1' : '0';
+        }
     }
 
-    function renderTable(matches)
+    function showBanner()
+    {
+        var bannerTable = byId(config.bannerTableId);
+        var simple = byId(config.simpleBannerId);
+        var banner = byId(config.bannerId);
+
+        if (simple) simple.style.display = 'none';
+        if (bannerTable) bannerTable.style.display = '';
+        if (banner) banner.style.display = '';
+    }
+
+    function restoreSimpleBanner()
+    {
+        var bannerTable = byId(config.bannerTableId);
+        var simple = byId(config.simpleBannerId);
+        var showSimple = (typeof candidateIsAlreadyInSystem !== 'undefined' && candidateIsAlreadyInSystem);
+
+        if (simple) simple.style.display = showSimple ? '' : 'none';
+        if (bannerTable) bannerTable.style.display = showSimple ? '' : 'none';
+    }
+
+    function hideBanner()
+    {
+        var banner = byId(config.bannerId);
+        if (banner) banner.style.display = 'none';
+        restoreSimpleBanner();
+    }
+
+    function renderTable(matches, selectable)
     {
         var html = '';
         html += '<table class="ui2-table" style="width: 100%;">';
         html += '<tr>';
-        html += '<th></th>';
+        if (selectable)
+        {
+            html += '<th></th>';
+        }
         html += '<th align="left">Candidate</th>';
         html += '<th align="left">Email</th>';
         html += '<th align="left">Phone</th>';
@@ -141,7 +176,10 @@ var CandidateDuplicateCheck = (function ()
 
             var checked = (i === 0) ? ' checked="checked"' : '';
             html += '<tr>';
-            html += '<td><input type="radio" name="dupCheckSelect" value="' + escapeHTML(candidateID) + '"' + checked + ' /></td>';
+            if (selectable)
+            {
+                html += '<td><input type="radio" name="dupCheckSelect" value="' + escapeHTML(candidateID) + '"' + checked + ' /></td>';
+            }
             html += '<td><a href="' + escapeHTML(CATSIndexName + '?m=candidates&a=show&candidateID=' + candidateID) + '" target="_blank">' + escapeHTML(candidateName) + '</a></td>';
             html += '<td>' + escapeHTML(email) + '</td>';
             html += '<td>' + escapeHTML(phone) + '</td>';
@@ -181,69 +219,55 @@ var CandidateDuplicateCheck = (function ()
         }
     }
 
-    function configureModal(type, matches)
+    function configureBanner(type, matches)
     {
         var titleNode = byId(config.titleId);
         var messageNode = byId(config.messageId);
         var tableNode = byId(config.tableId);
-        var confirmRow = byId(config.confirmRowId);
-        var confirmBox = byId(config.confirmId);
+        var reviewButton = byId(config.reviewId);
         var continueButton = byId(config.continueId);
         var openButton = byId(config.openId);
 
         var isHard = (type === 'hard');
         if (titleNode)
         {
-            titleNode.innerHTML = isHard ? 'Possible duplicate found' : 'Similar candidates found';
+            titleNode.innerHTML = isHard ? 'Possible duplicate found' : 'Similar candidate profiles found';
         }
         if (messageNode)
         {
             messageNode.innerHTML = isHard
-                ? 'A candidate with the same email/phone already exists.'
-                : 'Similar candidates were found. Review before continuing.';
+                ? 'A candidate with the same email/phone already exists. Please open the existing profile.'
+                : 'Similar candidate profiles were found. Please review before creating a duplicate.';
         }
         if (tableNode)
         {
-            tableNode.innerHTML = renderTable(matches);
+            tableNode.innerHTML = renderTable(matches, isHard);
+            tableNode.style.display = isHard ? '' : 'none';
         }
 
-        if (confirmRow)
+        if (reviewButton)
         {
-            confirmRow.style.display = (isHard && config.isAdmin) ? '' : 'none';
-        }
-
-        if (confirmBox)
-        {
-            confirmBox.checked = false;
+            reviewButton.style.display = isHard ? 'none' : '';
         }
 
         if (continueButton)
         {
-            if (isHard)
-            {
-                continueButton.value = config.isAdmin ? 'Continue anyway' : 'Continue';
-                continueButton.style.display = config.isAdmin ? '' : 'none';
-                continueButton.disabled = config.isAdmin ? true : false;
-            }
-            else
-            {
-                continueButton.value = 'Continue';
-                continueButton.style.display = '';
-                continueButton.disabled = false;
-            }
+            continueButton.style.display = isHard ? 'none' : '';
+            continueButton.disabled = false;
         }
 
         if (openButton)
         {
-            openButton.style.display = '';
+            openButton.style.display = isHard ? '' : 'none';
         }
     }
 
-    function showDuplicateModal(type, matches)
+    function showDuplicateBanner(type, matches)
     {
         state.lastMatches = matches || [];
-        configureModal(type, state.lastMatches);
-        showModal();
+        state.lastType = type;
+        configureBanner(type, state.lastMatches);
+        showBanner();
     }
 
     function handleResponse(payload)
@@ -258,34 +282,55 @@ var CandidateDuplicateCheck = (function ()
 
         var hardMatches = payload.hardMatches || [];
         var softMatches = payload.softMatches || [];
+        var softOverride = getSoftOverride();
 
         if (hardMatches.length > 0)
         {
-            showDuplicateModal('hard', hardMatches);
+            showDuplicateBanner('hard', hardMatches);
             return;
         }
 
-        if (softMatches.length > 0)
+        if (softMatches.length > 0 && !softOverride)
         {
-            showDuplicateModal('soft', softMatches);
+            showDuplicateBanner('soft', softMatches);
             return;
         }
 
         submitForm();
     }
 
+    function showMatches()
+    {
+        var tableNode = byId(config.tableId);
+        if (tableNode)
+        {
+            tableNode.style.display = '';
+            if (tableNode.scrollIntoView)
+            {
+                try
+                {
+                    tableNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                catch (e)
+                {
+                    tableNode.scrollIntoView();
+                }
+            }
+        }
+    }
+
     function bindActions()
     {
-        var confirmBox = byId(config.confirmId);
+        var reviewButton = byId(config.reviewId);
         var continueButton = byId(config.continueId);
         var cancelButton = byId(config.cancelId);
         var openButton = byId(config.openId);
 
-        if (confirmBox && continueButton)
+        if (reviewButton)
         {
-            confirmBox.onclick = function ()
+            reviewButton.onclick = function ()
             {
-                continueButton.disabled = !confirmBox.checked;
+                showMatches();
             };
         }
 
@@ -293,12 +338,8 @@ var CandidateDuplicateCheck = (function ()
         {
             continueButton.onclick = function ()
             {
-                var override = byId(config.overrideId);
-                if (override && config.isAdmin)
-                {
-                    override.value = '1';
-                }
-                hideModal();
+                setSoftOverride(true);
+                hideBanner();
                 submitForm();
             };
         }
@@ -307,7 +348,7 @@ var CandidateDuplicateCheck = (function ()
         {
             cancelButton.onclick = function ()
             {
-                hideModal();
+                hideBanner();
             };
         }
 
@@ -316,6 +357,10 @@ var CandidateDuplicateCheck = (function ()
             openButton.onclick = function ()
             {
                 var selectedID = getSelectedCandidateID();
+                if (selectedID === '' && state.lastMatches.length > 0)
+                {
+                    selectedID = state.lastMatches[0].candidate_id;
+                }
                 if (selectedID !== '')
                 {
                     window.open(
@@ -323,7 +368,7 @@ var CandidateDuplicateCheck = (function ()
                         '_blank'
                     );
                 }
-                hideModal();
+                hideBanner();
             };
         }
     }
@@ -349,7 +394,8 @@ var CandidateDuplicateCheck = (function ()
             }
         }
 
-        resetOverride();
+        hideBanner();
+        resetHardOverride();
 
         var firstName = getInputValue('firstName');
         var lastName = getInputValue('lastName');
@@ -422,10 +468,6 @@ var CandidateDuplicateCheck = (function ()
         {
             config.sessionCookie = options.sessionCookie;
         }
-        if (typeof options.isAdmin !== 'undefined')
-        {
-            config.isAdmin = options.isAdmin ? true : false;
-        }
 
         bindActions();
     }
@@ -435,4 +477,3 @@ var CandidateDuplicateCheck = (function ()
         onSubmit: onSubmit
     };
 })();
-

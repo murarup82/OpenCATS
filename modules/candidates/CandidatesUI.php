@@ -2910,26 +2910,30 @@ class CandidatesUI extends UserInterface
 
         $candidates = new Candidates($this->_siteID);
 
-        $dupOverride = ((int) $this->getTrimmedInput('dup_check_override', $_POST) === 1);
-        $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
         $hardDuplicateID = -1;
+        $hardMatchConditions = array();
+        $db = DatabaseConnection::getInstance();
 
         if (!empty($email1) && strpos($email1, '@') !== false)
         {
             $hardDuplicateID = $candidates->getIDByEmail($email1);
+            $hardMatchConditions[] = 'candidate.email1 = ' . $db->makeQueryString($email1);
         }
 
-        if ($hardDuplicateID <= 0 && !empty($phoneCell))
+        if (!empty($phoneCell))
         {
-            $hardDuplicateID = $candidates->getIDByPhone($phoneCell);
+            if ($hardDuplicateID <= 0)
+            {
+                $hardDuplicateID = $candidates->getIDByPhone($phoneCell);
+            }
+            $hardMatchConditions[] = 'candidate.phone_cell = ' . $db->makeQueryString($phoneCell);
         }
 
-        if ($hardDuplicateID <= 0 && !empty($phoneCell))
+        if (!empty($phoneCell))
         {
             $phoneDigits = preg_replace('/\\D+/', '', $phoneCell);
             if (strlen($phoneDigits) >= 6)
             {
-                $db = DatabaseConnection::getInstance();
                 $phoneRow = $db->getAssoc(sprintf(
                     "SELECT
                         candidate_id AS candidateID
@@ -2946,13 +2950,71 @@ class CandidatesUI extends UserInterface
                 {
                     $hardDuplicateID = (int) $phoneRow['candidateID'];
                 }
+                $hardMatchConditions[] =
+                    "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone_cell, ' ', ''), '-', ''), '(', ''), ')', ''), '.', ''), '+', '') = "
+                    . $db->makeQueryString($phoneDigits);
             }
         }
 
-        if ($hardDuplicateID > 0 && !($dupOverride && $isAdmin))
+        if ($hardDuplicateID > 0)
         {
+            $hardMatches = array();
+            if (!empty($hardMatchConditions))
+            {
+                $hardMatches = $db->getAllAssoc(sprintf(
+                    "SELECT
+                        candidate_id AS candidateID,
+                        first_name AS firstName,
+                        last_name AS lastName
+                     FROM
+                        candidate
+                     WHERE
+                        site_id = %s
+                        AND (%s)
+                     ORDER BY
+                        date_created DESC
+                     LIMIT 5",
+                    $db->makeQueryInteger($this->_siteID),
+                    implode(' OR ', $hardMatchConditions)
+                ));
+            }
+
+            $matchLinks = array();
+            if (!empty($hardMatches))
+            {
+                foreach ($hardMatches as $matchRow)
+                {
+                    $matchID = (int) $matchRow['candidateID'];
+                    $matchName = trim($matchRow['firstName'] . ' ' . $matchRow['lastName']);
+                    if ($matchName === '')
+                    {
+                        $matchName = 'Candidate #' . $matchID;
+                    }
+                    $matchLinks[] = sprintf(
+                        '<li><a href="%s" target="_blank">%s</a></li>',
+                        htmlspecialchars(
+                            CATSUtility::getIndexName() . '?m=candidates&a=show&candidateID=' . $matchID,
+                            ENT_QUOTES
+                        ),
+                        htmlspecialchars($matchName, ENT_QUOTES)
+                    );
+                }
+            }
+            else
+            {
+                $matchLinks[] = sprintf(
+                    '<li><a href="%s" target="_blank">Candidate #%d</a></li>',
+                    htmlspecialchars(
+                        CATSUtility::getIndexName() . '?m=candidates&a=show&candidateID=' . (int) $hardDuplicateID,
+                        ENT_QUOTES
+                    ),
+                    (int) $hardDuplicateID
+                );
+            }
+
             $this->$fatal(
-                'Duplicate candidate detected (email/phone). Please open existing or confirm override.',
+                'Duplicate candidate detected (email/phone). Please open the existing candidate profile:<br />'
+                . '<ul>' . implode('', $matchLinks) . '</ul>',
                 $moduleDirectory
             );
         }

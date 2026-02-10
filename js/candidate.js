@@ -30,6 +30,27 @@ var candidateIsAlreadyInSystem = false;
 var candidateIsAlreadyInSystemID = -1;
 var candidateIsAlreadyInSystemName = '';
 
+function toggleAlreadyInSystemBanner(show)
+{
+    var table = document.getElementById('candidateAlreadyInSystemTable');
+    var simple = document.getElementById('candidateAlreadyInSystemSimple');
+    var dupBanner = document.getElementById('dupCheckBanner');
+
+    if (show)
+    {
+        if (simple) simple.style.display = '';
+        if (dupBanner) dupBanner.style.display = 'none';
+        if (table) table.style.display = '';
+        return;
+    }
+
+    if (simple) simple.style.display = 'none';
+    if (table && (!dupBanner || dupBanner.style.display === 'none'))
+    {
+        table.style.display = 'none';
+    }
+}
+
 function checkEmailAlreadyInSystem(email, sessionCookie)
 {
     if (email == '')
@@ -67,12 +88,12 @@ function checkEmailAlreadyInSystem(email, sessionCookie)
             candidateIsAlreadyInSystemName = http.responseXML.getElementsByTagName('name').item(0).firstChild.nodeValue;
             
             document.getElementById('candidateAlreadyInSystemName').innerHTML = candidateIsAlreadyInSystemName;
-            document.getElementById('candidateAlreadyInSystemTable').style.display = '';
+            toggleAlreadyInSystemBanner(true);
         }
         else
         {
             candidateIsAlreadyInSystem = false;
-            document.getElementById('candidateAlreadyInSystemTable').style.display = 'none';
+            toggleAlreadyInSystemBanner(false);
         }
     }
 
@@ -137,12 +158,12 @@ function checkPhoneAlreadyInSystem(phone, sessionCookie)
             candidateIsAlreadyInSystemName = http.responseXML.getElementsByTagName('name').item(0).firstChild.nodeValue;
             
             document.getElementById('candidateAlreadyInSystemName').innerHTML = candidateIsAlreadyInSystemName;
-            document.getElementById('candidateAlreadyInSystemTable').style.display = '';
+            toggleAlreadyInSystemBanner(true);
         }
         else
         {
             candidateIsAlreadyInSystem = false;
-            document.getElementById('candidateAlreadyInSystemTable').style.display = 'none';
+            toggleAlreadyInSystemBanner(false);
         }
     }
 
