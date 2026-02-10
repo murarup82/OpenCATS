@@ -531,6 +531,7 @@ class CandidatesUI extends UserInterface
         $gdprDeletionRequired = false;
         $gdprSendDisabled = false;
         $gdprSendDisabledReason = '';
+        $gdprSendEnabled = ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT);
         $gdprLegacyConsent = false;
         $gdprLegacyProof = array(
             'status' => 'UNKNOWN',
@@ -885,6 +886,7 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('lists', $lists);
         $this->_template->assign('gdprLatestRequest', $gdprLatestRequest);
         $this->_template->assign('gdprDeletionRequired', $gdprDeletionRequired);
+        $this->_template->assign('gdprSendEnabled', $gdprSendEnabled);
         $this->_template->assign('gdprSendDisabled', $gdprSendDisabled);
         $this->_template->assign('gdprSendDisabledReason', $gdprSendDisabledReason);
         $this->_template->assign('gdprLegacyConsent', $gdprLegacyConsent);

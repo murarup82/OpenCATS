@@ -97,7 +97,7 @@
                 </tr>
             </table>
             <?php if ($this->privledged): ?>
-                <a id="edit_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=editUser&amp;userID=<?php $this->_($this->data['userID']); ?>" title="Edit">
+                <a id="edit_link" class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=editUser&amp;userID=<?php $this->_($this->data['userID']); ?>" title="Edit">
                     <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" style="border: none;" alt="edit user" />&nbsp;Edit
                 </a>
             <?php else: ?>

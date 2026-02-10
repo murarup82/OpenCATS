@@ -417,7 +417,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <div class="ui2-card ui2-card--section">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">GDPR</div>
-                            <?php if (!$this->isPopup && $this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA): ?>
+                            <?php if (!$this->isPopup && !empty($this->gdprSendEnabled)): ?>
                                 <div class="ui2-card-actions">
                                     <button
                                         id="gdprSendRequest"

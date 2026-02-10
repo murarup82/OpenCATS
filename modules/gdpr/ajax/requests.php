@@ -40,17 +40,22 @@ function getLegacyProofPatterns()
 
 $interface = new SecureAJAXInterface();
 
-if ($_SESSION['CATS']->getAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
-{
-    $interface->outputXMLErrorPage(-1, 'You do not have permission to access GDPR consents.');
-    die();
-}
-
 $action = $interface->getTrimmedInput('action');
 if ($action === '')
 {
     $interface->outputXMLErrorPage(-1, 'No action specified.');
     die();
+}
+
+$isAdmin = ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+$canSendCandidate = ($_SESSION['CATS']->getAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT);
+if (!$isAdmin)
+{
+    if (!($action === 'sendCandidate' && $canSendCandidate))
+    {
+        $interface->outputXMLErrorPage(-1, 'You do not have permission to access GDPR consents.');
+        die();
+    }
 }
 
 $db = DatabaseConnection::getInstance();

@@ -2975,6 +2975,7 @@ class SettingsUI extends UserInterface
         $this->_template->assign('subActive', 'User Management');
         $this->_template->assign('rs', $rs);
         $this->_template->assign('license', $license);
+        $this->_template->assign('currentUser', $this->_userID);
         $this->_template->display('./modules/settings/Users.tpl');
     }
 

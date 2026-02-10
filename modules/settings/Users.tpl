@@ -26,6 +26,7 @@
                         <th align="left" nowrap="nowrap">Access Level</th>
                         <th align="left" nowrap="nowrap">Last Success</th>
                         <th align="left" nowrap="nowrap">Last Fail</th>
+                        <th align="left" nowrap="nowrap">Actions</th>
                     </tr>
                 </thead>
 
@@ -46,15 +47,71 @@
                             <td valign="top" align="left"><?php $this->_($data['accessLevelDescription']); ?></td>
                             <td valign="top" align="left"><?php $this->_($data['successfulDate']); ?></td>
                             <td valign="top" align="left"><?php $this->_($data['unsuccessfulDate']); ?></td>
+                            <td valign="top" align="left">
+                                <span class="ui2-inline">
+                                    <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=editUser&amp;userID=<?php $this->_($data['userID']); ?>">
+                                        Edit
+                                    </a>
+                                    <?php if ($this->getUserAccessLevel('settings.deleteUser') >= ACCESS_LEVEL_SA && (int) $this->currentUser !== (int) $data['userID']): ?>
+                                        <a class="ui2-button ui2-button--danger" href="javascript:void(0);" onclick="return deleteUser(<?php $this->_($data['userID']); ?>);">
+                                            Delete
+                                        </a>
+                                    <?php endif; ?>
+                                </span>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </table>
             <?php if (AUTH_MODE != "ldap"): ?>
-                <a id="add_link" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=addUser" title="You have <?php $this->_($this->license['diff']); ?> user accounts remaining.">
+                <a id="add_link" class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=addUser" title="You have <?php $this->_($this->license['diff']); ?> user accounts remaining.">
                     <img src="images/candidate_inline.gif" width="16" height="16" class="absmiddle" alt="add" style="border: none;" />&nbsp;Add User
                 </a>
             <?php endif; ?>
+
+            <script type="text/javascript">
+                function deleteUser(userID)
+                {
+                    if (!confirm('Delete this user?'))
+                    {
+                        return false;
+                    }
+
+                    var http = AJAX_getXMLHttpObject();
+                    if (!http)
+                    {
+                        alert('Browser does not support AJAX.');
+                        return false;
+                    }
+
+                    http.onreadystatechange = function ()
+                    {
+                        if (http.readyState !== 4)
+                        {
+                            return;
+                        }
+
+                        if (http.status !== 200)
+                        {
+                            alert('Unable to delete user.');
+                            return;
+                        }
+
+                        var response = (http.responseText || '').replace(/^\s+|\s+$/g, '');
+                        if (response !== 'Ok')
+                        {
+                            alert(response || 'Unable to delete user.');
+                            return;
+                        }
+
+                        window.location.reload();
+                    };
+
+                    http.open('GET', CATSIndexName + '?m=settings&a=ajax_wizardDeleteUser&userID=' + encodeURIComponent(userID), true);
+                    http.send(null);
+                    return false;
+                }
+            </script>
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>
