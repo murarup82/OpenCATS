@@ -135,7 +135,9 @@ class Pipelines
                     PIPELINE_STATUS_ALLOCATED,
                     PIPELINE_STATUS_NOSTATUS,
                     'System: allocated on job association',
-                    1
+                    1,
+                    null,
+                    $userID
                 );
 
                 return true;
@@ -190,7 +192,9 @@ class Pipelines
             PIPELINE_STATUS_ALLOCATED,
             PIPELINE_STATUS_NOSTATUS,
             'System: allocated on job association',
-            1
+            1,
+            null,
+            $userID
         );
 
         return true;
@@ -265,7 +269,8 @@ class Pipelines
             $statusFromID,
             $commentText,
             0,
-            $rejectionReasonOther
+            $rejectionReasonOther,
+            $userID
         );
         if ($historyID > 0 && $rejectionReasonID > 0)
         {
@@ -403,7 +408,8 @@ class Pipelines
     // FIXME: Document me.
     public function setStatus($candidateID, $jobOrderID, $statusID,
                               $emailAddress, $emailText, $userID = 0,
-                              $commentText = '', $rejectionReasonOther = null)
+                              $commentText = '', $rejectionReasonOther = null,
+                              $commentIsSystem = 0, $enteredBy = null)
     {
         /* Get existing status. */
         $sql = sprintf(
@@ -431,6 +437,11 @@ class Pipelines
 
         $candidateJobOrderID = $rs['candidateJobOrderID'];
         $oldStatusID         = $rs['oldStatusID'];
+
+        if ($enteredBy === null)
+        {
+            $enteredBy = $userID;
+        }
 
         if ($oldStatusID == $statusID)
         {
@@ -502,8 +513,9 @@ class Pipelines
             $statusID,
             $oldStatusID,
             $commentText,
-            0,
-            $rejectionReasonOther
+            $commentIsSystem,
+            $rejectionReasonOther,
+            $enteredBy
         );
 
         /* Add auditing history. */
@@ -654,7 +666,8 @@ class Pipelines
     public function addStatusHistory($candidateID, $jobOrderID, $statusToID,
                                      $statusFromID, $commentText = '',
                                      $commentIsSystem = 0,
-                                     $rejectionReasonOther = null)
+                                     $rejectionReasonOther = null,
+                                     $enteredBy = null)
     {
         $sql = sprintf(
             "INSERT INTO candidate_joborder_status_history (
@@ -666,6 +679,7 @@ class Pipelines
                 status_from,
                 comment_text,
                 comment_is_system,
+                entered_by,
                 rejection_reason_other
             )
             VALUES (
@@ -673,6 +687,7 @@ class Pipelines
                 %s,
                 %s,
                 NOW(),
+                %s,
                 %s,
                 %s,
                 %s,
@@ -686,6 +701,7 @@ class Pipelines
             $this->_db->makeQueryInteger($statusFromID),
             $this->_db->makeQueryStringOrNULL($commentText),
             $this->_db->makeQueryInteger($commentIsSystem),
+            $this->_db->makeQueryIntegerOrNULL($enteredBy),
             $this->_db->makeQueryStringOrNULL($rejectionReasonOther)
         );
 
@@ -1044,7 +1060,7 @@ class Pipelines
                 candidate_joborder_status_history.comment_is_system AS commentIsSystem,
                 candidate_joborder_status_history.rejection_reason_other AS rejectionReasonOther,
                 GROUP_CONCAT(DISTINCT rejection_reason.label ORDER BY rejection_reason.label SEPARATOR ', ') AS rejectionReasons,
-                history.entered_by AS enteredByID,
+                candidate_joborder_status_history.entered_by AS enteredByID,
                 entered_by_user.first_name AS enteredByFirstName,
                 entered_by_user.last_name AS enteredByLastName,
                 candidate_joborder_status_history.edited_at AS editedAt,
@@ -1058,14 +1074,8 @@ class Pipelines
                 ON candidate_joborder.candidate_id = candidate_joborder_status_history.candidate_id
                 AND candidate_joborder.joborder_id = candidate_joborder_status_history.joborder_id
                 AND candidate_joborder.site_id = candidate_joborder_status_history.site_id
-            LEFT JOIN history
-                ON history.data_item_type = %s
-                AND history.data_item_id = candidate_joborder.candidate_joborder_id
-                AND history.previous_value = candidate_joborder_status_history.status_from
-                AND history.new_value = candidate_joborder_status_history.status_to
-                AND history.set_date = candidate_joborder_status_history.date
             LEFT JOIN user AS entered_by_user
-                ON entered_by_user.user_id = history.entered_by
+                ON entered_by_user.user_id = candidate_joborder_status_history.entered_by
             LEFT JOIN candidate_joborder_status AS status_from
                 ON status_from.candidate_joborder_status_id = candidate_joborder_status_history.status_from
             LEFT JOIN candidate_joborder_status AS status_to
@@ -1086,7 +1096,6 @@ class Pipelines
                 candidate_joborder_status_history.date DESC,
                 candidate_joborder_status_history.candidate_joborder_status_history_id DESC",
             $this->_db->makeQueryInteger($candidateJobOrderID),
-            $this->_db->makeQueryInteger(DATA_ITEM_PIPELINE),
             $this->_siteID
         );
 

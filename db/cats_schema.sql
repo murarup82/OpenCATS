@@ -290,6 +290,7 @@ CREATE TABLE `candidate_joborder_status_history` (
   `status_to` int(11) NOT NULL DEFAULT '0',
   `comment_text` text COLLATE utf8_unicode_ci,
   `comment_is_system` int(1) NOT NULL DEFAULT '0',
+  `entered_by` int(11) DEFAULT NULL,
   `rejection_reason_other` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `site_id` int(11) NOT NULL DEFAULT '0',
   `edited_at` datetime DEFAULT NULL,

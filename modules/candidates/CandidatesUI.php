@@ -3518,11 +3518,90 @@ class CandidatesUI extends UserInterface
 
             $db = DatabaseConnection::getInstance();
             $transactionStarted = false;
+            $autoFillHistoryIDs = array();
+            $originalPipelineRow = array();
             if (!empty($autoFillSteps))
             {
+                $originalPipelineRow = $db->getAssoc(sprintf(
+                    "SELECT
+                        candidate_joborder_id AS candidateJobOrderID,
+                        status AS statusID,
+                        is_active AS isActive,
+                        closed_at AS closedAt,
+                        closed_by AS closedBy,
+                        date_modified AS dateModified
+                    FROM
+                        candidate_joborder
+                    WHERE
+                        candidate_id = %s
+                    AND
+                        joborder_id = %s
+                    AND
+                        site_id = %s",
+                    $db->makeQueryInteger($candidateID),
+                    $db->makeQueryInteger($regardingID),
+                    $db->makeQueryInteger($this->_siteID)
+                ));
+
+                if (empty($originalPipelineRow))
+                {
+                    CommonErrors::fatalModal(
+                        COMMONERROR_BADINDEX,
+                        $this,
+                        'Pipeline entry not found.'
+                    );
+                }
+
                 $transactionStarted = $db->beginTransaction();
                 foreach ($autoFillSteps as $stepStatusID)
                 {
+                    if ($stepStatusID == PIPELINE_STATUS_HIRED || $stepStatusID == PIPELINE_STATUS_REJECTED)
+                    {
+                        if ($transactionStarted)
+                        {
+                            $db->rollbackTransaction();
+                        }
+                        if (!empty($autoFillHistoryIDs))
+                        {
+                            $db->query(sprintf(
+                                "DELETE FROM status_history_rejection_reason WHERE status_history_id IN (%s)",
+                                implode(',', array_map('intval', $autoFillHistoryIDs))
+                            ));
+                            $db->query(sprintf(
+                                "DELETE FROM candidate_joborder_status_history WHERE candidate_joborder_status_history_id IN (%s)",
+                                implode(',', array_map('intval', $autoFillHistoryIDs))
+                            ));
+                        }
+                        if (!empty($originalPipelineRow))
+                        {
+                            $db->query(sprintf(
+                                "UPDATE candidate_joborder
+                                SET
+                                    status = %s,
+                                    is_active = %s,
+                                    closed_at = %s,
+                                    closed_by = %s,
+                                    date_modified = %s
+                                WHERE
+                                    candidate_joborder_id = %s
+                                AND
+                                    site_id = %s",
+                                $db->makeQueryInteger($originalPipelineRow['statusID']),
+                                $db->makeQueryInteger($originalPipelineRow['isActive']),
+                                $db->makeQueryStringOrNULL($originalPipelineRow['closedAt']),
+                                $db->makeQueryIntegerOrNULL($originalPipelineRow['closedBy']),
+                                $db->makeQueryStringOrNULL($originalPipelineRow['dateModified']),
+                                $db->makeQueryInteger($originalPipelineRow['candidateJobOrderID']),
+                                $db->makeQueryInteger($this->_siteID)
+                            ));
+                        }
+                        CommonErrors::fatalModal(
+                            COMMONERROR_RECORDERROR,
+                            $this,
+                            'Auto-fill encountered a terminal status and was aborted.'
+                        );
+                    }
+
                     $stepHistoryID = $pipelines->setStatus(
                         $candidateID,
                         $regardingID,
@@ -3530,7 +3609,9 @@ class CandidatesUI extends UserInterface
                         '',
                         '',
                         $this->_userID,
-                        $autoFillComment
+                        $autoFillComment,
+                        null,
+                        1
                     );
                     if (empty($stepHistoryID) || $stepHistoryID < 0)
                     {
@@ -3538,12 +3619,47 @@ class CandidatesUI extends UserInterface
                         {
                             $db->rollbackTransaction();
                         }
+                        if (!empty($autoFillHistoryIDs))
+                        {
+                            $db->query(sprintf(
+                                "DELETE FROM status_history_rejection_reason WHERE status_history_id IN (%s)",
+                                implode(',', array_map('intval', $autoFillHistoryIDs))
+                            ));
+                            $db->query(sprintf(
+                                "DELETE FROM candidate_joborder_status_history WHERE candidate_joborder_status_history_id IN (%s)",
+                                implode(',', array_map('intval', $autoFillHistoryIDs))
+                            ));
+                        }
+                        if (!empty($originalPipelineRow))
+                        {
+                            $db->query(sprintf(
+                                "UPDATE candidate_joborder
+                                SET
+                                    status = %s,
+                                    is_active = %s,
+                                    closed_at = %s,
+                                    closed_by = %s,
+                                    date_modified = %s
+                                WHERE
+                                    candidate_joborder_id = %s
+                                AND
+                                    site_id = %s",
+                                $db->makeQueryInteger($originalPipelineRow['statusID']),
+                                $db->makeQueryInteger($originalPipelineRow['isActive']),
+                                $db->makeQueryStringOrNULL($originalPipelineRow['closedAt']),
+                                $db->makeQueryIntegerOrNULL($originalPipelineRow['closedBy']),
+                                $db->makeQueryStringOrNULL($originalPipelineRow['dateModified']),
+                                $db->makeQueryInteger($originalPipelineRow['candidateJobOrderID']),
+                                $db->makeQueryInteger($this->_siteID)
+                            ));
+                        }
                         CommonErrors::fatalModal(
                             COMMONERROR_RECORDERROR,
                             $this,
                             'Failed to auto-fill pipeline history.'
                         );
                     }
+                    $autoFillHistoryIDs[] = (int) $stepHistoryID;
                 }
             }
 
@@ -3566,6 +3682,40 @@ class CandidatesUI extends UserInterface
                     if ($transactionStarted)
                     {
                         $db->rollbackTransaction();
+                    }
+                    if (!empty($autoFillHistoryIDs))
+                    {
+                        $db->query(sprintf(
+                            "DELETE FROM status_history_rejection_reason WHERE status_history_id IN (%s)",
+                            implode(',', array_map('intval', $autoFillHistoryIDs))
+                        ));
+                        $db->query(sprintf(
+                            "DELETE FROM candidate_joborder_status_history WHERE candidate_joborder_status_history_id IN (%s)",
+                            implode(',', array_map('intval', $autoFillHistoryIDs))
+                        ));
+                    }
+                    if (!empty($originalPipelineRow))
+                    {
+                        $db->query(sprintf(
+                            "UPDATE candidate_joborder
+                            SET
+                                status = %s,
+                                is_active = %s,
+                                closed_at = %s,
+                                closed_by = %s,
+                                date_modified = %s
+                            WHERE
+                                candidate_joborder_id = %s
+                            AND
+                                site_id = %s",
+                            $db->makeQueryInteger($originalPipelineRow['statusID']),
+                            $db->makeQueryInteger($originalPipelineRow['isActive']),
+                            $db->makeQueryStringOrNULL($originalPipelineRow['closedAt']),
+                            $db->makeQueryIntegerOrNULL($originalPipelineRow['closedBy']),
+                            $db->makeQueryStringOrNULL($originalPipelineRow['dateModified']),
+                            $db->makeQueryInteger($originalPipelineRow['candidateJobOrderID']),
+                            $db->makeQueryInteger($this->_siteID)
+                        ));
                     }
                     CommonErrors::fatalModal(
                         COMMONERROR_RECORDERROR,

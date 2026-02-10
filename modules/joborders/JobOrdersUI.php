@@ -1969,6 +1969,7 @@ class JobOrdersUI extends UserInterface
                 candidate.first_name AS candidateFirstName,
                 candidate.last_name AS candidateLastName,
                 joborder.title AS jobOrderTitle,
+                joborder.owner AS jobOrderOwner,
                 company.name AS companyName
             FROM
                 candidate_joborder
@@ -1990,6 +1991,16 @@ class JobOrdersUI extends UserInterface
         if (empty($pipelineData))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Pipeline entry not found.');
+        }
+
+        $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+        if (!$isAdmin && (int) $pipelineData['jobOrderOwner'] !== (int) $this->_userID)
+        {
+            CommonErrors::fatalModal(
+                COMMONERROR_PERMISSION,
+                $this,
+                'You do not have permission to view this pipeline entry.'
+            );
         }
 
         $statusHistoryRS = $pipelines->getStatusHistory($pipelineID);
