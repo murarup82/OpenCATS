@@ -1086,6 +1086,10 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('currentUserID', $_SESSION['CATS']->getUserID());
         $this->_template->assign('isModal', false);
+        $this->_template->assign(
+            'dupCheckIsAdmin',
+            ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
+        );
 
         /* REMEMBER TO ALSO UPDATE JobOrdersUI::addCandidateModal() IF
          * APPLICABLE.
@@ -2905,6 +2909,53 @@ class CandidatesUI extends UserInterface
         if (!eval(Hooks::get('CANDIDATE_ON_ADD_PRE'))) return;
 
         $candidates = new Candidates($this->_siteID);
+
+        $dupOverride = ((int) $this->getTrimmedInput('dup_check_override', $_POST) === 1);
+        $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+        $hardDuplicateID = -1;
+
+        if (!empty($email1) && strpos($email1, '@') !== false)
+        {
+            $hardDuplicateID = $candidates->getIDByEmail($email1);
+        }
+
+        if ($hardDuplicateID <= 0 && !empty($phoneCell))
+        {
+            $hardDuplicateID = $candidates->getIDByPhone($phoneCell);
+        }
+
+        if ($hardDuplicateID <= 0 && !empty($phoneCell))
+        {
+            $phoneDigits = preg_replace('/\\D+/', '', $phoneCell);
+            if (strlen($phoneDigits) >= 6)
+            {
+                $db = DatabaseConnection::getInstance();
+                $phoneRow = $db->getAssoc(sprintf(
+                    "SELECT
+                        candidate_id AS candidateID
+                     FROM
+                        candidate
+                     WHERE
+                        site_id = %s
+                        AND REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone_cell, ' ', ''), '-', ''), '(', ''), ')', ''), '.', ''), '+', '') = %s
+                     LIMIT 1",
+                    $db->makeQueryInteger($this->_siteID),
+                    $db->makeQueryString($phoneDigits)
+                ));
+                if (!empty($phoneRow))
+                {
+                    $hardDuplicateID = (int) $phoneRow['candidateID'];
+                }
+            }
+        }
+
+        if ($hardDuplicateID > 0 && !($dupOverride && $isAdmin))
+        {
+            $this->$fatal(
+                'Duplicate candidate detected (email/phone). Please open existing or confirm override.',
+                $moduleDirectory
+            );
+        }
 
         $duplicatesID = $candidates->checkDuplicity($firstName, $lastName, $email1, $phoneCell, $address, $city);
 

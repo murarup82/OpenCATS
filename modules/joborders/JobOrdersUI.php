@@ -1737,6 +1737,10 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('gdprSettingsRS', $gdprSettingsRS);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('currentUserID', $_SESSION['CATS']->getUserID());
+        $this->_template->assign(
+            'dupCheckIsAdmin',
+            ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
+        );
 
         if (!eval(Hooks::get('JO_ADD_CANDIDATE_MODAL'))) return;
 

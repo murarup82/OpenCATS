@@ -1,8 +1,8 @@
 <?php /* $Id: Add.tpl 3746 2007-11-28 20:28:21Z andrew $ */ ?>
 <?php if ($this->isModal): ?>
-    <?php TemplateUtility::printModalHeader('Candidates', array('modules/candidates/validator.js', 'js/addressParser.js', 'js/listEditor.js',  'js/candidate.js', 'js/candidateParser.js', 'modules/candidates/addCandidateAiAssist.js'), 'Add New Candidate to this Job Order'); ?>
+    <?php TemplateUtility::printModalHeader('Candidates', array('modules/candidates/validator.js', 'js/addressParser.js', 'js/listEditor.js',  'js/candidate.js', 'js/candidateParser.js', 'modules/candidates/addCandidateAiAssist.js', 'modules/candidates/duplicateCheck.js'), 'Add New Candidate to this Job Order'); ?>
 <?php else: ?>
-    <?php TemplateUtility::printHeader('Candidates', array('modules/candidates/validator.js', 'js/addressParser.js', 'js/listEditor.js',  'js/candidate.js', 'js/candidateParser.js', 'modules/candidates/addCandidateAiAssist.js')); ?>
+    <?php TemplateUtility::printHeader('Candidates', array('modules/candidates/validator.js', 'js/addressParser.js', 'js/listEditor.js',  'js/candidate.js', 'js/candidateParser.js', 'modules/candidates/addCandidateAiAssist.js', 'modules/candidates/duplicateCheck.js')); ?>
     <?php TemplateUtility::printHeaderBlock(); ?>
     <?php TemplateUtility::printTabs($this->active, $this->subActive); ?>
 
@@ -46,11 +46,12 @@
                 <?php $URI = CATSUtility::getIndexName() . '?m=candidates&amp;a=add'; ?>
             <?php endif; ?>
 
-            <form name="addCandidateForm" id="addCandidateForm" enctype="multipart/form-data" action="<?php echo($URI); ?>" method="post" onsubmit="return (checkAddForm(document.addCandidateForm) && onSubmitEmailInSystem() && onSubmitPhoneInSystem());" autocomplete="off" enctype="multipart/form-data">
+            <form name="addCandidateForm" id="addCandidateForm" enctype="multipart/form-data" action="<?php echo($URI); ?>" method="post" onsubmit="if (typeof CandidateDuplicateCheck === 'undefined') { return true; } return CandidateDuplicateCheck.onSubmit();" autocomplete="off" enctype="multipart/form-data">
                 <?php if ($this->isModal): ?>
                     <input type="hidden" name="jobOrderID" id="jobOrderID" value="<?php echo($this->jobOrderID); ?>" />
                 <?php endif; ?>
                 <input type="hidden" name="postback" id="postback" value="postback" />
+                <input type="hidden" name="dup_check_override" id="dupCheckOverride" value="0" />
 
                 <table class="editTable">
                     <?php if ($this->isParsingEnabled): ?>
@@ -475,6 +476,64 @@
             </form>
                 </div>
 
+            <style type="text/css">
+                #dupCheckOverlay {
+                    display: none;
+                    position: fixed;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: #000;
+                    opacity: 0.3;
+                    z-index: 1000;
+                }
+                #dupCheckModal {
+                    display: none;
+                    position: fixed;
+                    left: 50%;
+                    top: 12%;
+                    width: 760px;
+                    max-width: 92%;
+                    margin-left: -380px;
+                    background: #fff;
+                    border: 1px solid #666;
+                    padding: 12px;
+                    z-index: 1001;
+                    box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+                }
+                #dupCheckMessage {
+                    margin: 6px 0 10px 0;
+                }
+                #dupCheckConfirmRow {
+                    margin: 10px 0;
+                }
+                #dupCheckActions {
+                    margin-top: 10px;
+                }
+            </style>
+            <div id="dupCheckOverlay"></div>
+            <div id="dupCheckModal">
+                <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card-header">
+                        <div class="ui2-card-title" id="dupCheckTitle">Possible duplicate found</div>
+                    </div>
+                    <div id="dupCheckMessage"></div>
+                    <div id="dupCheckTable"></div>
+                    <div id="dupCheckConfirmRow" style="display: none;">
+                        <label>
+                            <input type="checkbox" id="dupCheckConfirm" />
+                            I confirm I want to create a duplicate candidate.
+                        </label>
+                    </div>
+                    <div id="dupCheckActions">
+                        <input type="button" class="button ui2-button--primary" id="dupCheckContinue" value="Continue" />
+                        <input type="button" class="button ui2-button--secondary" id="dupCheckOpenExisting" value="Open existing" />
+                        <input type="button" class="button ui2-button--secondary" id="dupCheckCancel" value="Cancel" />
+                    </div>
+                </div>
+            </div>
+
 <script type="text/javascript">
     document.addCandidateForm.firstName.focus();
     <?php if(isset($this->preassignedFields['email']) || isset($this->preassignedFields['email1'])): ?>
@@ -488,6 +547,13 @@
         AddCandidateAiAssist.configure({
             sessionCookie: '<?php echo($this->sessionCookie); ?>',
             actor: '<?php echo($this->currentUserID); ?>'
+        });
+    }
+    if (typeof CandidateDuplicateCheck !== 'undefined')
+    {
+        CandidateDuplicateCheck.configure({
+            sessionCookie: '<?php echo($this->sessionCookie); ?>',
+            isAdmin: <?php echo(!empty($this->dupCheckIsAdmin) ? 'true' : 'false'); ?>
         });
     }
 </script>
