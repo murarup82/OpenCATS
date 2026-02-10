@@ -23,6 +23,11 @@ if (!defined('GDPR_LEGACY_PROOF_PATTERNS'))
     define('GDPR_LEGACY_PROOF_PATTERNS', array('acord prelucrare', 'gdpr', 'consent', 'prelucrare date'));
 }
 
+if (!defined('GDPR_RENEWAL_WINDOW_DAYS'))
+{
+    define('GDPR_RENEWAL_WINDOW_DAYS', 30);
+}
+
 function getLegacyProofPatterns()
 {
     if (defined('GDPR_LEGACY_PROOF_PATTERNS') && is_array(GDPR_LEGACY_PROOF_PATTERNS))
@@ -150,7 +155,8 @@ function fetchCandidateRow($db, $siteID, $candidateID)
             first_name AS firstName,
             last_name AS lastName,
             email1 AS email1,
-            gdpr_signed AS gdprSigned
+            gdpr_signed AS gdprSigned,
+            gdpr_expiration_date AS gdprExpirationDate
          FROM
             candidate
          WHERE
@@ -472,10 +478,56 @@ if ($action === 'createLegacy')
         die();
     }
 
+    if ((int) $candidateRow['gdprSigned'] !== 1)
+    {
+        logGdprEvent('createLegacy: not legacy', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
+        $interface->outputXMLErrorPage(-1, 'Candidate is not marked as legacy consent.');
+        die();
+    }
+
+    $latestRequestRow = fetchLatestRequestRow($db, $siteID, $candidateID);
+    if (!empty($latestRequestRow))
+    {
+        logGdprEvent('createLegacy: request exists', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID, 'requestID' => $latestRequestRow['requestID']));
+        $interface->outputXMLErrorPage(-1, 'Candidate already has GDPR requests; use audited actions.');
+        die();
+    }
+
     if (empty($candidateRow['email1']))
     {
         logGdprEvent('createLegacy: missing email', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'candidateID' => $candidateID));
         $interface->outputXMLErrorPage(-1, 'Candidate email is missing.');
+        die();
+    }
+
+    $expirationDate = isset($candidateRow['gdprExpirationDate']) ? trim($candidateRow['gdprExpirationDate']) : '';
+    $effectiveExpiresAt = null;
+    if ($expirationDate !== '' && $expirationDate !== '0000-00-00')
+    {
+        $expirationTimestamp = strtotime($expirationDate . ' 00:00:00');
+        if ($expirationTimestamp !== false)
+        {
+            $effectiveExpiresAt = $expirationTimestamp;
+        }
+    }
+
+    $renewalWindowDays = defined('GDPR_RENEWAL_WINDOW_DAYS') ? (int) GDPR_RENEWAL_WINDOW_DAYS : 30;
+    if ($renewalWindowDays <= 0)
+    {
+        $renewalWindowDays = 30;
+    }
+    $renewalWindowCutoff = strtotime('+' . $renewalWindowDays . ' days');
+    if ($effectiveExpiresAt !== null && $effectiveExpiresAt > $renewalWindowCutoff)
+    {
+        logGdprEvent('createLegacy: renewal window not reached', array(
+            'action' => $action,
+            'siteID' => $siteID,
+            'userID' => $userID,
+            'candidateID' => $candidateID,
+            'expirationDate' => $expirationDate,
+            'renewalWindowDays' => $renewalWindowDays
+        ));
+        $interface->outputXMLErrorPage(-1, sprintf('Renewal is available within %d days of expiration.', $renewalWindowDays));
         die();
     }
 

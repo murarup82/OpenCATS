@@ -143,9 +143,20 @@ class GDPRUI extends UserInterface
             $days = (int) trim($_GET['expiring']);
             if ($days > 0)
             {
-                $includeLegacy = false;
+                $effectiveRequestExpires = 'r.expires_at';
                 $filtersRequest[] = sprintf(
-                    '(r.expires_at IS NOT NULL AND r.expires_at <= DATE_ADD(NOW(), INTERVAL %s DAY) AND r.expires_at >= NOW())',
+                    '(%s IS NOT NULL AND %s > NOW() AND %s <= DATE_ADD(NOW(), INTERVAL %s DAY))',
+                    $effectiveRequestExpires,
+                    $effectiveRequestExpires,
+                    $effectiveRequestExpires,
+                    $db->makeQueryInteger($days)
+                );
+                $effectiveLegacyExpires = "CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME)";
+                $filtersLegacy[] = sprintf(
+                    '(%s IS NOT NULL AND %s > NOW() AND %s <= DATE_ADD(NOW(), INTERVAL %s DAY))',
+                    $effectiveLegacyExpires,
+                    $effectiveLegacyExpires,
+                    $effectiveLegacyExpires,
                     $db->makeQueryInteger($days)
                 );
             }
@@ -248,7 +259,7 @@ class GDPRUI extends UserInterface
                 'LEGACY' AS status,
                 c.date_created AS createdAt,
                 NULL AS sentAt,
-                NULL AS expiresAt,
+                CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME) AS expiresAt,
                 NULL AS acceptedAt,
                 NULL AS acceptedIP,
                 NULL AS acceptedLang,
@@ -337,13 +348,14 @@ class GDPRUI extends UserInterface
                 $pdf->SetFont('Arial', 'B', 10);
                 $pdf->Cell(0, 6, $headerLabel . ' - ' . $fullName, 0, 1);
                 $pdf->SetFont('Arial', '', 9);
+                $expiresAtDisplay = ($row['expiresAt'] !== null && $row['expiresAt'] !== '') ? $row['expiresAt'] : '--';
                 $pdf->MultiCell(0, 5,
                     'Candidate ID: ' . $row['candidateID'] . "\n" .
                     'Email: ' . ($row['email1'] !== '' ? $row['email1'] : '--') . "\n" .
                     'Status: ' . $status . "\n" .
                     'Created: ' . ($row['createdAt'] !== null ? $row['createdAt'] : '--') . "\n" .
                     'Sent: ' . ($row['sentAt'] !== null ? $row['sentAt'] : '--') . "\n" .
-                    'Expires: ' . ($row['expiresAt'] !== null ? $row['expiresAt'] : '--') . "\n" .
+                    'Expires: ' . $expiresAtDisplay . "\n" .
                     'Accepted: ' . ($row['acceptedAt'] !== null ? $row['acceptedAt'] : '--') . "\n" .
                     'Accepted IP: ' . ($row['acceptedIP'] !== null ? $row['acceptedIP'] : '--') . "\n" .
                     'Language: ' . ($row['acceptedLang'] !== null ? $row['acceptedLang'] : '--') . "\n" .
@@ -402,6 +414,7 @@ class GDPRUI extends UserInterface
 
                 $requestIDValue = $isLegacy ? 'LEGACY' : $row['requestID'];
 
+                $expiresAtCsv = ($row['expiresAt'] !== null && $row['expiresAt'] !== '') ? $row['expiresAt'] : '--';
                 fputcsv($out, array(
                     $requestIDValue,
                     $row['candidateID'],
@@ -410,7 +423,7 @@ class GDPRUI extends UserInterface
                     $status,
                     $row['createdAt'],
                     $row['sentAt'],
-                    $row['expiresAt'],
+                    $expiresAtCsv,
                     $row['acceptedAt'],
                     $row['acceptedIP'],
                     $row['acceptedLang'],

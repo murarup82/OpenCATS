@@ -138,6 +138,11 @@ var GDPRRequests = (function ()
             return confirm('Scan legacy GDPR proofs now? This may take some time.');
         }
 
+        if (action === 'createLegacy')
+        {
+            return confirm('Send a GDPR renewal request? This creates an audited request record and emails the candidate.');
+        }
+
         return true;
     }
 

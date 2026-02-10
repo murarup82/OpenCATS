@@ -48,9 +48,9 @@ class GDPRRequestsDataGrid extends DataGrid
             $isExpired = ($rsData['isExpired'] == 1);
             if ($rsData['isLegacy'] == 1)
             {
-                if ($hasCandidate)
+                if ($hasCandidate && (int) $rsData['renewalEligible'] === 1)
                 {
-                    $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="GDPRRequests.actionCandidate(\'createLegacy\', ' . $rsData['candidateID'] . ');">Create New</a>';
+                    $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="GDPRRequests.actionCandidate(\'createLegacy\', ' . $rsData['candidateID'] . ');" title="Creates an audited GDPR request and emails the candidate.">Send renewal request</a>';
                 }
             }
             else if ($isLatest && $hasCandidate)
@@ -166,6 +166,11 @@ EOT;
     public function getSQL($selectSQL, $joinSQL, $whereSQL, $havingSQL, $orderSQL, $limitSQL, $distinct = '')
     {
         $db = DatabaseConnection::getInstance();
+        $renewalWindowDays = defined('GDPR_RENEWAL_WINDOW_DAYS') ? (int) GDPR_RENEWAL_WINDOW_DAYS : 30;
+        if ($renewalWindowDays <= 0)
+        {
+            $renewalWindowDays = 30;
+        }
 
         $filtersRequest = array();
         $filtersLegacy = array();
@@ -200,9 +205,20 @@ EOT;
             $days = (int) $_GET['expiring'];
             if ($days > 0)
             {
-                $includeLegacy = false;
+                $effectiveRequestExpires = 'r.expires_at';
                 $filtersRequest[] = sprintf(
-                    '(r.expires_at IS NOT NULL AND r.expires_at > NOW() AND r.expires_at <= DATE_ADD(NOW(), INTERVAL %s DAY))',
+                    '(%s IS NOT NULL AND %s > NOW() AND %s <= DATE_ADD(NOW(), INTERVAL %s DAY))',
+                    $effectiveRequestExpires,
+                    $effectiveRequestExpires,
+                    $effectiveRequestExpires,
+                    $db->makeQueryInteger($days)
+                );
+                $effectiveLegacyExpires = "CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME)";
+                $filtersLegacy[] = sprintf(
+                    '(%s IS NOT NULL AND %s > NOW() AND %s <= DATE_ADD(NOW(), INTERVAL %s DAY))',
+                    $effectiveLegacyExpires,
+                    $effectiveLegacyExpires,
+                    $effectiveLegacyExpires,
                     $db->makeQueryInteger($days)
                 );
             }
@@ -269,6 +285,7 @@ EOT;
                 DATE_FORMAT(r.created_at, '%%m-%%d-%%y') AS createdAt,
                 r.email_sent_at AS sentAtSort,
                 DATE_FORMAT(r.email_sent_at, '%%m-%%d-%%y') AS sentAt,
+                r.expires_at AS effective_expires_at,
                 r.expires_at AS expiresAtSort,
                 DATE_FORMAT(r.expires_at, '%%m-%%d-%%y') AS expiresAt,
                 r.accepted_at AS acceptedAtSort,
@@ -300,6 +317,7 @@ EOT;
                 NULL AS proofAttachmentID,
                 NULL AS proofDirName,
                 NULL AS proofFilename,
+                0 AS renewalEligible,
                 %s
             FROM
                 candidate_gdpr_requests r
@@ -319,6 +337,7 @@ EOT;
             WHERE
                 r.site_id = %s
             %s",
+            $db->makeQueryInteger($renewalWindowDays),
             $selectSQL,
             $joinSQL,
             $this->_siteID,
@@ -334,8 +353,9 @@ EOT;
                 DATE_FORMAT(c.date_created, '%%m-%%d-%%y') AS createdAt,
                 NULL AS sentAtSort,
                 NULL AS sentAt,
-                NULL AS expiresAtSort,
-                NULL AS expiresAt,
+                CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME) AS effective_expires_at,
+                CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME) AS expiresAtSort,
+                DATE_FORMAT(CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME), '%%m-%%d-%%y') AS expiresAt,
                 NULL AS acceptedAtSort,
                 NULL AS acceptedAt,
                 NULL AS acceptedIP,
@@ -361,6 +381,13 @@ EOT;
                 a.attachment_id AS proofAttachmentID,
                 a.directory_name AS proofDirName,
                 a.original_filename AS proofFilename,
+                CASE
+                    WHEN CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME) IS NULL THEN 1
+                    WHEN CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME) <= NOW() THEN 1
+                    WHEN CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME) <= DATE_ADD(NOW(), INTERVAL %s DAY)
+                    THEN 1
+                    ELSE 0
+                END AS renewalEligible,
                 %s
             FROM
                 candidate c
@@ -377,6 +404,7 @@ EOT;
                     AND r2.candidate_id = c.candidate_id
                 )
             %s",
+            $db->makeQueryInteger($renewalWindowDays),
             $selectSQL,
             $this->_siteID,
             $legacyFilterSQL
