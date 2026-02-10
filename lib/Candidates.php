@@ -570,6 +570,9 @@ class Candidates
                     candidate.date_created, '%%m-%%d-%%y (%%h:%%i %%p)'
                 ) AS dateCreated,
                 DATE_FORMAT(
+                    candidate.date_created, '%%Y-%%m-%%dT%%H:%%i'
+                ) AS dateCreatedInput,
+                DATE_FORMAT(
                     candidate.date_modified, '%%m-%%d-%%y (%%h:%%i %%p)'
                 ) AS dateModified,
                 COUNT(

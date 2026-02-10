@@ -825,6 +825,14 @@ class CandidatesUI extends UserInterface
             $privledgedUser = true;
         }
 
+        $ownershipEditEnabled = (!$isPopup && $this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+        $ownershipUsersRS = array();
+        if ($ownershipEditEnabled)
+        {
+            $users = new Users($this->_siteID);
+            $ownershipUsersRS = $users->getSelectList();
+        }
+
         $EEOSettings = new EEOSettings($this->_siteID);
         $EEOSettingsRS = $EEOSettings->getAll();
         $EEOValues = array();
@@ -868,6 +876,8 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('EEOSettingsRS', $EEOSettingsRS);
         $this->_template->assign('EEOValues', $EEOValues);
         $this->_template->assign('privledgedUser', $privledgedUser);
+        $this->_template->assign('ownershipEditEnabled', $ownershipEditEnabled);
+        $this->_template->assign('ownershipUsersRS', $ownershipUsersRS);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('tagsRS', $tags->getAll());
         $this->_template->assign('assignedTags', $tags->getCandidateTagsTitle($candidateID));

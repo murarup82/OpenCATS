@@ -4,9 +4,9 @@ use OpenCATS\UI\CandidateQuickActionMenu;
 use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 ?>
 <?php if ($this->isPopup): ?>
-    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js')); ?>
+    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js', 'modules/candidates/ownershipEdit.js')); ?>
 <?php else: ?>
-    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/quickAction-duplicates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js')); ?>
+    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/quickAction-duplicates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js', 'modules/candidates/ownershipEdit.js')); ?>
     
     <?php TemplateUtility::printHeaderBlock(); ?>
     <?php TemplateUtility::printTabs($this->active); ?>
@@ -501,17 +501,47 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <div class="ui2-card ui2-card--section">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Ownership</div>
+                            <?php if (!empty($this->ownershipEditEnabled)): ?>
+                                <div class="ui2-card-actions">
+                                    <button type="button" id="ownershipEditToggle" class="ui2-button ui2-button--secondary">Edit</button>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <table class="detailsInside ui2-details-table">
                             <tr>
                                 <td class="vertical">Created:</td>
-                                <td class="data"><?php $this->_($this->data['dateCreated']); ?> (<?php $this->_($this->data['enteredByFullName']); ?>)</td>
+                                <td class="data"><span id="ownershipCreatedDisplay"><?php $this->_($this->data['dateCreated']); ?></span> (<?php $this->_($this->data['enteredByFullName']); ?>)</td>
                             </tr>
                             <tr>
                                 <td class="vertical">Owner:</td>
-                                <td class="data"><?php $this->_($this->data['ownerFullName']); ?></td>
+                                <td class="data"><span id="ownershipOwnerDisplay"><?php $this->_($this->data['ownerFullName']); ?></span></td>
                             </tr>
                         </table>
+                        <?php if (!empty($this->ownershipEditEnabled)): ?>
+                            <div id="ownershipEditForm" style="display:none; margin-top: 8px;">
+                                <div class="ui2-card ui2-card--subtle" style="padding: 10px;">
+                                    <label for="ownershipCreatedInput">Created datetime</label><br />
+                                    <input type="datetime-local" id="ownershipCreatedInput" class="ui2-input" value="<?php echo htmlspecialchars($this->data['dateCreatedInput']); ?>" />
+                                    <br />
+                                    <label for="ownershipOwnerSelect">Owner</label><br />
+                                    <select id="ownershipOwnerSelect" class="ui2-select">
+                                        <?php foreach ($this->ownershipUsersRS as $user): ?>
+                                            <option value="<?php echo $user['userID']; ?>"<?php if ($user['userID'] == $this->data['owner']) echo ' selected="selected"'; ?>>
+                                                <?php echo htmlspecialchars(trim($user['firstName'] . ' ' . $user['lastName'])); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <br />
+                                    <label for="ownershipReason">Reason</label><br />
+                                    <textarea id="ownershipReason" class="ui2-textarea" rows="2"></textarea>
+                                    <div style="margin-top: 8px;">
+                                        <button type="button" class="ui2-button ui2-button--primary" id="ownershipSave">Save</button>
+                                        <button type="button" class="ui2-button ui2-button--secondary" id="ownershipCancel">Cancel</button>
+                                    </div>
+                                    <div id="ownershipEditStatus" class="ui2-ai-status" style="display:none; margin-top: 8px;"></div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <div class="ui2-card ui2-card--section">
                         <div class="ui2-card-header">
@@ -771,6 +801,26 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             });
             GDPRCandidateRequest.bind();
         }
+        <?php if (!empty($this->ownershipEditEnabled)): ?>
+        if (typeof CandidateOwnershipEdit !== 'undefined')
+        {
+            CandidateOwnershipEdit.configure({
+                sessionCookie: '<?php echo($this->sessionCookie); ?>',
+                candidateID: '<?php echo($this->candidateID); ?>',
+                toggleId: 'ownershipEditToggle',
+                formId: 'ownershipEditForm',
+                createdInputId: 'ownershipCreatedInput',
+                ownerSelectId: 'ownershipOwnerSelect',
+                reasonId: 'ownershipReason',
+                statusId: 'ownershipEditStatus',
+                saveId: 'ownershipSave',
+                cancelId: 'ownershipCancel',
+                createdDisplayId: 'ownershipCreatedDisplay',
+                ownerDisplayId: 'ownershipOwnerDisplay'
+            });
+            CandidateOwnershipEdit.bind();
+        }
+        <?php endif; ?>
         <?php if (!empty($this->gdprFlashMessage)): ?>
         if (window.history && typeof window.history.replaceState === 'function')
         {

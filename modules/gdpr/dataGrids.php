@@ -337,7 +337,6 @@ EOT;
             WHERE
                 r.site_id = %s
             %s",
-            $db->makeQueryInteger($renewalWindowDays),
             $selectSQL,
             $joinSQL,
             $this->_siteID,
@@ -394,6 +393,7 @@ EOT;
             LEFT JOIN attachment a
                 ON a.attachment_id = c.gdpr_legacy_proof_attachment_id
                 AND a.site_id = c.site_id
+            %s
             WHERE
                 c.site_id = %s
                 AND c.gdpr_signed = 1
@@ -406,6 +406,7 @@ EOT;
             %s",
             $db->makeQueryInteger($renewalWindowDays),
             $selectSQL,
+            $joinSQL,
             $this->_siteID,
             $legacyFilterSQL
         );
