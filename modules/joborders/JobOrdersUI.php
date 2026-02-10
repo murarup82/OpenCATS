@@ -2011,7 +2011,7 @@ class JobOrdersUI extends UserInterface
         }
 
         $statusHistoryRS = $pipelines->getStatusHistory($pipelineID);
-        $canEditHistory = ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT);
+        $canEditHistory = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
 
         $this->_template->assign('pipelineID', $pipelineID);
         $this->_template->assign('pipelineData', $pipelineData);
@@ -2029,7 +2029,7 @@ class JobOrdersUI extends UserInterface
             CommonErrors::fatalModal(COMMONERROR_BADFIELDS, $this, 'Invalid request.');
         }
 
-        if ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') < ACCESS_LEVEL_EDIT)
+        if ($this->getUserAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
         {
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
         }
