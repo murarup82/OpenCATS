@@ -14,6 +14,7 @@ services:
       image: opencats/php-base:7.2-fpm-alpine
       volumes_from:
         - opencatsdata
+      entrypoint: ["/bin/sh", "/var/www/public/tools/docker-start.sh"]
 
     opencatsdata:
       container_name: opencats_data
