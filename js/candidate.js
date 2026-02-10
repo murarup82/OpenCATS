@@ -32,22 +32,18 @@ var candidateIsAlreadyInSystemName = '';
 
 function toggleAlreadyInSystemBanner(show)
 {
-    var table = document.getElementById('candidateAlreadyInSystemTable');
-    var simple = document.getElementById('candidateAlreadyInSystemSimple');
-    var dupBanner = document.getElementById('dupCheckBanner');
-
     if (show)
     {
-        if (simple) simple.style.display = '';
-        if (dupBanner) dupBanner.style.display = 'none';
-        if (table) table.style.display = '';
+        if (typeof showSimpleAlreadyInSystemBanner === 'function')
+        {
+            showSimpleAlreadyInSystemBanner();
+        }
         return;
     }
 
-    if (simple) simple.style.display = 'none';
-    if (table && (!dupBanner || dupBanner.style.display === 'none'))
+    if (typeof hideAlreadyInSystemBanner === 'function')
     {
-        table.style.display = 'none';
+        hideAlreadyInSystemBanner();
     }
 }
 
@@ -89,11 +85,19 @@ function checkEmailAlreadyInSystem(email, sessionCookie)
             
             document.getElementById('candidateAlreadyInSystemName').innerHTML = candidateIsAlreadyInSystemName;
             toggleAlreadyInSystemBanner(true);
+            if (typeof blockAddCandidateButton === 'function')
+            {
+                blockAddCandidateButton('Duplicate candidate detected. Please open the existing profile.');
+            }
         }
         else
         {
             candidateIsAlreadyInSystem = false;
             toggleAlreadyInSystemBanner(false);
+            if (typeof unblockAddCandidateButton === 'function')
+            {
+                unblockAddCandidateButton();
+            }
         }
     }
 
@@ -159,11 +163,19 @@ function checkPhoneAlreadyInSystem(phone, sessionCookie)
             
             document.getElementById('candidateAlreadyInSystemName').innerHTML = candidateIsAlreadyInSystemName;
             toggleAlreadyInSystemBanner(true);
+            if (typeof blockAddCandidateButton === 'function')
+            {
+                blockAddCandidateButton('Duplicate candidate detected. Please open the existing profile.');
+            }
         }
         else
         {
             candidateIsAlreadyInSystem = false;
             toggleAlreadyInSystemBanner(false);
+            if (typeof unblockAddCandidateButton === 'function')
+            {
+                unblockAddCandidateButton();
+            }
         }
     }
 

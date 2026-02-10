@@ -56,6 +56,17 @@
     border-color: #c9cdd3;
 }
 
+.ui2 .ui2-button--blocked {
+    background: #e46b8b;
+    border-color: #d25878;
+    color: #ffffff;
+}
+
+.ui2 .ui2-button--blocked:hover {
+    background: #e46b8b;
+    border-color: #d25878;
+}
+
 .ui2 .ui2-status {
     font-size: var(--ui2-font-size-1);
     color: var(--ui2-color-muted);

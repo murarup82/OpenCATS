@@ -3,6 +3,178 @@
  * Candidate Duplicate Check (Pre-save)
  */
 
+function _dupBannerGetNodes()
+{
+    return {
+        table: document.getElementById('candidateAlreadyInSystemTable'),
+        simple: document.getElementById('candidateAlreadyInSystemSimple'),
+        dup: document.getElementById('dupCheckBanner'),
+        title: document.getElementById('dupCheckTitle'),
+        message: document.getElementById('dupCheckMessage')
+    };
+}
+
+function _dupBannerIsHidden(node)
+{
+    if (!node)
+    {
+        return true;
+    }
+    return (node.style.display === 'none');
+}
+
+function _dupBannerEnsureVisible(nodes)
+{
+    if (!nodes || !nodes.table)
+    {
+        return;
+    }
+
+    var simpleHidden = _dupBannerIsHidden(nodes.simple);
+    var dupHidden = _dupBannerIsHidden(nodes.dup);
+
+    if (simpleHidden && dupHidden)
+    {
+        if (nodes.simple)
+        {
+            nodes.simple.style.display = '';
+        }
+        else if (nodes.dup)
+        {
+            nodes.dup.style.display = '';
+        }
+    }
+}
+
+function _dupBannerTrim(value)
+{
+    if (value === null || typeof value === 'undefined')
+    {
+        return '';
+    }
+    return (value + '').replace(/^\s+|\s+$/g, '');
+}
+
+function showSimpleAlreadyInSystemBanner()
+{
+    var nodes = _dupBannerGetNodes();
+    if (nodes.table) nodes.table.style.display = '';
+    if (nodes.simple) nodes.simple.style.display = '';
+    if (nodes.dup) nodes.dup.style.display = 'none';
+    _dupBannerEnsureVisible(nodes);
+}
+
+function showDupCheckBanner(fallbackTitle, fallbackMessage)
+{
+    var nodes = _dupBannerGetNodes();
+    if (nodes.table) nodes.table.style.display = '';
+    if (nodes.simple) nodes.simple.style.display = 'none';
+    if (nodes.dup) nodes.dup.style.display = '';
+
+    if (nodes.title && _dupBannerTrim(nodes.title.innerHTML) === '')
+    {
+        nodes.title.innerHTML = fallbackTitle || 'Possible duplicate found';
+    }
+    if (nodes.message && _dupBannerTrim(nodes.message.innerHTML) === '')
+    {
+        nodes.message.innerHTML = fallbackMessage || 'This profile may already be in the system.';
+    }
+
+    _dupBannerEnsureVisible(nodes);
+}
+
+function hideAlreadyInSystemBanner()
+{
+    var nodes = _dupBannerGetNodes();
+    if (nodes.table) nodes.table.style.display = 'none';
+    if (nodes.simple) nodes.simple.style.display = 'none';
+    if (nodes.dup) nodes.dup.style.display = 'none';
+}
+
+function _dupGetSubmitButton()
+{
+    var button = document.getElementById('addCandidateSubmit');
+    if (button)
+    {
+        return button;
+    }
+
+    var form = document.getElementById('addCandidateForm');
+    if (!form)
+    {
+        return null;
+    }
+
+    var inputs = form.getElementsByTagName('input');
+    for (var i = 0; i < inputs.length; i++)
+    {
+        if (inputs[i].type === 'submit')
+        {
+            return inputs[i];
+        }
+    }
+
+    return null;
+}
+
+function _dupAddClass(node, className)
+{
+    if (!node)
+    {
+        return;
+    }
+    if (node.classList)
+    {
+        node.classList.add(className);
+        return;
+    }
+    var current = node.className || '';
+    if ((' ' + current + ' ').indexOf(' ' + className + ' ') === -1)
+    {
+        node.className = (current ? current + ' ' : '') + className;
+    }
+}
+
+function _dupRemoveClass(node, className)
+{
+    if (!node)
+    {
+        return;
+    }
+    if (node.classList)
+    {
+        node.classList.remove(className);
+        return;
+    }
+    var current = (' ' + (node.className || '') + ' ');
+    var updated = current.replace(' ' + className + ' ', ' ');
+    node.className = updated.replace(/^\s+|\s+$/g, '');
+}
+
+function blockAddCandidateButton(reasonText)
+{
+    var button = _dupGetSubmitButton();
+    if (!button)
+    {
+        return;
+    }
+    _dupAddClass(button, 'ui2-button--blocked');
+    button.disabled = true;
+    button.title = reasonText || '';
+}
+
+function unblockAddCandidateButton()
+{
+    var button = _dupGetSubmitButton();
+    if (!button)
+    {
+        return;
+    }
+    _dupRemoveClass(button, 'ui2-button--blocked');
+    button.disabled = false;
+    button.title = '';
+}
+
 var CandidateDuplicateCheck = (function ()
 {
     var config = {
@@ -113,30 +285,24 @@ var CandidateDuplicateCheck = (function ()
 
     function showBanner()
     {
-        var bannerTable = byId(config.bannerTableId);
-        var simple = byId(config.simpleBannerId);
-        var banner = byId(config.bannerId);
-
-        if (simple) simple.style.display = 'none';
-        if (bannerTable) bannerTable.style.display = '';
-        if (banner) banner.style.display = '';
+        showDupCheckBanner();
     }
 
     function restoreSimpleBanner()
     {
-        var bannerTable = byId(config.bannerTableId);
-        var simple = byId(config.simpleBannerId);
-        var showSimple = (typeof candidateIsAlreadyInSystem !== 'undefined' && candidateIsAlreadyInSystem);
-
-        if (simple) simple.style.display = showSimple ? '' : 'none';
-        if (bannerTable) bannerTable.style.display = showSimple ? '' : 'none';
+        if (typeof candidateIsAlreadyInSystem !== 'undefined' && candidateIsAlreadyInSystem)
+        {
+            showSimpleAlreadyInSystemBanner();
+        }
+        else
+        {
+            hideAlreadyInSystemBanner();
+        }
     }
 
     function hideBanner()
     {
-        var banner = byId(config.bannerId);
-        if (banner) banner.style.display = 'none';
-        restoreSimpleBanner();
+        hideAlreadyInSystemBanner();
     }
 
     function renderTable(matches, selectable)
@@ -267,7 +433,21 @@ var CandidateDuplicateCheck = (function ()
         state.lastMatches = matches || [];
         state.lastType = type;
         configureBanner(type, state.lastMatches);
-        showBanner();
+        var fallbackTitle = (type === 'hard')
+            ? 'Possible duplicate found'
+            : 'Similar candidate profiles found';
+        var fallbackMessage = (type === 'hard')
+            ? 'A candidate with the same email/phone already exists. Please open the existing profile.'
+            : 'Similar candidate profiles were found. Please review before creating a duplicate.';
+        if (type === 'hard')
+        {
+            blockAddCandidateButton('Duplicate candidate detected. Please open the existing profile.');
+        }
+        else
+        {
+            unblockAddCandidateButton();
+        }
+        showDupCheckBanner(fallbackTitle, fallbackMessage);
     }
 
     function handleResponse(payload)
@@ -276,6 +456,7 @@ var CandidateDuplicateCheck = (function ()
 
         if (!payload || payload.success !== 1)
         {
+            unblockAddCandidateButton();
             submitForm();
             return;
         }
@@ -296,6 +477,7 @@ var CandidateDuplicateCheck = (function ()
             return;
         }
 
+        unblockAddCandidateButton();
         submitForm();
     }
 
@@ -315,6 +497,35 @@ var CandidateDuplicateCheck = (function ()
                 {
                     tableNode.scrollIntoView();
                 }
+            }
+        }
+    }
+
+    function bindFieldChangeReset()
+    {
+        var fieldIds = ['email1', 'phoneCell', 'firstName', 'lastName'];
+        var handler = function ()
+        {
+            hideAlreadyInSystemBanner();
+            unblockAddCandidateButton();
+        };
+
+        for (var i = 0; i < fieldIds.length; i++)
+        {
+            var node = byId(fieldIds[i]);
+            if (!node)
+            {
+                continue;
+            }
+            if (node.addEventListener)
+            {
+                node.addEventListener('input', handler, false);
+                node.addEventListener('change', handler, false);
+            }
+            else
+            {
+                node.onkeyup = handler;
+                node.onchange = handler;
             }
         }
     }
@@ -339,6 +550,7 @@ var CandidateDuplicateCheck = (function ()
             continueButton.onclick = function ()
             {
                 setSoftOverride(true);
+                unblockAddCandidateButton();
                 hideBanner();
                 submitForm();
             };
@@ -349,6 +561,10 @@ var CandidateDuplicateCheck = (function ()
             cancelButton.onclick = function ()
             {
                 hideBanner();
+                if (state.lastType !== 'hard')
+                {
+                    unblockAddCandidateButton();
+                }
             };
         }
 
@@ -470,6 +686,7 @@ var CandidateDuplicateCheck = (function ()
         }
 
         bindActions();
+        bindFieldChangeReset();
     }
 
     return {
@@ -477,3 +694,5 @@ var CandidateDuplicateCheck = (function ()
         onSubmit: onSubmit
     };
 })();
+
+

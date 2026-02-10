@@ -480,7 +480,7 @@
                         </td>
                     </tr>
                 </table>
-                <input type="submit" tabindex="<?php echo($tabIndex++); ?>" class="button" value="Add Candidate" />&nbsp;
+                <input type="submit" id="addCandidateSubmit" tabindex="<?php echo($tabIndex++); ?>" class="button ui2-button" value="Add Candidate" />&nbsp;
                 <input type="reset"  tabindex="<?php echo($tabIndex++); ?>" class="button" value="Reset" />&nbsp;
                 <?php if ($this->isModal): ?>
                     <input type="button" tabindex="<?php echo($tabIndex++); ?>" class="button" value="Back to Search" onclick="javascript:goToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=considerCandidateSearch&amp;jobOrderID=<?php echo($this->jobOrderID); ?>');" />
