@@ -183,6 +183,7 @@ var CandidateOwnershipEdit = (function ()
             updateDisplay(payload);
             setStatus('Ownership updated.', false);
             reasonInput.value = '';
+            toggleForm(false);
             if (saveButton) saveButton.disabled = false;
         };
 
