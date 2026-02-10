@@ -27,7 +27,7 @@
             <thead>
                 <tr>
                     <th>Timestamp</th>
-                    <th>From → To</th>
+                    <th>From -&gt; To</th>
                     <th>Entered By</th>
                     <th>Comment</th>
                     <th>Auto?</th>
@@ -72,7 +72,7 @@
                         ?>
                         <tr>
                             <td><?php $this->_($row['dateDisplay']); ?></td>
-                            <td><?php $this->_($statusFrom); ?> → <?php $this->_($statusTo); ?></td>
+                            <td><?php $this->_($statusFrom); ?> -&gt; <?php $this->_($statusTo); ?></td>
                             <td><?php $this->_($enteredByName); ?></td>
                             <td>
                                 <?php if ($comment !== ''): ?>
@@ -111,8 +111,14 @@
                             </td>
                             <td><?php echo($auto ? 'Yes' : 'No'); ?></td>
                             <td>
-                                <?php if (!empty($this->canEditHistory) && !empty($this->featureFlagEditHistory)): ?>
-                                    <button class="ui2-button ui2-button--secondary" type="button" disabled="disabled">Edit</button>
+                                <?php if (!empty($this->canEditHistory) && $auto): ?>
+                                    <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=pipelineStatusEditDate">
+                                        <input type="hidden" name="pipelineID" value="<?php echo((int) $this->pipelineID); ?>" />
+                                        <input type="hidden" name="historyID" value="<?php echo((int) $row['historyID']); ?>" />
+                                        <input type="text" name="newDate" class="inputbox ui2-input ui2-input--sm" style="width: 170px;" value="<?php $this->_($row['dateEdit']); ?>" placeholder="YYYY-MM-DD HH:MM:SS" />
+                                        <input type="text" name="editNote" class="inputbox ui2-input ui2-input--sm" style="width: 200px;" placeholder="Edit note (optional)" />
+                                        <button class="ui2-button ui2-button--secondary" type="submit">Save</button>
+                                    </form>
                                 <?php else: ?>
                                     <span class="ui2-muted">--</span>
                                 <?php endif; ?>
@@ -127,3 +133,4 @@
 
     </body>
 </html>
+

@@ -3479,15 +3479,7 @@ class CandidatesUI extends UserInterface
                         $currentIndex + 1,
                         $targetIndex - $currentIndex - 1
                     );
-                    $autoFillComment = sprintf(
-                        '[AUTO] Auto-filled pipeline steps (user selected %s from %s).',
-                        $newStatusDescription,
-                        $oldStatusDescription
-                    );
-                    if ($statusComment !== '')
-                    {
-                        $autoFillComment .= ' ' . $statusComment;
-                    }
+                    $autoFillComment = '[AUTO] Auto-filled pipeline steps.';
                 }
             }
 

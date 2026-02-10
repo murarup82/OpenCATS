@@ -213,6 +213,13 @@ class JobOrdersUI extends UserInterface
                 }
                 $this->pipelineStatusDetails();
                 break;
+            case 'pipelineStatusEditDate':
+                if ($this->getUserAccessLevel('joborders.show') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->pipelineStatusEditDate();
+                break;
 
             /*
              * Search for a candidate (in the modal window) for which to
@@ -2004,7 +2011,7 @@ class JobOrdersUI extends UserInterface
         }
 
         $statusHistoryRS = $pipelines->getStatusHistory($pipelineID);
-        $canEditHistory = ($this->getUserAccessLevel('settings.editStatusHistory') >= ACCESS_LEVEL_MULTI_SA);
+        $canEditHistory = ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT);
 
         $this->_template->assign('pipelineID', $pipelineID);
         $this->_template->assign('pipelineData', $pipelineData);
@@ -2013,6 +2020,130 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('featureFlagEditHistory', false);
 
         $this->_template->display('./modules/joborders/PipelineStatusDetails.tpl');
+    }
+
+    private function pipelineStatusEditDate()
+    {
+        if (!$this->isPostBack())
+        {
+            CommonErrors::fatalModal(COMMONERROR_BADFIELDS, $this, 'Invalid request.');
+        }
+
+        if ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') < ACCESS_LEVEL_EDIT)
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+        }
+
+        if (!$this->isRequiredIDValid('pipelineID', $_POST) || !$this->isRequiredIDValid('historyID', $_POST))
+        {
+            CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid pipeline history entry.');
+        }
+
+        $pipelineID = (int) $_POST['pipelineID'];
+        $historyID = (int) $_POST['historyID'];
+        $newDateInput = trim($this->getTrimmedInput('newDate', $_POST));
+        $editNote = trim($this->getTrimmedInput('editNote', $_POST));
+
+        if ($newDateInput === '')
+        {
+            CommonErrors::fatalModal(COMMONERROR_MISSINGFIELDS, $this, 'Date is required.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$/', $newDateInput))
+        {
+            CommonErrors::fatalModal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid date format.');
+        }
+
+        $timestamp = strtotime($newDateInput);
+        if ($timestamp === false)
+        {
+            CommonErrors::fatalModal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid date value.');
+        }
+
+        $newDate = date('Y-m-d H:i:s', $timestamp);
+        if ($editNote === '')
+        {
+            $editNote = 'Auto date adjusted.';
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $row = $db->getAssoc(sprintf(
+            "SELECT
+                h.candidate_joborder_status_history_id AS historyID,
+                h.comment_text AS commentText,
+                h.comment_is_system AS commentIsSystem,
+                cjo.candidate_joborder_id AS pipelineID,
+                jo.owner AS jobOrderOwner
+             FROM
+                candidate_joborder_status_history h
+             INNER JOIN candidate_joborder cjo
+                ON cjo.candidate_id = h.candidate_id
+                AND cjo.joborder_id = h.joborder_id
+                AND cjo.site_id = h.site_id
+             INNER JOIN joborder jo
+                ON jo.joborder_id = cjo.joborder_id
+             WHERE
+                h.candidate_joborder_status_history_id = %s
+             AND
+                cjo.candidate_joborder_id = %s
+             AND
+                h.site_id = %s",
+            $db->makeQueryInteger($historyID),
+            $db->makeQueryInteger($pipelineID),
+            $db->makeQueryInteger($this->_siteID)
+        ));
+
+        if (empty($row))
+        {
+            CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Pipeline history entry not found.');
+        }
+
+        $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+        if (!$isAdmin && (int) $row['jobOrderOwner'] !== (int) $this->_userID)
+        {
+            CommonErrors::fatalModal(
+                COMMONERROR_PERMISSION,
+                $this,
+                'You do not have permission to edit this pipeline entry.'
+            );
+        }
+
+        $auto = false;
+        if ((int) $row['commentIsSystem'] === 1)
+        {
+            $auto = true;
+        }
+        else if (!empty($row['commentText']) && strpos($row['commentText'], '[AUTO]') === 0)
+        {
+            $auto = true;
+        }
+
+        if (!$auto)
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Only auto-filled entries can be edited.');
+        }
+
+        $db->query(sprintf(
+            "UPDATE candidate_joborder_status_history
+             SET
+                date = %s,
+                edited_at = NOW(),
+                edited_by = %s,
+                edit_note = %s
+             WHERE
+                candidate_joborder_status_history_id = %s
+             AND
+                site_id = %s",
+            $db->makeQueryString($newDate),
+            $db->makeQueryInteger($this->_userID),
+            $db->makeQueryString($editNote),
+            $db->makeQueryInteger($historyID),
+            $db->makeQueryInteger($this->_siteID)
+        ));
+
+        CATSUtility::transferRelativeURI(
+            'm=joborders&a=pipelineStatusDetails&pipelineID=' . (int) $pipelineID
+        );
     }
 
     private function onAddActivityChangeStatus()
