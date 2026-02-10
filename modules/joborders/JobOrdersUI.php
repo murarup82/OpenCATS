@@ -206,6 +206,14 @@ class JobOrdersUI extends UserInterface
 
                 break;
 
+            case 'pipelineStatusDetails':
+                if ($this->getUserAccessLevel('joborders.show') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->pipelineStatusDetails();
+                break;
+
             /*
              * Search for a candidate (in the modal window) for which to
              * consider for this job order.
@@ -1934,6 +1942,66 @@ class JobOrdersUI extends UserInterface
         $this->_template->display(
             './modules/candidates/AddActivityChangeStatusModal.tpl'
         );
+    }
+
+    private function pipelineStatusDetails()
+    {
+        $pipelineID = (int) $this->getTrimmedInput('pipelineID', $_GET);
+        $candidateID = (int) $this->getTrimmedInput('candidateID', $_GET);
+        $jobOrderID = (int) $this->getTrimmedInput('jobOrderID', $_GET);
+
+        $pipelines = new Pipelines($this->_siteID);
+        if ($pipelineID <= 0 && $candidateID > 0 && $jobOrderID > 0)
+        {
+            $pipelineID = $pipelines->getCandidateJobOrderID($candidateID, $jobOrderID);
+        }
+
+        if ($pipelineID <= 0)
+        {
+            CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid pipeline entry.');
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $sql = sprintf(
+            "SELECT
+                candidate_joborder.candidate_id AS candidateID,
+                candidate_joborder.joborder_id AS jobOrderID,
+                candidate.first_name AS candidateFirstName,
+                candidate.last_name AS candidateLastName,
+                joborder.title AS jobOrderTitle,
+                company.name AS companyName
+            FROM
+                candidate_joborder
+            INNER JOIN candidate
+                ON candidate.candidate_id = candidate_joborder.candidate_id
+            INNER JOIN joborder
+                ON joborder.joborder_id = candidate_joborder.joborder_id
+            LEFT JOIN company
+                ON company.company_id = joborder.company_id
+            WHERE
+                candidate_joborder.candidate_joborder_id = %s
+            AND
+                candidate_joborder.site_id = %s",
+            $db->makeQueryInteger($pipelineID),
+            $db->makeQueryInteger($this->_siteID)
+        );
+
+        $pipelineData = $db->getAssoc($sql);
+        if (empty($pipelineData))
+        {
+            CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Pipeline entry not found.');
+        }
+
+        $statusHistoryRS = $pipelines->getStatusHistory($pipelineID);
+        $canEditHistory = ($this->getUserAccessLevel('settings.editStatusHistory') >= ACCESS_LEVEL_MULTI_SA);
+
+        $this->_template->assign('pipelineID', $pipelineID);
+        $this->_template->assign('pipelineData', $pipelineData);
+        $this->_template->assign('statusHistoryRS', $statusHistoryRS);
+        $this->_template->assign('canEditHistory', $canEditHistory ? 1 : 0);
+        $this->_template->assign('featureFlagEditHistory', false);
+
+        $this->_template->display('./modules/joborders/PipelineStatusDetails.tpl');
     }
 
     private function onAddActivityChangeStatus()

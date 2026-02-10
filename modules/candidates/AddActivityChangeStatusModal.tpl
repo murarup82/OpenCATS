@@ -25,24 +25,29 @@
 </script>
 <?php endif; ?>
 
+<div class="ui2">
+
 <?php if (!$this->isFinishedMode): ?>
 
 <script type="text/javascript">
     <?php if ($this->isJobOrdersMode): ?>
         statusesArray = new Array(1);
         jobOrdersArray = new Array(1);
+        candidateJobOrderArray = new Array(1);
         statusesArrayString = new Array(1);
         jobOrdersArrayStringTitle = new Array(1);
         jobOrdersArrayStringCompany = new Array(1);
         statusesArray[0] = <?php echo($this->pipelineData['statusID']); ?>;
         statusesArrayString[0] = '<?php echo($this->pipelineData['status']); ?>';
         jobOrdersArray[0] = <?php echo($this->pipelineData['jobOrderID']); ?>;
+        candidateJobOrderArray[0] = <?php echo($this->pipelineData['candidateJobOrderID']); ?>;
         jobOrdersArrayStringTitle[0] = '<?php echo(str_replace("'", "\\'", $this->pipelineData['title'])); ?>';
         jobOrdersArrayStringCompany[0] = '<?php echo(str_replace("'", "\\'", $this->pipelineData['companyName'])); ?>';
     <?php else: ?>
         <?php $count = count($this->pipelineRS); ?>
         statusesArray = new Array(<?php echo($count); ?>);
         jobOrdersArray = new Array(<?php echo($count); ?>);
+        candidateJobOrderArray = new Array(<?php echo($count); ?>);
         statusesArrayString = new Array(<?php echo($count); ?>);
         jobOrdersArrayStringTitle = new Array(<?php echo($count); ?>);
         jobOrdersArrayStringCompany = new Array(<?php echo($count); ?>);
@@ -50,6 +55,7 @@
             statusesArray[<?php echo($i); ?>] = <?php echo($this->pipelineRS[$i]['statusID']); ?>;
             statusesArrayString[<?php echo($i); ?>] = '<?php echo($this->pipelineRS[$i]['status']); ?>';
             jobOrdersArray[<?php echo($i); ?>] = <?php echo($this->pipelineRS[$i]['jobOrderID']); ?>;
+            candidateJobOrderArray[<?php echo($i); ?>] = <?php echo($this->pipelineRS[$i]['candidateJobOrderID']); ?>;
             jobOrdersArrayStringTitle[<?php echo($i); ?>] = '<?php echo(str_replace("'", "\\'", $this->pipelineRS[$i]['title'])); ?>';
             jobOrdersArrayStringCompany[<?php echo($i); ?>] = '<?php echo(str_replace("'", "\\'", $this->pipelineRS[$i]['companyName'])); ?>';
         <?php endfor; ?>
@@ -119,6 +125,61 @@
             otherInput.disabled = true;
         }
     }
+
+    function AS_getCandidateJobOrderIDForJobOrder(jobOrderID)
+    {
+        if (typeof jobOrdersArray === 'undefined' || typeof candidateJobOrderArray === 'undefined')
+        {
+            return '';
+        }
+
+        for (var i = 0; i < jobOrdersArray.length; i++)
+        {
+            if (String(jobOrdersArray[i]) === String(jobOrderID))
+            {
+                return candidateJobOrderArray[i];
+            }
+        }
+
+        return '';
+    }
+
+    function AS_openPipelineStatusDetails()
+    {
+        var jobOrderInput = document.getElementById('regardingID');
+        var jobOrderID = jobOrderInput ? jobOrderInput.value : '';
+        var candidateInput = document.getElementById('candidateID');
+        var candidateID = candidateInput ? candidateInput.value : '';
+        var pipelineID = '';
+
+        if (jobOrderID === '' || jobOrderID === '-1')
+        {
+            return false;
+        }
+
+        if (jobOrderID !== '')
+        {
+            pipelineID = AS_getCandidateJobOrderIDForJobOrder(jobOrderID);
+        }
+
+        var url = CATSIndexName + '?m=joborders&a=pipelineStatusDetails';
+        if (pipelineID)
+        {
+            url += '&pipelineID=' + encodeURIComponent(pipelineID);
+        }
+        else if (candidateID !== '' && jobOrderID !== '')
+        {
+            url += '&candidateID=' + encodeURIComponent(candidateID) +
+                '&jobOrderID=' + encodeURIComponent(jobOrderID);
+        }
+        else
+        {
+            return false;
+        }
+
+        window.open(url, 'pipelineStatusDetails', 'width=900,height=650,scrollbars=yes,resizable=yes');
+        return false;
+    }
 </script>
 
     <form name="changePipelineStatusForm" id="changePipelineStatusForm" action="<?php echo(CATSUtility::getIndexName()); ?>?m=<?php if ($this->isJobOrdersMode): ?>joborders<?php else: ?>candidates<?php endif; ?>&amp;a=addActivityChangeStatus<?php if ($this->onlyScheduleEvent): ?>&amp;onlyScheduleEvent=true<?php endif; ?>" method="post" onsubmit="return checkActivityForm(document.changePipelineStatusForm);" autocomplete="off">
@@ -131,7 +192,8 @@
         <input type="hidden" id="regardingID" name="regardingID" value="<?php echo($this->selectedJobOrderID); ?>" />
 <?php endif; ?>
 
-        <table class="editTable" width="560">
+        <div class="ui2-card ui2-card--section" style="width: 560px;">
+        <table class="editTable" width="100%">
             <tr id="visibleTR" <?php if ($this->onlyScheduleEvent): ?>style="display:none;"<?php endif; ?>>
                 <td class="tdVertical">
                     <label id="regardingIDLabel" for="regardingID">Regarding:</label>
@@ -140,7 +202,7 @@
 <?php if ($this->isJobOrdersMode): ?>
                     <span><?php $this->_($this->pipelineData['title']); ?></span>
 <?php else: ?>
-                    <select id="regardingID" name="regardingID" class="inputbox" style="width: 150px;" onchange="AS_onRegardingChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'statusTR', 'sendEmailCheckTR', 'triggerEmail', 'triggerEmailSpan', 'changeStatus', 'changeStatusSpanA', 'changeStatusSpanB');">
+                    <select id="regardingID" name="regardingID" class="inputbox ui2-input" style="width: 150px;" onchange="AS_onRegardingChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'statusTR', 'sendEmailCheckTR', 'triggerEmail', 'triggerEmailSpan', 'changeStatus', 'changeStatusSpanA', 'changeStatusSpanB');">
                         <option value="-1">General</option>
 
                         <?php foreach ($this->pipelineRS as $rowNumber => $pipelinesData): ?>
@@ -164,7 +226,7 @@
                     <span id="changeStatusSpanA"<?php if ($this->selectedJobOrderID == -1): ?> style="color: #aaaaaa;"<?php endif;?>>Change Status</span><br />
 
                     <div id="changeStatusDiv" style="margin-top: 4px;">
-                        <select id="statusID" name="statusID" class="inputbox" style="width: 150px;" onchange="AS_onStatusChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'sendEmailCheckTR', 'triggerEmailSpan', 'activityNote', 'activityTypeID', <?php if ($this->isJobOrdersMode): echo $this->selectedJobOrderID; else: ?>null<?php endif; ?>, 'customMessage', 'origionalCustomMessage', 'triggerEmail', statusesArrayString, jobOrdersArrayStringTitle, jobOrdersArrayStringCompany, statusTriggersEmailArray, 'emailIsDisabled');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent || !$forceStatusChange): ?> disabled<?php endif; ?>>
+                        <select id="statusID" name="statusID" class="inputbox ui2-input" style="width: 150px;" onchange="AS_onStatusChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'sendEmailCheckTR', 'triggerEmailSpan', 'activityNote', 'activityTypeID', <?php if ($this->isJobOrdersMode): echo $this->selectedJobOrderID; else: ?>null<?php endif; ?>, 'customMessage', 'origionalCustomMessage', 'triggerEmail', statusesArrayString, jobOrdersArrayStringTitle, jobOrdersArrayStringCompany, statusTriggersEmailArray, 'emailIsDisabled');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent || !$forceStatusChange): ?> disabled<?php endif; ?>>
                             <option value="-1">(Select a Status)</option>
 
                             <?php if ($this->selectedStatusID == -1): ?>
@@ -182,6 +244,17 @@
                     </div>
                 </td>
             </tr>
+            <tr id="autoFillTR" <?php if ($this->onlyScheduleEvent): ?>style="display:none;"<?php endif; ?>>
+                <td class="tdVertical">
+                    <label for="autoFillStages">Auto-fill:</label>
+                </td>
+                <td class="tdData">
+                    <label>
+                        <input type="checkbox" name="autoFillStages" id="autoFillStages" value="1" checked="checked" />
+                        Auto-fill intermediate stages
+                    </label>
+                </td>
+            </tr>
 
             <tr id="sendEmailCheckTR" style="display: none;">
                 <td class="tdVertical">
@@ -191,7 +264,7 @@
                     Custom Message<br />
                     <input type="hidden" id="origionalCustomMessage" value="<?php $this->_($this->statusChangeTemplate); ?>" />
                     <input type="hidden" id="emailIsDisabled" value="<?php echo($this->emailDisabled); ?>" />
-                    <textarea style="height:135px; width:375px;" name="customMessage" id="customMessage" cols="50" class="inputbox"></textarea>
+                    <textarea style="height:135px; width:375px;" name="customMessage" id="customMessage" cols="50" class="inputbox ui2-input"></textarea>
                 </td>
             </tr>
             <tr id="statusCommentTR" style="display: none;">
@@ -199,7 +272,7 @@
                     <label id="statusCommentLabel" for="statusComment">Status Comment:</label>
                 </td>
                 <td class="tdData">
-                    <textarea name="statusComment" id="statusComment" cols="50" style="width:375px;" class="inputbox"></textarea>
+                    <textarea name="statusComment" id="statusComment" cols="50" style="width:375px;" class="inputbox ui2-input"></textarea>
                 </td>
             </tr>
             <?php if (!empty($this->rejectionReasons)): ?>
@@ -354,12 +427,14 @@
             </tr>
 
         </table>
-        <input type="submit" class="button" name="submit" id="submit" value="Save" />&nbsp;
+        <input type="button" class="button ui2-button ui2-button--secondary" name="details" id="details" value="Details" onclick="AS_openPipelineStatusDetails();" />&nbsp;
+        <input type="submit" class="button ui2-button ui2-button--primary" name="submit" id="submit" value="Save" />&nbsp;
 <?php if ($this->isJobOrdersMode): ?>
-        <input type="button" class="button" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo($this->selectedJobOrderID); ?>');" />
+        <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo($this->selectedJobOrderID); ?>');" />
 <?php else: ?>
-        <input type="button" class="button" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>');" />
+        <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>');" />
 <?php endif; ?>
+        </div>
 
 <script type="text/javascript">
     if (<?php echo($forceStatusChange ? 'true' : 'false'); ?>)
@@ -416,12 +491,13 @@
 
     <form>
 <?php if ($this->isJobOrdersMode): ?>
-        <input type="button" name="close" class="button" value="Close" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo($this->regardingID); ?>');" />
+        <input type="button" name="close" class="button ui2-button ui2-button--secondary" value="Close" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo($this->regardingID); ?>');" />
 <?php else: ?>
-        <input type="button" name="close" class="button" value="Close" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>');" />
+        <input type="button" name="close" class="button ui2-button ui2-button--secondary" value="Close" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>');" />
 <?php endif; ?>
     </form>
 <?php endif; ?>
 
+    </div>
     </body>
 </html>

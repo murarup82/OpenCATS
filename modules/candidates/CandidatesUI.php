@@ -29,6 +29,7 @@
 
 include_once(LEGACY_ROOT . '/lib/FileUtility.php');
 include_once(LEGACY_ROOT . '/lib/StringUtility.php');
+include_once(LEGACY_ROOT . '/lib/DatabaseConnection.php');
 include_once(LEGACY_ROOT . '/lib/ResultSetUtility.php');
 include_once(LEGACY_ROOT . '/lib/DateUtility.php'); /* Depends on StringUtility. */
 include_once(LEGACY_ROOT . '/lib/Candidates.php');
@@ -3401,6 +3402,12 @@ class CandidatesUI extends UserInterface
             $statusComment = $this->getTrimmedInput('statusComment', $_POST);
             $rejectionReasonIDs = array();
             $rejectionReasonOther = null;
+            $autoFillEnabled = true;
+
+            if (isset($_POST['autoFillStages']))
+            {
+                $autoFillEnabled = $this->isChecked('autoFillStages', $_POST);
+            }
 
             if (isset($_POST['rejectionReasonIDs']) && is_array($_POST['rejectionReasonIDs']))
             {
@@ -3451,6 +3458,37 @@ class CandidatesUI extends UserInterface
                 }
             }
 
+            $autoFillSteps = array();
+            $autoFillComment = '';
+            if ($statusChanged && $autoFillEnabled && $statusID != PIPELINE_STATUS_REJECTED)
+            {
+                $statusOrder = array();
+                foreach ($statusRS as $statusRow)
+                {
+                    $statusOrder[] = (int) $statusRow['statusID'];
+                }
+
+                $currentIndex = array_search((int) $data['statusID'], $statusOrder, true);
+                $targetIndex = array_search((int) $statusID, $statusOrder, true);
+                if ($currentIndex !== false && $targetIndex !== false && $targetIndex > ($currentIndex + 1))
+                {
+                    $autoFillSteps = array_slice(
+                        $statusOrder,
+                        $currentIndex + 1,
+                        $targetIndex - $currentIndex - 1
+                    );
+                    $autoFillComment = sprintf(
+                        '[AUTO] Auto-filled pipeline steps (user selected %s from %s).',
+                        $newStatusDescription,
+                        $oldStatusDescription
+                    );
+                    if ($statusComment !== '')
+                    {
+                        $autoFillComment .= ' ' . $statusComment;
+                    }
+                }
+            }
+
             if ($statusChanged && $this->isChecked('triggerEmail', $_POST)) {
                 $customMessage = $this->getTrimmedInput('customMessage', $_POST);
 
@@ -3478,7 +3516,38 @@ class CandidatesUI extends UserInterface
                 $notificationHTML = '<p>No e-mail notification has been sent to the candidate.</p>';
             }
 
-            /* Set the pipeline entry's status, but don't send e-mails for now. */
+            $db = DatabaseConnection::getInstance();
+            $transactionStarted = false;
+            if (!empty($autoFillSteps))
+            {
+                $transactionStarted = $db->beginTransaction();
+                foreach ($autoFillSteps as $stepStatusID)
+                {
+                    $stepHistoryID = $pipelines->setStatus(
+                        $candidateID,
+                        $regardingID,
+                        $stepStatusID,
+                        '',
+                        '',
+                        $this->_userID,
+                        $autoFillComment
+                    );
+                    if (empty($stepHistoryID) || $stepHistoryID < 0)
+                    {
+                        if ($transactionStarted)
+                        {
+                            $db->rollbackTransaction();
+                        }
+                        CommonErrors::fatalModal(
+                            COMMONERROR_RECORDERROR,
+                            $this,
+                            'Failed to auto-fill pipeline history.'
+                        );
+                    }
+                }
+            }
+
+            /* Set the pipeline entry's final status, but don't send e-mails for now. */
             $historyID = $pipelines->setStatus(
                 $candidateID,
                 $regardingID,
@@ -3489,6 +3558,26 @@ class CandidatesUI extends UserInterface
                 $statusComment,
                 $rejectionReasonOther
             );
+
+            if (!empty($autoFillSteps))
+            {
+                if (empty($historyID) || $historyID < 0)
+                {
+                    if ($transactionStarted)
+                    {
+                        $db->rollbackTransaction();
+                    }
+                    CommonErrors::fatalModal(
+                        COMMONERROR_RECORDERROR,
+                        $this,
+                        'Failed to update pipeline status.'
+                    );
+                }
+                if ($transactionStarted)
+                {
+                    $db->commitTransaction();
+                }
+            }
 
             if ($statusID == PIPELINE_STATUS_REJECTED && $historyID > 0)
             {

@@ -1044,6 +1044,9 @@ class Pipelines
                 candidate_joborder_status_history.comment_is_system AS commentIsSystem,
                 candidate_joborder_status_history.rejection_reason_other AS rejectionReasonOther,
                 GROUP_CONCAT(DISTINCT rejection_reason.label ORDER BY rejection_reason.label SEPARATOR ', ') AS rejectionReasons,
+                history.entered_by AS enteredByID,
+                entered_by_user.first_name AS enteredByFirstName,
+                entered_by_user.last_name AS enteredByLastName,
                 candidate_joborder_status_history.edited_at AS editedAt,
                 DATE_FORMAT(candidate_joborder_status_history.edited_at, '%%m-%%d-%%y (%%h:%%i:%%s %%p)') AS editedAtDisplay,
                 candidate_joborder_status_history.edit_note AS editNote,
@@ -1055,6 +1058,14 @@ class Pipelines
                 ON candidate_joborder.candidate_id = candidate_joborder_status_history.candidate_id
                 AND candidate_joborder.joborder_id = candidate_joborder_status_history.joborder_id
                 AND candidate_joborder.site_id = candidate_joborder_status_history.site_id
+            LEFT JOIN history
+                ON history.data_item_type = %s
+                AND history.data_item_id = candidate_joborder.candidate_joborder_id
+                AND history.previous_value = candidate_joborder_status_history.status_from
+                AND history.new_value = candidate_joborder_status_history.status_to
+                AND history.set_date = candidate_joborder_status_history.date
+            LEFT JOIN user AS entered_by_user
+                ON entered_by_user.user_id = history.entered_by
             LEFT JOIN candidate_joborder_status AS status_from
                 ON status_from.candidate_joborder_status_id = candidate_joborder_status_history.status_from
             LEFT JOIN candidate_joborder_status AS status_to
@@ -1075,6 +1086,7 @@ class Pipelines
                 candidate_joborder_status_history.date DESC,
                 candidate_joborder_status_history.candidate_joborder_status_history_id DESC",
             $this->_db->makeQueryInteger($candidateJobOrderID),
+            $this->_db->makeQueryInteger(DATA_ITEM_PIPELINE),
             $this->_siteID
         );
 
