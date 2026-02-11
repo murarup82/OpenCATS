@@ -1,3 +1,6 @@
+-- 20260211_0002_update_gdpr_consent_email.sql
+-- Update GDPR consent email template copy (one-off, safe to re-run).
+
 UPDATE email_template
 SET
     title = 'Keeping your data safe at Avel Technologies',

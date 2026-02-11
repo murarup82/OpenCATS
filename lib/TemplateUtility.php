@@ -999,7 +999,7 @@ class TemplateUtility
 
             if ($tabText == 'Home')
             {
-                $tabText = 'Dashboard';
+                $tabText = 'Overview';
             }
 
             $displayTab = true;
@@ -1079,8 +1079,8 @@ class TemplateUtility
             );
         }
 
-        $groups = array(
-            array('label' => 'Overview', 'modules' => array('home', 'dashboard', 'activity')),
+          $groups = array(
+              array('label' => 'Overview', 'modules' => array('dashboard', 'home', 'activity')),
             array('label' => 'Core Recruiting', 'modules' => array('candidates', 'joborders', 'companies', 'contacts')),
             array('label' => 'Sourcing & Lists', 'modules' => array('sourcing', 'lists')),
             array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports')),

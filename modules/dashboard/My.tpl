@@ -31,6 +31,12 @@
                 .my-dashboard .status-hired { background: #dcfce7; color: #166534; border-color: #86efac; }
                 .my-dashboard .status-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
                 .my-dashboard .status-unknown { background: #f2f4f6; color: #4c5a61; border-color: #d1d9de; }
+                .my-dashboard .ui2-datatable-card--avel table.sortable th:first-child,
+                .my-dashboard .ui2-datatable-card--avel table.sortable td:first-child {
+                    width: auto;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                }
             </style>
             <div class="ui2-page my-dashboard">
                 <div class="ui2-header">
@@ -56,6 +62,17 @@
                                 </select>
                             </div>
                             <div>
+                                <label for="dashboardStatus">Status</label><br />
+                                <select id="dashboardStatus" name="statusID" class="inputbox ui2-input ui2-input--md">
+                                    <option value="0">All statuses</option>
+                                    <?php foreach ($this->statusOptions as $option): ?>
+                                        <option value="<?php $this->_($option['statusID']); ?>" <?php if ((int) $this->statusID === (int) $option['statusID']) echo('selected'); ?>>
+                                            <?php $this->_($option['status']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div>
                                 <label>
                                     <input type="checkbox" name="showClosed" value="1" <?php if (!empty($this->showClosed)) echo('checked="checked"'); ?> />
                                     Show Closed
@@ -67,7 +84,8 @@
                         </div>
                     </form>
 
-                    <table class="ui2-table" style="margin-top: 12px;">
+                    <div class="ui2-datatable-card ui2-datatable-card--avel" style="margin-top: 12px;">
+                    <table class="sortable">
                         <thead>
                             <tr>
                                 <th>Candidate Name</th>
@@ -139,6 +157,7 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                    </div>
 
                     <?php if (!empty($this->totalRows)): ?>
                         <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
@@ -159,6 +178,7 @@
                                     $params = array();
                                     if (!empty($this->showClosed)) $params[] = 'showClosed=1';
                                     if (!empty($this->jobOrderID)) $params[] = 'jobOrderID=' . (int) $this->jobOrderID;
+                                    if (!empty($this->statusID)) $params[] = 'statusID=' . (int) $this->statusID;
                                     $base = $base . (count($params) ? '&' . implode('&', $params) : '');
                                 ?>
                                 <?php if ($this->page > 1): ?>
@@ -175,4 +195,17 @@
             </div>
         </div>
     </div>
+    <script type="text/javascript">
+        (function () {
+            var form = document.getElementById('dashboardFilters');
+            if (!form) return;
+            var autoSubmit = function () { form.submit(); };
+            var jobOrder = document.getElementById('dashboardJobOrder');
+            var status = document.getElementById('dashboardStatus');
+            var showClosed = form.querySelector('input[name="showClosed"]');
+            if (jobOrder) jobOrder.onchange = autoSubmit;
+            if (status) status.onchange = autoSubmit;
+            if (showClosed) showClosed.onchange = autoSubmit;
+        })();
+    </script>
 <?php TemplateUtility::printFooter(); ?>

@@ -200,7 +200,7 @@ function buildConsentEmail($firstName, $lastName, $siteName, $link, $requestExpi
         $fullName = $safeName;
     }
 
-    $subject = 'GDPR Consent Request';
+    $subject = 'Keeping your data safe at Avel Technologies';
     $body = '';
 
     if (!empty($templateRow) && isset($templateRow['disabled']) && $templateRow['disabled'] == '0')
@@ -233,16 +233,15 @@ function buildConsentEmail($firstName, $lastName, $siteName, $link, $requestExpi
         $body = "* This is an automated message. Please do not reply. *\n";
         $body .= "%DATETIME%\n\n";
         $body .= "Hello " . $safeName . ",\n\n";
-        $body .= "To continue processing your application and storing your personal data,\n";
-        $body .= "we need your consent in accordance with GDPR regulations.\n\n";
-        $body .= "Please review and respond by clicking the link below:\n";
-        $body .= $link . "\n\n";
+        $body .= "We'd love to keep your application active and stay in touch about future opportunities at Avel Technologies but your privacy matters to us as much as your application does.\n\n";
+        $body .= "To ensure we're following the latest GDPR guidelines while we process your candidacy, we need your consent to keep your info in our secure system.\n\n";
+        $body .= "Click here to stay on our radar: " . $link . "\n\n";
+        $body .= "Thank you!\n";
+        $body .= "The Avel Technologies Team\n\n";
         if ($requestExpires !== '')
         {
-            $body .= "This link will expire on " . $requestExpires . ".\n\n";
+            $body .= "P.S. This link expires on " . $requestExpires . ", so don't let it sit in your inbox for too long!\n";
         }
-        $body .= "Thank you,\n\n";
-        $body .= $siteName;
     }
 
     $body = strip_tags($body);

@@ -48,9 +48,14 @@ class DashboardUI extends UserInterface
     {
         $showClosed = $this->isChecked('showClosed', $_GET);
         $jobOrderID = (int) $this->getTrimmedInput('jobOrderID', $_GET);
+        $statusID = (int) $this->getTrimmedInput('statusID', $_GET);
         if ($jobOrderID < 0)
         {
             $jobOrderID = 0;
+        }
+        if ($statusID < 0)
+        {
+            $statusID = 0;
         }
 
         $page = (int) $this->getTrimmedInput('page', $_GET);
@@ -81,6 +86,12 @@ class DashboardUI extends UserInterface
         if ($jobOrderID > 0)
         {
             $jobOrderFilter = 'AND candidate_joborder.joborder_id = ' . $db->makeQueryInteger($jobOrderID);
+        }
+
+        $statusFilterByID = '';
+        if ($statusID > 0)
+        {
+            $statusFilterByID = 'AND candidate_joborder.status = ' . $db->makeQueryInteger($statusID);
         }
 
         $sql = sprintf(
@@ -136,6 +147,7 @@ class DashboardUI extends UserInterface
                 joborder.owner = %s
             %s
             %s
+            %s
             ORDER BY
                 lastStatusChange DESC,
                 candidate_joborder.date_modified DESC
@@ -147,6 +159,7 @@ class DashboardUI extends UserInterface
             $db->makeQueryInteger($userID),
             $statusFilter,
             $jobOrderFilter,
+            $statusFilterByID,
             $db->makeQueryInteger($offset),
             $db->makeQueryInteger($entriesPerPage)
         );
@@ -182,6 +195,8 @@ class DashboardUI extends UserInterface
         }
 
         $jobOrderOptions = $this->getOwnedJobOrders($showClosed);
+        $pipelines = new Pipelines($this->_siteID);
+        $statusOptions = $pipelines->getStatusesForPicking();
 
         $totalPages = 1;
         if ($entriesPerPage > 0)
@@ -196,7 +211,9 @@ class DashboardUI extends UserInterface
         $this->_template->assign('rows', $rows);
         $this->_template->assign('showClosed', $showClosed);
         $this->_template->assign('jobOrderID', $jobOrderID);
+        $this->_template->assign('statusID', $statusID);
         $this->_template->assign('jobOrderOptions', $jobOrderOptions);
+        $this->_template->assign('statusOptions', $statusOptions);
         $this->_template->assign('page', $page);
         $this->_template->assign('totalPages', $totalPages);
         $this->_template->assign('totalRows', $totalRows);

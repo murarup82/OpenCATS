@@ -8,11 +8,11 @@ INSERT INTO email_template (
     disabled
 )
 SELECT
-    '* This is an automated message. Please do not reply. *\r\n%DATETIME%\r\n\r\nHello %CANDIDATE_NAME%,\r\n\r\nTo continue processing your application and storing your personal data,\r\nwe need your consent in accordance with GDPR regulations.\r\n\r\nPlease review and respond by clicking the link below:\r\n%CONSENT_LINK%\r\n\r\nThis link will expire on %REQUEST_EXPIRES%.\r\n\r\nThank you,\r\n\r\nAvel Technologies Team',
+    '* This is an automated message. Please do not reply. *\r\n%DATETIME%\r\n\r\nHello %CANDFIRSTNAME%,\r\n\r\nWe''d love to keep your application active and stay in touch about future opportunities at Avel Technologies but your privacy matters to us as much as your application does.\r\n\r\nTo ensure we''re following the latest GDPR guidelines while we process your candidacy, we need your consent to keep your info in our secure system.\r\n\r\nClick here to stay on our radar: %CONSENT_LINK%\r\n\r\nThank you!\r\nThe Avel Technologies Team\r\n\r\nP.S. This link expires on %REQUEST_EXPIRES%, so don''t let it sit in your inbox for too long!',
     1,
     s.site_id,
     'GDPR_CONSENT',
-    'GDPR Consent Request',
+    'Keeping your data safe at Avel Technologies',
     '%DATETIME%%SITENAME%%USERFULLNAME%%USERMAIL%%CANDIDATE_NAME%%CANDFIRSTNAME%%CANDFULLNAME%%CONSENT_LINK%%REQUEST_EXPIRES%',
     0
 FROM site s
