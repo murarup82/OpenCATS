@@ -344,6 +344,21 @@ class SettingsUI extends UserInterface
                 $this->manageUsers();
                 break;
 
+            case 'schemaMigrations':
+                if ($this->getUserAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if ($this->isPostBack())
+                {
+                    $this->onSchemaMigrations();
+                }
+                else
+                {
+                    $this->schemaMigrations();
+                }
+                break;
+
             case 'professional':
                 if ($this->getUserAccessLevel('settings.professional') < ACCESS_LEVEL_DEMO)
                 {
@@ -2805,6 +2820,267 @@ class SettingsUI extends UserInterface
         $this->_template->assign('systemAdministration', $systemAdministration);
         $this->_template->assign('active', $this);
         $this->_template->display($templateFile);
+    }
+
+    private function schemaMigrations()
+    {
+        $indexByVersion = array();
+        $dirMissing = false;
+        $migrations = $this->loadSchemaMigrations($indexByVersion, $dirMissing);
+
+        $pendingCount = 0;
+        foreach ($migrations as $migration)
+        {
+            if (!$migration['applied'])
+            {
+                $pendingCount++;
+            }
+        }
+
+        $message = $this->getTrimmedInput('message', $_GET);
+        $errorMessage = $this->getTrimmedInput('error', $_GET);
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Administration');
+        $this->_template->assign('migrations', $migrations);
+        $this->_template->assign('pendingCount', $pendingCount);
+        $this->_template->assign('dirMissing', $dirMissing ? 1 : 0);
+        $this->_template->assign('message', $message);
+        $this->_template->assign('errorMessage', $errorMessage);
+
+        $this->_template->display('./modules/settings/SchemaMigrations.tpl');
+    }
+
+    private function onSchemaMigrations()
+    {
+        $version = $this->getTrimmedInput('version', $_POST);
+        $applyAll = (isset($_POST['applyAll']) && $_POST['applyAll'] !== '');
+
+        $indexByVersion = array();
+        $dirMissing = false;
+        $migrations = $this->loadSchemaMigrations($indexByVersion, $dirMissing);
+
+        if ($dirMissing)
+        {
+            CommonErrors::fatal(COMMONERROR_FILEERROR, $this, 'Migrations directory not found.');
+        }
+
+        $toApply = array();
+        if ($applyAll)
+        {
+            foreach ($migrations as $migration)
+            {
+                if (!$migration['applied'])
+                {
+                    $toApply[] = $migration;
+                }
+            }
+            if (empty($toApply))
+            {
+                CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('No pending migrations.'));
+            }
+        }
+        else
+        {
+            if ($version === '' || !isset($indexByVersion[$version]))
+            {
+                CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'Invalid migration selection.');
+            }
+            $migration = $indexByVersion[$version];
+            if ($migration['applied'])
+            {
+                CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('Migration already applied.'));
+            }
+            $toApply[] = $migration;
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $this->ensureSchemaMigrationsTable($db);
+
+        $lockRS = $db->getAssoc(sprintf(
+            "SELECT GET_LOCK(%s, %s) AS gotLock",
+            $db->makeQueryString('opencats_migrate'),
+            $db->makeQueryInteger(60)
+        ));
+
+        if (empty($lockRS) || (int) $lockRS['gotLock'] !== 1)
+        {
+            CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to acquire migration lock.');
+        }
+
+        $appliedCount = 0;
+        foreach ($toApply as $migration)
+        {
+            $sql = file_get_contents($migration['file']);
+            if ($sql === false)
+            {
+                $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+                CommonErrors::fatal(COMMONERROR_FILEERROR, $this, 'Failed to read migration file.');
+            }
+
+            $statements = $this->splitMigrationSqlStatements($sql);
+            foreach ($statements as $statement)
+            {
+                $statement = trim($statement);
+                if ($statement === '' || $statement === '--' || $statement === '#')
+                {
+                    continue;
+                }
+                if (strpos($statement, '--') === 0 || strpos($statement, '#') === 0)
+                {
+                    continue;
+                }
+                $result = $db->query($statement, true);
+                if ($result === false)
+                {
+                    $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+                    CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Migration query failed: ' . $db->getError());
+                }
+            }
+
+            $insert = $db->query(sprintf(
+                "INSERT INTO schema_migrations (version, checksum, applied_at, applied_by)
+                 VALUES (%s, %s, NOW(), %s)",
+                $db->makeQueryString($migration['version']),
+                $db->makeQueryString($migration['checksum']),
+                $db->makeQueryString('admin-ui')
+            ), true);
+
+            if ($insert === false)
+            {
+                $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+                CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to record migration: ' . $db->getError());
+            }
+
+            $appliedCount++;
+        }
+
+        $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+
+        $message = ($appliedCount === 1)
+            ? 'Applied 1 migration.'
+            : 'Applied ' . $appliedCount . ' migrations.';
+        CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode($message));
+    }
+
+    private function ensureSchemaMigrationsTable($db)
+    {
+        $db->query(
+            "CREATE TABLE IF NOT EXISTS schema_migrations (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                version VARCHAR(255) NOT NULL,
+                checksum CHAR(64) DEFAULT NULL,
+                applied_at DATETIME NOT NULL,
+                applied_by VARCHAR(64) NOT NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY uniq_version (version)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci"
+        );
+    }
+
+    private function loadSchemaMigrations(&$indexByVersion, &$dirMissing)
+    {
+        $indexByVersion = array();
+        $dirMissing = false;
+
+        $migrationsDir = LEGACY_ROOT . '/migrations';
+        if (!is_dir($migrationsDir))
+        {
+            $dirMissing = true;
+            return array();
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $this->ensureSchemaMigrationsTable($db);
+
+        $applied = array();
+        $appliedRows = $db->getAllAssoc("SELECT version, checksum, applied_at, applied_by FROM schema_migrations");
+        foreach ($appliedRows as $row)
+        {
+            $applied[$row['version']] = $row;
+        }
+
+        $files = glob($migrationsDir . '/*.sql');
+        if (!is_array($files))
+        {
+            $files = array();
+        }
+        sort($files, SORT_STRING);
+
+        $list = array();
+        foreach ($files as $file)
+        {
+            $version = basename($file);
+            $checksum = hash_file('sha256', $file);
+            $appliedRow = isset($applied[$version]) ? $applied[$version] : null;
+            $isApplied = ($appliedRow !== null);
+            $checksumMatches = true;
+            if ($isApplied && !empty($appliedRow['checksum']) && $appliedRow['checksum'] !== $checksum)
+            {
+                $checksumMatches = false;
+            }
+
+            $row = array(
+                'version' => $version,
+                'file' => $file,
+                'checksum' => $checksum,
+                'applied' => $isApplied ? 1 : 0,
+                'appliedAt' => $isApplied ? $appliedRow['applied_at'] : '',
+                'appliedBy' => $isApplied ? $appliedRow['applied_by'] : '',
+                'checksumMatches' => $checksumMatches ? 1 : 0
+            );
+
+            $list[] = $row;
+            $indexByVersion[$version] = $row;
+        }
+
+        return $list;
+    }
+
+    private function splitMigrationSqlStatements($sql)
+    {
+        $statements = array();
+        $buffer = '';
+        $inString = false;
+        $stringChar = '';
+        $len = strlen($sql);
+        for ($i = 0; $i < $len; $i++)
+        {
+            $ch = $sql[$i];
+            if ($inString)
+            {
+                if ($ch === $stringChar && ($i === 0 || $sql[$i - 1] !== '\\'))
+                {
+                    $inString = false;
+                }
+                $buffer .= $ch;
+                continue;
+            }
+
+            if ($ch === '\'' || $ch === '"')
+            {
+                $inString = true;
+                $stringChar = $ch;
+                $buffer .= $ch;
+                continue;
+            }
+
+            if ($ch === ';')
+            {
+                $statements[] = $buffer;
+                $buffer = '';
+                continue;
+            }
+
+            $buffer .= $ch;
+        }
+
+        if (trim($buffer) !== '')
+        {
+            $statements[] = $buffer;
+        }
+
+        return $statements;
     }
 
     /*

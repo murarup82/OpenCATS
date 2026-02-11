@@ -199,7 +199,7 @@ else if ($_SESSION['CATS']->isLoggedIn() &&
     ModuleUtility::loadModule('login');
 }
 
-/* If user specified a module, load it; otherwise, load the home module. */
+/* If user specified a module, load it; otherwise, load the default module. */
 else if (!isset($_GET['m']) || empty($_GET['m']))
 {
     if ($_SESSION['CATS']->isLoggedIn())
@@ -208,7 +208,14 @@ else if (!isset($_GET['m']) || empty($_GET['m']))
 
         if (!eval(Hooks::get('INDEX_LOAD_HOME'))) return;
 
-        ModuleUtility::loadModule('home');
+        if ($_SESSION['CATS']->getAccessLevel('joborders.show') >= ACCESS_LEVEL_READ)
+        {
+            ModuleUtility::loadModule('dashboard');
+        }
+        else
+        {
+            ModuleUtility::loadModule('home');
+        }
     }
     else
     {

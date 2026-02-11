@@ -78,9 +78,6 @@
                                     Show Closed
                                 </label>
                             </div>
-                            <div>
-                                <input type="submit" class="button ui2-button" value="Apply" />
-                            </div>
                         </div>
                     </form>
 
@@ -146,7 +143,7 @@
                                             <?php if (!empty($this->canChangeStatus)): ?>
                                                 <span class="ui2-inline">
                                                     <a class="button ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=addActivityChangeStatus&amp;jobOrderID=<?php echo($row['jobOrderID']); ?>&amp;candidateID=<?php echo($row['candidateID']); ?>&amp;enforceOwner=1&amp;refreshParent=1', 600, 550, null); return false;">Change Status</a>
-                                                    <a class="button ui2-button ui2-button--secondary" href="#" onclick="window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=pipelineStatusDetails&amp;pipelineID=<?php echo($row['candidateJobOrderID']); ?>', 'pipelineStatusDetails', 'width=900,height=650,scrollbars=yes,resizable=yes'); return false;">Details</a>
+                                                    <a class="button ui2-button ui2-button--secondary" href="#" onclick="var w=900,h=650;var left=Math.max(0,Math.floor((screen.width-w)/2));var top=Math.max(0,Math.floor((screen.height-h)/2));window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=pipelineStatusDetails&amp;pipelineID=<?php echo($row['candidateJobOrderID']); ?>','pipelineStatusDetails','width='+w+',height='+h+',left='+left+',top='+top+',scrollbars=yes,resizable=yes'); return false;">Details</a>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="ui2-status">No access</span>

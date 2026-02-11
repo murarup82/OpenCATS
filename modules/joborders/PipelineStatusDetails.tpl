@@ -20,6 +20,30 @@
         font-size: 12px;
         padding: 5px 10px;
     }
+    .pipeline-status-details .status-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.3;
+        border: 1px solid #d1d9de;
+        color: #1f2933;
+        background: #f2f4f6;
+        white-space: nowrap;
+    }
+    .pipeline-status-details .status-allocated { background: #e6f0ff; color: #1d4ed8; border-color: #c7ddff; }
+    .pipeline-status-details .status-delivery-validated { background: #e6f7f4; color: #0f766e; border-color: #c5ece6; }
+    .pipeline-status-details .status-proposed-to-customer { background: #f3e8ff; color: #6b21a8; border-color: #e3d0ff; }
+    .pipeline-status-details .status-customer-interview { background: #fff7ed; color: #b45309; border-color: #fde0b6; }
+    .pipeline-status-details .status-customer-approved { background: #eef2ff; color: #4f46e5; border-color: #d6dcff; }
+    .pipeline-status-details .status-avel-approved { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+    .pipeline-status-details .status-offer-negotiation,
+    .pipeline-status-details .status-offer-negociation { background: #fff1f2; color: #c2410c; border-color: #fed7aa; }
+    .pipeline-status-details .status-offer-accepted { background: #ecfdf3; color: #15803d; border-color: #bbf7d0; }
+    .pipeline-status-details .status-hired { background: #dcfce7; color: #166534; border-color: #86efac; }
+    .pipeline-status-details .status-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+    .pipeline-status-details .status-unknown { background: #f2f4f6; color: #4c5a61; border-color: #d1d9de; }
 </style>
 
 <div class="ui2 ui2-theme-avel pipeline-status-details">
@@ -95,10 +119,33 @@
                             {
                                 $statusTo = 'None';
                             }
+
+                            $statusFromSlug = strtolower($statusFrom);
+                            $statusFromSlug = preg_replace('/[^a-z0-9]+/', '-', $statusFromSlug);
+                            $statusFromSlug = trim($statusFromSlug, '-');
+                            if ($statusFromSlug === '')
+                            {
+                                $statusFromSlug = 'unknown';
+                            }
+                            $statusToSlug = strtolower($statusTo);
+                            $statusToSlug = preg_replace('/[^a-z0-9]+/', '-', $statusToSlug);
+                            $statusToSlug = trim($statusToSlug, '-');
+                            if ($statusToSlug === '')
+                            {
+                                $statusToSlug = 'unknown';
+                            }
                         ?>
                         <tr>
                             <td><?php $this->_($row['dateDisplay']); ?></td>
-                            <td><?php $this->_($statusFrom); ?> -&gt; <?php $this->_($statusTo); ?></td>
+                            <td>
+                                <span class="status-pill status-<?php echo($statusFromSlug); ?>">
+                                    <?php $this->_($statusFrom); ?>
+                                </span>
+                                &nbsp;-&gt;&nbsp;
+                                <span class="status-pill status-<?php echo($statusToSlug); ?>">
+                                    <?php $this->_($statusTo); ?>
+                                </span>
+                            </td>
                             <td><?php $this->_($enteredByName); ?></td>
                             <td>
                                 <?php if ($comment !== ''): ?>
@@ -159,6 +206,51 @@
         <?php endif; ?>
     </div>
 </div>
+
+<script type="text/javascript">
+    (function () {
+        function resizeAndCenter() {
+            var body = document.body;
+            var html = document.documentElement;
+            if (!body || !html || !window.resizeTo) return;
+
+            var contentWidth = Math.max(
+                body.scrollWidth, body.offsetWidth,
+                html.clientWidth, html.scrollWidth, html.offsetWidth
+            );
+            var contentHeight = Math.max(
+                body.scrollHeight, body.offsetHeight,
+                html.clientHeight, html.scrollHeight, html.offsetHeight
+            );
+
+            var chromeWidth = window.outerWidth - window.innerWidth;
+            var chromeHeight = window.outerHeight - window.innerHeight;
+            if (isNaN(chromeWidth) || chromeWidth < 0) chromeWidth = 16;
+            if (isNaN(chromeHeight) || chromeHeight < 0) chromeHeight = 88;
+
+            var targetWidth = Math.min(Math.max(contentWidth + chromeWidth + 20, 760), screen.availWidth - 40);
+            var targetHeight = Math.min(Math.max(contentHeight + chromeHeight + 20, 520), screen.availHeight - 40);
+
+            try {
+                window.resizeTo(targetWidth, targetHeight);
+            } catch (e) {}
+
+            if (window.moveTo) {
+                var left = Math.max(0, Math.floor((screen.availWidth - targetWidth) / 2));
+                var top = Math.max(0, Math.floor((screen.availHeight - targetHeight) / 2));
+                try { window.moveTo(left, top); } catch (e) {}
+            }
+        }
+
+        if (document.readyState === 'complete') {
+            resizeAndCenter();
+        } else {
+            window.addEventListener('load', resizeAndCenter);
+        }
+        setTimeout(resizeAndCenter, 150);
+        setTimeout(resizeAndCenter, 400);
+    })();
+</script>
 
     </body>
 </html>

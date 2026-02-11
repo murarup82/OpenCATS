@@ -278,7 +278,11 @@
             return false;
         }
 
-        window.open(url, 'pipelineStatusDetails', 'width=900,height=650,scrollbars=yes,resizable=yes');
+        var w = 900;
+        var h = 650;
+        var left = Math.max(0, Math.floor((screen.width - w) / 2));
+        var top = Math.max(0, Math.floor((screen.height - h) / 2));
+        window.open(url, 'pipelineStatusDetails', 'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',scrollbars=yes,resizable=yes');
         return false;
     }
 </script>
@@ -552,6 +556,43 @@
     {
         AS_refreshRejectionUI();
     }
+
+    function AS_resizePopWin()
+    {
+        if (!window.parent || !window.parent.gPopupContainer || !window.parent.gPopFrameIFrame || !window.parent.centerPopWin)
+        {
+            return;
+        }
+
+        var body = document.body;
+        var html = document.documentElement;
+        var height = Math.max(
+            body.scrollHeight, body.offsetHeight,
+            html.clientHeight, html.scrollHeight, html.offsetHeight
+        );
+        height = Math.min(Math.max(height + 10, 260), 700);
+
+        var titleBar = window.parent.document.getElementById('popupTitleBar');
+        var titleBarHeight = titleBar ? titleBar.offsetHeight : 0;
+
+        window.parent.gPopFrameIFrame.style.height = height + 'px';
+        window.parent.gPopFrameDiv.style.height = height + 'px';
+        window.parent.gPopupContainer.style.height = (height + titleBarHeight) + 'px';
+        window.parent.centerPopWin(window.parent.gPopupContainer.offsetWidth, height);
+    }
+
+    setTimeout(AS_resizePopWin, 50);
+    setTimeout(AS_resizePopWin, 250);
+
+    var resizeTargets = ['changeStatus', 'statusID', 'autoFillStages', 'scheduleEvent', 'triggerEmail'];
+    for (var i = 0; i < resizeTargets.length; i++)
+    {
+        var el = document.getElementById(resizeTargets[i]);
+        if (el)
+        {
+            el.onchange = AS_resizePopWin;
+        }
+    }
 </script>
     </form>
 
@@ -568,61 +609,41 @@
     </script>
 
 <?php else: ?>
-    <?php if (!empty($this->refreshParentOnClose)): ?>
-        <script type="text/javascript">
+    <script type="text/javascript">
+        (function () {
             if (parent && parent.hidePopWinRefresh)
             {
                 parent.hidePopWinRefresh(false);
+                return;
             }
-            else if (parent && parent.hidePopWin)
+            if (parent && parent.hidePopWin)
             {
                 parent.hidePopWin(false);
-                parent.location.reload();
-            }
-            else
-            {
-                if (window.opener)
+                if (parent.location && parent.location.reload)
                 {
-                    window.opener.location.reload();
+                    parent.location.reload();
                 }
-                window.close();
+                return;
             }
-        </script>
-    <?php endif; ?>
-    <?php if (!$this->changesMade): ?>
-        <p>No changes have been made.</p>
-    <?php else: ?>
-         <?php if (!$this->onlyScheduleEvent): ?>
-            <?php //FIXME: E-mail stuff. ?>
-            <?php if ($this->statusChanged): ?>
-                <p>The candidate's status has been changed from <span class="bold"><?php $this->_($this->oldStatusDescription); ?></span> to <span class="bold"><?php $this->_($this->newStatusDescription); ?></span>.</p>
-            <?php else: ?>
-                <p>The candidate's status has not been changed.</p>
-            <?php endif; ?>
+            if (window.opener && !window.opener.closed)
+            {
+                try { window.opener.location.reload(); } catch (e) {}
+                window.close();
+                return;
+            }
 
-            <?php if ($this->activityAdded): ?>
-                <?php if (!empty($this->activityDescription)): ?>
-                    <p>An activity entry of type <span class="bold"><?php $this->_($this->activityType); ?></span> has been added with the following note: &quot;<?php echo($this->activityDescription); ?>&quot;.</p>
-                <?php else: ?>
-                    <p>An activity entry of type <span class="bold"><?php $this->_($this->activityType); ?></span> has been added with no notes.</p>
-                <?php endif; ?>
-            <?php else: ?>
-                <p>No activity entries have been added.</p>
-            <?php endif; ?>
-        <?php endif; ?>
-    <?php endif; ?>
-
-    <?php echo($this->eventHTML); ?>
-
-    <?php echo($this->notificationHTML); ?>
-
-    <form>
+            var fallback = '';
 <?php if ($this->isJobOrdersMode): ?>
-        <input type="button" name="close" class="button ui2-button ui2-button--secondary" value="Close" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo($this->regardingID); ?>');" />
+            fallback = '<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&a=show&jobOrderID=<?php echo($this->regardingID); ?>';
 <?php else: ?>
-        <input type="button" name="close" class="button ui2-button ui2-button--secondary" value="Close" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>');" />
+            fallback = '<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&a=show&candidateID=<?php echo($this->candidateID); ?>';
 <?php endif; ?>
-    </form>
+            if (fallback)
+            {
+                window.location.href = fallback;
+            }
+        })();
+    </script>
 <?php endif; ?>
 
     </div>

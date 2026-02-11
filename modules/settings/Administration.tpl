@@ -131,6 +131,17 @@
                                     Produce a downloadable backup with all the content in your site.
                                 </td>
                             </tr>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=schemaMigrations">
+                                        Schema Migrations
+                                    </a>
+                                </td>
+                                <td>
+                                    Review and apply pending schema migrations.
+                                </td>
+                            </tr>
                         </table>
                         <br />
 

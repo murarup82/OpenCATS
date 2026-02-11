@@ -2162,9 +2162,13 @@ class JobOrdersUI extends UserInterface
             ));
         }
 
-        CATSUtility::transferRelativeURI(
-            'm=joborders&a=pipelineStatusDetails&pipelineID=' . (int) $pipelineID
-        );
+        $redirect = CATSUtility::getIndexName() . '?m=joborders&a=pipelineStatusDetails&pipelineID=' . (int) $pipelineID;
+        echo '<html><head><script type="text/javascript">',
+             'if (window.opener && !window.opener.closed) { try { window.opener.location.reload(); } catch (e) {} }',
+             'window.close();',
+             'setTimeout(function(){ if (!window.closed) { window.location.href = \'', addslashes($redirect), '\'; } }, 200);',
+             '</script></head><body></body></html>';
+        return;
     }
 
     private function onAddActivityChangeStatus()
