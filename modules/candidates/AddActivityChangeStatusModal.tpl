@@ -25,7 +25,34 @@
 </script>
 <?php endif; ?>
 
-<div class="ui2">
+<style type="text/css">
+    .pipeline-status-modal .status-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.3;
+        border: 1px solid #d1d9de;
+        color: #1f2933;
+        background: #f2f4f6;
+        white-space: nowrap;
+    }
+    .pipeline-status-modal .status-allocated { background: #e6f0ff; color: #1d4ed8; border-color: #c7ddff; }
+    .pipeline-status-modal .status-delivery-validated { background: #e6f7f4; color: #0f766e; border-color: #c5ece6; }
+    .pipeline-status-modal .status-proposed-to-customer { background: #f3e8ff; color: #6b21a8; border-color: #e3d0ff; }
+    .pipeline-status-modal .status-customer-interview { background: #fff7ed; color: #b45309; border-color: #fde0b6; }
+    .pipeline-status-modal .status-customer-approved { background: #eef2ff; color: #4f46e5; border-color: #d6dcff; }
+    .pipeline-status-modal .status-avel-approved { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+    .pipeline-status-modal .status-offer-negotiation,
+    .pipeline-status-modal .status-offer-negociation { background: #fff1f2; color: #c2410c; border-color: #fed7aa; }
+    .pipeline-status-modal .status-offer-accepted { background: #ecfdf3; color: #15803d; border-color: #bbf7d0; }
+    .pipeline-status-modal .status-hired { background: #dcfce7; color: #166534; border-color: #86efac; }
+    .pipeline-status-modal .status-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+    .pipeline-status-modal .status-unknown { background: #f2f4f6; color: #4c5a61; border-color: #d1d9de; }
+</style>
+
+<div class="ui2 pipeline-status-modal">
 
 <?php if (!$this->isFinishedMode): ?>
 
@@ -143,10 +170,30 @@
             statusSelect.add(option);
         }
 
-        var desired = selectedValue;
-        if (desired === '-1' || allowed.indexOf(parseInt(desired, 10)) === -1)
+        var currentInt = parseInt(currentStatusID, 10);
+        var hasCurrent = !isNaN(currentInt);
+        var nextStatusID = null;
+        if (hasCurrent)
         {
-            desired = currentStatusID;
+            if (allowed.length > 1 && parseInt(allowed[0], 10) === currentInt)
+            {
+                nextStatusID = allowed[1];
+            }
+            else if (allowed.length > 0)
+            {
+                nextStatusID = allowed[0];
+            }
+        }
+        else if (allowed.length > 0)
+        {
+            nextStatusID = allowed[0];
+        }
+
+        var desired = selectedValue;
+        var desiredInt = parseInt(desired, 10);
+        if (desired === '-1' || allowed.indexOf(desiredInt) === -1 || (hasCurrent && desiredInt === currentInt))
+        {
+            desired = (nextStatusID !== null ? nextStatusID : currentStatusID);
         }
 
         if (desired != null)
@@ -345,18 +392,27 @@
                                 }
                             }
                         }
-                        if ($currentStatusLabel === '')
-                        {
-                            $currentStatusLabel = 'None';
-                        }
-                    ?>
+                    if ($currentStatusLabel === '')
+                    {
+                        $currentStatusLabel = 'None';
+                    }
+                    $currentStatusSlug = strtolower($currentStatusLabel);
+                    $currentStatusSlug = preg_replace('/[^a-z0-9]+/', '-', $currentStatusSlug);
+                    $currentStatusSlug = trim($currentStatusSlug, '-');
+                    if ($currentStatusSlug === '')
+                    {
+                        $currentStatusSlug = 'unknown';
+                    }
+                ?>
                     <div style="margin-bottom: 4px;">
-                        Current Status:
-                        <strong><?php $this->_($currentStatusLabel); ?></strong>
+                        <span style="font-weight: 700; color: #1f2a37;">Current Status:</span>
+                        <span class="status-pill status-<?php echo($currentStatusSlug); ?>">
+                            <?php $this->_($currentStatusLabel); ?>
+                        </span>
                     </div>
 
                     <div id="changeStatusDiv" style="margin-top: 4px;">
-                        <div style="margin-bottom: 4px;">New Status</div>
+                        <label for="statusID" style="font-weight: 700; color: #1f2a37; margin-right: 6px;">New Status:</label>
                         <select id="statusID" name="statusID" class="inputbox ui2-input" style="width: 150px;" onchange="AS_onStatusChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'sendEmailCheckTR', 'triggerEmailSpan', 'activityNote', 'activityTypeID', <?php if ($this->isJobOrdersMode): echo $this->selectedJobOrderID; else: ?>null<?php endif; ?>, 'customMessage', 'origionalCustomMessage', 'triggerEmail', statusesArrayString, jobOrdersArrayStringTitle, jobOrdersArrayStringCompany, statusTriggersEmailArray, 'emailIsDisabled');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent || !$forceStatusChange): ?> disabled<?php endif; ?>>
                             <option value="-1">(Select a Status)</option>
 
@@ -561,9 +617,9 @@
         <input type="button" class="button ui2-button ui2-button--secondary" name="details" id="details" value="Details" onclick="AS_openPipelineStatusDetails();" />&nbsp;
         <input type="submit" class="button ui2-button ui2-button--primary" name="submit" id="submit" value="Save" />&nbsp;
 <?php if ($this->isJobOrdersMode): ?>
-        <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo($this->selectedJobOrderID); ?>');" />
+        <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=dashboard&amp;a=my');" />
 <?php else: ?>
-        <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>');" />
+        <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=dashboard&amp;a=my');" />
 <?php endif; ?>
         </div>
 
