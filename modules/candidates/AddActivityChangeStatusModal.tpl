@@ -676,7 +676,18 @@
         var el = document.getElementById(resizeTargets[i]);
         if (el)
         {
-            el.onchange = AS_resizePopWin;
+            (function (element)
+            {
+                var prevHandler = element.onchange;
+                element.onchange = function (evt)
+                {
+                    if (typeof prevHandler === 'function')
+                    {
+                        prevHandler.call(element, evt);
+                    }
+                    AS_resizePopWin();
+                };
+            })(el);
         }
     }
 </script>
