@@ -22,34 +22,37 @@
     }
     .pipeline-status-details .ui2-table {
         width: 100%;
-        table-layout: fixed;
+        table-layout: auto;
+    }
+    .pipeline-status-details .ui2-table th,
+    .pipeline-status-details .ui2-table td {
+        white-space: normal;
     }
     .pipeline-status-details .ui2-table th:nth-child(1),
     .pipeline-status-details .ui2-table td:nth-child(1) {
-        width: 130px;
+        width: 150px;
     }
     .pipeline-status-details .ui2-table th:nth-child(2),
     .pipeline-status-details .ui2-table td:nth-child(2) {
-        width: 260px;
+        min-width: 260px;
     }
     .pipeline-status-details .ui2-table th:nth-child(3),
     .pipeline-status-details .ui2-table td:nth-child(3) {
-        width: 140px;
+        width: 150px;
     }
     .pipeline-status-details .ui2-table th:nth-child(4),
     .pipeline-status-details .ui2-table td:nth-child(4) {
-        width: 32%;
-        white-space: normal;
+        min-width: 360px;
         word-break: break-word;
     }
     .pipeline-status-details .ui2-table th:nth-child(5),
     .pipeline-status-details .ui2-table td:nth-child(5) {
-        width: 60px;
+        width: 70px;
         text-align: center;
     }
     .pipeline-status-details .ui2-table th:nth-child(6),
     .pipeline-status-details .ui2-table td:nth-child(6) {
-        width: 260px;
+        min-width: 280px;
     }
     .pipeline-status-details .status-pill {
         display: inline-block;

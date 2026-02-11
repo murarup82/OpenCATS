@@ -2855,6 +2855,7 @@ class SettingsUI extends UserInterface
     {
         $version = $this->getTrimmedInput('version', $_POST);
         $applyAll = (isset($_POST['applyAll']) && $_POST['applyAll'] !== '');
+        $markApplied = (isset($_POST['markApplied']) && $_POST['markApplied'] !== '');
 
         $indexByVersion = array();
         $dirMissing = false;
@@ -2863,6 +2864,60 @@ class SettingsUI extends UserInterface
         if ($dirMissing)
         {
             CommonErrors::fatal(COMMONERROR_FILEERROR, $this, 'Migrations directory not found.');
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $this->ensureSchemaMigrationsTable($db);
+
+        if ($markApplied)
+        {
+            if ($version === '' || !isset($indexByVersion[$version]))
+            {
+                CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'Invalid migration selection.');
+            }
+
+            $migration = $indexByVersion[$version];
+            if ($migration['applied'])
+            {
+                CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('Migration already applied.'));
+            }
+
+            if ($version === '202602101500_add_entered_by.sql')
+            {
+                $columns = $db->getAllAssoc("SHOW COLUMNS FROM candidate_joborder_status_history LIKE 'entered_by'");
+                if (empty($columns))
+                {
+                    CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'entered_by column not found; cannot mark applied.');
+                }
+            }
+
+            $lockRS = $db->getAssoc(sprintf(
+                "SELECT GET_LOCK(%s, %s) AS gotLock",
+                $db->makeQueryString('opencats_migrate'),
+                $db->makeQueryInteger(60)
+            ));
+
+            if (empty($lockRS) || (int) $lockRS['gotLock'] !== 1)
+            {
+                CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to acquire migration lock.');
+            }
+
+            $insert = $db->query(sprintf(
+                "INSERT INTO schema_migrations (version, checksum, applied_at, applied_by)
+                 VALUES (%s, %s, NOW(), %s)",
+                $db->makeQueryString($migration['version']),
+                $db->makeQueryString($migration['checksum']),
+                $db->makeQueryString('admin-ui')
+            ), true);
+
+            $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+
+            if ($insert === false)
+            {
+                CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to record migration: ' . $db->getError());
+            }
+
+            CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('Migration marked as applied.'));
         }
 
         $toApply = array();
@@ -2893,9 +2948,6 @@ class SettingsUI extends UserInterface
             }
             $toApply[] = $migration;
         }
-
-        $db = DatabaseConnection::getInstance();
-        $this->ensureSchemaMigrationsTable($db);
 
         $lockRS = $db->getAssoc(sprintf(
             "SELECT GET_LOCK(%s, %s) AS gotLock",

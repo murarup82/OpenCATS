@@ -80,6 +80,7 @@
                                                 <input type="submit" class="button ui2-button ui2-button--secondary" value="Applied" disabled="disabled" />
                                             <?php else: ?>
                                                 <input type="submit" class="button ui2-button ui2-button--primary" value="Apply" />
+                                                <input type="submit" class="button ui2-button ui2-button--secondary" name="markApplied" value="Mark Applied" onclick="return confirm('Mark this migration as applied without running it?');" />
                                             <?php endif; ?>
                                         </form>
                                     </td>

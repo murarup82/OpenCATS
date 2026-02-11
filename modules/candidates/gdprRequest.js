@@ -66,6 +66,21 @@ var GDPRCandidateRequest = (function ()
             setStatus(reason || 'Action unavailable.', true);
             return;
         }
+        if (button)
+        {
+            var requestStatus = button.getAttribute('data-request-status');
+            if (requestStatus && requestStatus.toUpperCase() === 'SENT')
+            {
+                var confirmed = window.confirm(
+                    'A GDPR request is already pending for this candidate and is awaiting feedback.\n\n' +
+                    'Do you want to resend the request?'
+                );
+                if (!confirmed)
+                {
+                    return;
+                }
+            }
+        }
 
         var http = AJAX_getXMLHttpObject();
         if (!http)

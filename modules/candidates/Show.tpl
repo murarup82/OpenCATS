@@ -425,6 +425,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         class="ui2-button ui2-button--secondary"
                                         <?php if ($this->gdprSendDisabled): ?>disabled="disabled"<?php endif; ?>
                                         <?php if ($this->gdprSendDisabledReason !== ''): ?>data-disabled-reason="<?php echo(htmlspecialchars($this->gdprSendDisabledReason, ENT_QUOTES)); ?>" title="<?php echo(htmlspecialchars($this->gdprSendDisabledReason, ENT_QUOTES)); ?>"<?php endif; ?>
+                                        <?php if (!empty($this->gdprLatestRequest['rawStatus'])): ?>data-request-status="<?php echo(htmlspecialchars($this->gdprLatestRequest['rawStatus'], ENT_QUOTES)); ?>"<?php endif; ?>
                                     >Send GDPR request</button>
                                 </div>
                             <?php endif; ?>

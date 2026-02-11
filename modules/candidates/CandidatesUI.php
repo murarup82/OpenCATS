@@ -1625,6 +1625,9 @@ class CandidatesUI extends UserInterface
         } else if ($gdprSigned) {
             CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, 'GDPR expiration date is required when GDPR Signed is Yes.');
         }
+        if (!$gdprSigned) {
+            $gdprExpirationDate = null;
+        }
         /* Candidate source list editor. */
         $sourceCSV = $this->getTrimmedInput('sourceCSV', $_POST);
 
@@ -2892,6 +2895,9 @@ class CandidatesUI extends UserInterface
             );
         } else if ($gdprSigned) {
             $this->$fatal('GDPR expiration date is required when GDPR Signed is Yes.', $moduleDirectory);
+        }
+        if (!$gdprSigned) {
+            $gdprExpirationDate = null;
         }
 
         /* Candidate source list editor. */

@@ -327,10 +327,36 @@
                     <label id="statusIDLabel" for="statusID">Status:</label>
                 </td>
                 <td class="tdData">
-                    <input type="checkbox" name="changeStatus" id="changeStatus" style="margin-left: 0px" onclick="AS_onChangeStatusChange('changeStatus', 'statusID', 'changeStatusSpanB');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent): ?> disabled<?php endif; ?><?php if ($forceStatusChange): ?> checked="checked"<?php endif; ?> />
-                    <span id="changeStatusSpanA"<?php if ($this->selectedJobOrderID == -1): ?> style="color: #aaaaaa;"<?php endif;?>>Change Status</span><br />
+                    <input type="checkbox" name="changeStatus" id="changeStatus" style="display:none;"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent): ?> disabled<?php endif; ?><?php if ($forceStatusChange): ?> checked="checked"<?php endif; ?> />
+                    <?php
+                        $currentStatusLabel = '';
+                        if ($this->isJobOrdersMode && !empty($this->pipelineData['status']))
+                        {
+                            $currentStatusLabel = $this->pipelineData['status'];
+                        }
+                        else if (!empty($this->selectedStatusID) && (int) $this->selectedStatusID > 0)
+                        {
+                            foreach ($this->statusRS as $statusRow)
+                            {
+                                if ((int) $statusRow['statusID'] === (int) $this->selectedStatusID)
+                                {
+                                    $currentStatusLabel = $statusRow['status'];
+                                    break;
+                                }
+                            }
+                        }
+                        if ($currentStatusLabel === '')
+                        {
+                            $currentStatusLabel = 'None';
+                        }
+                    ?>
+                    <div style="margin-bottom: 4px;">
+                        Current Status:
+                        <strong><?php $this->_($currentStatusLabel); ?></strong>
+                    </div>
 
                     <div id="changeStatusDiv" style="margin-top: 4px;">
+                        <div style="margin-bottom: 4px;">New Status</div>
                         <select id="statusID" name="statusID" class="inputbox ui2-input" style="width: 150px;" onchange="AS_onStatusChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'sendEmailCheckTR', 'triggerEmailSpan', 'activityNote', 'activityTypeID', <?php if ($this->isJobOrdersMode): echo $this->selectedJobOrderID; else: ?>null<?php endif; ?>, 'customMessage', 'origionalCustomMessage', 'triggerEmail', statusesArrayString, jobOrdersArrayStringTitle, jobOrdersArrayStringCompany, statusTriggersEmailArray, 'emailIsDisabled');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent || !$forceStatusChange): ?> disabled<?php endif; ?>>
                             <option value="-1">(Select a Status)</option>
 

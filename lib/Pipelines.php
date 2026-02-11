@@ -1093,8 +1093,8 @@ class Pipelines
             GROUP BY
                 candidate_joborder_status_history.candidate_joborder_status_history_id
             ORDER BY
-                candidate_joborder_status_history.date DESC,
-                candidate_joborder_status_history.candidate_joborder_status_history_id DESC",
+                candidate_joborder_status_history.date ASC,
+                candidate_joborder_status_history.candidate_joborder_status_history_id ASC",
             $this->_db->makeQueryInteger($candidateJobOrderID),
             $this->_siteID
         );
