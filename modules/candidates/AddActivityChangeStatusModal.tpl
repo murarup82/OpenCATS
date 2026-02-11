@@ -400,7 +400,7 @@
 
                     <div id="changeStatusDiv" style="margin-top: 4px;">
                         <label for="statusID" style="font-weight: 700; color: #1f2a37; margin-right: 6px;">New Status:</label>
-                        <select id="statusID" name="statusID" class="inputbox ui2-input" style="width: 150px;" onchange="AS_onStatusChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'sendEmailCheckTR', 'triggerEmailSpan', 'activityNote', 'activityTypeID', <?php if ($this->isJobOrdersMode): echo $this->selectedJobOrderID; else: ?>null<?php endif; ?>, 'customMessage', 'origionalCustomMessage', 'triggerEmail', statusesArrayString, jobOrdersArrayStringTitle, jobOrdersArrayStringCompany, statusTriggersEmailArray, 'emailIsDisabled');"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent || !$forceStatusChange): ?> disabled<?php endif; ?>>
+                        <select id="statusID" name="statusID" class="inputbox ui2-input" style="width: 150px;" onchange="AS_onStatusChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'sendEmailCheckTR', 'triggerEmailSpan', 'activityNote', 'activityTypeID', <?php if ($this->isJobOrdersMode): echo $this->selectedJobOrderID; else: ?>null<?php endif; ?>, 'customMessage', 'origionalCustomMessage', 'triggerEmail', statusesArrayString, jobOrdersArrayStringTitle, jobOrdersArrayStringCompany, statusTriggersEmailArray, 'emailIsDisabled'); AS_refreshRejectionUI();"<?php if ($this->selectedJobOrderID == -1 || $this->onlyScheduleEvent || !$forceStatusChange): ?> disabled<?php endif; ?>>
                             <option value="-1">(Select a Status)</option>
 
                             <?php if ($this->selectedStatusID == -1): ?>
