@@ -54,6 +54,31 @@
     .pipeline-status-details .ui2-table td:nth-child(6) {
         min-width: 280px;
     }
+    .pipeline-status-details .ui2-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .pipeline-status-details .edit-mode-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #4c5a61;
+        cursor: pointer;
+        user-select: none;
+    }
+    .pipeline-status-details .edit-mode-toggle input[type="checkbox"] {
+        margin: 0;
+    }
+    .pipeline-status-details.edit-column-hidden .ui2-table th:nth-child(6),
+    .pipeline-status-details.edit-column-hidden .ui2-table td:nth-child(6),
+    .pipeline-status-details.edit-column-hidden .ui2-table col:nth-child(6) {
+        display: none;
+    }
+    .pipeline-status-details.edit-column-hidden .pipeline-status-edit-actions {
+        display: none;
+    }
     .pipeline-status-details .status-pill {
         display: inline-block;
         padding: 2px 8px;
@@ -98,6 +123,12 @@
                 </div>
             </div>
             <div class="ui2-header-actions">
+                <?php if (!empty($this->canEditHistory)): ?>
+                    <label class="edit-mode-toggle">
+                        <input type="checkbox" id="toggleEditMode" />
+                        Enable edit mode
+                    </label>
+                <?php endif; ?>
                 <a class="ui2-button ui2-button--secondary" href="#" onclick="window.close(); return false;">Close</a>
             </div>
         </div>
@@ -233,7 +264,7 @@
             </tbody>
         </table>
         <?php if (!empty($this->canEditHistory)): ?>
-            <div style="margin-top: 12px; text-align: right;">
+            <div class="pipeline-status-edit-actions" style="margin-top: 12px; text-align: right;">
                 <button class="ui2-button ui2-button--primary" type="submit">Save Changes</button>
             </div>
         </form>
@@ -283,6 +314,30 @@
         }
         setTimeout(resizeAndCenter, 150);
         setTimeout(resizeAndCenter, 400);
+
+        function setEditMode(enabled) {
+            var container = document.querySelector('.pipeline-status-details');
+            if (!container) return;
+            container.classList.toggle('edit-column-hidden', !enabled);
+        }
+
+        function setupEditModeToggle() {
+            var toggle = document.getElementById('toggleEditMode');
+            if (!toggle) {
+                return;
+            }
+            setEditMode(false);
+            toggle.checked = false;
+            toggle.addEventListener('change', function () {
+                setEditMode(!!toggle.checked);
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupEditModeToggle);
+        } else {
+            setupEditModeToggle();
+        }
     })();
 </script>
 
