@@ -153,7 +153,7 @@
         }
         else
         {
-            allowed = statusOrder.slice(currentIndex);
+            allowed = statusOrder.slice(currentIndex + 1);
         }
 
         if (rejectedStatusID && allowed.indexOf(rejectedStatusID) === -1)
@@ -170,28 +170,15 @@
             statusSelect.add(option);
         }
 
-        var currentInt = parseInt(currentStatusID, 10);
-        var hasCurrent = !isNaN(currentInt);
         var nextStatusID = null;
-        if (hasCurrent)
-        {
-            if (allowed.length > 1 && parseInt(allowed[0], 10) === currentInt)
-            {
-                nextStatusID = allowed[1];
-            }
-            else if (allowed.length > 0)
-            {
-                nextStatusID = allowed[0];
-            }
-        }
-        else if (allowed.length > 0)
+        if (allowed.length > 0)
         {
             nextStatusID = allowed[0];
         }
 
         var desired = selectedValue;
         var desiredInt = parseInt(desired, 10);
-        if (desired === '-1' || allowed.indexOf(desiredInt) === -1 || (hasCurrent && desiredInt === currentInt))
+        if (desired === '-1' || allowed.indexOf(desiredInt) === -1)
         {
             desired = (nextStatusID !== null ? nextStatusID : currentStatusID);
         }
