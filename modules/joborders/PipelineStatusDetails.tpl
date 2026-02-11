@@ -20,6 +20,37 @@
         font-size: 12px;
         padding: 5px 10px;
     }
+    .pipeline-status-details .ui2-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+    .pipeline-status-details .ui2-table th:nth-child(1),
+    .pipeline-status-details .ui2-table td:nth-child(1) {
+        width: 130px;
+    }
+    .pipeline-status-details .ui2-table th:nth-child(2),
+    .pipeline-status-details .ui2-table td:nth-child(2) {
+        width: 260px;
+    }
+    .pipeline-status-details .ui2-table th:nth-child(3),
+    .pipeline-status-details .ui2-table td:nth-child(3) {
+        width: 140px;
+    }
+    .pipeline-status-details .ui2-table th:nth-child(4),
+    .pipeline-status-details .ui2-table td:nth-child(4) {
+        width: 32%;
+        white-space: normal;
+        word-break: break-word;
+    }
+    .pipeline-status-details .ui2-table th:nth-child(5),
+    .pipeline-status-details .ui2-table td:nth-child(5) {
+        width: 60px;
+        text-align: center;
+    }
+    .pipeline-status-details .ui2-table th:nth-child(6),
+    .pipeline-status-details .ui2-table td:nth-child(6) {
+        width: 260px;
+    }
     .pipeline-status-details .status-pill {
         display: inline-block;
         padding: 2px 8px;
@@ -228,7 +259,7 @@
             if (isNaN(chromeWidth) || chromeWidth < 0) chromeWidth = 16;
             if (isNaN(chromeHeight) || chromeHeight < 0) chromeHeight = 88;
 
-            var targetWidth = Math.min(Math.max(contentWidth + chromeWidth + 20, 760), screen.availWidth - 40);
+            var targetWidth = Math.min(Math.max(contentWidth + chromeWidth + 40, 980), screen.availWidth - 40);
             var targetHeight = Math.min(Math.max(contentHeight + chromeHeight + 20, 520), screen.availHeight - 40);
 
             try {

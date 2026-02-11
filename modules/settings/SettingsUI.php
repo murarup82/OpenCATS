@@ -2965,17 +2965,57 @@ class SettingsUI extends UserInterface
 
     private function ensureSchemaMigrationsTable($db)
     {
-        $db->query(
-            "CREATE TABLE IF NOT EXISTS schema_migrations (
-                id INT(11) NOT NULL AUTO_INCREMENT,
-                version VARCHAR(255) NOT NULL,
-                checksum CHAR(64) DEFAULT NULL,
-                applied_at DATETIME NOT NULL,
-                applied_by VARCHAR(64) NOT NULL,
-                PRIMARY KEY (id),
-                UNIQUE KEY uniq_version (version)
-            ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci"
-        );
+        $tables = $db->getAllAssoc("SHOW TABLES LIKE 'schema_migrations'");
+        if (empty($tables))
+        {
+            $db->query(
+                "CREATE TABLE IF NOT EXISTS schema_migrations (
+                    id INT(11) NOT NULL AUTO_INCREMENT,
+                    version VARCHAR(255) NOT NULL,
+                    checksum CHAR(64) DEFAULT NULL,
+                    applied_at DATETIME NOT NULL,
+                    applied_by VARCHAR(64) NOT NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY uniq_version (version)
+                ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci"
+            );
+            return;
+        }
+
+        $columns = $db->getAllAssoc("SHOW COLUMNS FROM schema_migrations");
+        $columnNames = array();
+        foreach ($columns as $column)
+        {
+            $columnNames[$column['Field']] = true;
+        }
+
+        if (!isset($columnNames['version']))
+        {
+            $db->query("ALTER TABLE schema_migrations ADD COLUMN version VARCHAR(255) NOT NULL");
+        }
+        if (!isset($columnNames['checksum']))
+        {
+            $db->query("ALTER TABLE schema_migrations ADD COLUMN checksum CHAR(64) DEFAULT NULL");
+        }
+        if (!isset($columnNames['applied_at']))
+        {
+            $db->query("ALTER TABLE schema_migrations ADD COLUMN applied_at DATETIME NOT NULL");
+        }
+        if (!isset($columnNames['applied_by']))
+        {
+            $db->query("ALTER TABLE schema_migrations ADD COLUMN applied_by VARCHAR(64) NOT NULL");
+        }
+
+        $indexes = $db->getAllAssoc("SHOW INDEX FROM schema_migrations");
+        $indexNames = array();
+        foreach ($indexes as $index)
+        {
+            $indexNames[$index['Key_name']] = true;
+        }
+        if (!isset($indexNames['uniq_version']))
+        {
+            $db->query("CREATE UNIQUE INDEX uniq_version ON schema_migrations (version)");
+        }
     }
 
     private function loadSchemaMigrations(&$indexByVersion, &$dirMissing)

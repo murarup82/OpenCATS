@@ -564,12 +564,25 @@
             return;
         }
 
-        var body = document.body;
-        var html = document.documentElement;
-        var height = Math.max(
-            body.scrollHeight, body.offsetHeight,
-            html.clientHeight, html.scrollHeight, html.offsetHeight
-        );
+        var content = document.getElementById('changePipelineStatusForm');
+        if (!content)
+        {
+            content = document.querySelector('.ui2-card');
+        }
+        var height = 0;
+        if (content)
+        {
+            height = content.offsetTop + content.offsetHeight + 20;
+        }
+        if (height <= 0)
+        {
+            var body = document.body;
+            var html = document.documentElement;
+            height = Math.max(
+                body.scrollHeight, body.offsetHeight,
+                html.clientHeight, html.scrollHeight, html.offsetHeight
+            );
+        }
         height = Math.min(Math.max(height + 10, 260), 700);
 
         var titleBar = window.parent.document.getElementById('popupTitleBar');
