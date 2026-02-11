@@ -568,6 +568,27 @@
     </script>
 
 <?php else: ?>
+    <?php if (!empty($this->refreshParentOnClose)): ?>
+        <script type="text/javascript">
+            if (parent && parent.hidePopWinRefresh)
+            {
+                parent.hidePopWinRefresh(false);
+            }
+            else if (parent && parent.hidePopWin)
+            {
+                parent.hidePopWin(false);
+                parent.location.reload();
+            }
+            else
+            {
+                if (window.opener)
+                {
+                    window.opener.location.reload();
+                }
+                window.close();
+            }
+        </script>
+    <?php endif; ?>
     <?php if (!$this->changesMade): ?>
         <p>No changes have been made.</p>
     <?php else: ?>

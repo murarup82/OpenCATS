@@ -6,7 +6,33 @@
         <?php TemplateUtility::printQuickSearch(); ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <div class="ui2-page">
+            <style type="text/css">
+                .my-dashboard .status-pill {
+                    display: inline-block;
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 1.3;
+                    border: 1px solid #d1d9de;
+                    color: #1f2933;
+                    background: #f2f4f6;
+                    white-space: nowrap;
+                }
+                .my-dashboard .status-allocated { background: #e6f0ff; color: #1d4ed8; border-color: #c7ddff; }
+                .my-dashboard .status-delivery-validated { background: #e6f7f4; color: #0f766e; border-color: #c5ece6; }
+                .my-dashboard .status-proposed-to-customer { background: #f3e8ff; color: #6b21a8; border-color: #e3d0ff; }
+                .my-dashboard .status-customer-interview { background: #fff7ed; color: #b45309; border-color: #fde0b6; }
+                .my-dashboard .status-customer-approved { background: #eef2ff; color: #4f46e5; border-color: #d6dcff; }
+                .my-dashboard .status-avel-approved { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+                .my-dashboard .status-offer-negotiation,
+                .my-dashboard .status-offer-negociation { background: #fff1f2; color: #c2410c; border-color: #fed7aa; }
+                .my-dashboard .status-offer-accepted { background: #ecfdf3; color: #15803d; border-color: #bbf7d0; }
+                .my-dashboard .status-hired { background: #dcfce7; color: #166534; border-color: #86efac; }
+                .my-dashboard .status-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+                .my-dashboard .status-unknown { background: #f2f4f6; color: #4c5a61; border-color: #d1d9de; }
+            </style>
+            <div class="ui2-page my-dashboard">
                 <div class="ui2-header">
                     <div class="ui2-header-title">
                         <h2>My Dashboard</h2>
@@ -76,7 +102,23 @@
                                         <td><?php echo($row['ratingLine']); ?></td>
                                         <td><?php $this->_($row['location']); ?></td>
                                         <td>
-                                            <?php $this->_($row['status']); ?>
+                                            <?php
+                                                $statusLabel = trim($row['status']);
+                                                if ($statusLabel === '' || $statusLabel === null)
+                                                {
+                                                    $statusLabel = 'Unknown';
+                                                }
+                                                $statusSlug = strtolower($statusLabel);
+                                                $statusSlug = preg_replace('/[^a-z0-9]+/', '-', $statusSlug);
+                                                $statusSlug = trim($statusSlug, '-');
+                                                if ($statusSlug === '')
+                                                {
+                                                    $statusSlug = 'unknown';
+                                                }
+                                            ?>
+                                            <span class="status-pill status-<?php echo($statusSlug); ?>">
+                                                <?php $this->_($statusLabel); ?>
+                                            </span>
                                             <?php if ((int) $row['isActive'] === 0): ?>
                                                 <span class="pipelineClosedTag">Closed</span>
                                             <?php endif; ?>

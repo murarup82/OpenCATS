@@ -44,6 +44,11 @@
             </div>
         </div>
 
+        <?php if (!empty($this->canEditHistory)): ?>
+        <form id="pipelineStatusEditForm" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=pipelineStatusEditDate">
+            <input type="hidden" name="postback" value="postback" />
+            <input type="hidden" name="pipelineID" value="<?php echo((int) $this->pipelineID); ?>" />
+        <?php endif; ?>
         <table class="ui2-table">
             <thead>
                 <tr>
@@ -133,14 +138,10 @@
                             <td><?php echo($auto ? 'Yes' : 'No'); ?></td>
                             <td>
                                 <?php if (!empty($this->canEditHistory)): ?>
-                                    <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=pipelineStatusEditDate">
-                                        <input type="hidden" name="postback" value="postback" />
-                                        <input type="hidden" name="pipelineID" value="<?php echo((int) $this->pipelineID); ?>" />
-                                        <input type="hidden" name="historyID" value="<?php echo((int) $row['historyID']); ?>" />
-                                        <input type="text" name="newDate" class="inputbox ui2-input ui2-input--sm" style="width: 170px;" value="<?php $this->_($row['dateEdit']); ?>" placeholder="YYYY-MM-DD HH:MM:SS" />
-                                        <input type="text" name="editNote" class="inputbox ui2-input ui2-input--sm" style="width: 200px;" placeholder="Edit note (optional)" />
-                                        <button class="ui2-button ui2-button--secondary" type="submit">Save</button>
-                                    </form>
+                                    <input type="hidden" name="historyID[]" value="<?php echo((int) $row['historyID']); ?>" />
+                                    <input type="hidden" name="originalDate[<?php echo((int) $row['historyID']); ?>]" value="<?php $this->_($row['dateEdit']); ?>" />
+                                    <input type="text" name="newDate[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm" style="width: 170px;" value="<?php $this->_($row['dateEdit']); ?>" placeholder="YYYY-MM-DD HH:MM:SS" />
+                                    <input type="text" name="editNote[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm" style="width: 200px;" placeholder="Edit note (optional)" />
                                 <?php else: ?>
                                     <span class="ui2-muted">--</span>
                                 <?php endif; ?>
@@ -150,6 +151,12 @@
                 <?php endif; ?>
             </tbody>
         </table>
+        <?php if (!empty($this->canEditHistory)): ?>
+            <div style="margin-top: 12px; text-align: right;">
+                <button class="ui2-button ui2-button--primary" type="submit">Save Changes</button>
+            </div>
+        </form>
+        <?php endif; ?>
     </div>
 </div>
 
