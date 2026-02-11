@@ -209,17 +209,21 @@
         var statusCommentRow = document.getElementById('statusCommentTR');
         var rejectionRow = document.getElementById('rejectionReasonTR');
 
-        var changeActive = (changeStatusCheckbox && changeStatusCheckbox.checked);
+        var changeActive = true;
+        if (changeStatusCheckbox)
+        {
+            changeActive = changeStatusCheckbox.checked || changeStatusCheckbox.style.display === 'none';
+        }
         if (statusCommentRow)
         {
             statusCommentRow.style.display = changeActive ? '' : 'none';
         }
 
-        var isRejected = changeActive &&
-            statusSelect && statusSelect.value == rejectedStatusID;
+        var isRejected = statusSelect &&
+            String(statusSelect.value) === String(rejectedStatusID);
         if (rejectionRow)
         {
-            rejectionRow.style.display = isRejected ? '' : 'none';
+            rejectionRow.style.display = (changeActive && isRejected) ? 'table-row' : 'none';
         }
 
         AS_onRejectionReasonChange();
