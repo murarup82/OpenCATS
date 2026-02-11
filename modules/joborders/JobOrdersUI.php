@@ -2108,21 +2108,6 @@ class JobOrdersUI extends UserInterface
             );
         }
 
-        $auto = false;
-        if ((int) $row['commentIsSystem'] === 1)
-        {
-            $auto = true;
-        }
-        else if (!empty($row['commentText']) && strpos($row['commentText'], '[AUTO]') === 0)
-        {
-            $auto = true;
-        }
-
-        if (!$auto)
-        {
-            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Only auto-filled entries can be edited.');
-        }
-
         $db->query(sprintf(
             "UPDATE candidate_joborder_status_history
              SET

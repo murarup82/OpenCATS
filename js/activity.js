@@ -652,18 +652,32 @@ function AS_onStatusChange(statusesArray, jobOrdersArray, regardingSelectID,
         /* If the selected status is the same as the candidate's current
          * status, no notification e-mails.
          */
-        if (statusesArray[statusIndex] == statusSelectList[statusSelectList.selectedIndex].value)
-        {
-            sendEmailSpan.style.display = 'none';
-            triggerEmail.checked = false;
-        }
-        else
-        {
-            if (statusTriggersEmailArray[statusSelectList.selectedIndex-1] == 1 && emailIsDisabled.value == "0")
-            {
-                sendEmailSpan.style.display = 'inline';
-                triggerEmail.checked = true;
-            }
+          if (statusesArray[statusIndex] == statusSelectList[statusSelectList.selectedIndex].value)
+          {
+              sendEmailSpan.style.display = 'none';
+              triggerEmail.checked = false;
+          }
+          else
+          {
+              var selectedStatusId = statusSelectList[statusSelectList.selectedIndex].value;
+              var triggersEmail = 0;
+              if (statusTriggersEmailArray && typeof statusTriggersEmailArray === 'object')
+              {
+                  if (typeof statusTriggersEmailArray[selectedStatusId] !== 'undefined')
+                  {
+                      triggersEmail = statusTriggersEmailArray[selectedStatusId];
+                  }
+                  else if (typeof statusTriggersEmailArray.length !== 'undefined')
+                  {
+                      triggersEmail = statusTriggersEmailArray[statusSelectList.selectedIndex-1];
+                  }
+              }
+
+              if (triggersEmail == 1 && emailIsDisabled.value == "0")
+              {
+                  sendEmailSpan.style.display = 'inline';
+                  triggerEmail.checked = true;
+              }
             else
             {
                 sendEmailSpan.style.display = 'inline';

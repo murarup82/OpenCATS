@@ -1,7 +1,28 @@
 <?php /* Pipeline Status Details */ ?>
 <?php TemplateUtility::printModalHeader('Job Orders', array(), 'Pipeline Status Details'); ?>
 
-<div class="ui2">
+<style type="text/css">
+    .pipeline-status-details {
+        font-size: 13px;
+        line-height: 1.35;
+    }
+    .pipeline-status-details .ui2-header h2 {
+        font-size: 18px;
+    }
+    .pipeline-status-details .ui2-table td {
+        font-size: 13px;
+    }
+    .pipeline-status-details .ui2-input {
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+    .pipeline-status-details .ui2-button {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+</style>
+
+<div class="ui2 ui2-theme-avel pipeline-status-details">
     <div class="ui2-card ui2-card--section">
         <div class="ui2-header">
             <div class="ui2-header-title">
@@ -111,8 +132,9 @@
                             </td>
                             <td><?php echo($auto ? 'Yes' : 'No'); ?></td>
                             <td>
-                                <?php if (!empty($this->canEditHistory) && $auto): ?>
+                                <?php if (!empty($this->canEditHistory)): ?>
                                     <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=pipelineStatusEditDate">
+                                        <input type="hidden" name="postback" value="postback" />
                                         <input type="hidden" name="pipelineID" value="<?php echo((int) $this->pipelineID); ?>" />
                                         <input type="hidden" name="historyID" value="<?php echo((int) $row['historyID']); ?>" />
                                         <input type="text" name="newDate" class="inputbox ui2-input ui2-input--sm" style="width: 170px;" value="<?php $this->_($row['dateEdit']); ?>" placeholder="YYYY-MM-DD HH:MM:SS" />

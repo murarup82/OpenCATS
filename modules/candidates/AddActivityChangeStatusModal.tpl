@@ -60,12 +60,113 @@
             jobOrdersArrayStringCompany[<?php echo($i); ?>] = '<?php echo(str_replace("'", "\\'", $this->pipelineRS[$i]['companyName'])); ?>';
         <?php endfor; ?>
     <?php endif; ?>
-    statusTriggersEmailArray = new Array(<?php echo(count($this->statusRS)); ?>);
+    statusTriggersEmailArray = {};
+    statusOrder = new Array(<?php echo(count($this->statusRS)); ?>);
+    statusLabels = {};
     <?php foreach ($this->statusRS as $rowNumber => $statusData): ?>
-       statusTriggersEmailArray[<?php echo($rowNumber); ?>] = <?php echo($statusData['triggersEmail']); ?>;
+       statusTriggersEmailArray[<?php echo($statusData['statusID']); ?>] = <?php echo($statusData['triggersEmail']); ?>;
+       statusOrder[<?php echo($rowNumber); ?>] = <?php echo($statusData['statusID']); ?>;
+       statusLabels[<?php echo($statusData['statusID']); ?>] = '<?php echo(str_replace("'", "\\'", $statusData['status'])); ?>';
     <?php endforeach; ?>
     rejectedStatusID = <?php echo(isset($this->rejectedStatusId) ? (int) $this->rejectedStatusId : 0); ?>;
     rejectionOtherReasonID = <?php echo(isset($this->rejectionOtherReasonId) ? (int) $this->rejectionOtherReasonId : 0); ?>;
+
+    function AS_getCurrentStatusID()
+    {
+        <?php if ($this->isJobOrdersMode): ?>
+            return statusesArray[0];
+        <?php else: ?>
+            var regardingSelectList = document.getElementById('regardingID');
+            if (!regardingSelectList || regardingSelectList.selectedIndex < 0)
+            {
+                return null;
+            }
+            var regardingID = regardingSelectList[regardingSelectList.selectedIndex].value;
+            if (regardingID == '-1')
+            {
+                return null;
+            }
+            var statusIndex = findValueInArray(jobOrdersArray, regardingID);
+            if (statusIndex == -1)
+            {
+                return null;
+            }
+            return statusesArray[statusIndex];
+        <?php endif; ?>
+    }
+
+    function AS_rebuildStatusOptions(currentStatusID)
+    {
+        var statusSelect = document.getElementById('statusID');
+        if (!statusSelect || currentStatusID == null)
+        {
+            return;
+        }
+
+        var selectedValue = statusSelect.value;
+        while (statusSelect.options.length > 1)
+        {
+            statusSelect.remove(1);
+        }
+
+        var allowed = [];
+        var currentIndex = -1;
+        for (var i = 0; i < statusOrder.length; i++)
+        {
+            if (parseInt(statusOrder[i], 10) === parseInt(currentStatusID, 10))
+            {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        if (currentIndex === -1)
+        {
+            allowed = statusOrder.slice(0);
+        }
+        else
+        {
+            allowed = statusOrder.slice(currentIndex);
+        }
+
+        if (rejectedStatusID && allowed.indexOf(rejectedStatusID) === -1)
+        {
+            allowed.push(rejectedStatusID);
+        }
+
+        for (var j = 0; j < allowed.length; j++)
+        {
+            var statusID = allowed[j];
+            var option = document.createElement('option');
+            option.value = statusID;
+            option.text = statusLabels[statusID] || statusID;
+            statusSelect.add(option);
+        }
+
+        var desired = selectedValue;
+        if (desired === '-1' || allowed.indexOf(parseInt(desired, 10)) === -1)
+        {
+            desired = currentStatusID;
+        }
+
+        if (desired != null)
+        {
+            for (var k = 0; k < statusSelect.options.length; k++)
+            {
+                if (parseInt(statusSelect.options[k].value, 10) === parseInt(desired, 10))
+                {
+                    statusSelect.selectedIndex = k;
+                    break;
+                }
+            }
+        }
+    }
+
+    function AS_applyStatusFilter()
+    {
+        var currentStatusID = AS_getCurrentStatusID();
+        AS_rebuildStatusOptions(currentStatusID);
+    }
 
     function AS_refreshRejectionUI()
     {
@@ -202,7 +303,7 @@
 <?php if ($this->isJobOrdersMode): ?>
                     <span><?php $this->_($this->pipelineData['title']); ?></span>
 <?php else: ?>
-                    <select id="regardingID" name="regardingID" class="inputbox ui2-input" style="width: 150px;" onchange="AS_onRegardingChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'statusTR', 'sendEmailCheckTR', 'triggerEmail', 'triggerEmailSpan', 'changeStatus', 'changeStatusSpanA', 'changeStatusSpanB');">
+                    <select id="regardingID" name="regardingID" class="inputbox ui2-input" style="width: 150px;" onchange="AS_onRegardingChange(statusesArray, jobOrdersArray, 'regardingID', 'statusID', 'statusTR', 'sendEmailCheckTR', 'triggerEmail', 'triggerEmailSpan', 'changeStatus', 'changeStatusSpanA', 'changeStatusSpanB'); AS_applyStatusFilter();">
                         <option value="-1">General</option>
 
                         <?php foreach ($this->pipelineRS as $rowNumber => $pipelinesData): ?>
@@ -440,6 +541,11 @@
     if (<?php echo($forceStatusChange ? 'true' : 'false'); ?>)
     {
         AS_onChangeStatusChange('changeStatus', 'statusID', 'changeStatusSpanB');
+    }
+
+    if (typeof AS_applyStatusFilter === 'function')
+    {
+        AS_applyStatusFilter();
     }
 
     if (typeof AS_refreshRejectionUI === 'function')
