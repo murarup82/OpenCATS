@@ -29,9 +29,8 @@
                         <div class="ui2-header-utilities">
                             <form class="ui2-header-search" action="<?php echo(CATSUtility::getIndexName()); ?>" method="get" autocomplete="off">
                                 <input type="hidden" name="m" value="candidates" />
-                                <input type="hidden" name="a" value="search" />
-                                <input type="hidden" name="mode" value="searchByFullName" />
-                                <input type="text" name="wildCardString" class="ui2-input" placeholder="Search candidates..." />
+                                <input type="hidden" name="a" value="listByView" />
+                                <input type="text" name="wildCardString" class="ui2-input" placeholder="Search candidates..." value="<?php if (!empty($this->quickSearchQuery)) $this->_($this->quickSearchQuery); ?>" />
                                 <button type="submit" class="ui2-button ui2-button--secondary">Search</button>
                             </form>
                             <?php TemplateUtility::printRecentDropdown('candidates'); ?>

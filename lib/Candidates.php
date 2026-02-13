@@ -2201,6 +2201,36 @@ class CandidatesDataGrid extends DataGrid
                 'exportable' => false
             ),
 
+            'QuickSearchCandidateIDs' => array(
+                'select' => '',
+                'filter' => 'candidate.candidate_id',
+                'pagerOptional' => false,
+                'filterable' => false,
+                'filterTypes' => '=#',
+                'filterDescription' => 'Quick Search',
+                'filterRender=#' => '
+                                      $candidateIDParts = explode("-", $argument);
+                                      $candidateIDs = array();
+
+                                      foreach ($candidateIDParts as $candidateIDPart)
+                                      {
+                                          $candidateID = (int) $candidateIDPart;
+                                          if ($candidateID > 0)
+                                          {
+                                              $candidateIDs[] = $candidateID;
+                                          }
+                                      }
+
+                                      $candidateIDs = array_unique($candidateIDs);
+                                      if (empty($candidateIDs))
+                                      {
+                                          return "0";
+                                      }
+
+                                      return "candidate.candidate_id IN (" . implode(",", $candidateIDs) . ")";
+                                     '
+            ),
+
             'OwnerID' =>       array(
                 'select'    => '',
                 'filter'    => 'candidate.owner',

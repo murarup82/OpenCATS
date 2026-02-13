@@ -30,7 +30,7 @@ class candidatesListByViewDataGrid extends CandidatesDataGrid
             array('name' => 'Key Skills', 'width' => 215),
             array('name' => 'Owner', 'width' => 65),
             array('name' => 'Created', 'width' => 60),
-            array('name' => 'Modified', 'width' => 60),
+            array('name' => 'Source', 'width' => 140),
         );
 
          parent::__construct("candidates:candidatesListByViewDataGrid",

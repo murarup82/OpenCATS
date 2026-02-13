@@ -385,6 +385,7 @@ class CandidatesUI extends UserInterface
     {
         // Log message that shows up on the top of the list page
         $topLog = '';
+        $quickSearchQuery = '';
 
         $dataGridProperties = DataGrid::getRecentParamaters("candidates:candidatesListByViewDataGrid");
 
@@ -397,6 +398,13 @@ class CandidatesUI extends UserInterface
                 'filterVisible' => false,
                 'filter'        => 'IsActive==1'
             );
+        }
+
+        if (isset($_GET['wildCardString'])) {
+            $quickSearchQuery = $this->getTrimmedInput('wildCardString', $_GET);
+            $this->applyQuickSearchToDataGrid($dataGridProperties, $quickSearchQuery, $topLog);
+        } else if (isset($dataGridProperties['quickSearchQuery'])) {
+            $quickSearchQuery = $dataGridProperties['quickSearchQuery'];
         }
 
         //$newParameterArray = $this->_parameters;
@@ -414,11 +422,163 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('userID', $_SESSION['CATS']->getUserID());
         $this->_template->assign('errMessage', $errMessage);
         $this->_template->assign('topLog', $topLog);
+        $this->_template->assign('quickSearchQuery', $quickSearchQuery);
         $this->_template->assign('tagsRS', $tagsRS);
 
         if (!eval(Hooks::get('CANDIDATE_LIST_BY_VIEW'))) return;
 
         $this->_template->display('./modules/candidates/Candidates.tpl');
+    }
+
+    private function applyQuickSearchToDataGrid(&$dataGridProperties, $query, &$topLog)
+    {
+        $columnName = 'QuickSearchCandidateIDs';
+        $filterString = '';
+
+        if (isset($dataGridProperties['filter'])) {
+            $filterString = $this->removeFilterColumnFromDataGrid($dataGridProperties['filter'], $columnName);
+        }
+
+        $query = trim($query);
+        $dataGridProperties['quickSearchQuery'] = $query;
+
+        if ($query === '') {
+            $dataGridProperties['filter'] = $filterString;
+            $dataGridProperties['rangeStart'] = 0;
+            return;
+        }
+
+        $candidateIDs = $this->getQuickSearchCandidateIDs($query);
+        if (empty($candidateIDs)) {
+            $quickFilter = $columnName . '=#0';
+            $topLog = sprintf(
+                'No candidates found for "<strong>%s</strong>" in name, key skills, or resume.',
+                htmlspecialchars($query)
+            );
+        } else {
+            $quickFilter = $columnName . '=#' . implode('-', $candidateIDs);
+            $topLog = sprintf(
+                'Showing candidates matching "<strong>%s</strong>" in name, key skills, or resume.',
+                htmlspecialchars($query)
+            );
+        }
+
+        if ($filterString !== '') {
+            $dataGridProperties['filter'] = $filterString . ',' . $quickFilter;
+        } else {
+            $dataGridProperties['filter'] = $quickFilter;
+        }
+
+        $dataGridProperties['rangeStart'] = 0;
+    }
+
+    private function removeFilterColumnFromDataGrid($filterString, $columnName)
+    {
+        if (!is_string($filterString) || $filterString === '') {
+            return '';
+        }
+
+        $updatedFilters = array();
+        $filterParts = explode(',', $filterString);
+        foreach ($filterParts as $filterPart) {
+            $filterPart = trim($filterPart);
+            if ($filterPart === '' || strpos($filterPart, '=') === false) {
+                continue;
+            }
+
+            $filterColumn = urldecode(substr($filterPart, 0, strpos($filterPart, '=')));
+            if ($filterColumn === $columnName) {
+                continue;
+            }
+
+            $updatedFilters[] = $filterPart;
+        }
+
+        return implode(',', $updatedFilters);
+    }
+
+    private function getQuickSearchCandidateIDs($query)
+    {
+        $candidateIDMap = array();
+        $search = new SearchCandidates($this->_siteID);
+
+        $this->addCandidateIDsToMap(
+            $candidateIDMap,
+            $search->byFullName($query, 'lastName', 'ASC')
+        );
+        $this->addCandidateIDsToMap(
+            $candidateIDMap,
+            $search->byKeySkills($query, 'lastName', 'ASC')
+        );
+
+        foreach ($this->getResumeSearchCandidateIDs($query) as $candidateID) {
+            $candidateID = (int) $candidateID;
+            if ($candidateID > 0) {
+                $candidateIDMap[$candidateID] = true;
+            }
+        }
+
+        $candidateIDs = array_keys($candidateIDMap);
+        sort($candidateIDs, SORT_NUMERIC);
+
+        return $candidateIDs;
+    }
+
+    private function addCandidateIDsToMap(&$candidateIDMap, $resultSet)
+    {
+        if (!is_array($resultSet)) {
+            return;
+        }
+
+        foreach ($resultSet as $row) {
+            if (!is_array($row) || !isset($row['candidateID'])) {
+                continue;
+            }
+
+            $candidateID = (int) $row['candidateID'];
+            if ($candidateID > 0) {
+                $candidateIDMap[$candidateID] = true;
+            }
+        }
+    }
+
+    private function getResumeSearchCandidateIDs($query)
+    {
+        $candidateIDMap = array();
+        $rowsPerPage = 200;
+
+        $resumePager = new SearchByResumePager(
+            $rowsPerPage,
+            1,
+            $this->_siteID,
+            $query,
+            'lastName',
+            'ASC'
+        );
+
+        $totalPages = (int) $resumePager->getTotalPages();
+        if ($totalPages <= 0) {
+            return array();
+        }
+
+        for ($page = 1; $page <= $totalPages; $page++) {
+            if ($page === 1) {
+                $pagePager = $resumePager;
+            } else {
+                $pagePager = new SearchByResumePager(
+                    $rowsPerPage,
+                    $page,
+                    $this->_siteID,
+                    $query,
+                    'lastName',
+                    'ASC'
+                );
+            }
+
+            $this->addCandidateIDsToMap($candidateIDMap, $pagePager->getPage());
+        }
+
+        return array_keys($candidateIDMap);
     }
 
     /*
@@ -1368,9 +1528,7 @@ class CandidatesUI extends UserInterface
             $this->_userID
         );
 
-        CATSUtility::transferRelativeURI(
-            'm=candidates&a=show&candidateID=' . $candidateID
-        );
+        CATSUtility::transferRelativeURI('m=candidates&a=listByView');
     }
 
     /*
