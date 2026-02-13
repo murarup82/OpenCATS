@@ -555,6 +555,7 @@ class CandidatesUI extends UserInterface
             'lastName',
             'ASC'
         );
+        $resumePager->setSortByParameters('', 'lastName', 'ASC');
 
         $totalPages = (int) $resumePager->getTotalPages();
         if ($totalPages <= 0) {
@@ -573,6 +574,7 @@ class CandidatesUI extends UserInterface
                     'lastName',
                     'ASC'
                 );
+                $pagePager->setSortByParameters('', 'lastName', 'ASC');
             }
 
             $this->addCandidateIDsToMap($candidateIDMap, $pagePager->getPage());
