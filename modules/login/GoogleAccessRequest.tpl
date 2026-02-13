@@ -33,6 +33,7 @@
                     </p>
 
                     <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=login&amp;a=requestAccess" method="post">
+                        <input type="hidden" name="postback" value="postback" />
                         <label for="fullName">Name</label><br />
                         <input id="fullName" type="text" class="login-input-box ui2-input" value="<?php $this->_($this->fullName); ?>" readonly="readonly" />
                         <br />

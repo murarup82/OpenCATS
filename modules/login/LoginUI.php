@@ -81,7 +81,8 @@ class LoginUI extends UserInterface
                 break;
 
             case 'requestAccess':
-                if ($this->isPostBack())
+                if ($this->isPostBack() ||
+                    (isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD']) === 'POST'))
                 {
                     $this->onRequestAccess();
                 }
