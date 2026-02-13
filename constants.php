@@ -73,6 +73,7 @@ define('SETTINGS_EEO',           3);
 define('SETTINGS_CAREER_PORTAL', 4);
 define('SETTINGS_GDPR',          5);
 define('SETTINGS_TALENTFITFLOW', 6);
+define('SETTINGS_GOOGLE_OIDC',   7);
 
 /* GDPR test-only hard delete toggle. */
 if (!defined('GDPR_ALLOW_HARD_DELETE'))

@@ -51,6 +51,7 @@ include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
 include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
+include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
 eval(Hooks::get('XML_FEED_SUBMISSION_SETTINGS_HEADERS'));
 
 /* Users.php is included by index.php already. */
@@ -673,6 +674,25 @@ class SettingsUI extends UserInterface
                 else
                 {
                     $this->talentFitFlowSettings();
+                }
+                break;
+
+            case 'googleOIDCSettings':
+                if ($this->getUserAccessLevel('settings.googleOIDCSettings') < ACCESS_LEVEL_SA)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if ($this->isPostBack())
+                {
+                    if ($this->getUserAccessLevel('settings.googleOIDCSettings.POST') < ACCESS_LEVEL_SA)
+                    {
+                        CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    }
+                    $this->onGoogleOIDCSettings();
+                }
+                else
+                {
+                    $this->googleOIDCSettings();
                 }
                 break;
 
@@ -2282,6 +2302,231 @@ class SettingsUI extends UserInterface
         $tffSettings->set('hmacSecret', $hmacSecret);
 
         CATSUtility::transferRelativeURI('m=settings&a=talentFitFlowSettings&saved=1');
+    }
+
+    /*
+     * Called by handleRequest() to show the Google OIDC settings template.
+     */
+    private function googleOIDCSettings()
+    {
+        $googleOIDCSettings = new GoogleOIDCSettings($this->_siteID);
+        $googleOIDCSettingsRS = $googleOIDCSettings->getAll();
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Administration');
+        $this->_template->assign('googleOIDCSettings', $googleOIDCSettingsRS);
+        $this->_template->assign('googleOIDCSaved', isset($_GET['saved']));
+        $this->_template->display('./modules/settings/GoogleOIDCSettings.tpl');
+    }
+
+    /*
+     * Called by handleRequest() to process the Google OIDC settings template.
+     */
+    private function onGoogleOIDCSettings()
+    {
+        $enabled = (UserInterface::isChecked('enabled', $_POST) ? '1' : '0');
+        $clientId = $this->getTrimmedInput('clientId', $_POST);
+        $clientSecret = $this->getTrimmedInput('clientSecret', $_POST);
+        $redirectUri = $this->getTrimmedInput('redirectUri', $_POST);
+        $hostedDomain = strtolower($this->getTrimmedInput('hostedDomain', $_POST));
+        $siteIdRaw = $this->getTrimmedInput('siteId', $_POST);
+        $siteId = (string) ((int) $siteIdRaw > 0 ? (int) $siteIdRaw : (defined('LDAP_SITEID') ? (int) LDAP_SITEID : 1));
+        $autoProvisionEnabled = (UserInterface::isChecked('autoProvisionEnabled', $_POST) ? '1' : '0');
+        $notifyEmail = strtolower($this->getTrimmedInput('notifyEmail', $_POST));
+        $fromEmail = strtolower($this->getTrimmedInput('fromEmail', $_POST));
+        $requestSubject = $this->getTrimmedInput('requestSubject', $_POST);
+
+        $settingsPayload = array(
+            'enabled' => $enabled,
+            'clientId' => $clientId,
+            'clientSecret' => $clientSecret,
+            'redirectUri' => $redirectUri,
+            'hostedDomain' => $hostedDomain,
+            'siteId' => $siteId,
+            'autoProvisionEnabled' => $autoProvisionEnabled,
+            'notifyEmail' => $notifyEmail,
+            'fromEmail' => $fromEmail,
+            'requestSubject' => $requestSubject
+        );
+
+        if (isset($_POST['testConfig']))
+        {
+            $testResult = $this->testGoogleOIDCSettings($settingsPayload);
+
+            $this->_template->assign('active', $this);
+            $this->_template->assign('subActive', 'Administration');
+            $this->_template->assign('googleOIDCSettings', $settingsPayload);
+            $this->_template->assign('googleOIDCSaved', false);
+            $this->_template->assign('googleOIDCTestOk', $testResult['ok']);
+            $this->_template->assign('googleOIDCTestMessage', $testResult['message']);
+            $this->_template->display('./modules/settings/GoogleOIDCSettings.tpl');
+            return;
+        }
+
+        $googleOIDCSettings = new GoogleOIDCSettings($this->_siteID);
+        $googleOIDCSettings->set('enabled', $enabled);
+        $googleOIDCSettings->set('clientId', $clientId);
+        $googleOIDCSettings->set('clientSecret', $clientSecret);
+        $googleOIDCSettings->set('redirectUri', $redirectUri);
+        $googleOIDCSettings->set('hostedDomain', $hostedDomain);
+        $googleOIDCSettings->set('siteId', $siteId);
+        $googleOIDCSettings->set('autoProvisionEnabled', $autoProvisionEnabled);
+        $googleOIDCSettings->set('notifyEmail', $notifyEmail);
+        $googleOIDCSettings->set('fromEmail', $fromEmail);
+        $googleOIDCSettings->set('requestSubject', $requestSubject);
+
+        CATSUtility::transferRelativeURI('m=settings&a=googleOIDCSettings&saved=1');
+    }
+
+    private function testGoogleOIDCSettings($settings)
+    {
+        $errors = array();
+        $warnings = array();
+
+        if (trim($settings['clientId']) === '')
+        {
+            $errors[] = 'Client ID is required.';
+        }
+
+        if (trim($settings['clientSecret']) === '')
+        {
+            $errors[] = 'Client Secret is required.';
+        }
+
+        $effectiveRedirectURI = trim($settings['redirectUri']);
+        if ($effectiveRedirectURI === '')
+        {
+            $effectiveRedirectURI = CATSUtility::getAbsoluteURI(
+                CATSUtility::getIndexName() . '?m=login&a=googleCallback'
+            );
+        }
+
+        $redirectParts = @parse_url($effectiveRedirectURI);
+        if ($redirectParts === false || !isset($redirectParts['scheme']) || !isset($redirectParts['host']))
+        {
+            $errors[] = 'Redirect URI is invalid.';
+        }
+        else if ($redirectParts['scheme'] !== 'https')
+        {
+            $warnings[] = 'Redirect URI is not HTTPS.';
+        }
+
+        if (trim($settings['hostedDomain']) !== '')
+        {
+            $domains = preg_split('/[\s,;]+/', strtolower(trim($settings['hostedDomain'])));
+            foreach ($domains as $domain)
+            {
+                if ($domain === '')
+                {
+                    continue;
+                }
+
+                if (!preg_match('/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/', $domain))
+                {
+                    $errors[] = 'Invalid hosted domain entry: ' . $domain;
+                    break;
+                }
+            }
+        }
+
+        $probe = $this->httpGetForGoogleTest(
+            'https://accounts.google.com/.well-known/openid-configuration'
+        );
+        if (!$probe['ok'])
+        {
+            $errors[] = 'Unable to reach Google OpenID configuration endpoint.';
+        }
+        else
+        {
+            $payload = json_decode($probe['body'], true);
+            if (!is_array($payload) ||
+                empty($payload['authorization_endpoint']) ||
+                empty($payload['token_endpoint']))
+            {
+                $errors[] = 'Google OpenID configuration response is invalid.';
+            }
+        }
+
+        if (!empty($errors))
+        {
+            return array(
+                'ok' => false,
+                'message' => implode(' ', $errors)
+            );
+        }
+
+        $message = 'Google configuration looks valid. Effective redirect URI: ' . $effectiveRedirectURI . '.';
+        if (!empty($warnings))
+        {
+            $message .= ' Warning: ' . implode(' ', $warnings);
+        }
+
+        return array(
+            'ok' => true,
+            'message' => $message
+        );
+    }
+
+    private function httpGetForGoogleTest($url)
+    {
+        if (function_exists('curl_init'))
+        {
+            $curl = curl_init();
+            curl_setopt($curl, CURLOPT_URL, $url);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 20);
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array('Accept: application/json'));
+
+            $body = curl_exec($curl);
+            $statusCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $error = '';
+            if ($body === false)
+            {
+                $error = curl_error($curl);
+                $body = '';
+            }
+            curl_close($curl);
+
+            return array(
+                'ok' => ($statusCode >= 200 && $statusCode < 300 && $error === ''),
+                'statusCode' => $statusCode,
+                'body' => $body,
+                'error' => $error
+            );
+        }
+
+        $contextOptions = array(
+            'http' => array(
+                'method' => 'GET',
+                'ignore_errors' => true,
+                'timeout' => 20,
+                'header' => "Accept: application/json"
+            )
+        );
+
+        $body = @file_get_contents(
+            $url,
+            false,
+            stream_context_create($contextOptions)
+        );
+
+        $statusCode = 0;
+        if (isset($http_response_header[0]) &&
+            preg_match('/\s(\d{3})\s/', $http_response_header[0], $matches))
+        {
+            $statusCode = (int) $matches[1];
+        }
+
+        return array(
+            'ok' => ($body !== false && $statusCode >= 200 && $statusCode < 300),
+            'statusCode' => $statusCode,
+            'body' => ($body === false ? '' : $body),
+            'error' => ($body === false ? 'HTTP request failed.' : '')
+        );
     }
 
     /*

@@ -35,6 +35,7 @@ include_once(LEGACY_ROOT . '/lib/Wizard.php');
 include_once(LEGACY_ROOT . '/lib/License.php');
 include_once(LEGACY_ROOT . '/lib/Users.php');
 include_once(LEGACY_ROOT . '/lib/DatabaseConnection.php');
+include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
 
 class LoginUI extends UserInterface
 {
@@ -518,26 +519,40 @@ class LoginUI extends UserInterface
 
     private function googleStart()
     {
-        if (!$this->isGoogleOIDCConfigured())
+        $reloginVars = $this->getTrimmedInput('reloginVars', $_GET);
+        $siteName = $this->getTrimmedInput('s', $_GET);
+        $siteID = $this->resolveGoogleSiteID($siteName);
+        $googleSettings = $this->getGoogleSettingsForSite($siteID);
+
+        if ($siteName === '')
+        {
+            $configuredSiteID = (int) $googleSettings['siteId'];
+            if ($configuredSiteID > 0 && $configuredSiteID !== $siteID)
+            {
+                $siteID = $configuredSiteID;
+                $googleSettings = $this->getGoogleSettingsForSite($siteID);
+            }
+        }
+
+        if (!$this->isGoogleOIDCConfigured($googleSettings))
         {
             $this->displayLoginMessage(
-                'Google sign-in is not configured yet. Please contact your administrator.'
+                'Google sign-in is not configured yet. Please contact your administrator.',
+                $siteName
             );
             return;
         }
 
-        $reloginVars = $this->getTrimmedInput('reloginVars', $_GET);
-        $siteName = $this->getTrimmedInput('s', $_GET);
-
         $_SESSION[self::GOOGLE_STATE_SESSION_KEY] = array(
             'token' => md5(uniqid((string) mt_rand(), true)),
             'reloginVars' => $reloginVars,
-            'siteName' => $siteName
+            'siteName' => $siteName,
+            'siteID' => $siteID
         );
 
         $params = array(
-            'client_id' => GOOGLE_OIDC_CLIENT_ID,
-            'redirect_uri' => $this->getGoogleRedirectURI(),
+            'client_id' => $googleSettings['clientId'],
+            'redirect_uri' => $this->getGoogleRedirectURI($googleSettings),
             'response_type' => 'code',
             'scope' => 'openid email profile',
             'access_type' => 'online',
@@ -546,10 +561,9 @@ class LoginUI extends UserInterface
             'state' => $_SESSION[self::GOOGLE_STATE_SESSION_KEY]['token']
         );
 
-        if (defined('GOOGLE_OIDC_HOSTED_DOMAIN') &&
-            trim((string) GOOGLE_OIDC_HOSTED_DOMAIN) !== '')
+        if (trim($googleSettings['hostedDomain']) !== '')
         {
-            $params['hd'] = trim((string) GOOGLE_OIDC_HOSTED_DOMAIN);
+            $params['hd'] = trim($googleSettings['hostedDomain']);
         }
 
         CATSUtility::transferURL(
@@ -560,14 +574,6 @@ class LoginUI extends UserInterface
 
     private function googleCallback()
     {
-        if (!$this->isGoogleOIDCConfigured())
-        {
-            $this->displayLoginMessage(
-                'Google sign-in is not configured yet. Please contact your administrator.'
-            );
-            return;
-        }
-
         $googleError = $this->getTrimmedInput('error', $_GET);
         if ($googleError !== '')
         {
@@ -600,7 +606,29 @@ class LoginUI extends UserInterface
             return;
         }
 
-        $tokenRS = $this->exchangeGoogleAuthCode($code);
+        $siteName = (isset($stateData['siteName']) ? $stateData['siteName'] : '');
+        $siteID = (isset($stateData['siteID']) ? (int) $stateData['siteID'] : 0);
+        if ($siteID <= 0)
+        {
+            $siteID = $this->resolveGoogleSiteID($siteName);
+        }
+        if ($siteID <= 0)
+        {
+            $this->displayLoginMessage('Unable to resolve target site for Google sign-in.', $siteName);
+            return;
+        }
+
+        $googleSettings = $this->getGoogleSettingsForSite($siteID);
+        if (!$this->isGoogleOIDCConfigured($googleSettings))
+        {
+            $this->displayLoginMessage(
+                'Google sign-in is not configured yet. Please contact your administrator.',
+                $siteName
+            );
+            return;
+        }
+
+        $tokenRS = $this->exchangeGoogleAuthCode($code, $googleSettings);
         if (!$tokenRS['success'])
         {
             $this->displayLoginMessage($tokenRS['error']);
@@ -622,21 +650,9 @@ class LoginUI extends UserInterface
         }
 
         $email = strtolower(trim($profile['email']));
-        if (!$this->isAllowedGoogleEmail($email))
+        if (!$this->isAllowedGoogleEmail($email, $googleSettings['hostedDomain']))
         {
             $this->displayLoginMessage('Your Google account domain is not allowed.');
-            return;
-        }
-
-        $siteName = '';
-        if (isset($stateData['siteName']))
-        {
-            $siteName = $stateData['siteName'];
-        }
-        $siteID = $this->resolveGoogleSiteID($siteName);
-        if ($siteID <= 0)
-        {
-            $this->displayLoginMessage('Unable to resolve target site for Google sign-in.');
             return;
         }
 
@@ -650,7 +666,7 @@ class LoginUI extends UserInterface
             return;
         }
 
-        if (!$this->isGoogleAutoProvisionEnabled())
+        if (!$this->isGoogleAutoProvisionEnabled($googleSettings))
         {
             $this->displayLoginMessage(
                 'Google sign-in is configured, but automatic access request is disabled.'
@@ -732,6 +748,7 @@ class LoginUI extends UserInterface
 
         $siteID = (int) $profile['siteID'];
         $email = strtolower(trim($profile['email']));
+        $googleSettings = $this->getGoogleSettingsForSite($siteID);
 
         $existingUser = $this->getUserByEmailAndSite($email, $siteID);
         if (!empty($existingUser) &&
@@ -797,7 +814,8 @@ class LoginUI extends UserInterface
             $username,
             $userID,
             $reason,
-            $alreadyPending
+            $alreadyPending,
+            $googleSettings
         );
 
         if ($alreadyPending)
@@ -824,28 +842,73 @@ class LoginUI extends UserInterface
 
     private function assignGoogleLoginTemplateVars($reloginVars, $siteName)
     {
-        $this->_template->assign('googleAuthEnabled', $this->isGoogleOIDCConfigured());
+        $siteID = $this->resolveGoogleSiteID($siteName);
+        $googleSettings = $this->getGoogleSettingsForSite($siteID);
+
+        if ($siteName === '')
+        {
+            $configuredSiteID = (int) $googleSettings['siteId'];
+            if ($configuredSiteID > 0 && $configuredSiteID !== $siteID)
+            {
+                $siteID = $configuredSiteID;
+                $googleSettings = $this->getGoogleSettingsForSite($siteID);
+            }
+        }
+
+        $this->_template->assign('googleAuthEnabled', $this->isGoogleOIDCConfigured($googleSettings));
         $this->_template->assign(
             'googleLoginURL',
             $this->buildGoogleStartURL($reloginVars, $siteName)
         );
     }
 
-    private function isGoogleOIDCConfigured()
+    private function getGoogleSettingsForSite($siteID = -1)
     {
-        if (!defined('GOOGLE_OIDC_ENABLED') || !GOOGLE_OIDC_ENABLED)
+        $settings = array(
+            'enabled' => (defined('GOOGLE_OIDC_ENABLED') && GOOGLE_OIDC_ENABLED) ? '1' : '0',
+            'clientId' => (defined('GOOGLE_OIDC_CLIENT_ID') ? trim((string) GOOGLE_OIDC_CLIENT_ID) : ''),
+            'clientSecret' => (defined('GOOGLE_OIDC_CLIENT_SECRET') ? trim((string) GOOGLE_OIDC_CLIENT_SECRET) : ''),
+            'redirectUri' => (defined('GOOGLE_OIDC_REDIRECT_URI') ? trim((string) GOOGLE_OIDC_REDIRECT_URI) : ''),
+            'hostedDomain' => (defined('GOOGLE_OIDC_HOSTED_DOMAIN') ? trim((string) GOOGLE_OIDC_HOSTED_DOMAIN) : ''),
+            'siteId' => (defined('GOOGLE_OIDC_SITE_ID') ? (string) ((int) GOOGLE_OIDC_SITE_ID) : ''),
+            'autoProvisionEnabled' => (!defined('GOOGLE_AUTO_PROVISION_ENABLED') || GOOGLE_AUTO_PROVISION_ENABLED) ? '1' : '0',
+            'notifyEmail' => (defined('GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL') ? trim((string) GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL) : ''),
+            'fromEmail' => (defined('GOOGLE_ACCESS_REQUEST_FROM_EMAIL') ? trim((string) GOOGLE_ACCESS_REQUEST_FROM_EMAIL) : ''),
+            'requestSubject' => (defined('GOOGLE_ACCESS_REQUEST_SUBJECT') ? trim((string) GOOGLE_ACCESS_REQUEST_SUBJECT) : '')
+        );
+
+        $siteID = (int) $siteID;
+        if ($siteID > 0)
+        {
+            $googleOIDCSettings = new GoogleOIDCSettings($siteID);
+            $siteSettings = $googleOIDCSettings->getAll();
+            foreach ($settings as $key => $value)
+            {
+                if (isset($siteSettings[$key]))
+                {
+                    $settings[$key] = trim((string) $siteSettings[$key]);
+                }
+            }
+        }
+
+        return $settings;
+    }
+
+    private function isGoogleOIDCConfigured($googleSettings)
+    {
+        if (!isset($googleSettings['enabled']) || $googleSettings['enabled'] !== '1')
         {
             return false;
         }
 
-        if (!defined('GOOGLE_OIDC_CLIENT_ID') ||
-            trim((string) GOOGLE_OIDC_CLIENT_ID) === '')
+        if (!isset($googleSettings['clientId']) ||
+            trim($googleSettings['clientId']) === '')
         {
             return false;
         }
 
-        if (!defined('GOOGLE_OIDC_CLIENT_SECRET') ||
-            trim((string) GOOGLE_OIDC_CLIENT_SECRET) === '')
+        if (!isset($googleSettings['clientSecret']) ||
+            trim($googleSettings['clientSecret']) === '')
         {
             return false;
         }
@@ -853,10 +916,10 @@ class LoginUI extends UserInterface
         return true;
     }
 
-    private function isGoogleAutoProvisionEnabled()
+    private function isGoogleAutoProvisionEnabled($googleSettings)
     {
-        return (!defined('GOOGLE_AUTO_PROVISION_ENABLED') ||
-            GOOGLE_AUTO_PROVISION_ENABLED);
+        return (isset($googleSettings['autoProvisionEnabled']) &&
+            $googleSettings['autoProvisionEnabled'] === '1');
     }
 
     private function buildGoogleStartURL($reloginVars, $siteName)
@@ -878,12 +941,12 @@ class LoginUI extends UserInterface
         return CATSUtility::getIndexName() . '?' . http_build_query($query, '', '&');
     }
 
-    private function getGoogleRedirectURI()
+    private function getGoogleRedirectURI($googleSettings = array())
     {
-        if (defined('GOOGLE_OIDC_REDIRECT_URI') &&
-            trim((string) GOOGLE_OIDC_REDIRECT_URI) !== '')
+        if (isset($googleSettings['redirectUri']) &&
+            trim($googleSettings['redirectUri']) !== '')
         {
-            return trim((string) GOOGLE_OIDC_REDIRECT_URI);
+            return trim($googleSettings['redirectUri']);
         }
 
         return CATSUtility::getAbsoluteURI(
@@ -918,7 +981,7 @@ class LoginUI extends UserInterface
         return (int) $site->getFirstSiteID();
     }
 
-    private function isAllowedGoogleEmail($email)
+    private function isAllowedGoogleEmail($email, $allowedDomainsRaw = '')
     {
         $atPosition = strpos($email, '@');
         if ($atPosition === false)
@@ -927,14 +990,13 @@ class LoginUI extends UserInterface
         }
 
         $domain = strtolower(substr($email, $atPosition + 1));
-        if (!defined('GOOGLE_OIDC_HOSTED_DOMAIN') ||
-            trim((string) GOOGLE_OIDC_HOSTED_DOMAIN) === '')
+        $allowedDomainsRaw = strtolower(trim((string) $allowedDomainsRaw));
+        if ($allowedDomainsRaw === '')
         {
             return true;
         }
 
-        $allowedRaw = strtolower((string) GOOGLE_OIDC_HOSTED_DOMAIN);
-        $allowedDomains = preg_split('/[\s,;]+/', $allowedRaw);
+        $allowedDomains = preg_split('/[\s,;]+/', $allowedDomainsRaw);
         foreach ($allowedDomains as $allowedDomain)
         {
             $allowedDomain = trim($allowedDomain);
@@ -947,16 +1009,16 @@ class LoginUI extends UserInterface
         return false;
     }
 
-    private function exchangeGoogleAuthCode($code)
+    private function exchangeGoogleAuthCode($code, $googleSettings)
     {
         $response = $this->httpRequest(
             'https://oauth2.googleapis.com/token',
             'POST',
             array(
                 'code' => $code,
-                'client_id' => GOOGLE_OIDC_CLIENT_ID,
-                'client_secret' => GOOGLE_OIDC_CLIENT_SECRET,
-                'redirect_uri' => $this->getGoogleRedirectURI(),
+                'client_id' => $googleSettings['clientId'],
+                'client_secret' => $googleSettings['clientSecret'],
+                'redirect_uri' => $this->getGoogleRedirectURI($googleSettings),
                 'grant_type' => 'authorization_code'
             ),
             array('Accept: application/json')
@@ -1190,21 +1252,22 @@ class LoginUI extends UserInterface
         $username,
         $userID,
         $reason,
-        $alreadyPending
+        $alreadyPending,
+        $googleSettings
     )
     {
-        if (!defined('GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL') ||
-            trim((string) GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL) === '')
+        if (!isset($googleSettings['notifyEmail']) ||
+            trim((string) $googleSettings['notifyEmail']) === '')
         {
             return false;
         }
 
-        $notifyEmail = trim((string) GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL);
+        $notifyEmail = trim((string) $googleSettings['notifyEmail']);
         $subject = 'OpenCATS Access Request - ' . $profile['email'];
-        if (defined('GOOGLE_ACCESS_REQUEST_SUBJECT') &&
-            trim((string) GOOGLE_ACCESS_REQUEST_SUBJECT) !== '')
+        if (isset($googleSettings['requestSubject']) &&
+            trim((string) $googleSettings['requestSubject']) !== '')
         {
-            $subject = trim((string) GOOGLE_ACCESS_REQUEST_SUBJECT);
+            $subject = trim((string) $googleSettings['requestSubject']);
         }
 
         $body = "A Google sign-in access request was submitted.\n\n";
@@ -1219,10 +1282,10 @@ class LoginUI extends UserInterface
         $body .= 'Requested At: ' . date('Y-m-d H:i:s') . "\n";
 
         $mailer = new Mailer($siteID);
-        if (defined('GOOGLE_ACCESS_REQUEST_FROM_EMAIL') &&
-            trim((string) GOOGLE_ACCESS_REQUEST_FROM_EMAIL) !== '')
+        if (isset($googleSettings['fromEmail']) &&
+            trim((string) $googleSettings['fromEmail']) !== '')
         {
-            $mailer->overrideSetting('fromAddress', trim((string) GOOGLE_ACCESS_REQUEST_FROM_EMAIL));
+            $mailer->overrideSetting('fromAddress', trim((string) $googleSettings['fromEmail']));
         }
 
         return (bool) $mailer->sendToOne(

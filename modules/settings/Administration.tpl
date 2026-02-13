@@ -214,6 +214,17 @@
                                     Configure API credentials for CV transformations.
                                 </td>
                             </tr>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=googleOIDCSettings">
+                                        Google SSO / Access Request
+                                    </a>
+                                </td>
+                                <td>
+                                    Configure Google Workspace sign-in and access request provisioning e-mails.
+                                </td>
+                            </tr>
                         </table>
                         <br />
 
