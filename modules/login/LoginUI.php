@@ -33,9 +33,15 @@ include_once(LEGACY_ROOT . '/lib/Site.php');
 include_once(LEGACY_ROOT . '/lib/NewVersionCheck.php');
 include_once(LEGACY_ROOT . '/lib/Wizard.php');
 include_once(LEGACY_ROOT . '/lib/License.php');
+include_once(LEGACY_ROOT . '/lib/Users.php');
+include_once(LEGACY_ROOT . '/lib/DatabaseConnection.php');
 
 class LoginUI extends UserInterface
 {
+    const GOOGLE_STATE_SESSION_KEY = 'googleOIDCLoginState';
+    const GOOGLE_PROFILE_SESSION_KEY = 'googleOIDCAccessRequestProfile';
+    const GOOGLE_REQUEST_STATUS_SESSION_KEY = 'googleOIDCAccessRequestStatus';
+
     public function __construct()
     {
         parent::__construct();
@@ -62,6 +68,25 @@ class LoginUI extends UserInterface
                 else
                 {
                     $this->forgotPassword();
+                }
+                break;
+
+            case 'googleStart':
+                $this->googleStart();
+                break;
+
+            case 'googleCallback':
+                $this->googleCallback();
+                break;
+
+            case 'requestAccess':
+                if ($this->isPostBack())
+                {
+                    $this->onRequestAccess();
+                }
+                else
+                {
+                    $this->requestAccess();
                 }
                 break;
 
@@ -160,6 +185,7 @@ class LoginUI extends UserInterface
         $this->_template->assign('siteName', $siteName);
         $this->_template->assign('siteNameFull', $siteNameFull);
         $this->_template->assign('dateString', date('l, F jS, Y'));
+        $this->assignGoogleLoginTemplateVars($reloginVars, $siteName);
 
         if (!eval(Hooks::get('SHOW_LOGIN_FORM_POST_2'))) return;
 
@@ -219,6 +245,10 @@ class LoginUI extends UserInterface
             $this->_template->assign('siteName', $siteName);
             $this->_template->assign('siteNameFull', $siteNameFull);
             $this->_template->assign('dateString', date('l, F jS, Y'));
+            $this->assignGoogleLoginTemplateVars(
+                isset($_GET['reloginVars']) ? urlencode($_GET['reloginVars']) : '',
+                $siteName
+            );
 
             $this->_template->display('./modules/login/Login.tpl');
 
@@ -278,6 +308,10 @@ class LoginUI extends UserInterface
             $this->_template->assign('siteName', $siteName);
             $this->_template->assign('siteNameFull', $siteNameFull);
             $this->_template->assign('dateString', date('l, F jS, Y'));
+            $this->assignGoogleLoginTemplateVars(
+                isset($_GET['reloginVars']) ? urlencode($_GET['reloginVars']) : '',
+                $siteName
+            );
             $this->_template->display('./modules/login/Login.tpl');
 
             return;
@@ -480,6 +514,797 @@ class LoginUI extends UserInterface
         }
 
         $this->_template->display('./modules/login/ForgotPassword.tpl');
+    }
+
+    private function googleStart()
+    {
+        if (!$this->isGoogleOIDCConfigured())
+        {
+            $this->displayLoginMessage(
+                'Google sign-in is not configured yet. Please contact your administrator.'
+            );
+            return;
+        }
+
+        $reloginVars = $this->getTrimmedInput('reloginVars', $_GET);
+        $siteName = $this->getTrimmedInput('s', $_GET);
+
+        $_SESSION[self::GOOGLE_STATE_SESSION_KEY] = array(
+            'token' => md5(uniqid((string) mt_rand(), true)),
+            'reloginVars' => $reloginVars,
+            'siteName' => $siteName
+        );
+
+        $params = array(
+            'client_id' => GOOGLE_OIDC_CLIENT_ID,
+            'redirect_uri' => $this->getGoogleRedirectURI(),
+            'response_type' => 'code',
+            'scope' => 'openid email profile',
+            'access_type' => 'online',
+            'include_granted_scopes' => 'true',
+            'prompt' => 'select_account',
+            'state' => $_SESSION[self::GOOGLE_STATE_SESSION_KEY]['token']
+        );
+
+        if (defined('GOOGLE_OIDC_HOSTED_DOMAIN') &&
+            trim((string) GOOGLE_OIDC_HOSTED_DOMAIN) !== '')
+        {
+            $params['hd'] = trim((string) GOOGLE_OIDC_HOSTED_DOMAIN);
+        }
+
+        CATSUtility::transferURL(
+            'https://accounts.google.com/o/oauth2/v2/auth?' .
+            http_build_query($params, '', '&')
+        );
+    }
+
+    private function googleCallback()
+    {
+        if (!$this->isGoogleOIDCConfigured())
+        {
+            $this->displayLoginMessage(
+                'Google sign-in is not configured yet. Please contact your administrator.'
+            );
+            return;
+        }
+
+        $googleError = $this->getTrimmedInput('error', $_GET);
+        if ($googleError !== '')
+        {
+            $this->displayLoginMessage('Google sign-in was cancelled or failed.');
+            return;
+        }
+
+        $state = $this->getTrimmedInput('state', $_GET);
+        $code = $this->getTrimmedInput('code', $_GET);
+        if ($state === '' || $code === '')
+        {
+            $this->displayLoginMessage('Google sign-in did not return a valid response.');
+            return;
+        }
+
+        if (!isset($_SESSION[self::GOOGLE_STATE_SESSION_KEY]) ||
+            !is_array($_SESSION[self::GOOGLE_STATE_SESSION_KEY]))
+        {
+            $this->displayLoginMessage('Google sign-in session has expired. Please try again.');
+            return;
+        }
+
+        $stateData = $_SESSION[self::GOOGLE_STATE_SESSION_KEY];
+        unset($_SESSION[self::GOOGLE_STATE_SESSION_KEY]);
+
+        if (!isset($stateData['token']) ||
+            !$this->secureCompare((string) $stateData['token'], $state))
+        {
+            $this->displayLoginMessage('Google sign-in validation failed. Please try again.');
+            return;
+        }
+
+        $tokenRS = $this->exchangeGoogleAuthCode($code);
+        if (!$tokenRS['success'])
+        {
+            $this->displayLoginMessage($tokenRS['error']);
+            return;
+        }
+
+        $profileRS = $this->fetchGoogleUserInfo($tokenRS['accessToken']);
+        if (!$profileRS['success'])
+        {
+            $this->displayLoginMessage($profileRS['error']);
+            return;
+        }
+
+        $profile = $profileRS['profile'];
+        if (empty($profile['email']) || empty($profile['email_verified']))
+        {
+            $this->displayLoginMessage('Google account e-mail is missing or not verified.');
+            return;
+        }
+
+        $email = strtolower(trim($profile['email']));
+        if (!$this->isAllowedGoogleEmail($email))
+        {
+            $this->displayLoginMessage('Your Google account domain is not allowed.');
+            return;
+        }
+
+        $siteName = '';
+        if (isset($stateData['siteName']))
+        {
+            $siteName = $stateData['siteName'];
+        }
+        $siteID = $this->resolveGoogleSiteID($siteName);
+        if ($siteID <= 0)
+        {
+            $this->displayLoginMessage('Unable to resolve target site for Google sign-in.');
+            return;
+        }
+
+        $user = $this->getUserByEmailAndSite($email, $siteID);
+        if (!empty($user) && (int) $user['accessLevel'] > ACCESS_LEVEL_DISABLED)
+        {
+            $_SESSION['CATS']->transparentLogin($siteID, (int) $user['userID'], (int) $user['siteID']);
+            $this->transferAfterLogin(
+                isset($stateData['reloginVars']) ? $stateData['reloginVars'] : ''
+            );
+            return;
+        }
+
+        if (!$this->isGoogleAutoProvisionEnabled())
+        {
+            $this->displayLoginMessage(
+                'Google sign-in is configured, but automatic access request is disabled.'
+            );
+            return;
+        }
+
+        $fullName = trim(
+            (isset($profile['given_name']) ? $profile['given_name'] : '') . ' ' .
+            (isset($profile['family_name']) ? $profile['family_name'] : '')
+        );
+        if ($fullName === '' && isset($profile['name']))
+        {
+            $fullName = trim($profile['name']);
+        }
+
+        $_SESSION[self::GOOGLE_PROFILE_SESSION_KEY] = array(
+            'email' => $email,
+            'firstName' => isset($profile['given_name']) ? trim($profile['given_name']) : '',
+            'lastName' => isset($profile['family_name']) ? trim($profile['family_name']) : '',
+            'fullName' => $fullName,
+            'googleSub' => isset($profile['sub']) ? $profile['sub'] : '',
+            'siteID' => $siteID,
+            'reloginVars' => isset($stateData['reloginVars']) ? $stateData['reloginVars'] : ''
+        );
+
+        CATSUtility::transferRelativeURI('m=login&a=requestAccess');
+    }
+
+    private function requestAccess()
+    {
+        if (!isset($_SESSION[self::GOOGLE_PROFILE_SESSION_KEY]) ||
+            !is_array($_SESSION[self::GOOGLE_PROFILE_SESSION_KEY]))
+        {
+            $this->displayLoginMessage('Please sign in with Google before requesting access.');
+            return;
+        }
+
+        $profile = $_SESSION[self::GOOGLE_PROFILE_SESSION_KEY];
+        $status = 'form';
+        $statusMessage = '';
+        if (isset($_SESSION[self::GOOGLE_REQUEST_STATUS_SESSION_KEY]) &&
+            is_array($_SESSION[self::GOOGLE_REQUEST_STATUS_SESSION_KEY]))
+        {
+            $status = $_SESSION[self::GOOGLE_REQUEST_STATUS_SESSION_KEY]['status'];
+            $statusMessage = $_SESSION[self::GOOGLE_REQUEST_STATUS_SESSION_KEY]['message'];
+            unset($_SESSION[self::GOOGLE_REQUEST_STATUS_SESSION_KEY]);
+        }
+
+        $fullName = trim($profile['fullName']);
+        if ($fullName === '')
+        {
+            $fullName = trim($profile['firstName'] . ' ' . $profile['lastName']);
+        }
+        if ($fullName === '')
+        {
+            $fullName = $profile['email'];
+        }
+
+        $this->_template->assign('status', $status);
+        $this->_template->assign('statusMessage', $statusMessage);
+        $this->_template->assign('fullName', $fullName);
+        $this->_template->assign('email', $profile['email']);
+        $this->_template->assign('reason', '');
+        $this->_template->display('./modules/login/GoogleAccessRequest.tpl');
+    }
+
+    private function onRequestAccess()
+    {
+        if (!isset($_SESSION[self::GOOGLE_PROFILE_SESSION_KEY]) ||
+            !is_array($_SESSION[self::GOOGLE_PROFILE_SESSION_KEY]))
+        {
+            $this->displayLoginMessage('Please sign in with Google before requesting access.');
+            return;
+        }
+
+        $profile = $_SESSION[self::GOOGLE_PROFILE_SESSION_KEY];
+        $reason = $this->getTrimmedInput('reason', $_POST);
+
+        $siteID = (int) $profile['siteID'];
+        $email = strtolower(trim($profile['email']));
+
+        $existingUser = $this->getUserByEmailAndSite($email, $siteID);
+        if (!empty($existingUser) &&
+            (int) $existingUser['accessLevel'] > ACCESS_LEVEL_DISABLED)
+        {
+            $_SESSION['CATS']->transparentLogin(
+                $siteID,
+                (int) $existingUser['userID'],
+                (int) $existingUser['siteID']
+            );
+            $this->transferAfterLogin(
+                isset($profile['reloginVars']) ? $profile['reloginVars'] : ''
+            );
+            return;
+        }
+
+        $alreadyPending = false;
+        $userID = 0;
+        $username = '';
+        if (!empty($existingUser))
+        {
+            $alreadyPending = true;
+            $userID = (int) $existingUser['userID'];
+            $username = $existingUser['username'];
+        }
+        else
+        {
+            $username = $this->createUniqueUsernameFromEmail($email);
+            $firstName = trim($profile['firstName']);
+            $lastName = trim($profile['lastName']);
+            if ($firstName === '' && $lastName === '')
+            {
+                $firstName = 'Google';
+                $lastName = 'User';
+            }
+
+            $users = new Users($siteID);
+            $generatedPassword = 'google-' . md5(uniqid((string) mt_rand(), true));
+            $userID = (int) $users->add(
+                $lastName,
+                $firstName,
+                $email,
+                $username,
+                $generatedPassword,
+                ACCESS_LEVEL_DISABLED,
+                false,
+                $siteID
+            );
+
+            if ($userID <= 0)
+            {
+                $_SESSION[self::GOOGLE_REQUEST_STATUS_SESSION_KEY] = array(
+                    'status' => 'error',
+                    'message' => 'Unable to create your account request. Please contact an administrator.'
+                );
+                CATSUtility::transferRelativeURI('m=login&a=requestAccess');
+            }
+        }
+
+        $mailSent = $this->sendGoogleAccessRequestNotification(
+            $siteID,
+            $profile,
+            $username,
+            $userID,
+            $reason,
+            $alreadyPending
+        );
+
+        if ($alreadyPending)
+        {
+            $message = 'Your account request is already pending approval.';
+        }
+        else
+        {
+            $message = 'Your access request was submitted and is pending approval.';
+        }
+
+        if (!$mailSent)
+        {
+            $message .= ' Notification e-mail could not be sent automatically.';
+        }
+
+        $_SESSION[self::GOOGLE_REQUEST_STATUS_SESSION_KEY] = array(
+            'status' => 'submitted',
+            'message' => $message
+        );
+
+        CATSUtility::transferRelativeURI('m=login&a=requestAccess');
+    }
+
+    private function assignGoogleLoginTemplateVars($reloginVars, $siteName)
+    {
+        $this->_template->assign('googleAuthEnabled', $this->isGoogleOIDCConfigured());
+        $this->_template->assign(
+            'googleLoginURL',
+            $this->buildGoogleStartURL($reloginVars, $siteName)
+        );
+    }
+
+    private function isGoogleOIDCConfigured()
+    {
+        if (!defined('GOOGLE_OIDC_ENABLED') || !GOOGLE_OIDC_ENABLED)
+        {
+            return false;
+        }
+
+        if (!defined('GOOGLE_OIDC_CLIENT_ID') ||
+            trim((string) GOOGLE_OIDC_CLIENT_ID) === '')
+        {
+            return false;
+        }
+
+        if (!defined('GOOGLE_OIDC_CLIENT_SECRET') ||
+            trim((string) GOOGLE_OIDC_CLIENT_SECRET) === '')
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isGoogleAutoProvisionEnabled()
+    {
+        return (!defined('GOOGLE_AUTO_PROVISION_ENABLED') ||
+            GOOGLE_AUTO_PROVISION_ENABLED);
+    }
+
+    private function buildGoogleStartURL($reloginVars, $siteName)
+    {
+        $query = array(
+            'm' => 'login',
+            'a' => 'googleStart'
+        );
+
+        if ($reloginVars !== '')
+        {
+            $query['reloginVars'] = $reloginVars;
+        }
+        if ($siteName !== '')
+        {
+            $query['s'] = $siteName;
+        }
+
+        return CATSUtility::getIndexName() . '?' . http_build_query($query, '', '&');
+    }
+
+    private function getGoogleRedirectURI()
+    {
+        if (defined('GOOGLE_OIDC_REDIRECT_URI') &&
+            trim((string) GOOGLE_OIDC_REDIRECT_URI) !== '')
+        {
+            return trim((string) GOOGLE_OIDC_REDIRECT_URI);
+        }
+
+        return CATSUtility::getAbsoluteURI(
+            CATSUtility::getIndexName() . '?m=login&a=googleCallback'
+        );
+    }
+
+    private function resolveGoogleSiteID($siteName)
+    {
+        $siteName = trim((string) $siteName);
+        if ($siteName !== '' && $siteName !== 'choose')
+        {
+            $site = new Site(-1);
+            $rs = $site->getSiteByUnixName($siteName);
+            if (isset($rs['siteID']))
+            {
+                return (int) $rs['siteID'];
+            }
+        }
+
+        if (defined('GOOGLE_OIDC_SITE_ID') && (int) GOOGLE_OIDC_SITE_ID > 0)
+        {
+            return (int) GOOGLE_OIDC_SITE_ID;
+        }
+
+        if (defined('LDAP_SITEID') && (int) LDAP_SITEID > 0)
+        {
+            return (int) LDAP_SITEID;
+        }
+
+        $site = new Site(-1);
+        return (int) $site->getFirstSiteID();
+    }
+
+    private function isAllowedGoogleEmail($email)
+    {
+        $atPosition = strpos($email, '@');
+        if ($atPosition === false)
+        {
+            return false;
+        }
+
+        $domain = strtolower(substr($email, $atPosition + 1));
+        if (!defined('GOOGLE_OIDC_HOSTED_DOMAIN') ||
+            trim((string) GOOGLE_OIDC_HOSTED_DOMAIN) === '')
+        {
+            return true;
+        }
+
+        $allowedRaw = strtolower((string) GOOGLE_OIDC_HOSTED_DOMAIN);
+        $allowedDomains = preg_split('/[\s,;]+/', $allowedRaw);
+        foreach ($allowedDomains as $allowedDomain)
+        {
+            $allowedDomain = trim($allowedDomain);
+            if ($allowedDomain !== '' && $domain === $allowedDomain)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function exchangeGoogleAuthCode($code)
+    {
+        $response = $this->httpRequest(
+            'https://oauth2.googleapis.com/token',
+            'POST',
+            array(
+                'code' => $code,
+                'client_id' => GOOGLE_OIDC_CLIENT_ID,
+                'client_secret' => GOOGLE_OIDC_CLIENT_SECRET,
+                'redirect_uri' => $this->getGoogleRedirectURI(),
+                'grant_type' => 'authorization_code'
+            ),
+            array('Accept: application/json')
+        );
+
+        if (!$response['ok'])
+        {
+            return array(
+                'success' => false,
+                'error' => 'Google token exchange failed.'
+            );
+        }
+
+        $payload = json_decode($response['body'], true);
+        if (!is_array($payload) || !isset($payload['access_token']))
+        {
+            return array(
+                'success' => false,
+                'error' => 'Invalid token response from Google.'
+            );
+        }
+
+        return array(
+            'success' => true,
+            'accessToken' => $payload['access_token']
+        );
+    }
+
+    private function fetchGoogleUserInfo($accessToken)
+    {
+        $response = $this->httpRequest(
+            'https://openidconnect.googleapis.com/v1/userinfo',
+            'GET',
+            array(),
+            array(
+                'Accept: application/json',
+                'Authorization: Bearer ' . $accessToken
+            )
+        );
+
+        if (!$response['ok'])
+        {
+            return array(
+                'success' => false,
+                'error' => 'Unable to read Google user profile.'
+            );
+        }
+
+        $payload = json_decode($response['body'], true);
+        if (!is_array($payload))
+        {
+            return array(
+                'success' => false,
+                'error' => 'Invalid Google user profile response.'
+            );
+        }
+
+        return array(
+            'success' => true,
+            'profile' => $payload
+        );
+    }
+
+    private function httpRequest($url, $method = 'GET', $data = array(), $headers = array())
+    {
+        $method = strtoupper($method);
+        $queryString = http_build_query($data, '', '&');
+
+        if ($method === 'GET' && $queryString !== '')
+        {
+            $url .= (strpos($url, '?') === false ? '?' : '&') . $queryString;
+        }
+
+        if (function_exists('curl_init'))
+        {
+            $curl = curl_init();
+            curl_setopt($curl, CURLOPT_URL, $url);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 20);
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+
+            if (!empty($headers))
+            {
+                curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+            }
+
+            if ($method === 'POST')
+            {
+                curl_setopt($curl, CURLOPT_POST, true);
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $queryString);
+            }
+            else if ($method !== 'GET')
+            {
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+                if ($queryString !== '')
+                {
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $queryString);
+                }
+            }
+
+            $body = curl_exec($curl);
+            $statusCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $error = '';
+            if ($body === false)
+            {
+                $error = curl_error($curl);
+                $body = '';
+            }
+            curl_close($curl);
+
+            return array(
+                'ok' => ($statusCode >= 200 && $statusCode < 300 && $error === ''),
+                'statusCode' => $statusCode,
+                'body' => $body,
+                'error' => $error
+            );
+        }
+
+        $headerLines = $headers;
+        if (($method === 'POST' || $method === 'PUT') &&
+            !empty($data))
+        {
+            $headerLines[] = 'Content-Type: application/x-www-form-urlencoded';
+        }
+
+        $contextOptions = array(
+            'http' => array(
+                'method' => $method,
+                'ignore_errors' => true,
+                'timeout' => 20,
+                'header' => implode("\r\n", $headerLines)
+            )
+        );
+        if (($method === 'POST' || $method === 'PUT') && $queryString !== '')
+        {
+            $contextOptions['http']['content'] = $queryString;
+        }
+
+        $body = @file_get_contents(
+            $url,
+            false,
+            stream_context_create($contextOptions)
+        );
+
+        $statusCode = 0;
+        if (isset($http_response_header[0]) &&
+            preg_match('/\s(\d{3})\s/', $http_response_header[0], $matches))
+        {
+            $statusCode = (int) $matches[1];
+        }
+
+        return array(
+            'ok' => ($body !== false && $statusCode >= 200 && $statusCode < 300),
+            'statusCode' => $statusCode,
+            'body' => ($body === false ? '' : $body),
+            'error' => ($body === false ? 'HTTP request failed.' : '')
+        );
+    }
+
+    private function getUserByEmailAndSite($email, $siteID)
+    {
+        $db = DatabaseConnection::getInstance();
+        $sql = sprintf(
+            "SELECT
+                user_id AS userID,
+                site_id AS siteID,
+                user_name AS username,
+                access_level AS accessLevel
+            FROM
+                user
+            WHERE
+                site_id = %s
+            AND
+                (
+                    LOWER(email) = LOWER(%s)
+                    OR LOWER(user_name) = LOWER(%s)
+                )
+            LIMIT 1",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryString($email),
+            $db->makeQueryString($email)
+        );
+
+        return $db->getAssoc($sql);
+    }
+
+    private function createUniqueUsernameFromEmail($email)
+    {
+        $db = DatabaseConnection::getInstance();
+
+        $base = strtolower(trim($email));
+        $base = preg_replace('/[^a-z0-9._@-]/', '', $base);
+        if ($base === '')
+        {
+            $base = 'googleuser';
+        }
+
+        $candidate = $base;
+        $suffix = 1;
+        while ($suffix < 1000)
+        {
+            $sql = sprintf(
+                "SELECT
+                    user_id AS userID
+                FROM
+                    user
+                WHERE
+                    user_name = %s
+                LIMIT 1",
+                $db->makeQueryString($candidate)
+            );
+            $rs = $db->getAssoc($sql);
+            if (empty($rs))
+            {
+                return $candidate;
+            }
+
+            $candidate = $base . '.' . $suffix;
+            $suffix++;
+        }
+
+        return $base . '.' . time();
+    }
+
+    private function sendGoogleAccessRequestNotification(
+        $siteID,
+        $profile,
+        $username,
+        $userID,
+        $reason,
+        $alreadyPending
+    )
+    {
+        if (!defined('GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL') ||
+            trim((string) GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL) === '')
+        {
+            return false;
+        }
+
+        $notifyEmail = trim((string) GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL);
+        $subject = 'OpenCATS Access Request - ' . $profile['email'];
+        if (defined('GOOGLE_ACCESS_REQUEST_SUBJECT') &&
+            trim((string) GOOGLE_ACCESS_REQUEST_SUBJECT) !== '')
+        {
+            $subject = trim((string) GOOGLE_ACCESS_REQUEST_SUBJECT);
+        }
+
+        $body = "A Google sign-in access request was submitted.\n\n";
+        $body .= 'Name: ' . $profile['fullName'] . "\n";
+        $body .= 'Email: ' . $profile['email'] . "\n";
+        $body .= 'Username: ' . $username . "\n";
+        $body .= 'User ID: ' . $userID . "\n";
+        $body .= 'Site ID: ' . $siteID . "\n";
+        $body .= 'Request Type: ' . ($alreadyPending ? 'Reminder (already pending)' : 'New request') . "\n";
+        $body .= 'Reason: ' . ($reason === '' ? '(not provided)' : $reason) . "\n";
+        $body .= 'Source IP: ' . $this->getClientIP() . "\n";
+        $body .= 'Requested At: ' . date('Y-m-d H:i:s') . "\n";
+
+        $mailer = new Mailer($siteID);
+        if (defined('GOOGLE_ACCESS_REQUEST_FROM_EMAIL') &&
+            trim((string) GOOGLE_ACCESS_REQUEST_FROM_EMAIL) !== '')
+        {
+            $mailer->overrideSetting('fromAddress', trim((string) GOOGLE_ACCESS_REQUEST_FROM_EMAIL));
+        }
+
+        return (bool) $mailer->sendToOne(
+            array($notifyEmail, $notifyEmail),
+            $subject,
+            $body,
+            false,
+            true,
+            array(),
+            78,
+            false
+        );
+    }
+
+    private function transferAfterLogin($reloginVars)
+    {
+        if ($reloginVars !== '')
+        {
+            CATSUtility::transferRelativeURI($reloginVars);
+        }
+
+        CATSUtility::transferRelativeURI('m=home');
+    }
+
+    private function displayLoginMessage($message, $siteName = '')
+    {
+        $siteNameFull = '';
+        if ($siteName !== '')
+        {
+            $site = new Site(-1);
+            $siteRS = $site->getSiteByUnixName($siteName);
+            $siteNameFull = (isset($siteRS['name']) ? $siteRS['name'] : $siteName);
+        }
+
+        $this->_template->assign('message', $message);
+        $this->_template->assign('messageSuccess', false);
+        $this->_template->assign('username', '');
+        $this->_template->assign('reloginVars', '');
+        $this->_template->assign('siteName', $siteName);
+        $this->_template->assign('siteNameFull', $siteNameFull);
+        $this->_template->assign('dateString', date('l, F jS, Y'));
+        $this->assignGoogleLoginTemplateVars('', $siteName);
+        $this->_template->display('./modules/login/Login.tpl');
+    }
+
+    private function secureCompare($knownString, $userString)
+    {
+        if (function_exists('hash_equals'))
+        {
+            return hash_equals($knownString, $userString);
+        }
+
+        if (strlen($knownString) !== strlen($userString))
+        {
+            return false;
+        }
+
+        $result = 0;
+        $maxLength = strlen($knownString);
+        for ($i = 0; $i < $maxLength; $i++)
+        {
+            $result |= (ord($knownString[$i]) ^ ord($userString[$i]));
+        }
+
+        return ($result === 0);
+    }
+
+    private function getClientIP()
+    {
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) &&
+            trim($_SERVER['HTTP_X_FORWARDED_FOR']) !== '')
+        {
+            $parts = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+            return trim($parts[0]);
+        }
+
+        if (isset($_SERVER['REMOTE_ADDR']))
+        {
+            return $_SERVER['REMOTE_ADDR'];
+        }
+
+        return '';
     }
 
 

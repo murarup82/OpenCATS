@@ -77,6 +77,10 @@
 
                                         <input type="submit" class="button ui2-btn ui2-btn-primary" value="Login" />
                                         <input type="reset"  id="reset" name="reset" class="button ui2-btn ui2-btn-secondary" value="Reset" />
+                                        <?php if (!empty($this->googleAuthEnabled)): ?>
+                                            <br /><br />
+                                            <a href="<?php echo($this->googleLoginURL); ?>" class="button ui2-btn ui2-btn-secondary">Sign in with Google</a>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <br />
                                         <a href="javascript:void(0);" onclick="demoLogin(); return false;">Login to Demo Account</a><br />
