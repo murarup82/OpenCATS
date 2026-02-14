@@ -290,7 +290,8 @@ class CommonErrors
         );
 
         $errorMessage .= '<p><b>Reference:</b> ' . htmlspecialchars($errorReference) . '</p>';
-        if ($canViewTechnicalDetails && trim((string) $customMessage) !== '')
+        if (($canViewTechnicalDetails || (int) $code === COMMONERROR_RECORDERROR) &&
+            trim((string) $customMessage) !== '')
         {
             $errorMessage .= '<p><b>Technical details:</b> '
                 . nl2br(htmlspecialchars(trim((string) $customMessage), ENT_QUOTES, 'UTF-8'))

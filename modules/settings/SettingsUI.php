@@ -3294,7 +3294,11 @@ class SettingsUI extends UserInterface
                     'version' => $version,
                     'dbError' => $db->getError()
                 ));
-                CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to record migration: ' . $db->getError());
+                CommonErrors::fatal(
+                    COMMONERROR_RECORDERROR,
+                    $this,
+                    $this->buildMigrationFailureDetails('mark_applied_insert_failed', $migration, $db)
+                );
             }
             $this->logMigrationEvent('mark_applied_completed', array('version' => $version));
 
@@ -3433,7 +3437,11 @@ class SettingsUI extends UserInterface
                     'version' => $migration['version'],
                     'dbError' => $db->getError()
                 ));
-                CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to record migration: ' . $db->getError());
+                CommonErrors::fatal(
+                    COMMONERROR_RECORDERROR,
+                    $this,
+                    $this->buildMigrationFailureDetails('apply_migration_record_failed', $migration, $db)
+                );
             }
 
             $appliedCount++;
@@ -3708,6 +3716,27 @@ class SettingsUI extends UserInterface
         }
 
         return true;
+    }
+
+    private function buildMigrationFailureDetails($stage, $migration, $db)
+    {
+        $dbError = $db->getError();
+        $details = array(
+            'stage=' . $stage,
+            'version=' . (isset($migration['version']) ? $migration['version'] : ''),
+            'checksum=' . (isset($migration['checksum']) ? $migration['checksum'] : ''),
+            'siteID=' . (int) $this->_siteID,
+            'userID=' . (int) $this->_userID,
+            'CATS_SLAVE=' . ((defined('CATS_SLAVE') && CATS_SLAVE) ? 'true' : 'false'),
+            'dbError=' . $dbError
+        );
+
+        if (strpos($dbError, 'errno: 0') !== false)
+        {
+            $details[] = 'hint=MySQL returned no SQL error; query may be blocked before execution (read-only/slave mode or DB query filter), or DB handle is stale.';
+        }
+
+        return 'Failed to record migration. ' . implode(' | ', $details);
     }
 
     private function logMigrationEvent($event, $context = array())

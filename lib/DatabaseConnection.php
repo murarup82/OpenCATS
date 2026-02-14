@@ -43,6 +43,7 @@ class DatabaseConnection
     private $_timeZone;
     private $_dateDMY;
     private $_inTransaction;
+    private $_lastBlockedReason;
 
 
     /**
@@ -158,9 +159,19 @@ class DatabaseConnection
      */
     public function query($query, $ignoreErrors = false)
     {
+        $this->_lastBlockedReason = '';
+
         /* Does our current configuration allow the execution of this query? */
         if (!$this->allowQuery($query))
         {
+            $rawSlave = defined('CATS_SLAVE') ? var_export(CATS_SLAVE, true) : 'undefined';
+            $parsedSlave = $this->isSlaveModeEnabled() ? 'true' : 'false';
+            $queryPreview = substr(preg_replace('/\s+/', ' ', trim((string) $query)), 0, 240);
+            $this->_lastBlockedReason = 'Query blocked by allowQuery filter'
+                . '; CATS_SLAVE(raw)=' . $rawSlave
+                . '; CATS_SLAVE(parsed)=' . $parsedSlave
+                . '; query=' . $queryPreview;
+            $this->logQueryError((string) $query, $this->_lastBlockedReason);
             return false;
         }
 
@@ -575,6 +586,11 @@ class DatabaseConnection
     */
     public function getError()
     {
+        if (!empty($this->_lastBlockedReason))
+        {
+            return "errno: 0, error: " . $this->_lastBlockedReason;
+        }
+
         if ($this->_connection === null)
         {
             $error = "errno: " . mysqli_connect_errno() . ", ";
@@ -647,8 +663,35 @@ class DatabaseConnection
      */
     public function allowQuery($query)
     {
-        if (CATS_SLAVE &&
+        if ($this->isSlaveModeEnabled() &&
             preg_match('/^\s*(?:UPDATE|INSERT|DELETE)\s/i', trim($query)))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isSlaveModeEnabled()
+    {
+        if (!defined('CATS_SLAVE'))
+        {
+            return false;
+        }
+
+        if (is_bool(CATS_SLAVE))
+        {
+            return CATS_SLAVE;
+        }
+
+        if (is_int(CATS_SLAVE) || is_float(CATS_SLAVE))
+        {
+            return ((int) CATS_SLAVE) !== 0;
+        }
+
+        $value = strtolower(trim((string) CATS_SLAVE));
+        if ($value === '' || $value === '0' || $value === 'false' ||
+            $value === 'off' || $value === 'no' || $value === 'null')
         {
             return false;
         }
