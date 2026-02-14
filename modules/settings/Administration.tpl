@@ -65,6 +65,19 @@
                                     Add, edit and delete users for your site.
                                 </td>
                             </tr>
+                            <?php if ($this->rolePermissionsEnabled): ?>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=rolePagePermissions">
+                                        Role Access Matrix
+                                    </a>
+                                </td>
+                                <td>
+                                    Configure page visibility and minimum access level by role.
+                                </td>
+                            </tr>
+                            <?php endif; ?>
                             <tr>
                                 <td>
                                     <img src="images/bullet_black.gif" alt="" />

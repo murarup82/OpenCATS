@@ -66,6 +66,29 @@ class ModuleUtility
             }
         }
 
+        if (isset($_SESSION['CATS']) &&
+            $_SESSION['CATS']->isLoggedIn() &&
+            class_exists('RolePagePermissions'))
+        {
+            $action = isset($_REQUEST['a']) ? $_REQUEST['a'] : '';
+            $rolePagePermissions = new RolePagePermissions($_SESSION['CATS']->getSiteID());
+            if ($rolePagePermissions->isSchemaAvailable() &&
+                !$rolePagePermissions->canAccessRequest(
+                    $_SESSION['CATS']->getUserID(),
+                    $moduleName,
+                    $action,
+                    $_SESSION['CATS']->getAccessLevel('')
+                ))
+            {
+                CommonErrors::fatal(
+                    COMMONERROR_PERMISSION,
+                    NULL,
+                    'This page is not available for your assigned role.'
+                );
+                return;
+            }
+        }
+
         $moduleClass = $modules[$moduleName][0];
 
         include_once(LEGACY_ROOT . 

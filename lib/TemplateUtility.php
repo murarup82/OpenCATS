@@ -39,6 +39,7 @@ include_once('./vendor/autoload.php');
 include_once(LEGACY_ROOT . '/lib/Candidates.php');
 include_once(LEGACY_ROOT . '/lib/DateUtility.php');
 include_once(LEGACY_ROOT . '/lib/SystemInfo.php');
+include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
 
 use OpenCATS\UI\QuickActionMenu;
 
@@ -752,6 +753,22 @@ class TemplateUtility
         echo '<ul id="primary">', "\n";
 
         $indexName = CATSUtility::getIndexName();
+        $rolePagePermissions = null;
+        $currentUserID = 0;
+        $currentAccessLevel = ACCESS_LEVEL_DISABLED;
+        if (isset($_SESSION['CATS']) && $_SESSION['CATS']->isLoggedIn())
+        {
+            $rolePagePermissions = new RolePagePermissions($_SESSION['CATS']->getSiteID());
+            if (!$rolePagePermissions->isSchemaAvailable())
+            {
+                $rolePagePermissions = null;
+            }
+            else
+            {
+                $currentUserID = (int) $_SESSION['CATS']->getUserID();
+                $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+            }
+        }
 
         $modules = ModuleUtility::getModules();
         foreach ($modules as $moduleName => $parameters)
@@ -778,6 +795,15 @@ class TemplateUtility
             if (!$displayTab)
             {
                 continue;
+            }
+
+            if ($rolePagePermissions !== null)
+            {
+                $pageKey = RolePagePermissions::mapRequestToPageKey($moduleName, '');
+                if (!$rolePagePermissions->isPageAllowedForUser($currentUserID, $pageKey, $currentAccessLevel))
+                {
+                    continue;
+                }
             }
 
             /* Inactive Tab? */
@@ -970,6 +996,22 @@ class TemplateUtility
     {
         $indexName = CATSUtility::getIndexName();
         $modules = ModuleUtility::getModules();
+        $rolePagePermissions = null;
+        $currentUserID = 0;
+        $currentAccessLevel = ACCESS_LEVEL_DISABLED;
+        if (isset($_SESSION['CATS']) && $_SESSION['CATS']->isLoggedIn())
+        {
+            $rolePagePermissions = new RolePagePermissions($_SESSION['CATS']->getSiteID());
+            if (!$rolePagePermissions->isSchemaAvailable())
+            {
+                $rolePagePermissions = null;
+            }
+            else
+            {
+                $currentUserID = (int) $_SESSION['CATS']->getUserID();
+                $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+            }
+        }
         $itemsByKey = array();
         $username  = $_SESSION['CATS']->getUsername();
         $fullName  = $_SESSION['CATS']->getFullName();
@@ -1008,6 +1050,15 @@ class TemplateUtility
             if (!$displayTab)
             {
                 continue;
+            }
+
+            if ($rolePagePermissions !== null)
+            {
+                $pageKey = RolePagePermissions::mapRequestToPageKey($moduleName, '');
+                if (!$rolePagePermissions->isPageAllowedForUser($currentUserID, $pageKey, $currentAccessLevel))
+                {
+                    continue;
+                }
             }
 
             $alPosition = strpos($tabText, "*al=");
@@ -1059,24 +1110,32 @@ class TemplateUtility
 
         if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_DEMO)
         {
-            $itemsByKey['settings_admin'] = array(
-                'label' => 'Administration',
-                'href' => $indexName . '?m=settings&amp;a=administration',
-                'module' => 'settings',
-                'action' => 'administration',
-                'icon' => 'settings'
-            );
+            if ($rolePagePermissions === null ||
+                $rolePagePermissions->isPageAllowedForUser($currentUserID, 'settings_admin', $currentAccessLevel))
+            {
+                $itemsByKey['settings_admin'] = array(
+                    'label' => 'Administration',
+                    'href' => $indexName . '?m=settings&amp;a=administration',
+                    'module' => 'settings',
+                    'action' => 'administration',
+                    'icon' => 'settings'
+                );
+            }
         }
 
         if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
         {
-            $itemsByKey['gdpr_consents'] = array(
-                'label' => 'GDPR Consents',
-                'href' => $indexName . '?m=gdpr&amp;a=requests',
-                'module' => 'gdpr',
-                'action' => 'requests',
-                'icon' => 'settings'
-            );
+            if ($rolePagePermissions === null ||
+                $rolePagePermissions->isPageAllowedForUser($currentUserID, 'gdpr_consents', $currentAccessLevel))
+            {
+                $itemsByKey['gdpr_consents'] = array(
+                    'label' => 'GDPR Consents',
+                    'href' => $indexName . '?m=gdpr&amp;a=requests',
+                    'module' => 'gdpr',
+                    'action' => 'requests',
+                    'icon' => 'settings'
+                );
+            }
         }
 
           $groups = array(

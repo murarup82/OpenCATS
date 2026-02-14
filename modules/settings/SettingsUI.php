@@ -53,6 +53,7 @@ include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
 include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
 include_once(LEGACY_ROOT . '/lib/UserRoles.php');
+include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
 eval(Hooks::get('XML_FEED_SUBMISSION_SETTINGS_HEADERS'));
 
 /* Users.php is included by index.php already. */
@@ -694,6 +695,21 @@ class SettingsUI extends UserInterface
                 else
                 {
                     $this->googleOIDCSettings();
+                }
+                break;
+
+            case 'rolePagePermissions':
+                if ($this->getUserAccessLevel('settings.rolePagePermissions') < ACCESS_LEVEL_SA)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if ($this->isPostBack())
+                {
+                    $this->onRolePagePermissions();
+                }
+                else
+                {
+                    $this->rolePagePermissions();
                 }
                 break;
 
@@ -2636,6 +2652,46 @@ class SettingsUI extends UserInterface
         );
     }
 
+    private function rolePagePermissions()
+    {
+        $rolePagePermissions = new RolePagePermissions($this->_siteID);
+        $matrixData = $rolePagePermissions->getRoleMatrix();
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Administration');
+        $this->_template->assign('rolePermissionsEnabled', $rolePagePermissions->isSchemaAvailable() ? 1 : 0);
+        $this->_template->assign('roles', $matrixData['roles']);
+        $this->_template->assign('pages', $matrixData['pages']);
+        $this->_template->assign('matrix', $matrixData['matrix']);
+        $this->_template->assign('accessOptions', RolePagePermissions::getAccessOptions());
+        $this->_template->assign('message', isset($_GET['message']) ? $_GET['message'] : '');
+        $this->_template->display('./modules/settings/RolePagePermissions.tpl');
+    }
+
+    private function onRolePagePermissions()
+    {
+        $rolePagePermissions = new RolePagePermissions($this->_siteID);
+        if (!$rolePagePermissions->isSchemaAvailable())
+        {
+            CATSUtility::transferRelativeURI('m=settings&a=rolePagePermissions&message=' . urlencode('Role/page permission schema is not available yet. Apply migrations first.'));
+            return;
+        }
+
+        $postedMatrix = array();
+        if (isset($_POST['perm']) && is_array($_POST['perm']))
+        {
+            $postedMatrix = $_POST['perm'];
+        }
+
+        if ($rolePagePermissions->saveRoleMatrix($postedMatrix))
+        {
+            CATSUtility::transferRelativeURI('m=settings&a=rolePagePermissions&message=' . urlencode('Role access matrix saved.'));
+            return;
+        }
+
+        CATSUtility::transferRelativeURI('m=settings&a=rolePagePermissions&message=' . urlencode('Failed to save role access matrix.'));
+    }
+
     /*
      * Called by handleRequest() to show the e-mail settings template.
      */
@@ -3168,6 +3224,8 @@ class SettingsUI extends UserInterface
         }
 
         $this->_template->assign('careerPortalUnlock', $careerPortalUnlock);
+        $rolePagePermissions = new RolePagePermissions($this->_siteID);
+        $this->_template->assign('rolePermissionsEnabled', $rolePagePermissions->isSchemaAvailable() ? 1 : 0);
         $this->_template->assign('subActive', 'Administration');
         $this->_template->assign('systemAdministration', $systemAdministration);
         $this->_template->assign('active', $this);

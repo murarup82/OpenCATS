@@ -68,6 +68,7 @@ include_once(LEGACY_ROOT . '/lib/Session.php'); /* Depends: MRU, Users, Database
 include_once(LEGACY_ROOT . '/lib/UserInterface.php'); /* Depends: Template, Session. */
 include_once(LEGACY_ROOT . '/lib/ModuleUtility.php'); /* Depends: UserInterface */
 include_once(LEGACY_ROOT . '/lib/TemplateUtility.php'); /* Depends: ModuleUtility, Hooks */
+include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
 
 
 /* Give the session a unique name to avoid conflicts and start the session. */
@@ -208,14 +209,41 @@ else if (!isset($_GET['m']) || empty($_GET['m']))
 
         if (!eval(Hooks::get('INDEX_LOAD_HOME'))) return;
 
-        if ($_SESSION['CATS']->getAccessLevel('joborders.show') >= ACCESS_LEVEL_READ)
+        $landingModule = '';
+        $landingAction = '';
+        $rolePagePermissions = new RolePagePermissions($_SESSION['CATS']->getSiteID());
+        if ($rolePagePermissions->isSchemaAvailable())
         {
-            ModuleUtility::loadModule('dashboard');
+            $landingRoute = $rolePagePermissions->getDefaultLandingRoute(
+                $_SESSION['CATS']->getUserID(),
+                $_SESSION['CATS']->getAccessLevel('')
+            );
+            if (!empty($landingRoute))
+            {
+                $landingModule = $landingRoute['module'];
+                $landingAction = $landingRoute['action'];
+            }
         }
-        else
+
+        if ($landingModule == '')
         {
-            ModuleUtility::loadModule('home');
+            if ($_SESSION['CATS']->getAccessLevel('joborders.show') >= ACCESS_LEVEL_READ)
+            {
+                $landingModule = 'dashboard';
+            }
+            else
+            {
+                $landingModule = 'home';
+            }
         }
+
+        if ($landingAction != '')
+        {
+            $_REQUEST['a'] = $landingAction;
+            $_GET['a'] = $landingAction;
+        }
+
+        ModuleUtility::loadModule($landingModule);
     }
     else
     {
