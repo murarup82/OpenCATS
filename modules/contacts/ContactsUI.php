@@ -387,6 +387,7 @@ class ContactsUI extends UserInterface
 
         /* Get extra fields. */
         $extraFieldRS = $contacts->extraFields->getValuesForShow($contactID);
+        $lists = $contacts->getListsForContact($contactID);
 
         /* Is the user an admin - can user see history? */
         if ($this->getUserAccessLevel('contacts.show') < ACCESS_LEVEL_DEMO)
@@ -405,6 +406,7 @@ class ContactsUI extends UserInterface
         $this->_template->assign('extraFieldRS', $extraFieldRS);
         $this->_template->assign('calendarRS', $calendarRS);
         $this->_template->assign('activityRS', $activityRS);
+        $this->_template->assign('lists', $lists);
         $this->_template->assign('contactID', $contactID);
         $this->_template->assign('privledgedUser', $privledgedUser);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());

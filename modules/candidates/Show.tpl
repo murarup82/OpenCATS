@@ -774,6 +774,13 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             <br />
 
             <p class="note">Lists</p>
+            <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT): ?>
+                <p style="margin: 6px 0 8px 0;">
+                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=lists&amp;a=quickActionAddToListModal&amp;dataItemType=<?php echo DATA_ITEM_CANDIDATE; ?>&amp;dataItemID=<?php echo $this->candidateID; ?>', 450, 350, null); return false;">
+                        Manage Candidate Lists
+                    </a>
+                </p>
+            <?php endif; ?>
 
             <table id="listsTable" class="sortable">
                 <tr>
@@ -782,7 +789,11 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 <?php foreach($this->lists as $rowNumber => $list): ?>
                     <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
                         <td>
-                            <a href="index.php?m=lists&a=showList&savedListID=<?php echo $list['listID']; ?>"><?php echo $list['name']; ?></a>
+                            <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_READ): ?>
+                                <a href="index.php?m=lists&a=showList&savedListID=<?php echo $list['listID']; ?>"><?php $this->_($list['name']); ?></a>
+                            <?php else: ?>
+                                <?php $this->_($list['name']); ?>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -81,10 +81,17 @@ class ModuleUtility
             $rolePagePermissions = new RolePagePermissions($_SESSION['CATS']->getSiteID());
             if ($rolePagePermissions->isSchemaAvailable())
             {
-                $currentAccessLevel = (int) $_SESSION['CATS']->getRealAccessLevel();
-                if ($currentAccessLevel <= 0)
+                if (method_exists($_SESSION['CATS'], 'getBaseAccessLevel'))
                 {
-                    $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+                    $currentAccessLevel = (int) $_SESSION['CATS']->getBaseAccessLevel();
+                }
+                else
+                {
+                    $currentAccessLevel = (int) $_SESSION['CATS']->getRealAccessLevel();
+                    if ($currentAccessLevel <= 0)
+                    {
+                        $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+                    }
                 }
 
                 if (!$rolePagePermissions->canAccessRequest(

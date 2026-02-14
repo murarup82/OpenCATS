@@ -33,6 +33,7 @@ include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 
 function isRequiredValueValid($value)
 {
+    $allowZero = false;
     $value = (string) $value;
 
     /* Return false if the key is empty, or if the key is zero and
@@ -61,6 +62,12 @@ function isRequiredValueValid($value)
 
 
 $interface = new SecureAJAXInterface();
+
+if ($_SESSION['CATS']->getAccessLevel('lists.listByView') < ACCESS_LEVEL_EDIT)
+{
+    $interface->outputXMLErrorPage(-1, 'Permission denied.');
+    die();
+}
 
 if (!isset($_REQUEST['listsToAdd']))
 {
@@ -123,6 +130,29 @@ $savedLists = new SavedLists($siteID);
 /* Write changes. */
 foreach ($listsToAdd as $list)
 {
+    $list = (int) $list;
+    if ($list <= 0)
+    {
+        continue;
+    }
+
+    $listRS = $savedLists->get($list);
+    if (empty($listRS))
+    {
+        $interface->outputXMLErrorPage(-1, 'Invalid list ID.');
+        die();
+    }
+    if ((int) $listRS['isDynamic'] !== 0)
+    {
+        $interface->outputXMLErrorPage(-1, 'Cannot manually edit a dynamic list.');
+        die();
+    }
+    if ((int) $listRS['dataItemType'] !== (int) $dataItemType)
+    {
+        $interface->outputXMLErrorPage(-1, 'List item type mismatch.');
+        die();
+    }
+
     $itemsToAddTemp = array();
     foreach ($itemsToAdd as $item)
     {
@@ -130,13 +160,21 @@ foreach ($listsToAdd as $list)
         /* Because its too slow adding 1 item at a time, we do it in spurts of 200 items. */
         if (count($itemsToAddTemp) > 200)
         {
-            $savedLists->addEntryMany($list, $dataItemType, $itemsToAddTemp);
+            if (!$savedLists->addEntryMany($list, $dataItemType, $itemsToAddTemp))
+            {
+                $interface->outputXMLErrorPage(-1, 'Failed to add one or more items to list.');
+                die();
+            }
             $itemsToAddTemp = array();
         }
     }
     if (count($itemsToAddTemp) > 0)
     {
-        $savedLists->addEntryMany($list, $dataItemType, $itemsToAddTemp);
+        if (!$savedLists->addEntryMany($list, $dataItemType, $itemsToAddTemp))
+        {
+            $interface->outputXMLErrorPage(-1, 'Failed to add one or more items to list.');
+            die();
+        }
     }
 }
 

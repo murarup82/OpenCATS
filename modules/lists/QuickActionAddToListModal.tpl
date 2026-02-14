@@ -1,5 +1,5 @@
 <?php /* $Id: QuickActionAddToListModal.tpl 3198 2007-10-14 23:36:43Z will $ */ ?>
-<?php TemplateUtility::printModalHeader('Candidates', array('js/lists.js'), 'Add to '.$this->dataItemDesc.' Static Lists'); ?>
+<?php TemplateUtility::printModalHeader('Lists', array('js/lists.js'), 'Add to '.$this->dataItemDesc.' Static Lists'); ?>
     <table>
         <tr>
             <td><!--Add to Static Lists-->Select the lists you want to add the item<?php if (count($this->dataItemIDArray) > 1): ?>s<?php endif; ?> to.</td>
@@ -14,16 +14,20 @@
                             &nbsp;
                             <span id="savedListRowDescriptionArea<?php echo($data['savedListID']); ?>"><?php $this->_($data['description']); ?></span>&nbsp;(<?php echo($data['numberEntries']); ?>)
                         </span>
+                        <?php if (!empty($this->canManageLists)): ?>
                         <span style="float:right; padding-right:25px;">
                             <a href="javascript:void(0);" onclick="editListRow(<?php echo($data['savedListID']); ?>);" style="text-decoration:none;"><img src="images/actions/edit.gif" border="0">&nbsp;Edit</a>
                         </span>
+                        <?php endif; ?>
                     </div>
                     <div class="<?php TemplateUtility::printAlternatingDivClass($index); ?>" style="display:none;" id="savedListRowEditing<?php echo($data['savedListID']); ?>">
                         <span style="float:left;">
                             <input class="inputbox" style="width:220px; padding-left:5px; margin-top:2px;" value="<?php $this->_($data['description']); ?>" id="savedListRowInput<?php echo($data['savedListID']); ?>">
                         </span>
                         <span style="float:right; padding-right:25px;">
+                            <?php if (!empty($this->canDeleteLists)): ?>
                             <a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="deleteListRow(<?php echo($data['savedListID']); ?>, '<?php echo($this->sessionCookie); ?>', <?php echo($data['numberEntries']); ?>);" style="text-decoration:none;"><img src="images/actions/delete.gif" border="0">&nbsp;Delete</a>&nbsp;
+                            <?php endif; ?>
                             <a href="javascript:void(0);" onclick="saveListRow(<?php echo($data['savedListID']); ?>, '<?php echo($this->sessionCookie); ?>');" style="text-decoration:none;"><img src="images/actions/screen.gif" border="0">&nbsp;Save</a>
                         </span>
                     </div>
@@ -46,9 +50,11 @@
             </div>
             <br />
             <div style="float:right;" id="actionArea">
+                <?php if (!empty($this->canManageLists)): ?>
                 <input type="button" class="button" value="New List" onclick="addListRow();">&nbsp;
                 <input type="button" class="button" value="Add To Lists" onclick="addItemsToList('<?php echo($this->sessionCookie); ?>', <?php echo($this->dataItemType); ?>);">&nbsp;
-                <input type="button" class="button" value="Cancel" onclick="parentHidePopWin();">&nbsp;
+                <?php endif; ?>
+                <input type="button" class="button" value="Close" onclick="parentHidePopWin();">&nbsp;
             </div>
             <div style="display:none; font: normal normal normal 12px/130% Arial, Tahoma, sans-serif;" id="addingToListAjaxing">
                 <img src="images/indicator.gif">&nbsp;Adding to Lists, Please Wait <?php if (count($this->dataItemIDArray) > 20): ?>(This could take awhile)<?php endif; ?>...

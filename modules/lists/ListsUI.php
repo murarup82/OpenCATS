@@ -75,30 +75,60 @@ class ListsUI extends UserInterface
             */
 
             case 'showList':
+                if ($this->getUserAccessLevel('lists.listByView') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    return;
+                }
                 $this->showList();
                 break;
 
             /* Add to list popup. */
             case 'quickActionAddToListModal':
+                if ($this->getUserAccessLevel('lists.listByView') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    return;
+                }
                 $this->quickActionAddToListModal();
                 break;
 
             /* Add to list popup via datagrid. */
             case 'addToListFromDatagridModal':
+                if ($this->getUserAccessLevel('lists.listByView') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    return;
+                }
                 $this->addToListFromDatagridModal();
                 break;
 
             case 'removeFromListDatagrid':
+                if ($this->getUserAccessLevel('lists.listByView') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    return;
+                }
                 $this->removeFromListDatagrid();
                 break;
 
             case 'deleteStaticList':
+                if ($this->getUserAccessLevel('lists.listByView') < ACCESS_LEVEL_DELETE)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    return;
+                }
                 $this->onDeleteStaticList();
                 break;
 
             /* Main list page. */
             case 'listByView':
             default:
+                if ($this->getUserAccessLevel('lists.listByView') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    return;
+                }
                 $this->listByView();
                 break;
         }
@@ -242,6 +272,8 @@ class ListsUI extends UserInterface
         $this->_template->assign('dataItemType', $dataItemType);
         $this->_template->assign('dataItemIDArray', $dataItemIDArray);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
+        $this->_template->assign('canManageLists', ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT));
+        $this->_template->assign('canDeleteLists', ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_DELETE));
 
         $this->_template->display('./modules/lists/QuickActionAddToListModal.tpl');
     }
@@ -285,6 +317,8 @@ class ListsUI extends UserInterface
         $this->_template->assign('dataItemType', $dataItemType);
         $this->_template->assign('dataItemIDArray', $dataItemIDArray);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
+        $this->_template->assign('canManageLists', ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT));
+        $this->_template->assign('canDeleteLists', ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_DELETE));
 
         $this->_template->display('./modules/lists/QuickActionAddToListModal.tpl');
     }

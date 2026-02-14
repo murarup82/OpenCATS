@@ -472,6 +472,12 @@ class CATSSession
         self::$_requestAccessCap = null;
     }
 
+    // Base user access level after login/account state adjustments (before role page caps).
+    public function getBaseAccessLevel()
+    {
+        return (int) $this->_accessLevel;
+    }
+
     // FIXME: Document me!
     public function getRealAccessLevel()
     {

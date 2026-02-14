@@ -145,8 +145,17 @@ class SavedLists
      * @param string saved list description
      * @return integer saved list ID or -1 on failure
      */
-    public function getIDByDescription($description)
+    public function getIDByDescription($description, $dataItemType = -1)
     {
+        $typeSQL = '';
+        if ((int) $dataItemType > 0)
+        {
+            $typeSQL = sprintf(
+                ' AND data_item_type = %s',
+                $this->_db->makeQueryInteger($dataItemType)
+            );
+        }
+
         $sql = sprintf(
             "SELECT
                 saved_list_id AS savedListID
@@ -155,9 +164,11 @@ class SavedLists
             WHERE
                 description = %s
             AND
-                site_id = %s",
+                site_id = %s
+            %s",
             $this->_db->makeQueryString($description),
-            $this->_siteID
+            $this->_siteID,
+            $typeSQL
         );
         $rs = $this->_db->getAssoc($sql);
 
@@ -390,9 +401,39 @@ class SavedLists
      */ 
     function addEntryMany($savedListID, $dataItemType, $dataItemIDs)
     {
+        $savedListID = (int) $savedListID;
+        $dataItemType = (int) $dataItemType;
+        if ($savedListID <= 0 || $dataItemType <= 0 || !is_array($dataItemIDs))
+        {
+            return false;
+        }
+
+        $normalizedItemIDs = array();
+        foreach ($dataItemIDs as $dataItemID)
+        {
+            $dataItemID = (int) $dataItemID;
+            if ($dataItemID > 0)
+            {
+                $normalizedItemIDs[$dataItemID] = $dataItemID;
+            }
+        }
+
+        if (empty($normalizedItemIDs))
+        {
+            return false;
+        }
+
+        $listRS = $this->get($savedListID);
+        if (empty($listRS) ||
+            (int) $listRS['dataItemType'] !== $dataItemType ||
+            (int) $listRS['isDynamic'] !== 0)
+        {
+            return false;
+        }
+
         $sql = sprintf(
             "SELECT
-                saved_list_id AS savedListID
+                data_item_id AS dataItemID
             FROM
                 saved_list_entry
             WHERE
@@ -400,27 +441,44 @@ class SavedLists
             AND
                 saved_list_id = %s
             AND
+                data_item_type = %s
+            AND
                 data_item_id IN (%s)",
-            $this->_siteID,
-            $savedListID,
-            implode(',', $dataItemIDs)
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($savedListID),
+            $this->_db->makeQueryInteger($dataItemType),
+            implode(',', $normalizedItemIDs)
         );
 
-        $rs = $this->_db->getAssoc($sql);     
-        
-        if (isset($rs['savedListID']))
+        $existingRows = $this->_db->getAllAssoc($sql);
+        $existingItemIDs = array();
+        foreach ($existingRows as $row)
         {
-            return;
-        }  
-        
+            $existingItemID = (int) $row['dataItemID'];
+            if ($existingItemID > 0)
+            {
+                $existingItemIDs[$existingItemID] = true;
+            }
+        }
+
         $valuesArray = array();
-        foreach ($dataItemIDs as $dataItemID)
+        foreach ($normalizedItemIDs as $dataItemID)
         {
+            if (isset($existingItemIDs[$dataItemID]))
+            {
+                continue;
+            }
+
             $valuesArray[] = '(' . $this->_db->makeQueryInteger($savedListID) . ',' .
                                   $this->_db->makeQueryInteger($dataItemType) . ',' .
                                   $this->_db->makeQueryInteger($dataItemID) . ',' .
                                   $this->_siteID .','.
                                   'NOW())';
+        }
+
+        if (empty($valuesArray))
+        {
+            return true;
         }
         
         $sql = sprintf(
@@ -437,6 +495,7 @@ class SavedLists
         $this->_db->query($sql);
         
         $this->updateSavedListItemCountAndTimeStamp($savedListID);
+        return true;
     }
     
     /*
@@ -444,6 +503,27 @@ class SavedLists
      */ 
     function removeEntryMany($savedListID, $dataItemIDs)
     {        
+        $savedListID = (int) $savedListID;
+        if ($savedListID <= 0 || !is_array($dataItemIDs))
+        {
+            return false;
+        }
+
+        $normalizedItemIDs = array();
+        foreach ($dataItemIDs as $dataItemID)
+        {
+            $dataItemID = (int) $dataItemID;
+            if ($dataItemID > 0)
+            {
+                $normalizedItemIDs[$dataItemID] = $dataItemID;
+            }
+        }
+
+        if (empty($normalizedItemIDs))
+        {
+            return false;
+        }
+
         $sql = sprintf(
             "DELETE FROM
                 saved_list_entry 
@@ -456,11 +536,12 @@ class SavedLists
             ",
             $this->_db->makeQueryInteger($savedListID),
             $this->_db->makeQueryInteger($this->_siteID),
-            implode(',', $dataItemIDs)
+            implode(',', $normalizedItemIDs)
         );
         $this->_db->query($sql);
         
         $this->updateSavedListItemCountAndTimeStamp($savedListID);
+        return true;
     }    
     
     /*
@@ -476,21 +557,32 @@ class SavedLists
              FROM
                 saved_list_entry
              WHERE
-                saved_list_id = %s",
-             $savedListID
+                saved_list_id = %s
+             AND
+                site_id = %s",
+             $this->_db->makeQueryInteger($savedListID),
+             $this->_db->makeQueryInteger($this->_siteID)
         );
                          
         $countRS = $this->_db->getAssoc($sql);
+        $numberOfEntries = 0;
+        if (!empty($countRS) && isset($countRS['numberOfEntries']))
+        {
+            $numberOfEntries = (int) $countRS['numberOfEntries'];
+        }
 
         $sql = sprintf(
             "UPDATE
                 saved_list
              SET
                 number_entries = %s
-             WHERE
-                saved_list_id = %s",
-            $countRS['numberOfEntries'],
-            $savedListID
+              WHERE
+                saved_list_id = %s
+             AND
+                site_id = %s",
+            $this->_db->makeQueryInteger($numberOfEntries),
+            $this->_db->makeQueryInteger($savedListID),
+            $this->_db->makeQueryInteger($this->_siteID)
         );
         
         $this->_db->query($sql);
@@ -527,7 +619,7 @@ class SavedLists
             {
                 case LIST_EDITOR_ADD:
                     // FIXME: There has to be some way to already know the ID...
-                    $savedListID = $this->getIDByDescription($update[0]);
+                    $savedListID = $this->getIDByDescription($update[0], $dataItemType);
 
                     if ($savedListID == -1)
                     {

@@ -24,7 +24,9 @@
                     <div class="ui2-header-utilities">
                         <?php TemplateUtility::printRecentDropdown('lists'); ?>
                     </div>
+                    <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_DELETE): ?>
                     <a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="deleteListFromListView(<?php $this->_($this->listRS['savedListID']); ?>, <?php $this->_($this->listRS['numberEntries']); ?>);">Delete List</a>
+                    <?php endif; ?>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
                 </div>

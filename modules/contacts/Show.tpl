@@ -267,6 +267,43 @@ use OpenCATS\UI\QuickActionMenu;
 
             <div class="ui2-card ui2-card--section">
                 <div class="ui2-card-header">
+                    <div class="ui2-card-title">Lists</div>
+                </div>
+                <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT): ?>
+                    <p style="margin: 6px 0 8px 0;">
+                        <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=lists&amp;a=quickActionAddToListModal&amp;dataItemType=<?php echo DATA_ITEM_CONTACT; ?>&amp;dataItemID=<?php echo $this->contactID; ?>', 450, 350, null); return false;">
+                            Manage Contact Lists
+                        </a>
+                    </p>
+                <?php endif; ?>
+                <table id="contactListsTable" class="sortable ui2-table">
+                    <tr>
+                        <th align="left" width="250">Name</th>
+                    </tr>
+                    <?php if (!empty($this->lists)): ?>
+                        <?php foreach($this->lists as $rowNumber => $list): ?>
+                            <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
+                                <td>
+                                    <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_READ): ?>
+                                        <a href="index.php?m=lists&a=showList&savedListID=<?php echo $list['listID']; ?>"><?php $this->_($list['name']); ?></a>
+                                    <?php else: ?>
+                                        <?php $this->_($list['name']); ?>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td>(None)</td>
+                        </tr>
+                    <?php endif; ?>
+                </table>
+            </div>
+            <br clear="all" />
+            <br />
+
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
                     <div class="ui2-card-title">Activity</div>
                     <?php if ($this->getUserAccessLevel('contacts.logActivityScheduleEvent') >= ACCESS_LEVEL_EDIT): ?>
                         <div class="ui2-card-actions">

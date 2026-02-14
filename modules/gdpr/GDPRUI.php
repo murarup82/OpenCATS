@@ -41,7 +41,7 @@ class GDPRUI extends UserInterface
 
     private function requests()
     {
-        if ($this->getUserAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
+        if ($this->getUserAccessLevel('gdpr.requests') < ACCESS_LEVEL_READ)
         {
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for GDPR consents.');
             return;
@@ -95,7 +95,7 @@ class GDPRUI extends UserInterface
 
     private function export()
     {
-        if ($this->getUserAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
+        if ($this->getUserAccessLevel('gdpr.requests') < ACCESS_LEVEL_READ)
         {
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for GDPR consents.');
             return;

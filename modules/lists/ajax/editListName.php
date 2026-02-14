@@ -35,6 +35,12 @@ include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 
 $interface = new SecureAJAXInterface();
 
+if ($_SESSION['CATS']->getAccessLevel('lists.listByView') < ACCESS_LEVEL_EDIT)
+{
+    $interface->outputXMLErrorPage(-1, 'Permission denied.');
+    die();
+}
+
 if (!$interface->isRequiredIDValid('savedListID'))
 {
     $interface->outputXMLErrorPage(-1, 'Invalid saved list ID.');
@@ -50,12 +56,19 @@ if (!isset($_REQUEST['savedListName']))
 $siteID = $interface->getSiteID();
 
 $savedListID = $_REQUEST['savedListID'];
-$savedListName = $_REQUEST['savedListName'];
+$savedListName = trim($_REQUEST['savedListName']);
 
 $savedLists = new SavedLists($siteID);
+$listRS = $savedLists->get($savedListID);
+if (empty($listRS))
+{
+    $interface->outputXMLErrorPage(-1, 'Invalid saved list ID.');
+    die();
+}
 
 /* Validate the lists - if name is in use or name is blank, fail. */
-if ($savedLists->getIDByDescription($savedListName) != -1 && $savedLists->getIDByDescription($savedListName) != $savedListID)
+$collisionListID = $savedLists->getIDByDescription($savedListName, (int) $listRS['dataItemType']);
+if ($collisionListID != -1 && $collisionListID != $savedListID)
 {
     $interface->outputXMLPage(
         "<data>\n" .
@@ -67,7 +80,7 @@ if ($savedLists->getIDByDescription($savedListName) != -1 && $savedLists->getIDB
     die;  
 }
 
-if ($savedListName == '')
+if ($savedListName === '')
 {
     $interface->outputXMLPage(
         "<data>\n" .

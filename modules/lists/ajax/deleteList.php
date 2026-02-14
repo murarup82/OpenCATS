@@ -35,6 +35,12 @@ include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 
 $interface = new SecureAJAXInterface();
 
+if ($_SESSION['CATS']->getAccessLevel('lists.listByView') < ACCESS_LEVEL_DELETE)
+{
+    $interface->outputXMLErrorPage(-1, 'Permission denied.');
+    die();
+}
+
 if (!$interface->isRequiredIDValid('savedListID'))
 {
     $interface->outputXMLErrorPage(-1, 'Invalid saved list ID.');

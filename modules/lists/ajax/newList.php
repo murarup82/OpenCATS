@@ -35,6 +35,12 @@ include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 
 $interface = new SecureAJAXInterface();
 
+if ($_SESSION['CATS']->getAccessLevel('lists.listByView') < ACCESS_LEVEL_EDIT)
+{
+    $interface->outputXMLErrorPage(-1, 'Permission denied.');
+    die();
+}
+
 if (!$interface->isRequiredIDValid('dataItemType'))
 {
     $interface->outputXMLErrorPage(-1, 'Invalid saved list type.');
@@ -49,13 +55,13 @@ if (!isset($_REQUEST['description']))
 
 $siteID = $interface->getSiteID();
 
-$savedListName = $_REQUEST['description'];
+$savedListName = trim($_REQUEST['description']);
 $dataItemType = $_REQUEST['dataItemType'];
 
 $savedLists = new SavedLists($siteID);
 
 /* Validate the lists - if name is in use or name is blank, fail. */
-if ($savedLists->getIDByDescription($savedListName) != -1)
+if ($savedLists->getIDByDescription($savedListName, $dataItemType) != -1)
 {
     $interface->outputXMLPage(
         "<data>\n" .
@@ -67,7 +73,7 @@ if ($savedLists->getIDByDescription($savedListName) != -1)
     die;  
 }
 
-if ($savedListName == '')
+if ($savedListName === '')
 {
     $interface->outputXMLPage(
         "<data>\n" .

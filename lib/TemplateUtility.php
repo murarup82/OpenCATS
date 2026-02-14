@@ -766,7 +766,14 @@ class TemplateUtility
             else
             {
                 $currentUserID = (int) $_SESSION['CATS']->getUserID();
-                $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+                if (method_exists($_SESSION['CATS'], 'getBaseAccessLevel'))
+                {
+                    $currentAccessLevel = (int) $_SESSION['CATS']->getBaseAccessLevel();
+                }
+                else
+                {
+                    $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+                }
             }
         }
 
@@ -1009,7 +1016,14 @@ class TemplateUtility
             else
             {
                 $currentUserID = (int) $_SESSION['CATS']->getUserID();
-                $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+                if (method_exists($_SESSION['CATS'], 'getBaseAccessLevel'))
+                {
+                    $currentAccessLevel = (int) $_SESSION['CATS']->getBaseAccessLevel();
+                }
+                else
+                {
+                    $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+                }
             }
         }
         $itemsByKey = array();
@@ -1123,7 +1137,7 @@ class TemplateUtility
             }
         }
 
-        if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
+        if ($_SESSION['CATS']->getAccessLevel('gdpr.requests') >= ACCESS_LEVEL_READ)
         {
             if ($rolePagePermissions === null ||
                 $rolePagePermissions->isPageAllowedForUser($currentUserID, 'gdpr_consents', $currentAccessLevel))
