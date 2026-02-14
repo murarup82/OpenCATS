@@ -109,10 +109,14 @@ class DashboardUI extends UserInterface
             $statusFilterByID = 'AND candidate_joborder.status = ' . $db->makeQueryInteger($statusID);
         }
 
-        $ownerFilter = '';
+        $assignmentFilter = '';
         if ($dashboardScope === 'mine')
         {
-            $ownerFilter = 'AND joborder.owner = ' . $db->makeQueryInteger($userID);
+            $assignmentFilter = sprintf(
+                'AND (joborder.recruiter = %s OR joborder.owner = %s)',
+                $db->makeQueryInteger($userID),
+                $db->makeQueryInteger($userID)
+            );
         }
 
         $sql = sprintf(
@@ -176,7 +180,7 @@ class DashboardUI extends UserInterface
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
-            $ownerFilter,
+            $assignmentFilter,
             $statusFilter,
             $jobOrderFilter,
             $statusFilterByID,
@@ -262,10 +266,14 @@ class DashboardUI extends UserInterface
             $statusFilter = 'AND joborder.status IN ' . JobOrderStatuses::getOpenStatusSQL();
         }
 
-        $ownerFilter = '';
+        $assignmentFilter = '';
         if (!$includeAll)
         {
-            $ownerFilter = 'AND joborder.owner = ' . $db->makeQueryInteger($this->_userID);
+            $assignmentFilter = sprintf(
+                'AND (joborder.recruiter = %s OR joborder.owner = %s)',
+                $db->makeQueryInteger($this->_userID),
+                $db->makeQueryInteger($this->_userID)
+            );
         }
 
         $sql = sprintf(
@@ -284,7 +292,7 @@ class DashboardUI extends UserInterface
             ORDER BY
                 joborder.date_created DESC",
             $db->makeQueryInteger($this->_siteID),
-            $ownerFilter,
+            $assignmentFilter,
             $statusFilter
         );
 

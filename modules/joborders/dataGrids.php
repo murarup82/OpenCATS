@@ -34,6 +34,7 @@
 include_once(LEGACY_ROOT . '/lib/JobOrders.php');
 include_once(LEGACY_ROOT . '/lib/Hooks.php');
 include_once(LEGACY_ROOT . '/lib/Width.php');
+include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 
 class JobOrdersListByViewDataGrid extends JobOrdersDataGrid
 {
@@ -146,7 +147,17 @@ class joborderSavedListByViewDataGrid extends JobOrdersDataGrid
     {
         $html = '';
 
+        $canEditSavedList = false;
         if ($_SESSION['CATS']->getAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT)
+        {
+            $savedLists = new SavedLists($_SESSION['CATS']->getSiteID());
+            $canEditSavedList = $savedLists->canUserEditList(
+                (int) $this->getMiscArgument(),
+                (int) $_SESSION['CATS']->getUserID()
+            );
+        }
+
+        if ($canEditSavedList)
         {
             $html .= $this->getInnerActionAreaItem('Remove From This List', CATSUtility::getIndexName().'?m=lists&amp;a=removeFromListDatagrid&amp;dataItemType='.DATA_ITEM_JOBORDER.'&amp;savedListID='.$this->getMiscArgument(), false);
         }

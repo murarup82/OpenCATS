@@ -126,6 +126,7 @@ foreach ($itemsToAdd as $index => $data)
 }
 
 $savedLists = new SavedLists($siteID);
+$currentUserID = (int) $_SESSION['CATS']->getUserID();
 
 /* Write changes. */
 foreach ($listsToAdd as $list)
@@ -140,6 +141,11 @@ foreach ($listsToAdd as $list)
     if (empty($listRS))
     {
         $interface->outputXMLErrorPage(-1, 'Invalid list ID.');
+        die();
+    }
+    if (!$savedLists->canUserEditList($list, $currentUserID))
+    {
+        $interface->outputXMLErrorPage(-1, 'Permission denied for one or more selected lists.');
         die();
     }
     if ((int) $listRS['isDynamic'] !== 0)

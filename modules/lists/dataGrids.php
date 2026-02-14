@@ -34,9 +34,13 @@
 include_once(LEGACY_ROOT . '/lib/Companies.php');
 include_once(LEGACY_ROOT . '/lib/Hooks.php');
 include_once(LEGACY_ROOT . '/lib/Width.php');
+include_once(LEGACY_ROOT . '/lib/DatabaseConnection.php');
 
 class ListsDataGrid extends DataGrid
 {   
+    private $_listAccessSchemaChecked;
+    private $_listAccessSchemaAvailable;
+
     // FIXME: Fix ugly indenting - ~400 character lines = bad.
     public function __construct($siteID, $parameters, $misc)
     {
@@ -51,6 +55,8 @@ class ListsDataGrid extends DataGrid
 
         $this->defaultSortBy = 'description';
         $this->defaultSortDirection = 'DESC';
+        $this->_listAccessSchemaChecked = false;
+        $this->_listAccessSchemaAvailable = false;
    
         $this->_defaultColumns = array( 
             array('name' => 'Attachments', 'width' => 10),
@@ -134,6 +140,41 @@ class ListsDataGrid extends DataGrid
      */
     public function getSQL($selectSQL, $joinSQL, $whereSQL, $havingSQL, $orderSQL, $limitSQL, $distinct = '')
     {   
+        $visibilityCriterion = '';
+        if ($this->hasListAccessSchema() && !$this->currentUserCanBypassListAccess())
+        {
+            $currentUserID = (int) $_SESSION['CATS']->getUserID();
+            if ($currentUserID > 0)
+            {
+                $visibilityCriterion = sprintf(
+                    " AND (
+                        saved_list.created_by = %1\$s
+                        OR
+                        NOT EXISTS (
+                            SELECT 1
+                            FROM saved_list_user_access list_access_exists
+                            WHERE
+                                list_access_exists.site_id = saved_list.site_id
+                            AND
+                                list_access_exists.saved_list_id = saved_list.saved_list_id
+                        )
+                        OR
+                        EXISTS (
+                            SELECT 1
+                            FROM saved_list_user_access list_access
+                            WHERE
+                                list_access.site_id = saved_list.site_id
+                            AND
+                                list_access.saved_list_id = saved_list.saved_list_id
+                            AND
+                                list_access.user_id = %1\$s
+                        )
+                    )",
+                    $currentUserID
+                );
+            }
+        }
+
         $sql = sprintf(
             "SELECT SQL_CALC_FOUND_ROWS %s
                 saved_list_id as savedListID,
@@ -152,6 +193,7 @@ class ListsDataGrid extends DataGrid
             WHERE
                 saved_list.site_id = %s
             %s
+            %s
             GROUP BY saved_list.saved_list_id
             %s
             %s
@@ -160,6 +202,7 @@ class ListsDataGrid extends DataGrid
             $selectSQL,
             $joinSQL,
             $_SESSION['CATS']->getSiteID(),
+            $visibilityCriterion,
             (strlen($whereSQL) > 0) ? ' AND ' . $whereSQL : '',
             (strlen($havingSQL) > 0) ? ' HAVING ' . $havingSQL : '',
             $orderSQL,
@@ -197,6 +240,45 @@ class ListsDataGrid extends DataGrid
         //         );       
         
         return $html;
+    }
+
+    private function hasListAccessSchema()
+    {
+        if ($this->_listAccessSchemaChecked)
+        {
+            return $this->_listAccessSchemaAvailable;
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $tableRS = $db->getAllAssoc("SHOW TABLES LIKE 'saved_list_user_access'");
+        $this->_listAccessSchemaAvailable = !empty($tableRS);
+        $this->_listAccessSchemaChecked = true;
+
+        return $this->_listAccessSchemaAvailable;
+    }
+
+    private function currentUserCanBypassListAccess()
+    {
+        if (!isset($_SESSION['CATS']) || !is_object($_SESSION['CATS']))
+        {
+            return false;
+        }
+
+        $accessLevel = 0;
+        if (method_exists($_SESSION['CATS'], 'getBaseAccessLevel'))
+        {
+            $accessLevel = (int) $_SESSION['CATS']->getBaseAccessLevel();
+        }
+        else if (method_exists($_SESSION['CATS'], 'getRealAccessLevel'))
+        {
+            $accessLevel = (int) $_SESSION['CATS']->getRealAccessLevel();
+        }
+        else
+        {
+            $accessLevel = (int) $_SESSION['CATS']->getAccessLevel('lists.listByView');
+        }
+
+        return ($accessLevel >= ACCESS_LEVEL_DELETE);
     }
 }
 

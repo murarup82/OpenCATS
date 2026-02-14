@@ -1856,9 +1856,7 @@ class JobOrdersUI extends UserInterface
         {
             $jobOrders = new JobOrders($this->_siteID);
             $jobOrderData = $jobOrders->get($jobOrderID);
-            $isAdmin = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
-
-            if (empty($jobOrderData) || ((int) $jobOrderData['owner'] !== (int) $this->_userID && !$isAdmin))
+            if (!$this->canAccessJobOrderPipelineByJobOrderData($jobOrderData))
             {
                 CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'You do not have permission to change status for this job order.');
             }
@@ -2005,6 +2003,7 @@ class JobOrdersUI extends UserInterface
                 candidate.last_name AS candidateLastName,
                 joborder.title AS jobOrderTitle,
                 joborder.owner AS jobOrderOwner,
+                joborder.recruiter AS jobOrderRecruiter,
                 company.name AS companyName
             FROM
                 candidate_joborder
@@ -2028,8 +2027,10 @@ class JobOrdersUI extends UserInterface
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Pipeline entry not found.');
         }
 
-        $isAdmin = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
-        if (!$isAdmin && (int) $pipelineData['jobOrderOwner'] !== (int) $this->_userID)
+        if (!$this->canAccessJobOrderPipelineByOwnerRecruiter(
+            $pipelineData['jobOrderOwner'],
+            $pipelineData['jobOrderRecruiter']
+        ))
         {
             CommonErrors::fatalModal(
                 COMMONERROR_PERMISSION,
@@ -2656,6 +2657,42 @@ class JobOrdersUI extends UserInterface
         }
 
         return ($baseAccessLevel >= ACCESS_LEVEL_DELETE);
+    }
+
+    private function canAccessJobOrderPipelineByOwnerRecruiter($ownerUserID, $recruiterUserID)
+    {
+        if ($this->canManageRecruiterAllocation())
+        {
+            return true;
+        }
+
+        $ownerUserID = (int) $ownerUserID;
+        $recruiterUserID = (int) $recruiterUserID;
+        $currentUserID = (int) $this->_userID;
+
+        return ($ownerUserID === $currentUserID || $recruiterUserID === $currentUserID);
+    }
+
+    private function canAccessJobOrderPipelineByJobOrderData($jobOrderData)
+    {
+        if (empty($jobOrderData))
+        {
+            return false;
+        }
+
+        $ownerUserID = 0;
+        if (isset($jobOrderData['owner']))
+        {
+            $ownerUserID = (int) $jobOrderData['owner'];
+        }
+
+        $recruiterUserID = 0;
+        if (isset($jobOrderData['recruiter']))
+        {
+            $recruiterUserID = (int) $jobOrderData['recruiter'];
+        }
+
+        return $this->canAccessJobOrderPipelineByOwnerRecruiter($ownerUserID, $recruiterUserID);
     }
 
     private function getRecruiterAllocationUsers()

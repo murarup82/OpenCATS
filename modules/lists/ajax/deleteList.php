@@ -52,6 +52,11 @@ $siteID = $interface->getSiteID();
 $savedListID = $_REQUEST['savedListID'];
 
 $savedLists = new SavedLists($siteID);
+if (!$savedLists->canUserManageListAccess($savedListID, $_SESSION['CATS']->getUserID()))
+{
+    $interface->outputXMLErrorPage(-1, 'Permission denied for this list.');
+    die();
+}
 
 /* Write changes. */
 $savedLists->delete($savedListID);

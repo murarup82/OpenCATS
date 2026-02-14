@@ -4,6 +4,7 @@
 
 include_once(LEGACY_ROOT . '/lib/Candidates.php');
 include_once(LEGACY_ROOT . '/lib/Width.php');
+include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 
 class candidatesListByViewDataGrid extends CandidatesDataGrid
 {
@@ -121,7 +122,17 @@ class candidatesSavedListByViewDataGrid extends CandidatesDataGrid
         //  - Mass set rank (depends on each candidate having their own personal rank - are we going to do this?)
         $html = '';
 
+        $canEditSavedList = false;
         if ($_SESSION['CATS']->getAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT)
+        {
+            $savedLists = new SavedLists($_SESSION['CATS']->getSiteID());
+            $canEditSavedList = $savedLists->canUserEditList(
+                (int) $this->getMiscArgument(),
+                (int) $_SESSION['CATS']->getUserID()
+            );
+        }
+
+        if ($canEditSavedList)
         {
             $html .= $this->getInnerActionAreaItem('Remove From This List', CATSUtility::getIndexName().'?m=lists&amp;a=removeFromListDatagrid&amp;dataItemType='.DATA_ITEM_CANDIDATE.'&amp;savedListID='.$this->getMiscArgument(), false);
         }

@@ -3952,6 +3952,39 @@ class SettingsUI extends UserInterface
             return true;
         }
 
+        if ($version === '20260214_0005_saved_list_user_access_phase1.sql')
+        {
+            $tableRS = $db->getAllAssoc("SHOW TABLES LIKE 'saved_list_user_access'");
+            if (empty($tableRS))
+            {
+                $message = 'saved_list_user_access table not found; migration verification failed.';
+                return false;
+            }
+
+            $requiredColumns = array(
+                'saved_list_user_access_id',
+                'site_id',
+                'saved_list_id',
+                'user_id',
+                'can_edit'
+            );
+
+            foreach ($requiredColumns as $columnName)
+            {
+                $columnRS = $db->getAllAssoc(
+                    "SHOW COLUMNS FROM saved_list_user_access LIKE " . $db->makeQueryString($columnName)
+                );
+                if (empty($columnRS))
+                {
+                    $message = 'saved_list_user_access.' . $columnName . ' column not found; migration verification failed.';
+                    return false;
+                }
+            }
+
+            $message = '[Check] saved_list_user_access schema verified.';
+            return true;
+        }
+
         return true;
     }
 

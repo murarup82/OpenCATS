@@ -65,6 +65,11 @@ if (empty($listRS))
     $interface->outputXMLErrorPage(-1, 'Invalid saved list ID.');
     die();
 }
+if (!$savedLists->canUserEditList($savedListID, $_SESSION['CATS']->getUserID()))
+{
+    $interface->outputXMLErrorPage(-1, 'Permission denied for this list.');
+    die();
+}
 
 /* Validate the lists - if name is in use or name is blank, fail. */
 $collisionListID = $savedLists->getIDByDescription($savedListName, (int) $listRS['dataItemType']);

@@ -39,12 +39,16 @@ class SavedLists
 {
     private $_db;
     private $_siteID;
+    private $_listAccessSchemaChecked;
+    private $_listAccessSchemaAvailable;
 
 
     public function __construct($siteID)
     {
         $this->_siteID = $siteID;
         $this->_db = DatabaseConnection::getInstance();
+        $this->_listAccessSchemaChecked = false;
+        $this->_listAccessSchemaAvailable = false;
     }
 
 
@@ -65,6 +69,7 @@ class SavedLists
                 is_dynamic AS isDynamic,
                 datagrid_instance AS datagridInstance,
                 parameters AS parameters,
+                created_by AS createdBy,
                 number_entries as numberEntries
             FROM
                 saved_list
@@ -77,6 +82,20 @@ class SavedLists
         );
 
         return $this->_db->getAssoc($sql);
+    }
+
+    public function hasListAccessSchema()
+    {
+        if ($this->_listAccessSchemaChecked)
+        {
+            return $this->_listAccessSchemaAvailable;
+        }
+
+        $tableRS = $this->_db->getAllAssoc("SHOW TABLES LIKE 'saved_list_user_access'");
+        $this->_listAccessSchemaAvailable = !empty($tableRS);
+        $this->_listAccessSchemaChecked = true;
+
+        return $this->_listAccessSchemaAvailable;
     }
 
     /**
@@ -137,6 +156,414 @@ class SavedLists
         );
 
         return $this->_db->getAllAssoc($sql);
+    }
+
+    public function getAllForUser($userID, $dataItemType = -1, $listType = ALL_LISTS, $editOnly = false)
+    {
+        $userID = (int) $userID;
+        if ($userID <= 0)
+        {
+            return array();
+        }
+
+        if ($this->canUserManageAllLists($userID) || !$this->hasListAccessSchema())
+        {
+            return $this->getAll($dataItemType, $listType);
+        }
+
+        $typeCriterion = '';
+        if ($dataItemType != -1)
+        {
+            $typeCriterion = sprintf(
+                'AND saved_list.data_item_type = %s',
+                $this->_db->makeQueryInteger($dataItemType)
+            );
+        }
+        
+        if ($listType == STATIC_LISTS)
+        {
+            $typeCriterion .= ' AND saved_list.is_dynamic = false';
+        }
+
+        if ($listType == DYNAMIC_LISTS)
+        {
+            $typeCriterion .= ' AND saved_list.is_dynamic = true';
+        }
+
+        if ($editOnly)
+        {
+            $assignmentCriterion = sprintf(
+                "AND (
+                    saved_list.created_by = %1\$s
+                    OR
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM saved_list_user_access access_exists
+                        WHERE
+                            access_exists.site_id = saved_list.site_id
+                        AND
+                            access_exists.saved_list_id = saved_list.saved_list_id
+                    )
+                    OR
+                    EXISTS (
+                        SELECT 1
+                        FROM saved_list_user_access list_access
+                        WHERE
+                            list_access.site_id = saved_list.site_id
+                        AND
+                            list_access.saved_list_id = saved_list.saved_list_id
+                        AND
+                            list_access.user_id = %1\$s
+                        AND
+                            list_access.can_edit = 1
+                    )
+                )",
+                $this->_db->makeQueryInteger($userID)
+            );
+        }
+        else
+        {
+            $assignmentCriterion = sprintf(
+                "AND (
+                    saved_list.created_by = %1\$s
+                    OR
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM saved_list_user_access access_exists
+                        WHERE
+                            access_exists.site_id = saved_list.site_id
+                        AND
+                            access_exists.saved_list_id = saved_list.saved_list_id
+                    )
+                    OR
+                    EXISTS (
+                        SELECT 1
+                        FROM saved_list_user_access list_access
+                        WHERE
+                            list_access.site_id = saved_list.site_id
+                        AND
+                            list_access.saved_list_id = saved_list.saved_list_id
+                        AND
+                            list_access.user_id = %1\$s
+                    )
+                )",
+                $this->_db->makeQueryInteger($userID)
+            );
+        }
+
+        $sql = sprintf(
+            "SELECT
+                saved_list.saved_list_id AS savedListID,
+                saved_list.data_item_type as dataItemType,
+                saved_list.description AS description,
+                saved_list.is_dynamic AS isDynamic,
+                saved_list.datagrid_instance as datagridInstance,
+                saved_list.parameters as parameters,
+                saved_list.created_by as createdBy,
+                saved_list.number_entries as numberEntries
+            FROM
+                saved_list
+            WHERE
+                saved_list.site_id = %s
+            %s
+            %s
+            ORDER BY
+                saved_list.saved_list_id ASC",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $typeCriterion,
+            $assignmentCriterion
+        );
+
+        return $this->_db->getAllAssoc($sql);
+    }
+
+    public function canUserViewList($savedListID, $userID)
+    {
+        $savedListID = (int) $savedListID;
+        $userID = (int) $userID;
+        if ($savedListID <= 0 || $userID <= 0)
+        {
+            return false;
+        }
+
+        $listRS = $this->get($savedListID);
+        if (empty($listRS))
+        {
+            return false;
+        }
+
+        if ($this->canUserManageAllLists($userID))
+        {
+            return true;
+        }
+
+        if ((int) $listRS['createdBy'] === $userID)
+        {
+            return true;
+        }
+
+        if (!$this->hasListAccessSchema())
+        {
+            return true;
+        }
+
+        if (!$this->hasExplicitAccessRows($savedListID))
+        {
+            return true;
+        }
+
+        $sql = sprintf(
+            "SELECT
+                saved_list_user_access_id AS accessID
+            FROM
+                saved_list_user_access
+            WHERE
+                site_id = %s
+            AND
+                saved_list_id = %s
+            AND
+                user_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($savedListID),
+            $this->_db->makeQueryInteger($userID)
+        );
+
+        $rs = $this->_db->getAssoc($sql);
+        return !empty($rs);
+    }
+
+    public function canUserEditList($savedListID, $userID)
+    {
+        $savedListID = (int) $savedListID;
+        $userID = (int) $userID;
+        if ($savedListID <= 0 || $userID <= 0)
+        {
+            return false;
+        }
+
+        $listRS = $this->get($savedListID);
+        if (empty($listRS))
+        {
+            return false;
+        }
+
+        if ($this->canUserManageAllLists($userID))
+        {
+            return true;
+        }
+
+        if ((int) $listRS['createdBy'] === $userID)
+        {
+            return true;
+        }
+
+        if (!$this->hasListAccessSchema())
+        {
+            return true;
+        }
+
+        if (!$this->hasExplicitAccessRows($savedListID))
+        {
+            return true;
+        }
+
+        $sql = sprintf(
+            "SELECT
+                saved_list_user_access_id AS accessID
+            FROM
+                saved_list_user_access
+            WHERE
+                site_id = %s
+            AND
+                saved_list_id = %s
+            AND
+                user_id = %s
+            AND
+                can_edit = 1",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($savedListID),
+            $this->_db->makeQueryInteger($userID)
+        );
+
+        $rs = $this->_db->getAssoc($sql);
+        return !empty($rs);
+    }
+
+    public function canUserManageListAccess($savedListID, $userID)
+    {
+        $savedListID = (int) $savedListID;
+        $userID = (int) $userID;
+        if ($savedListID <= 0 || $userID <= 0)
+        {
+            return false;
+        }
+
+        if (!$this->hasListAccessSchema())
+        {
+            return false;
+        }
+
+        $listRS = $this->get($savedListID);
+        if (empty($listRS))
+        {
+            return false;
+        }
+
+        if (!$this->hasListAccessSchema())
+        {
+            if ($this->canUserManageAllLists($userID))
+            {
+                return true;
+            }
+
+            return ((int) $listRS['createdBy'] === $userID);
+        }
+
+        if ($this->canUserManageAllLists($userID))
+        {
+            return true;
+        }
+
+        return ((int) $listRS['createdBy'] === $userID);
+    }
+
+    public function hasExplicitAccessRows($savedListID)
+    {
+        $savedListID = (int) $savedListID;
+        if ($savedListID <= 0 || !$this->hasListAccessSchema())
+        {
+            return false;
+        }
+
+        $sql = sprintf(
+            "SELECT
+                COUNT(*) AS rowCount
+            FROM
+                saved_list_user_access
+            WHERE
+                site_id = %s
+            AND
+                saved_list_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($savedListID)
+        );
+        $rs = $this->_db->getAssoc($sql);
+        if (empty($rs))
+        {
+            return false;
+        }
+
+        return ((int) $rs['rowCount'] > 0);
+    }
+
+    public function getUserAccessRows($savedListID)
+    {
+        $savedListID = (int) $savedListID;
+        if ($savedListID <= 0 || !$this->hasListAccessSchema())
+        {
+            return array();
+        }
+
+        $sql = sprintf(
+            "SELECT
+                saved_list_user_access.user_id AS userID,
+                saved_list_user_access.can_edit AS canEdit,
+                user.first_name AS firstName,
+                user.last_name AS lastName,
+                user.user_name AS username
+            FROM
+                saved_list_user_access
+            LEFT JOIN user
+                ON user.user_id = saved_list_user_access.user_id
+               AND user.site_id = saved_list_user_access.site_id
+            WHERE
+                saved_list_user_access.site_id = %s
+            AND
+                saved_list_user_access.saved_list_id = %s
+            ORDER BY
+                user.last_name ASC,
+                user.first_name ASC",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($savedListID)
+        );
+
+        return $this->_db->getAllAssoc($sql);
+    }
+
+    public function replaceUserAccessRows($savedListID, $ownerUserID, $assignments)
+    {
+        $savedListID = (int) $savedListID;
+        $ownerUserID = (int) $ownerUserID;
+        if ($savedListID <= 0 || !$this->hasListAccessSchema())
+        {
+            return false;
+        }
+
+        $sql = sprintf(
+            "DELETE FROM
+                saved_list_user_access
+            WHERE
+                site_id = %s
+            AND
+                saved_list_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($savedListID)
+        );
+        $this->_db->query($sql);
+
+        if (!is_array($assignments) || empty($assignments))
+        {
+            return true;
+        }
+
+        $actorUserID = 0;
+        if (isset($_SESSION['CATS']) && is_object($_SESSION['CATS']) && method_exists($_SESSION['CATS'], 'getUserID'))
+        {
+            $actorUserID = (int) $_SESSION['CATS']->getUserID();
+        }
+        if ($actorUserID <= 0)
+        {
+            $actorUserID = $ownerUserID;
+        }
+
+        $values = array();
+        foreach ($assignments as $userID => $canEdit)
+        {
+            $userID = (int) $userID;
+            if ($userID <= 0 || $userID === $ownerUserID)
+            {
+                continue;
+            }
+
+            $values[] = sprintf(
+                "(%s, %s, %s, %s, %s, NOW(), NOW())",
+                $this->_db->makeQueryInteger($this->_siteID),
+                $this->_db->makeQueryInteger($savedListID),
+                $this->_db->makeQueryInteger($userID),
+                $this->_db->makeQueryInteger(((int) $canEdit > 0) ? 1 : 0),
+                $this->_db->makeQueryInteger($actorUserID)
+            );
+        }
+
+        if (empty($values))
+        {
+            return true;
+        }
+
+        $sql = "INSERT INTO saved_list_user_access
+            (
+                site_id,
+                saved_list_id,
+                user_id,
+                can_edit,
+                created_by,
+                date_created,
+                date_modified
+            )
+            VALUES " . implode(',', $values);
+
+        $queryResult = $this->_db->query($sql);
+        return ($queryResult !== false);
     }
 
     /**
@@ -496,6 +923,35 @@ class SavedLists
         
         $this->updateSavedListItemCountAndTimeStamp($savedListID);
         return true;
+    }
+
+    private function canUserManageAllLists($userID)
+    {
+        $userID = (int) $userID;
+        if ($userID <= 0)
+        {
+            return false;
+        }
+
+        $sql = sprintf(
+            "SELECT
+                access_level AS accessLevel
+            FROM
+                user
+            WHERE
+                site_id = %s
+            AND
+                user_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($userID)
+        );
+        $rs = $this->_db->getAssoc($sql);
+        if (empty($rs))
+        {
+            return false;
+        }
+
+        return ((int) $rs['accessLevel'] >= ACCESS_LEVEL_DELETE);
     }
     
     /*

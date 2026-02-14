@@ -39,6 +39,7 @@ include_once(LEGACY_ROOT . '/lib/ListEditor.php');
 include_once(LEGACY_ROOT . '/lib/FileUtility.php');
 include_once(LEGACY_ROOT . '/lib/SavedLists.php');
 include_once(LEGACY_ROOT . '/lib/ExtraFields.php');
+include_once(LEGACY_ROOT . '/lib/Users.php');
 
 
 class ListsUI extends UserInterface
@@ -81,6 +82,15 @@ class ListsUI extends UserInterface
                     return;
                 }
                 $this->showList();
+                break;
+
+            case 'saveListAccess':
+                if ($this->getUserAccessLevel('lists.listByView') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    return;
+                }
+                $this->onSaveListAccess();
                 break;
 
             /* Add to list popup. */
@@ -185,6 +195,17 @@ class ListsUI extends UserInterface
         $savedLists = new SavedLists($this->_siteID);
 
         $listRS = $savedLists->get($savedListID);
+        if (empty($listRS))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid saved list ID.');
+            return;
+        }
+
+        if (!$savedLists->canUserViewList($savedListID, $this->_userID))
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'You do not have permission to view this list.');
+            return;
+        }
 
         if ($listRS['isDynamic'] == 0)
         {
@@ -229,10 +250,45 @@ class ListsUI extends UserInterface
 
         $dataGrid = DataGrid::get($dataGridInstance, $dataGridProperties, $savedListID);
 
+        $canEditList = (
+            $this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT
+            && $savedLists->canUserEditList($savedListID, $this->_userID)
+        );
+        $canManageListAccess = $savedLists->canUserManageListAccess($savedListID, $this->_userID);
+
+        $listAccessUsersRS = array();
+        $listAccessMap = array();
+        $listAccessRestricted = false;
+        if ($savedLists->hasListAccessSchema())
+        {
+            $listAccessRestricted = $savedLists->hasExplicitAccessRows($savedListID);
+        }
+
+        if ($canManageListAccess)
+        {
+            $users = new Users($this->_siteID);
+            $listAccessUsersRS = $users->getSelectList();
+
+            $listAccessRS = $savedLists->getUserAccessRows($savedListID);
+            foreach ($listAccessRS as $row)
+            {
+                $listAccessMap[(int) $row['userID']] = array(
+                    'canEdit' => ((int) $row['canEdit'] > 0 ? 1 : 0)
+                );
+            }
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('dataGrid', $dataGrid);
         $this->_template->assign('listRS', $listRS);
         $this->_template->assign('userID', $_SESSION['CATS']->getUserID());
+        $this->_template->assign('canEditList', ($canEditList ? 1 : 0));
+        $this->_template->assign('canManageListAccess', ($canManageListAccess ? 1 : 0));
+        $this->_template->assign('listAccessUsersRS', $listAccessUsersRS);
+        $this->_template->assign('listAccessMap', $listAccessMap);
+        $this->_template->assign('listAccessRestricted', ($listAccessRestricted ? 1 : 0));
+        $this->_template->assign('listAccessMessage', $this->getTrimmedInput('listAccessMessage', $_GET));
+        $this->_template->assign('listAccessSchemaAvailable', ($savedLists->hasListAccessSchema() ? 1 : 0));
 
         $this->_template->display('./modules/lists/List.tpl');
 
@@ -263,7 +319,7 @@ class ListsUI extends UserInterface
 
         $savedLists = new SavedLists($this->_siteID);
 
-        $savedListsRS = $savedLists->getAll($dataItemType, STATIC_LISTS);
+        $savedListsRS = $savedLists->getAllForUser($this->_userID, $dataItemType, STATIC_LISTS, true);
 
         $dataItemDesc = TemplateUtility::getDataItemTypeDescription($dataItemType);
 
@@ -308,7 +364,7 @@ class ListsUI extends UserInterface
 
         $savedLists = new SavedLists($this->_siteID);
 
-        $savedListsRS = $savedLists->getAll($dataItemType, STATIC_LISTS);
+        $savedListsRS = $savedLists->getAllForUser($this->_userID, $dataItemType, STATIC_LISTS, true);
 
         $dataItemDesc = TemplateUtility::getDataItemTypeDescription($dataItemType);
 
@@ -363,6 +419,11 @@ class ListsUI extends UserInterface
 
         /* Remove the items */
         $savedLists = new SavedLists($this->_siteID);
+        if (!$savedLists->canUserEditList($savedListID, $this->_userID))
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'You do not have permission to edit this list.');
+            return;
+        }
 
         $dataItemIDArrayTemp = array();
         foreach ($dataItemIDArray as $dataItemID)
@@ -400,12 +461,115 @@ class ListsUI extends UserInterface
         $savedListID = $_GET['savedListID'];
 
         $savedLists = new SavedLists($this->_siteID);
+        if (!$savedLists->canUserManageListAccess($savedListID, $this->_userID))
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'You do not have permission to delete this list.');
+            return;
+        }
 
         /* Write changes. */
         $savedLists->delete($savedListID);
 
 
         CATSUtility::transferRelativeURI('m=lists');
+    }
+
+    private function onSaveListAccess()
+    {
+        if (!$this->isPostBack())
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+            return;
+        }
+
+        if (!$this->isRequiredIDValid('savedListID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid saved list ID.');
+            return;
+        }
+
+        $savedListID = (int) $_POST['savedListID'];
+        $savedLists = new SavedLists($this->_siteID);
+        if (!$savedLists->hasListAccessSchema())
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'List access schema is not available yet. Apply migrations first.');
+            return;
+        }
+        if (!$savedLists->canUserManageListAccess($savedListID, $this->_userID))
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'You do not have permission to manage list access.');
+            return;
+        }
+
+        $listRS = $savedLists->get($savedListID);
+        if (empty($listRS))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid saved list ID.');
+            return;
+        }
+
+        $isRestricted = $this->isChecked('isRestricted', $_POST);
+        $allowedUsers = array();
+        $users = new Users($this->_siteID);
+        foreach ($users->getSelectList() as $userRow)
+        {
+            $allowedUsers[(int) $userRow['userID']] = true;
+        }
+
+        $assignments = array();
+        if ($isRestricted)
+        {
+            $enabledUsers = array();
+            if (isset($_POST['accessEnabled']) && is_array($_POST['accessEnabled']))
+            {
+                foreach ($_POST['accessEnabled'] as $userID)
+                {
+                    $enabledUsers[] = (int) $userID;
+                }
+            }
+
+            $accessMode = array();
+            if (isset($_POST['accessMode']) && is_array($_POST['accessMode']))
+            {
+                $accessMode = $_POST['accessMode'];
+            }
+
+            foreach ($enabledUsers as $userID)
+            {
+                if ($userID <= 0 || !isset($allowedUsers[$userID]))
+                {
+                    continue;
+                }
+
+                $mode = 'view';
+                if (isset($accessMode[$userID]))
+                {
+                    $mode = strtolower(trim($accessMode[$userID]));
+                }
+                $assignments[$userID] = ($mode === 'edit' ? 1 : 0);
+            }
+        }
+
+        $savedLists->replaceUserAccessRows(
+            $savedListID,
+            (int) $listRS['createdBy'],
+            $assignments
+        );
+
+        $message = 'List access updated.';
+        if (!$isRestricted)
+        {
+            $message = 'List access set to default (visible to all list users).';
+        }
+        else if (empty($assignments))
+        {
+            $message = 'Restricted mode enabled but no users selected (owner/admin only).';
+        }
+
+        CATSUtility::transferRelativeURI(
+            'm=lists&a=showList&savedListID=' . $savedListID
+            . '&listAccessMessage=' . urlencode($message)
+        );
     }
 }
 
