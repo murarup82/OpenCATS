@@ -43,17 +43,20 @@ class GDPRRequestsDataGrid extends DataGrid
 
         $actionsPagerRender = <<<'EOT'
             $actions = array();
+            $gdprAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('gdpr.requests');
+            $canEditGdpr = ($gdprAccessLevel >= ACCESS_LEVEL_EDIT);
+            $canHardDeleteRequest = ($gdprAccessLevel >= ACCESS_LEVEL_SA);
             $isLatest = ($rsData['isLatest'] == 1);
             $hasCandidate = !empty($rsData['candidateExists']);
             $isExpired = ($rsData['isExpired'] == 1);
-            if ($rsData['isLegacy'] == 1)
+            if ($canEditGdpr && $rsData['isLegacy'] == 1)
             {
                 if ($hasCandidate && (int) $rsData['renewalEligible'] === 1)
                 {
                     $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="GDPRRequests.actionCandidate(\'createLegacy\', ' . $rsData['candidateID'] . ');" title="Creates an audited GDPR request and emails the candidate.">Send renewal request</a>';
                 }
             }
-            else if ($isLatest && $hasCandidate)
+            else if ($canEditGdpr && $isLatest && $hasCandidate)
             {
                 if (in_array($rsData['status'], array('CREATED', 'SENT')) && !$isExpired)
                 {
@@ -66,7 +69,7 @@ class GDPRRequestsDataGrid extends DataGrid
                     $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="GDPRRequests.action(\'delete\', ' . $rsData['requestID'] . ');">Delete Candidate Data</a>';
                 }
             }
-            if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_MULTI_SA && $rsData['isLegacy'] != 1 && !empty($rsData['requestID']))
+            if ($canHardDeleteRequest && $rsData['isLegacy'] != 1 && !empty($rsData['requestID']))
             {
                 $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="GDPRRequests.action(\'deleteRequest\', ' . $rsData['requestID'] . ');">Delete (test)</a>';
             }

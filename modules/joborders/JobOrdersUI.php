@@ -1754,7 +1754,7 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('currentUserID', $_SESSION['CATS']->getUserID());
         $this->_template->assign(
             'dupCheckIsAdmin',
-            ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
+            ($_SESSION['CATS']->getAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA)
         );
 
         if (!eval(Hooks::get('JO_ADD_CANDIDATE_MODAL'))) return;
@@ -1828,7 +1828,7 @@ class JobOrdersUI extends UserInterface
         {
             $jobOrders = new JobOrders($this->_siteID);
             $jobOrderData = $jobOrders->get($jobOrderID);
-            $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+            $isAdmin = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
 
             if (empty($jobOrderData) || ((int) $jobOrderData['owner'] !== (int) $this->_userID && !$isAdmin))
             {
@@ -2000,7 +2000,7 @@ class JobOrdersUI extends UserInterface
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Pipeline entry not found.');
         }
 
-        $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+        $isAdmin = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
         if (!$isAdmin && (int) $pipelineData['jobOrderOwner'] !== (int) $this->_userID)
         {
             CommonErrors::fatalModal(
@@ -2011,7 +2011,7 @@ class JobOrdersUI extends UserInterface
         }
 
         $statusHistoryRS = $pipelines->getStatusHistory($pipelineID);
-        $canEditHistory = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+        $canEditHistory = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
 
         $this->_template->assign('pipelineID', $pipelineID);
         $this->_template->assign('pipelineData', $pipelineData);
@@ -2029,7 +2029,7 @@ class JobOrdersUI extends UserInterface
             CommonErrors::fatalModal(COMMONERROR_BADFIELDS, $this, 'Invalid request.');
         }
 
-        if ($this->getUserAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
+        if ($this->getUserAccessLevel('joborders') < ACCESS_LEVEL_SA)
         {
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
         }
@@ -2065,7 +2065,7 @@ class JobOrdersUI extends UserInterface
         }
 
         $db = DatabaseConnection::getInstance();
-        $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+        $isAdmin = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
 
         foreach ($newDates as $historyID => $newDateInput)
         {

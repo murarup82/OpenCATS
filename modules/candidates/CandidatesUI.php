@@ -808,7 +808,7 @@ class CandidatesUI extends UserInterface
                     ));
                 }
 
-                if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
+                if ($_SESSION['CATS']->getAccessLevel('gdpr.requests') >= ACCESS_LEVEL_SA)
                 {
                     error_log('GDPR legacy proof lookup | ' . json_encode(array(
                         'candidateID' => $candidateID,
@@ -989,7 +989,7 @@ class CandidatesUI extends UserInterface
             $privledgedUser = true;
         }
 
-        $ownershipEditEnabled = (!$isPopup && $this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+        $ownershipEditEnabled = (!$isPopup && $this->getUserAccessLevel('candidates') >= ACCESS_LEVEL_SA);
         $ownershipUsersRS = array();
         if ($ownershipEditEnabled)
         {
@@ -1253,7 +1253,7 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('isModal', false);
         $this->_template->assign(
             'dupCheckIsAdmin',
-            ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA)
+            ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA)
         );
 
         /* REMEMBER TO ALSO UPDATE JobOrdersUI::addCandidateModal() IF
@@ -3469,7 +3469,7 @@ class CandidatesUI extends UserInterface
         {
             $jobOrders = new JobOrders($this->_siteID);
             $jobOrderData = $jobOrders->get($regardingID);
-            $isAdmin = ($this->getUserAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
+            $isAdmin = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
 
             if (empty($jobOrderData) || ((int) $jobOrderData['owner'] !== (int) $this->_userID && !$isAdmin))
             {

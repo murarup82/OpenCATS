@@ -47,15 +47,26 @@ if ($action === '')
     die();
 }
 
-$isAdmin = ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_SA);
-$canSendCandidate = ($_SESSION['CATS']->getAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT);
-if (!$isAdmin)
+$gdprAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('gdpr.requests');
+if ($gdprAccessLevel < ACCESS_LEVEL_READ)
 {
-    if (!($action === 'sendCandidate' && $canSendCandidate))
-    {
-        $interface->outputXMLErrorPage(-1, 'You do not have permission to access GDPR consents.');
-        die();
-    }
+    $interface->outputXMLErrorPage(-1, 'You do not have permission to access GDPR consents.');
+    die();
+}
+
+$writeActions = array(
+    'sendCandidate',
+    'createLegacy',
+    'scanLegacy',
+    'resend',
+    'create',
+    'expire',
+    'delete'
+);
+if (in_array($action, $writeActions, true) && $gdprAccessLevel < ACCESS_LEVEL_EDIT)
+{
+    $interface->outputXMLErrorPage(-1, 'You do not have permission to modify GDPR consents.');
+    die();
 }
 
 $db = DatabaseConnection::getInstance();
@@ -684,7 +695,7 @@ $isExpired = (!empty($request['expiresAt']) && strtotime($request['expiresAt']) 
 if ($action === 'deleteRequest')
 {
     logGdprEvent('deleteRequest: start', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID, 'candidateID' => $candidateID));
-    if ($_SESSION['CATS']->getAccessLevel('settings.administration') < ACCESS_LEVEL_MULTI_SA)
+    if ($gdprAccessLevel < ACCESS_LEVEL_SA)
     {
         logGdprEvent('deleteRequest: permission denied', array('action' => $action, 'siteID' => $siteID, 'userID' => $userID, 'requestID' => $requestID));
         $interface->outputXMLErrorPage(-1, 'You do not have permission to hard delete GDPR requests.');

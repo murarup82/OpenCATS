@@ -22,7 +22,7 @@ function jsonError($message)
     die();
 }
 
-if ($_SESSION['CATS']->getAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
+if ($_SESSION['CATS']->getAccessLevel('candidates') < ACCESS_LEVEL_SA)
 {
     jsonError('You do not have permission to edit ownership metadata.');
 }
