@@ -776,7 +776,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             <p class="note">Lists</p>
             <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT): ?>
                 <p style="margin: 6px 0 8px 0;">
-                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=lists&amp;a=quickActionAddToListModal&amp;dataItemType=<?php echo DATA_ITEM_CANDIDATE; ?>&amp;dataItemID=<?php echo $this->candidateID; ?>', 450, 350, null); return false;">
+                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=lists&amp;a=quickActionAddToListModal&amp;dataItemType=<?php echo DATA_ITEM_CANDIDATE; ?>&amp;dataItemID=<?php echo $this->candidateID; ?>', 720, 520, null); return false;">
                         Manage Candidate Lists
                     </a>
                 </p>

@@ -10,6 +10,20 @@
             font-size: 13px;
             color: #4a5560;
         }
+        .list-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0 0 8px 0;
+        }
+        .list-modal-selected {
+            font-size: 12px;
+            color: #35657b;
+            background: #ecf7fc;
+            border: 1px solid #d2e9f4;
+            border-radius: 999px;
+            padding: 2px 10px;
+        }
         .list-modal .addToListListBox {
             max-height: 270px;
             overflow-y: auto;
@@ -39,6 +53,11 @@
             min-width: 0;
             flex: 1;
             gap: 8px;
+        }
+        .list-modal-row-main input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
         }
         .list-modal-row-label {
             white-space: nowrap;
@@ -117,6 +136,9 @@
 
     <div class="list-modal">
         <p class="list-modal-intro">Select the lists you want to add the item<?php if (count($this->dataItemIDArray) > 1): ?>s<?php endif; ?> to.</p>
+        <div class="list-modal-head">
+            <div class="list-modal-selected" id="selectedCountLabel">No list selected</div>
+        </div>
         <input type="hidden" style="width:200px;" id="dataItemArray" value="<?php $this->_(implode(',', $this->dataItemIDArray)); ?>">
 
         <div class="addToListListBox" id="addToListBox">
@@ -124,9 +146,9 @@
                 <div class="list-modal-empty">No lists available yet. Create one to continue.</div>
             <?php endif; ?>
             <?php foreach($this->savedListsRS as $index => $data): ?>
-                <div class="<?php TemplateUtility::printAlternatingDivClass($index); ?> list-modal-row" id="savedListRow<?php echo($data['savedListID']); ?>">
+                <div class="<?php TemplateUtility::printAlternatingDivClass($index); ?> list-modal-row" id="savedListRow<?php echo($data['savedListID']); ?>" onclick="toggleSavedListSelection(<?php echo($data['savedListID']); ?>, event);">
                     <div class="list-modal-row-main">
-                        <input type="checkbox" id="savedListRowCheck<?php echo($data['savedListID']); ?>">
+                        <input type="checkbox" id="savedListRowCheck<?php echo($data['savedListID']); ?>" onclick="event.stopPropagation();" onchange="updateSelectionState();">
                         <span class="list-modal-row-label" id="savedListRowDescriptionArea<?php echo($data['savedListID']); ?>"><?php $this->_($data['description']); ?></span>
                         <span class="list-modal-row-count">(<?php echo($data['numberEntries']); ?>)</span>
                     </div>
@@ -173,7 +195,7 @@
         <div class="list-modal-footer" id="actionArea">
             <?php if (!empty($this->canManageLists)): ?>
             <input type="button" class="ui2-button ui2-button--secondary" value="New List" onclick="addListRow();">
-            <input type="button" class="ui2-button ui2-button--primary" value="Add To Lists" onclick="addItemsToList('<?php echo($this->sessionCookie); ?>', <?php echo($this->dataItemType); ?>);">
+            <input type="button" class="ui2-button ui2-button--primary" id="addToListsButton" value="Add To Lists" onclick="addItemsToList('<?php echo($this->sessionCookie); ?>', <?php echo($this->dataItemType); ?>);" disabled="disabled">
             <?php endif; ?>
             <input type="button" class="ui2-button ui2-button--secondary" value="Close" onclick="parentHidePopWin();">
         </div>
@@ -219,6 +241,11 @@
                         document.getElementById("savedListNew").className = 'oddDivRow list-modal-row';
                         document.getElementById("savedListNewAjaxing").className = 'oddDivRow list-modal-row';
                     }
+
+                    if (typeof updateSelectionState === 'function')
+                    {
+                        updateSelectionState();
+                    }
                 }
                 function getCheckedBoxes()
                 {
@@ -231,7 +258,67 @@
                     <?php endforeach; ?>  
                     return checked;                 
                 }
+                function getCheckedCount()
+                {
+                    var count = 0;
+                    <?php foreach($this->savedListsRS as $index => $data): ?>
+                        if (document.getElementById("savedListRowCheck<?php echo($data['savedListID']); ?>").checked)
+                        {
+                            count++;
+                        }
+                    <?php endforeach; ?>
+                    return count;
+                }
+                function updateSelectionState()
+                {
+                    var count = getCheckedCount();
+                    var addButton = document.getElementById('addToListsButton');
+                    var counter = document.getElementById('selectedCountLabel');
+
+                    if (counter)
+                    {
+                        if (count <= 0)
+                        {
+                            counter.innerHTML = 'No list selected';
+                        }
+                        else if (count === 1)
+                        {
+                            counter.innerHTML = '1 list selected';
+                        }
+                        else
+                        {
+                            counter.innerHTML = count + ' lists selected';
+                        }
+                    }
+
+                    if (addButton)
+                    {
+                        addButton.disabled = (count <= 0);
+                    }
+                }
+                function toggleSavedListSelection(savedListID, event)
+                {
+                    var target = event ? (event.target || event.srcElement) : null;
+                    if (target)
+                    {
+                        var tag = (target.tagName || '').toLowerCase();
+                        if (tag === 'a' || tag === 'input' || tag === 'button' || tag === 'select' || tag === 'textarea')
+                        {
+                            return;
+                        }
+                    }
+
+                    var checkbox = document.getElementById('savedListRowCheck' + savedListID);
+                    if (!checkbox || checkbox.disabled)
+                    {
+                        return;
+                    }
+
+                    checkbox.checked = !checkbox.checked;
+                    updateSelectionState();
+                }
                 relabelEvenOdd();
+                updateSelectionState();
             </script>
     </body>
 </html>

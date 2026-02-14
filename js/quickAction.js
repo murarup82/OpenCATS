@@ -112,7 +112,7 @@ function showHideSingleQuickActionMenu(menu)
 function showQuickActionAddToList(menuDataItemType, menuDataItemId)
 {
     /* Create a popup window for adding this data item type to a list (content loaded from server) */
-    showPopWin(CATSIndexName + '?m=lists&a=quickActionAddToListModal&dataItemType='+ menuDataItemType +'&dataItemID='+ menuDataItemId, 450, 350, null);
+    showPopWin(CATSIndexName + '?m=lists&a=quickActionAddToListModal&dataItemType='+ menuDataItemType +'&dataItemID='+ menuDataItemId, 720, 520, null);
 };
 
 /* Shows a popup for adding a item to a list. */

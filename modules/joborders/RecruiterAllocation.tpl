@@ -84,6 +84,7 @@
             <div class="ui2-card">No job orders match the selected filters.</div>
         <?php else: ?>
             <form method="post" action="<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=recruiterAllocation">
+                <input type="hidden" name="postback" value="1" />
                 <input type="hidden" name="scope" value="<?php echo htmlspecialchars($this->scope); ?>" />
                 <input type="hidden" name="ownerUserID" value="<?php echo (int) $this->ownerUserID; ?>" />
                 <input type="hidden" name="recruiterUserID" value="<?php echo (int) $this->recruiterUserID; ?>" />
@@ -98,8 +99,8 @@
                             <th style="width: 180px;">Company</th>
                             <th style="width: 150px;">Status</th>
                             <th style="width: 170px;">Owner</th>
-                            <th style="width: 170px;">Current Recruiter</th>
-                            <th style="width: 220px;">Assign Recruiter</th>
+                            <th style="width: 170px;">Allocated User</th>
+                            <th style="width: 220px;">Allocate To</th>
                             <th style="width: 90px;">Modified</th>
                         </tr>
                         <?php foreach ($this->rows as $index => $row): ?>
@@ -116,7 +117,17 @@
                                 <td>
                                     <?php
                                         $currentRecruiterLabel = trim((string) $row['recruiterFullName']);
-                                        if ($currentRecruiterLabel === '') { $currentRecruiterLabel = '(Unassigned)'; }
+                                        if ($currentRecruiterLabel === '')
+                                        {
+                                            if ((int) $row['recruiterUserID'] > 0)
+                                            {
+                                                $currentRecruiterLabel = sprintf('(User ID %d)', (int) $row['recruiterUserID']);
+                                            }
+                                            else
+                                            {
+                                                $currentRecruiterLabel = '(Unassigned)';
+                                            }
+                                        }
                                         echo htmlspecialchars($currentRecruiterLabel);
                                     ?>
                                 </td>

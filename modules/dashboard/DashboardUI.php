@@ -11,6 +11,7 @@ include_once(LEGACY_ROOT . '/lib/TemplateUtility.php');
 include_once(LEGACY_ROOT . '/lib/JobOrders.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 include_once(LEGACY_ROOT . '/lib/Pipelines.php');
+include_once(LEGACY_ROOT . '/lib/UserRoles.php');
 include_once(LEGACY_ROOT . '/lib/Hooks.php');
 
 class DashboardUI extends UserInterface
@@ -75,6 +76,20 @@ class DashboardUI extends UserInterface
         $db = DatabaseConnection::getInstance();
         $siteID = $this->_siteID;
         $userID = $this->_userID;
+        $canViewAllDashboardRows = $this->canViewAllDashboardRows();
+        $requestedScope = strtolower(trim($this->getTrimmedInput('scope', $_GET)));
+        if (!$canViewAllDashboardRows)
+        {
+            $dashboardScope = 'mine';
+        }
+        else if ($requestedScope === 'mine')
+        {
+            $dashboardScope = 'mine';
+        }
+        else
+        {
+            $dashboardScope = 'all';
+        }
 
         $statusFilter = '';
         if (!$showClosed)
@@ -92,6 +107,12 @@ class DashboardUI extends UserInterface
         if ($statusID > 0)
         {
             $statusFilterByID = 'AND candidate_joborder.status = ' . $db->makeQueryInteger($statusID);
+        }
+
+        $ownerFilter = '';
+        if ($dashboardScope === 'mine')
+        {
+            $ownerFilter = 'AND joborder.owner = ' . $db->makeQueryInteger($userID);
         }
 
         $sql = sprintf(
@@ -143,8 +164,7 @@ class DashboardUI extends UserInterface
                 candidate.site_id = %s
             AND
                 joborder.site_id = %s
-            AND
-                joborder.owner = %s
+            %s
             %s
             %s
             %s
@@ -156,7 +176,7 @@ class DashboardUI extends UserInterface
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
-            $db->makeQueryInteger($userID),
+            $ownerFilter,
             $statusFilter,
             $jobOrderFilter,
             $statusFilterByID,
@@ -194,7 +214,7 @@ class DashboardUI extends UserInterface
             }
         }
 
-        $jobOrderOptions = $this->getOwnedJobOrders($showClosed);
+        $jobOrderOptions = $this->getDashboardJobOrders($showClosed, $dashboardScope === 'all');
         $pipelines = new Pipelines($this->_siteID);
         $statusOptions = $pipelines->getStatusesForPicking();
 
@@ -213,6 +233,12 @@ class DashboardUI extends UserInterface
         $this->_template->assign('jobOrderID', $jobOrderID);
         $this->_template->assign('statusID', $statusID);
         $this->_template->assign('jobOrderOptions', $jobOrderOptions);
+        $this->_template->assign('showScopeSwitcher', $canViewAllDashboardRows ? 1 : 0);
+        $this->_template->assign('dashboardScope', $dashboardScope);
+        $this->_template->assign(
+            'jobOrderScopeLabel',
+            ($dashboardScope === 'all') ? 'All job orders' : 'All my assigned job orders'
+        );
         $this->_template->assign('statusOptions', $statusOptions);
         $this->_template->assign('page', $page);
         $this->_template->assign('totalPages', $totalPages);
@@ -227,13 +253,19 @@ class DashboardUI extends UserInterface
         $this->_template->display('./modules/dashboard/My.tpl');
     }
 
-    private function getOwnedJobOrders($includeClosed)
+    private function getDashboardJobOrders($includeClosed, $includeAll)
     {
         $db = DatabaseConnection::getInstance();
         $statusFilter = '';
         if (!$includeClosed)
         {
             $statusFilter = 'AND joborder.status IN ' . JobOrderStatuses::getOpenStatusSQL();
+        }
+
+        $ownerFilter = '';
+        if (!$includeAll)
+        {
+            $ownerFilter = 'AND joborder.owner = ' . $db->makeQueryInteger($this->_userID);
         }
 
         $sql = sprintf(
@@ -247,17 +279,31 @@ class DashboardUI extends UserInterface
                 ON joborder.company_id = company.company_id
             WHERE
                 joborder.site_id = %s
-            AND
-                joborder.owner = %s
+            %s
             %s
             ORDER BY
                 joborder.date_created DESC",
             $db->makeQueryInteger($this->_siteID),
-            $db->makeQueryInteger($this->_userID),
+            $ownerFilter,
             $statusFilter
         );
 
         return $db->getAllAssoc($sql);
+    }
+
+    private function canViewAllDashboardRows()
+    {
+        $userRoles = new UserRoles($this->_siteID);
+        if ($userRoles->isSchemaAvailable())
+        {
+            $role = $userRoles->getForUser($this->_userID);
+            if (!empty($role) && !empty($role['roleKey']))
+            {
+                return in_array($role['roleKey'], array('site_admin', 'hr_manager'), true);
+            }
+        }
+
+        return ($this->getUserAccessLevel('joborders.show') >= ACCESS_LEVEL_DELETE);
     }
 
     private function canChangeStatus()

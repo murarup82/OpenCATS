@@ -49,11 +49,29 @@
                     <form id="dashboardFilters" method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
                         <input type="hidden" name="m" value="dashboard" />
                         <input type="hidden" name="a" value="my" />
+                        <input type="hidden" id="dashboardScopeInput" name="scope" value="<?php $this->_($this->dashboardScope); ?>" />
                         <div class="ui2-datatable-toolbar">
+                            <?php if (!empty($this->showScopeSwitcher)): ?>
+                                <div>
+                                    <label>Scope</label><br />
+                                    <span class="ui2-inline">
+                                        <button
+                                            type="button"
+                                            class="button ui2-button <?php echo(($this->dashboardScope === 'all') ? 'ui2-button--primary' : 'ui2-button--secondary'); ?>"
+                                            onclick="setDashboardScope('all');"
+                                        >All Jobs</button>
+                                        <button
+                                            type="button"
+                                            class="button ui2-button <?php echo(($this->dashboardScope === 'mine') ? 'ui2-button--primary' : 'ui2-button--secondary'); ?>"
+                                            onclick="setDashboardScope('mine');"
+                                        >My Assigned Jobs</button>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                             <div>
                                 <label for="dashboardJobOrder">Job Order</label><br />
                                 <select id="dashboardJobOrder" name="jobOrderID" class="inputbox ui2-input ui2-input--md">
-                                    <option value="0">All my job orders</option>
+                                    <option value="0"><?php $this->_($this->jobOrderScopeLabel); ?></option>
                                     <?php foreach ($this->jobOrderOptions as $option): ?>
                                         <option value="<?php $this->_($option['jobOrderID']); ?>" <?php if ((int) $this->jobOrderID === (int) $option['jobOrderID']) echo('selected'); ?>>
                                             <?php $this->_($option['title']); ?><?php if (!empty($option['companyName'])): ?> (<?php $this->_($option['companyName']); ?>)<?php endif; ?>
@@ -173,6 +191,7 @@
                                 <?php
                                     $base = CATSUtility::getIndexName() . '?m=dashboard&a=my';
                                     $params = array();
+                                    if (!empty($this->showScopeSwitcher) && $this->dashboardScope === 'mine') $params[] = 'scope=mine';
                                     if (!empty($this->showClosed)) $params[] = 'showClosed=1';
                                     if (!empty($this->jobOrderID)) $params[] = 'jobOrderID=' . (int) $this->jobOrderID;
                                     if (!empty($this->statusID)) $params[] = 'statusID=' . (int) $this->statusID;
@@ -193,6 +212,18 @@
         </div>
     </div>
     <script type="text/javascript">
+        function setDashboardScope(scopeValue)
+        {
+            var form = document.getElementById('dashboardFilters');
+            var scopeInput = document.getElementById('dashboardScopeInput');
+            if (!form || !scopeInput)
+            {
+                return;
+            }
+            scopeInput.value = scopeValue;
+            form.submit();
+        }
+
         (function () {
             var form = document.getElementById('dashboardFilters');
             if (!form) return;
