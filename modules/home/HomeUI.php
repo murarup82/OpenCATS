@@ -92,11 +92,6 @@ class HomeUI extends UserInterface
 
     private function home()
     {        
-        if ($this->getUserAccessLevel('joborders.show') >= ACCESS_LEVEL_READ)
-        {
-            CATSUtility::transferRelativeURI('m=dashboard&a=my');
-        }
-
         if (!eval(Hooks::get('HOME'))) return;
         
         NewVersionCheck::getNews();
