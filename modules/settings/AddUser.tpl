@@ -120,10 +120,30 @@
                                     </td>
                                 </tr>
 
+                                <?php if ($this->userRolesEnabled && count($this->userRoles) > 0): ?>
+                                    <tr>
+                                        <td class="tdVertical">
+                                            <label for="roleID">Application Role:</label>
+                                        </td>
+                                        <td class="tdData">
+                                            <select id="roleID" name="roleID" class="inputbox" style="width: 220px;">
+                                                <?php foreach ($this->userRoles as $userRole): ?>
+                                                    <option value="<?php $this->_($userRole['roleID']); ?>" data-access-level="<?php $this->_($userRole['accessLevel']); ?>" <?php if ((int) $this->defaultUserRoleID === (int) $userRole['roleID']): ?>selected<?php endif; ?>>
+                                                        <?php $this->_($userRole['roleName']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <div style="font-size: smaller; margin-top: 4px;">Access Level is automatically set from the selected Application Role when saving.</div>
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <input type="hidden" name="roleID" value="0" />
+                                <?php endif; ?>
+
                                 <?php if (count($this->categories) > 0): ?>
                                     <tr>
                                         <td class="tdVertical">
-                                            <label id="accessLevelLabel" for="accessLevel">Role:</label>
+                                            <label id="accessLevelLabel" for="accessLevel">Legacy Category:</label>
                                         </td>
                                         <td class="tdData">
                                            <input type="radio" name="role" value="none" title="" checked onclick="document.getElementById('userRoleDesc').innerHTML='This user is a normal user.';  document.getElementById('accessLevelsSpan').style.display='';" /> Normal User
@@ -180,6 +200,44 @@
                 <input type="reset"  class="button" name="reset"  id="reset"  value="Reset" onclick="document.getElementById('userAccessStatus').innerHTML='Delete - All lower access, plus the ability to delete information on the system.'" />&nbsp;
                 <input type="button" class="button" name="back"   id="back"   value="Cancel" onclick="javascript:goToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=manageUsers');" />
             </form>
+            <script type="text/javascript">
+                (function ()
+                {
+                    var roleSelect = document.getElementById('roleID');
+                    if (!roleSelect)
+                    {
+                        return;
+                    }
+
+                    var syncAccessLevel = function ()
+                    {
+                        var selectedOption = roleSelect.options[roleSelect.selectedIndex];
+                        if (!selectedOption)
+                        {
+                            return;
+                        }
+
+                        var accessLevel = selectedOption.getAttribute('data-access-level');
+                        if (!accessLevel)
+                        {
+                            return;
+                        }
+
+                        var accessRadio = document.getElementById('access' + accessLevel);
+                        if (accessRadio && !accessRadio.disabled)
+                        {
+                            accessRadio.checked = true;
+                            if (typeof accessRadio.onclick === 'function')
+                            {
+                                accessRadio.onclick();
+                            }
+                        }
+                    };
+
+                    roleSelect.onchange = syncAccessLevel;
+                    syncAccessLevel();
+                })();
+            </script>
         </div>
     </div>
 

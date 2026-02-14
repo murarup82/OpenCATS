@@ -52,6 +52,7 @@ include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
 include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
+include_once(LEGACY_ROOT . '/lib/UserRoles.php');
 eval(Hooks::get('XML_FEED_SUBMISSION_SETTINGS_HEADERS'));
 
 /* Users.php is included by index.php already. */
@@ -1158,6 +1159,17 @@ class SettingsUI extends UserInterface
         $EEOSettings = new EEOSettings($this->_siteID);
         $EEOSettingsRS = $EEOSettings->getAll();
 
+        $userRoles = new UserRoles($this->_siteID);
+        $applicationRole = $userRoles->getForUser($userID);
+        if (empty($applicationRole))
+        {
+            $applicationRole = array(
+                'roleName' => '',
+                'roleKey' => '',
+                'accessLevel' => ''
+            );
+        }
+
         $this->_template->assign('privledged', $privledged);
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', '');
@@ -1165,6 +1177,8 @@ class SettingsUI extends UserInterface
         $this->_template->assign('categories', $categories);
         $this->_template->assign('accessLevels', $accessLevels);
         $this->_template->assign('EEOSettingsRS', $EEOSettingsRS);
+        $this->_template->assign('userRolesEnabled', $userRoles->isSchemaAvailable() ? 1 : 0);
+        $this->_template->assign('applicationRole', $applicationRole);
         $this->_template->assign('currentUser', $this->_userID);
         $this->_template->assign('loginDisplay', self::MAX_RECENT_LOGINS);
         $this->_template->assign('loginAttempts', $loginAttempts);
@@ -1205,6 +1219,19 @@ class SettingsUI extends UserInterface
         $EEOSettings = new EEOSettings($this->_siteID);
         $EEOSettingsRS = $EEOSettings->getAll();
 
+        $userRoles = new UserRoles($this->_siteID);
+        $userRolesRS = $userRoles->getAll();
+        $defaultUserRoleID = 0;
+        if (!empty($userRolesRS))
+        {
+            $defaultUserRole = $userRoles->getDefaultRoleByAccessLevel(ACCESS_LEVEL_DELETE);
+            if (empty($defaultUserRole))
+            {
+                $defaultUserRole = $userRolesRS[0];
+            }
+            $defaultUserRoleID = (int) $defaultUserRole['roleID'];
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', '');
         $this->_template->assign('accessLevels', $accessLevels);
@@ -1213,6 +1240,9 @@ class SettingsUI extends UserInterface
         $this->_template->assign('defaultAccessLevel', ACCESS_LEVEL_DELETE);
         $this->_template->assign('currentUser', $this->_userID);
         $this->_template->assign('categories', $categories);
+        $this->_template->assign('userRolesEnabled', $userRoles->isSchemaAvailable() ? 1 : 0);
+        $this->_template->assign('userRoles', $userRolesRS);
+        $this->_template->assign('defaultUserRoleID', $defaultUserRoleID);
         $this->_template->assign('auth_mode', AUTH_MODE);
 
         if (!eval(Hooks::get('SETTINGS_ADD_USER'))) return;
@@ -1239,9 +1269,37 @@ class SettingsUI extends UserInterface
         $password       = $this->getTrimmedInput('password', $_POST);
         $retypePassword = $this->getTrimmedInput('retypePassword', $_POST);
         $role           = $this->getTrimmedInput('role', $_POST);
+        $roleID         = (int) $this->getTrimmedInput('roleID', $_POST);
         $eeoIsVisible   = $this->isChecked('eeoIsVisible', $_POST);
 
         $users = new Users($this->_siteID);
+        $userRoles = new UserRoles($this->_siteID);
+        $selectedUserRole = array();
+        if ($userRoles->isSchemaAvailable())
+        {
+            if ($roleID > 0)
+            {
+                $selectedUserRole = $userRoles->getByID($roleID);
+                if (empty($selectedUserRole))
+                {
+                    CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'Invalid user role selected.');
+                }
+                $accessLevel = (int) $selectedUserRole['accessLevel'];
+            }
+            else
+            {
+                $selectedUserRole = $userRoles->getDefaultRoleByAccessLevel($accessLevel);
+                if (!empty($selectedUserRole))
+                {
+                    $accessLevel = (int) $selectedUserRole['accessLevel'];
+                }
+            }
+        }
+        if ($userRoles->isSchemaAvailable() && empty($selectedUserRole))
+        {
+            CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'No application roles are configured for this site.');
+        }
+
         $license = $users->getLicenseData();
 
         if (!$license['canAdd'] && $accessLevel > ACCESS_LEVEL_READ)
@@ -1287,6 +1345,14 @@ class SettingsUI extends UserInterface
         $userID = $users->add(
             $lastName, $firstName, $email, $username, $password, $accessLevel, $eeoIsVisible
         );
+
+        if ($userID > 0 &&
+            $userRoles->isSchemaAvailable() &&
+            !empty($selectedUserRole) &&
+            !$userRoles->setForUser($userID, (int) $selectedUserRole['roleID']))
+        {
+            CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to assign role to user.');
+        }
 
         /* Check role (category) to make sure that the role is allowed to be set. */
         $modules = ModuleUtility::getModules();
@@ -1398,6 +1464,23 @@ class SettingsUI extends UserInterface
         $EEOSettings = new EEOSettings($this->_siteID);
         $EEOSettingsRS = $EEOSettings->getAll();
 
+        $userRoles = new UserRoles($this->_siteID);
+        $userRolesRS = $userRoles->getAll();
+        $selectedUserRole = $userRoles->getForUser($userID);
+        $selectedUserRoleID = 0;
+        if (!empty($selectedUserRole) && !empty($selectedUserRole['roleID']))
+        {
+            $selectedUserRoleID = (int) $selectedUserRole['roleID'];
+        }
+        else if (!empty($userRolesRS))
+        {
+            $defaultUserRole = $userRoles->getDefaultRoleByAccessLevel($data['accessLevel']);
+            if (!empty($defaultUserRole))
+            {
+                $selectedUserRoleID = (int) $defaultUserRole['roleID'];
+            }
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', '');
         $this->_template->assign('data', $data);
@@ -1406,6 +1489,9 @@ class SettingsUI extends UserInterface
         $this->_template->assign('EEOSettingsRS', $EEOSettingsRS);
         $this->_template->assign('license', $license);
         $this->_template->assign('categories', $categories);
+        $this->_template->assign('userRolesEnabled', $userRoles->isSchemaAvailable() ? 1 : 0);
+        $this->_template->assign('userRoles', $userRolesRS);
+        $this->_template->assign('selectedUserRoleID', $selectedUserRoleID);
         $this->_template->assign('currentUser', $this->_userID);
         $this->_template->assign('cannotEnableMessage', $cannotEnableMessage);
         $this->_template->assign('disableAccessChange', $disableAccessChange);
@@ -1443,7 +1529,8 @@ class SettingsUI extends UserInterface
         $password2   = $this->getTrimmedInput('password2', $_POST);
         $passwordRst = $this->getTrimmedInput('passwordIsReset', $_POST);
         $role        = $this->getTrimmedInput('role', $_POST);
-        $eeoIsVisible   = $this->isChecked('eeoIsVisible', $_POST);
+        $roleID      = (int) $this->getTrimmedInput('roleID', $_POST);
+        $eeoIsVisible = $this->isChecked('eeoIsVisible', $_POST);
 
         /* Bail out if any of the required fields are empty. */
         if (empty($firstName) || empty($lastName) || empty($username))
@@ -1461,6 +1548,18 @@ class SettingsUI extends UserInterface
         if ($password1 !== $password2)
         {
             CommonErrors::fatal(COMMONERROR_NOPASSWORDMATCH, $this, 'Passwords do not match.');
+        }
+
+        $userRoles = new UserRoles($this->_siteID);
+        $selectedUserRole = array();
+        if ($userRoles->isSchemaAvailable() && $roleID > 0)
+        {
+            $selectedUserRole = $userRoles->getByID($roleID);
+            if (empty($selectedUserRole))
+            {
+                CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'Invalid user role selected.');
+            }
+            $accessLevel = (int) $selectedUserRole['accessLevel'];
         }
 
         /* Don't allow access level changes to the currently logged-in user's
@@ -1529,6 +1628,14 @@ class SettingsUI extends UserInterface
                     }
                 }
             }
+        }
+
+        if ($userRoles->isSchemaAvailable() &&
+            !empty($selectedUserRole) &&
+            $userID != $this->_userID &&
+            !$userRoles->setForUser($userID, (int) $selectedUserRole['roleID']))
+        {
+            CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to update user role.');
         }
 
         CATSUtility::transferRelativeURI(
@@ -3127,13 +3234,10 @@ class SettingsUI extends UserInterface
                 CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('Migration already applied.'));
             }
 
-            if ($version === '202602101500_add_entered_by.sql')
+            $verificationMessage = '';
+            if (!$this->verifySchemaMigrationPrereq($version, $db, $verificationMessage))
             {
-                $columns = $db->getAllAssoc("SHOW COLUMNS FROM candidate_joborder_status_history LIKE 'entered_by'");
-                if (empty($columns))
-                {
-                    CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'entered_by column not found; cannot mark applied.');
-                }
+                CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, $verificationMessage);
             }
 
             $lockRS = $db->getAssoc(sprintf(
@@ -3162,7 +3266,12 @@ class SettingsUI extends UserInterface
                 CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to record migration: ' . $db->getError());
             }
 
-            CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('Migration marked as applied.'));
+            $message = 'Migration marked as applied.';
+            if ($verificationMessage !== '')
+            {
+                $message .= ' ' . $verificationMessage;
+            }
+            CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode($message));
         }
 
         $toApply = array();
@@ -3206,6 +3315,7 @@ class SettingsUI extends UserInterface
         }
 
         $appliedCount = 0;
+        $verificationLogs = array();
         foreach ($toApply as $migration)
         {
             $sql = file_get_contents($migration['file']);
@@ -3235,6 +3345,17 @@ class SettingsUI extends UserInterface
                 }
             }
 
+            $verificationMessage = '';
+            if (!$this->verifySchemaMigrationPrereq($migration['version'], $db, $verificationMessage))
+            {
+                $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+                CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, $verificationMessage);
+            }
+            if ($verificationMessage !== '')
+            {
+                $verificationLogs[] = $verificationMessage;
+            }
+
             $insert = $db->query(sprintf(
                 "INSERT INTO schema_migrations (version, checksum, applied_at, applied_by)
                  VALUES (%s, %s, NOW(), %s)",
@@ -3257,6 +3378,10 @@ class SettingsUI extends UserInterface
         $message = ($appliedCount === 1)
             ? 'Applied 1 migration.'
             : 'Applied ' . $appliedCount . ' migrations.';
+        if (!empty($verificationLogs))
+        {
+            $message .= ' ' . implode(' ', array_unique($verificationLogs));
+        }
         CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode($message));
     }
 
@@ -3420,6 +3545,73 @@ class SettingsUI extends UserInterface
         return $statements;
     }
 
+    private function verifySchemaMigrationPrereq($version, $db, &$message)
+    {
+        $message = '';
+
+        if ($version === '202602101500_add_entered_by.sql')
+        {
+            $columns = $db->getAllAssoc("SHOW COLUMNS FROM candidate_joborder_status_history LIKE 'entered_by'");
+            if (empty($columns))
+            {
+                $message = 'entered_by column not found; migration verification failed.';
+                return false;
+            }
+            $message = '[Check] entered_by column detected.';
+            return true;
+        }
+
+        if ($version === '20260213_0003_user_roles_phase1.sql')
+        {
+            $roleTable = $db->getAllAssoc("SHOW TABLES LIKE 'user_role'");
+            if (empty($roleTable))
+            {
+                $message = 'user_role table not found; migration verification failed.';
+                return false;
+            }
+
+            $roleColumn = $db->getAllAssoc("SHOW COLUMNS FROM user LIKE 'role_id'");
+            if (empty($roleColumn))
+            {
+                $message = 'user.role_id column not found; migration verification failed.';
+                return false;
+            }
+
+            $requiredRoleCount = $db->getAssoc(sprintf(
+                "SELECT COUNT(*) AS roleCount
+                 FROM user_role
+                 WHERE site_id = %s
+                 AND role_key IN ('site_admin', 'hr_manager', 'hr_recruiter', 'top_management')",
+                $db->makeQueryInteger($this->_siteID)
+            ));
+
+            if (empty($requiredRoleCount) || (int) $requiredRoleCount['roleCount'] < 4)
+            {
+                $message = 'Default roles are missing for this site; migration verification failed.';
+                return false;
+            }
+
+            $missingRoleIDCount = $db->getAssoc(sprintf(
+                "SELECT COUNT(*) AS missingCount
+                 FROM user
+                 WHERE site_id = %s
+                 AND role_id IS NULL",
+                $db->makeQueryInteger($this->_siteID)
+            ));
+
+            if (!empty($missingRoleIDCount) && (int) $missingRoleIDCount['missingCount'] > 0)
+            {
+                $message = 'Some users have no role_id after migration; migration verification failed.';
+                return false;
+            }
+
+            $message = '[Check] user_role schema verified with seeded defaults.';
+            return true;
+        }
+
+        return true;
+    }
+
     /*
      * Called by handleRequest() to process the administration page.
      */
@@ -3560,6 +3752,13 @@ class SettingsUI extends UserInterface
         $users = new Users($this->_siteID);
         $rs = $users->getAll();
         $license = $users->getLicenseData();
+        $userRoles = new UserRoles($this->_siteID);
+        $userIDs = array();
+        foreach ($rs as $row)
+        {
+            $userIDs[] = (int) $row['userID'];
+        }
+        $userRoleNamesByUserID = $userRoles->getRoleNamesByUserIDs($userIDs);
 
         foreach ($rs as $rowIndex => $row)
         {
@@ -3582,12 +3781,19 @@ class SettingsUI extends UserInterface
                    '@' . $_SESSION['CATS']->getSiteID(), '', $row['username']
                );
             }
+
+            $rs[$rowIndex]['applicationRole'] = '';
+            if (isset($userRoleNamesByUserID[(int) $row['userID']]))
+            {
+                $rs[$rowIndex]['applicationRole'] = $userRoleNamesByUserID[(int) $row['userID']];
+            }
         }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'User Management');
         $this->_template->assign('rs', $rs);
         $this->_template->assign('license', $license);
+        $this->_template->assign('userRolesEnabled', $userRoles->isSchemaAvailable() ? 1 : 0);
         $this->_template->assign('currentUser', $this->_userID);
         $this->_template->display('./modules/settings/Users.tpl');
     }

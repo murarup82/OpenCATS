@@ -61,6 +61,13 @@
                                 <td class="vertical">Access Level:</td>
                                 <td class="data"><?php $this->_($this->data['accessLevelLongDescription']); ?></td>
                             </tr>
+
+                            <?php if ($this->userRolesEnabled && !empty($this->applicationRole['roleName'])): ?>
+                                <tr>
+                                    <td class="vertical">Application Role:</td>
+                                    <td class="data"><?php $this->_($this->applicationRole['roleName']); ?></td>
+                                </tr>
+                            <?php endif; ?>
                             
                             <?php if($this->EEOSettingsRS['enabled'] == 1): ?> <tr>
                                 <td class="vertical">Can See EEO Info:</td>

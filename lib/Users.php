@@ -65,12 +65,16 @@ class Users
     private $_db;
     private $_siteID;
     private $_ldap;
+    private $_roleSchemaChecked;
+    private $_roleSchemaAvailable;
 
 
     public function __construct($siteID)
     {
         $this->_siteID = $siteID;
         $this->_db = DatabaseConnection::getInstance();
+        $this->_roleSchemaChecked = false;
+        $this->_roleSchemaAvailable = false;
     }
 
 
@@ -133,7 +137,10 @@ class Users
             return -1;
         }
 
-        return $this->_db->getLastInsertID();
+        $userID = $this->_db->getLastInsertID();
+        $this->syncRoleFromAccessLevel($userID, $accessLevel);
+
+        return $userID;
     }
 
     /**
@@ -189,7 +196,13 @@ class Users
                 $this->_siteID
                     );
 
-        return (boolean) $this->_db->query($sql);
+        $result = (boolean) $this->_db->query($sql);
+        if ($result && $accessLevel != -1)
+        {
+            $this->syncRoleFromAccessLevel($userID, $accessLevel);
+        }
+
+        return $result;
     }
 
     /**
@@ -1234,6 +1247,85 @@ class Users
         }
 
         return $rs;
+    }
+
+    private function isRoleSchemaAvailable()
+    {
+        if ($this->_roleSchemaChecked)
+        {
+            return $this->_roleSchemaAvailable;
+        }
+
+        $tableRS = $this->_db->getAllAssoc("SHOW TABLES LIKE 'user_role'");
+        if (empty($tableRS))
+        {
+            $this->_roleSchemaChecked = true;
+            $this->_roleSchemaAvailable = false;
+            return false;
+        }
+
+        $columnRS = $this->_db->getAllAssoc("SHOW COLUMNS FROM user LIKE 'role_id'");
+        $this->_roleSchemaAvailable = !empty($columnRS);
+        $this->_roleSchemaChecked = true;
+
+        return $this->_roleSchemaAvailable;
+    }
+
+    private function syncRoleFromAccessLevel($userID, $accessLevel)
+    {
+        if (!$this->isRoleSchemaAvailable())
+        {
+            return true;
+        }
+
+        $roleKey = 'top_management';
+        $accessLevel = (int) $accessLevel;
+        if ($accessLevel >= ACCESS_LEVEL_SA)
+        {
+            $roleKey = 'site_admin';
+        }
+        else if ($accessLevel >= ACCESS_LEVEL_DELETE)
+        {
+            $roleKey = 'hr_manager';
+        }
+        else if ($accessLevel >= ACCESS_LEVEL_EDIT)
+        {
+            $roleKey = 'hr_recruiter';
+        }
+
+        $roleRS = $this->_db->getAssoc(sprintf(
+            "SELECT
+                user_role_id AS roleID
+            FROM
+                user_role
+            WHERE
+                site_id = %s
+            AND
+                role_key = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryString($roleKey)
+        ));
+
+        if (empty($roleRS))
+        {
+            return false;
+        }
+
+        $sql = sprintf(
+            "UPDATE
+                user
+            SET
+                role_id = %s
+            WHERE
+                user_id = %s
+            AND
+                site_id = %s",
+            $this->_db->makeQueryInteger($roleRS['roleID']),
+            $this->_db->makeQueryInteger($userID),
+            $this->_db->makeQueryInteger($this->_siteID)
+        );
+
+        return (boolean) $this->_db->query($sql);
     }
 
     public function isUserLDAP($userID)
