@@ -2677,6 +2677,7 @@ class SettingsUI extends UserInterface
             return;
         }
 
+        $beforeMatrix = $rolePagePermissions->getRoleMatrix();
         $postedMatrix = array();
         if (isset($_POST['perm']) && is_array($_POST['perm']))
         {
@@ -2685,11 +2686,98 @@ class SettingsUI extends UserInterface
 
         if ($rolePagePermissions->saveRoleMatrix($postedMatrix))
         {
+            $afterMatrix = $rolePagePermissions->getRoleMatrix();
+            $this->logRolePagePermissionsAudit($beforeMatrix, $afterMatrix);
             CATSUtility::transferRelativeURI('m=settings&a=rolePagePermissions&message=' . urlencode('Role access matrix saved.'));
             return;
         }
 
         CATSUtility::transferRelativeURI('m=settings&a=rolePagePermissions&message=' . urlencode('Failed to save role access matrix.'));
+    }
+
+    private function logRolePagePermissionsAudit($beforeMatrix, $afterMatrix)
+    {
+        $beforeSnapshot = $this->buildRolePagePermissionsSnapshot($beforeMatrix);
+        $afterSnapshot = $this->buildRolePagePermissionsSnapshot($afterMatrix);
+
+        $changes = array();
+        foreach ($afterSnapshot as $roleName => $pages)
+        {
+            $beforePages = isset($beforeSnapshot[$roleName]) ? $beforeSnapshot[$roleName] : array();
+            foreach ($pages as $pageLabel => $newValue)
+            {
+                $oldValue = isset($beforePages[$pageLabel]) ? $beforePages[$pageLabel] : '(default)';
+                if ($oldValue !== $newValue)
+                {
+                    $changes[] = $roleName . ' / ' . $pageLabel . ': ' . $oldValue . ' -> ' . $newValue;
+                }
+            }
+        }
+
+        if (empty($changes))
+        {
+            return;
+        }
+
+        $summary = implode(' | ', array_slice($changes, 0, 30));
+        if (count($changes) > 30)
+        {
+            $summary .= ' | ...';
+        }
+
+        $payload = array(
+            'siteID' => $this->_siteID,
+            'userID' => $this->_userID,
+            'changeCount' => count($changes),
+            'changes' => $changes
+        );
+        error_log('RoleMatrixAudit | ' . json_encode($payload));
+
+        $historySummary = '(USER) updated role access matrix. changes=' . count($changes) . '. ';
+        $historySummary .= substr($summary, 0, 900);
+        $history = new History($this->_siteID);
+        $history->storeHistorySimple(
+            DATA_ITEM_USER,
+            $this->_userID,
+            $historySummary
+        );
+    }
+
+    private function buildRolePagePermissionsSnapshot($matrixData)
+    {
+        $snapshot = array();
+        if (!isset($matrixData['roles']) || !isset($matrixData['pages']) || !isset($matrixData['matrix']))
+        {
+            return $snapshot;
+        }
+
+        foreach ($matrixData['roles'] as $role)
+        {
+            $roleID = (int) $role['roleID'];
+            $roleName = $role['roleName'];
+            $snapshot[$roleName] = array();
+
+            foreach ($matrixData['pages'] as $pageKey => $pageData)
+            {
+                $pageLabel = $pageData['label'];
+                $option = '';
+                if (isset($matrixData['matrix'][$roleID]) &&
+                    isset($matrixData['matrix'][$roleID][$pageKey]) &&
+                    isset($matrixData['matrix'][$roleID][$pageKey]['option']))
+                {
+                    $option = $matrixData['matrix'][$roleID][$pageKey]['option'];
+                }
+
+                if ($option == '')
+                {
+                    $option = 'read';
+                }
+
+                $snapshot[$roleName][$pageLabel] = $option;
+            }
+        }
+
+        return $snapshot;
     }
 
     /*

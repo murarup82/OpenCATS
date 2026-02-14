@@ -31,6 +31,7 @@
  */
 
 include(LEGACY_ROOT . '/lib/ACL.php');
+include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
 
 /**
  *  CATS Session Object
@@ -39,6 +40,8 @@ include(LEGACY_ROOT . '/lib/ACL.php');
  */
 class CATSSession
 {
+    private static $_requestAccessCap = null;
+
     private $_siteID = -1;
     private $_userID = -1;
     private $_siteCompanyID = -1;
@@ -253,6 +256,7 @@ class CATSSession
     public function logout()
     {
         $this->_isLoggedIn = false;
+        self::$_requestAccessCap = null;
     }
 
     /**
@@ -402,7 +406,70 @@ class CATSSession
     // FIXME: Document me!
     public function getAccessLevel($securedObjectName)
     {
-        return ACL::getAccessLevel($securedObjectName, $this->getUserCategories(), $this->_accessLevel);
+        $accessLevel = ACL::getAccessLevel($securedObjectName, $this->getUserCategories(), $this->_accessLevel);
+
+        if (self::$_requestAccessCap !== null)
+        {
+            $accessLevel = min($accessLevel, (int) self::$_requestAccessCap);
+        }
+
+        if (!$this->_isLoggedIn || !class_exists('RolePagePermissions'))
+        {
+            return $accessLevel;
+        }
+
+        if ($this->_siteID <= 0 || $this->_userID <= 0)
+        {
+            return $accessLevel;
+        }
+
+        static $rolePagePermissionsBySite = array();
+        $siteID = (int) $this->_siteID;
+        if (!isset($rolePagePermissionsBySite[$siteID]))
+        {
+            $rolePagePermissionsBySite[$siteID] = new RolePagePermissions($siteID);
+        }
+        $rolePagePermissions = $rolePagePermissionsBySite[$siteID];
+
+        if (!$rolePagePermissions->isSchemaAvailable())
+        {
+            return $accessLevel;
+        }
+
+        $baseAccessLevel = (int) $this->_realAccessLevel;
+        if ($baseAccessLevel <= 0)
+        {
+            $baseAccessLevel = (int) $this->_accessLevel;
+        }
+
+        $accessCap = $rolePagePermissions->getAccessCapForSecuredObject(
+            $this->_userID,
+            $securedObjectName,
+            $baseAccessLevel
+        );
+
+        if ($accessCap !== null)
+        {
+            $accessLevel = min($accessLevel, (int) $accessCap);
+        }
+
+        return $accessLevel;
+    }
+
+    public function setRoleAccessCap($accessLevel = null)
+    {
+        if ($accessLevel === null || $accessLevel === '')
+        {
+            self::$_requestAccessCap = null;
+            return;
+        }
+
+        self::$_requestAccessCap = (int) $accessLevel;
+    }
+
+    public function clearRoleAccessCap()
+    {
+        self::$_requestAccessCap = null;
     }
 
     // FIXME: Document me!

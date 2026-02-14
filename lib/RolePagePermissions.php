@@ -201,6 +201,66 @@ class RolePagePermissions
         return '';
     }
 
+    public static function mapSecuredObjectToPageKeys($securedObjectName)
+    {
+        $securedObjectName = strtolower(trim((string) $securedObjectName));
+        if ($securedObjectName === '')
+        {
+            return array();
+        }
+
+        if (strpos($securedObjectName, '.') !== false)
+        {
+            $parts = explode('.', $securedObjectName, 2);
+            $prefix = $parts[0];
+        }
+        else
+        {
+            $prefix = $securedObjectName;
+        }
+
+        switch ($prefix)
+        {
+            case 'dashboard':
+            case 'home':
+            case 'activity':
+            case 'candidates':
+            case 'joborders':
+            case 'companies':
+            case 'contacts':
+            case 'sourcing':
+            case 'lists':
+            case 'kpis':
+            case 'reports':
+            case 'calendar':
+                return array($prefix);
+
+            case 'clients':
+                return array('companies');
+
+            case 'pipelines':
+                return array('candidates', 'joborders');
+
+            case 'settings':
+                if ($securedObjectName === 'settings' ||
+                    strpos($securedObjectName, 'settings.myprofile') === 0 ||
+                    strpos($securedObjectName, 'settings.changepassword') === 0 ||
+                    strpos($securedObjectName, 'settings.showuser') === 0 ||
+                    strpos($securedObjectName, 'settings.viewitemhistory') === 0 ||
+                    strpos($securedObjectName, 'settings.setemail') === 0)
+                {
+                    return array('settings');
+                }
+                return array('settings_admin');
+
+            case 'gdpr':
+                return array('gdpr_consents');
+
+            default:
+                return array();
+        }
+    }
+
     public function canAccessRequest($userID, $moduleName, $action, $currentAccessLevel)
     {
         if (!$this->isSchemaAvailable())
@@ -221,6 +281,105 @@ class RolePagePermissions
         }
 
         return $this->isPageAllowedForUser((int) $userID, $pageKey, (int) $currentAccessLevel);
+    }
+
+    public function getRequestAccessCap($userID, $moduleName, $action, $currentAccessLevel)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return null;
+        }
+
+        $pageKey = self::mapRequestToPageKey($moduleName, $action);
+        if ($pageKey === '')
+        {
+            return null;
+        }
+
+        if ($pageKey == 'settings_admin' && (int) $currentAccessLevel >= ACCESS_LEVEL_SA)
+        {
+            // Prevent accidental self-lockout for site admins.
+            return null;
+        }
+
+        $permission = $this->getPagePermissionForUser($userID, $pageKey);
+        if (empty($permission))
+        {
+            return null;
+        }
+
+        if ((int) $permission['isVisible'] !== 1)
+        {
+            return ACCESS_LEVEL_DISABLED;
+        }
+
+        return (int) $permission['requiredAccessLevel'];
+    }
+
+    public function getAccessCapForSecuredObject($userID, $securedObjectName, $currentAccessLevel)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return null;
+        }
+
+        $pageKeys = self::mapSecuredObjectToPageKeys($securedObjectName);
+        if (empty($pageKeys))
+        {
+            return null;
+        }
+
+        $caps = array();
+        foreach ($pageKeys as $pageKey)
+        {
+            if ($pageKey == 'settings_admin' && (int) $currentAccessLevel >= ACCESS_LEVEL_SA)
+            {
+                continue;
+            }
+
+            $permission = $this->getPagePermissionForUser($userID, $pageKey);
+            if (empty($permission))
+            {
+                continue;
+            }
+
+            if ((int) $permission['isVisible'] !== 1)
+            {
+                $caps[] = ACCESS_LEVEL_DISABLED;
+                continue;
+            }
+
+            $caps[] = (int) $permission['requiredAccessLevel'];
+        }
+
+        if (empty($caps))
+        {
+            return null;
+        }
+
+        return min($caps);
+    }
+
+    public function getPagePermissionForUser($userID, $pageKey)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return array();
+        }
+
+        $pageKey = trim((string) $pageKey);
+        if ($pageKey === '')
+        {
+            return array();
+        }
+
+        $role = $this->getRoleForUser((int) $userID);
+        if (empty($role))
+        {
+            return array();
+        }
+
+        return $this->getEffectivePermission($role, $pageKey);
     }
 
     public function isPageAllowedForUser($userID, $pageKey, $currentAccessLevel)

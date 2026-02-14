@@ -51,6 +51,13 @@ class ModuleUtility
     public static function loadModule($moduleName)
     {
         $modules = self::getModules();
+        $roleAccessCap = null;
+
+        if (isset($_SESSION['CATS']) &&
+            method_exists($_SESSION['CATS'], 'clearRoleAccessCap'))
+        {
+            $_SESSION['CATS']->clearRoleAccessCap();
+        }
 
         if (!isset($modules[$moduleName]))
         {
@@ -72,21 +79,42 @@ class ModuleUtility
         {
             $action = isset($_REQUEST['a']) ? $_REQUEST['a'] : '';
             $rolePagePermissions = new RolePagePermissions($_SESSION['CATS']->getSiteID());
-            if ($rolePagePermissions->isSchemaAvailable() &&
-                !$rolePagePermissions->canAccessRequest(
+            if ($rolePagePermissions->isSchemaAvailable())
+            {
+                $currentAccessLevel = (int) $_SESSION['CATS']->getRealAccessLevel();
+                if ($currentAccessLevel <= 0)
+                {
+                    $currentAccessLevel = (int) $_SESSION['CATS']->getAccessLevel('');
+                }
+
+                if (!$rolePagePermissions->canAccessRequest(
                     $_SESSION['CATS']->getUserID(),
                     $moduleName,
                     $action,
-                    $_SESSION['CATS']->getAccessLevel('')
+                    $currentAccessLevel
                 ))
-            {
-                CommonErrors::fatal(
-                    COMMONERROR_PERMISSION,
-                    NULL,
-                    'This page is not available for your assigned role.'
+                {
+                    CommonErrors::fatal(
+                        COMMONERROR_PERMISSION,
+                        NULL,
+                        'This page is not available for your assigned role.'
+                    );
+                    return;
+                }
+
+                $roleAccessCap = $rolePagePermissions->getRequestAccessCap(
+                    $_SESSION['CATS']->getUserID(),
+                    $moduleName,
+                    $action,
+                    $currentAccessLevel
                 );
-                return;
             }
+        }
+
+        if (isset($_SESSION['CATS']) &&
+            method_exists($_SESSION['CATS'], 'setRoleAccessCap'))
+        {
+            $_SESSION['CATS']->setRoleAccessCap($roleAccessCap);
         }
 
         $moduleClass = $modules[$moduleName][0];
