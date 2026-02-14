@@ -1090,7 +1090,7 @@ class TemplateUtility
 
         echo '<nav class="ui2-sidebar" aria-label="Primary">', "\n";
         echo '<div class="ui2-sidebar-logo">', "\n";
-        echo '<a href="', $indexName, '?m=home"><img src="images/applicationLogo.jpg" alt="OpenCATS" /></a>', "\n";
+        echo '<a href="', $indexName, '"><img src="images/applicationLogo.jpg" alt="OpenCATS" /></a>', "\n";
         echo '</div>', "\n";
         $iconMap = array(
             'home' => 'home',

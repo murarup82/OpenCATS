@@ -36,6 +36,7 @@ include_once(LEGACY_ROOT . '/lib/License.php');
 include_once(LEGACY_ROOT . '/lib/Users.php');
 include_once(LEGACY_ROOT . '/lib/DatabaseConnection.php');
 include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
+include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
 
 class LoginUI extends UserInterface
 {
@@ -332,7 +333,7 @@ class LoginUI extends UserInterface
          * all old-style wizards will no longer be shown.
          */
 
-        $wizard = new Wizard(CATSUtility::getIndexName() . '?m=home', './js/wizardIntro.js');
+        $wizard = new Wizard(CATSUtility::getIndexName(), './js/wizardIntro.js');
         if ($_SESSION['CATS']->isFirstTimeSetup())
         {
             $wizard->addPage('Welcome!', './modules/login/wizard/Intro.tpl', '', false, true);
@@ -462,7 +463,9 @@ class LoginUI extends UserInterface
         else
         {
             if (!eval(Hooks::get('LOGGED_IN_HOME_PAGE'))) return;
-            CATSUtility::transferRelativeURI('m=home');
+            CATSUtility::transferURL(
+                CATSUtility::getAbsoluteURI(CATSUtility::getIndexName())
+            );
         }
     }
 
@@ -1308,7 +1311,9 @@ class LoginUI extends UserInterface
             CATSUtility::transferRelativeURI($reloginVars);
         }
 
-        CATSUtility::transferRelativeURI('m=home');
+        CATSUtility::transferURL(
+            CATSUtility::getAbsoluteURI(CATSUtility::getIndexName())
+        );
     }
 
     private function displayLoginMessage($message, $siteName = '')

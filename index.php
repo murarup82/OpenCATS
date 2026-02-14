@@ -303,6 +303,24 @@ else
     else
     {
         /* Everything's good; load the requested module. */
+        if (($_GET['m'] == 'home' || $_GET['m'] == 'dashboard') &&
+            class_exists('RolePagePermissions'))
+        {
+            $rolePagePermissions = new RolePagePermissions($_SESSION['CATS']->getSiteID());
+            if ($rolePagePermissions->isSchemaAvailable() &&
+                !$rolePagePermissions->canAccessRequest(
+                    $_SESSION['CATS']->getUserID(),
+                    $_GET['m'],
+                    (isset($_GET['a']) ? $_GET['a'] : ''),
+                    $_SESSION['CATS']->getAccessLevel('')
+                ))
+            {
+                CATSUtility::transferURL(
+                    CATSUtility::getAbsoluteURI(CATSUtility::getIndexName())
+                );
+            }
+        }
+
         $_SESSION['CATS']->logPageView();
         ModuleUtility::loadModule($_GET['m']);
     }

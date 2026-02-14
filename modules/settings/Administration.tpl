@@ -43,7 +43,7 @@
                                     Configure your website where applicants can apply and post their resumes for your jobs.
                                 </td>
                             </tr>
-                           <tr>
+                            <tr>
                                 <td width="230">
                                     <img src="images/bullet_black.gif" alt="" />
                                     <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=administration&amp;s=siteName">
@@ -52,41 +52,6 @@
                                 </td>
                                 <td>
                                     Change the site details such as site name and institution configuration.
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <img src="images/bullet_black.gif" alt="" />
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=manageUsers">
-                                        User Management
-                                    </a>
-                                </td>
-                                <td>
-                                    Add, edit and delete users for your site.
-                                </td>
-                            </tr>
-                            <?php if ($this->rolePermissionsEnabled): ?>
-                            <tr>
-                                <td>
-                                    <img src="images/bullet_black.gif" alt="" />
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=rolePagePermissions">
-                                        Role Access Matrix
-                                    </a>
-                                </td>
-                                <td>
-                                    Configure page visibility and minimum access level by role.
-                                </td>
-                            </tr>
-                            <?php endif; ?>
-                            <tr>
-                                <td>
-                                    <img src="images/bullet_black.gif" alt="" />
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=loginActivity">
-                                        Login Activity
-                                    </a>
-                                </td>
-                                <td>
-                                    Shows you the login history for your site.
                                 </td>
                             </tr>
                             <tr>
@@ -225,6 +190,47 @@
                                 </td>
                                 <td>
                                     Configure API credentials for CV transformations.
+                                </td>
+                            </tr>
+                        </table>
+                        <br />
+
+                        <p class="noteUnsized">User Management</p>
+
+                        <table class="searchTable" width="100%">
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=manageUsers">
+                                        User Management
+                                    </a>
+                                </td>
+                                <td>
+                                    Add, edit and delete users for your site.
+                                </td>
+                            </tr>
+                            <?php if ($this->rolePermissionsEnabled): ?>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=rolePagePermissions">
+                                        Role Access Matrix
+                                    </a>
+                                </td>
+                                <td>
+                                    Configure page visibility and minimum access level by role.
+                                </td>
+                            </tr>
+                            <?php endif; ?>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=loginActivity">
+                                        Login Activity
+                                    </a>
+                                </td>
+                                <td>
+                                    Shows you the login history for your site.
                                 </td>
                             </tr>
                             <tr>
