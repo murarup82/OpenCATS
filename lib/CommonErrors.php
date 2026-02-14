@@ -69,6 +69,7 @@ class CommonErrors
     {
         $template = new Template();
         $internalErrorTitle = '';
+        $errorReference = self::buildErrorReference();
         switch ($code)
         {
             case COMMONERROR_RESTRICTEDEXTENSION:
@@ -237,19 +238,26 @@ class CommonErrors
 
         //self::sendEmail($internalErrorTitle, $customMessage);
 
+        $userID = -1;
+        $siteID = -1;
+        $accessLevel = 0;
+        $isDemo = true;
+        $canViewTechnicalDetails = false;
+
         if (isset($_SESSION['CATS']) && !empty($_SESSION['CATS']))
         {
             /* Get the current user's user ID. */
-            $userID = $_SESSION['CATS']->getUserID();
+            $userID = (int) $_SESSION['CATS']->getUserID();
 
             /* Get the current user's site ID. */
-            $siteID = $_SESSION['CATS']->getSiteID();
+            $siteID = (int) $_SESSION['CATS']->getSiteID();
 
             /* Get the current user's access level. */
-            $accessLevel = $_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT);
+            $accessLevel = (int) $_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT);
 
             /* Is it a demo */
             $isDemo = $_SESSION['CATS']->isDemo();
+            $canViewTechnicalDetails = ($accessLevel >= ACCESS_LEVEL_SA);
 
             // Save log if a session is present and it's not a demo, and exceptions are logged
             if (!$isDemo && self::isExceptionLoggingEnabled())
@@ -269,6 +277,24 @@ class CommonErrors
             $template->assign('siteID', -1);
             $template->assign('userID', -1);
             $template->assign('accessLevel', 0);
+        }
+
+        self::writeDiagnosticLog(
+            $errorReference,
+            $code,
+            $internalErrorTitle,
+            $customMessage,
+            $siteID,
+            $userID,
+            $accessLevel
+        );
+
+        $errorMessage .= '<p><b>Reference:</b> ' . htmlspecialchars($errorReference) . '</p>';
+        if ($canViewTechnicalDetails && trim((string) $customMessage) !== '')
+        {
+            $errorMessage .= '<p><b>Technical details:</b> '
+                . nl2br(htmlspecialchars(trim((string) $customMessage), ENT_QUOTES, 'UTF-8'))
+                . '</p>';
         }
 
         $template->assign('active', $active);
@@ -317,6 +343,48 @@ class CommonErrors
     private static function sendEmail($subject, $body)
     {
         if (!eval(Hooks::get('EXCEPTION_NOTIFY_DEV'))) return;
+    }
+
+    private static function buildErrorReference()
+    {
+        return date('Ymd-His') . '-' . substr(md5(uniqid('', true)), 0, 8);
+    }
+
+    private static function writeDiagnosticLog(
+        $errorReference,
+        $code,
+        $internalErrorTitle,
+        $customMessage,
+        $siteID,
+        $userID,
+        $accessLevel
+    )
+    {
+        $payload = array(
+            'ref' => $errorReference,
+            'code' => (int) $code,
+            'title' => (string) $internalErrorTitle,
+            'message' => substr((string) $customMessage, 0, 4000),
+            'siteID' => (int) $siteID,
+            'userID' => (int) $userID,
+            'accessLevel' => (int) $accessLevel,
+            'script' => isset($_SERVER['SCRIPT_NAME']) ? (string) $_SERVER['SCRIPT_NAME'] : '',
+            'request' => isset($_SERVER['QUERY_STRING']) ? (string) $_SERVER['QUERY_STRING'] : '',
+            'method' => isset($_SERVER['REQUEST_METHOD']) ? (string) $_SERVER['REQUEST_METHOD'] : '',
+            'remoteIP' => isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '',
+            'time' => date('c')
+        );
+
+        $encoded = json_encode($payload);
+        if ($encoded === false)
+        {
+            $encoded = '{"ref":"' . addslashes((string) $errorReference) . '","error":"json_encode_failed"}';
+        }
+
+        error_log('CommonErrors | ' . $encoded);
+
+        $logFile = LEGACY_ROOT . '/temp/common-errors.log';
+        @file_put_contents($logFile, '[' . date('Y-m-d H:i:s') . '] CommonErrors | ' . $encoded . PHP_EOL, FILE_APPEND);
     }
 };
 
