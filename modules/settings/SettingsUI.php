@@ -3278,13 +3278,16 @@ class SettingsUI extends UserInterface
                 CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to acquire migration lock.');
             }
 
-            $insert = $db->query(sprintf(
+            $insertSQL = sprintf(
                 "INSERT INTO schema_migrations (version, checksum, applied_at, applied_by)
                  VALUES (%s, %s, NOW(), %s)",
                 $db->makeQueryString($migration['version']),
                 $db->makeQueryString($migration['checksum']),
                 $db->makeQueryString('admin-ui')
-            ), true);
+            );
+            $insert = $db->query($insertSQL, true);
+            $insertError = ($insert === false) ? $db->getError() : '';
+            $dbState = ($insert === false) ? $this->getMigrationDBState($db) : array();
 
             $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
 
@@ -3292,12 +3295,21 @@ class SettingsUI extends UserInterface
             {
                 $this->logMigrationEvent('mark_applied_insert_failed', array(
                     'version' => $version,
-                    'dbError' => $db->getError()
+                    'dbError' => $insertError,
+                    'dbState' => $dbState,
+                    'insertSQL' => substr(preg_replace('/\s+/', ' ', $insertSQL), 0, 240)
                 ));
                 CommonErrors::fatal(
                     COMMONERROR_RECORDERROR,
                     $this,
-                    $this->buildMigrationFailureDetails('mark_applied_insert_failed', $migration, $db)
+                    $this->buildMigrationFailureDetails(
+                        'mark_applied_insert_failed',
+                        $migration,
+                        $db,
+                        $insertError,
+                        $insertSQL,
+                        $dbState
+                    )
                 );
             }
             $this->logMigrationEvent('mark_applied_completed', array('version' => $version));
@@ -3422,25 +3434,37 @@ class SettingsUI extends UserInterface
                 ));
             }
 
-            $insert = $db->query(sprintf(
+            $insertSQL = sprintf(
                 "INSERT INTO schema_migrations (version, checksum, applied_at, applied_by)
                  VALUES (%s, %s, NOW(), %s)",
                 $db->makeQueryString($migration['version']),
                 $db->makeQueryString($migration['checksum']),
                 $db->makeQueryString('admin-ui')
-            ), true);
+            );
+            $insert = $db->query($insertSQL, true);
+            $insertError = ($insert === false) ? $db->getError() : '';
+            $dbState = ($insert === false) ? $this->getMigrationDBState($db) : array();
 
             if ($insert === false)
             {
                 $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
                 $this->logMigrationEvent('apply_migration_record_failed', array(
                     'version' => $migration['version'],
-                    'dbError' => $db->getError()
+                    'dbError' => $insertError,
+                    'dbState' => $dbState,
+                    'insertSQL' => substr(preg_replace('/\s+/', ' ', $insertSQL), 0, 240)
                 ));
                 CommonErrors::fatal(
                     COMMONERROR_RECORDERROR,
                     $this,
-                    $this->buildMigrationFailureDetails('apply_migration_record_failed', $migration, $db)
+                    $this->buildMigrationFailureDetails(
+                        'apply_migration_record_failed',
+                        $migration,
+                        $db,
+                        $insertError,
+                        $insertSQL,
+                        $dbState
+                    )
                 );
             }
 
@@ -3718,9 +3742,19 @@ class SettingsUI extends UserInterface
         return true;
     }
 
-    private function buildMigrationFailureDetails($stage, $migration, $db)
+    private function buildMigrationFailureDetails(
+        $stage,
+        $migration,
+        $db,
+        $dbError = '',
+        $failedSQL = '',
+        $dbState = array()
+    )
     {
-        $dbError = $db->getError();
+        if ($dbError === '')
+        {
+            $dbError = $db->getError();
+        }
         $details = array(
             'stage=' . $stage,
             'version=' . (isset($migration['version']) ? $migration['version'] : ''),
@@ -3736,7 +3770,39 @@ class SettingsUI extends UserInterface
             $details[] = 'hint=MySQL returned no SQL error; query may be blocked before execution (read-only/slave mode or DB query filter), or DB handle is stale.';
         }
 
+        if ($failedSQL !== '')
+        {
+            $details[] = 'failedSQL=' . substr(preg_replace('/\s+/', ' ', $failedSQL), 0, 300);
+        }
+
+        if (is_array($dbState) && !empty($dbState))
+        {
+            $details[] = 'dbState=' . json_encode($dbState);
+        }
+
         return 'Failed to record migration. ' . implode(' | ', $details);
+    }
+
+    private function getMigrationDBState($db)
+    {
+        $state = array();
+
+        $conn = $db->getConnection();
+        if (!is_object($conn))
+        {
+            $state['connection'] = 'missing';
+            return $state;
+        }
+
+        $state['connection'] = 'ok';
+        $state['ping'] = @mysqli_ping($conn) ? 1 : 0;
+        $state['errno'] = (int) @mysqli_errno($conn);
+        $state['error'] = (string) @mysqli_error($conn);
+        $state['sqlState'] = (string) @mysqli_sqlstate($conn);
+        $state['threadID'] = (int) @mysqli_thread_id($conn);
+        $state['serverInfo'] = (string) @mysqli_get_server_info($conn);
+
+        return $state;
     }
 
     private function logMigrationEvent($event, $context = array())
