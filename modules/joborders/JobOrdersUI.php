@@ -49,6 +49,8 @@ include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/CommonErrors.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderTypes.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
+include_once(LEGACY_ROOT . '/lib/UserRoles.php');
+include_once(LEGACY_ROOT . '/lib/Users.php');
 
 
 class JobOrdersUI extends UserInterface
@@ -88,6 +90,15 @@ class JobOrdersUI extends UserInterface
             'Add Job Order' => 'javascript:void(0);*js=showPopWin(\''.CATSUtility::getIndexName().'?m=joborders&amp;a=addJobOrderPopup\', 400, 250, null);*al=' . ACCESS_LEVEL_EDIT . '@joborders.add',
             'Search Job Orders' => CATSUtility::getIndexName() . '?m=joborders&amp;a=search'
         );
+
+        if (isset($_SESSION['CATS']) &&
+            is_object($_SESSION['CATS']) &&
+            method_exists($_SESSION['CATS'], 'isLoggedIn') &&
+            $_SESSION['CATS']->isLoggedIn() &&
+            $this->canManageRecruiterAllocation())
+        {
+            $this->_subTabs['Recruiter Allocation'] = CATSUtility::getIndexName() . '?m=joborders&amp;a=recruiterAllocation';
+        }
     }
 
 
@@ -330,6 +341,22 @@ class JobOrdersUI extends UserInterface
                 $this->administrativeHideShow();
                 break;
 
+            case 'recruiterAllocation':
+                if (!$this->canManageRecruiterAllocation())
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+
+                if ($this->isPostBack())
+                {
+                    $this->onRecruiterAllocation();
+                }
+                else
+                {
+                    $this->recruiterAllocation();
+                }
+                break;
+
             /* Main job orders page. */
             case 'listByView':
             default:
@@ -369,6 +396,7 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('userID', $_SESSION['CATS']->getUserID());
         $this->_template->assign('errMessage', $errMessage);
         $this->_template->assign('jobOrderFilters', $jobOrderFilters);
+        $this->_template->assign('canManageRecruiterAllocation', $this->canManageRecruiterAllocation());
 
         if (!eval(Hooks::get('JO_LIST_BY_VIEW'))) return;
 
@@ -2590,6 +2618,292 @@ class JobOrdersUI extends UserInterface
         $joborders->administrativeHideShow($jobOrderID, $state);
 
         CATSUtility::transferRelativeURI('m=joborders&a=show&jobOrderID='.$jobOrderID);
+    }
+
+    private function canManageRecruiterAllocation()
+    {
+        if (!isset($_SESSION['CATS']) ||
+            !is_object($_SESSION['CATS']) ||
+            !method_exists($_SESSION['CATS'], 'isLoggedIn') ||
+            !$_SESSION['CATS']->isLoggedIn())
+        {
+            return false;
+        }
+
+        $baseAccessLevel = 0;
+        if (method_exists($_SESSION['CATS'], 'getBaseAccessLevel'))
+        {
+            $baseAccessLevel = (int) $_SESSION['CATS']->getBaseAccessLevel();
+        }
+        else
+        {
+            $baseAccessLevel = (int) $_SESSION['CATS']->getRealAccessLevel();
+        }
+
+        if ($baseAccessLevel >= ACCESS_LEVEL_SA)
+        {
+            return true;
+        }
+
+        $userRoles = new UserRoles($this->_siteID);
+        if ($userRoles->isSchemaAvailable())
+        {
+            $role = $userRoles->getForUser($this->_userID);
+            if (!empty($role) && isset($role['roleKey']) && $role['roleKey'] === 'hr_manager')
+            {
+                return true;
+            }
+        }
+
+        return ($baseAccessLevel >= ACCESS_LEVEL_DELETE);
+    }
+
+    private function getRecruiterAllocationUsers()
+    {
+        $db = DatabaseConnection::getInstance();
+        $userRoles = new UserRoles($this->_siteID);
+
+        if ($userRoles->isSchemaAvailable())
+        {
+            $sql = sprintf(
+                "SELECT
+                    user.user_id AS userID,
+                    user.first_name AS firstName,
+                    user.last_name AS lastName,
+                    user.user_name AS username,
+                    user.access_level AS accessLevel,
+                    user_role.role_key AS roleKey,
+                    user_role.role_name AS roleName
+                FROM
+                    user
+                LEFT JOIN user_role
+                    ON user_role.user_role_id = user.role_id
+                   AND user_role.site_id = user.site_id
+                WHERE
+                    user.site_id = %s
+                AND
+                    user.access_level > %s
+                AND
+                    user.user_name <> 'cats@rootadmin'
+                AND
+                    (
+                        user_role.role_key IN ('hr_recruiter', 'hr_manager', 'site_admin')
+                        OR
+                        (
+                            user_role.user_role_id IS NULL
+                            AND user.access_level >= %s
+                        )
+                    )
+                ORDER BY
+                    user.last_name ASC,
+                    user.first_name ASC",
+                $db->makeQueryInteger($this->_siteID),
+                $db->makeQueryInteger(ACCESS_LEVEL_DISABLED),
+                $db->makeQueryInteger(ACCESS_LEVEL_EDIT)
+            );
+        }
+        else
+        {
+            $sql = sprintf(
+                "SELECT
+                    user.user_id AS userID,
+                    user.first_name AS firstName,
+                    user.last_name AS lastName,
+                    user.user_name AS username,
+                    user.access_level AS accessLevel,
+                    '' AS roleKey,
+                    '' AS roleName
+                FROM
+                    user
+                WHERE
+                    user.site_id = %s
+                AND
+                    user.access_level >= %s
+                AND
+                    user.user_name <> 'cats@rootadmin'
+                ORDER BY
+                    user.last_name ASC,
+                    user.first_name ASC",
+                $db->makeQueryInteger($this->_siteID),
+                $db->makeQueryInteger(ACCESS_LEVEL_EDIT)
+            );
+        }
+
+        $rows = $db->getAllAssoc($sql);
+        foreach ($rows as $index => $row)
+        {
+            $fullName = trim($row['firstName'] . ' ' . $row['lastName']);
+            if ($fullName === '')
+            {
+                $fullName = $row['username'];
+            }
+            $rows[$index]['fullName'] = $fullName;
+        }
+
+        return $rows;
+    }
+
+    private function recruiterAllocation($noticeMessage = '', $errorMessage = '')
+    {
+        $scope = strtolower(trim($this->getTrimmedInput('scope', $_REQUEST)));
+        if (!in_array($scope, array('all', 'mine', 'unassigned'), true))
+        {
+            $scope = 'all';
+        }
+
+        $search = trim($this->getTrimmedInput('search', $_REQUEST));
+        $ownerUserID = (int) $this->getTrimmedInput('ownerUserID', $_REQUEST);
+        $recruiterUserIDRaw = $this->getTrimmedInput('recruiterUserID', $_REQUEST);
+        if ($recruiterUserIDRaw === '')
+        {
+            $recruiterUserID = -2;
+        }
+        else
+        {
+            $recruiterUserID = (int) $recruiterUserIDRaw;
+        }
+
+        $page = (int) $this->getTrimmedInput('page', $_REQUEST);
+        if ($page <= 0)
+        {
+            $page = 1;
+        }
+
+        $perPage = 50;
+        $jobOrders = new JobOrders($this->_siteID);
+        $totalRows = $jobOrders->getRecruiterAllocationCount(
+            $scope,
+            $search,
+            $ownerUserID,
+            $recruiterUserID,
+            $this->_userID
+        );
+
+        $totalPages = 1;
+        if ($totalRows > 0)
+        {
+            $totalPages = (int) ceil($totalRows / $perPage);
+        }
+        if ($page > $totalPages)
+        {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $perPage;
+        $rows = $jobOrders->getRecruiterAllocationRows(
+            $scope,
+            $search,
+            $ownerUserID,
+            $recruiterUserID,
+            $this->_userID,
+            $perPage,
+            $offset
+        );
+
+        $users = new Users($this->_siteID);
+        $ownerOptions = $users->getSelectList();
+        $recruiterOptions = $this->getRecruiterAllocationUsers();
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('scope', $scope);
+        $this->_template->assign('search', $search);
+        $this->_template->assign('ownerUserID', $ownerUserID);
+        $this->_template->assign('recruiterUserID', $recruiterUserID);
+        $this->_template->assign('page', $page);
+        $this->_template->assign('totalPages', $totalPages);
+        $this->_template->assign('totalRows', $totalRows);
+        $this->_template->assign('rows', $rows);
+        $this->_template->assign('ownerOptions', $ownerOptions);
+        $this->_template->assign('recruiterOptions', $recruiterOptions);
+        $this->_template->assign('noticeMessage', $noticeMessage);
+        $this->_template->assign('errorMessage', $errorMessage);
+
+        $this->_template->display('./modules/joborders/RecruiterAllocation.tpl');
+    }
+
+    private function onRecruiterAllocation()
+    {
+        $assignments = array();
+        if (isset($_POST['recruiterAssignment']) && is_array($_POST['recruiterAssignment']))
+        {
+            $assignments = $_POST['recruiterAssignment'];
+        }
+
+        $currentAssignments = array();
+        if (isset($_POST['currentRecruiterAssignment']) && is_array($_POST['currentRecruiterAssignment']))
+        {
+            $currentAssignments = $_POST['currentRecruiterAssignment'];
+        }
+
+        $allowedRecruiters = array(0 => true);
+        foreach ($this->getRecruiterAllocationUsers() as $user)
+        {
+            $allowedRecruiters[(int) $user['userID']] = true;
+        }
+
+        $jobOrders = new JobOrders($this->_siteID);
+        $updatedCount = 0;
+        $errorCount = 0;
+
+        foreach ($assignments as $jobOrderID => $newRecruiterUserID)
+        {
+            $jobOrderID = (int) $jobOrderID;
+            if ($jobOrderID <= 0)
+            {
+                continue;
+            }
+
+            $newRecruiterUserID = (int) $newRecruiterUserID;
+            if ($newRecruiterUserID < 0)
+            {
+                $newRecruiterUserID = 0;
+            }
+
+            $currentRecruiterUserID = -1;
+            if (isset($currentAssignments[$jobOrderID]))
+            {
+                $currentRecruiterUserID = (int) $currentAssignments[$jobOrderID];
+            }
+            if ($currentRecruiterUserID === $newRecruiterUserID)
+            {
+                continue;
+            }
+
+            if (!isset($allowedRecruiters[$newRecruiterUserID]))
+            {
+                $errorCount++;
+                continue;
+            }
+
+            if ($jobOrders->updateRecruiterAssignment($jobOrderID, $newRecruiterUserID))
+            {
+                $updatedCount++;
+            }
+            else
+            {
+                $errorCount++;
+            }
+        }
+
+        if ($updatedCount <= 0 && $errorCount <= 0)
+        {
+            $noticeMessage = 'No assignment changes detected.';
+            $errorMessage = '';
+        }
+        else
+        {
+            $noticeMessage = sprintf('Updated %d job assignment(s).', $updatedCount);
+            if ($errorCount > 0)
+            {
+                $errorMessage = sprintf('%d update(s) failed. Check permissions and selected users.', $errorCount);
+            }
+            else
+            {
+                $errorMessage = '';
+            }
+        }
+
+        $this->recruiterAllocation($noticeMessage, $errorMessage);
     }
 
     /**

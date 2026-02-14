@@ -40,6 +40,9 @@
                         <?php if ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT): ?>
                             <a class="ui2-button ui2-button--primary" href="javascript:void(0);" onclick="showPopWin('<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=addJobOrderPopup', 400, 250, null); return false;">Add Job Order</a>
                         <?php endif; ?>
+                        <?php if (!empty($this->canManageRecruiterAllocation)): ?>
+                            <a class="ui2-button ui2-button--secondary" href="<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=recruiterAllocation">Recruiter Allocation</a>
+                        <?php endif; ?>
                         <?php $this->dataGrid->drawShowFilterControl(); ?>
                         <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
                     </div>

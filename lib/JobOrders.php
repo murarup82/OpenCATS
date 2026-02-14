@@ -758,6 +758,256 @@ class JobOrders
     }
 
     /**
+     * Returns number of job orders matching recruiter allocation filters.
+     *
+     * @param string scope all|mine|unassigned
+     * @param string search search text
+     * @param integer owner user filter (0 for any)
+     * @param integer recruiter user filter (-2 for any, -1 for unassigned)
+     * @param integer current user ID for scope=mine
+     * @return integer
+     */
+    public function getRecruiterAllocationCount($scope, $search, $ownerUserID, $recruiterUserID, $currentUserID)
+    {
+        $whereSQL = $this->buildRecruiterAllocationWhereSQL(
+            $scope,
+            $search,
+            $ownerUserID,
+            $recruiterUserID,
+            $currentUserID
+        );
+
+        $sql = sprintf(
+            "SELECT
+                COUNT(*) AS totalRows
+            FROM
+                joborder
+            LEFT JOIN company
+                ON company.company_id = joborder.company_id
+            WHERE
+                joborder.site_id = %s
+                %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $whereSQL
+        );
+
+        $row = $this->_db->getAssoc($sql);
+        if (empty($row))
+        {
+            return 0;
+        }
+
+        return (int) $row['totalRows'];
+    }
+
+    /**
+     * Returns filtered job orders for recruiter allocation management.
+     *
+     * @param string scope all|mine|unassigned
+     * @param string search search text
+     * @param integer owner user filter (0 for any)
+     * @param integer recruiter user filter (-2 for any, -1 for unassigned)
+     * @param integer current user ID for scope=mine
+     * @param integer limit max rows
+     * @param integer offset row offset
+     * @return array
+     */
+    public function getRecruiterAllocationRows($scope, $search, $ownerUserID, $recruiterUserID, $currentUserID, $limit, $offset)
+    {
+        $whereSQL = $this->buildRecruiterAllocationWhereSQL(
+            $scope,
+            $search,
+            $ownerUserID,
+            $recruiterUserID,
+            $currentUserID
+        );
+
+        $sql = sprintf(
+            "SELECT
+                joborder.joborder_id AS jobOrderID,
+                joborder.client_job_id AS companyJobID,
+                joborder.title AS title,
+                joborder.status AS status,
+                joborder.owner AS ownerUserID,
+                joborder.recruiter AS recruiterUserID,
+                company.name AS companyName,
+                CONCAT(owner_user.first_name, ' ', owner_user.last_name) AS ownerFullName,
+                CONCAT(recruiter_user.first_name, ' ', recruiter_user.last_name) AS recruiterFullName,
+                DATE_FORMAT(joborder.date_modified, '%%m-%%d-%%y') AS dateModified
+            FROM
+                joborder
+            LEFT JOIN company
+                ON company.company_id = joborder.company_id
+            LEFT JOIN user AS owner_user
+                ON owner_user.user_id = joborder.owner
+            LEFT JOIN user AS recruiter_user
+                ON recruiter_user.user_id = joborder.recruiter
+            WHERE
+                joborder.site_id = %s
+                %s
+            ORDER BY
+                joborder.date_modified DESC,
+                joborder.joborder_id DESC
+            LIMIT %s, %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $whereSQL,
+            $this->_db->makeQueryInteger($offset),
+            $this->_db->makeQueryInteger($limit)
+        );
+
+        return $this->_db->getAllAssoc($sql);
+    }
+
+    /**
+     * Updates recruiter assignment for one job order.
+     *
+     * @param integer job order ID
+     * @param integer recruiter user ID (0 for unassigned)
+     * @return boolean
+     */
+    public function updateRecruiterAssignment($jobOrderID, $recruiterUserID)
+    {
+        $jobOrderID = (int) $jobOrderID;
+        $recruiterUserID = (int) $recruiterUserID;
+
+        if ($jobOrderID <= 0)
+        {
+            return false;
+        }
+
+        $preHistory = $this->get($jobOrderID);
+        if (empty($preHistory))
+        {
+            return false;
+        }
+
+        $currentRecruiterUserID = (int) $preHistory['recruiter'];
+        if ($recruiterUserID < 0)
+        {
+            $recruiterUserID = 0;
+        }
+
+        if ($currentRecruiterUserID === $recruiterUserID)
+        {
+            return true;
+        }
+
+        $recruiterSQL = ($recruiterUserID > 0)
+            ? $this->_db->makeQueryInteger($recruiterUserID)
+            : 'NULL';
+
+        $sql = sprintf(
+            "UPDATE
+                joborder
+            SET
+                recruiter = %s,
+                date_modified = NOW()
+            WHERE
+                joborder_id = %s
+            AND
+                site_id = %s",
+            $recruiterSQL,
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_db->makeQueryInteger($this->_siteID)
+        );
+
+        if (!$this->_db->query($sql))
+        {
+            return false;
+        }
+
+        $postHistory = $this->get($jobOrderID);
+
+        $beforeRecruiter = trim((string) $preHistory['recruiterFullName']);
+        if ($beforeRecruiter === '')
+        {
+            $beforeRecruiter = '(Unassigned)';
+        }
+
+        $afterRecruiter = trim((string) $postHistory['recruiterFullName']);
+        if ($afterRecruiter === '')
+        {
+            $afterRecruiter = '(Unassigned)';
+        }
+
+        $history = new History($this->_siteID);
+        $history->storeHistoryData(
+            DATA_ITEM_JOBORDER,
+            $jobOrderID,
+            'Recruiter',
+            $beforeRecruiter,
+            $afterRecruiter,
+            '(USER) updated recruiter assignment.'
+        );
+
+        return true;
+    }
+
+    private function buildRecruiterAllocationWhereSQL($scope, $search, $ownerUserID, $recruiterUserID, $currentUserID)
+    {
+        $scope = strtolower(trim((string) $scope));
+        $search = trim((string) $search);
+        $ownerUserID = (int) $ownerUserID;
+        $recruiterUserID = (int) $recruiterUserID;
+        $currentUserID = (int) $currentUserID;
+
+        $criteriaSQL = " AND (joborder.is_admin_hidden = 0 OR joborder.is_admin_hidden IS NULL)";
+
+        if ($scope === 'mine' && $currentUserID > 0)
+        {
+            $criteriaSQL .= sprintf(
+                " AND (joborder.owner = %s OR joborder.recruiter = %s)",
+                $this->_db->makeQueryInteger($currentUserID),
+                $this->_db->makeQueryInteger($currentUserID)
+            );
+        }
+        else if ($scope === 'unassigned')
+        {
+            $criteriaSQL .= " AND (joborder.recruiter IS NULL OR joborder.recruiter = 0)";
+        }
+
+        if ($ownerUserID > 0)
+        {
+            $criteriaSQL .= sprintf(
+                " AND joborder.owner = %s",
+                $this->_db->makeQueryInteger($ownerUserID)
+            );
+        }
+
+        if ($recruiterUserID === -1)
+        {
+            $criteriaSQL .= " AND (joborder.recruiter IS NULL OR joborder.recruiter = 0)";
+        }
+        else if ($recruiterUserID > 0)
+        {
+            $criteriaSQL .= sprintf(
+                " AND joborder.recruiter = %s",
+                $this->_db->makeQueryInteger($recruiterUserID)
+            );
+        }
+
+        if ($search !== '')
+        {
+            $search = substr($search, 0, 128);
+            $search = str_replace(array('\\', '%', '_'), array('\\\\', '\\%', '\\_'), $search);
+            $likeTerm = '%' . $search . '%';
+
+            $criteriaSQL .= sprintf(
+                " AND (
+                    joborder.title LIKE %s ESCAPE '\\\\'
+                    OR company.name LIKE %s ESCAPE '\\\\'
+                    OR joborder.client_job_id LIKE %s ESCAPE '\\\\'
+                )",
+                $this->_db->makeQueryString($likeTerm),
+                $this->_db->makeQueryString($likeTerm),
+                $this->_db->makeQueryString($likeTerm)
+            );
+        }
+
+        return $criteriaSQL;
+    }
+
+    /**
      * Updates a job order's modified timestamp.
      *
      * @param integer job order ID
