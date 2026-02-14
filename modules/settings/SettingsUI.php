@@ -1282,11 +1282,14 @@ class SettingsUI extends UserInterface
                 $selectedUserRole = $userRoles->getByID($roleID);
                 if (empty($selectedUserRole))
                 {
-                    CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'Invalid user role selected.');
+                    $selectedUserRole = array();
                 }
-                $accessLevel = (int) $selectedUserRole['accessLevel'];
+                else
+                {
+                    $accessLevel = (int) $selectedUserRole['accessLevel'];
+                }
             }
-            else
+            if (empty($selectedUserRole))
             {
                 $selectedUserRole = $userRoles->getDefaultRoleByAccessLevel($accessLevel);
                 if (!empty($selectedUserRole))
@@ -1294,10 +1297,6 @@ class SettingsUI extends UserInterface
                     $accessLevel = (int) $selectedUserRole['accessLevel'];
                 }
             }
-        }
-        if ($userRoles->isSchemaAvailable() && empty($selectedUserRole))
-        {
-            CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'No application roles are configured for this site.');
         }
 
         $license = $users->getLicenseData();
@@ -1348,10 +1347,9 @@ class SettingsUI extends UserInterface
 
         if ($userID > 0 &&
             $userRoles->isSchemaAvailable() &&
-            !empty($selectedUserRole) &&
-            !$userRoles->setForUser($userID, (int) $selectedUserRole['roleID']))
+            !empty($selectedUserRole))
         {
-            CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to assign role to user.');
+            $userRoles->setForUser($userID, (int) $selectedUserRole['roleID']);
         }
 
         /* Check role (category) to make sure that the role is allowed to be set. */
@@ -1557,9 +1555,12 @@ class SettingsUI extends UserInterface
             $selectedUserRole = $userRoles->getByID($roleID);
             if (empty($selectedUserRole))
             {
-                CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'Invalid user role selected.');
+                $selectedUserRole = array();
             }
-            $accessLevel = (int) $selectedUserRole['accessLevel'];
+            else
+            {
+                $accessLevel = (int) $selectedUserRole['accessLevel'];
+            }
         }
 
         /* Don't allow access level changes to the currently logged-in user's
@@ -1632,10 +1633,9 @@ class SettingsUI extends UserInterface
 
         if ($userRoles->isSchemaAvailable() &&
             !empty($selectedUserRole) &&
-            $userID != $this->_userID &&
-            !$userRoles->setForUser($userID, (int) $selectedUserRole['roleID']))
+            $userID != $this->_userID)
         {
-            CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to update user role.');
+            $userRoles->setForUser($userID, (int) $selectedUserRole['roleID']);
         }
 
         CATSUtility::transferRelativeURI(
@@ -3208,6 +3208,11 @@ class SettingsUI extends UserInterface
         $version = $this->getTrimmedInput('version', $_POST);
         $applyAll = (isset($_POST['applyAll']) && $_POST['applyAll'] !== '');
         $markApplied = (isset($_POST['markApplied']) && $_POST['markApplied'] !== '');
+        $this->logMigrationEvent('request_received', array(
+            'version' => $version,
+            'applyAll' => $applyAll ? 1 : 0,
+            'markApplied' => $markApplied ? 1 : 0
+        ));
 
         $indexByVersion = array();
         $dirMissing = false;
@@ -3215,6 +3220,7 @@ class SettingsUI extends UserInterface
 
         if ($dirMissing)
         {
+            $this->logMigrationEvent('migrations_directory_missing');
             CommonErrors::fatal(COMMONERROR_FILEERROR, $this, 'Migrations directory not found.');
         }
 
@@ -3225,20 +3231,30 @@ class SettingsUI extends UserInterface
         {
             if ($version === '' || !isset($indexByVersion[$version]))
             {
+                $this->logMigrationEvent('mark_applied_invalid_version', array('version' => $version));
                 CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'Invalid migration selection.');
             }
 
             $migration = $indexByVersion[$version];
             if ($migration['applied'])
             {
+                $this->logMigrationEvent('mark_applied_already_applied', array('version' => $version));
                 CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('Migration already applied.'));
             }
 
             $verificationMessage = '';
             if (!$this->verifySchemaMigrationPrereq($version, $db, $verificationMessage))
             {
+                $this->logMigrationEvent('mark_applied_verification_failed', array(
+                    'version' => $version,
+                    'details' => $verificationMessage
+                ));
                 CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, $verificationMessage);
             }
+            $this->logMigrationEvent('mark_applied_verification_ok', array(
+                'version' => $version,
+                'details' => $verificationMessage
+            ));
 
             $lockRS = $db->getAssoc(sprintf(
                 "SELECT GET_LOCK(%s, %s) AS gotLock",
@@ -3248,6 +3264,7 @@ class SettingsUI extends UserInterface
 
             if (empty($lockRS) || (int) $lockRS['gotLock'] !== 1)
             {
+                $this->logMigrationEvent('mark_applied_lock_failed', array('version' => $version));
                 CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to acquire migration lock.');
             }
 
@@ -3263,8 +3280,13 @@ class SettingsUI extends UserInterface
 
             if ($insert === false)
             {
+                $this->logMigrationEvent('mark_applied_insert_failed', array(
+                    'version' => $version,
+                    'dbError' => $db->getError()
+                ));
                 CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to record migration: ' . $db->getError());
             }
+            $this->logMigrationEvent('mark_applied_completed', array('version' => $version));
 
             $message = 'Migration marked as applied.';
             if ($verificationMessage !== '')
@@ -3286,6 +3308,7 @@ class SettingsUI extends UserInterface
             }
             if (empty($toApply))
             {
+                $this->logMigrationEvent('apply_all_no_pending');
                 CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('No pending migrations.'));
             }
         }
@@ -3293,15 +3316,18 @@ class SettingsUI extends UserInterface
         {
             if ($version === '' || !isset($indexByVersion[$version]))
             {
+                $this->logMigrationEvent('apply_single_invalid_version', array('version' => $version));
                 CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'Invalid migration selection.');
             }
             $migration = $indexByVersion[$version];
             if ($migration['applied'])
             {
+                $this->logMigrationEvent('apply_single_already_applied', array('version' => $version));
                 CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode('Migration already applied.'));
             }
             $toApply[] = $migration;
         }
+        $this->logMigrationEvent('apply_migrations_selected', array('count' => count($toApply)));
 
         $lockRS = $db->getAssoc(sprintf(
             "SELECT GET_LOCK(%s, %s) AS gotLock",
@@ -3311,22 +3337,30 @@ class SettingsUI extends UserInterface
 
         if (empty($lockRS) || (int) $lockRS['gotLock'] !== 1)
         {
+            $this->logMigrationEvent('apply_lock_failed');
             CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to acquire migration lock.');
         }
+        $this->logMigrationEvent('apply_lock_acquired');
 
         $appliedCount = 0;
         $verificationLogs = array();
         foreach ($toApply as $migration)
         {
+            $this->logMigrationEvent('apply_migration_started', array('version' => $migration['version']));
             $sql = file_get_contents($migration['file']);
             if ($sql === false)
             {
                 $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+                $this->logMigrationEvent('apply_migration_read_failed', array('version' => $migration['version']));
                 CommonErrors::fatal(COMMONERROR_FILEERROR, $this, 'Failed to read migration file.');
             }
 
             $statements = $this->splitMigrationSqlStatements($sql);
-            foreach ($statements as $statement)
+            $this->logMigrationEvent('apply_migration_statements_parsed', array(
+                'version' => $migration['version'],
+                'statementCount' => count($statements)
+            ));
+            foreach ($statements as $statementIndex => $statement)
             {
                 $statement = trim($statement);
                 if ($statement === '' || $statement === '--' || $statement === '#')
@@ -3341,6 +3375,12 @@ class SettingsUI extends UserInterface
                 if ($result === false)
                 {
                     $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+                    $this->logMigrationEvent('apply_migration_query_failed', array(
+                        'version' => $migration['version'],
+                        'statementIndex' => $statementIndex + 1,
+                        'statementPreview' => substr(preg_replace('/\s+/', ' ', $statement), 0, 200),
+                        'dbError' => $db->getError()
+                    ));
                     CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Migration query failed: ' . $db->getError());
                 }
             }
@@ -3349,11 +3389,19 @@ class SettingsUI extends UserInterface
             if (!$this->verifySchemaMigrationPrereq($migration['version'], $db, $verificationMessage))
             {
                 $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+                $this->logMigrationEvent('apply_migration_verification_failed', array(
+                    'version' => $migration['version'],
+                    'details' => $verificationMessage
+                ));
                 CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, $verificationMessage);
             }
             if ($verificationMessage !== '')
             {
                 $verificationLogs[] = $verificationMessage;
+                $this->logMigrationEvent('apply_migration_verification_ok', array(
+                    'version' => $migration['version'],
+                    'details' => $verificationMessage
+                ));
             }
 
             $insert = $db->query(sprintf(
@@ -3367,13 +3415,19 @@ class SettingsUI extends UserInterface
             if ($insert === false)
             {
                 $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+                $this->logMigrationEvent('apply_migration_record_failed', array(
+                    'version' => $migration['version'],
+                    'dbError' => $db->getError()
+                ));
                 CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to record migration: ' . $db->getError());
             }
 
             $appliedCount++;
+            $this->logMigrationEvent('apply_migration_completed', array('version' => $migration['version']));
         }
 
         $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
+        $this->logMigrationEvent('apply_lock_released');
 
         $message = ($appliedCount === 1)
             ? 'Applied 1 migration.'
@@ -3382,6 +3436,10 @@ class SettingsUI extends UserInterface
         {
             $message .= ' ' . implode(' ', array_unique($verificationLogs));
         }
+        $this->logMigrationEvent('apply_completed', array(
+            'appliedCount' => $appliedCount,
+            'message' => $message
+        ));
         CATSUtility::transferRelativeURI('m=settings&a=schemaMigrations&message=' . urlencode($message));
     }
 
@@ -3610,6 +3668,25 @@ class SettingsUI extends UserInterface
         }
 
         return true;
+    }
+
+    private function logMigrationEvent($event, $context = array())
+    {
+        $payload = array(
+            'event' => $event,
+            'siteID' => (int) $this->_siteID,
+            'userID' => (int) $this->_userID
+        );
+
+        if (is_array($context) && !empty($context))
+        {
+            foreach ($context as $key => $value)
+            {
+                $payload[$key] = $value;
+            }
+        }
+
+        error_log('SchemaMigrations | ' . json_encode($payload));
     }
 
     /*
