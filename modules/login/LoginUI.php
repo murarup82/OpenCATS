@@ -491,13 +491,38 @@ class LoginUI extends UserInterface
         if (!eval(Hooks::get('ON_FORGOT_PASSWORD'))) return;
 
         $user = new Users($this->_siteID);
-        if ($password = $user->getPassword($username))
+        $userID = $user->getIDByUsername($username);
+        if ($userID !== false && $userID > 0)
         {
+            if (function_exists('random_bytes'))
+            {
+                try
+                {
+                    $temporaryPassword = bin2hex(random_bytes(8));
+                }
+                catch (Exception $e)
+                {
+                    $temporaryPassword = substr(sha1(uniqid((string) mt_rand(), true)), 0, 16);
+                }
+            }
+            else
+            {
+                $temporaryPassword = substr(sha1(uniqid((string) mt_rand(), true)), 0, 16);
+            }
+
+            if (!$user->resetPassword((int) $userID, $temporaryPassword))
+            {
+                $this->_template->assign('message', 'Unable to process password reset at this time.');
+                $this->_template->assign('complete', false);
+                $this->_template->display('./modules/login/ForgotPassword.tpl');
+                return;
+            }
+
             $mailer = new Mailer($this->_siteID);
             $mailerStatus = $mailer->sendToOne(
                 array($username, $username),
                 PASSWORD_RESET_SUBJECT,
-                sprintf(PASSWORD_RESET_BODY, $password),
+                sprintf(PASSWORD_RESET_BODY, $temporaryPassword),
                 true
             );
 
@@ -548,7 +573,7 @@ class LoginUI extends UserInterface
         }
 
         $_SESSION[self::GOOGLE_STATE_SESSION_KEY] = array(
-            'token' => md5(uniqid((string) mt_rand(), true)),
+            'token' => $this->makeRandomToken(16),
             'reloginVars' => $reloginVars,
             'siteName' => $siteName,
             'siteID' => $siteID
@@ -790,7 +815,7 @@ class LoginUI extends UserInterface
             }
 
             $users = new Users($siteID);
-            $generatedPassword = 'google-' . md5(uniqid((string) mt_rand(), true));
+            $generatedPassword = 'google-' . $this->makeRandomToken(8);
             $userID = (int) $users->add(
                 $lastName,
                 $firstName,
@@ -1357,6 +1382,22 @@ class LoginUI extends UserInterface
         }
 
         return ($result === 0);
+    }
+
+    private function makeRandomToken($bytes = 16)
+    {
+        if (function_exists('random_bytes'))
+        {
+            try
+            {
+                return bin2hex(random_bytes($bytes));
+            }
+            catch (Exception $e)
+            {
+            }
+        }
+
+        return sha1(uniqid((string) mt_rand(), true));
     }
 
     private function getClientIP()

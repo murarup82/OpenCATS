@@ -385,7 +385,7 @@ class UserInterface
      * getSanitisedInput is getTrimmedInput but with XSS protection for public facing career portal
      */
     
-   protected function getSanitisedInput($key, $request)
+    protected function getSanitisedInput($key, $request)
     {
         if (isset($request[$key]))
         {
@@ -393,6 +393,70 @@ class UserInterface
 		}
         return '';
     } 
+
+    /**
+     * Returns (and lazily creates) a CSRF token for a logical action name.
+     *
+     * @param string token name / scope
+     * @return string token value
+     */
+    protected function getCSRFToken($tokenName)
+    {
+        if (!isset($_SESSION['CATS_CSRF_TOKENS']) ||
+            !is_array($_SESSION['CATS_CSRF_TOKENS']))
+        {
+            $_SESSION['CATS_CSRF_TOKENS'] = array();
+        }
+
+        if (!isset($_SESSION['CATS_CSRF_TOKENS'][$tokenName]) ||
+            $_SESSION['CATS_CSRF_TOKENS'][$tokenName] === '')
+        {
+            if (function_exists('random_bytes'))
+            {
+                try
+                {
+                    $_SESSION['CATS_CSRF_TOKENS'][$tokenName] = bin2hex(random_bytes(32));
+                }
+                catch (Exception $e)
+                {
+                    $_SESSION['CATS_CSRF_TOKENS'][$tokenName] = sha1(uniqid((string) mt_rand(), true));
+                }
+            }
+            else
+            {
+                $_SESSION['CATS_CSRF_TOKENS'][$tokenName] = sha1(uniqid((string) mt_rand(), true));
+            }
+        }
+
+        return $_SESSION['CATS_CSRF_TOKENS'][$tokenName];
+    }
+
+    /**
+     * Validates a CSRF token for a logical action name.
+     *
+     * @param string token name / scope
+     * @param string provided token
+     * @return boolean valid token
+     */
+    protected function isCSRFTokenValid($tokenName, $token)
+    {
+        if (!isset($_SESSION['CATS_CSRF_TOKENS']) ||
+            !is_array($_SESSION['CATS_CSRF_TOKENS']) ||
+            !isset($_SESSION['CATS_CSRF_TOKENS'][$tokenName]))
+        {
+            return false;
+        }
+
+        $known = (string) $_SESSION['CATS_CSRF_TOKENS'][$tokenName];
+        $token = (string) $token;
+
+        if (function_exists('hash_equals'))
+        {
+            return hash_equals($known, $token);
+        }
+
+        return ($known === $token);
+    }
     
     /**
      * Returns valid subtabs for this module.

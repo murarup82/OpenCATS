@@ -54,6 +54,43 @@ class Attachments
     }
 
     /**
+     * Creates a signed access token used when serving attachment downloads.
+     *
+     * @param integer Attachment ID.
+     * @param string Attachment directory name.
+     * @return string Token.
+     */
+    public static function makeDirectoryAccessToken($attachmentID, $directoryName)
+    {
+        return hash_hmac(
+            'sha256',
+            (string) ((int) $attachmentID) . '|' . (string) $directoryName,
+            (string) DATABASE_PASS
+        );
+    }
+
+    /**
+     * Validates a signed access token for attachment download requests.
+     *
+     * @param integer Attachment ID.
+     * @param string Attachment directory name.
+     * @param string Token provided by request.
+     * @return boolean Valid token?
+     */
+    public static function isDirectoryAccessTokenValid($attachmentID, $directoryName, $providedToken)
+    {
+        $knownToken = self::makeDirectoryAccessToken($attachmentID, $directoryName);
+        $providedToken = (string) $providedToken;
+
+        if (function_exists('hash_equals'))
+        {
+            return hash_equals($knownToken, $providedToken);
+        }
+
+        return ($knownToken === $providedToken);
+    }
+
+    /**
      * Adds attachment metadata to the database.
      *
      * @param flag Data Item type.
@@ -543,11 +580,16 @@ class Attachments
 
         foreach ($rs as $index => $data)
         {
+            $directoryAccessToken = self::makeDirectoryAccessToken(
+                $data['attachmentID'],
+                $data['directoryName']
+            );
+
             $rs[$index]['retrievalURL'] = sprintf(
                 '%s?m=attachments&amp;a=getAttachment&amp;id=%s&amp;directoryNameHash=%s',
                 CATSUtility::getIndexName(),
                 $data['attachmentID'],
-                urlencode(md5($data['directoryName']))
+                urlencode($directoryAccessToken)
             );
 
             $directoryName = $data['directoryName'];
@@ -560,7 +602,7 @@ class Attachments
                 sprintf(
                     'id=%s&amp;directoryNameHash=%s',
                     $data['attachmentID'],
-                    urlencode(md5($data['directoryName']))
+                    urlencode($directoryAccessToken)
                 ),
                 $rs[$index]['retrievalURL']
             );
@@ -578,6 +620,18 @@ class Attachments
      */
     public function get($attachmentID, $verifySiteID = true)
     {
+        if ($verifySiteID)
+        {
+            $whereClause = sprintf(
+                'site_id = %s',
+                $this->_siteID
+            );
+        }
+        else
+        {
+            $whereClause = '1 = 1';
+        }
+
         $sql = sprintf(
             "SELECT
                 IF(ISNULL(text), 0, 1) AS hasText,
@@ -598,10 +652,9 @@ class Attachments
             WHERE
                 attachment_id = %s
             AND
-                (site_id = %s || content_type = 'catsbackup' || %s)",
+                %s",
             $this->_db->makeQueryInteger($attachmentID),
-            $this->_siteID,
-            ($verifySiteID ? 'false' : 'true')
+            $whereClause
         );
         $rs = $this->_db->getAssoc($sql);
 
@@ -614,11 +667,16 @@ class Attachments
         }
         else
         {
+            $directoryAccessToken = self::makeDirectoryAccessToken(
+                $rs['attachmentID'],
+                $rs['directoryName']
+            );
+
             $rs['retrievalURL'] = sprintf(
                 '%s?m=attachments&amp;a=getAttachment&amp;id=%s&amp;directoryNameHash=%s',
                 CATSUtility::getIndexName(),
                 $rs['attachmentID'],
-                urlencode(md5($rs['directoryName']))
+                urlencode($directoryAccessToken)
             );
         }
 

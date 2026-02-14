@@ -2,6 +2,7 @@
 
 include_once(LEGACY_ROOT . '/lib/Width.php');
 include_once(LEGACY_ROOT . '/lib/StringUtility.php');
+include_once(LEGACY_ROOT . '/lib/Attachments.php');
 
 class GDPRRequestsDataGrid extends DataGrid
 {
@@ -140,7 +141,7 @@ EOT;
                 'pagerWidth' => 110
             ),
             'Proof' => array(
-                'pagerRender' => 'if (!empty($rsData[\'proofAttachmentID\']) && !empty($rsData[\'proofDirName\'])) { $hash = md5($rsData[\'proofDirName\']); $label = !empty($rsData[\'proofFilename\']) ? htmlspecialchars($rsData[\'proofFilename\']) : \'View PDF\'; return \'<a href="\' . CATSUtility::getIndexName() . \'?m=attachments&amp;a=getAttachment&amp;id=\' . $rsData[\'proofAttachmentID\'] . \'&amp;directoryNameHash=\' . urlencode($hash) . \'" target="_blank">\' . $label . \'</a>\'; } return \'--\';',
+                'pagerRender' => 'if (!empty($rsData[\'proofAttachmentID\']) && !empty($rsData[\'proofDirName\'])) { $hash = Attachments::makeDirectoryAccessToken($rsData[\'proofAttachmentID\'], $rsData[\'proofDirName\']); $label = !empty($rsData[\'proofFilename\']) ? htmlspecialchars($rsData[\'proofFilename\']) : \'View PDF\'; return \'<a href="\' . CATSUtility::getIndexName() . \'?m=attachments&amp;a=getAttachment&amp;id=\' . $rsData[\'proofAttachmentID\'] . \'&amp;directoryNameHash=\' . urlencode($hash) . \'" target="_blank">\' . $label . \'</a>\'; } return \'--\';',
                 'sortableColumn' => 'proofAttachmentID',
                 'pagerWidth' => 120
             ),

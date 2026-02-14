@@ -440,6 +440,10 @@ class CompaniesUI extends UserInterface
         $this->_template->assign('contactsRSWC', $contactsRSWC);
         $this->_template->assign('privledgedUser', $privledgedUser);
         $this->_template->assign('companyID', $companyID);
+        $this->_template->assign(
+            'deleteAttachmentToken',
+            $this->getCSRFToken('companies.deleteAttachment')
+        );
 
         if (!eval(Hooks::get('CLIENTS_SHOW'))) return;
 
@@ -1073,24 +1077,43 @@ class CompaniesUI extends UserInterface
      */
     private function onDeleteAttachment()
     {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
         /* Bail out if we don't have a valid attachment ID. */
-        if (!$this->isRequiredIDValid('attachmentID', $_GET))
+        if (!$this->isRequiredIDValid('attachmentID', $_POST))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid attachment ID.');
         }
 
         /* Bail out if we don't have a valid joborder ID. */
-        if (!$this->isRequiredIDValid('companyID', $_GET))
+        if (!$this->isRequiredIDValid('companyID', $_POST))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid company ID.');
         }
 
-        $companyID  = $_GET['companyID'];
-        $attachmentID = $_GET['attachmentID'];
+        $companyID  = $_POST['companyID'];
+        $attachmentID = $_POST['attachmentID'];
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+
+        if (!$this->isCSRFTokenValid('companies.deleteAttachment', $securityToken))
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request token.');
+        }
 
         if (!eval(Hooks::get('CLIENTS_ON_DELETE_ATTACHMENT_PRE'))) return;
 
         $attachments = new Attachments($this->_siteID);
+        $attachmentRS = $attachments->get($attachmentID, true);
+        if (empty($attachmentRS) ||
+            (int) $attachmentRS['dataItemType'] !== DATA_ITEM_COMPANY ||
+            (int) $attachmentRS['dataItemID'] !== (int) $companyID)
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Attachment does not belong to this company.');
+        }
+
         $attachments->delete($attachmentID);
 
         if (!eval(Hooks::get('CLIENTS_ON_DELETE_ATTACHMENT_POST'))) return;

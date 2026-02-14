@@ -606,6 +606,10 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('privledgedUser', $privledgedUser);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('showClosedPipeline', $showClosed);
+        $this->_template->assign(
+            'deleteAttachmentToken',
+            $this->getCSRFToken('joborders.deleteAttachment')
+        );
 
         if (!eval(Hooks::get('JO_SHOW'))) return;
 
@@ -2567,24 +2571,43 @@ class JobOrdersUI extends UserInterface
      */
     private function onDeleteAttachment()
     {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
         /* Bail out if we don't have a valid attachment ID. */
-        if (!$this->isRequiredIDValid('attachmentID', $_GET))
+        if (!$this->isRequiredIDValid('attachmentID', $_POST))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid attachment ID.');
         }
 
         /* Bail out if we don't have a valid joborder ID. */
-        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        if (!$this->isRequiredIDValid('jobOrderID', $_POST))
         {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid Job Order ID.');
         }
 
-        $jobOrderID  = $_GET['jobOrderID'];
-        $attachmentID = $_GET['attachmentID'];
+        $jobOrderID  = $_POST['jobOrderID'];
+        $attachmentID = $_POST['attachmentID'];
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+
+        if (!$this->isCSRFTokenValid('joborders.deleteAttachment', $securityToken))
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request token.');
+        }
 
         if (!eval(Hooks::get('JO_ON_DELETE_ATTACHMENT_PRE'))) return;
 
         $attachments = new Attachments($this->_siteID);
+        $attachmentRS = $attachments->get($attachmentID, true);
+        if (empty($attachmentRS) ||
+            (int) $attachmentRS['dataItemType'] !== DATA_ITEM_JOBORDER ||
+            (int) $attachmentRS['dataItemID'] !== (int) $jobOrderID)
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Attachment does not belong to this job order.');
+        }
+
         $attachments->delete($attachmentID);
 
         if (!eval(Hooks::get('JO_ON_DELETE_ATTACHMENT_POST'))) return;

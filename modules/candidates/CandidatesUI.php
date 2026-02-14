@@ -1055,6 +1055,10 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('gdprLegacyProof', $gdprLegacyProof);
         $this->_template->assign('gdprLegacyProofWarning', $gdprLegacyProofWarning);
         $this->_template->assign('gdprFlashMessage', $gdprFlashMessage);
+        $this->_template->assign(
+            'deleteAttachmentToken',
+            $this->getCSRFToken('candidates.deleteAttachment')
+        );
 
         $this->_template->display('./modules/candidates/Show.tpl');
 
@@ -2849,22 +2853,41 @@ class CandidatesUI extends UserInterface
      */
     private function onDeleteAttachment()
     {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
         /* Bail out if we don't have a valid attachment ID. */
-        if (!$this->isRequiredIDValid('attachmentID', $_GET)) {
+        if (!$this->isRequiredIDValid('attachmentID', $_POST)) {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid attachment ID.');
         }
 
         /* Bail out if we don't have a valid candidate ID. */
-        if (!$this->isRequiredIDValid('candidateID', $_GET)) {
+        if (!$this->isRequiredIDValid('candidateID', $_POST)) {
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
-        $candidateID  = $_GET['candidateID'];
-        $attachmentID = $_GET['attachmentID'];
+        $candidateID  = $_POST['candidateID'];
+        $attachmentID = $_POST['attachmentID'];
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+
+        if (!$this->isCSRFTokenValid('candidates.deleteAttachment', $securityToken))
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request token.');
+        }
 
         if (!eval(Hooks::get('CANDIDATE_ON_DELETE_ATTACHMENT_PRE'))) return;
 
         $attachments = new Attachments($this->_siteID);
+        $attachmentRS = $attachments->get($attachmentID, true);
+        if (empty($attachmentRS) ||
+            (int) $attachmentRS['dataItemType'] !== DATA_ITEM_CANDIDATE ||
+            (int) $attachmentRS['dataItemID'] !== (int) $candidateID)
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Attachment does not belong to this candidate.');
+        }
+
         $attachments->delete($attachmentID);
 
         if (!eval(Hooks::get('CANDIDATE_ON_DELETE_ATTACHMENT_POST'))) return;

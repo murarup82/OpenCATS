@@ -230,9 +230,14 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <td style="text-align:center;" class="vertical">
                                             <?php if (!$this->isPopup): ?>
                                                 <?php if ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment&amp;candidateID=<?php echo($this->candidateID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" class="ui2-button ui2-button--danger" onclick="javascript:return confirm('Delete this attachment?');">
-                                                        <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" title="Delete" />
-                                                    </a>
+                                                    <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment" style="display:inline;" onsubmit="javascript:return confirm('Delete this attachment?');">
+                                                        <input type="hidden" name="candidateID" value="<?php echo($this->candidateID); ?>" />
+                                                        <input type="hidden" name="attachmentID" value="<?php $this->_($attachmentsData['attachmentID']); ?>" />
+                                                        <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteAttachmentToken); ?>" />
+                                                        <button type="submit" class="ui2-button ui2-button--danger" title="Delete">
+                                                            <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
+                                                        </button>
+                                                    </form>
                                                 <?php endif; ?>
                                             <?php else: ?>
                                             &nbsp;&nbsp;&nbsp;&nbsp;
@@ -390,9 +395,14 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <td>
                                             <?php if (!$this->isPopup): ?>
                                                 <?php if ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment&amp;candidateID=<?php echo($this->candidateID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" class="ui2-button ui2-button--danger" onclick="javascript:return confirm('Delete this attachment?');">
-                                                        <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" title="Delete" />
-                                                    </a>
+                                                    <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteAttachment" style="display:inline;" onsubmit="javascript:return confirm('Delete this attachment?');">
+                                                        <input type="hidden" name="candidateID" value="<?php echo($this->candidateID); ?>" />
+                                                        <input type="hidden" name="attachmentID" value="<?php $this->_($attachmentsData['attachmentID']); ?>" />
+                                                        <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteAttachmentToken); ?>" />
+                                                        <button type="submit" class="ui2-button ui2-button--danger" title="Delete">
+                                                            <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
+                                                        </button>
+                                                    </form>
                                                 <?php endif; ?>
                                             <?php endif; ?>
                                         </td>

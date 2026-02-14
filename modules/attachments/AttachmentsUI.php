@@ -79,11 +79,28 @@ class AttachmentsUI extends UserInterface
         }
 
         $attachmentID = $_GET['id'];
+        $directoryToken = $this->getTrimmedInput('directoryNameHash', $_GET);
 
-        $attachments = new Attachments(-1);
-        $rs = $attachments->get($attachmentID, false);
+        $attachments = new Attachments($this->_siteID);
+        $rs = $attachments->get($attachmentID, true);
 
-        if (empty($rs) || md5($rs['directoryName']) != $_GET['directoryNameHash'])
+        if (empty($rs) &&
+            $this->getUserAccessLevel('settings') >= ACCESS_LEVEL_SA)
+        {
+            /* Backups are stored on the admin site. */
+            $adminAttachments = new Attachments(CATS_ADMIN_SITE);
+            $adminRS = $adminAttachments->get($attachmentID, true);
+            if (!empty($adminRS) && $adminRS['contentType'] === 'catsbackup')
+            {
+                $rs = $adminRS;
+            }
+        }
+
+        if (empty($rs) || !Attachments::isDirectoryAccessTokenValid(
+            $rs['attachmentID'],
+            $rs['directoryName'],
+            $directoryToken
+        ))
         {
             CommonErrors::fatal(
                 COMMONERROR_BADFIELDS,

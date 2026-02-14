@@ -42,14 +42,30 @@ if (!isset($_POST['id']) || !$interface->isRequiredIDValid('id'))
 }
 
 $attachmentID = $_POST['id'];
+$directoryToken = $interface->getTrimmedInput('directoryNameHash');
 
-$attachments = new Attachments(-1);
+$attachments = new Attachments($interface->getSiteID());
+$rs = $attachments->get($attachmentID, true);
 
-$rs = $attachments->get($attachmentID, false);
+if (empty($rs) &&
+    $_SESSION['CATS']->getAccessLevel('settings') >= ACCESS_LEVEL_SA)
+{
+    /* Backups are stored on the admin site. */
+    $adminAttachments = new Attachments(CATS_ADMIN_SITE);
+    $adminRS = $adminAttachments->get($attachmentID, true);
+    if (!empty($adminRS) && $adminRS['contentType'] === 'catsbackup')
+    {
+        $rs = $adminRS;
+    }
+}
 
 if (!isset($rs['directoryName']) ||
     !isset($rs['storedFilename']) ||
-    md5($rs['directoryName']) != $_POST['directoryNameHash'])
+    !Attachments::isDirectoryAccessTokenValid(
+        $rs['attachmentID'],
+        $rs['directoryName'],
+        $directoryToken
+    ))
 {
     $interface->outputXMLErrorPage(-2, 'Invalid directory name hash.');
     die();

@@ -77,6 +77,100 @@ class Users
         $this->_roleSchemaAvailable = false;
     }
 
+    private function secureCompare($knownString, $userString)
+    {
+        $knownString = (string) $knownString;
+        $userString = (string) $userString;
+
+        if (function_exists('hash_equals'))
+        {
+            return hash_equals($knownString, $userString);
+        }
+
+        return ($knownString === $userString);
+    }
+
+    private function isLegacyMD5Hash($hash)
+    {
+        return (preg_match('/^[a-f0-9]{32}$/i', (string) $hash) === 1);
+    }
+
+    private function hashPassword($password)
+    {
+        if (function_exists('password_hash'))
+        {
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            if ($passwordHash !== false)
+            {
+                return $passwordHash;
+            }
+        }
+
+        return md5($password);
+    }
+
+    private function verifyPassword($password, $storedHash)
+    {
+        $storedHash = (string) $storedHash;
+
+        if (function_exists('password_get_info') &&
+            function_exists('password_verify'))
+        {
+            $passwordInfo = password_get_info($storedHash);
+            if (!empty($passwordInfo['algo']))
+            {
+                return password_verify($password, $storedHash);
+            }
+        }
+
+        if ($this->isLegacyMD5Hash($storedHash))
+        {
+            return $this->secureCompare(strtolower($storedHash), md5($password));
+        }
+
+        /* Legacy plain-text rows (very old installs) are upgraded on login. */
+        return $this->secureCompare($storedHash, $password);
+    }
+
+    private function shouldUpgradePasswordHash($storedHash)
+    {
+        $storedHash = (string) $storedHash;
+
+        if (function_exists('password_get_info'))
+        {
+            $passwordInfo = password_get_info($storedHash);
+            if (empty($passwordInfo['algo']))
+            {
+                return true;
+            }
+
+            if (function_exists('password_needs_rehash'))
+            {
+                return password_needs_rehash($storedHash, PASSWORD_DEFAULT);
+            }
+
+            return false;
+        }
+
+        return false;
+    }
+
+    private function updatePasswordHash($userID, $newHash)
+    {
+        $sql = sprintf(
+            "UPDATE
+                user
+            SET
+                password = %s
+            WHERE
+                user_id = %s",
+            $this->_db->makeQueryString($newHash),
+            $this->_db->makeQueryInteger($userID)
+        );
+
+        return (boolean) $this->_db->query($sql);
+    }
+
 
     /**
      * Adds a user to the database.
@@ -93,8 +187,9 @@ class Users
     public function add($lastName, $firstName, $email, $username, $password,
             $accessLevel, $eeoIsVisible = false, $userSiteID = -1)
     {
-
-        $md5pwd = $password == LDAPUSER_PASSWORD ? $password : md5($password);
+        $passwordHash = ($password == LDAPUSER_PASSWORD
+            ? $password
+            : $this->hashPassword($password));
         $userSiteID = $userSiteID < 0 ? $this->_siteID : $userSiteID;
         $sql = sprintf(
                 "INSERT INTO user (
@@ -122,7 +217,7 @@ class Users
                     %s
                     )",
         $this->_db->makeQueryString($username),
-        $this->_db->makeQueryString($md5pwd),
+        $this->_db->makeQueryString($passwordHash),
         $this->_db->makeQueryInteger($accessLevel),
         $this->_db->makeQueryString($email),
         $this->_db->makeQueryString($firstName),
@@ -689,7 +784,7 @@ class Users
         }
 
         /* Is the user's supplied password correct? */
-        if ($rs['password'] !== md5($currentPassword))
+        if (!$this->verifyPassword($currentPassword, $rs['password']))
         {
             return LOGIN_INVALID_PASSWORD;
         }
@@ -707,18 +802,10 @@ class Users
         }
 
         /* Change the user's password. */
-        $sql = sprintf(
-                "UPDATE
-                user
-                SET
-                password = md5(%s)
-                WHERE
-                user.user_id = %s",
-                $this->_db->makeQueryString($newPassword),
-                $this->_db->makeQueryInteger($userID)
-                );
-        $this->_db->query($sql);
-        // FIXME: Did the above query succeed? If not, fail.
+        if (!$this->updatePasswordHash($userID, $this->hashPassword($newPassword)))
+        {
+            return LOGIN_INVALID_USER;
+        }
 
         return LOGIN_SUCCESS;
     }
@@ -761,20 +848,7 @@ class Users
         }
 
         /* Change the user's password. */
-        $sql = sprintf(
-                "UPDATE
-                user
-                SET
-                password = md5(%s)
-                WHERE
-                user.user_id = %s",
-                $this->_db->makeQueryString($newPassword),
-                $this->_db->makeQueryInteger($userID)
-                );
-        $this->_db->query($sql);
-        // FIXME: Did the above query succeed? If not, fail.
-
-        return true;
+        return $this->updatePasswordHash($userID, $this->hashPassword($newPassword));
     }
 
     /**
@@ -809,6 +883,7 @@ class Users
 
         $sql = sprintf(
                 "SELECT
+                user.user_id AS userID,
                 user.user_name AS username,
                 user.password AS password,
                 user.access_level AS accessLevel
@@ -850,9 +925,14 @@ class Users
             return LOGIN_INVALID_USER;
         } else {
             /* Is the user's supplied password correct? */
-            if ($rs['password'] !== md5($password))
+            if (!$this->verifyPassword($password, $rs['password']))
             {
                 return LOGIN_INVALID_PASSWORD;
+            }
+
+            if ($this->shouldUpgradePasswordHash($rs['password']))
+            {
+                $this->updatePasswordHash($rs['userID'], $this->hashPassword($password));
             }
         }
         

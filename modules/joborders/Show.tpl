@@ -313,9 +313,14 @@ use OpenCATS\UI\QuickActionMenu;
                                                 <td>
                                                     <?php if (!$this->isPopup): ?>
                                                         <?php if ($this->getUserAccessLevel('joborders.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=deleteAttachment&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" class="ui2-button ui2-button--danger" title="Delete" onclick="javascript:return confirm('Delete this attachment?');">
-                                                                <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
-                                                            </a>
+                                                            <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=deleteAttachment" style="display:inline;" onsubmit="javascript:return confirm('Delete this attachment?');">
+                                                                <input type="hidden" name="jobOrderID" value="<?php echo($this->jobOrderID); ?>" />
+                                                                <input type="hidden" name="attachmentID" value="<?php $this->_($attachmentsData['attachmentID']); ?>" />
+                                                                <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteAttachmentToken); ?>" />
+                                                                <button type="submit" class="ui2-button ui2-button--danger" title="Delete">
+                                                                    <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
+                                                                </button>
+                                                            </form>
                                                         <?php endif; ?>
                                                     <?php endif; ?>
                                                 </td>

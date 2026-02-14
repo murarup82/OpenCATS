@@ -857,6 +857,11 @@ class CATSSession
                 break;
                 
             case LOGIN_SUCCESS:
+                if (function_exists('session_regenerate_id'))
+                {
+                    @session_regenerate_id(true);
+                }
+
                 $this->_username               = $rs['username'];
                 $this->_password               = $rs['password'];
                 $this->_userID                 = $rs['userID'];
@@ -1012,6 +1017,11 @@ class CATSSession
     public function transparentLogin($toSiteID, $asUserID, $asSiteID)
     {
          $db = DatabaseConnection::getInstance();
+
+         if (function_exists('session_regenerate_id'))
+         {
+             @session_regenerate_id(true);
+         }
 
          $sql = sprintf(
             "SELECT

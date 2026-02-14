@@ -210,9 +210,14 @@ use OpenCATS\UI\QuickActionMenu;
                             <td><?php $this->_($attachmentsData['dateCreated']) ?></td>
                             <td>
                                 <?php if ($this->getUserAccessLevel('companies.deleteAttachment') >= ACCESS_LEVEL_DELETE): ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=deleteAttachment&amp;companyID=<?php echo($this->companyID); ?>&amp;attachmentID=<?php $this->_($attachmentsData['attachmentID']) ?>" class="ui2-button ui2-button--danger" title="Delete" onclick="javascript:return confirm('Delete this attachment?');">
-                                        <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
-                                    </a>
+                                    <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=companies&amp;a=deleteAttachment" style="display:inline;" onsubmit="javascript:return confirm('Delete this attachment?');">
+                                        <input type="hidden" name="companyID" value="<?php echo($this->companyID); ?>" />
+                                        <input type="hidden" name="attachmentID" value="<?php $this->_($attachmentsData['attachmentID']); ?>" />
+                                        <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteAttachmentToken); ?>" />
+                                        <button type="submit" class="ui2-button ui2-button--danger" title="Delete">
+                                            <img src="images/actions/delete.gif" alt="" width="16" height="16" border="0" />
+                                        </button>
+                                    </form>
                                 <?php endif; ?>
                             </td>
                         </tr>
