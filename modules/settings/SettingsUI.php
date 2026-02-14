@@ -3278,12 +3278,11 @@ class SettingsUI extends UserInterface
                 CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to acquire migration lock.');
             }
 
-            $insertSQL = sprintf(
-                "INSERT INTO schema_migrations (version, checksum, applied_at, applied_by)
-                 VALUES (%s, %s, NOW(), %s)",
-                $db->makeQueryString($migration['version']),
-                $db->makeQueryString($migration['checksum']),
-                $db->makeQueryString('admin-ui')
+            $insertSQL = $this->buildSchemaMigrationInsertSQL(
+                $db,
+                $migration['version'],
+                $migration['checksum'],
+                'admin-ui'
             );
             $insert = $db->query($insertSQL, true);
             $insertError = ($insert === false) ? $db->getError() : '';
@@ -3434,12 +3433,11 @@ class SettingsUI extends UserInterface
                 ));
             }
 
-            $insertSQL = sprintf(
-                "INSERT INTO schema_migrations (version, checksum, applied_at, applied_by)
-                 VALUES (%s, %s, NOW(), %s)",
-                $db->makeQueryString($migration['version']),
-                $db->makeQueryString($migration['checksum']),
-                $db->makeQueryString('admin-ui')
+            $insertSQL = $this->buildSchemaMigrationInsertSQL(
+                $db,
+                $migration['version'],
+                $migration['checksum'],
+                'admin-ui'
             );
             $insert = $db->query($insertSQL, true);
             $insertError = ($insert === false) ? $db->getError() : '';
@@ -3560,10 +3558,41 @@ class SettingsUI extends UserInterface
         $this->ensureSchemaMigrationsTable($db);
 
         $applied = array();
-        $appliedRows = $db->getAllAssoc("SELECT version, checksum, applied_at, applied_by FROM schema_migrations");
+        $hasFilenameColumn = $this->schemaMigrationsHasColumn($db, 'filename');
+        if ($hasFilenameColumn)
+        {
+            $appliedRows = $db->getAllAssoc(
+                "SELECT
+                    version,
+                    filename,
+                    checksum,
+                    applied_at,
+                    applied_by
+                 FROM
+                    schema_migrations"
+            );
+        }
+        else
+        {
+            $appliedRows = $db->getAllAssoc("SELECT version, checksum, applied_at, applied_by FROM schema_migrations");
+        }
         foreach ($appliedRows as $row)
         {
-            $applied[$row['version']] = $row;
+            $appliedVersion = '';
+            if (isset($row['version']) && trim((string) $row['version']) !== '')
+            {
+                $appliedVersion = trim((string) $row['version']);
+            }
+            else if ($hasFilenameColumn && isset($row['filename']) && trim((string) $row['filename']) !== '')
+            {
+                $appliedVersion = trim((string) $row['filename']);
+            }
+
+            if ($appliedVersion !== '')
+            {
+                $row['version'] = $appliedVersion;
+                $applied[$appliedVersion] = $row;
+            }
         }
 
         $files = glob($migrationsDir . '/*.sql');
@@ -3601,6 +3630,44 @@ class SettingsUI extends UserInterface
         }
 
         return $list;
+    }
+
+    private function schemaMigrationsHasColumn($db, $columnName)
+    {
+        $columnName = trim((string) $columnName);
+        if ($columnName === '')
+        {
+            return false;
+        }
+
+        $columns = $db->getAllAssoc(
+            "SHOW COLUMNS FROM schema_migrations LIKE " . $db->makeQueryString($columnName)
+        );
+        return !empty($columns);
+    }
+
+    private function buildSchemaMigrationInsertSQL($db, $version, $checksum, $appliedBy)
+    {
+        $hasFilenameColumn = $this->schemaMigrationsHasColumn($db, 'filename');
+        if ($hasFilenameColumn)
+        {
+            return sprintf(
+                "INSERT INTO schema_migrations (filename, version, checksum, applied_at, applied_by)
+                 VALUES (%s, %s, %s, NOW(), %s)",
+                $db->makeQueryString($version),
+                $db->makeQueryString($version),
+                $db->makeQueryString($checksum),
+                $db->makeQueryString($appliedBy)
+            );
+        }
+
+        return sprintf(
+            "INSERT INTO schema_migrations (version, checksum, applied_at, applied_by)
+             VALUES (%s, %s, NOW(), %s)",
+            $db->makeQueryString($version),
+            $db->makeQueryString($checksum),
+            $db->makeQueryString($appliedBy)
+        );
     }
 
     private function splitMigrationSqlStatements($sql)
