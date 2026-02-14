@@ -3227,6 +3227,16 @@ class SettingsUI extends UserInterface
         $db = DatabaseConnection::getInstance();
         $this->ensureSchemaMigrationsTable($db);
 
+        if (defined('CATS_SLAVE') && CATS_SLAVE)
+        {
+            $this->logMigrationEvent('apply_blocked_slave_mode');
+            CommonErrors::fatal(
+                COMMONERROR_BADFIELDS,
+                $this,
+                'Schema migrations are blocked because CATS is running in slave/read-only mode (CATS_SLAVE=true).'
+            );
+        }
+
         if ($markApplied)
         {
             if ($version === '' || !isset($indexByVersion[$version]))
@@ -3362,26 +3372,30 @@ class SettingsUI extends UserInterface
             ));
             foreach ($statements as $statementIndex => $statement)
             {
-                $statement = trim($statement);
-                if ($statement === '' || $statement === '--' || $statement === '#')
-                {
-                    continue;
-                }
-                if (strpos($statement, '--') === 0 || strpos($statement, '#') === 0)
+                $statement = $this->normalizeMigrationStatement($statement);
+                if ($statement === '')
                 {
                     continue;
                 }
                 $result = $db->query($statement, true);
                 if ($result === false)
                 {
+                    $dbError = $db->getError();
+                    $statementPreview = substr(preg_replace('/\s+/', ' ', $statement), 0, 200);
+                    $failureDetails = 'Migration query failed at statement #' . ($statementIndex + 1)
+                        . '. Query: ' . $statementPreview . '. DB: ' . $dbError;
+                    if (defined('CATS_SLAVE') && CATS_SLAVE && strpos($dbError, 'errno: 0') !== false)
+                    {
+                        $failureDetails .= ' Writes are blocked because CATS_SLAVE is enabled in config.php.';
+                    }
                     $db->query(sprintf("SELECT RELEASE_LOCK(%s)", $db->makeQueryString('opencats_migrate')));
                     $this->logMigrationEvent('apply_migration_query_failed', array(
                         'version' => $migration['version'],
                         'statementIndex' => $statementIndex + 1,
-                        'statementPreview' => substr(preg_replace('/\s+/', ' ', $statement), 0, 200),
-                        'dbError' => $db->getError()
+                        'statementPreview' => $statementPreview,
+                        'dbError' => $dbError
                     ));
-                    CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Migration query failed: ' . $db->getError());
+                    CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, $failureDetails);
                 }
             }
 
@@ -3601,6 +3615,32 @@ class SettingsUI extends UserInterface
         }
 
         return $statements;
+    }
+
+    private function normalizeMigrationStatement($statement)
+    {
+        $statement = str_replace("\r\n", "\n", $statement);
+        $lines = explode("\n", $statement);
+        $normalizedLines = array();
+
+        foreach ($lines as $line)
+        {
+            $trimmedLine = trim($line);
+            if ($trimmedLine === '')
+            {
+                $normalizedLines[] = $line;
+                continue;
+            }
+
+            if (strpos($trimmedLine, '--') === 0 || strpos($trimmedLine, '#') === 0)
+            {
+                continue;
+            }
+
+            $normalizedLines[] = $line;
+        }
+
+        return trim(implode("\n", $normalizedLines));
     }
 
     private function verifySchemaMigrationPrereq($version, $db, &$message)
