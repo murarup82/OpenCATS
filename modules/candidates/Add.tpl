@@ -491,6 +491,10 @@
                 </div>
 
             <style type="text/css">
+                .ui2-ai-prefilled-cell {
+                    background-color: #e8f7e8;
+                    transition: background-color 0.2s ease;
+                }
                 #dupCheckBanner {
                     display: none;
                 }

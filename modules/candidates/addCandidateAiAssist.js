@@ -11,6 +11,7 @@ var AddCandidateAiAssist = (function ()
     var currentJobId = '';
     var undoStore = {};
     var undoMeta = {};
+    var aiPrefilledCellClass = 'ui2-ai-prefilled-cell';
     var config = {
         sessionCookie: '',
         actor: ''
@@ -109,11 +110,119 @@ var AddCandidateAiAssist = (function ()
 
         if (!undoStore.hasOwnProperty(el.id))
         {
-            undoStore[el.id] = el.value;
+            undoStore[el.id] = {
+                value: el.value,
+                checked: !!el.checked
+            };
             undoMeta[el.id] = {
                 placeholder: el.placeholder,
                 title: el.title
             };
+        }
+    }
+
+    function hasClass(el, className)
+    {
+        if (!el || !className)
+        {
+            return false;
+        }
+
+        return (' ' + (el.className || '') + ' ').indexOf(' ' + className + ' ') !== -1;
+    }
+
+    function addClass(el, className)
+    {
+        if (!el || !className || hasClass(el, className))
+        {
+            return;
+        }
+
+        if (!el.className)
+        {
+            el.className = className;
+            return;
+        }
+
+        el.className += ' ' + className;
+    }
+
+    function removeClass(el, className)
+    {
+        if (!el || !className || !el.className)
+        {
+            return;
+        }
+
+        var classes = (' ' + el.className + ' ').replace(' ' + className + ' ', ' ');
+        el.className = safeTrim(classes);
+    }
+
+    function getClosestTableCell(el)
+    {
+        var node = el;
+        while (node && node.nodeType === 1)
+        {
+            if (node.tagName && node.tagName.toLowerCase() === 'td')
+            {
+                return node;
+            }
+            node = node.parentNode;
+        }
+
+        return null;
+    }
+
+    function cellHasPrefilledDescendants(cell)
+    {
+        if (!cell)
+        {
+            return false;
+        }
+
+        var descendants = cell.getElementsByTagName('*');
+        var i;
+        for (i = 0; i < descendants.length; i++)
+        {
+            if (descendants[i].getAttribute &&
+                descendants[i].getAttribute('data-ai-prefilled') === '1')
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function markPrefilled(el)
+    {
+        if (!el)
+        {
+            return;
+        }
+
+        el.setAttribute('data-ai-prefilled', '1');
+
+        var cell = getClosestTableCell(el);
+        if (cell)
+        {
+            addClass(cell, aiPrefilledCellClass);
+        }
+    }
+
+    function clearPrefilledMarker(el)
+    {
+        if (!el)
+        {
+            return;
+        }
+
+        el.removeAttribute('data-ai-prefilled');
+
+        var cell = getClosestTableCell(el);
+        if (cell && !cellHasPrefilledDescendants(cell))
+        {
+            removeClass(cell, aiPrefilledCellClass);
         }
     }
 
@@ -131,7 +240,7 @@ var AddCandidateAiAssist = (function ()
     {
         storeUndo(el);
         el.value = value;
-        el.setAttribute('data-ai-prefilled', '1');
+        markPrefilled(el);
     }
 
     function applySuggestion(el, value, confidence)
@@ -278,6 +387,41 @@ var AddCandidateAiAssist = (function ()
         return false;
     }
 
+    function formatTitleCase(value)
+    {
+        var text = safeTrim(value);
+        if (text === '')
+        {
+            return '';
+        }
+
+        var parts = text.split(/(\s+)/);
+        var i;
+        for (i = 0; i < parts.length; i++)
+        {
+            var part = parts[i];
+            if (part === '' || /^\s+$/.test(part))
+            {
+                continue;
+            }
+
+            var subParts = part.split(/(['-])/);
+            var j;
+            for (j = 0; j < subParts.length; j++)
+            {
+                var sub = subParts[j];
+                if (sub === '' || sub === '\'' || sub === '-')
+                {
+                    continue;
+                }
+                subParts[j] = sub.charAt(0).toUpperCase() + sub.slice(1).toLowerCase();
+            }
+            parts[i] = subParts.join('');
+        }
+
+        return parts.join('');
+    }
+
     function normalizeLabel(text)
     {
         var value = safeTrim(text || '');
@@ -359,8 +503,9 @@ var AddCandidateAiAssist = (function ()
             if (normalizeOptionLabel(option.value) === desired ||
                 normalizeOptionLabel(option.text) === desired)
             {
+                storeUndo(select);
                 select.value = option.value;
-                select.setAttribute('data-ai-prefilled', '1');
+                markPrefilled(select);
                 return true;
             }
         }
@@ -403,9 +548,12 @@ var AddCandidateAiAssist = (function ()
         {
             if (isFieldEmpty(extra.hidden))
             {
+                storeUndo(extra.control);
+                storeUndo(extra.hidden);
                 extra.control.checked = true;
                 extra.hidden.value = value;
-                extra.hidden.setAttribute('data-ai-prefilled', '1');
+                markPrefilled(extra.control);
+                markPrefilled(extra.hidden);
                 return true;
             }
             return false;
@@ -419,8 +567,9 @@ var AddCandidateAiAssist = (function ()
             {
                 if (normalizeOptionLabel(extra.radios[i].value) === desired)
                 {
+                    storeUndo(extra.radios[i]);
                     extra.radios[i].checked = true;
-                    extra.radios[i].setAttribute('data-ai-prefilled', '1');
+                    markPrefilled(extra.radios[i]);
                     return true;
                 }
             }
@@ -591,9 +740,10 @@ var AddCandidateAiAssist = (function ()
 
         if (candidate.first_name)
         {
+            var firstNameValue = formatTitleCase(coerceValue(candidate.first_name.value));
             changed = applyCandidateValue(
                 'firstName',
-                coerceValue(candidate.first_name.value),
+                firstNameValue,
                 candidate.first_name.confidence,
                 'First Name',
                 suggestions
@@ -601,9 +751,10 @@ var AddCandidateAiAssist = (function ()
         }
         if (candidate.last_name)
         {
+            var lastNameValue = formatTitleCase(coerceValue(candidate.last_name.value));
             changed = applyCandidateValue(
                 'lastName',
-                coerceValue(candidate.last_name.value),
+                lastNameValue,
                 candidate.last_name.confidence,
                 'Last Name',
                 suggestions
@@ -659,21 +810,23 @@ var AddCandidateAiAssist = (function ()
                 var parsedLocation = parseLocationString(locationValue);
                 if (parsedLocation)
                 {
-                    if (parsedLocation.city !== '')
+                    var parsedCity = formatTitleCase(parsedLocation.city);
+                    if (parsedCity !== '')
                     {
                         changed = applyCandidateValue(
                             'city',
-                            parsedLocation.city,
+                            parsedCity,
                             locationConfidence,
                             'City',
                             suggestions
                         ) || changed;
                     }
-                    if (parsedLocation.country !== '')
+                    var parsedCountry = formatTitleCase(parsedLocation.country);
+                    if (parsedCountry !== '')
                     {
                         changed = applyCandidateValue(
                             'country',
-                            parsedLocation.country,
+                            parsedCountry,
                             locationConfidence,
                             'Country',
                             suggestions
@@ -710,9 +863,10 @@ var AddCandidateAiAssist = (function ()
                 }
                 if (locationValue.city)
                 {
+                    var cityValue = formatTitleCase(coerceValue(locationValue.city));
                     changed = applyCandidateValue(
                         'city',
-                        coerceValue(locationValue.city),
+                        cityValue,
                         locationConfidence,
                         'City',
                         suggestions
@@ -720,9 +874,10 @@ var AddCandidateAiAssist = (function ()
                 }
                 if (!locationCountryName && locationValue.country)
                 {
+                    var countryValue = formatTitleCase(coerceValue(locationValue.country));
                     changed = applyCandidateValue(
                         'country',
-                        coerceValue(locationValue.country),
+                        countryValue,
                         locationConfidence,
                         'Country',
                         suggestions
@@ -732,9 +887,10 @@ var AddCandidateAiAssist = (function ()
 
             if (locationCountryName)
             {
+                var formattedCountryName = formatTitleCase(coerceValue(locationCountryName));
                 changed = applyCandidateValue(
                     'country',
-                    coerceValue(locationCountryName),
+                    formattedCountryName,
                     locationConfidence,
                     'Country',
                     suggestions
@@ -1228,13 +1384,24 @@ var AddCandidateAiAssist = (function ()
                 continue;
             }
 
-            el.value = undoStore[key];
+            if (typeof undoStore[key] === 'object' && undoStore[key] !== null)
+            {
+                el.value = undoStore[key].value;
+                if (typeof undoStore[key].checked !== 'undefined')
+                {
+                    el.checked = !!undoStore[key].checked;
+                }
+            }
+            else
+            {
+                el.value = undoStore[key];
+            }
             if (undoMeta[key])
             {
                 el.placeholder = undoMeta[key].placeholder;
                 el.title = undoMeta[key].title;
             }
-            el.removeAttribute('data-ai-prefilled');
+            clearPrefilledMarker(el);
             el.removeAttribute('data-ai-suggested');
         }
 
