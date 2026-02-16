@@ -378,6 +378,15 @@ var AddCandidateAiAssist = (function ()
             return true;
         }
 
+        if (numericConfidence >= 0.85 &&
+            !isFieldEmpty(el) &&
+            normalizeOptionLabel(el.value) === normalizeOptionLabel(value))
+        {
+            storeUndo(el);
+            markPrefilled(el);
+            return true;
+        }
+
         if (isFieldEmpty(el))
         {
             applySuggestion(el, value, numericConfidence.toFixed(2));

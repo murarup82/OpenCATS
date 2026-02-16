@@ -491,9 +491,16 @@
                 </div>
 
             <style type="text/css">
-                .ui2-ai-prefilled-cell {
+                table.editTable td.ui2-ai-prefilled-cell {
                     background-color: #e8f7e8;
                     transition: background-color 0.2s ease;
+                }
+                .inputbox[data-ai-prefilled="1"],
+                .ui2-input[data-ai-prefilled="1"],
+                textarea[data-ai-prefilled="1"],
+                select[data-ai-prefilled="1"] {
+                    background-color: #dff5df !important;
+                    border-color: #8dc98d !important;
                 }
                 #dupCheckBanner {
                     display: none;
