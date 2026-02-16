@@ -102,7 +102,7 @@
                                     <tr>
                                         <td valign="middle" align="right" colspan="2">
                                             <img src="images/parser/arrow.gif" border="0" />
-                                            <input type="hidden" name="MAX_FILE_SIZE" VALUE="10000000" />
+                                            <input type="hidden" name="MAX_FILE_SIZE" VALUE="3145728" />
                                             <input type="file" id="documentFile" name="documentFile" onchange="documentFileChange();" size="<?php if ($this->isModal): ?>20<?php else: ?>40<?php endif; ?>" />
                                             <input type="button" id="documentLoad" value="Upload" onclick="loadDocumentFileContents();" disabled />
                                             &nbsp;
