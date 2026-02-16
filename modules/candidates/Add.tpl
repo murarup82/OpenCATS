@@ -502,6 +502,12 @@
                     background-color: #dff5df !important;
                     border-color: #8dc98d !important;
                 }
+                .inputbox[data-ai-review-needed="1"],
+                .ui2-input[data-ai-review-needed="1"],
+                select[data-ai-review-needed="1"] {
+                    background-color: #ffe8ef !important;
+                    border-color: #e1a9ba !important;
+                }
                 #dupCheckBanner {
                     display: none;
                 }

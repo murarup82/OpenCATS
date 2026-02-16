@@ -9,9 +9,11 @@ var AddCandidateAiAssist = (function ()
     var pollDelay = 2000;
     var maxDelay = 10000;
     var currentJobId = '';
+    var preferredWorkModelDefault = 'Hybrid Office 3-4 Days';
     var undoStore = {};
     var undoMeta = {};
     var aiPrefilledCellClass = 'ui2-ai-prefilled-cell';
+    var sourceReviewListenerBound = false;
     var config = {
         sessionCookie: '',
         actor: ''
@@ -223,6 +225,126 @@ var AddCandidateAiAssist = (function ()
         if (cell && !cellHasPrefilledDescendants(cell))
         {
             removeClass(cell, aiPrefilledCellClass);
+        }
+    }
+
+    function shouldSourceNeedReview(sourceValue)
+    {
+        var value = safeTrim(sourceValue);
+        return (value === '' || value === '(none)' || value === 'nullline' || value === 'edit');
+    }
+
+    function setSourceNeedsReview(enabled)
+    {
+        var sourceEl = byId('sourceSelect');
+        if (!sourceEl)
+        {
+            return;
+        }
+
+        if (enabled)
+        {
+            sourceEl.setAttribute('data-ai-review-needed', '1');
+        }
+        else
+        {
+            sourceEl.removeAttribute('data-ai-review-needed');
+        }
+    }
+
+    function setupSourceReviewListener()
+    {
+        var sourceEl = byId('sourceSelect');
+        if (!sourceEl || sourceReviewListenerBound)
+        {
+            return;
+        }
+
+        sourceEl.addEventListener('change', function ()
+        {
+            if (!shouldSourceNeedReview(sourceEl.value))
+            {
+                setSourceNeedsReview(false);
+            }
+        });
+        sourceReviewListenerBound = true;
+    }
+
+    function setExtraFieldReviewNeeded(labelText, enabled)
+    {
+        var extra = findExtraFieldControl(labelText);
+        if (!extra)
+        {
+            return false;
+        }
+
+        var attrValue = enabled ? '1' : null;
+        var i;
+
+        if (extra.control)
+        {
+            if (attrValue === null)
+            {
+                extra.control.removeAttribute('data-ai-review-needed');
+            }
+            else
+            {
+                extra.control.setAttribute('data-ai-review-needed', attrValue);
+            }
+        }
+
+        if (extra.radios && extra.radios.length)
+        {
+            for (i = 0; i < extra.radios.length; i++)
+            {
+                if (attrValue === null)
+                {
+                    extra.radios[i].removeAttribute('data-ai-review-needed');
+                }
+                else
+                {
+                    extra.radios[i].setAttribute('data-ai-review-needed', attrValue);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function bindReviewClearOnChange(control)
+    {
+        if (!control || control.getAttribute('data-ai-review-listener') === '1')
+        {
+            return;
+        }
+
+        control.addEventListener('change', function ()
+        {
+            control.removeAttribute('data-ai-review-needed');
+        });
+        control.setAttribute('data-ai-review-listener', '1');
+    }
+
+    function setupPreferredWorkModelReviewListener()
+    {
+        var extra = findExtraFieldControl('Preferred Work Model');
+        var i;
+        if (!extra)
+        {
+            return;
+        }
+
+        if (extra.control)
+        {
+            bindReviewClearOnChange(extra.control);
+        }
+
+        if (extra.radios && extra.radios.length)
+        {
+            for (i = 0; i < extra.radios.length; i++)
+            {
+                bindReviewClearOnChange(extra.radios[i]);
+            }
         }
     }
 
@@ -1141,7 +1263,8 @@ var AddCandidateAiAssist = (function ()
         }
 
         changed = setExtraFieldDefault('Notice Period', 'regular notice (20days)', suggestions) || changed;
-        changed = setExtraFieldDefault('Preferred Work Model', 'Hybrid Office 3-4 Days', suggestions) || changed;
+        changed = setExtraFieldDefault('Preferred Work Model', preferredWorkModelDefault, suggestions) || changed;
+        setExtraFieldReviewNeeded('Preferred Work Model', true);
 
         var warningMessage = '';
         if (formattedWarnings.length)
@@ -1160,6 +1283,7 @@ var AddCandidateAiAssist = (function ()
         }
 
         setStatus(statusLabel, false);
+        setSourceNeedsReview(shouldSourceNeedReview(byId('sourceSelect') ? byId('sourceSelect').value : ''));
         if (changed || suggestions.length)
         {
             setUndoVisible(true);
@@ -1415,6 +1539,8 @@ var AddCandidateAiAssist = (function ()
         }
 
         setStatus('AI Prefill undone.', false);
+        setSourceNeedsReview(false);
+        setExtraFieldReviewNeeded('Preferred Work Model', false);
         resetUndo();
     }
 
@@ -1433,6 +1559,9 @@ var AddCandidateAiAssist = (function ()
         {
             config.actor = newConfig.actor;
         }
+
+        setupSourceReviewListener();
+        setupPreferredWorkModelReviewListener();
     }
 
     return {
