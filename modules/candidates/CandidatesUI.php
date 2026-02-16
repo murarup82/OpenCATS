@@ -416,6 +416,8 @@ class CandidatesUI extends UserInterface
 
         $candidates = new Candidates($this->_siteID);
         $this->_template->assign('totalCandidates', $candidates->getCount());
+        $this->_template->assign('sourcesRS', $candidates->getPossibleSources());
+        $this->_template->assign('sourceFilterValue', $dataGrid->getFilterValue('Source'));
 
         $this->_template->assign('active', $this);
         $this->_template->assign('dataGrid', $dataGrid);

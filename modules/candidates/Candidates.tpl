@@ -21,6 +21,7 @@
                                 <h2>Candidates: Home</h2>
                                 <div class="ui2-datatable-meta">
                                     Candidates - Page <?php echo($this->dataGrid->getCurrentPageHTML()); ?> (<?php echo($this->dataGrid->getNumberOfRows()); ?> Items)
+                                    <?php if (!empty($this->sourceFilterValue)): ?>(Source: <?php $this->_($this->sourceFilterValue); ?>)<?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -65,6 +66,21 @@
                         <label class="ui2-inline" for="onlyActiveCandidates">
                             <input type="checkbox" name="onlyActiveCandidates" id="onlyActiveCandidates" <?php if ($this->dataGrid->getFilterValue('IsActive') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsActive', '==', '\'1\''); ?>" />
                             Active Candidates
+                        </label>
+                        <label class="ui2-inline">
+                            Source
+                            <select name="sourceFilter" id="sourceFilter" onchange="<?php echo($this->dataGrid->getJSAddFilter('Source', '==', 'this.value', 'true')); ?>" class="selectBox">
+                                <option value=""<?php if (empty($this->sourceFilterValue)): ?> selected="selected"<?php endif; ?>>All</option>
+                                <option value="(none)"<?php if ($this->sourceFilterValue === '(none)'): ?> selected="selected"<?php endif; ?>>(None)</option>
+                                <?php if (!empty($this->sourcesRS)): ?>
+                                    <?php foreach ($this->sourcesRS as $source): ?>
+                                        <?php if (!isset($source['name']) || $source['name'] === '' || $source['name'] === '(none)') continue; ?>
+                                        <option value="<?php $this->_($source['name']); ?>"<?php if ($this->sourceFilterValue === $source['name']): ?> selected="selected"<?php endif; ?>>
+                                            <?php $this->_($source['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                         </label>
                         <div class="ui2-datatable-tagfilter">
                             <a href="javascript:void(0);" id="exportBoxLink<?= $md5InstanceName ?>" onclick="toggleHideShowControls('<?= $md5InstanceName ?>-tags'); return false;">Filter by tag</a>
