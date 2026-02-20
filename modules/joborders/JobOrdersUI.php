@@ -2044,7 +2044,7 @@ class JobOrdersUI extends UserInterface
         }
 
         $statusHistoryRS = $pipelines->getStatusHistory($pipelineID);
-        $canEditHistory = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
+        $canEditHistory = $this->canEditPipelineStatusHistory();
 
         $this->_template->assign('pipelineID', $pipelineID);
         $this->_template->assign('pipelineData', $pipelineData);
@@ -2062,7 +2062,7 @@ class JobOrdersUI extends UserInterface
             CommonErrors::fatalModal(COMMONERROR_BADFIELDS, $this, 'Invalid request.');
         }
 
-        if ($this->getUserAccessLevel('joborders') < ACCESS_LEVEL_SA)
+        if (!$this->canEditPipelineStatusHistory())
         {
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
         }
@@ -2098,7 +2098,7 @@ class JobOrdersUI extends UserInterface
         }
 
         $db = DatabaseConnection::getInstance();
-        $isAdmin = ($this->getUserAccessLevel('joborders') >= ACCESS_LEVEL_SA);
+        $isAdmin = $this->canEditPipelineStatusHistory();
 
         foreach ($newDates as $historyID => $newDateInput)
         {
@@ -2680,6 +2680,11 @@ class JobOrdersUI extends UserInterface
         }
 
         return ($baseAccessLevel >= ACCESS_LEVEL_DELETE);
+    }
+
+    private function canEditPipelineStatusHistory()
+    {
+        return $this->canManageRecruiterAllocation();
     }
 
     private function canAccessJobOrderPipelineByOwnerRecruiter($ownerUserID, $recruiterUserID)
