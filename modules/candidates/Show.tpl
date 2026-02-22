@@ -375,6 +375,212 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         </table>
                     </div>
 
+                    <div class="ui2-card ui2-card--section" id="candidateCommentsSection">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Team Comments</div>
+                            <div class="ui2-card-actions">
+                                <?php if (!empty($this->canAddCandidateComment)): ?>
+                                    <button
+                                        type="button"
+                                        class="ui2-button ui2-button--secondary"
+                                        onclick="CandidateComments_openComposer();"
+                                    >Add Comment</button>
+                                <?php endif; ?>
+                                <button
+                                    type="button"
+                                    class="ui2-button ui2-button--secondary"
+                                    id="candidateCommentsToggleButton"
+                                    onclick="CandidateComments_toggle();"
+                                ><?php if (!empty($this->candidateCommentsInitiallyOpen)): ?>Hide<?php else: ?>Show<?php endif; ?> Comments (<?php echo((int) $this->candidateCommentCount); ?>)</button>
+                            </div>
+                        </div>
+                        <?php if (!empty($this->candidateCommentFlashMessage)): ?>
+                            <div
+                                class="ui2-ai-status"
+                                style="margin-top: 8px; <?php if (!empty($this->candidateCommentFlashIsError)): ?>color: #b00000; border-left-color: #b00000;<?php endif; ?>"
+                            >
+                                <?php $this->_($this->candidateCommentFlashMessage); ?>
+                            </div>
+                        <?php endif; ?>
+                        <div
+                            id="candidateCommentsPanel"
+                            style="<?php if (empty($this->candidateCommentsInitiallyOpen)) echo('display: none;'); ?> margin-top: 8px;"
+                        >
+                            <?php if (!empty($this->canAddCandidateComment)): ?>
+                                <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addProfileComment">
+                                    <input type="hidden" name="candidateID" value="<?php echo($this->candidateID); ?>" />
+                                    <input type="hidden" name="securityToken" value="<?php $this->_($this->addCommentToken); ?>" />
+                                    <table class="detailsInside ui2-details-table" style="margin-bottom: 8px;">
+                                        <tr>
+                                            <td class="vertical" style="width: 130px;">Comment Type:</td>
+                                            <td class="data">
+                                                <select name="commentCategory" class="ui2-select">
+                                                    <?php foreach ($this->candidateCommentCategories as $commentCategory): ?>
+                                                        <option value="<?php echo(htmlspecialchars($commentCategory, ENT_QUOTES)); ?>"><?php $this->_($commentCategory); ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="vertical">Comment:</td>
+                                            <td class="data">
+                                                <textarea
+                                                    name="commentText"
+                                                    id="candidateCommentText"
+                                                    class="ui2-textarea"
+                                                    rows="3"
+                                                    maxlength="4000"
+                                                    required="required"
+                                                ></textarea>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="vertical"></td>
+                                            <td class="data">
+                                                <button type="submit" class="ui2-button ui2-button--primary">Save Comment</button>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </form>
+                            <?php endif; ?>
+
+                            <table class="ui2-table">
+                                <tr>
+                                    <th align="left" width="150">Date</th>
+                                    <th align="left" width="140">Entered By</th>
+                                    <th align="left" width="160">Type</th>
+                                    <th align="left">Comment</th>
+                                </tr>
+                                <?php if (!empty($this->candidateComments)): ?>
+                                    <?php foreach ($this->candidateComments as $rowNumber => $candidateComment): ?>
+                                        <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
+                                            <td valign="top"><?php $this->_($candidateComment['dateCreated']); ?></td>
+                                            <td valign="top"><?php $this->_($candidateComment['enteredBy']); ?></td>
+                                            <td valign="top"><span class="pipelineClosedTag"><?php $this->_($candidateComment['category']); ?></span></td>
+                                            <td valign="top"><?php echo($candidateComment['commentHTML']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="4">(No comments yet)</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="ui2-card ui2-card--section" id="candidateMessagesSection">
+                        <div class="ui2-card-header">
+                            <div class="ui2-card-title">Team Inbox (Internal)</div>
+                            <?php if (!empty($this->candidateMessagingEnabled)): ?>
+                                <div class="ui2-card-actions">
+                                    <button
+                                        type="button"
+                                        class="ui2-button ui2-button--secondary"
+                                        onclick="CandidateMessages_openComposer();"
+                                    >New Message</button>
+                                    <button
+                                        type="button"
+                                        class="ui2-button ui2-button--secondary"
+                                        id="candidateMessagesToggleButton"
+                                        onclick="CandidateMessages_toggle();"
+                                    ><?php if (!empty($this->candidateMessagesInitiallyOpen)): ?>Hide<?php else: ?>Show<?php endif; ?> Thread</button>
+                                    <?php if (!empty($this->candidateMessageThreadID) && !empty($this->candidateThreadVisibleToCurrentUser)): ?>
+                                        <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox&amp;threadID=<?php echo((int) $this->candidateMessageThreadID); ?>">
+                                            Open My Inbox
+                                        </a>
+                                    <?php else: ?>
+                                        <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox">
+                                            Open My Inbox
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (empty($this->candidateMessagingEnabled)): ?>
+                            <div class="ui2-ai-status" style="margin-top: 8px; color:#b00000; border-left-color:#b00000;">
+                                Messaging tables are missing. Apply schema migrations from Settings -> Schema Migrations.
+                            </div>
+                        <?php else: ?>
+                            <?php if (!empty($this->candidateMessageFlashMessage)): ?>
+                                <div class="ui2-ai-status" style="margin-top: 8px; <?php if (!empty($this->candidateMessageFlashIsError)): ?>color:#b00000; border-left-color:#b00000;<?php endif; ?>">
+                                    <?php $this->_($this->candidateMessageFlashMessage); ?>
+                                </div>
+                            <?php endif; ?>
+                            <div
+                                id="candidateMessagesPanel"
+                                style="<?php if (empty($this->candidateMessagesInitiallyOpen)) echo('display: none;'); ?> margin-top: 8px;"
+                            >
+                                <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=postMessage">
+                                    <input type="hidden" name="candidateID" value="<?php echo((int) $this->candidateID); ?>" />
+                                    <input type="hidden" name="securityToken" value="<?php $this->_($this->postCandidateMessageToken); ?>" />
+                                    <table class="detailsInside ui2-details-table" style="margin-bottom: 8px;">
+                                        <tr>
+                                            <td class="vertical" style="width: 130px;">Message:</td>
+                                            <td class="data">
+                                                <textarea
+                                                    name="messageBody"
+                                                    id="candidateMessageBody"
+                                                    class="ui2-textarea"
+                                                    rows="3"
+                                                    maxlength="4000"
+                                                    required="required"
+                                                    placeholder="Type a message and mention teammates with @First Last."
+                                                ></textarea>
+                                            </td>
+                                        </tr>
+                                        <?php if (!empty($this->candidateMessageMentionHintNames)): ?>
+                                            <tr>
+                                                <td class="vertical">Mention Help:</td>
+                                                <td class="data">
+                                                    <?php foreach ($this->candidateMessageMentionHintNames as $hintIndex => $mentionHintName): ?>
+                                                        <?php if ($hintIndex > 0): ?>, <?php endif; ?>
+                                                        @<?php $this->_($mentionHintName); ?>
+                                                    <?php endforeach; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
+                                        <tr>
+                                            <td class="vertical"></td>
+                                            <td class="data">
+                                                <button type="submit" class="ui2-button ui2-button--primary">Send Message</button>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </form>
+
+                                <?php if (!empty($this->candidateMessageThreadID) && empty($this->candidateThreadVisibleToCurrentUser)): ?>
+                                    <div class="ui2-ai-status" style="margin-top: 8px;">
+                                        You are not part of this thread yet. Send a message and mention teammates to start collaborating.
+                                    </div>
+                                <?php elseif (!empty($this->candidateThreadVisibleToCurrentUser)): ?>
+                                    <table class="ui2-table">
+                                        <tr>
+                                            <th align="left" width="150">Date</th>
+                                            <th align="left" width="140">From</th>
+                                            <th align="left" width="180">Mentions</th>
+                                            <th align="left">Message</th>
+                                        </tr>
+                                        <?php if (!empty($this->candidateThreadMessages)): ?>
+                                            <?php foreach ($this->candidateThreadMessages as $rowNumber => $threadMessage): ?>
+                                                <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
+                                                    <td valign="top"><?php $this->_($threadMessage['dateCreated']); ?></td>
+                                                    <td valign="top"><?php $this->_($threadMessage['senderName']); ?></td>
+                                                    <td valign="top"><?php if (!empty($threadMessage['mentionedUsers'])) $this->_($threadMessage['mentionedUsers']); else echo('--'); ?></td>
+                                                    <td valign="top"><?php echo($threadMessage['bodyHTML']); ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="4">(No messages yet)</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </table>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
                     <div class="ui2-card ui2-card--section">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Attachments</div>
@@ -859,6 +1065,56 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
     </script>
 
 <?php endif; ?>
+
+    <script type="text/javascript">
+        function CandidateComments_toggle(forceOpen)
+        {
+            var panel = document.getElementById('candidateCommentsPanel');
+            var button = document.getElementById('candidateCommentsToggleButton');
+            if (!panel || !button)
+            {
+                return;
+            }
+
+            var shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : (panel.style.display === 'none');
+            panel.style.display = shouldOpen ? '' : 'none';
+            button.innerHTML = button.innerHTML.replace(/^(Show|Hide)/, shouldOpen ? 'Hide' : 'Show');
+        }
+
+        function CandidateComments_openComposer()
+        {
+            CandidateComments_toggle(true);
+            var textArea = document.getElementById('candidateCommentText');
+            if (textArea)
+            {
+                textArea.focus();
+            }
+        }
+
+        function CandidateMessages_toggle(forceOpen)
+        {
+            var panel = document.getElementById('candidateMessagesPanel');
+            var button = document.getElementById('candidateMessagesToggleButton');
+            if (!panel || !button)
+            {
+                return;
+            }
+
+            var shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : (panel.style.display === 'none');
+            panel.style.display = shouldOpen ? '' : 'none';
+            button.innerHTML = button.innerHTML.replace(/^(Show|Hide)/, shouldOpen ? 'Hide' : 'Show');
+        }
+
+        function CandidateMessages_openComposer()
+        {
+            CandidateMessages_toggle(true);
+            var textArea = document.getElementById('candidateMessageBody');
+            if (textArea)
+            {
+                textArea.focus();
+            }
+        }
+    </script>
 	
 <?php TemplateUtility::printFooter(); ?>
 

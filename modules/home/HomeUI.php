@@ -32,6 +32,7 @@ include_once(LEGACY_ROOT . '/lib/CommonErrors.php');
 include_once(LEGACY_ROOT . '/lib/Dashboard.php');
 include_once(LEGACY_ROOT . '/lib/JobOrders.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
+include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
 
 class HomeUI extends UserInterface
 {
@@ -43,7 +44,10 @@ class HomeUI extends UserInterface
         $this->_moduleDirectory = 'home';
         $this->_moduleName = 'home';
         $this->_moduleTabText = 'Overview';
-        $this->_subTabs = array();
+        $this->_subTabs = array(
+            'Dashboard' => CATSUtility::getIndexName() . '?m=home&amp;a=home',
+            'My Inbox'  => CATSUtility::getIndexName() . '?m=home&amp;a=inbox'
+        );
     }
 
 
@@ -60,6 +64,22 @@ class HomeUI extends UserInterface
                 include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 
                 $this->quickSearch();
+                break;
+
+            case 'inbox':
+                if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->inbox();
+                break;
+
+            case 'postInboxMessage':
+                if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onPostInboxMessage();
                 break;
 
             case 'deleteSavedSearch':
@@ -150,7 +170,175 @@ class HomeUI extends UserInterface
         $this->_template->assign('upcomingEventsHTML', $upcomingEventsHTML);
         $this->_template->assign('upcomingEventsFupHTML', $upcomingEventsFupHTML);
         $this->_template->assign('wildCardQuickSearch', '');
+        $this->_template->assign('subActive', 'Dashboard');
         $this->_template->display('./modules/home/Home.tpl');
+    }
+
+    private function inbox()
+    {
+        $candidateMessages = new CandidateMessages($this->_siteID);
+        $schemaAvailable = $candidateMessages->isSchemaAvailable();
+
+        $flashMessage = '';
+        $flashIsError = false;
+        if (isset($_GET['msg']))
+        {
+            $msgStatus = $this->getTrimmedInput('msg', $_GET);
+            switch ($msgStatus)
+            {
+                case 'sent':
+                    $flashMessage = 'Message sent.';
+                    break;
+
+                case 'empty':
+                    $flashMessage = 'Message cannot be empty.';
+                    $flashIsError = true;
+                    break;
+
+                case 'tooLong':
+                    $flashMessage = 'Message is too long.';
+                    $flashIsError = true;
+                    break;
+
+                case 'token':
+                case 'invalid':
+                    $flashMessage = 'Invalid message request.';
+                    $flashIsError = true;
+                    break;
+
+                case 'forbidden':
+                    $flashMessage = 'You do not have access to this thread.';
+                    $flashIsError = true;
+                    break;
+
+                case 'schema':
+                    $flashMessage = 'Inbox tables are missing. Apply schema migrations first.';
+                    $flashIsError = true;
+                    break;
+
+                default:
+                    $flashMessage = 'Unable to send message.';
+                    $flashIsError = true;
+                    break;
+            }
+        }
+
+        $selectedThreadID = 0;
+        if ($this->isOptionalIDValid('threadID', $_GET))
+        {
+            $selectedThreadID = (int) $_GET['threadID'];
+        }
+
+        $threads = array();
+        $selectedThread = array();
+        $messages = array();
+        $mentionUsers = array();
+        $mentionHintNames = array();
+        if ($schemaAvailable)
+        {
+            $threads = $candidateMessages->getInboxThreads($this->_userID, 250);
+            if (
+                $selectedThreadID > 0 &&
+                !$candidateMessages->isUserParticipant($selectedThreadID, $this->_userID)
+            )
+            {
+                $selectedThreadID = 0;
+                if ($flashMessage === '')
+                {
+                    $flashMessage = 'You do not have access to this thread.';
+                    $flashIsError = true;
+                }
+            }
+
+            if ($selectedThreadID <= 0 && !empty($threads))
+            {
+                $selectedThreadID = (int) $threads[0]['threadID'];
+            }
+
+            if ($selectedThreadID > 0)
+            {
+                $selectedThread = $candidateMessages->getThread($selectedThreadID);
+                if (!empty($selectedThread))
+                {
+                    $candidateMessages->markThreadRead($selectedThreadID, $this->_userID);
+                    $messages = $candidateMessages->getMessagesByThread($selectedThreadID, 250);
+                }
+            }
+
+            $mentionUsers = $candidateMessages->getMentionableUsers();
+            foreach ($mentionUsers as $mentionUser)
+            {
+                if (count($mentionHintNames) >= 5)
+                {
+                    break;
+                }
+
+                $fullName = trim($mentionUser['fullName']);
+                if ($fullName !== '')
+                {
+                    $mentionHintNames[] = $fullName;
+                }
+            }
+        }
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'My Inbox');
+        $this->_template->assign('schemaAvailable', $schemaAvailable);
+        $this->_template->assign('flashMessage', $flashMessage);
+        $this->_template->assign('flashIsError', $flashIsError);
+        $this->_template->assign('threads', $threads);
+        $this->_template->assign('selectedThreadID', $selectedThreadID);
+        $this->_template->assign('selectedThread', $selectedThread);
+        $this->_template->assign('messages', $messages);
+        $this->_template->assign('mentionHintNames', $mentionHintNames);
+        $this->_template->assign(
+            'postInboxMessageToken',
+            $this->getCSRFToken('home.postInboxMessage')
+        );
+
+        $this->_template->display('./modules/home/MyInbox.tpl');
+    }
+
+    private function onPostInboxMessage()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('threadID', $_POST))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=invalid');
+        }
+
+        $threadID = (int) $_POST['threadID'];
+        $body = $this->getTrimmedInput('messageBody', $_POST);
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+
+        if (!$this->isCSRFTokenValid('home.postInboxMessage', $securityToken))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=token');
+        }
+
+        $candidateMessages = new CandidateMessages($this->_siteID);
+        if (!$candidateMessages->isSchemaAvailable())
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
+        }
+
+        if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=forbidden');
+        }
+
+        $result = $candidateMessages->postMessageToThread($threadID, $this->_userID, $body);
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=' . rawurlencode($error));
+        }
+
+        CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=sent');
     }
 
     private function deleteSavedSearch()

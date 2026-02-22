@@ -1,11 +1,14 @@
 <?php /* $Id: Home.tpl 3563 2007-11-12 07:41:54Z will $ */ ?>
 <?php TemplateUtility::printHeader('Overview', array('js/sweetTitles.js', 'js/dataGrid.js', 'js/dataGridFilters.js', 'js/home.js')); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
-<?php TemplateUtility::printTabs($this->active); ?>
+<?php TemplateUtility::printTabs($this->active, isset($this->subActive) ? $this->subActive : 'Dashboard'); ?>
     <div id="main" class="home">
         <?php TemplateUtility::printQuickSearch(); ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?> style="padding-top: 10px;">
+            <div style="margin-bottom: 8px; text-align: right;">
+                <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox">My Inbox</a>
+            </div>
 
             <table>
                 <tr>

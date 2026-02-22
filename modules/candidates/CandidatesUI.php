@@ -51,6 +51,7 @@ include_once(LEGACY_ROOT . '/lib/ParseUtility.php');
 include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/Tags.php');
 include_once(LEGACY_ROOT . '/lib/Search.php');
+include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
 
 class CandidatesUI extends UserInterface
 {
@@ -63,6 +64,9 @@ class CandidatesUI extends UserInterface
      * contacts listing.
      */
     const TRUNCATE_KEYSKILLS = 30;
+    const PROFILE_COMMENT_ACTIVITY_TYPE = 400;
+    const PROFILE_COMMENT_MARKER = '[CANDIDATE_COMMENT]';
+    const PROFILE_COMMENT_MAXLEN = 4000;
 
 
     public function __construct()
@@ -191,6 +195,20 @@ class CandidatesUI extends UserInterface
                 } else {
                     $this->addCandidateTags();
                 }
+                break;
+
+            case 'postMessage':
+                if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT) {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onPostCandidateMessage();
+                break;
+
+            case 'addProfileComment':
+                if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT) {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onAddProfileComment();
                 break;
 
             /* Change candidate-joborder status. */
@@ -620,6 +638,88 @@ class CandidatesUI extends UserInterface
             }
         }
 
+        $candidateCommentFlashMessage = '';
+        $candidateCommentFlashIsError = false;
+        if (isset($_GET['comment']))
+        {
+            $commentStatus = $this->getTrimmedInput('comment', $_GET);
+            switch ($commentStatus)
+            {
+                case 'added':
+                    $candidateCommentFlashMessage = 'Comment added.';
+                    break;
+
+                case 'empty':
+                    $candidateCommentFlashMessage = 'Comment text is required.';
+                    $candidateCommentFlashIsError = true;
+                    break;
+
+                case 'tooLong':
+                    $candidateCommentFlashMessage = 'Comment is too long.';
+                    $candidateCommentFlashIsError = true;
+                    break;
+
+                case 'invalid':
+                case 'token':
+                    $candidateCommentFlashMessage = 'Invalid comment request.';
+                    $candidateCommentFlashIsError = true;
+                    break;
+
+                case 'failed':
+                    $candidateCommentFlashMessage = 'Failed to save comment.';
+                    $candidateCommentFlashIsError = true;
+                    break;
+            }
+        }
+        $candidateCommentsInitiallyOpen = (
+            (isset($_GET['showComments']) && $_GET['showComments'] === '1') ||
+            $candidateCommentFlashMessage !== ''
+        );
+
+        $candidateMessageFlashMessage = '';
+        $candidateMessageFlashIsError = false;
+        if (isset($_GET['msg']))
+        {
+            $msgStatus = $this->getTrimmedInput('msg', $_GET);
+            switch ($msgStatus)
+            {
+                case 'sent':
+                    $candidateMessageFlashMessage = 'Message sent.';
+                    break;
+
+                case 'empty':
+                    $candidateMessageFlashMessage = 'Message cannot be empty.';
+                    $candidateMessageFlashIsError = true;
+                    break;
+
+                case 'tooLong':
+                    $candidateMessageFlashMessage = 'Message is too long.';
+                    $candidateMessageFlashIsError = true;
+                    break;
+
+                case 'schema':
+                    $candidateMessageFlashMessage = 'Inbox tables are missing. Apply schema migrations first.';
+                    $candidateMessageFlashIsError = true;
+                    break;
+
+                case 'token':
+                case 'invalid':
+                    $candidateMessageFlashMessage = 'Invalid message request.';
+                    $candidateMessageFlashIsError = true;
+                    break;
+
+                default:
+                    $candidateMessageFlashMessage = 'Unable to send message.';
+                    $candidateMessageFlashIsError = true;
+                    break;
+            }
+        }
+
+        $candidateMessagesInitiallyOpen = (
+            (isset($_GET['showMessages']) && $_GET['showMessages'] === '1') ||
+            $candidateMessageFlashMessage !== ''
+        );
+
         $data = $candidates->getWithDuplicity($candidateID);
 
         /* Bail out if we got an empty result set. */
@@ -1038,6 +1138,52 @@ class CandidatesUI extends UserInterface
         $questionnaires = $questionnaire->getCandidateQuestionnaires($candidateID);
 
         $lists = $candidates->getListsForCandidate($candidateID);
+        $candidateComments = $this->getCandidateProfileComments($candidateID);
+        $candidateCommentCategories = $this->getCandidateCommentCategories();
+        $canAddCandidateComment = (
+            !$isPopup &&
+            $this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT
+        );
+
+        $candidateMessages = new CandidateMessages($this->_siteID);
+        $candidateMessagingEnabled = $candidateMessages->isSchemaAvailable();
+        $candidateMessageThread = array();
+        $candidateMessageThreadID = 0;
+        $candidateThreadVisibleToCurrentUser = false;
+        $candidateThreadMessages = array();
+        $candidateMessageMentionHintNames = array();
+        if ($candidateMessagingEnabled)
+        {
+            $candidateMessageThread = $candidateMessages->getThreadByCandidate($candidateID);
+            if (!empty($candidateMessageThread))
+            {
+                $candidateMessageThreadID = (int) $candidateMessageThread['threadID'];
+                $candidateThreadVisibleToCurrentUser = $candidateMessages->isUserParticipant(
+                    $candidateMessageThreadID,
+                    $this->_userID
+                );
+                if ($candidateThreadVisibleToCurrentUser)
+                {
+                    $candidateMessages->markThreadRead($candidateMessageThreadID, $this->_userID);
+                    $candidateThreadMessages = $candidateMessages->getMessagesByThread($candidateMessageThreadID, 100);
+                }
+            }
+
+            $mentionUsers = $candidateMessages->getMentionableUsers();
+            foreach ($mentionUsers as $mentionUser)
+            {
+                if (count($candidateMessageMentionHintNames) >= 5)
+                {
+                    break;
+                }
+
+                $fullName = trim($mentionUser['fullName']);
+                if ($fullName !== '')
+                {
+                    $candidateMessageMentionHintNames[] = $fullName;
+                }
+            }
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('questionnaires', $questionnaires);
@@ -1060,6 +1206,21 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('tagsRS', $tags->getAll());
         $this->_template->assign('assignedTags', $tags->getCandidateTagsTitle($candidateID));
         $this->_template->assign('lists', $lists);
+        $this->_template->assign('candidateComments', $candidateComments);
+        $this->_template->assign('candidateCommentCategories', $candidateCommentCategories);
+        $this->_template->assign('candidateCommentCount', count($candidateComments));
+        $this->_template->assign('canAddCandidateComment', $canAddCandidateComment);
+        $this->_template->assign('candidateCommentsInitiallyOpen', $candidateCommentsInitiallyOpen);
+        $this->_template->assign('candidateCommentFlashMessage', $candidateCommentFlashMessage);
+        $this->_template->assign('candidateCommentFlashIsError', $candidateCommentFlashIsError);
+        $this->_template->assign('candidateMessagingEnabled', $candidateMessagingEnabled);
+        $this->_template->assign('candidateMessageThreadID', $candidateMessageThreadID);
+        $this->_template->assign('candidateThreadVisibleToCurrentUser', $candidateThreadVisibleToCurrentUser);
+        $this->_template->assign('candidateThreadMessages', $candidateThreadMessages);
+        $this->_template->assign('candidateMessageMentionHintNames', $candidateMessageMentionHintNames);
+        $this->_template->assign('candidateMessagesInitiallyOpen', $candidateMessagesInitiallyOpen);
+        $this->_template->assign('candidateMessageFlashMessage', $candidateMessageFlashMessage);
+        $this->_template->assign('candidateMessageFlashIsError', $candidateMessageFlashIsError);
         $this->_template->assign('gdprLatestRequest', $gdprLatestRequest);
         $this->_template->assign('gdprDeletionRequired', $gdprDeletionRequired);
         $this->_template->assign('gdprSendEnabled', $gdprSendEnabled);
@@ -1072,6 +1233,14 @@ class CandidatesUI extends UserInterface
         $this->_template->assign(
             'deleteAttachmentToken',
             $this->getCSRFToken('candidates.deleteAttachment')
+        );
+        $this->_template->assign(
+            'addCommentToken',
+            $this->getCSRFToken('candidates.addProfileComment')
+        );
+        $this->_template->assign(
+            'postCandidateMessageToken',
+            $this->getCSRFToken('candidates.postMessage')
         );
 
         $this->_template->display('./modules/candidates/Show.tpl');
@@ -3010,6 +3179,249 @@ class CandidatesUI extends UserInterface
         CATSUtility::transferRelativeURI(
             'm=candidates&a=show&candidateID=' . $candidateID
         );
+    }
+
+    private function onAddProfileComment()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('candidateID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
+        }
+
+        $candidateID = (int) $_POST['candidateID'];
+        $candidates = new Candidates($this->_siteID);
+        if (empty($candidates->get($candidateID)))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified candidate ID could not be found.');
+        }
+
+        $redirectParams = array('showComments' => '1');
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('candidates.addProfileComment', $securityToken))
+        {
+            $this->redirectToCandidateShow($candidateID, array_merge(
+                $redirectParams,
+                array('comment' => 'token')
+            ));
+        }
+
+        $candidateComment = $this->getTrimmedInput('commentText', $_POST);
+        if ($candidateComment === '')
+        {
+            $this->redirectToCandidateShow($candidateID, array_merge(
+                $redirectParams,
+                array('comment' => 'empty')
+            ));
+        }
+
+        if (strlen($candidateComment) > self::PROFILE_COMMENT_MAXLEN)
+        {
+            $this->redirectToCandidateShow($candidateID, array_merge(
+                $redirectParams,
+                array('comment' => 'tooLong')
+            ));
+        }
+
+        $candidateCommentCategory = $this->getTrimmedInput('commentCategory', $_POST);
+        $candidateCommentCategories = $this->getCandidateCommentCategories();
+        if (!in_array($candidateCommentCategory, $candidateCommentCategories, true))
+        {
+            $candidateCommentCategory = 'General';
+        }
+
+        $activityEntries = new ActivityEntries($this->_siteID);
+        $activityID = $activityEntries->add(
+            $candidateID,
+            DATA_ITEM_CANDIDATE,
+            self::PROFILE_COMMENT_ACTIVITY_TYPE,
+            htmlspecialchars(
+                $this->makeCandidateProfileComment(
+                    $candidateCommentCategory,
+                    $candidateComment
+                ),
+                ENT_QUOTES
+            ),
+            $this->_userID,
+            -1
+        );
+
+        if (empty($activityID))
+        {
+            $this->redirectToCandidateShow($candidateID, array_merge(
+                $redirectParams,
+                array('comment' => 'failed')
+            ));
+        }
+
+        $this->redirectToCandidateShow($candidateID, array_merge(
+            $redirectParams,
+            array('comment' => 'added')
+        ));
+    }
+
+    private function onPostCandidateMessage()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('candidateID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
+        }
+
+        $candidateID = (int) $_POST['candidateID'];
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('candidates.postMessage', $securityToken))
+        {
+            $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'token'));
+        }
+
+        $candidates = new Candidates($this->_siteID);
+        if (empty($candidates->get($candidateID)))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified candidate ID could not be found.');
+        }
+
+        $candidateMessages = new CandidateMessages($this->_siteID);
+        if (!$candidateMessages->isSchemaAvailable())
+        {
+            $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'schema'));
+        }
+
+        $messageBody = $this->getTrimmedInput('messageBody', $_POST);
+        $result = $candidateMessages->postMessageForCandidate(
+            $candidateID,
+            $this->_userID,
+            $messageBody
+        );
+
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            $this->redirectToCandidateShow($candidateID, array(
+                'showMessages' => '1',
+                'msg' => $error
+            ));
+        }
+
+        $this->redirectToCandidateShow($candidateID, array(
+            'showMessages' => '1',
+            'msg' => 'sent'
+        ));
+    }
+
+    private function getCandidateProfileComments($candidateID)
+    {
+        $activityEntries = new ActivityEntries($this->_siteID);
+        $activityRS = $activityEntries->getAllByDataItem($candidateID, DATA_ITEM_CANDIDATE);
+        if (empty($activityRS))
+        {
+            return array();
+        }
+
+        $comments = array();
+        foreach ($activityRS as $activityData)
+        {
+            $parsedComment = $this->parseCandidateProfileComment($activityData['notes']);
+            if ($parsedComment === false)
+            {
+                continue;
+            }
+
+            $enteredBy = trim(
+                $activityData['enteredByFirstName'] . ' ' . $activityData['enteredByLastName']
+            );
+            if ($enteredBy === '')
+            {
+                $enteredBy = 'Unknown User';
+            }
+
+            $comments[] = array(
+                'activityID' => (int) $activityData['activityID'],
+                'dateCreated' => $activityData['dateCreated'],
+                'enteredBy' => $enteredBy,
+                'category' => $parsedComment['category'],
+                'commentHTML' => nl2br(htmlspecialchars($parsedComment['comment'], ENT_QUOTES))
+            );
+        }
+
+        return array_reverse($comments);
+    }
+
+    private function getCandidateCommentCategories()
+    {
+        return array(
+            'General',
+            'Interview Feedback',
+            'Technical Feedback',
+            'Client Feedback',
+            'Internal Note'
+        );
+    }
+
+    private function makeCandidateProfileComment($category, $comment)
+    {
+        return self::PROFILE_COMMENT_MARKER . '[' . $category . '] ' . $comment;
+    }
+
+    private function parseCandidateProfileComment($note)
+    {
+        $decoded = html_entity_decode((string) $note, ENT_QUOTES);
+        if (strpos($decoded, self::PROFILE_COMMENT_MARKER) !== 0)
+        {
+            return false;
+        }
+
+        $payload = trim(substr($decoded, strlen(self::PROFILE_COMMENT_MARKER)));
+        if ($payload === '')
+        {
+            return false;
+        }
+
+        $category = 'General';
+        $comment = $payload;
+        if (preg_match('/^\[([^\]]+)\]\s*(.*)$/s', $payload, $matches))
+        {
+            if (trim($matches[1]) !== '')
+            {
+                $category = trim($matches[1]);
+            }
+            $comment = trim($matches[2]);
+        }
+
+        if ($comment === '')
+        {
+            return false;
+        }
+
+        return array(
+            'category' => $category,
+            'comment' => $comment
+        );
+    }
+
+    private function redirectToCandidateShow($candidateID, $params = array())
+    {
+        $transferURI = 'm=candidates&a=show&candidateID=' . (int) $candidateID;
+        if (!empty($params))
+        {
+            $queryParts = array();
+            foreach ($params as $key => $value)
+            {
+                $queryParts[] = rawurlencode($key) . '=' . rawurlencode((string) $value);
+            }
+            $transferURI .= '&' . implode('&', $queryParts);
+        }
+
+        CATSUtility::transferRelativeURI($transferURI);
     }
 
     //TODO: Document me.
