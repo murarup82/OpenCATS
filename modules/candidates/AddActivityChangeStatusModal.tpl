@@ -96,6 +96,7 @@
        statusLabels[<?php echo($statusData['statusID']); ?>] = '<?php echo(str_replace("'", "\\'", $statusData['status'])); ?>';
     <?php endforeach; ?>
     rejectedStatusID = <?php echo(isset($this->rejectedStatusId) ? (int) $this->rejectedStatusId : 0); ?>;
+    allocatedStatusID = <?php echo((int) PIPELINE_STATUS_ALLOCATED); ?>;
     hiredStatusID = <?php echo((int) PIPELINE_STATUS_HIRED); ?>;
     rejectionOtherReasonID = <?php echo(isset($this->rejectionOtherReasonId) ? (int) $this->rejectionOtherReasonId : 0); ?>;
 
@@ -209,7 +210,7 @@
         var statusSelect = document.getElementById('statusID');
         var statusCommentRow = document.getElementById('statusCommentTR');
         var rejectionRow = document.getElementById('rejectionReasonTR');
-        var rejectionDateRow = document.getElementById('rejectionDateTR');
+        var transitionDateRow = document.getElementById('transitionDateTR');
 
         var changeActive = true;
         if (changeStatusCheckbox)
@@ -223,13 +224,20 @@
 
         var isRejected = statusSelect &&
             String(statusSelect.value) === String(rejectedStatusID);
+        var selectedStatusID = statusSelect ? parseInt(statusSelect.value, 10) : -1;
+        var requiresTransitionDate = (
+            changeActive &&
+            !isNaN(selectedStatusID) &&
+            selectedStatusID > 0 &&
+            selectedStatusID !== parseInt(allocatedStatusID, 10)
+        );
         if (rejectionRow)
         {
             rejectionRow.style.display = (changeActive && isRejected) ? 'table-row' : 'none';
         }
-        if (rejectionDateRow)
+        if (transitionDateRow)
         {
-            rejectionDateRow.style.display = (changeActive && isRejected) ? 'table-row' : 'none';
+            transitionDateRow.style.display = requiresTransitionDate ? 'table-row' : 'none';
         }
 
         AS_onRejectionReasonChange();
@@ -480,12 +488,12 @@
                 </td>
             </tr>
             <?php endif; ?>
-            <tr id="rejectionDateTR" style="display: none;">
+            <tr id="transitionDateTR" style="display: none;">
                 <td class="tdVertical">
-                    <label id="rejectionDateLabel" for="rejectionDate">Rejection Date:</label>
+                    <label id="transitionDateLabel" for="transitionDate">Transition Date:</label>
                 </td>
                 <td class="tdData">
-                    <script type="text/javascript">DateInput('rejectionDate', false, 'MM-DD-YY', '<?php echo(date('m-d-y')); ?>', -1);</script>
+                    <script type="text/javascript">DateInput('transitionDate', false, 'MM-DD-YY', '<?php echo(date('m-d-y')); ?>', -1);</script>
                 </td>
             </tr>
            <tr id="addActivityTR" <?php if ($this->onlyScheduleEvent || $hideActivity): ?>style="display:none;"<?php endif; ?>>

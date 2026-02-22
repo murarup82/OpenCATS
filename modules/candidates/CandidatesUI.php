@@ -4156,6 +4156,36 @@ class CandidatesUI extends UserInterface
                     );
                 }
 
+                $transitionDateInput = $this->getTrimmedInput('transitionDate', $_POST);
+                if ($transitionDateInput === '')
+                {
+                    /* Backward compatibility with older modal field name. */
+                    $transitionDateInput = $this->getTrimmedInput('rejectionDate', $_POST);
+                }
+
+                if ((int) $statusID !== (int) PIPELINE_STATUS_ALLOCATED)
+                {
+                    if (
+                        $transitionDateInput === '' ||
+                        !DateUtility::validate('-', $transitionDateInput, DATE_FORMAT_MMDDYY)
+                    )
+                    {
+                        CommonErrors::fatalModal(
+                            COMMONERROR_MISSINGFIELDS,
+                            $this,
+                            'Invalid transition date.'
+                        );
+                    }
+
+                    $transitionDate = DateUtility::convert(
+                        '-',
+                        $transitionDateInput,
+                        DATE_FORMAT_MMDDYY,
+                        DATE_FORMAT_YYYYMMDD
+                    );
+                    $statusHistoryDate = $transitionDate . ' ' . date('H:i:s');
+                }
+
                 if ($statusID == PIPELINE_STATUS_REJECTED)
                 {
                     if (empty($rejectionReasonIDs))
@@ -4185,23 +4215,6 @@ class CandidatesUI extends UserInterface
                             );
                         }
                     }
-
-                    $rejectionDateInput = $this->getTrimmedInput('rejectionDate', $_POST);
-                    if ($rejectionDateInput === '' || !DateUtility::validate('-', $rejectionDateInput, DATE_FORMAT_MMDDYY))
-                    {
-                        CommonErrors::fatalModal(
-                            COMMONERROR_MISSINGFIELDS,
-                            $this,
-                            'Invalid rejection date.'
-                        );
-                    }
-                    $rejectionDate = DateUtility::convert(
-                        '-',
-                        $rejectionDateInput,
-                        DATE_FORMAT_MMDDYY,
-                        DATE_FORMAT_YYYYMMDD
-                    );
-                    $statusHistoryDate = $rejectionDate . ' ' . date('H:i:s');
                 }
             }
 

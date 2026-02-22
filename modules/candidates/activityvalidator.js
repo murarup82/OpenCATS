@@ -15,7 +15,7 @@ function checkActivityForm(form)
     errorMessage += checkEventTitle();
     errorMessage += checkStatusComment();
     errorMessage += checkRejectionReasons();
-    errorMessage += checkRejectionDate();
+    errorMessage += checkTransitionDate();
 
     if (errorMessage != '')
     {
@@ -148,24 +148,31 @@ function checkRejectionReasons()
     return errorMessage;
 }
 
-function checkRejectionDate()
+function checkTransitionDate()
 {
-    if (typeof rejectedStatusID === 'undefined')
+    if (typeof allocatedStatusID === 'undefined')
     {
         return '';
     }
 
     var changeStatus = document.getElementById('changeStatus');
     var statusSelect = document.getElementById('statusID');
-    var dateField = document.getElementById('rejectionDate');
-    var dateLabel = document.getElementById('rejectionDateLabel');
+    var dateField = document.getElementById('transitionDate');
+    var dateLabel = document.getElementById('transitionDateLabel');
 
     if (!changeStatus || !statusSelect || !dateField || !dateLabel)
     {
         return '';
     }
 
-    if (!changeStatus.checked || statusSelect.value != rejectedStatusID)
+    var selectedStatusID = parseInt(statusSelect.value, 10);
+    var allocatedStatus = parseInt(allocatedStatusID, 10);
+    if (
+        !changeStatus.checked ||
+        isNaN(selectedStatusID) ||
+        selectedStatusID <= 0 ||
+        selectedStatusID === allocatedStatus
+    )
     {
         dateLabel.style.color = '#000';
         return '';
@@ -177,9 +184,14 @@ function checkRejectionDate()
     if (!datePattern.test(value))
     {
         dateLabel.style.color = '#ff0000';
-        return "    - You must enter a valid rejection date.\n";
+        return "    - You must enter a valid transition date.\n";
     }
 
     dateLabel.style.color = '#000';
     return '';
+}
+
+function checkRejectionDate()
+{
+    return checkTransitionDate();
 }
