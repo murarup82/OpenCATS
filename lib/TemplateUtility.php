@@ -1108,6 +1108,7 @@ class TemplateUtility
         echo '</div>', "\n";
         $iconMap = array(
             'home' => 'home',
+            'home_inbox' => 'activity',
             'dashboard' => 'home',
             'candidates' => 'candidates',
             'joborders' => 'joborders',
@@ -1152,8 +1153,29 @@ class TemplateUtility
             }
         }
 
+        if (isset($itemsByKey['home']))
+        {
+            $itemsByKey['home']['href'] = $indexName . '?m=home&amp;a=home';
+            $itemsByKey['home']['action'] = 'home';
+        }
+
+        if ($_SESSION['CATS']->getAccessLevel('candidates.show') >= ACCESS_LEVEL_READ)
+        {
+            if ($rolePagePermissions === null ||
+                $rolePagePermissions->isPageAllowedForUser($currentUserID, 'home', $currentAccessLevel))
+            {
+                $itemsByKey['home_inbox'] = array(
+                    'label' => 'My Inbox',
+                    'href' => $indexName . '?m=home&amp;a=inbox',
+                    'module' => 'home',
+                    'action' => 'inbox',
+                    'icon' => 'activity'
+                );
+            }
+        }
+
           $groups = array(
-              array('label' => 'Overview', 'modules' => array('dashboard', 'home', 'activity')),
+              array('label' => 'Overview', 'modules' => array('dashboard', 'home', 'home_inbox', 'activity')),
             array('label' => 'Core Recruiting', 'modules' => array('candidates', 'joborders', 'companies', 'contacts')),
             array('label' => 'Sourcing & Lists', 'modules' => array('sourcing', 'lists')),
             array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports')),
@@ -1191,6 +1213,13 @@ class TemplateUtility
                     if (isset($item['action']))
                     {
                         $isActive = ($currentAction === $item['action']);
+                        if (!$isActive &&
+                            $item['module'] === 'home' &&
+                            $item['action'] === 'home' &&
+                            $currentAction === '')
+                        {
+                            $isActive = true;
+                        }
                     }
                     else
                     {

@@ -428,7 +428,8 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                                     name="commentText"
                                                     id="candidateCommentText"
                                                     class="ui2-textarea"
-                                                    rows="3"
+                                                    rows="6"
+                                                    style="width: 100%; min-height: 140px;"
                                                     maxlength="4000"
                                                     required="required"
                                                 ></textarea>
