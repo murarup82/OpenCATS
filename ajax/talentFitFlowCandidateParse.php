@@ -142,11 +142,21 @@ if ($action === 'create')
         }
 
         $attachments->forceAttachmentLocal($attachmentID);
-        $cvPath = FileUtility::getUploadFilePath(
-            $interface->getSiteID(),
+        $relativeAttachmentPath = sprintf(
+            'attachments/%s/%s',
             $attachment['directoryName'],
             $attachment['storedFilename']
         );
+        $absoluteAttachmentPath = dirname(__FILE__) . '/../' . $relativeAttachmentPath;
+
+        if (is_readable($relativeAttachmentPath))
+        {
+            $cvPath = $relativeAttachmentPath;
+        }
+        else if (is_readable($absoluteAttachmentPath))
+        {
+            $cvPath = $absoluteAttachmentPath;
+        }
     }
 
     if ($cvPath === false || !is_readable($cvPath))
