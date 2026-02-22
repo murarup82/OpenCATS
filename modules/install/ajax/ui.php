@@ -54,11 +54,12 @@ $action = $_REQUEST['a'];
 /* Don't allow installation if ./INSTALL_BLOCK exists. */
 if (file_exists('INSTALL_BLOCK'))
 {
-    echo '
-        <script type="text/javascript">
-            setActiveStep(1);
-            showTextBlock(\'installLocked\');
-        </script>';
+    if (!headers_sent())
+    {
+        http_response_code(403);
+        header('Content-Type: text/plain; charset=UTF-8');
+    }
+    echo 'Installer disabled.';
     die();
 }
 
@@ -151,8 +152,8 @@ switch ($action)
                 setActiveStep(2);
                 showTextBlock(\'databaseConnectivity\');
                 document.getElementById(\'dbname\').value = \'' . htmlspecialchars(DATABASE_NAME) . '\';
-                document.getElementById(\'dbuser\').value = \'' . htmlspecialchars(DATABASE_USER) . '\';
-                document.getElementById(\'dbpass\').value = \'' . htmlspecialchars(DATABASE_PASS) . '\';
+                document.getElementById(\'dbuser\').value = \'\';
+                document.getElementById(\'dbpass\').value = \'\';
                 document.getElementById(\'dbhost\').value = \'' . htmlspecialchars(DATABASE_HOST) . '\';
             </script>';
         break;
@@ -182,7 +183,7 @@ switch ($action)
                 document.getElementById(\'mailSmtpHost\').value = \'' . htmlspecialchars(MAIL_SMTP_HOST) . '\';
                 document.getElementById(\'mailSmtpPort\').value = \'' . htmlspecialchars(MAIL_SMTP_PORT) . '\';
                 document.getElementById(\'mailSmtpUsername\').value = \'' . htmlspecialchars(MAIL_SMTP_USER) . '\';
-                document.getElementById(\'mailSmtpPassword\').value = \'' . htmlspecialchars(MAIL_SMTP_PASS) . '\';
+                document.getElementById(\'mailSmtpPassword\').value = \'\';
                 document.getElementById(\'mailFromAddress\').value = \'' . htmlspecialchars($mailFromAddress[0]) . '\';
                 changeMailForm();
             </script>';

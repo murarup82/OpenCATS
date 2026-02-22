@@ -1,8 +1,36 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
     include_once('constants.php');
     include_once('config.php');
+
+    /*
+     * Security hardening:
+     * Once OpenCATS is installed (INSTALL_BLOCK exists), the installer UI must
+     * not be publicly reachable, otherwise it can expose configuration details.
+     */
+    if (file_exists('INSTALL_BLOCK'))
+    {
+        if (!headers_sent())
+        {
+            http_response_code(403);
+            header('Content-Type: text/html; charset=' . HTML_ENCODING);
+            header('X-Robots-Tag: noindex, nofollow');
+        }
+
+        echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" '
+            . '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
+            '<html><head><title>OpenCATS - Installer Disabled</title>',
+            '<style type="text/css">',
+            'body{font-family:Arial,Tahoma,sans-serif;background:#f6f6f6;color:#1f2933;}',
+            '.box{max-width:760px;margin:90px auto;padding:20px;border:1px solid #c8d2db;background:#fff;}',
+            '.box h1{font-size:22px;margin:0 0 10px 0;color:#0f4a7b;}',
+            '.box p{margin:8px 0;line-height:1.45;}',
+            '</style></head><body>',
+            '<div class="box"><h1>Installer Disabled</h1>',
+            '<p>OpenCATS is already installed. Direct access to installwizard.php is disabled.</p>',
+            '<p>Use the normal application URL (<a href="index.php">index.php</a>) to continue.</p>',
+            '</div></body></html>';
+        die();
+    }
 
     /* We aren't using any TemplateUtility methods that require us to pull in
      * any of its dependencies.
@@ -20,6 +48,8 @@
         $php4 = true;
     }
 ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
     <head>
         <title>OpenCATS - Installation Wizard Script</title>
