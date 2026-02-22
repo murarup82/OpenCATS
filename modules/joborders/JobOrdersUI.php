@@ -1892,9 +1892,22 @@ class JobOrdersUI extends UserInterface
         /* Rejected entries cannot transition directly; open details flow instead. */
         if ((int) $pipelineData['statusID'] === (int) PIPELINE_STATUS_REJECTED)
         {
-            CATSUtility::transferRelativeURI(
-                'm=joborders&a=pipelineStatusDetails&pipelineID=' . (int) $pipelineData['candidateJobOrderID']
-            );
+            $detailsURL = CATSUtility::getIndexName() . '?m=joborders&a=pipelineStatusDetails&pipelineID=' . (int) $pipelineData['candidateJobOrderID'];
+            $detailsURLForJS = str_replace("'", "\\'", $detailsURL);
+
+            echo '<html><head><script type="text/javascript">',
+                 '(function(){',
+                 'var url=\'' . $detailsURLForJS . '\';',
+                 'var w=900,h=650,left=Math.max(0,Math.floor((screen.width-w)/2)),top=Math.max(0,Math.floor((screen.height-h)/2));',
+                 'if (window.parent && window.parent.hidePopWin){',
+                 'window.open(url, "pipelineStatusDetails", "width="+w+",height="+h+",left="+left+",top="+top+",scrollbars=yes,resizable=yes");',
+                 'window.parent.hidePopWin(false);',
+                 'return;',
+                 '}',
+                 'window.location.href=url;',
+                 '})();',
+                 '</script></head><body></body></html>';
+            return;
         }
 
         $statusRS = $pipelines->getStatusesForPicking();
