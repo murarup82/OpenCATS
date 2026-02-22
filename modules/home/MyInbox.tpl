@@ -6,6 +6,234 @@
 
     <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?> style="padding-top: 10px;">
         <div class="ui2-page">
+            <style type="text/css">
+                .my-inbox-page {
+                    --inbox-bg: #f3f6fa;
+                    --inbox-pane: #ffffff;
+                    --inbox-border: #d7e0ea;
+                    --inbox-text: #142433;
+                    --inbox-muted: #617486;
+                    --inbox-primary: #0078d4;
+                    --inbox-primary-soft: #e7f2ff;
+                    --inbox-unread: #0b5cab;
+                    font-family: "Segoe UI", "Tahoma", "Verdana", sans-serif;
+                }
+                .my-inbox-page .inbox-shell {
+                    display: grid;
+                    grid-template-columns: 340px minmax(0, 1fr);
+                    gap: 16px;
+                    min-height: 620px;
+                    background: linear-gradient(180deg, #f8fbff 0%, var(--inbox-bg) 100%);
+                    border: 1px solid var(--inbox-border);
+                    border-radius: 10px;
+                    padding: 12px;
+                }
+                .my-inbox-page .inbox-pane {
+                    background: var(--inbox-pane);
+                    border: 1px solid var(--inbox-border);
+                    border-radius: 8px;
+                    min-height: 0;
+                }
+                .my-inbox-page .inbox-pane-header {
+                    padding: 12px 14px;
+                    border-bottom: 1px solid var(--inbox-border);
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 10px;
+                }
+                .my-inbox-page .inbox-pane-title {
+                    font-size: 16px;
+                    font-weight: 700;
+                    letter-spacing: 0.02em;
+                    color: #0f3c64;
+                }
+                .my-inbox-page .inbox-pane-subtitle {
+                    font-size: 12px;
+                    color: var(--inbox-muted);
+                }
+                .my-inbox-page .inbox-thread-list {
+                    max-height: 720px;
+                    overflow-y: auto;
+                }
+                .my-inbox-page .inbox-thread-item {
+                    display: block;
+                    text-decoration: none;
+                    color: var(--inbox-text);
+                    padding: 12px 14px;
+                    border-bottom: 1px solid #edf2f7;
+                    transition: background-color 0.15s ease, border-left-color 0.15s ease;
+                    border-left: 3px solid transparent;
+                }
+                .my-inbox-page .inbox-thread-item:hover {
+                    background: #f7fbff;
+                }
+                .my-inbox-page .inbox-thread-item.selected {
+                    background: var(--inbox-primary-soft);
+                    border-left-color: var(--inbox-primary);
+                }
+                .my-inbox-page .inbox-thread-top {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: 8px;
+                    margin-bottom: 5px;
+                }
+                .my-inbox-page .inbox-thread-name {
+                    font-weight: 700;
+                    color: #123a5d;
+                    font-size: 14px;
+                    line-height: 1.2;
+                }
+                .my-inbox-page .inbox-thread-time {
+                    color: var(--inbox-muted);
+                    font-size: 12px;
+                    white-space: nowrap;
+                }
+                .my-inbox-page .inbox-thread-bottom {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    align-items: flex-start;
+                }
+                .my-inbox-page .inbox-thread-snippet {
+                    font-size: 12px;
+                    color: #3f5366;
+                    line-height: 1.35;
+                    max-height: 2.8em;
+                    overflow: hidden;
+                }
+                .my-inbox-page .inbox-unread-badge {
+                    background: var(--inbox-unread);
+                    color: #fff;
+                    min-width: 20px;
+                    height: 20px;
+                    border-radius: 999px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 11px;
+                    font-weight: 700;
+                    padding: 0 6px;
+                }
+                .my-inbox-page .inbox-unread-none {
+                    color: #90a4b7;
+                    font-size: 12px;
+                    min-width: 20px;
+                    text-align: center;
+                }
+                .my-inbox-page .inbox-empty {
+                    padding: 16px;
+                    color: var(--inbox-muted);
+                    font-size: 13px;
+                }
+                .my-inbox-page .inbox-reading-pane {
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 0;
+                }
+                .my-inbox-page .inbox-reading-title {
+                    font-size: 18px;
+                    color: #0f3c64;
+                    font-weight: 700;
+                }
+                .my-inbox-page .inbox-reading-actions {
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                    flex-wrap: wrap;
+                }
+                .my-inbox-page .inbox-message-list {
+                    flex: 1 1 auto;
+                    min-height: 280px;
+                    max-height: 500px;
+                    overflow-y: auto;
+                    padding: 14px;
+                    background: #f8fbff;
+                    border-bottom: 1px solid var(--inbox-border);
+                }
+                .my-inbox-page .inbox-message-item {
+                    background: #ffffff;
+                    border: 1px solid #e3ebf3;
+                    border-radius: 10px;
+                    padding: 10px 12px;
+                    margin-bottom: 10px;
+                    box-shadow: 0 1px 1px rgba(9, 30, 66, 0.04);
+                }
+                .my-inbox-page .inbox-message-item:last-child {
+                    margin-bottom: 0;
+                }
+                .my-inbox-page .inbox-message-meta {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    align-items: baseline;
+                    margin-bottom: 6px;
+                }
+                .my-inbox-page .inbox-message-sender {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #123a5d;
+                }
+                .my-inbox-page .inbox-message-date {
+                    font-size: 11px;
+                    color: #6b7e92;
+                    white-space: nowrap;
+                }
+                .my-inbox-page .inbox-message-mentions {
+                    margin-bottom: 6px;
+                    font-size: 11px;
+                    color: #0c6bb4;
+                    font-weight: 700;
+                }
+                .my-inbox-page .inbox-message-body {
+                    font-size: 13px;
+                    line-height: 1.45;
+                    color: #1e2f40;
+                    word-break: break-word;
+                }
+                .my-inbox-page .inbox-composer {
+                    padding: 12px 14px 14px 14px;
+                    background: #fff;
+                }
+                .my-inbox-page .inbox-composer textarea {
+                    width: 100%;
+                    min-height: 170px;
+                    border: 1px solid #c5d3e1;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    box-sizing: border-box;
+                    resize: vertical;
+                    font-family: "Consolas", "Lucida Console", monospace;
+                    font-size: 13px;
+                    line-height: 1.4;
+                }
+                .my-inbox-page .inbox-mention-help {
+                    margin: 8px 0 10px 0;
+                    font-size: 11px;
+                    color: #5f7284;
+                }
+                .my-inbox-page .inbox-placeholder {
+                    padding: 20px;
+                }
+                @media (max-width: 1200px) {
+                    .my-inbox-page .inbox-shell {
+                        grid-template-columns: 300px minmax(0, 1fr);
+                    }
+                }
+                @media (max-width: 960px) {
+                    .my-inbox-page .inbox-shell {
+                        grid-template-columns: 1fr;
+                        min-height: 0;
+                    }
+                    .my-inbox-page .inbox-thread-list {
+                        max-height: 300px;
+                    }
+                    .my-inbox-page .inbox-message-list {
+                        max-height: 380px;
+                    }
+                }
+            </style>
             <div class="ui2-header">
                 <div class="ui2-header-title">
                     <h2>Overview: My Inbox</h2>
@@ -28,57 +256,52 @@
                     Candidate inbox tables are missing. Apply schema migrations from Settings -> Schema Migrations.
                 </div>
             <?php else: ?>
-                <div class="ui2-grid">
-                    <div class="ui2-col-main" style="width: 40%;">
-                        <div class="ui2-card ui2-card--section">
-                            <div class="ui2-card-header">
-                                <div class="ui2-card-title">Threads</div>
+                <div class="my-inbox-page">
+                    <div class="inbox-shell">
+                        <div class="inbox-pane">
+                            <div class="inbox-pane-header">
+                                <div>
+                                    <div class="inbox-pane-title">Inbox</div>
+                                    <div class="inbox-pane-subtitle"><?php echo((int) count($this->threads)); ?> thread(s)</div>
+                                </div>
                             </div>
-                            <table class="ui2-table">
-                                <tr>
-                                    <th align="left">Candidate</th>
-                                    <th align="left" width="120">Last Message</th>
-                                    <th align="left" width="80">Unread</th>
-                                </tr>
+                            <div class="inbox-thread-list">
                                 <?php if (!empty($this->threads)): ?>
-                                    <?php foreach ($this->threads as $rowNumber => $thread): ?>
-                                        <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?><?php if ((int) $this->selectedThreadID === (int) $thread['threadID']) echo(' pipelineClosedRow'); ?>">
-                                            <td valign="top">
-                                                <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox&amp;threadID=<?php echo((int) $thread['threadID']); ?>">
-                                                    <?php $this->_($thread['candidateName']); ?>
-                                                </a>
-                                                <div style="font-size: 10px; color: #666;"><?php $this->_($thread['snippet']); ?></div>
-                                            </td>
-                                            <td valign="top"><?php $this->_($thread['lastMessageAt']); ?></td>
-                                            <td valign="top">
+                                    <?php foreach ($this->threads as $thread): ?>
+                                        <a
+                                            class="inbox-thread-item<?php if ((int) $this->selectedThreadID === (int) $thread['threadID']) echo(' selected'); ?>"
+                                            href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox&amp;threadID=<?php echo((int) $thread['threadID']); ?>"
+                                        >
+                                            <div class="inbox-thread-top">
+                                                <div class="inbox-thread-name"><?php $this->_($thread['candidateName']); ?></div>
+                                                <div class="inbox-thread-time"><?php $this->_($thread['lastMessageAt']); ?></div>
+                                            </div>
+                                            <div class="inbox-thread-bottom">
+                                                <div class="inbox-thread-snippet"><?php $this->_($thread['snippet']); ?></div>
                                                 <?php if ((int) $thread['unreadCount'] > 0): ?>
-                                                    <span class="pipelineClosedTag"><?php echo((int) $thread['unreadCount']); ?></span>
+                                                    <span class="inbox-unread-badge"><?php echo((int) $thread['unreadCount']); ?></span>
                                                 <?php else: ?>
-                                                    0
+                                                    <span class="inbox-unread-none">0</span>
                                                 <?php endif; ?>
-                                            </td>
-                                        </tr>
+                                            </div>
+                                        </a>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <tr>
-                                        <td colspan="3">(No conversations yet)</td>
-                                    </tr>
+                                    <div class="inbox-empty">No conversations yet.</div>
                                 <?php endif; ?>
-                            </table>
+                            </div>
                         </div>
-                    </div>
-                    <div class="ui2-col-side" style="width: 60%;">
-                        <div class="ui2-card ui2-card--section">
-                            <div class="ui2-card-header">
-                                <div class="ui2-card-title">
-                                    <?php if (!empty($this->selectedThread)): ?>
-                                        Conversation: <?php $this->_($this->selectedThread['candidateFirstName']); ?> <?php $this->_($this->selectedThread['candidateLastName']); ?>
-                                    <?php else: ?>
-                                        Conversation
-                                    <?php endif; ?>
-                                </div>
-                                <?php if (!empty($this->selectedThread)): ?>
-                                    <div class="ui2-card-actions">
+
+                        <div class="inbox-pane inbox-reading-pane">
+                            <?php if (!empty($this->selectedThread)): ?>
+                                <div class="inbox-pane-header">
+                                    <div>
+                                        <div class="inbox-reading-title">
+                                            <?php $this->_($this->selectedThread['candidateFirstName']); ?> <?php $this->_($this->selectedThread['candidateLastName']); ?>
+                                        </div>
+                                        <div class="inbox-pane-subtitle">Conversation history</div>
+                                    </div>
+                                    <div class="inbox-reading-actions">
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo((int) $this->selectedThread['candidateID']); ?>&amp;showMessages=1">
                                             Open Candidate
                                         </a>
@@ -88,41 +311,32 @@
                                             <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
                                         </form>
                                     </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <?php if (!empty($this->selectedThread)): ?>
-                                <div style="margin-bottom: 8px; max-height: 440px; overflow-y: auto;">
-                                    <table class="ui2-table">
-                                        <tr>
-                                            <th align="left" width="160">Date</th>
-                                            <th align="left" width="140">From</th>
-                                            <th align="left" width="170">Mentions</th>
-                                            <th align="left">Message</th>
-                                        </tr>
-                                        <?php if (!empty($this->messages)): ?>
-                                            <?php foreach ($this->messages as $rowNumber => $message): ?>
-                                                <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
-                                                    <td valign="top"><?php $this->_($message['dateCreated']); ?></td>
-                                                    <td valign="top"><?php $this->_($message['senderName']); ?></td>
-                                                    <td valign="top"><?php if (!empty($message['mentionedUsers'])) $this->_($message['mentionedUsers']); else echo('--'); ?></td>
-                                                    <td valign="top"><?php echo($message['bodyHTML']); ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <tr>
-                                                <td colspan="4">(No messages yet)</td>
-                                            </tr>
-                                        <?php endif; ?>
-                                    </table>
                                 </div>
-                                <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=postInboxMessage">
-                                    <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
-                                    <input type="hidden" name="securityToken" value="<?php $this->_($this->postInboxMessageToken); ?>" />
-                                    <div style="margin-bottom: 6px;">
+
+                                <div class="inbox-message-list">
+                                    <?php if (!empty($this->messages)): ?>
+                                        <?php foreach ($this->messages as $message): ?>
+                                            <div class="inbox-message-item">
+                                                <div class="inbox-message-meta">
+                                                    <div class="inbox-message-sender"><?php $this->_($message['senderName']); ?></div>
+                                                    <div class="inbox-message-date"><?php $this->_($message['dateCreated']); ?></div>
+                                                </div>
+                                                <?php if (!empty($message['mentionedUsers'])): ?>
+                                                    <div class="inbox-message-mentions">@<?php $this->_($message['mentionedUsers']); ?></div>
+                                                <?php endif; ?>
+                                                <div class="inbox-message-body"><?php echo($message['bodyHTML']); ?></div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="inbox-empty">No messages yet.</div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="inbox-composer">
+                                    <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=postInboxMessage">
+                                        <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
+                                        <input type="hidden" name="securityToken" value="<?php $this->_($this->postInboxMessageToken); ?>" />
                                         <textarea
-                                            class="ui2-textarea"
-                                            style="width: 100%; min-height: 140px;"
                                             rows="6"
                                             maxlength="4000"
                                             name="messageBody"
@@ -130,21 +344,23 @@
                                             placeholder="Reply here. Mention teammates with @First Last."
                                             required="required"
                                         ></textarea>
-                                    </div>
-                                    <?php if (!empty($this->mentionHintNames)): ?>
-                                        <div style="margin-bottom: 8px; font-size: 11px; color: #666;">
-                                            Mention examples:
-                                            <?php foreach ($this->mentionHintNames as $mentionIndex => $mentionName): ?>
-                                                <?php if ($mentionIndex > 0): ?>, <?php endif; ?>
-                                                @<?php $this->_($mentionName); ?>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    <button type="submit" class="ui2-button ui2-button--primary">Send Reply</button>
-                                </form>
+                                        <?php if (!empty($this->mentionHintNames)): ?>
+                                            <div class="inbox-mention-help">
+                                                Mention examples:
+                                                <?php foreach ($this->mentionHintNames as $mentionIndex => $mentionName): ?>
+                                                    <?php if ($mentionIndex > 0): ?>, <?php endif; ?>
+                                                    @<?php $this->_($mentionName); ?>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <button type="submit" class="ui2-button ui2-button--primary">Send Reply</button>
+                                    </form>
+                                </div>
                             <?php else: ?>
-                                <div class="ui2-ai-status">
-                                    Select a thread from the left to open it.
+                                <div class="inbox-placeholder">
+                                    <div class="ui2-ai-status">
+                                        Select a thread from the left to open it.
+                                    </div>
                                 </div>
                             <?php endif; ?>
                         </div>
