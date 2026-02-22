@@ -3,9 +3,21 @@
 
     <?php if (!$this->isFinishedMode): ?>
         <script type="text/javascript">
-            function confirmAddToJobOrder()
+            function confirmAddToJobOrder(linkEl)
             {
-                return confirm('Are you sure you want to assign the selected candidate(s) to this job order?');
+                var role = '';
+                if (linkEl && linkEl.getAttribute)
+                {
+                    role = linkEl.getAttribute('data-job-title') || '';
+                }
+
+                var message = 'Are you sure you want to assign the selected candidate(s) to this job order?';
+                if (role !== '')
+                {
+                    message = 'Are you sure you want to assign the selected candidate(s) to "' + role + '"?';
+                }
+
+                return confirm(message);
             }
         </script>
 
@@ -79,7 +91,7 @@
                             <td align="left" valign="top"><?php $this->_($data['jobID']); ?></td>
                             <td align="left" valign="top">
                                 <?php if (!$data['inPipeline']): ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addToPipeline&amp;getback=getback&amp;candidateIDArrayStored=<?php echo($this->candidateIDArrayStored); ?>&amp;jobOrderID=<?php $this->_($data['jobOrderID']); ?>" class="<?php $this->_($data['linkClass']); ?>" onclick="return confirmAddToJobOrder();">
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addToPipeline&amp;getback=getback&amp;candidateIDArrayStored=<?php echo($this->candidateIDArrayStored); ?>&amp;jobOrderID=<?php $this->_($data['jobOrderID']); ?>" class="<?php $this->_($data['linkClass']); ?>" data-job-title="<?php echo(htmlspecialchars($data['title'], ENT_QUOTES)); ?>" onclick="return confirmAddToJobOrder(this);">
                                         <?php $this->_($data['title']); ?>
                                     </a>
                                 <?php else: ?>
@@ -129,7 +141,7 @@
                             <td align="left" valign="top"><?php $this->_($data['jobID']); ?></td>
                             <td align="left" valign="top">
                                 <?php if (!$data['inPipeline']): ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addToPipeline&amp;getback=getback&amp;candidateIDArrayStored=<?php echo($this->candidateIDArrayStored); ?>&amp;jobOrderID=<?php $this->_($data['jobOrderID']); ?>" class="<?php $this->_($data['linkClass']); ?>" onclick="return confirmAddToJobOrder();">
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addToPipeline&amp;getback=getback&amp;candidateIDArrayStored=<?php echo($this->candidateIDArrayStored); ?>&amp;jobOrderID=<?php $this->_($data['jobOrderID']); ?>" class="<?php $this->_($data['linkClass']); ?>" data-job-title="<?php echo(htmlspecialchars($data['title'], ENT_QUOTES)); ?>" onclick="return confirmAddToJobOrder(this);">
                                         <?php $this->_($data['title']); ?>
                                     </a>
                                 <?php else: ?>

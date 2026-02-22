@@ -5,7 +5,14 @@
         <script type="text/javascript">
             function confirmAddToJobOrder()
             {
-                return confirm('Are you sure you want to assign this candidate to this job order?');
+                var roleTitle = '<?php echo(isset($this->jobOrderTitle) ? addslashes($this->jobOrderTitle) : ''); ?>';
+                var message = 'Are you sure you want to assign this candidate to this job order?';
+                if (roleTitle !== '')
+                {
+                    message = 'Are you sure you want to assign this candidate to "' + roleTitle + '"?';
+                }
+
+                return confirm(message);
             }
         </script>
 

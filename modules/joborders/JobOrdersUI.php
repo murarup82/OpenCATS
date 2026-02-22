@@ -1572,12 +1572,18 @@ class JobOrdersUI extends UserInterface
         }
 
         $jobOrderID = $_GET['jobOrderID'];
+        $jobOrders = new JobOrders($this->_siteID);
+        $jobOrderData = $jobOrders->get($jobOrderID);
+        $jobOrderTitle = (!empty($jobOrderData) && !empty($jobOrderData['title']))
+            ? $jobOrderData['title']
+            : '';
 
         if (!eval(Hooks::get('JO_CONSIDER_CANDIDATE_SEARCH'))) return;
 
         $this->_template->assign('isFinishedMode', false);
         $this->_template->assign('isResultsMode', false);
         $this->_template->assign('jobOrderID', $jobOrderID);
+        $this->_template->assign('jobOrderTitle', $jobOrderTitle);
         $this->_template->display('./modules/joborders/ConsiderSearchModal.tpl');
     }
 
@@ -1603,6 +1609,11 @@ class JobOrdersUI extends UserInterface
         }
 
         $jobOrderID = $_POST['jobOrderID'];
+        $jobOrders = new JobOrders($this->_siteID);
+        $jobOrderData = $jobOrders->get($jobOrderID);
+        $jobOrderTitle = (!empty($jobOrderData) && !empty($jobOrderData['title']))
+            ? $jobOrderData['title']
+            : '';
 
         $query = $this->getTrimmedInput('wildCardString', $_POST);
 
@@ -1650,6 +1661,7 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('isFinishedMode', false);
         $this->_template->assign('isResultsMode', true);
         $this->_template->assign('jobOrderID', $jobOrderID);
+        $this->_template->assign('jobOrderTitle', $jobOrderTitle);
 
         if (!eval(Hooks::get('JO_ON_CONSIDER_CANDIDATE_SEARCH'))) return;
 
