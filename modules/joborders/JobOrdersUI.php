@@ -1682,7 +1682,12 @@ class JobOrdersUI extends UserInterface
         $pipelines = new Pipelines($this->_siteID);
         if (!$pipelines->add($candidateID, $jobOrderID, $this->_userID))
         {
-            CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to add candidate to job order.');
+            $errorMessage = $pipelines->getLastErrorMessage();
+            if (empty($errorMessage))
+            {
+                $errorMessage = 'Failed to add candidate to job order.';
+            }
+            CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, $errorMessage);
         }
 
         $this->_template->assign('isFinishedMode', true);

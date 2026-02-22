@@ -41,12 +41,75 @@ class Pipelines
 {
     private $_db;
     private $_siteID;
+    private $_lastErrorMessage;
 
 
     public function __construct($siteID)
     {
         $this->_siteID = $siteID;
         $this->_db = DatabaseConnection::getInstance();
+        $this->_lastErrorMessage = '';
+    }
+
+    public function getLastErrorMessage()
+    {
+        return $this->_lastErrorMessage;
+    }
+
+    private function setLastErrorMessage($message)
+    {
+        $this->_lastErrorMessage = $message;
+    }
+
+    public function hasEverBeenHiredForJobOrder($candidateID, $jobOrderID)
+    {
+        $sql = sprintf(
+            "SELECT
+                candidate_joborder_status_history_id AS historyID
+            FROM
+                candidate_joborder_status_history
+            WHERE
+                candidate_id = %s
+            AND
+                joborder_id = %s
+            AND
+                status_to = %s
+            AND
+                site_id = %s
+            LIMIT 1",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $this->_siteID
+        );
+        $rs = $this->_db->getAssoc($sql);
+        if (!empty($rs))
+        {
+            return true;
+        }
+
+        $sql = sprintf(
+            "SELECT
+                candidate_joborder_id AS candidateJobOrderID
+            FROM
+                candidate_joborder
+            WHERE
+                candidate_id = %s
+            AND
+                joborder_id = %s
+            AND
+                status = %s
+            AND
+                site_id = %s
+            LIMIT 1",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $this->_siteID
+        );
+        $rs = $this->_db->getAssoc($sql);
+
+        return !empty($rs);
     }
 
     private function normalizeStatusLabel($statusID, $label)
@@ -82,6 +145,16 @@ class Pipelines
      */
     public function add($candidateID, $jobOrderID, $userID = 0)
     {
+        $this->setLastErrorMessage('');
+
+        if ($this->hasEverBeenHiredForJobOrder($candidateID, $jobOrderID))
+        {
+            $this->setLastErrorMessage(
+                'This candidate has already been hired for this job order and cannot be added again.'
+            );
+            return false;
+        }
+
         $sql = sprintf(
             "SELECT
                 candidate_joborder_id AS candidateJobOrderID,
@@ -126,6 +199,7 @@ class Pipelines
                 $queryResult = $this->_db->query($sql);
                 if (!$queryResult)
                 {
+                    $this->setLastErrorMessage('Failed to reopen candidate in pipeline.');
                     return false;
                 }
 
@@ -144,6 +218,7 @@ class Pipelines
             }
 
             /* Candidate already exists in the pipeline. */
+            $this->setLastErrorMessage('Candidate already exists in the pipeline for this job order.');
             return false;
         }
 
@@ -183,6 +258,7 @@ class Pipelines
         $queryResult = $this->_db->query($sql);
         if (!$queryResult)
         {
+            $this->setLastErrorMessage('Failed to add candidate to job order.');
             return false;
         }
 

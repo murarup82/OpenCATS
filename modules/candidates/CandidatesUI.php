@@ -2082,10 +2082,21 @@ class CandidatesUI extends UserInterface
             }
         }
 
+        /* Drop candidate IDs that were already hired for this job order. */
+        foreach ($candidateIDArray as $arrayPos => $candidateID) {
+            if ($pipelines->hasEverBeenHiredForJobOrder($candidateID, $jobOrderID)) {
+                unset($candidateIDArray[$arrayPos]);
+            }
+        }
+
         /* Add to pipeline */
         foreach ($candidateIDArray as $candidateID) {
             if (!$pipelines->add($candidateID, $jobOrderID, $this->_userID)) {
-                CommonErrors::fatalModal(COMMONERROR_RECORDERROR, $this, 'Failed to add candidate to Job Order.');
+                $errorMessage = $pipelines->getLastErrorMessage();
+                if (empty($errorMessage)) {
+                    $errorMessage = 'Failed to add candidate to Job Order.';
+                }
+                CommonErrors::fatalModal(COMMONERROR_RECORDERROR, $this, $errorMessage);
             }
 
             if (!eval(Hooks::get('CANDIDATE_ADD_TO_PIPELINE_POST_IND'))) return;
@@ -2126,7 +2137,8 @@ class CandidatesUI extends UserInterface
         }
 
         $pipelines = new Pipelines($this->_siteID);
-        $pipelineRS = $pipelines->getCandidatePipeline($candidateID);
+        /* Include closed entries so rejected/hired job-order details remain accessible from this modal. */
+        $pipelineRS = $pipelines->getCandidatePipeline($candidateID, true);
 
         $statusRS = $pipelines->getStatusesForPicking();
 
