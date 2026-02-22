@@ -204,6 +204,13 @@ class CandidatesUI extends UserInterface
                 $this->onPostCandidateMessage();
                 break;
 
+            case 'deleteMessageThread':
+                if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ) {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onDeleteCandidateMessageThread();
+                break;
+
             case 'addProfileComment':
                 if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT) {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
@@ -708,6 +715,20 @@ class CandidatesUI extends UserInterface
                     $candidateMessageFlashIsError = true;
                     break;
 
+                case 'forbidden':
+                    $candidateMessageFlashMessage = 'You do not have access to this thread.';
+                    $candidateMessageFlashIsError = true;
+                    break;
+
+                case 'deleted':
+                    $candidateMessageFlashMessage = 'Thread removed from your inbox.';
+                    break;
+
+                case 'deletefailed':
+                    $candidateMessageFlashMessage = 'Unable to delete thread.';
+                    $candidateMessageFlashIsError = true;
+                    break;
+
                 default:
                     $candidateMessageFlashMessage = 'Unable to send message.';
                     $candidateMessageFlashIsError = true;
@@ -1152,6 +1173,7 @@ class CandidatesUI extends UserInterface
         $candidateThreadVisibleToCurrentUser = false;
         $candidateThreadMessages = array();
         $candidateMessageMentionHintNames = array();
+        $candidateMessageMentionAutocompleteValues = array();
         if ($candidateMessagingEnabled)
         {
             $candidateMessageThread = $candidateMessages->getThreadByCandidate($candidateID);
@@ -1172,12 +1194,22 @@ class CandidatesUI extends UserInterface
             $mentionUsers = $candidateMessages->getMentionableUsers();
             foreach ($mentionUsers as $mentionUser)
             {
+                $fullName = trim($mentionUser['fullName']);
+                if ($fullName !== '')
+                {
+                    $candidateMessageMentionAutocompleteValues[] = $fullName;
+                }
+                $userName = trim($mentionUser['userName']);
+                if ($userName !== '')
+                {
+                    $candidateMessageMentionAutocompleteValues[] = $userName;
+                }
+
                 if (count($candidateMessageMentionHintNames) >= 5)
                 {
                     break;
                 }
 
-                $fullName = trim($mentionUser['fullName']);
                 if ($fullName !== '')
                 {
                     $candidateMessageMentionHintNames[] = $fullName;
@@ -1218,6 +1250,10 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('candidateThreadVisibleToCurrentUser', $candidateThreadVisibleToCurrentUser);
         $this->_template->assign('candidateThreadMessages', $candidateThreadMessages);
         $this->_template->assign('candidateMessageMentionHintNames', $candidateMessageMentionHintNames);
+        $this->_template->assign(
+            'candidateMessageMentionAutocompleteValues',
+            array_values(array_unique($candidateMessageMentionAutocompleteValues))
+        );
         $this->_template->assign('candidateMessagesInitiallyOpen', $candidateMessagesInitiallyOpen);
         $this->_template->assign('candidateMessageFlashMessage', $candidateMessageFlashMessage);
         $this->_template->assign('candidateMessageFlashIsError', $candidateMessageFlashIsError);
@@ -1241,6 +1277,10 @@ class CandidatesUI extends UserInterface
         $this->_template->assign(
             'postCandidateMessageToken',
             $this->getCSRFToken('candidates.postMessage')
+        );
+        $this->_template->assign(
+            'deleteCandidateMessageThreadToken',
+            $this->getCSRFToken('candidates.deleteMessageThread')
         );
 
         $this->_template->display('./modules/candidates/Show.tpl');
@@ -3316,6 +3356,56 @@ class CandidatesUI extends UserInterface
             'showMessages' => '1',
             'msg' => 'sent'
         ));
+    }
+
+    private function onDeleteCandidateMessageThread()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('candidateID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
+        }
+
+        if (!$this->isRequiredIDValid('threadID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid thread ID.');
+        }
+
+        $candidateID = (int) $_POST['candidateID'];
+        $threadID = (int) $_POST['threadID'];
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('candidates.deleteMessageThread', $securityToken))
+        {
+            $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'token'));
+        }
+
+        $candidateMessages = new CandidateMessages($this->_siteID);
+        if (!$candidateMessages->isSchemaAvailable())
+        {
+            $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'schema'));
+        }
+
+        $thread = $candidateMessages->getThread($threadID);
+        if (empty($thread) || (int) $thread['candidateID'] !== $candidateID)
+        {
+            $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'invalid'));
+        }
+
+        if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
+        {
+            $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'forbidden'));
+        }
+
+        if (!$candidateMessages->archiveThreadForUser($threadID, $this->_userID))
+        {
+            $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'deletefailed'));
+        }
+
+        $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'deleted'));
     }
 
     private function getCandidateProfileComments($candidateID)

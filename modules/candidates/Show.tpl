@@ -4,9 +4,9 @@ use OpenCATS\UI\CandidateQuickActionMenu;
 use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 ?>
 <?php if ($this->isPopup): ?>
-    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js', 'modules/candidates/ownershipEdit.js')); ?>
+    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'js/mentionAutocomplete.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js', 'modules/candidates/ownershipEdit.js')); ?>
 <?php else: ?>
-    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/quickAction-duplicates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js', 'modules/candidates/ownershipEdit.js')); ?>
+    <?php TemplateUtility::printHeader('Candidate - '.$this->data['firstName'].' '.$this->data['lastName'], array( 'js/sorttable.js', 'js/match.js', 'js/lib.js', 'js/pipeline.js', 'js/attachment.js', 'js/mentionAutocomplete.js', 'modules/candidates/quickAction-candidates.js', 'modules/candidates/quickAction-duplicates.js', 'modules/candidates/transformCv.js', 'modules/candidates/gdprRequest.js', 'modules/candidates/ownershipEdit.js')); ?>
     
     <?php TemplateUtility::printHeaderBlock(); ?>
     <?php TemplateUtility::printTabs($this->active); ?>
@@ -490,6 +490,12 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox&amp;threadID=<?php echo((int) $this->candidateMessageThreadID); ?>">
                                             Open My Inbox
                                         </a>
+                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteMessageThread" style="display:inline;" onsubmit="return confirm('Remove this thread from your inbox?');">
+                                            <input type="hidden" name="candidateID" value="<?php echo((int) $this->candidateID); ?>" />
+                                            <input type="hidden" name="threadID" value="<?php echo((int) $this->candidateMessageThreadID); ?>" />
+                                            <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteCandidateMessageThreadToken); ?>" />
+                                            <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
+                                        </form>
                                     <?php else: ?>
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox">
                                             Open My Inbox
@@ -523,7 +529,8 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                                     name="messageBody"
                                                     id="candidateMessageBody"
                                                     class="ui2-textarea"
-                                                    rows="3"
+                                                    rows="6"
+                                                    style="width: 100%; min-height: 140px;"
                                                     maxlength="4000"
                                                     required="required"
                                                     placeholder="Type a message and mention teammates with @First Last."
@@ -1114,6 +1121,14 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             {
                 textArea.focus();
             }
+        }
+
+        if (typeof MentionAutocomplete !== 'undefined')
+        {
+            MentionAutocomplete.bind(
+                'candidateMessageBody',
+                <?php echo json_encode(isset($this->candidateMessageMentionAutocompleteValues) ? $this->candidateMessageMentionAutocompleteValues : array()); ?>
+            );
         }
     </script>
 	

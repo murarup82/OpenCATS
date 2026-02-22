@@ -1,4 +1,4 @@
-<?php TemplateUtility::printHeader('Overview - My Inbox', array('js/sweetTitles.js')); ?>
+<?php TemplateUtility::printHeader('Overview - My Inbox', array('js/sweetTitles.js', 'js/mentionAutocomplete.js')); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active, 'My Inbox'); ?>
 <div id="main" class="home">
@@ -82,6 +82,11 @@
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo((int) $this->selectedThread['candidateID']); ?>&amp;showMessages=1">
                                             Open Candidate
                                         </a>
+                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="display:inline;" onsubmit="return confirm('Remove this thread from your inbox?');">
+                                            <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
+                                            <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteInboxThreadToken); ?>" />
+                                            <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
+                                        </form>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -117,10 +122,11 @@
                                     <div style="margin-bottom: 6px;">
                                         <textarea
                                             class="ui2-textarea"
-                                            style="width: 100%;"
-                                            rows="4"
+                                            style="width: 100%; min-height: 140px;"
+                                            rows="6"
                                             maxlength="4000"
                                             name="messageBody"
+                                            id="inboxMessageBody"
                                             placeholder="Reply here. Mention teammates with @First Last."
                                             required="required"
                                         ></textarea>
@@ -148,4 +154,13 @@
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    if (typeof MentionAutocomplete !== 'undefined')
+    {
+        MentionAutocomplete.bind(
+            'inboxMessageBody',
+            <?php echo json_encode(isset($this->mentionAutocompleteValues) ? $this->mentionAutocompleteValues : array()); ?>
+        );
+    }
+</script>
 <?php TemplateUtility::printFooter(); ?>

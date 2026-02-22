@@ -82,6 +82,14 @@ class HomeUI extends UserInterface
                 $this->onPostInboxMessage();
                 break;
 
+            case 'deleteInboxThread':
+                if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onDeleteInboxThread();
+                break;
+
             case 'deleteSavedSearch':
                 include_once(LEGACY_ROOT . '/lib/Search.php');
 
@@ -211,6 +219,15 @@ class HomeUI extends UserInterface
                     $flashIsError = true;
                     break;
 
+                case 'deleted':
+                    $flashMessage = 'Thread removed from your inbox.';
+                    break;
+
+                case 'deletefailed':
+                    $flashMessage = 'Unable to delete thread.';
+                    $flashIsError = true;
+                    break;
+
                 case 'schema':
                     $flashMessage = 'Inbox tables are missing. Apply schema migrations first.';
                     $flashIsError = true;
@@ -234,6 +251,7 @@ class HomeUI extends UserInterface
         $messages = array();
         $mentionUsers = array();
         $mentionHintNames = array();
+        $mentionAutocompleteValues = array();
         if ($schemaAvailable)
         {
             $threads = $candidateMessages->getInboxThreads($this->_userID, 250);
@@ -268,12 +286,22 @@ class HomeUI extends UserInterface
             $mentionUsers = $candidateMessages->getMentionableUsers();
             foreach ($mentionUsers as $mentionUser)
             {
+                $fullName = trim($mentionUser['fullName']);
+                if ($fullName !== '')
+                {
+                    $mentionAutocompleteValues[] = $fullName;
+                }
+                $userName = trim($mentionUser['userName']);
+                if ($userName !== '')
+                {
+                    $mentionAutocompleteValues[] = $userName;
+                }
+
                 if (count($mentionHintNames) >= 5)
                 {
                     break;
                 }
 
-                $fullName = trim($mentionUser['fullName']);
                 if ($fullName !== '')
                 {
                     $mentionHintNames[] = $fullName;
@@ -291,9 +319,14 @@ class HomeUI extends UserInterface
         $this->_template->assign('selectedThread', $selectedThread);
         $this->_template->assign('messages', $messages);
         $this->_template->assign('mentionHintNames', $mentionHintNames);
+        $this->_template->assign('mentionAutocompleteValues', array_values(array_unique($mentionAutocompleteValues)));
         $this->_template->assign(
             'postInboxMessageToken',
             $this->getCSRFToken('home.postInboxMessage')
+        );
+        $this->_template->assign(
+            'deleteInboxThreadToken',
+            $this->getCSRFToken('home.deleteInboxThread')
         );
 
         $this->_template->display('./modules/home/MyInbox.tpl');
@@ -339,6 +372,44 @@ class HomeUI extends UserInterface
         }
 
         CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=sent');
+    }
+
+    private function onDeleteInboxThread()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('threadID', $_POST))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=invalid');
+        }
+
+        $threadID = (int) $_POST['threadID'];
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.deleteInboxThread', $securityToken))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=token');
+        }
+
+        $candidateMessages = new CandidateMessages($this->_siteID);
+        if (!$candidateMessages->isSchemaAvailable())
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
+        }
+
+        if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=forbidden');
+        }
+
+        if (!$candidateMessages->archiveThreadForUser($threadID, $this->_userID))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=deletefailed');
+        }
+
+        CATSUtility::transferRelativeURI('m=home&a=inbox&msg=deleted');
     }
 
     private function deleteSavedSearch()

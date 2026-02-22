@@ -214,11 +214,20 @@ class CandidateMessages
         return $row;
     }
 
-    public function isUserParticipant($threadID, $userID)
+    public function isUserParticipant($threadID, $userID, $includeArchived = false)
     {
         if (!$this->isSchemaAvailable())
         {
             return false;
+        }
+
+        if ($includeArchived)
+        {
+            $archivedCriterion = '';
+        }
+        else
+        {
+            $archivedCriterion = 'AND is_archived = 0';
         }
 
         $sql = sprintf(
@@ -230,14 +239,41 @@ class CandidateMessages
                 site_id = %s
                 AND thread_id = %s
                 AND user_id = %s
+                %s
              LIMIT 1",
             $this->_db->makeQueryInteger($this->_siteID),
             $this->_db->makeQueryInteger($threadID),
-            $this->_db->makeQueryInteger($userID)
+            $this->_db->makeQueryInteger($userID),
+            $archivedCriterion
         );
 
         $row = $this->_db->getAssoc($sql);
         return !empty($row);
+    }
+
+    public function archiveThreadForUser($threadID, $userID)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return false;
+        }
+
+        $sql = sprintf(
+            "UPDATE candidate_message_participant
+             SET
+                is_archived = 1,
+                date_modified = NOW()
+             WHERE
+                site_id = %s
+                AND thread_id = %s
+                AND user_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($threadID),
+            $this->_db->makeQueryInteger($userID)
+        );
+        $this->_db->query($sql);
+
+        return true;
     }
 
     public function markThreadRead($threadID, $userID)
