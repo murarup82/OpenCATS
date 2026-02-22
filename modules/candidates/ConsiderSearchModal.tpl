@@ -2,6 +2,13 @@
 <?php TemplateUtility::printModalHeader('Candidates', array(), 'Add Candidates to Job Order'); ?>
 
     <?php if (!$this->isFinishedMode): ?>
+        <script type="text/javascript">
+            function confirmAddToJobOrder()
+            {
+                return confirm('Are you sure you want to assign the selected candidate(s) to this job order?');
+            }
+        </script>
+
         <p>Search for a job order below, and then click on the job title to add
         the candidate to the selected job order.</p>
 
@@ -72,7 +79,7 @@
                             <td align="left" valign="top"><?php $this->_($data['jobID']); ?></td>
                             <td align="left" valign="top">
                                 <?php if (!$data['inPipeline']): ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addToPipeline&amp;getback=getback&amp;candidateIDArrayStored=<?php echo($this->candidateIDArrayStored); ?>&amp;jobOrderID=<?php $this->_($data['jobOrderID']); ?>" class="<?php $this->_($data['linkClass']); ?>">
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addToPipeline&amp;getback=getback&amp;candidateIDArrayStored=<?php echo($this->candidateIDArrayStored); ?>&amp;jobOrderID=<?php $this->_($data['jobOrderID']); ?>" class="<?php $this->_($data['linkClass']); ?>" onclick="return confirmAddToJobOrder();">
                                         <?php $this->_($data['title']); ?>
                                     </a>
                                 <?php else: ?>
@@ -122,7 +129,7 @@
                             <td align="left" valign="top"><?php $this->_($data['jobID']); ?></td>
                             <td align="left" valign="top">
                                 <?php if (!$data['inPipeline']): ?>
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addToPipeline&amp;getback=getback&amp;candidateIDArrayStored=<?php echo($this->candidateIDArrayStored); ?>&amp;jobOrderID=<?php $this->_($data['jobOrderID']); ?>" class="<?php $this->_($data['linkClass']); ?>">
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=addToPipeline&amp;getback=getback&amp;candidateIDArrayStored=<?php echo($this->candidateIDArrayStored); ?>&amp;jobOrderID=<?php $this->_($data['jobOrderID']); ?>" class="<?php $this->_($data['linkClass']); ?>" onclick="return confirmAddToJobOrder();">
                                         <?php $this->_($data['title']); ?>
                                     </a>
                                 <?php else: ?>

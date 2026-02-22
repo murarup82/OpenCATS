@@ -2,6 +2,13 @@
 <?php TemplateUtility::printModalHeader('Job Orders', 'js/sorttable.js', 'Add Candidate to This Job Order'); ?>
 
     <?php if (!$this->isFinishedMode): ?>
+        <script type="text/javascript">
+            function confirmAddToJobOrder()
+            {
+                return confirm('Are you sure you want to assign this candidate to this job order?');
+            }
+        </script>
+
         <p>Search for a candidate below, and then click on the candidate's
         first or last name to add the selected candidate to the job order
         pipeline.</p>
@@ -70,13 +77,13 @@
                             <?php endif; ?>
                             <?php if (!$data['inPipeline']): ?>
                                 <td valign="top" align="left">
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=addToPipeline&amp;getback=getback&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;candidateID=<?php $this->_($data['candidateID']); ?>">
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=addToPipeline&amp;getback=getback&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;candidateID=<?php $this->_($data['candidateID']); ?>" onclick="return confirmAddToJobOrder();">
                                         <?php $this->_($data['firstName']); ?>
                                     </a>
                                     &nbsp;
                                 </td>
                                 <td valign="top" align="left">
-                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=addToPipeline&amp;getback=getback&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;candidateID=<?php $this->_($data['candidateID']); ?>">
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=addToPipeline&amp;getback=getback&amp;jobOrderID=<?php echo($this->jobOrderID); ?>&amp;candidateID=<?php $this->_($data['candidateID']); ?>" onclick="return confirmAddToJobOrder();">
                                         <?php $this->_($data['lastName']); ?>
                                     </a>
                                     &nbsp;
