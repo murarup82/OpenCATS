@@ -669,7 +669,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <?php if (!$this->isPopup): ?>
                         <?php if ($this->getUserAccessLevel('candidates.considerForJobSearch') >= ACCESS_LEVEL_EDIT): ?>
                             <div class="ui2-card-actions">
-                                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=considerForJobSearch&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
+                                <a href="#" onclick="if (!confirm('Proceed to assign this candidate to a job order?')) { return false; } showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=considerForJobSearch&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
                                     <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="Add to Job Order" border="0" />&nbsp;Add This Candidate to Job Order
                                 </a>
                             </div>
