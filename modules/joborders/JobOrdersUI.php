@@ -1889,6 +1889,14 @@ class JobOrdersUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified pipeline entry could not be found.');
         }
 
+        /* Rejected entries cannot transition directly; open details flow instead. */
+        if ((int) $pipelineData['statusID'] === (int) PIPELINE_STATUS_REJECTED)
+        {
+            CATSUtility::transferRelativeURI(
+                'm=joborders&a=pipelineStatusDetails&pipelineID=' . (int) $pipelineData['candidateJobOrderID']
+            );
+        }
+
         $statusRS = $pipelines->getStatusesForPicking();
 
         $selectedStatusID = $pipelineData['statusID'];

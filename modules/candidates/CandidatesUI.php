@@ -2153,6 +2153,19 @@ class CandidatesUI extends UserInterface
             $selectedStatusID = -1;
         }
 
+        /* Rejected entries cannot transition directly; open details flow instead. */
+        if (
+            $selectedJobOrderID != -1 &&
+            (int) $selectedStatusID === (int) PIPELINE_STATUS_REJECTED
+        ) {
+            $pipelineID = $pipelines->getCandidateJobOrderID($candidateID, $selectedJobOrderID);
+            if ($pipelineID > 0) {
+                CATSUtility::transferRelativeURI(
+                    'm=joborders&a=pipelineStatusDetails&pipelineID=' . (int) $pipelineID
+                );
+            }
+        }
+
         /* Get the change status email template. */
         $emailTemplates = new EmailTemplates($this->_siteID);
         $statusChangeTemplateRS = $emailTemplates->getByTag(
@@ -3574,6 +3587,17 @@ class CandidatesUI extends UserInterface
             if (empty($data)) {
                 $this->fatalModal(
                     'The specified pipeline entry could not be found.'
+                );
+            }
+
+            if (
+                (int) $data['statusID'] === (int) PIPELINE_STATUS_REJECTED &&
+                (int) $statusID !== (int) PIPELINE_STATUS_REJECTED
+            ) {
+                CommonErrors::fatalModal(
+                    COMMONERROR_BADFIELDS,
+                    $this,
+                    'Cannot change status from Rejected. Re-assign this candidate to the job order to restart the pipeline.'
                 );
             }
 
