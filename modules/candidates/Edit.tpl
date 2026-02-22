@@ -74,10 +74,6 @@
                                         <?php endforeach; ?>
                                     </select>
                                     <input type="button" class="button" id="aiPrefillButton" value="AI Refill" onclick="AddCandidateAiAssist.submit();" />
-                                    <label>
-                                        <input type="checkbox" id="aiPrefillConsent" />
-                                        I confirm candidate consent
-                                    </label>
                                     <input type="button" class="button" id="aiPrefillUndo" value="Undo AI Refill" onclick="AddCandidateAiAssist.undo();" style="display: none;" />
                                 </div>
                                 <div id="aiPrefillStatus" class="ui2-ai-status" style="margin-top: 6px;"></div>

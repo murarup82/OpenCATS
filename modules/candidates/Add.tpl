@@ -112,10 +112,6 @@
                                         <td valign="top" align="right" colspan="2" style="padding-top: 4px;">
                                             <span class="ui2-inline ui2-ai-toolbar">
                                                 <input type="button" class="button ui2-button" id="aiPrefillButton" value="AI Prefill" onclick="AddCandidateAiAssist.submit();" />
-                                                <label>
-                                                    <input type="checkbox" id="aiPrefillConsent" />
-                                                    I confirm candidate consent
-                                                </label>
                                                 <input type="button" class="button ui2-button ui2-button--secondary" id="aiPrefillUndo" value="Undo AI Prefill" onclick="AddCandidateAiAssist.undo();" style="display: none;" />
                                             </span>
                                         </td>

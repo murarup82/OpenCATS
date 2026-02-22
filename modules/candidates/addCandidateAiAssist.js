@@ -1468,13 +1468,6 @@ var AddCandidateAiAssist = (function ()
 
     function submit()
     {
-        var consentCheckbox = byId('aiPrefillConsent');
-        if (consentCheckbox && !consentCheckbox.checked)
-        {
-            setStatus('Consent is required to run AI Prefill.', true);
-            return;
-        }
-
         resetUndo();
         setButtonDisabled(true);
         setStatus('Submitting AI Prefill request...', false);

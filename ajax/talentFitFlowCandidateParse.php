@@ -60,6 +60,28 @@ function normalizeTalentFitFlowJson($value)
     return $encoded;
 }
 
+function makeDefaultCandidateParseConsent($actor)
+{
+    $payload = array(
+        'consent_given' => true,
+        'timestamp' => gmdate('c'),
+        'actor' => (string) $actor
+    );
+
+    if (function_exists('json_encode'))
+    {
+        $encoded = json_encode($payload);
+        if ($encoded !== false)
+        {
+            return $encoded;
+        }
+    }
+
+    $safeActor = str_replace('\\', '\\\\', (string) $payload['actor']);
+    $safeActor = str_replace('"', '\\"', $safeActor);
+    return '{"consent_given":true,"timestamp":"' . $payload['timestamp'] . '","actor":"' . $safeActor . '"}';
+}
+
 $interface = new SecureAJAXInterface();
 
 if (
@@ -107,8 +129,7 @@ if ($action === 'create')
     $consent = isset($_REQUEST['consent']) ? trim($_REQUEST['consent']) : '';
     if ($consent === '')
     {
-        $interface->outputXMLErrorPage(-1, 'Consent is required.');
-        die();
+        $consent = makeDefaultCandidateParseConsent($_SESSION['CATS']->getUserID());
     }
 
     $cvPath = false;
