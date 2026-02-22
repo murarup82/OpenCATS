@@ -485,7 +485,8 @@ class Pipelines
     public function setStatus($candidateID, $jobOrderID, $statusID,
                               $emailAddress, $emailText, $userID = 0,
                               $commentText = '', $rejectionReasonOther = null,
-                              $commentIsSystem = 0, $enteredBy = null)
+                              $commentIsSystem = 0, $enteredBy = null,
+                              $historyDate = null)
     {
         /* Get existing status. */
         $sql = sprintf(
@@ -591,7 +592,8 @@ class Pipelines
             $commentText,
             $commentIsSystem,
             $rejectionReasonOther,
-            $enteredBy
+            $enteredBy,
+            $historyDate
         );
 
         /* Add auditing history. */
@@ -743,8 +745,15 @@ class Pipelines
                                      $statusFromID, $commentText = '',
                                      $commentIsSystem = 0,
                                      $rejectionReasonOther = null,
-                                     $enteredBy = null)
+                                     $enteredBy = null,
+                                     $historyDate = null)
     {
+        $historyDateSQL = 'NOW()';
+        if (!empty($historyDate))
+        {
+            $historyDateSQL = $this->_db->makeQueryString($historyDate);
+        }
+
         $sql = sprintf(
             "INSERT INTO candidate_joborder_status_history (
                 joborder_id,
@@ -762,7 +771,7 @@ class Pipelines
                 %s,
                 %s,
                 %s,
-                NOW(),
+                %s,
                 %s,
                 %s,
                 %s,
@@ -773,6 +782,7 @@ class Pipelines
             $this->_db->makeQueryInteger($jobOrderID),
             $this->_db->makeQueryInteger($candidateID),
             $this->_siteID,
+            $historyDateSQL,
             $this->_db->makeQueryInteger($statusToID),
             $this->_db->makeQueryInteger($statusFromID),
             $this->_db->makeQueryStringOrNULL($commentText),

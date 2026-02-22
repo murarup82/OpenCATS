@@ -15,6 +15,7 @@ function checkActivityForm(form)
     errorMessage += checkEventTitle();
     errorMessage += checkStatusComment();
     errorMessage += checkRejectionReasons();
+    errorMessage += checkRejectionDate();
 
     if (errorMessage != '')
     {
@@ -145,4 +146,40 @@ function checkRejectionReasons()
     }
 
     return errorMessage;
+}
+
+function checkRejectionDate()
+{
+    if (typeof rejectedStatusID === 'undefined')
+    {
+        return '';
+    }
+
+    var changeStatus = document.getElementById('changeStatus');
+    var statusSelect = document.getElementById('statusID');
+    var dateField = document.getElementById('rejectionDate');
+    var dateLabel = document.getElementById('rejectionDateLabel');
+
+    if (!changeStatus || !statusSelect || !dateField || !dateLabel)
+    {
+        return '';
+    }
+
+    if (!changeStatus.checked || statusSelect.value != rejectedStatusID)
+    {
+        dateLabel.style.color = '#000';
+        return '';
+    }
+
+    var value = dateField.value.replace(/^\s+|\s+$/g, '');
+    var datePattern = /^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])-\d{2}$/;
+
+    if (!datePattern.test(value))
+    {
+        dateLabel.style.color = '#ff0000';
+        return "    - You must enter a valid rejection date.\n";
+    }
+
+    dateLabel.style.color = '#000';
+    return '';
 }

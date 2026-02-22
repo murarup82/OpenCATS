@@ -209,6 +209,7 @@
         var statusSelect = document.getElementById('statusID');
         var statusCommentRow = document.getElementById('statusCommentTR');
         var rejectionRow = document.getElementById('rejectionReasonTR');
+        var rejectionDateRow = document.getElementById('rejectionDateTR');
 
         var changeActive = true;
         if (changeStatusCheckbox)
@@ -225,6 +226,10 @@
         if (rejectionRow)
         {
             rejectionRow.style.display = (changeActive && isRejected) ? 'table-row' : 'none';
+        }
+        if (rejectionDateRow)
+        {
+            rejectionDateRow.style.display = (changeActive && isRejected) ? 'table-row' : 'none';
         }
 
         AS_onRejectionReasonChange();
@@ -475,6 +480,14 @@
                 </td>
             </tr>
             <?php endif; ?>
+            <tr id="rejectionDateTR" style="display: none;">
+                <td class="tdVertical">
+                    <label id="rejectionDateLabel" for="rejectionDate">Rejection Date:</label>
+                </td>
+                <td class="tdData">
+                    <script type="text/javascript">DateInput('rejectionDate', false, 'MM-DD-YY', '<?php echo(date('m-d-y')); ?>', -1);</script>
+                </td>
+            </tr>
            <tr id="addActivityTR" <?php if ($this->onlyScheduleEvent || $hideActivity): ?>style="display:none;"<?php endif; ?>>
                 <td class="tdVertical">
                     <label id="addActivityLabel" for="addActivity">Activity:</label>
