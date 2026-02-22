@@ -20,7 +20,15 @@ if (!defined('GDPR_CONSENT_LINK_DAYS'))
 
 if (!defined('GDPR_LEGACY_PROOF_PATTERNS'))
 {
-    define('GDPR_LEGACY_PROOF_PATTERNS', array('acord prelucrare', 'gdpr', 'consent', 'prelucrare date'));
+    define('GDPR_LEGACY_PROOF_PATTERNS', array(
+        'acord prelucrare',
+        'acord prelucrarea',
+        'prelucrare date',
+        'prelucrarea date',
+        'prelucrarea datelor',
+        'gdpr',
+        'consent'
+    ));
 }
 
 if (!defined('GDPR_RENEWAL_WINDOW_DAYS'))
@@ -35,7 +43,15 @@ function getLegacyProofPatterns()
         return GDPR_LEGACY_PROOF_PATTERNS;
     }
 
-    return array('acord prelucrare', 'gdpr', 'consent', 'prelucrare date');
+    return array(
+        'acord prelucrare',
+        'acord prelucrarea',
+        'prelucrare date',
+        'prelucrarea date',
+        'prelucrarea datelor',
+        'gdpr',
+        'consent'
+    );
 }
 
 $interface = new SecureAJAXInterface();
@@ -600,7 +616,12 @@ if ($action === 'scanLegacy')
          WHERE
             site_id = %s
             AND gdpr_signed = 1
-            AND (gdpr_legacy_proof_status IS NULL OR gdpr_legacy_proof_status = 'UNKNOWN')",
+            AND (
+                gdpr_legacy_proof_status IS NULL
+                OR gdpr_legacy_proof_status = 'UNKNOWN'
+                OR gdpr_legacy_proof_status = 'PROOF_MISSING'
+                OR (gdpr_legacy_proof_status = 'PROOF_FOUND' AND gdpr_legacy_proof_attachment_id IS NULL)
+            )",
         $db->makeQueryInteger($siteID)
     ));
 

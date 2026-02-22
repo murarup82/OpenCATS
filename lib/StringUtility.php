@@ -127,6 +127,22 @@ class StringUtility
      */
     public static function extractPhoneNumber($string)
     {
+        $string = trim((string) $string);
+        if ($string === '')
+        {
+            return '';
+        }
+
+        /* Keep explicit international numbers as entered unless they are NANP (+1XXXXXXXXXX). */
+        if (preg_match('/^\+/', $string))
+        {
+            $digits = preg_replace('/\D+/', '', $string);
+            if (!(strlen($digits) === 11 && substr($digits, 0, 1) === '1'))
+            {
+                return $string;
+            }
+        }
+
         if (preg_match('/'
             . self::matchPHECountryCode . self::matchPHSeparator . self::matchPHEAreaCode
             . self::matchPHSeparator    . self::matchPHEExchange . self::matchPHSeparator
@@ -137,6 +153,10 @@ class StringUtility
 
             /* Don't format international phone numbers. */
             if (!empty($matches['countryCode']) && ($matches['countryCode'] != '1'))
+            {
+                return $string;
+            }
+            if (strpos($string, '+') !== false && empty($matches['countryCode']))
             {
                 return $string;
             }

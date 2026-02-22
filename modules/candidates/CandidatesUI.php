@@ -1335,7 +1335,15 @@ class CandidatesUI extends UserInterface
         );
 
         $rows = $db->getAllAssoc($sql);
-        $patterns = array('acord prelucrare', 'gdpr', 'consent', 'prelucrare date');
+        $patterns = array(
+            'acord prelucrare',
+            'acord prelucrarea',
+            'prelucrare date',
+            'prelucrarea date',
+            'prelucrarea datelor',
+            'gdpr',
+            'consent'
+        );
 
         $normalizedPatterns = array();
         foreach ($patterns as $pattern)
