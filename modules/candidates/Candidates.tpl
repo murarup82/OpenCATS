@@ -63,6 +63,10 @@
                             <input type="checkbox" name="onlyGdprUnsigned" id="onlyGdprUnsigned" <?php if ($this->dataGrid->getFilterValue('GdprSigned') == '0'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('GdprSigned', '==', '\'0\''); ?>" />
                             GDPR Not Signed
                         </label>
+                        <label class="ui2-inline" for="onlyInternalCandidates">
+                            <input type="checkbox" name="onlyInternalCandidates" id="onlyInternalCandidates" <?php if ($this->dataGrid->getFilterValue('InternalCandidates') != ''): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('InternalCandidates', '=#', '\'partner\''); ?>" />
+                            Internal Candidates
+                        </label>
                         <label class="ui2-inline" for="onlyActiveCandidates">
                             <input type="checkbox" name="onlyActiveCandidates" id="onlyActiveCandidates" <?php if ($this->dataGrid->getFilterValue('IsActive') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsActive', '==', '\'1\''); ?>" />
                             Active Candidates

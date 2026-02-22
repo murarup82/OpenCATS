@@ -2253,6 +2253,22 @@ class CandidatesDataGrid extends DataGrid
                 'filterable' => false,
                 'filterDescription' => 'GDPR Signed = No'
             ),
+            'InternalCandidates' => array(
+                'select'    => '',
+                'pagerOptional' => false,
+                'filterable' => false,
+                'filterDescription' => 'Internal Candidates (Source does not contain Partner)',
+                'filterTypes' => '=#',
+                'filterRender=#' => '
+                    $keyword = strtolower(trim($argument));
+                    if ($keyword === "")
+                    {
+                        $keyword = "partner";
+                    }
+
+                    return "LOWER(COALESCE(candidate.source, \'\')) NOT LIKE " . $db->makeQueryString("%" . $keyword . "%");
+                '
+            ),
             'IsActive' =>      array(
                 'select'    => '',
                 'filter'    => 'candidate.is_active',
