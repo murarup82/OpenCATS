@@ -199,6 +199,7 @@
                             {
                                 $statusToSlug = 'unknown';
                             }
+                            $dateEditInput = str_replace(' ', 'T', $row['dateEdit']);
                         ?>
                         <tr>
                             <td><?php $this->_($row['dateDisplay']); ?></td>
@@ -251,8 +252,8 @@
                             <td>
                                 <?php if (!empty($this->canEditHistory)): ?>
                                     <input type="hidden" name="historyID[]" value="<?php echo((int) $row['historyID']); ?>" />
-                                    <input type="hidden" name="originalDate[<?php echo((int) $row['historyID']); ?>]" value="<?php $this->_($row['dateEdit']); ?>" />
-                                    <input type="text" name="newDate[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm" style="width: 170px;" value="<?php $this->_($row['dateEdit']); ?>" placeholder="YYYY-MM-DD HH:MM:SS" />
+                                    <input type="hidden" name="originalDate[<?php echo((int) $row['historyID']); ?>]" value="<?php $this->_($dateEditInput); ?>" />
+                                    <input type="datetime-local" step="1" name="newDate[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm" style="width: 190px;" value="<?php $this->_($dateEditInput); ?>" />
                                     <input type="text" name="editNote[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm" style="width: 200px;" placeholder="Edit note (optional)" />
                                 <?php else: ?>
                                     <span class="ui2-muted">--</span>

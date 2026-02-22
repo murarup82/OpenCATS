@@ -80,6 +80,16 @@ var GDPRCandidateRequest = (function ()
                     return;
                 }
             }
+            else
+            {
+                var sendConfirmed = window.confirm(
+                    'Send GDPR request email to this candidate now?'
+                );
+                if (!sendConfirmed)
+                {
+                    return;
+                }
+            }
         }
 
         var http = AJAX_getXMLHttpObject();
