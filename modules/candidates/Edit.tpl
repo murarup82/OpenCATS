@@ -1,5 +1,5 @@
 <?php /* $Id: Edit.tpl 3695 2007-11-26 22:01:04Z brian $ */ ?>
-<?php TemplateUtility::printHeader('Candidates', array('modules/candidates/validator.js', 'js/sweetTitles.js', 'js/listEditor.js', 'js/doubleListEditor.js')); ?>
+<?php TemplateUtility::printHeader('Candidates', array('modules/candidates/validator.js', 'js/sweetTitles.js', 'js/listEditor.js', 'js/doubleListEditor.js', 'modules/candidates/addCandidateAiAssist.js')); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active); ?>
     <div id="main">
@@ -58,6 +58,32 @@
                         </td>
                         <td class="tdData">
                             <input type="text" class="inputbox" id="email1" name="email1" value="<?php $this->_($this->data['email1']); ?>" style="width: 150px;" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tdVertical" valign="top">
+                            <label for="aiPrefillAttachmentID">AI Refill:</label>
+                        </td>
+                        <td class="tdData">
+                            <?php if (!empty($this->attachmentsRS)): ?>
+                                <div class="ui2-inline ui2-ai-toolbar">
+                                    <select id="aiPrefillAttachmentID" class="inputbox" style="width: 260px;">
+                                        <option value="">(Select a CV Attachment)</option>
+                                        <?php foreach ($this->attachmentsRS as $attachment): ?>
+                                            <option value="<?php $this->_($attachment['attachmentID']); ?>"<?php if ((int) $this->aiPrefillDefaultAttachmentID === (int) $attachment['attachmentID']): ?> selected="selected"<?php endif; ?>><?php $this->_($attachment['originalFilename']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <input type="button" class="button" id="aiPrefillButton" value="AI Refill" onclick="AddCandidateAiAssist.submit();" />
+                                    <label>
+                                        <input type="checkbox" id="aiPrefillConsent" />
+                                        I confirm candidate consent
+                                    </label>
+                                    <input type="button" class="button" id="aiPrefillUndo" value="Undo AI Refill" onclick="AddCandidateAiAssist.undo();" style="display: none;" />
+                                </div>
+                                <div id="aiPrefillStatus" class="ui2-ai-status" style="margin-top: 6px;"></div>
+                            <?php else: ?>
+                                <span>No attachments available. Upload a CV attachment first.</span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <tr>
@@ -367,6 +393,26 @@
                 <input type="hidden" id="sourceCSVSave" name="sourceCSV" value="" />
             </form>
 
+            <style type="text/css">
+                table.editTable td.ui2-ai-prefilled-cell {
+                    background-color: #e8f7e8;
+                    transition: background-color 0.2s ease;
+                }
+                .inputbox[data-ai-prefilled="1"],
+                textarea[data-ai-prefilled="1"],
+                select[data-ai-prefilled="1"] {
+                    background-color: #dff5df !important;
+                    border-color: #8dc98d !important;
+                }
+                .inputbox[data-ai-review-needed="1"],
+                input[data-ai-review-needed="1"],
+                textarea[data-ai-review-needed="1"],
+                select[data-ai-review-needed="1"] {
+                    background-color: #ffe8ef !important;
+                    border-color: #e1a9ba !important;
+                }
+            </style>
+
             <script type="text/javascript">
                 function submitSourcesOnly()
                 {
@@ -378,6 +424,45 @@
                     }
                     document.getElementById('saveSourcesForm').submit();
                     return false;
+                }
+
+                if (typeof AddCandidateAiAssist !== 'undefined')
+                {
+                    AddCandidateAiAssist.configure({
+                        sessionCookie: '<?php echo($this->sessionCookie); ?>',
+                        actor: '<?php echo($this->currentUserID); ?>',
+                        buildCreateRequestData: function (context)
+                        {
+                            var attachmentSelect = document.getElementById('aiPrefillAttachmentID');
+                            if (!attachmentSelect)
+                            {
+                                return { errorMessage: 'No attachment selector found.' };
+                            }
+
+                            var attachmentID = (attachmentSelect.value || '').replace(/^\s+|\s+$/g, '');
+                            if (attachmentID === '')
+                            {
+                                return { errorMessage: 'Select a CV attachment first.' };
+                            }
+
+                            var candidateEl = document.getElementById('candidateID');
+                            var candidateID = candidateEl ? (candidateEl.value || '').replace(/^\s+|\s+$/g, '') : '';
+                            if (candidateID === '')
+                            {
+                                return { errorMessage: 'Candidate ID is missing.' };
+                            }
+
+                            var idempotencyKey = 'candidate-' + candidateID + '-attachment-' + attachmentID;
+
+                            return {
+                                postData: '&attachmentID=' + urlEncode(attachmentID)
+                                    + '&candidateID=' + urlEncode(candidateID)
+                                    + '&consent=' + urlEncode(context.consent)
+                                    + '&requested_fields=' + urlEncode(context.requestedFields)
+                                    + '&idempotency_key=' + urlEncode(idempotencyKey)
+                            };
+                        }
+                    });
                 }
 
                 document.editCandidateForm.firstName.focus();

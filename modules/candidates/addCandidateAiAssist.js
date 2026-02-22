@@ -16,7 +16,8 @@ var AddCandidateAiAssist = (function ()
     var sourceReviewListenerBound = false;
     var config = {
         sessionCookie: '',
-        actor: ''
+        actor: '',
+        buildCreateRequestData: null
     };
 
     function byId(id)
@@ -1414,15 +1415,59 @@ var AddCandidateAiAssist = (function ()
         );
     }
 
-    function submit()
+    function getCreateRequestData(consentJson, requestedFields)
     {
+        if (typeof config.buildCreateRequestData === 'function')
+        {
+            var customData = config.buildCreateRequestData({
+                consent: consentJson,
+                requestedFields: requestedFields
+            });
+
+            if (!customData || typeof customData !== 'object')
+            {
+                return {
+                    errorMessage: 'Invalid AI request configuration.'
+                };
+            }
+
+            if (customData.errorMessage)
+            {
+                return {
+                    errorMessage: customData.errorMessage
+                };
+            }
+
+            if (typeof customData.postData !== 'string' || safeTrim(customData.postData) === '')
+            {
+                return {
+                    errorMessage: 'Invalid AI request payload.'
+                };
+            }
+
+            return customData;
+        }
+
         var tempFile = byId('documentTempFile');
         if (!tempFile || safeTrim(tempFile.value) === '')
         {
-            setStatus('Upload a resume first.', true);
-            return;
+            return {
+                errorMessage: 'Upload a resume first.'
+            };
         }
 
+        var idempotencyKey = safeTrim(tempFile.value);
+
+        return {
+            postData: '&documentTempFile=' + urlEncode(tempFile.value)
+                + '&consent=' + urlEncode(consentJson)
+                + '&requested_fields=' + urlEncode(requestedFields)
+                + '&idempotency_key=' + urlEncode(idempotencyKey)
+        };
+    }
+
+    function submit()
+    {
         var consentCheckbox = byId('aiPrefillConsent');
         if (consentCheckbox && !consentCheckbox.checked)
         {
@@ -1444,13 +1489,15 @@ var AddCandidateAiAssist = (function ()
 
         var consentJson = buildConsentJson(config.actor);
         var requestedFields = '["first_name","last_name","email","phone","location","country_name","skills","summary","experience_years","seniority_band","current_employer","employment_recent"]';
-        var idempotencyKey = safeTrim(tempFile.value);
+        var createRequestData = getCreateRequestData(consentJson, requestedFields);
+        if (createRequestData.errorMessage)
+        {
+            setStatus(createRequestData.errorMessage, true);
+            setButtonDisabled(false);
+            return;
+        }
 
-        var POSTData = '&action=create'
-            + '&documentTempFile=' + urlEncode(tempFile.value)
-            + '&consent=' + urlEncode(consentJson)
-            + '&requested_fields=' + urlEncode(requestedFields)
-            + '&idempotency_key=' + urlEncode(idempotencyKey);
+        var POSTData = '&action=create' + createRequestData.postData;
 
         var callBack = function ()
         {
@@ -1558,6 +1605,10 @@ var AddCandidateAiAssist = (function ()
         if (typeof newConfig.actor !== 'undefined')
         {
             config.actor = newConfig.actor;
+        }
+        if (typeof newConfig.buildCreateRequestData !== 'undefined')
+        {
+            config.buildCreateRequestData = newConfig.buildCreateRequestData;
         }
 
         setupSourceReviewListener();

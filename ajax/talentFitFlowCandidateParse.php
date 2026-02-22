@@ -5,6 +5,7 @@
  */
 
 include_once(LEGACY_ROOT . '/lib/FileUtility.php');
+include_once(LEGACY_ROOT . '/lib/Attachments.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 
@@ -61,7 +62,10 @@ function normalizeTalentFitFlowJson($value)
 
 $interface = new SecureAJAXInterface();
 
-if ($_SESSION['CATS']->getAccessLevel('candidates.add') < ACCESS_LEVEL_EDIT)
+if (
+    $_SESSION['CATS']->getAccessLevel('candidates.add') < ACCESS_LEVEL_EDIT &&
+    $_SESSION['CATS']->getAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT
+)
 {
     $interface->outputXMLErrorPage(-1, 'Invalid user level for action.');
     die();
@@ -91,7 +95,10 @@ if (!$client->isConfigured())
 if ($action === 'create')
 {
     $documentTempFile = isset($_REQUEST['documentTempFile']) ? trim($_REQUEST['documentTempFile']) : '';
-    if ($documentTempFile === '')
+    $attachmentID = isset($_REQUEST['attachmentID']) ? (int) $_REQUEST['attachmentID'] : 0;
+    $candidateID = isset($_REQUEST['candidateID']) ? (int) $_REQUEST['candidateID'] : 0;
+
+    if ($documentTempFile === '' && $attachmentID <= 0)
     {
         $interface->outputXMLErrorPage(-1, 'Missing resume upload.');
         die();
@@ -104,11 +111,44 @@ if ($action === 'create')
         die();
     }
 
-    $cvPath = FileUtility::getUploadFilePath(
-        $interface->getSiteID(),
-        'addcandidate',
-        $documentTempFile
-    );
+    $cvPath = false;
+
+    if ($documentTempFile !== '')
+    {
+        $cvPath = FileUtility::getUploadFilePath(
+            $interface->getSiteID(),
+            'addcandidate',
+            $documentTempFile
+        );
+    }
+    else
+    {
+        if ($attachmentID <= 0 || $candidateID <= 0)
+        {
+            $interface->outputXMLErrorPage(-1, 'Invalid attachment or candidate ID.');
+            die();
+        }
+
+        $attachments = new Attachments($interface->getSiteID());
+        $attachment = $attachments->get($attachmentID);
+        if (
+            empty($attachment) ||
+            (int) $attachment['dataItemType'] !== DATA_ITEM_CANDIDATE ||
+            (int) $attachment['dataItemID'] !== $candidateID
+        )
+        {
+            $interface->outputXMLErrorPage(-1, 'Attachment not found for candidate.');
+            die();
+        }
+
+        $attachments->forceAttachmentLocal($attachmentID);
+        $cvPath = FileUtility::getUploadFilePath(
+            $interface->getSiteID(),
+            $attachment['directoryName'],
+            $attachment['storedFilename']
+        );
+    }
+
     if ($cvPath === false || !is_readable($cvPath))
     {
         $interface->outputXMLErrorPage(-1, 'Resume file is not available.');
@@ -129,7 +169,9 @@ if ($action === 'create')
     {
         logTalentFitFlowCandidateParseError('TalentFitFlow candidate parse create failed', array(
             'error' => $client->getLastError(),
-            'documentTempFile' => $documentTempFile
+            'documentTempFile' => $documentTempFile,
+            'attachmentID' => $attachmentID,
+            'candidateID' => $candidateID
         ));
         $interface->outputXMLErrorPage(-1, $client->getLastError());
         die();

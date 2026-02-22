@@ -868,6 +868,18 @@ class CandidatesUI extends UserInterface
             DATA_ITEM_CANDIDATE,
             $candidateID
         );
+        if (!empty($attachmentsRS))
+        {
+            usort($attachmentsRS, function ($left, $right) {
+                return ((int) $right['attachmentID']) - ((int) $left['attachmentID']);
+            });
+        }
+
+        $aiPrefillDefaultAttachmentID = 0;
+        if (!empty($attachmentsRS))
+        {
+            $aiPrefillDefaultAttachmentID = (int) $attachmentsRS[0]['attachmentID'];
+        }
 
         foreach ($attachmentsRS as $rowNumber => $attachmentsData) {
             /* If profile image is not local, force it to be local. */
@@ -1598,6 +1610,12 @@ class CandidatesUI extends UserInterface
             }
         }
 
+        $attachments = new Attachments($this->_siteID);
+        $attachmentsRS = $attachments->getAll(
+            DATA_ITEM_CANDIDATE,
+            $candidateID
+        );
+
         // TODO - improve for permission who can send email
         if ($this->getUserAccessLevel('candidates.emailCandidates') == ACCESS_LEVEL_DEMO) {
             $canEmail = false;
@@ -1646,9 +1664,13 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('sourcesString', $sourcesString);
         $this->_template->assign('sourceInRS', $sourceInRS);
         $this->_template->assign('candidateID', $candidateID);
+        $this->_template->assign('attachmentsRS', $attachmentsRS);
+        $this->_template->assign('aiPrefillDefaultAttachmentID', $aiPrefillDefaultAttachmentID);
         $this->_template->assign('canEmail', $canEmail);
         $this->_template->assign('EEOSettingsRS', $EEOSettingsRS);
         $this->_template->assign('emailTemplateDisabled', $emailTemplateDisabled);
+        $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
+        $this->_template->assign('currentUserID', $_SESSION['CATS']->getUserID());
         $this->_template->display('./modules/candidates/Edit.tpl');
     }
 
