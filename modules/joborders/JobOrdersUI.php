@@ -1676,10 +1676,47 @@ class JobOrdersUI extends UserInterface
 
         $jobOrderID  = $_GET['jobOrderID'];
         $candidateID = $_GET['candidateID'];
+        $confirmReapplyRejected = ((int) $this->getTrimmedInput('confirmReapplyRejected', $_GET) === 1);
 
         if (!eval(Hooks::get('JO_ON_ADD_PIPELINE'))) return;
 
         $pipelines = new Pipelines($this->_siteID);
+        if (
+            !$confirmReapplyRejected &&
+            !$pipelines->hasEverBeenHiredForJobOrder($candidateID, $jobOrderID) &&
+            $pipelines->hasEverBeenRejectedForJobOrder($candidateID, $jobOrderID)
+        )
+        {
+            $confirmURL = CATSUtility::getIndexName()
+                . '?m=joborders&a=addToPipeline'
+                . '&jobOrderID=' . (int) $jobOrderID
+                . '&candidateID=' . (int) $candidateID
+                . '&confirmReapplyRejected=1';
+
+            if (isset($_GET['getback']) && trim($_GET['getback']) !== '')
+            {
+                $confirmURL .= '&getback=' . urlencode(trim($_GET['getback']));
+            }
+
+            $message = 'This candidate was already rejected for this role. Please check closed transitions. Continue to re-assign and start a new flow?';
+            $messageJS = function_exists('json_encode')
+                ? json_encode($message)
+                : "'" . addslashes($message) . "'";
+            $confirmURLJS = function_exists('json_encode')
+                ? json_encode($confirmURL)
+                : "'" . addslashes($confirmURL) . "'";
+
+            echo '<html><head><script type="text/javascript">',
+                 '(function(){',
+                 'var msg=', $messageJS, ';',
+                 'var url=', $confirmURLJS, ';',
+                 'if (window.confirm(msg)) { window.location.href = url; return; }',
+                 'if (window.history && window.history.length > 1) { window.history.back(); }',
+                 '})();',
+                 '</script></head><body></body></html>';
+            return;
+        }
+
         if (!$pipelines->add($candidateID, $jobOrderID, $this->_userID))
         {
             $errorMessage = $pipelines->getLastErrorMessage();

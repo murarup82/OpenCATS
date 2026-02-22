@@ -112,6 +112,57 @@ class Pipelines
         return !empty($rs);
     }
 
+    public function hasEverBeenRejectedForJobOrder($candidateID, $jobOrderID)
+    {
+        $sql = sprintf(
+            "SELECT
+                candidate_joborder_status_history_id AS historyID
+            FROM
+                candidate_joborder_status_history
+            WHERE
+                candidate_id = %s
+            AND
+                joborder_id = %s
+            AND
+                status_to = %s
+            AND
+                site_id = %s
+            LIMIT 1",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_db->makeQueryInteger(PIPELINE_STATUS_REJECTED),
+            $this->_siteID
+        );
+        $rs = $this->_db->getAssoc($sql);
+        if (!empty($rs))
+        {
+            return true;
+        }
+
+        $sql = sprintf(
+            "SELECT
+                candidate_joborder_id AS candidateJobOrderID
+            FROM
+                candidate_joborder
+            WHERE
+                candidate_id = %s
+            AND
+                joborder_id = %s
+            AND
+                status = %s
+            AND
+                site_id = %s
+            LIMIT 1",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_db->makeQueryInteger(PIPELINE_STATUS_REJECTED),
+            $this->_siteID
+        );
+        $rs = $this->_db->getAssoc($sql);
+
+        return !empty($rs);
+    }
+
     private function normalizeStatusLabel($statusID, $label)
     {
         $map = array(

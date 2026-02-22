@@ -2097,6 +2097,7 @@ class CandidatesUI extends UserInterface
 
 
         $jobOrderID  = $_GET['jobOrderID'];
+        $confirmReapplyRejected = ((int) $this->getTrimmedInput('confirmReapplyRejected', $_GET) === 1);
 
         if (!eval(Hooks::get('CANDIDATE_ADD_TO_PIPELINE_PRE'))) return;
 
@@ -2117,6 +2118,52 @@ class CandidatesUI extends UserInterface
             if ($pipelines->hasEverBeenHiredForJobOrder($candidateID, $jobOrderID)) {
                 unset($candidateIDArray[$arrayPos]);
             }
+        }
+
+        $rejectedCandidateIDs = array();
+        foreach ($candidateIDArray as $candidateID) {
+            if ($pipelines->hasEverBeenRejectedForJobOrder($candidateID, $jobOrderID)) {
+                $rejectedCandidateIDs[] = (int) $candidateID;
+            }
+        }
+
+        if (!$confirmReapplyRejected && !empty($rejectedCandidateIDs)) {
+            $confirmURL = CATSUtility::getIndexName()
+                . '?m=candidates&a=addToPipeline'
+                . '&jobOrderID=' . (int) $jobOrderID
+                . '&confirmReapplyRejected=1';
+
+            if (isset($_GET['candidateID']) && $this->isRequiredIDValid('candidateID', $_GET)) {
+                $confirmURL .= '&candidateID=' . (int) $_GET['candidateID'];
+            } else if (isset($_REQUEST['candidateIDArrayStored']) && $this->isRequiredIDValid('candidateIDArrayStored', $_REQUEST, true)) {
+                $confirmURL .= '&candidateIDArrayStored=' . urlencode($_REQUEST['candidateIDArrayStored']);
+            }
+
+            if (isset($_GET['getback']) && trim($_GET['getback']) !== '') {
+                $confirmURL .= '&getback=' . urlencode(trim($_GET['getback']));
+            }
+
+            $isMultiple = (count($rejectedCandidateIDs) > 1);
+            $message = $isMultiple
+                ? 'One or more selected candidates were already rejected for this role. Please check closed transitions. Continue to re-assign and start a new flow?'
+                : 'This candidate was already rejected for this role. Please check closed transitions. Continue to re-assign and start a new flow?';
+
+            $messageJS = function_exists('json_encode')
+                ? json_encode($message)
+                : "'" . addslashes($message) . "'";
+            $confirmURLJS = function_exists('json_encode')
+                ? json_encode($confirmURL)
+                : "'" . addslashes($confirmURL) . "'";
+
+            echo '<html><head><script type="text/javascript">',
+                '(function(){',
+                'var msg=', $messageJS, ';',
+                'var url=', $confirmURLJS, ';',
+                'if (window.confirm(msg)) { window.location.href = url; return; }',
+                'if (window.history && window.history.length > 1) { window.history.back(); }',
+                '})();',
+                '</script></head><body></body></html>';
+            return;
         }
 
         /* Add to pipeline */
