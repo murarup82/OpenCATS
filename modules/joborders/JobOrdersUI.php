@@ -1948,7 +1948,7 @@ class JobOrdersUI extends UserInterface
                  '(function(){',
                  'var url=\'' . $detailsURLForJS . '\';',
                  'if (window.parent && window.parent.showPopWin){',
-                 'window.parent.showPopWin(url, 900, 650, null);',
+                 'window.parent.showPopWin(url, 1200, 760, null);',
                  'return;',
                  '}',
                  'window.location.href=url;',

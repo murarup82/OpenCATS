@@ -22,37 +22,53 @@
     }
     .pipeline-status-details .ui2-table {
         width: 100%;
-        table-layout: auto;
+        table-layout: fixed;
     }
     .pipeline-status-details .ui2-table th,
     .pipeline-status-details .ui2-table td {
         white-space: normal;
+        vertical-align: top;
     }
     .pipeline-status-details .ui2-table th:nth-child(1),
     .pipeline-status-details .ui2-table td:nth-child(1) {
-        width: 150px;
+        width: 13%;
     }
     .pipeline-status-details .ui2-table th:nth-child(2),
     .pipeline-status-details .ui2-table td:nth-child(2) {
-        min-width: 260px;
+        width: 16%;
     }
     .pipeline-status-details .ui2-table th:nth-child(3),
     .pipeline-status-details .ui2-table td:nth-child(3) {
-        width: 150px;
+        width: 12%;
     }
     .pipeline-status-details .ui2-table th:nth-child(4),
     .pipeline-status-details .ui2-table td:nth-child(4) {
-        min-width: 360px;
+        width: 31%;
         word-break: break-word;
+        overflow-wrap: anywhere;
     }
     .pipeline-status-details .ui2-table th:nth-child(5),
     .pipeline-status-details .ui2-table td:nth-child(5) {
-        width: 70px;
+        width: 6%;
         text-align: center;
     }
     .pipeline-status-details .ui2-table th:nth-child(6),
     .pipeline-status-details .ui2-table td:nth-child(6) {
-        min-width: 280px;
+        width: 22%;
+    }
+    .pipeline-status-details .edit-cell {
+        min-width: 0;
+    }
+    .pipeline-status-details .edit-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .pipeline-status-details .edit-date-input,
+    .pipeline-status-details .edit-note-input {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
     .pipeline-status-details .ui2-header-actions {
         display: flex;
@@ -251,10 +267,14 @@
                             <td><?php echo($auto ? 'Yes' : 'No'); ?></td>
                             <td>
                                 <?php if (!empty($this->canEditHistory)): ?>
-                                    <input type="hidden" name="historyID[]" value="<?php echo((int) $row['historyID']); ?>" />
-                                    <input type="hidden" name="originalDate[<?php echo((int) $row['historyID']); ?>]" value="<?php $this->_($dateEditInput); ?>" />
-                                    <input type="datetime-local" step="1" name="newDate[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm" style="width: 190px;" value="<?php $this->_($dateEditInput); ?>" />
-                                    <input type="text" name="editNote[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm" style="width: 200px;" placeholder="Edit note (optional)" />
+                                    <div class="edit-cell">
+                                        <input type="hidden" name="historyID[]" value="<?php echo((int) $row['historyID']); ?>" />
+                                        <input type="hidden" name="originalDate[<?php echo((int) $row['historyID']); ?>]" value="<?php $this->_($dateEditInput); ?>" />
+                                        <div class="edit-input-group">
+                                            <input type="datetime-local" step="1" name="newDate[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm edit-date-input" value="<?php $this->_($dateEditInput); ?>" />
+                                            <input type="text" name="editNote[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm edit-note-input" placeholder="Edit note (optional)" />
+                                        </div>
+                                    </div>
                                 <?php else: ?>
                                     <span class="ui2-muted">--</span>
                                 <?php endif; ?>
@@ -294,8 +314,8 @@
             if (isNaN(chromeWidth) || chromeWidth < 0) chromeWidth = 16;
             if (isNaN(chromeHeight) || chromeHeight < 0) chromeHeight = 88;
 
-            var targetWidth = Math.min(Math.max(contentWidth + chromeWidth + 40, 980), screen.availWidth - 40);
-            var targetHeight = Math.min(Math.max(contentHeight + chromeHeight + 20, 520), screen.availHeight - 40);
+            var targetWidth = Math.min(Math.max(contentWidth + chromeWidth + 40, 1180), screen.availWidth - 40);
+            var targetHeight = Math.min(Math.max(contentHeight + chromeHeight + 20, 620), screen.availHeight - 40);
 
             try {
                 window.resizeTo(targetWidth, targetHeight);

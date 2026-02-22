@@ -330,8 +330,16 @@
             return false;
         }
 
-        var w = 900;
-        var h = 650;
+        var w = Math.min(1200, screen.availWidth - 40);
+        if (w < 760)
+        {
+            w = Math.max(640, screen.availWidth - 20);
+        }
+        var h = Math.min(760, screen.availHeight - 60);
+        if (h < 560)
+        {
+            h = Math.max(500, screen.availHeight - 20);
+        }
         var left = Math.max(0, Math.floor((screen.width - w) / 2));
         var top = Math.max(0, Math.floor((screen.height - h) / 2));
         window.open(url, 'pipelineStatusDetails', 'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',scrollbars=yes,resizable=yes');
