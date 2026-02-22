@@ -656,6 +656,7 @@ function AS_onStatusChange(statusesArray, jobOrdersArray, regardingSelectID,
           {
               sendEmailSpan.style.display = 'none';
               triggerEmail.checked = false;
+              AS_onSendEmailChange('triggerEmail', 'sendEmailCheckTR', 'visibleTR');
           }
           else
           {
@@ -673,7 +674,13 @@ function AS_onStatusChange(statusesArray, jobOrdersArray, regardingSelectID,
                   }
               }
 
-              if (triggersEmail == 1 && emailIsDisabled.value == "0")
+              if (typeof hiredStatusID !== 'undefined' &&
+                  String(selectedStatusId) === String(hiredStatusID))
+              {
+                  sendEmailSpan.style.display = 'none';
+                  triggerEmail.checked = false;
+              }
+              else if (triggersEmail == 1 && emailIsDisabled.value == "0")
               {
                   sendEmailSpan.style.display = 'inline';
                   triggerEmail.checked = true;

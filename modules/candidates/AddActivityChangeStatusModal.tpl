@@ -96,6 +96,7 @@
        statusLabels[<?php echo($statusData['statusID']); ?>] = '<?php echo(str_replace("'", "\\'", $statusData['status'])); ?>';
     <?php endforeach; ?>
     rejectedStatusID = <?php echo(isset($this->rejectedStatusId) ? (int) $this->rejectedStatusId : 0); ?>;
+    hiredStatusID = <?php echo((int) PIPELINE_STATUS_HIRED); ?>;
     rejectionOtherReasonID = <?php echo(isset($this->rejectionOtherReasonId) ? (int) $this->rejectionOtherReasonId : 0); ?>;
 
     function AS_getCurrentStatusID()
