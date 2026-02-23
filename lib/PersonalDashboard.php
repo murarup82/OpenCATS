@@ -330,7 +330,7 @@ class PersonalDashboard
                 date_created,
                 date_modified
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
             )",
             $this->_db->makeQueryInteger($this->_siteID),
             $this->_db->makeQueryInteger($userID),

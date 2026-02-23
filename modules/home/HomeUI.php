@@ -35,6 +35,7 @@ include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderMessages.php');
 include_once(LEGACY_ROOT . '/lib/PersonalDashboard.php');
+include_once(LEGACY_ROOT . '/lib/FeedbackSettings.php');
 include_once(LEGACY_ROOT . '/lib/Users.php');
 
 class HomeUI extends UserInterface
@@ -112,6 +113,10 @@ class HomeUI extends UserInterface
 
             case 'sendPersonalNote':
                 $this->onSendPersonalNote();
+                break;
+
+            case 'submitFeedback':
+                $this->onSubmitFeedback();
                 break;
 
             case 'postInboxMessage':
@@ -1292,6 +1297,116 @@ class HomeUI extends UserInterface
         $this->redirectToMyNotes('notes', 'noteSent');
     }
 
+    private function onSubmitFeedback()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        $returnQuery = $this->getTrimmedInput('returnQuery', $_POST);
+        if (!$this->isCSRFTokenValid('home.submitFeedback', $securityToken))
+        {
+            $this->redirectToFeedbackReturn($returnQuery, 'token');
+        }
+
+        $feedbackType = strtolower($this->getTrimmedInput('feedbackType', $_POST));
+        if (!in_array($feedbackType, array('bug', 'feature', 'general'), true))
+        {
+            $feedbackType = 'general';
+        }
+
+        $subject = $this->getTrimmedInput('subject', $_POST);
+        $message = $this->getTrimmedInput('message', $_POST);
+        $pageURL = $this->getTrimmedInput('pageURL', $_POST);
+
+        if ($message === '')
+        {
+            $this->redirectToFeedbackReturn($returnQuery, 'empty');
+        }
+
+        if (strlen($subject) > PersonalDashboard::TITLE_MAXLEN)
+        {
+            $subject = substr($subject, 0, PersonalDashboard::TITLE_MAXLEN);
+        }
+
+        $feedbackSettings = new FeedbackSettings($this->_siteID);
+        $recipientUserID = (int) $feedbackSettings->getRecipientUserID();
+        if ($recipientUserID <= 0)
+        {
+            $this->redirectToFeedbackReturn($returnQuery, 'notConfigured');
+        }
+
+        $users = new Users($this->_siteID);
+        $recipientUser = $users->get($recipientUserID);
+        if (empty($recipientUser))
+        {
+            $this->redirectToFeedbackReturn($returnQuery, 'notConfigured');
+        }
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToFeedbackReturn($returnQuery, 'schema');
+        }
+
+        $senderDisplayName = trim((string) $_SESSION['CATS']->getFullName());
+        if ($senderDisplayName === '')
+        {
+            $senderDisplayName = trim((string) $_SESSION['CATS']->getUsername());
+        }
+        if ($senderDisplayName === '')
+        {
+            $senderDisplayName = 'Unknown User';
+        }
+
+        $feedbackTypeLabel = ucfirst($feedbackType);
+        $noteTitle = '[Feedback][' . $feedbackTypeLabel . ']';
+        if ($subject !== '')
+        {
+            $noteTitle .= ' ' . $subject;
+        }
+        else
+        {
+            $noteTitle .= ' Submitted by ' . $senderDisplayName;
+        }
+        if (strlen($noteTitle) > PersonalDashboard::TITLE_MAXLEN)
+        {
+            $noteTitle = substr($noteTitle, 0, PersonalDashboard::TITLE_MAXLEN);
+        }
+
+        $noteBody = 'Feedback type: ' . $feedbackTypeLabel . "\n";
+        $noteBody .= 'Submitted by: ' . $senderDisplayName . ' (' . $_SESSION['CATS']->getUsername() . ')' . "\n";
+        $noteBody .= 'Submitted on: ' . date('Y-m-d H:i:s') . "\n";
+        if ($pageURL !== '')
+        {
+            $noteBody .= 'Page: ' . $pageURL . "\n";
+        }
+        $noteBody .= "\n" . $message;
+        if (strlen($noteBody) > PersonalDashboard::BODY_MAXLEN)
+        {
+            $noteBody = substr($noteBody, 0, PersonalDashboard::BODY_MAXLEN);
+        }
+
+        $result = $personalDashboard->addItem(
+            $recipientUserID,
+            'note',
+            $noteTitle,
+            $noteBody,
+            '',
+            PersonalDashboard::PRIORITY_MEDIUM,
+            ''
+        );
+
+        if (empty($result['success']))
+        {
+            $this->redirectToFeedbackReturn($returnQuery, 'failed');
+        }
+
+        $this->redirectToFeedbackReturn($returnQuery, 'sent');
+    }
+
     private function getMyNotesView($source, $defaultView = 'notes')
     {
         if (!is_array($source) || !isset($source['view']))
@@ -1317,6 +1432,42 @@ class HomeUI extends UserInterface
             $transferURI .= '&msg=' . rawurlencode($msg);
         }
         CATSUtility::transferRelativeURI($transferURI);
+    }
+
+    private function sanitizeFeedbackReturnQuery($returnQuery)
+    {
+        $returnQuery = trim((string) $returnQuery);
+        if ($returnQuery === '')
+        {
+            return 'm=home&a=home';
+        }
+
+        $returnQuery = preg_replace('/[\r\n]+/', '', $returnQuery);
+        $returnQuery = preg_replace('/^index\.php\?/i', '', $returnQuery);
+        $returnQuery = ltrim($returnQuery, '?');
+
+        if ($returnQuery === '' ||
+            stripos($returnQuery, 'http://') === 0 ||
+            stripos($returnQuery, 'https://') === 0)
+        {
+            return 'm=home&a=home';
+        }
+
+        return $returnQuery;
+    }
+
+    private function redirectToFeedbackReturn($returnQuery, $status)
+    {
+        $returnQuery = $this->sanitizeFeedbackReturnQuery($returnQuery);
+        $returnQuery = preg_replace('/(^|&)feedbackStatus=[^&]*/i', '$1', $returnQuery);
+        $returnQuery = trim((string) $returnQuery, '&');
+        if ($returnQuery === '')
+        {
+            $returnQuery = 'm=home&a=home';
+        }
+
+        $returnQuery .= '&feedbackStatus=' . rawurlencode((string) $status);
+        CATSUtility::transferRelativeURI($returnQuery);
     }
 
     private function onDeleteInboxThread()

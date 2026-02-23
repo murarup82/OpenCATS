@@ -162,6 +162,17 @@
                             <tr>
                                 <td>
                                     <img src="images/bullet_black.gif" alt="" />
+                                    <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=feedbackSettings">
+                                        Feedback Settings
+                                    </a>
+                                </td>
+                                <td>
+                                    Configure which user receives feedback submitted from the global footer.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <img src="images/bullet_black.gif" alt="" />
                                     <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=tags">
                                         Configure Tags
                                     </a>

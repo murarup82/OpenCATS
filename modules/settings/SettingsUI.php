@@ -48,6 +48,7 @@ include_once(LEGACY_ROOT . '/lib/ImportUtility.php');
 include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/Tags.php');
 include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
+include_once(LEGACY_ROOT . '/lib/FeedbackSettings.php');
 include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
@@ -638,6 +639,21 @@ class SettingsUI extends UserInterface
                 else
                 {
                     $this->gdprSettings();
+                }
+                break;
+
+            case 'feedbackSettings':
+                if ($this->getUserAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                if ($this->isPostBack())
+                {
+                    $this->onFeedbackSettings();
+                }
+                else
+                {
+                    $this->feedbackSettings();
                 }
                 break;
 
@@ -2253,6 +2269,68 @@ class SettingsUI extends UserInterface
         $gdprSettings->set(GDPRSettings::SETTING_FROM_ADDRESS, $gdprFromAddress);
 
         CATSUtility::transferRelativeURI('m=settings&a=gdprSettings&saved=1');
+    }
+
+    private function feedbackSettings()
+    {
+        $feedbackSettings = new FeedbackSettings($this->_siteID);
+        $feedbackSettingsRS = $feedbackSettings->getAll();
+
+        $users = new Users($this->_siteID);
+        $usersRS = $users->getSelectList();
+        $recipientOptions = array();
+        foreach ($usersRS as $userData)
+        {
+            $userID = (int) $userData['userID'];
+            if ($userID <= 0)
+            {
+                continue;
+            }
+
+            $fullName = trim((string) ($userData['firstName'] . ' ' . $userData['lastName']));
+            if ($fullName === '')
+            {
+                $fullName = trim((string) $userData['username']);
+            }
+            if ($fullName === '')
+            {
+                $fullName = 'User #' . $userID;
+            }
+
+            $recipientOptions[] = array(
+                'userID' => $userID,
+                'fullName' => $fullName
+            );
+        }
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Administration');
+        $this->_template->assign('recipientOptions', $recipientOptions);
+        $this->_template->assign(
+            'feedbackRecipientUserID',
+            (int) $feedbackSettingsRS[FeedbackSettings::SETTING_RECIPIENT_USER_ID]
+        );
+        $this->_template->assign('feedbackSaved', isset($_GET['saved']));
+        $this->_template->display('./modules/settings/FeedbackSettings.tpl');
+    }
+
+    private function onFeedbackSettings()
+    {
+        $recipientUserID = (int) $this->getTrimmedInput('feedbackRecipientUserID', $_POST);
+        if ($recipientUserID > 0)
+        {
+            $users = new Users($this->_siteID);
+            $userData = $users->get($recipientUserID);
+            if (empty($userData))
+            {
+                CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid feedback recipient user.');
+            }
+        }
+
+        $feedbackSettings = new FeedbackSettings($this->_siteID);
+        $feedbackSettings->setRecipientUserID($recipientUserID);
+
+        CATSUtility::transferRelativeURI('m=settings&a=feedbackSettings&saved=1');
     }
 
     private function rejectionReasons()

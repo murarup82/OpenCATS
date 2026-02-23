@@ -42,6 +42,7 @@ include_once(LEGACY_ROOT . '/lib/SystemInfo.php');
 include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
 include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderMessages.php');
+include_once(LEGACY_ROOT . '/lib/FeedbackSettings.php');
 
 use OpenCATS\UI\QuickActionMenu;
 
@@ -52,6 +53,8 @@ use OpenCATS\UI\QuickActionMenu;
  */
 class TemplateUtility
 {
+    private static $_isModalWindow = false;
+
     /* Prevent this class from being instantiated. */
     private function __construct() {}
     private function __clone() {}
@@ -66,6 +69,7 @@ class TemplateUtility
      */
     public static function printHeader($pageTitle, $headIncludes = array())
     {
+        self::$_isModalWindow = false;
         self::_printCommonHeader($pageTitle, $headIncludes);
         $bodyClass = self::isUI2Enabled() ? ' class="ui2-body ui2-sidebar-enabled"' : ' class="ui2-body"';
         echo '<body', $bodyClass, ' style="background: #fff">', "\n";
@@ -82,6 +86,7 @@ class TemplateUtility
      */
     public static function printModalHeader($pageTitle, $headIncludes = array(), $title = '')
     {
+        self::$_isModalWindow = true;
         self::_printCommonHeader($pageTitle, $headIncludes);
         echo '<body class="ui2-body" style="background: #eee;">', "\n";
         if ($title != '')
@@ -1301,6 +1306,181 @@ class TemplateUtility
         return $total;
     }
 
+    private static function _getCSRFTokenFor($tokenName)
+    {
+        if (!isset($_SESSION['CATS_CSRF_TOKENS']) ||
+            !is_array($_SESSION['CATS_CSRF_TOKENS']))
+        {
+            $_SESSION['CATS_CSRF_TOKENS'] = array();
+        }
+
+        if (!isset($_SESSION['CATS_CSRF_TOKENS'][$tokenName]) ||
+            $_SESSION['CATS_CSRF_TOKENS'][$tokenName] === '')
+        {
+            if (function_exists('random_bytes'))
+            {
+                try
+                {
+                    $_SESSION['CATS_CSRF_TOKENS'][$tokenName] = bin2hex(random_bytes(32));
+                }
+                catch (Exception $e)
+                {
+                    $_SESSION['CATS_CSRF_TOKENS'][$tokenName] = sha1(uniqid((string) mt_rand(), true));
+                }
+            }
+            else
+            {
+                $_SESSION['CATS_CSRF_TOKENS'][$tokenName] = sha1(uniqid((string) mt_rand(), true));
+            }
+        }
+
+        return $_SESSION['CATS_CSRF_TOKENS'][$tokenName];
+    }
+
+    private static function _getFeedbackStatusMeta($status)
+    {
+        switch ((string) $status)
+        {
+            case 'sent':
+                return array('Feedback submitted.', 'noteGood');
+
+            case 'empty':
+                return array('Please enter feedback details before submitting.', 'noteBad');
+
+            case 'token':
+                return array('Your feedback session expired. Please try again.', 'noteBad');
+
+            case 'notConfigured':
+                return array('Feedback recipient is not configured. Go to Settings > Feedback Settings.', 'noteBad');
+
+            case 'schema':
+                return array('My Notes schema is missing. Please apply schema migrations.', 'noteBad');
+
+            case 'failed':
+                return array('Unable to submit feedback right now.', 'noteBad');
+        }
+
+        return array('', '');
+    }
+
+    private static function _printFeedbackFooterWidget()
+    {
+        if (self::$_isModalWindow ||
+            !isset($_SESSION['CATS']) ||
+            !$_SESSION['CATS']->isLoggedIn())
+        {
+            return;
+        }
+
+        $siteID = (int) $_SESSION['CATS']->getSiteID();
+        $feedbackSettings = new FeedbackSettings($siteID);
+        $recipientUserID = (int) $feedbackSettings->getRecipientUserID();
+        $isConfigured = ($recipientUserID > 0);
+
+        $feedbackStatus = '';
+        if (isset($_GET['feedbackStatus']))
+        {
+            $feedbackStatus = trim((string) $_GET['feedbackStatus']);
+        }
+        list($feedbackStatusMessage, $feedbackStatusClass) = self::_getFeedbackStatusMeta($feedbackStatus);
+
+        $returnQuery = isset($_SERVER['QUERY_STRING']) ? (string) $_SERVER['QUERY_STRING'] : '';
+        $returnQuery = preg_replace('/(^|&)feedbackStatus=[^&]*/i', '$1', $returnQuery);
+        $returnQuery = trim((string) $returnQuery, '&');
+        if ($returnQuery === '')
+        {
+            $returnQuery = 'm=home&a=home';
+        }
+
+        $requestURI = isset($_SERVER['REQUEST_URI'])
+            ? (string) $_SERVER['REQUEST_URI']
+            : (CATSUtility::getIndexName() . '?' . $returnQuery);
+
+        $feedbackToken = self::_getCSRFTokenFor('home.submitFeedback');
+        $indexName = CATSUtility::getIndexName();
+
+        echo '<style type="text/css">';
+        echo '.global-feedback-wrap{margin:18px auto 8px auto;}';
+        echo '.global-feedback-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#00425B;color:#fff;border-radius:4px;}';
+        echo '.ui2 .global-feedback-bar,.ui2-body .global-feedback-bar{background:var(--ui2-sidebar-bg,var(--ui2-primary,#00425B));}';
+        echo '.global-feedback-title{font-size:12px;font-weight:bold;letter-spacing:0.03em;text-transform:uppercase;}';
+        echo '.global-feedback-subtitle{font-size:12px;opacity:0.9;}';
+        echo '.global-feedback-actions{display:flex;align-items:center;gap:8px;}';
+        echo '.global-feedback-button{border:1px solid rgba(255,255,255,0.55);background:#fff;color:#00425B;padding:6px 10px;cursor:pointer;border-radius:3px;font-size:12px;font-weight:bold;}';
+        echo '.global-feedback-button[disabled]{cursor:not-allowed;opacity:0.65;}';
+        echo '.global-feedback-config-warning{font-size:11px;color:#ffd0d0;}';
+        echo '.global-feedback-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2500;}';
+        echo '.global-feedback-modal{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2501;width:min(640px,92vw);background:#fff;border:1px solid #c7d0d8;border-radius:6px;box-shadow:0 10px 36px rgba(0,0,0,0.35);}';
+        echo '.global-feedback-modal-header{padding:12px 14px;background:#00425B;color:#fff;font-weight:bold;border-radius:6px 6px 0 0;}';
+        echo '.global-feedback-modal-body{padding:12px 14px;}';
+        echo '.global-feedback-modal-row{margin-bottom:10px;}';
+        echo '.global-feedback-modal-label{display:block;font-size:12px;font-weight:bold;margin-bottom:4px;color:#334;}';
+        echo '.global-feedback-modal-input,.global-feedback-modal-textarea,.global-feedback-modal-select{width:100%;padding:6px 8px;border:1px solid #bcc8d3;border-radius:3px;font-size:13px;}';
+        echo '.global-feedback-modal-textarea{min-height:140px;resize:vertical;}';
+        echo '.global-feedback-modal-actions{display:flex;justify-content:flex-end;gap:8px;padding:0 14px 14px 14px;}';
+        echo '.global-feedback-modal-cancel,.global-feedback-modal-submit{padding:6px 12px;border:1px solid #bcc8d3;border-radius:3px;cursor:pointer;font-size:12px;}';
+        echo '.global-feedback-modal-submit{background:#0097BD;border-color:#0097BD;color:#fff;font-weight:bold;}';
+        echo '</style>', "\n";
+
+        echo '<div class="global-feedback-wrap">', "\n";
+
+        if ($feedbackStatusMessage !== '')
+        {
+            echo '<p class="', $feedbackStatusClass, '" style="margin-top:0;">', htmlspecialchars($feedbackStatusMessage), '</p>', "\n";
+        }
+
+        echo '<div class="global-feedback-bar">', "\n";
+        echo '<div>', "\n";
+        echo '<div class="global-feedback-title">Help Improve OpenCATS</div>', "\n";
+        echo '<div class="global-feedback-subtitle">Report bugs or propose features directly to the configured owner.</div>', "\n";
+        echo '</div>', "\n";
+        echo '<div class="global-feedback-actions">', "\n";
+        if (!$isConfigured)
+        {
+            echo '<span class="global-feedback-config-warning">Recipient not configured in Settings.</span>', "\n";
+        }
+        echo '<button type="button" class="global-feedback-button" onclick="CATSFeedback_openModal();"';
+        if (!$isConfigured)
+        {
+            echo ' disabled="disabled"';
+        }
+        echo '>Submit Feedback</button>', "\n";
+        echo '</div>', "\n";
+        echo '</div>', "\n";
+        echo '</div>', "\n";
+
+        echo '<div class="global-feedback-modal-backdrop" id="globalFeedbackBackdrop" onclick="CATSFeedback_closeModal();"></div>', "\n";
+        echo '<div class="global-feedback-modal" id="globalFeedbackModal">', "\n";
+        echo '<div class="global-feedback-modal-header">Submit Feedback</div>', "\n";
+        echo '<form method="post" action="', htmlspecialchars($indexName, ENT_QUOTES), '?m=home&amp;a=submitFeedback" autocomplete="off">', "\n";
+        echo '<div class="global-feedback-modal-body">', "\n";
+        echo '<input type="hidden" name="securityToken" value="', htmlspecialchars($feedbackToken, ENT_QUOTES), '" />', "\n";
+        echo '<input type="hidden" name="returnQuery" value="', htmlspecialchars($returnQuery, ENT_QUOTES), '" />', "\n";
+        echo '<input type="hidden" name="pageURL" value="', htmlspecialchars($requestURI, ENT_QUOTES), '" />', "\n";
+        echo '<div class="global-feedback-modal-row"><label class="global-feedback-modal-label" for="globalFeedbackType">Type</label>';
+        echo '<select class="global-feedback-modal-select" id="globalFeedbackType" name="feedbackType">';
+        echo '<option value="bug">Bug Report</option>';
+        echo '<option value="feature">Feature Request</option>';
+        echo '<option value="general">General Feedback</option>';
+        echo '</select></div>', "\n";
+        echo '<div class="global-feedback-modal-row"><label class="global-feedback-modal-label" for="globalFeedbackSubject">Subject (optional)</label>';
+        echo '<input class="global-feedback-modal-input" id="globalFeedbackSubject" name="subject" maxlength="255" /></div>', "\n";
+        echo '<div class="global-feedback-modal-row"><label class="global-feedback-modal-label" for="globalFeedbackMessage">Details</label>';
+        echo '<textarea class="global-feedback-modal-textarea" id="globalFeedbackMessage" name="message" maxlength="4000" required="required"></textarea></div>', "\n";
+        echo '</div>', "\n";
+        echo '<div class="global-feedback-modal-actions">';
+        echo '<button type="button" class="global-feedback-modal-cancel" onclick="CATSFeedback_closeModal();">Cancel</button>';
+        echo '<button type="submit" class="global-feedback-modal-submit">Send Feedback</button>';
+        echo '</div>', "\n";
+        echo '</form>', "\n";
+        echo '</div>', "\n";
+
+        echo '<script type="text/javascript">';
+        echo 'function CATSFeedback_openModal(){var m=document.getElementById("globalFeedbackModal");var b=document.getElementById("globalFeedbackBackdrop");if(m&&b){m.style.display="block";b.style.display="block";}var t=document.getElementById("globalFeedbackMessage");if(t){t.focus();}}';
+        echo 'function CATSFeedback_closeModal(){var m=document.getElementById("globalFeedbackModal");var b=document.getElementById("globalFeedbackBackdrop");if(m){m.style.display="none";}if(b){b.style.display="none";}}';
+        echo '</script>', "\n";
+    }
+
     /**
      * Prints footer HTML for non-report pages.
      *
@@ -1332,6 +1512,8 @@ class TemplateUtility
              "OpenCATS", must be a hyperlink to the CATS Project website, currently
              http://www.opencats.org/.
        */
+
+        self::_printFeedbackFooterWidget();
 
         echo '<div class="footerBlock">', "\n";
         echo '<p id="footerText">OpenCATS Version ', CATS_VERSION, $buildString,
