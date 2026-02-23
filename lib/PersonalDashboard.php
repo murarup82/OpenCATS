@@ -681,6 +681,61 @@ class PersonalDashboard
         return array('success' => true);
     }
 
+    public function updateNote($itemID, $userID, $title, $body)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return array('success' => false, 'error' => 'schema');
+        }
+
+        $title = trim((string) $title);
+        $body = trim((string) $body);
+        if ($body === '')
+        {
+            return array('success' => false, 'error' => 'empty');
+        }
+
+        if (strlen($title) > self::TITLE_MAXLEN)
+        {
+            return array('success' => false, 'error' => 'titleTooLong');
+        }
+
+        if (strlen($body) > self::BODY_MAXLEN)
+        {
+            return array('success' => false, 'error' => 'tooLong');
+        }
+
+        $item = $this->getItem($itemID, $userID);
+        if (empty($item))
+        {
+            return array('success' => false, 'error' => 'notfound');
+        }
+
+        if ($item['itemType'] !== 'note')
+        {
+            return array('success' => false, 'error' => 'invalidType');
+        }
+
+        $this->_db->query(sprintf(
+            "UPDATE user_personal_item
+             SET
+                title = %s,
+                body = %s,
+                date_modified = NOW()
+             WHERE
+                user_personal_item_id = %s
+                AND site_id = %s
+                AND user_id = %s",
+            $this->_db->makeQueryString($title),
+            $this->_db->makeQueryString($body),
+            $this->_db->makeQueryInteger($itemID),
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($userID)
+        ));
+
+        return array('success' => true);
+    }
+
     public function sendNoteToUsers($itemID, $fromUserID, $recipientUserIDs, $senderDisplayName = '')
     {
         if (!$this->isSchemaAvailable())

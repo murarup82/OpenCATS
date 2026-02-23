@@ -299,10 +299,26 @@
                 .my-notes-page .kanban-card:active {
                     cursor: grabbing;
                 }
-                .my-notes-page .kanban-status-select {
-                    width: auto;
-                    min-width: 130px;
-                    margin-right: 6px;
+                .my-notes-page .kanban-card .notes-item-head {
+                    margin-bottom: 2px;
+                }
+                .my-notes-page .todo-details-value {
+                    font-size: 13px;
+                    color: #1f3246;
+                    line-height: 1.45;
+                    min-height: 18px;
+                    word-break: break-word;
+                }
+                .my-notes-page .todo-details-body {
+                    font-size: 13px;
+                    color: #1f3246;
+                    line-height: 1.45;
+                    border: 1px solid #dbe6f2;
+                    border-radius: 6px;
+                    background: #f9fcff;
+                    padding: 10px;
+                    white-space: pre-wrap;
+                    word-break: break-word;
                 }
                 .my-notes-page .modal-backdrop {
                     position: fixed;
@@ -479,43 +495,17 @@
                                                             </div>
                                                             <div class="notes-item-meta"><?php $this->_($todoItem['dateCreated']); ?></div>
                                                         </div>
-                                                        <div class="notes-item-tags">
-                                                            <?php if (!empty($todoItem['priority'])): ?>
-                                                                <span class="notes-pill priority-<?php echo(htmlspecialchars($todoItem['priority'], ENT_QUOTES)); ?>">
-                                                                    <?php $this->_(ucfirst($todoItem['priority'])); ?>
-                                                                </span>
-                                                            <?php endif; ?>
-                                                            <?php if (!empty($todoItem['dueDateDisplay'])): ?>
-                                                                <span class="notes-pill<?php if (!empty($todoItem['isOverdue'])) echo(' overdue'); ?>">
-                                                                    Due: <?php $this->_($todoItem['dueDateDisplay']); ?>
-                                                                </span>
-                                                            <?php endif; ?>
-                                                            <?php if (!empty($todoItem['reminderAtDisplay'])): ?>
-                                                                <span class="notes-pill<?php if (!empty($todoItem['isReminderDue'])) echo(' reminder-due'); ?>">
-                                                                    Reminder: <?php $this->_($todoItem['reminderAtDisplay']); ?>
-                                                                </span>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                        <div class="notes-item-body"><?php echo($todoItem['bodyHTML']); ?></div>
                                                         <div class="notes-item-actions">
                                                             <button
                                                                 type="button"
                                                                 class="notes-inline-button"
                                                                 onclick="MyNotes_openTodoEditModal(<?php echo((int) $todoItem['itemID']); ?>);"
                                                             >Edit</button>
-                                                            <form class="notes-inline-form" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=setPersonalTodoStatus">
-                                                                <input type="hidden" name="itemID" value="<?php echo((int) $todoItem['itemID']); ?>" />
-                                                                <input type="hidden" name="securityToken" value="<?php $this->_($this->setPersonalTodoStatusToken); ?>" />
-                                                                <select name="taskStatus" class="notes-input kanban-status-select">
-                                                                    <?php foreach ($todoStatusOrder as $todoStatusOption): ?>
-                                                                        <?php $todoStatusOptionLabel = isset($todoStatusLabels[$todoStatusOption]) ? $todoStatusLabels[$todoStatusOption] : ucfirst(str_replace('_', ' ', $todoStatusOption)); ?>
-                                                                        <option value="<?php echo(htmlspecialchars($todoStatusOption, ENT_QUOTES)); ?>"<?php if ($todoStatusOption === $todoItem['taskStatus']) echo(' selected="selected"'); ?>>
-                                                                            <?php $this->_($todoStatusOptionLabel); ?>
-                                                                        </option>
-                                                                    <?php endforeach; ?>
-                                                                </select>
-                                                                <button type="submit" class="notes-inline-button primary">Move</button>
-                                                            </form>
+                                                            <button
+                                                                type="button"
+                                                                class="notes-inline-button primary"
+                                                                onclick="MyNotes_openTodoDetailsModal(<?php echo((int) $todoItem['itemID']); ?>);"
+                                                            >Details</button>
                                                             <form class="notes-inline-form" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deletePersonalItem" onsubmit="return confirm('Delete this item?');">
                                                                 <input type="hidden" name="itemID" value="<?php echo((int) $todoItem['itemID']); ?>" />
                                                                 <input type="hidden" name="view" value="todos" />
@@ -531,9 +521,16 @@ echo json_encode(
         'title' => (string) $todoItem['title'],
         'body' => (string) $todoItem['body'],
         'dueDate' => (string) $todoItem['dueDateISO'],
+        'dueDateDisplay' => (string) $todoItem['dueDateDisplay'],
         'priority' => (string) $todoItem['priority'],
+        'priorityLabel' => ucfirst((string) $todoItem['priority']),
         'reminderAtRaw' => (string) $todoItem['reminderAtRaw'],
-        'taskStatus' => (string) $todoItem['taskStatus']
+        'reminderAtDisplay' => (string) $todoItem['reminderAtDisplay'],
+        'taskStatus' => (string) $todoItem['taskStatus'],
+        'taskStatusLabel' => isset($todoStatusLabels[(string) $todoItem['taskStatus']]) ? $todoStatusLabels[(string) $todoItem['taskStatus']] : ucfirst(str_replace('_', ' ', (string) $todoItem['taskStatus'])),
+        'dateCreated' => (string) $todoItem['dateCreated'],
+        'dateModified' => (string) $todoItem['dateModified'],
+        'dateCompleted' => (string) $todoItem['dateCompleted']
     )
 );
 ?>
@@ -636,17 +633,7 @@ echo json_encode(
                                             <label class="notes-label" for="todoEditReminderAt">Reminder (optional)</label>
                                             <input class="notes-input" id="todoEditReminderAt" name="reminderAt" type="datetime-local" />
                                         </div>
-                                        <div class="notes-field">
-                                            <label class="notes-label" for="todoEditStatus">Status</label>
-                                            <select class="notes-input" id="todoEditStatus" name="taskStatus">
-                                                <?php foreach ($todoStatusOrder as $todoStatusOption): ?>
-                                                    <?php $todoStatusOptionLabel = isset($todoStatusLabels[$todoStatusOption]) ? $todoStatusLabels[$todoStatusOption] : ucfirst(str_replace('_', ' ', $todoStatusOption)); ?>
-                                                    <option value="<?php echo(htmlspecialchars($todoStatusOption, ENT_QUOTES)); ?>">
-                                                        <?php $this->_($todoStatusOptionLabel); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
+                                        <input type="hidden" id="todoEditStatus" name="taskStatus" value="open" />
                                         <div class="notes-field">
                                             <label class="notes-label" for="todoEditBody">Task Details</label>
                                             <textarea class="notes-textarea notes-textarea--xl" id="todoEditBody" name="body" maxlength="4000" required="required"></textarea>
@@ -654,6 +641,53 @@ echo json_encode(
                                         <button type="submit" class="ui2-button ui2-button--primary">Save Changes</button>
                                         <button type="button" class="ui2-button ui2-button--secondary" onclick="MyNotes_closeTodoEditModal();">Cancel</button>
                                     </form>
+                                </div>
+                            </div>
+
+                            <div class="modal-backdrop" id="todoDetailsModalBackdrop" onclick="MyNotes_closeTodoDetailsModal();"></div>
+                            <div class="modal-panel" id="todoDetailsModalPanel">
+                                <div class="modal-header">
+                                    <span>To-do Details</span>
+                                    <button type="button" class="modal-close" aria-label="Close" onclick="MyNotes_closeTodoDetailsModal();">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="notes-field">
+                                        <label class="notes-label">Title</label>
+                                        <div class="todo-details-value" id="todoDetailsTitle">--</div>
+                                    </div>
+                                    <div class="notes-field">
+                                        <label class="notes-label">Status</label>
+                                        <div class="todo-details-value" id="todoDetailsStatus">--</div>
+                                    </div>
+                                    <div class="notes-field">
+                                        <label class="notes-label">Priority</label>
+                                        <div class="todo-details-value" id="todoDetailsPriority">--</div>
+                                    </div>
+                                    <div class="notes-field">
+                                        <label class="notes-label">Due Date</label>
+                                        <div class="todo-details-value" id="todoDetailsDueDate">--</div>
+                                    </div>
+                                    <div class="notes-field">
+                                        <label class="notes-label">Reminder</label>
+                                        <div class="todo-details-value" id="todoDetailsReminder">--</div>
+                                    </div>
+                                    <div class="notes-field">
+                                        <label class="notes-label">Created</label>
+                                        <div class="todo-details-value" id="todoDetailsCreated">--</div>
+                                    </div>
+                                    <div class="notes-field">
+                                        <label class="notes-label">Last Updated</label>
+                                        <div class="todo-details-value" id="todoDetailsUpdated">--</div>
+                                    </div>
+                                    <div class="notes-field">
+                                        <label class="notes-label">Completed</label>
+                                        <div class="todo-details-value" id="todoDetailsCompleted">--</div>
+                                    </div>
+                                    <div class="notes-field">
+                                        <label class="notes-label">Task Details</label>
+                                        <div class="todo-details-body" id="todoDetailsBody">--</div>
+                                    </div>
+                                    <button type="button" class="ui2-button ui2-button--secondary" onclick="MyNotes_closeTodoDetailsModal();">Close</button>
                                 </div>
                             </div>
 
@@ -706,12 +740,12 @@ echo json_encode(
                                                             type="button"
                                                             class="notes-inline-button"
                                                             onclick="MyNotes_togglePanel('appendNotePanel<?php echo((int) $noteItem['itemID']); ?>');"
-                                                        >Edit / Append</button>
+                                                        >Edit</button>
                                                         <button
                                                             type="button"
                                                             class="notes-inline-button"
                                                             onclick="MyNotes_togglePanel('sendNotePanel<?php echo((int) $noteItem['itemID']); ?>');"
-                                                        >Send Note</button>
+                                                        >Forward Note</button>
                                                         <form class="notes-inline-form" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=movePersonalNoteToTodo">
                                                             <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
                                                             <input type="hidden" name="securityToken" value="<?php $this->_($this->movePersonalNoteToTodoToken); ?>" />
@@ -725,18 +759,30 @@ echo json_encode(
                                                         </form>
                                                     </div>
                                                     <div class="notes-inline-panel" id="appendNotePanel<?php echo((int) $noteItem['itemID']); ?>" style="display: none;">
-                                                        <div class="notes-inline-panel-title">Append to this note</div>
-                                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=appendPersonalNote">
+                                                        <div class="notes-inline-panel-title">Edit this note</div>
+                                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=updatePersonalNote">
                                                             <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
-                                                            <input type="hidden" name="securityToken" value="<?php $this->_($this->appendPersonalNoteToken); ?>" />
-                                                            <textarea class="notes-textarea" name="appendBody" maxlength="4000" required="required" placeholder="Add new content to this note..."></textarea>
+                                                            <input type="hidden" name="securityToken" value="<?php $this->_($this->updatePersonalNoteToken); ?>" />
+                                                            <div class="notes-field">
+                                                                <label class="notes-label">Title (optional)</label>
+                                                                <input class="notes-input" name="title" maxlength="255" value="<?php echo(htmlspecialchars((string) $noteItem['title'], ENT_QUOTES)); ?>" />
+                                                            </div>
+                                                            <div class="notes-field">
+                                                                <label class="notes-label">Note</label>
+                                                                <textarea class="notes-textarea" name="body" maxlength="4000" required="required"><?php echo(htmlspecialchars((string) $noteItem['body'], ENT_QUOTES)); ?></textarea>
+                                                            </div>
                                                             <div style="margin-top: 8px;">
-                                                                <button type="submit" class="ui2-button ui2-button--primary">Append</button>
+                                                                <button type="submit" class="ui2-button ui2-button--primary">Save Note</button>
+                                                                <button
+                                                                    type="button"
+                                                                    class="ui2-button ui2-button--secondary"
+                                                                    onclick="MyNotes_togglePanel('appendNotePanel<?php echo((int) $noteItem['itemID']); ?>');"
+                                                                >Cancel</button>
                                                             </div>
                                                         </form>
                                                     </div>
                                                     <div class="notes-inline-panel" id="sendNotePanel<?php echo((int) $noteItem['itemID']); ?>" style="display: none;">
-                                                        <div class="notes-inline-panel-title">Send this note to teammates</div>
+                                                        <div class="notes-inline-panel-title">Forward this note to teammates</div>
                                                         <?php if (!empty($this->shareTargetUsers)): ?>
                                                             <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=sendPersonalNote">
                                                                 <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
@@ -773,7 +819,12 @@ echo json_encode(
                                                                 </select>
                                                                 <div class="notes-help">Use Ctrl/Command + click to select multiple users.</div>
                                                                 <div style="margin-top: 8px;">
-                                                                    <button type="submit" class="ui2-button ui2-button--primary">Send Note</button>
+                                                                    <button type="submit" class="ui2-button ui2-button--primary">Forward Note</button>
+                                                                    <button
+                                                                        type="button"
+                                                                        class="ui2-button ui2-button--secondary"
+                                                                        onclick="MyNotes_togglePanel('sendNotePanel<?php echo((int) $noteItem['itemID']); ?>');"
+                                                                    >Cancel</button>
                                                                 </div>
                                                             </form>
                                                         <?php else: ?>
@@ -906,22 +957,42 @@ echo json_encode(
         return value.replace(' ', 'T');
     }
 
-    function MyNotes_openTodoEditModal(itemID)
+    function MyNotes_getTodoCardData(itemID)
     {
         var dataNode = document.getElementById('todoCardData' + itemID);
         if (!dataNode)
         {
-            return false;
+            return null;
         }
 
-        var data = {};
         try
         {
-            data = JSON.parse(dataNode.textContent || dataNode.innerText || '{}');
+            return JSON.parse(dataNode.textContent || dataNode.innerText || '{}');
         }
         catch (e)
         {
-            data = {};
+            return null;
+        }
+    }
+
+    function MyNotes_setText(elementID, value)
+    {
+        var node = document.getElementById(elementID);
+        if (!node)
+        {
+            return;
+        }
+
+        var text = String(value || '').replace(/^\s+|\s+$/g, '');
+        node.textContent = (text === '') ? '--' : text;
+    }
+
+    function MyNotes_openTodoEditModal(itemID)
+    {
+        var data = MyNotes_getTodoCardData(itemID);
+        if (!data)
+        {
+            return false;
         }
 
         var fieldItemID = document.getElementById('todoEditItemID');
@@ -958,6 +1029,52 @@ echo json_encode(
     {
         var backdrop = document.getElementById('todoEditModalBackdrop');
         var panel = document.getElementById('todoEditModalPanel');
+        if (backdrop)
+        {
+            backdrop.style.display = 'none';
+        }
+        if (panel)
+        {
+            panel.style.display = 'none';
+        }
+        return false;
+    }
+
+    function MyNotes_openTodoDetailsModal(itemID)
+    {
+        var data = MyNotes_getTodoCardData(itemID);
+        if (!data)
+        {
+            return false;
+        }
+
+        MyNotes_setText('todoDetailsTitle', data.title || '(Untitled task)');
+        MyNotes_setText('todoDetailsStatus', data.taskStatusLabel || data.taskStatus || '');
+        MyNotes_setText('todoDetailsPriority', data.priorityLabel || data.priority || '');
+        MyNotes_setText('todoDetailsDueDate', data.dueDateDisplay || data.dueDate || '');
+        MyNotes_setText('todoDetailsReminder', data.reminderAtDisplay || data.reminderAtRaw || '');
+        MyNotes_setText('todoDetailsCreated', data.dateCreated || '');
+        MyNotes_setText('todoDetailsUpdated', data.dateModified || '');
+        MyNotes_setText('todoDetailsCompleted', data.dateCompleted || '');
+        MyNotes_setText('todoDetailsBody', data.body || '');
+
+        var backdrop = document.getElementById('todoDetailsModalBackdrop');
+        var panel = document.getElementById('todoDetailsModalPanel');
+        if (backdrop)
+        {
+            backdrop.style.display = 'block';
+        }
+        if (panel)
+        {
+            panel.style.display = 'block';
+        }
+        return false;
+    }
+
+    function MyNotes_closeTodoDetailsModal()
+    {
+        var backdrop = document.getElementById('todoDetailsModalBackdrop');
+        var panel = document.getElementById('todoDetailsModalPanel');
         if (backdrop)
         {
             backdrop.style.display = 'none';

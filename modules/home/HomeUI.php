@@ -111,6 +111,10 @@ class HomeUI extends UserInterface
                 $this->onAppendPersonalNote();
                 break;
 
+            case 'updatePersonalNote':
+                $this->onUpdatePersonalNote();
+                break;
+
             case 'sendPersonalNote':
                 $this->onSendPersonalNote();
                 break;
@@ -125,6 +129,22 @@ class HomeUI extends UserInterface
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
                 $this->onPostInboxMessage();
+                break;
+
+            case 'createInboxNote':
+                if (!$this->canAccessAnyInbox())
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onCreateInboxNote();
+                break;
+
+            case 'createInboxTodo':
+                if (!$this->canAccessAnyInbox())
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onCreateInboxTodo();
                 break;
 
             case 'deleteInboxThread':
@@ -262,6 +282,14 @@ class HomeUI extends UserInterface
                     $flashMessage = 'Message sent.';
                     break;
 
+                case 'noteCreated':
+                    $flashMessage = 'Note created in My Notes.';
+                    break;
+
+                case 'todoCreated':
+                    $flashMessage = 'To-do created in My Notes.';
+                    break;
+
                 case 'empty':
                     $flashMessage = 'Message cannot be empty.';
                     $flashIsError = true;
@@ -294,6 +322,11 @@ class HomeUI extends UserInterface
 
                 case 'schema':
                     $flashMessage = 'Inbox tables are missing. Apply schema migrations first.';
+                    $flashIsError = true;
+                    break;
+
+                case 'personalSchema':
+                    $flashMessage = 'My Notes / To-do table is missing. Apply schema migrations first.';
                     $flashIsError = true;
                     break;
 
@@ -536,6 +569,14 @@ class HomeUI extends UserInterface
             $this->getCSRFToken('home.postInboxMessage')
         );
         $this->_template->assign(
+            'createInboxNoteToken',
+            $this->getCSRFToken('home.createInboxNote')
+        );
+        $this->_template->assign(
+            'createInboxTodoToken',
+            $this->getCSRFToken('home.createInboxTodo')
+        );
+        $this->_template->assign(
             'deleteInboxThreadToken',
             $this->getCSRFToken('home.deleteInboxThread')
         );
@@ -617,6 +658,275 @@ class HomeUI extends UserInterface
         CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=sent');
     }
 
+    private function parseInboxComposerRequest($tokenName, $defaultErrorMsg = 'invalid')
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('threadID', $_POST))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=' . rawurlencode($defaultErrorMsg));
+        }
+
+        $threadID = (int) $_POST['threadID'];
+        $threadType = strtolower($this->getTrimmedInput('threadType', $_POST));
+        if ($threadType !== 'joborder')
+        {
+            $threadType = 'candidate';
+        }
+        $threadKey = $threadType . ':' . $threadID;
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid($tokenName, $securityToken))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=token');
+        }
+
+        $messageBody = $this->getTrimmedInput('messageBody', $_POST);
+        if ($messageBody === '')
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=empty');
+        }
+
+        return array(
+            'threadID' => $threadID,
+            'threadType' => $threadType,
+            'threadKey' => $threadKey,
+            'messageBody' => $messageBody
+        );
+    }
+
+    private function getInboxThreadContextForUser($threadType, $threadID)
+    {
+        if ($threadType === 'joborder')
+        {
+            if ($this->getUserAccessLevel('joborders.show') < ACCESS_LEVEL_READ)
+            {
+                return array('success' => false, 'error' => 'forbidden');
+            }
+
+            $jobOrderMessages = new JobOrderMessages($this->_siteID);
+            if (!$jobOrderMessages->isSchemaAvailable())
+            {
+                return array('success' => false, 'error' => 'schema');
+            }
+
+            if (!$jobOrderMessages->isUserParticipant($threadID, $this->_userID))
+            {
+                return array('success' => false, 'error' => 'forbidden');
+            }
+
+            $thread = $jobOrderMessages->getThread($threadID);
+            if (empty($thread))
+            {
+                return array('success' => false, 'error' => 'forbidden');
+            }
+
+            $entityName = trim((string) $thread['jobOrderTitle']);
+            if ($entityName === '')
+            {
+                $entityName = 'Job Order #' . (int) $thread['jobOrderID'];
+            }
+
+            return array(
+                'success' => true,
+                'threadID' => (int) $threadID,
+                'threadType' => 'joborder',
+                'entityType' => 'Job Order',
+                'entityName' => $entityName,
+                'entitySubName' => trim((string) $thread['companyName'])
+            );
+        }
+
+        if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
+        {
+            return array('success' => false, 'error' => 'forbidden');
+        }
+
+        $candidateMessages = new CandidateMessages($this->_siteID);
+        if (!$candidateMessages->isSchemaAvailable())
+        {
+            return array('success' => false, 'error' => 'schema');
+        }
+
+        if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
+        {
+            return array('success' => false, 'error' => 'forbidden');
+        }
+
+        $thread = $candidateMessages->getThread($threadID);
+        if (empty($thread))
+        {
+            return array('success' => false, 'error' => 'forbidden');
+        }
+
+        $entityName = trim(
+            (string) $thread['candidateFirstName'] . ' ' . (string) $thread['candidateLastName']
+        );
+        if ($entityName === '')
+        {
+            $entityName = 'Candidate #' . (int) $thread['candidateID'];
+        }
+
+        return array(
+            'success' => true,
+            'threadID' => (int) $threadID,
+            'threadType' => 'candidate',
+            'entityType' => 'Candidate',
+            'entityName' => $entityName,
+            'entitySubName' => ''
+        );
+    }
+
+    private function buildInboxPersonalItemBody($threadContext, $messageBody)
+    {
+        $senderDisplayName = trim((string) $_SESSION['CATS']->getFullName());
+        if ($senderDisplayName === '')
+        {
+            $senderDisplayName = trim((string) $_SESSION['CATS']->getUsername());
+        }
+        if ($senderDisplayName === '')
+        {
+            $senderDisplayName = 'Unknown User';
+        }
+
+        $body = '[Created from My Inbox]' . "\n";
+        $body .= 'Thread: ' . $threadContext['entityType'] . ' - ' . $threadContext['entityName'];
+        if (trim((string) $threadContext['entitySubName']) !== '')
+        {
+            $body .= ' (' . trim((string) $threadContext['entitySubName']) . ')';
+        }
+        $body .= "\n";
+        $body .= 'Thread ID: ' . (int) $threadContext['threadID'] . "\n";
+        $body .= 'Captured by: ' . $senderDisplayName . "\n";
+        $body .= 'Captured on: ' . date('Y-m-d H:i:s') . "\n\n";
+        $body .= $messageBody;
+
+        if (strlen($body) > PersonalDashboard::BODY_MAXLEN)
+        {
+            $body = substr($body, 0, PersonalDashboard::BODY_MAXLEN);
+        }
+
+        return $body;
+    }
+
+    private function onCreateInboxNote()
+    {
+        $payload = $this->parseInboxComposerRequest('home.createInboxNote');
+        $threadContext = $this->getInboxThreadContextForUser(
+            $payload['threadType'],
+            $payload['threadID']
+        );
+        if (empty($threadContext['success']))
+        {
+            CATSUtility::transferRelativeURI(
+                'm=home&a=inbox&threadKey=' . rawurlencode($payload['threadKey']) .
+                '&msg=' . rawurlencode(isset($threadContext['error']) ? $threadContext['error'] : 'failed')
+            );
+        }
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            CATSUtility::transferRelativeURI(
+                'm=home&a=inbox&threadKey=' . rawurlencode($payload['threadKey']) . '&msg=personalSchema'
+            );
+        }
+
+        $title = 'Inbox Note: ' . $threadContext['entityName'];
+        if (strlen($title) > PersonalDashboard::TITLE_MAXLEN)
+        {
+            $title = substr($title, 0, PersonalDashboard::TITLE_MAXLEN);
+        }
+
+        $body = $this->buildInboxPersonalItemBody($threadContext, $payload['messageBody']);
+        $result = $personalDashboard->addItem(
+            $this->_userID,
+            'note',
+            $title,
+            $body,
+            '',
+            PersonalDashboard::PRIORITY_MEDIUM,
+            ''
+        );
+
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            CATSUtility::transferRelativeURI(
+                'm=home&a=inbox&threadKey=' . rawurlencode($payload['threadKey']) .
+                '&msg=' . rawurlencode($error)
+            );
+        }
+
+        CATSUtility::transferRelativeURI(
+            'm=home&a=inbox&threadKey=' . rawurlencode($payload['threadKey']) . '&msg=noteCreated'
+        );
+    }
+
+    private function onCreateInboxTodo()
+    {
+        $payload = $this->parseInboxComposerRequest('home.createInboxTodo');
+        $threadContext = $this->getInboxThreadContextForUser(
+            $payload['threadType'],
+            $payload['threadID']
+        );
+        if (empty($threadContext['success']))
+        {
+            CATSUtility::transferRelativeURI(
+                'm=home&a=inbox&threadKey=' . rawurlencode($payload['threadKey']) .
+                '&msg=' . rawurlencode(isset($threadContext['error']) ? $threadContext['error'] : 'failed')
+            );
+        }
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            CATSUtility::transferRelativeURI(
+                'm=home&a=inbox&threadKey=' . rawurlencode($payload['threadKey']) . '&msg=personalSchema'
+            );
+        }
+
+        $firstLine = preg_split('/\r\n|\r|\n/', $payload['messageBody'], 2);
+        $firstLine = trim((string) (is_array($firstLine) ? $firstLine[0] : ''));
+        $title = $firstLine;
+        if ($title === '')
+        {
+            $title = 'Inbox Follow-up: ' . $threadContext['entityName'];
+        }
+        if (strlen($title) > PersonalDashboard::TITLE_MAXLEN)
+        {
+            $title = substr($title, 0, PersonalDashboard::TITLE_MAXLEN);
+        }
+
+        $body = $this->buildInboxPersonalItemBody($threadContext, $payload['messageBody']);
+        $result = $personalDashboard->addItem(
+            $this->_userID,
+            'todo',
+            $title,
+            $body,
+            '',
+            PersonalDashboard::PRIORITY_MEDIUM,
+            '',
+            PersonalDashboard::STATUS_OPEN
+        );
+
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            CATSUtility::transferRelativeURI(
+                'm=home&a=inbox&threadKey=' . rawurlencode($payload['threadKey']) .
+                '&msg=' . rawurlencode($error)
+            );
+        }
+
+        CATSUtility::transferRelativeURI(
+            'm=home&a=inbox&threadKey=' . rawurlencode($payload['threadKey']) . '&msg=todoCreated'
+        );
+    }
+
     private function myNotes()
     {
         $personalDashboard = new PersonalDashboard($this->_siteID);
@@ -664,11 +974,12 @@ class HomeUI extends UserInterface
                     break;
 
                 case 'noteAppended':
+                case 'noteUpdated':
                     $flashMessage = 'Note updated.';
                     break;
 
                 case 'noteSent':
-                    $flashMessage = 'Note sent to selected users.';
+                    $flashMessage = 'Note forwarded to selected users.';
                     break;
 
                 case 'token':
@@ -864,6 +1175,10 @@ class HomeUI extends UserInterface
         $this->_template->assign(
             'appendPersonalNoteToken',
             $this->getCSRFToken('home.appendPersonalNote')
+        );
+        $this->_template->assign(
+            'updatePersonalNoteToken',
+            $this->getCSRFToken('home.updatePersonalNote')
         );
         $this->_template->assign(
             'sendPersonalNoteToken',
@@ -1198,6 +1513,48 @@ class HomeUI extends UserInterface
         }
 
         $this->redirectToMyNotes('notes', 'noteAppended');
+    }
+
+    private function onUpdatePersonalNote()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('notes', 'invalid');
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.updatePersonalNote', $securityToken))
+        {
+            $this->redirectToMyNotes('notes', 'token');
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $title = $this->getTrimmedInput('title', $_POST);
+        $body = $this->getTrimmedInput('body', $_POST);
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes('notes', 'schema');
+        }
+
+        $result = $personalDashboard->updateNote($itemID, $this->_userID, $title, $body);
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes('notes', $error);
+        }
+
+        $this->redirectToMyNotes('notes', 'noteUpdated');
     }
 
     private function onSendPersonalNote()

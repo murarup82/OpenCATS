@@ -208,6 +208,12 @@
                     font-size: 13px;
                     line-height: 1.4;
                 }
+                .my-inbox-page .inbox-composer-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                }
                 .my-inbox-page .inbox-mention-help {
                     margin: 8px 0 10px 0;
                     font-size: 11px;
@@ -300,6 +306,12 @@
 
                         <div class="inbox-pane inbox-reading-pane">
                             <?php if (!empty($this->selectedThread)): ?>
+                                <?php
+                                    $canDeleteThread = (
+                                        ($this->selectedThread['threadType'] === 'candidate' && $this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT) ||
+                                        ($this->selectedThread['threadType'] === 'joborder' && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
+                                    );
+                                ?>
                                 <div class="inbox-pane-header">
                                     <div>
                                         <div class="inbox-reading-title">
@@ -316,11 +328,8 @@
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo($this->selectedThread['openURL']); ?>">
                                             <?php $this->_($this->selectedThread['openLabel']); ?>
                                         </a>
-                                        <?php if (
-                                            ($this->selectedThread['threadType'] === 'candidate' && $this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT) ||
-                                            ($this->selectedThread['threadType'] === 'joborder' && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
-                                        ): ?>
-                                            <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="display:inline;" onsubmit="return confirm('Delete this thread for all users? This cannot be undone. A new thread will start on next message.');">
+                                        <?php if ($canDeleteThread): ?>
+                                            <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="display:inline;" id="deleteInboxThreadFormHeader" onsubmit="return confirm('Delete this thread for all users? This cannot be undone. A new thread will start on next message.');">
                                                 <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
                                                 <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
                                                 <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteInboxThreadToken); ?>" />
@@ -350,10 +359,10 @@
                                 </div>
 
                                 <div class="inbox-composer">
-                                    <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=postInboxMessage">
+                                    <form id="inboxComposerForm" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=postInboxMessage">
                                         <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
                                         <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
-                                        <input type="hidden" name="securityToken" value="<?php $this->_($this->postInboxMessageToken); ?>" />
+                                        <input type="hidden" name="securityToken" id="inboxComposerSecurityToken" value="<?php $this->_($this->postInboxMessageToken); ?>" />
                                         <textarea
                                             rows="6"
                                             maxlength="4000"
@@ -371,8 +380,20 @@
                                                 <?php endforeach; ?>
                                             </div>
                                         <?php endif; ?>
-                                        <button type="submit" class="ui2-button ui2-button--primary">Send Reply</button>
+                                        <div class="inbox-composer-actions">
+                                            <button type="submit" class="ui2-button ui2-button--primary" onclick="return MyInbox_prepareComposerSubmit('reply');">Send Reply</button>
+                                            <button type="submit" class="ui2-button ui2-button--secondary" onclick="return MyInbox_prepareComposerSubmit('note');">Create Note</button>
+                                            <button type="submit" class="ui2-button ui2-button--secondary" onclick="return MyInbox_prepareComposerSubmit('todo');">Create To-Do</button>
+                                        </div>
                                     </form>
+                                    <?php if ($canDeleteThread): ?>
+                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="margin-top:8px;" onsubmit="return confirm('Delete this thread for all users? This cannot be undone. A new thread will start on next message.');">
+                                            <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
+                                            <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
+                                            <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteInboxThreadToken); ?>" />
+                                            <button type="submit" class="ui2-button ui2-button--danger">Delete / Archive Thread</button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                             <?php else: ?>
                                 <div class="inbox-placeholder">
@@ -389,6 +410,42 @@
     </div>
 </div>
 <script type="text/javascript">
+    function MyInbox_prepareComposerSubmit(target)
+    {
+        var form = document.getElementById('inboxComposerForm');
+        var tokenField = document.getElementById('inboxComposerSecurityToken');
+        if (!form || !tokenField)
+        {
+            return true;
+        }
+
+        var replyAction = '<?php echo(CATSUtility::getIndexName()); ?>?m=home&a=postInboxMessage';
+        var noteAction = '<?php echo(CATSUtility::getIndexName()); ?>?m=home&a=createInboxNote';
+        var todoAction = '<?php echo(CATSUtility::getIndexName()); ?>?m=home&a=createInboxTodo';
+
+        var replyToken = '<?php echo(addslashes((string) $this->postInboxMessageToken)); ?>';
+        var noteToken = '<?php echo(addslashes((string) $this->createInboxNoteToken)); ?>';
+        var todoToken = '<?php echo(addslashes((string) $this->createInboxTodoToken)); ?>';
+
+        if (target === 'note')
+        {
+            form.action = noteAction;
+            tokenField.value = noteToken;
+        }
+        else if (target === 'todo')
+        {
+            form.action = todoAction;
+            tokenField.value = todoToken;
+        }
+        else
+        {
+            form.action = replyAction;
+            tokenField.value = replyToken;
+        }
+
+        return true;
+    }
+
     if (typeof MentionAutocomplete !== 'undefined')
     {
         MentionAutocomplete.bind(
