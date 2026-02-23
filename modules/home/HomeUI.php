@@ -119,6 +119,10 @@ class HomeUI extends UserInterface
                 $this->onSendPersonalNote();
                 break;
 
+            case 'setPersonalNoteArchived':
+                $this->onSetPersonalNoteArchived();
+                break;
+
             case 'submitFeedback':
                 $this->onSubmitFeedback();
                 break;
@@ -147,8 +151,16 @@ class HomeUI extends UserInterface
                 $this->onCreateInboxTodo();
                 break;
 
+            case 'archiveInboxThread':
+                if (!$this->canAccessAnyInbox())
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onArchiveInboxThread();
+                break;
+
             case 'deleteInboxThread':
-                if (!$this->canPostAnyInboxMessage())
+                if (!$this->canAccessAnyInbox())
                 {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
@@ -196,6 +208,13 @@ class HomeUI extends UserInterface
         return (
             $this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT ||
             $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT
+        );
+    }
+
+    private function canDeleteAnyInboxThread()
+    {
+        return (
+            $_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT) >= ACCESS_LEVEL_SA
         );
     }
 
@@ -290,6 +309,10 @@ class HomeUI extends UserInterface
                     $flashMessage = 'To-do created in My Notes.';
                     break;
 
+                case 'archived':
+                    $flashMessage = 'Thread archived.';
+                    break;
+
                 case 'empty':
                     $flashMessage = 'Message cannot be empty.';
                     $flashIsError = true;
@@ -317,6 +340,11 @@ class HomeUI extends UserInterface
 
                 case 'deletefailed':
                     $flashMessage = 'Unable to delete thread.';
+                    $flashIsError = true;
+                    break;
+
+                case 'archivefailed':
+                    $flashMessage = 'Unable to archive thread.';
                     $flashIsError = true;
                     break;
 
@@ -561,6 +589,7 @@ class HomeUI extends UserInterface
         $this->_template->assign('selectedThreadType', $selectedThreadType);
         $this->_template->assign('selectedThreadID', $selectedThreadID);
         $this->_template->assign('selectedThread', $selectedThread);
+        $this->_template->assign('canDeleteInboxThread', $this->canDeleteAnyInboxThread());
         $this->_template->assign('messages', $messages);
         $this->_template->assign('mentionHintNames', $mentionHintNames);
         $this->_template->assign('mentionAutocompleteValues', array_values(array_unique($mentionAutocompleteValues)));
@@ -575,6 +604,10 @@ class HomeUI extends UserInterface
         $this->_template->assign(
             'createInboxTodoToken',
             $this->getCSRFToken('home.createInboxTodo')
+        );
+        $this->_template->assign(
+            'archiveInboxThreadToken',
+            $this->getCSRFToken('home.archiveInboxThread')
         );
         $this->_template->assign(
             'deleteInboxThreadToken',
@@ -982,6 +1015,14 @@ class HomeUI extends UserInterface
                     $flashMessage = 'Note forwarded to selected users.';
                     break;
 
+                case 'noteArchived':
+                    $flashMessage = 'Note archived.';
+                    break;
+
+                case 'noteUnarchived':
+                    $flashMessage = 'Note restored to active notes.';
+                    break;
+
                 case 'token':
                 case 'invalid':
                     $flashMessage = 'Invalid request.';
@@ -1047,6 +1088,7 @@ class HomeUI extends UserInterface
 
         $summary = array(
             'notesCount' => 0,
+            'archivedNotesCount' => 0,
             'todoOpenCount' => 0,
             'todoDoneCount' => 0,
             'reminderDueCount' => 0,
@@ -1055,6 +1097,13 @@ class HomeUI extends UserInterface
             'todoStatusBlockedCount' => 0,
             'todoStatusDoneCount' => 0
         );
+        $noteFilters = $this->getMyNotesNoteFilters($_GET);
+        $noteMode = $noteFilters['noteMode'];
+        $noteSearch = $noteFilters['noteSearch'];
+        $archiveYear = $noteFilters['archiveYear'];
+        $archiveMonth = $noteFilters['archiveMonth'];
+        $noteArchiveBuckets = array();
+        $noteArchiveYears = array();
         $noteItems = array();
         $todoItems = array();
         $todoPriorities = array();
@@ -1069,7 +1118,18 @@ class HomeUI extends UserInterface
         if ($schemaAvailable)
         {
             $summary = $personalDashboard->getSummary($this->_userID);
-            $noteItems = $personalDashboard->getItems($this->_userID, 'note', 250);
+            $noteItems = $personalDashboard->getItems(
+                $this->_userID,
+                'note',
+                500,
+                array(
+                    'noteMode' => $noteMode,
+                    'archiveYear' => $archiveYear,
+                    'archiveMonth' => $archiveMonth,
+                    'noteSearch' => $noteSearch
+                )
+            );
+            $noteArchiveBuckets = $personalDashboard->getNoteArchiveBuckets($this->_userID, $noteSearch);
             $todoItems = $personalDashboard->getItems($this->_userID, 'todo', 250);
             $todoPriorities = $personalDashboard->getAllowedPriorities();
             $todoStatuses = $personalDashboard->getAllowedTodoStatuses();
@@ -1106,6 +1166,42 @@ class HomeUI extends UserInterface
             {
                 $noteItems[$index]['title'] = trim((string) $noteItem['title']);
                 $noteItems[$index]['bodyHTML'] = nl2br(htmlspecialchars((string) $noteItem['body'], ENT_QUOTES));
+                $noteItems[$index]['isArchived'] = ((int) $noteItem['isCompleted'] > 0);
+
+                $bucketSource = trim((string) $noteItem['dateModifiedRaw']);
+                if ($bucketSource === '')
+                {
+                    $bucketSource = trim((string) $noteItem['dateCreatedRaw']);
+                }
+                $bucketYear = 0;
+                $bucketMonth = 0;
+                if ($bucketSource !== '' && preg_match('/^(\d{4})-(\d{2})/', $bucketSource, $matches))
+                {
+                    $bucketYear = (int) $matches[1];
+                    $bucketMonth = (int) $matches[2];
+                }
+                $noteItems[$index]['archiveBucketKey'] = '';
+                $noteItems[$index]['archiveBucketLabel'] = '';
+                if ($bucketYear > 0 && $bucketMonth >= 1 && $bucketMonth <= 12)
+                {
+                    $noteItems[$index]['archiveBucketKey'] = sprintf('%04d-%02d', $bucketYear, $bucketMonth);
+                    $noteItems[$index]['archiveBucketLabel'] = date('F Y', mktime(0, 0, 0, $bucketMonth, 1, $bucketYear));
+                }
+            }
+
+            foreach ($noteArchiveBuckets as $bucket)
+            {
+                $bucketYear = (int) $bucket['year'];
+                $bucketMonth = (int) $bucket['month'];
+                if ($bucketYear <= 0 || $bucketMonth <= 0 || $bucketMonth > 12)
+                {
+                    continue;
+                }
+
+                if (!in_array($bucketYear, $noteArchiveYears, true))
+                {
+                    $noteArchiveYears[] = $bucketYear;
+                }
             }
 
             foreach ($todoItems as $index => $todoItem)
@@ -1143,6 +1239,12 @@ class HomeUI extends UserInterface
         $this->_template->assign('flashIsError', $flashIsError);
         $this->_template->assign('summary', $summary);
         $this->_template->assign('noteItems', $noteItems);
+        $this->_template->assign('noteMode', $noteMode);
+        $this->_template->assign('noteSearch', $noteSearch);
+        $this->_template->assign('archiveYear', $archiveYear);
+        $this->_template->assign('archiveMonth', $archiveMonth);
+        $this->_template->assign('noteArchiveBuckets', $noteArchiveBuckets);
+        $this->_template->assign('noteArchiveYears', $noteArchiveYears);
         $this->_template->assign('todoItems', $todoItems);
         $this->_template->assign('todoStatuses', $todoStatuses);
         $this->_template->assign('todoItemsByStatus', $todoItemsByStatus);
@@ -1184,6 +1286,10 @@ class HomeUI extends UserInterface
             'sendPersonalNoteToken',
             $this->getCSRFToken('home.sendPersonalNote')
         );
+        $this->_template->assign(
+            'setPersonalNoteArchivedToken',
+            $this->getCSRFToken('home.setPersonalNoteArchived')
+        );
 
         $this->_template->display('./modules/home/MyNotes.tpl');
     }
@@ -1198,17 +1304,19 @@ class HomeUI extends UserInterface
         $itemType = strtolower($this->getTrimmedInput('itemType', $_POST));
         $defaultView = ($itemType === 'todo') ? 'todos' : 'notes';
         $view = $this->getMyNotesView($_POST, $defaultView);
+        $noteFilters = $this->getMyNotesNoteFilters($_POST);
+        $redirectFilters = ($view === 'notes') ? $noteFilters : array();
 
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.addPersonalItem', $securityToken))
         {
-            $this->redirectToMyNotes($view, 'token');
+            $this->redirectToMyNotes($view, 'token', $redirectFilters);
         }
 
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
-            $this->redirectToMyNotes($view, 'schema');
+            $this->redirectToMyNotes($view, 'schema', $redirectFilters);
         }
 
         $title = $this->getTrimmedInput('title', $_POST);
@@ -1240,7 +1348,7 @@ class HomeUI extends UserInterface
             {
                 $error = 'invalid';
             }
-            $this->redirectToMyNotes($view, $error);
+            $this->redirectToMyNotes($view, $error, $redirectFilters);
         }
 
         if ($itemType === 'todo')
@@ -1248,7 +1356,7 @@ class HomeUI extends UserInterface
             $this->redirectToMyNotes('todos', 'todoAdded');
         }
 
-        $this->redirectToMyNotes('notes', 'noteAdded');
+        $this->redirectToMyNotes('notes', 'noteAdded', array('noteMode' => 'active'));
     }
 
     private function onMovePersonalNoteToTodo()
@@ -1258,22 +1366,23 @@ class HomeUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
+        $noteFilters = $this->getMyNotesNoteFilters($_POST);
         if (!$this->isRequiredIDValid('itemID', $_POST))
         {
-            $this->redirectToMyNotes('notes', 'invalid');
+            $this->redirectToMyNotes('notes', 'invalid', $noteFilters);
         }
 
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.movePersonalNoteToTodo', $securityToken))
         {
-            $this->redirectToMyNotes('notes', 'token');
+            $this->redirectToMyNotes('notes', 'token', $noteFilters);
         }
 
         $itemID = (int) $_POST['itemID'];
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
-            $this->redirectToMyNotes('notes', 'schema');
+            $this->redirectToMyNotes('notes', 'schema', $noteFilters);
         }
 
         $result = $personalDashboard->moveNoteToTodo($itemID, $this->_userID);
@@ -1284,7 +1393,7 @@ class HomeUI extends UserInterface
             {
                 $error = 'invalid';
             }
-            $this->redirectToMyNotes('notes', $error);
+            $this->redirectToMyNotes('notes', $error, $noteFilters);
         }
 
         $this->redirectToMyNotes('todos', 'movedToTodo');
@@ -1451,27 +1560,28 @@ class HomeUI extends UserInterface
         }
 
         $view = $this->getMyNotesView($_POST, 'notes');
+        $redirectFilters = ($view === 'notes') ? $this->getMyNotesNoteFilters($_POST) : array();
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.deletePersonalItem', $securityToken))
         {
-            $this->redirectToMyNotes($view, 'token');
+            $this->redirectToMyNotes($view, 'token', $redirectFilters);
         }
 
         $itemID = (int) $_POST['itemID'];
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
-            $this->redirectToMyNotes($view, 'schema');
+            $this->redirectToMyNotes($view, 'schema', $redirectFilters);
         }
 
         $result = $personalDashboard->deleteItem($itemID, $this->_userID);
         if (empty($result['success']))
         {
             $error = isset($result['error']) ? $result['error'] : 'failed';
-            $this->redirectToMyNotes($view, $error);
+            $this->redirectToMyNotes($view, $error, $redirectFilters);
         }
 
-        $this->redirectToMyNotes($view, 'deleted');
+        $this->redirectToMyNotes($view, 'deleted', $redirectFilters);
     }
 
     private function onAppendPersonalNote()
@@ -1481,15 +1591,16 @@ class HomeUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
+        $noteFilters = $this->getMyNotesNoteFilters($_POST);
         if (!$this->isRequiredIDValid('itemID', $_POST))
         {
-            $this->redirectToMyNotes('notes', 'invalid');
+            $this->redirectToMyNotes('notes', 'invalid', $noteFilters);
         }
 
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.appendPersonalNote', $securityToken))
         {
-            $this->redirectToMyNotes('notes', 'token');
+            $this->redirectToMyNotes('notes', 'token', $noteFilters);
         }
 
         $itemID = (int) $_POST['itemID'];
@@ -1498,7 +1609,7 @@ class HomeUI extends UserInterface
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
-            $this->redirectToMyNotes('notes', 'schema');
+            $this->redirectToMyNotes('notes', 'schema', $noteFilters);
         }
 
         $result = $personalDashboard->appendToNote($itemID, $this->_userID, $appendBody);
@@ -1509,10 +1620,10 @@ class HomeUI extends UserInterface
             {
                 $error = 'invalid';
             }
-            $this->redirectToMyNotes('notes', $error);
+            $this->redirectToMyNotes('notes', $error, $noteFilters);
         }
 
-        $this->redirectToMyNotes('notes', 'noteAppended');
+        $this->redirectToMyNotes('notes', 'noteAppended', $noteFilters);
     }
 
     private function onUpdatePersonalNote()
@@ -1522,15 +1633,16 @@ class HomeUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
+        $noteFilters = $this->getMyNotesNoteFilters($_POST);
         if (!$this->isRequiredIDValid('itemID', $_POST))
         {
-            $this->redirectToMyNotes('notes', 'invalid');
+            $this->redirectToMyNotes('notes', 'invalid', $noteFilters);
         }
 
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.updatePersonalNote', $securityToken))
         {
-            $this->redirectToMyNotes('notes', 'token');
+            $this->redirectToMyNotes('notes', 'token', $noteFilters);
         }
 
         $itemID = (int) $_POST['itemID'];
@@ -1540,7 +1652,7 @@ class HomeUI extends UserInterface
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
-            $this->redirectToMyNotes('notes', 'schema');
+            $this->redirectToMyNotes('notes', 'schema', $noteFilters);
         }
 
         $result = $personalDashboard->updateNote($itemID, $this->_userID, $title, $body);
@@ -1551,10 +1663,10 @@ class HomeUI extends UserInterface
             {
                 $error = 'invalid';
             }
-            $this->redirectToMyNotes('notes', $error);
+            $this->redirectToMyNotes('notes', $error, $noteFilters);
         }
 
-        $this->redirectToMyNotes('notes', 'noteUpdated');
+        $this->redirectToMyNotes('notes', 'noteUpdated', $noteFilters);
     }
 
     private function onSendPersonalNote()
@@ -1564,15 +1676,16 @@ class HomeUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
+        $noteFilters = $this->getMyNotesNoteFilters($_POST);
         if (!$this->isRequiredIDValid('itemID', $_POST))
         {
-            $this->redirectToMyNotes('notes', 'invalid');
+            $this->redirectToMyNotes('notes', 'invalid', $noteFilters);
         }
 
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.sendPersonalNote', $securityToken))
         {
-            $this->redirectToMyNotes('notes', 'token');
+            $this->redirectToMyNotes('notes', 'token', $noteFilters);
         }
 
         $itemID = (int) $_POST['itemID'];
@@ -1592,7 +1705,7 @@ class HomeUI extends UserInterface
 
         if (empty($recipientUserIDs))
         {
-            $this->redirectToMyNotes('notes', 'noRecipients');
+            $this->redirectToMyNotes('notes', 'noRecipients', $noteFilters);
         }
 
         $users = new Users($this->_siteID);
@@ -1619,7 +1732,7 @@ class HomeUI extends UserInterface
 
         if (empty($validRecipientUserIDs))
         {
-            $this->redirectToMyNotes('notes', 'noRecipients');
+            $this->redirectToMyNotes('notes', 'noRecipients', $noteFilters);
         }
 
         $senderDisplayName = trim((string) $_SESSION['CATS']->getFullName());
@@ -1631,7 +1744,7 @@ class HomeUI extends UserInterface
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
-            $this->redirectToMyNotes('notes', 'schema');
+            $this->redirectToMyNotes('notes', 'schema', $noteFilters);
         }
 
         $result = $personalDashboard->sendNoteToUsers(
@@ -1648,10 +1761,52 @@ class HomeUI extends UserInterface
             {
                 $error = 'invalid';
             }
-            $this->redirectToMyNotes('notes', $error);
+            $this->redirectToMyNotes('notes', $error, $noteFilters);
         }
 
-        $this->redirectToMyNotes('notes', 'noteSent');
+        $this->redirectToMyNotes('notes', 'noteSent', $noteFilters);
+    }
+
+    private function onSetPersonalNoteArchived()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        $noteFilters = $this->getMyNotesNoteFilters($_POST);
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('notes', 'invalid', $noteFilters);
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.setPersonalNoteArchived', $securityToken))
+        {
+            $this->redirectToMyNotes('notes', 'token', $noteFilters);
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $isArchived = ((int) $this->getTrimmedInput('isArchived', $_POST) > 0) ? 1 : 0;
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes('notes', 'schema', $noteFilters);
+        }
+
+        $result = $personalDashboard->setNoteArchived($itemID, $this->_userID, $isArchived);
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes('notes', $error, $noteFilters);
+        }
+
+        $this->redirectToMyNotes('notes', ($isArchived > 0) ? 'noteArchived' : 'noteUnarchived', $noteFilters);
     }
 
     private function onSubmitFeedback()
@@ -1780,10 +1935,92 @@ class HomeUI extends UserInterface
         return 'notes';
     }
 
-    private function redirectToMyNotes($view, $msg = '')
+    private function getMyNotesNoteFilters($source)
+    {
+        $filters = array(
+            'noteMode' => 'active',
+            'noteSearch' => '',
+            'archiveYear' => 0,
+            'archiveMonth' => 0
+        );
+
+        if (!is_array($source))
+        {
+            return $filters;
+        }
+
+        if (isset($source['noteMode']))
+        {
+            $noteMode = strtolower(trim((string) $source['noteMode']));
+            if (in_array($noteMode, array('active', 'archived', 'all'), true))
+            {
+                $filters['noteMode'] = $noteMode;
+            }
+        }
+
+        if (isset($source['noteSearch']))
+        {
+            $noteSearch = trim((string) $source['noteSearch']);
+            if (strlen($noteSearch) > 200)
+            {
+                $noteSearch = substr($noteSearch, 0, 200);
+            }
+            $filters['noteSearch'] = $noteSearch;
+        }
+
+        if (isset($source['archiveYear']))
+        {
+            $archiveYear = (int) trim((string) $source['archiveYear']);
+            if ($archiveYear >= 1970 && $archiveYear <= 2100)
+            {
+                $filters['archiveYear'] = $archiveYear;
+            }
+        }
+
+        if (isset($source['archiveMonth']))
+        {
+            $archiveMonth = (int) trim((string) $source['archiveMonth']);
+            if ($archiveMonth >= 1 && $archiveMonth <= 12)
+            {
+                $filters['archiveMonth'] = $archiveMonth;
+            }
+        }
+
+        if ($filters['noteMode'] === 'active')
+        {
+            $filters['archiveYear'] = 0;
+            $filters['archiveMonth'] = 0;
+        }
+
+        return $filters;
+    }
+
+    private function redirectToMyNotes($view, $msg = '', $extraParams = array())
     {
         $view = ($view === 'todos') ? 'todos' : 'notes';
         $transferURI = 'm=home&a=myNotes&view=' . $view;
+
+        if ($view === 'notes' && is_array($extraParams))
+        {
+            $noteFilters = $this->getMyNotesNoteFilters($extraParams);
+            if ($noteFilters['noteMode'] !== 'active')
+            {
+                $transferURI .= '&noteMode=' . rawurlencode($noteFilters['noteMode']);
+            }
+            if ($noteFilters['noteSearch'] !== '')
+            {
+                $transferURI .= '&noteSearch=' . rawurlencode($noteFilters['noteSearch']);
+            }
+            if ($noteFilters['archiveYear'] > 0)
+            {
+                $transferURI .= '&archiveYear=' . rawurlencode((string) $noteFilters['archiveYear']);
+            }
+            if ($noteFilters['archiveMonth'] > 0)
+            {
+                $transferURI .= '&archiveMonth=' . rawurlencode((string) $noteFilters['archiveMonth']);
+            }
+        }
+
         if ($msg !== '')
         {
             $transferURI .= '&msg=' . rawurlencode($msg);
@@ -1852,6 +2089,11 @@ class HomeUI extends UserInterface
             CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=token');
         }
 
+        if (!$this->canDeleteAnyInboxThread())
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+        }
+
         if ($threadType === 'joborder')
         {
             if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
@@ -1900,6 +2142,71 @@ class HomeUI extends UserInterface
         }
 
         CATSUtility::transferRelativeURI('m=home&a=inbox&msg=deleted');
+    }
+
+    private function onArchiveInboxThread()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('threadID', $_POST))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=invalid');
+        }
+
+        $threadID = (int) $_POST['threadID'];
+        $threadType = strtolower($this->getTrimmedInput('threadType', $_POST));
+        if ($threadType !== 'joborder')
+        {
+            $threadType = 'candidate';
+        }
+        $threadKey = $threadType . ':' . $threadID;
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.archiveInboxThread', $securityToken))
+        {
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=token');
+        }
+
+        if ($threadType === 'joborder')
+        {
+            $jobOrderMessages = new JobOrderMessages($this->_siteID);
+            if (!$jobOrderMessages->isSchemaAvailable())
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
+            }
+
+            if (!$jobOrderMessages->isUserParticipant($threadID, $this->_userID, true))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
+
+            if (!$jobOrderMessages->archiveThreadForUser($threadID, $this->_userID))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=archivefailed');
+            }
+        }
+        else
+        {
+            $candidateMessages = new CandidateMessages($this->_siteID);
+            if (!$candidateMessages->isSchemaAvailable())
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
+            }
+
+            if (!$candidateMessages->isUserParticipant($threadID, $this->_userID, true))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
+
+            if (!$candidateMessages->archiveThreadForUser($threadID, $this->_userID))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=archivefailed');
+            }
+        }
+
+        CATSUtility::transferRelativeURI('m=home&a=inbox&msg=archived');
     }
 
     private function deleteSavedSearch()

@@ -1459,6 +1459,12 @@ class JobOrdersDataGrid extends DataGrid
                                      'filterable' => false,
                                      'filterDescription' => 'Only Hot Job Orders'),
 
+            'CompanyID' =>     array('select'    => '',
+                                     'filter'    => 'joborder.company_id',
+                                     'pagerOptional' => false,
+                                     'filterable' => false,
+                                     'filterDescription' => 'Company'),
+
             'Public/Private' => array('select'  => 'IF(joborder.public, \'Public\', \'Private\') AS public',
                                     'sortableColumn'    => 'public',
                                     'pagerWidth'   => 50,

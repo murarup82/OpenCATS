@@ -22,6 +22,7 @@
                                     (<?php if ($this->dataGrid->getFilterValue('Status') != '') echo ($this->dataGrid->getFilterValue('Status')); else echo ('All'); ?>)
                                     <?php if ($this->dataGrid->getFilterValue('OwnerID') ==  $this->userID): ?>(Only My Job Orders)<?php endif; ?>
                                     <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>(Only Hot Job Orders)<?php endif; ?>
+                                    <?php if (!empty($this->selectedCompanyFilterName)): ?>(Company: <?php $this->_($this->selectedCompanyFilterName); ?>)<?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -79,6 +80,24 @@
                         <label class="ui2-inline" for="onlyHotJobOrders">
                             <input type="checkbox" name="onlyHotJobOrders" id="onlyHotJobOrders" <?php if ($this->dataGrid->getFilterValue('IsHot') == '1'): ?>checked<?php endif; ?> onclick="<?php echo $this->dataGrid->getJSAddRemoveFilterFromCheckbox('IsHot', '==', '\'1\''); ?>" />
                             Only Hot Job Orders
+                        </label>
+                        <label class="ui2-inline">
+                            Company
+                            <select
+                                name="companyFilter"
+                                id="companyFilter"
+                                onchange="if (this.value === '') { <?php echo($this->dataGrid->getJSRemoveFilter('CompanyID')); ?> } else { <?php echo($this->dataGrid->getJSAddFilter('CompanyID', '==', 'this.value', 'true')); ?> }"
+                                class="selectBox"
+                            >
+                                <option value=""<?php if (empty($this->selectedCompanyFilterID)): ?> selected="selected"<?php endif; ?>>All</option>
+                                <?php if (!empty($this->companiesRS)): ?>
+                                    <?php foreach ($this->companiesRS as $company): ?>
+                                        <option value="<?php echo((int) $company['companyID']); ?>"<?php if ((int) $this->selectedCompanyFilterID === (int) $company['companyID']): ?> selected="selected"<?php endif; ?>>
+                                            <?php $this->_($company['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                         </label>
                     </div>
                 </form>

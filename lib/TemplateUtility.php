@@ -1401,11 +1401,13 @@ class TemplateUtility
 
         echo '<style type="text/css">';
         echo '.global-feedback-wrap{margin:18px auto 8px auto;}';
-        echo '.global-feedback-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#00425B;color:#fff;border-radius:4px;}';
+        echo '.ui2-sidebar-enabled .global-feedback-wrap{margin-left:220px;margin-right:0;width:calc(100% - 220px);}';
+        echo '.global-feedback-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#00425B;color:#fff;border-radius:4px;flex-wrap:wrap;}';
         echo '.ui2 .global-feedback-bar,.ui2-body .global-feedback-bar{background:var(--ui2-sidebar-bg,var(--ui2-primary,#00425B));}';
+        echo '.global-feedback-copy{min-width:260px;flex:1 1 auto;}';
         echo '.global-feedback-title{font-size:12px;font-weight:bold;letter-spacing:0.03em;text-transform:uppercase;}';
-        echo '.global-feedback-subtitle{font-size:12px;opacity:0.9;}';
-        echo '.global-feedback-actions{display:flex;align-items:center;gap:8px;}';
+        echo '.global-feedback-subtitle{font-size:12px;opacity:0.9;line-height:1.4;}';
+        echo '.global-feedback-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto;}';
         echo '.global-feedback-button{border:1px solid rgba(255,255,255,0.55);background:#fff;color:#00425B;padding:6px 10px;cursor:pointer;border-radius:3px;font-size:12px;font-weight:bold;}';
         echo '.global-feedback-button[disabled]{cursor:not-allowed;opacity:0.65;}';
         echo '.global-feedback-config-warning{font-size:11px;color:#ffd0d0;}';
@@ -1420,6 +1422,7 @@ class TemplateUtility
         echo '.global-feedback-modal-actions{display:flex;justify-content:flex-end;gap:8px;padding:0 14px 14px 14px;}';
         echo '.global-feedback-modal-cancel,.global-feedback-modal-submit{padding:6px 12px;border:1px solid #bcc8d3;border-radius:3px;cursor:pointer;font-size:12px;}';
         echo '.global-feedback-modal-submit{background:#0097BD;border-color:#0097BD;color:#fff;font-weight:bold;}';
+        echo '@media (max-width: 1024px){.ui2-sidebar-enabled .global-feedback-wrap{margin-left:0;margin-right:0;width:auto;}}';
         echo '</style>', "\n";
 
         echo '<div class="global-feedback-wrap">', "\n";
@@ -1430,9 +1433,9 @@ class TemplateUtility
         }
 
         echo '<div class="global-feedback-bar">', "\n";
-        echo '<div>', "\n";
+        echo '<div class="global-feedback-copy">', "\n";
         echo '<div class="global-feedback-title">Help Improve OpenCATS</div>', "\n";
-        echo '<div class="global-feedback-subtitle">Report bugs or propose features directly to the configured owner.</div>', "\n";
+        echo '<div class="global-feedback-subtitle">Please use the &quot;Submit Feedback&quot; button to report bugs or request new features.</div>', "\n";
         echo '</div>', "\n";
         echo '<div class="global-feedback-actions">', "\n";
         if (!$isConfigured)

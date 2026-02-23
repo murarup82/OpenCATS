@@ -306,12 +306,6 @@
 
                         <div class="inbox-pane inbox-reading-pane">
                             <?php if (!empty($this->selectedThread)): ?>
-                                <?php
-                                    $canDeleteThread = (
-                                        ($this->selectedThread['threadType'] === 'candidate' && $this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT) ||
-                                        ($this->selectedThread['threadType'] === 'joborder' && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
-                                    );
-                                ?>
                                 <div class="inbox-pane-header">
                                     <div>
                                         <div class="inbox-reading-title">
@@ -328,14 +322,6 @@
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo($this->selectedThread['openURL']); ?>">
                                             <?php $this->_($this->selectedThread['openLabel']); ?>
                                         </a>
-                                        <?php if ($canDeleteThread): ?>
-                                            <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="display:inline;" id="deleteInboxThreadFormHeader" onsubmit="return confirm('Delete this thread for all users? This cannot be undone. A new thread will start on next message.');">
-                                                <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
-                                                <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
-                                                <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteInboxThreadToken); ?>" />
-                                                <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
-                                            </form>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
 
@@ -384,14 +370,34 @@
                                             <button type="submit" class="ui2-button ui2-button--primary" onclick="return MyInbox_prepareComposerSubmit('reply');">Send Reply</button>
                                             <button type="submit" class="ui2-button ui2-button--secondary" onclick="return MyInbox_prepareComposerSubmit('note');">Create Note</button>
                                             <button type="submit" class="ui2-button ui2-button--secondary" onclick="return MyInbox_prepareComposerSubmit('todo');">Create To-Do</button>
+                                            <button
+                                                type="button"
+                                                class="ui2-button ui2-button--secondary"
+                                                onclick="return MyInbox_submitArchiveThread();"
+                                            >
+                                                Archive Thread
+                                            </button>
+                                            <?php if (!empty($this->canDeleteInboxThread)): ?>
+                                                <button
+                                                    type="button"
+                                                    class="ui2-button ui2-button--danger"
+                                                    onclick="return MyInbox_submitDeleteThread();"
+                                                >
+                                                    Delete Thread
+                                                </button>
+                                            <?php endif; ?>
                                         </div>
                                     </form>
-                                    <?php if ($canDeleteThread): ?>
-                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="margin-top:8px;" onsubmit="return confirm('Delete this thread for all users? This cannot be undone. A new thread will start on next message.');">
+                                    <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=archiveInboxThread" id="archiveInboxThreadForm" style="display:none;">
+                                        <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
+                                        <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
+                                        <input type="hidden" name="securityToken" value="<?php $this->_($this->archiveInboxThreadToken); ?>" />
+                                    </form>
+                                    <?php if (!empty($this->canDeleteInboxThread)): ?>
+                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" id="deleteInboxThreadForm" style="display:none;">
                                             <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
                                             <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
                                             <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteInboxThreadToken); ?>" />
-                                            <button type="submit" class="ui2-button ui2-button--danger">Delete / Archive Thread</button>
                                         </form>
                                     <?php endif; ?>
                                 </div>
@@ -444,6 +450,40 @@
         }
 
         return true;
+    }
+
+    function MyInbox_submitArchiveThread()
+    {
+        var form = document.getElementById('archiveInboxThreadForm');
+        if (!form)
+        {
+            return false;
+        }
+
+        if (!window.confirm('Archive this thread for you? It will be removed from your inbox list.'))
+        {
+            return false;
+        }
+
+        form.submit();
+        return false;
+    }
+
+    function MyInbox_submitDeleteThread()
+    {
+        var form = document.getElementById('deleteInboxThreadForm');
+        if (!form)
+        {
+            return false;
+        }
+
+        if (!window.confirm('Delete this thread for all users? This cannot be undone. A new thread will start on next message.'))
+        {
+            return false;
+        }
+
+        form.submit();
+        return false;
     }
 
     if (typeof MentionAutocomplete !== 'undefined')

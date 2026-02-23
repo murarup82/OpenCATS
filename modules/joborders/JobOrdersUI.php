@@ -419,11 +419,35 @@ class JobOrdersUI extends UserInterface
 
         $dataGrid = DataGrid::get("joborders:JobOrdersListByViewDataGrid", $dataGridProperties);
 
+        $companies = new Companies($this->_siteID);
+        $companiesRS = $companies->getSelectList();
+        $selectedCompanyFilterID = (int) $dataGrid->getFilterValue('CompanyID');
+        if ($selectedCompanyFilterID <= 0)
+        {
+            $selectedCompanyFilterID = 0;
+        }
+
+        $selectedCompanyFilterName = '';
+        if ($selectedCompanyFilterID > 0)
+        {
+            foreach ($companiesRS as $companyData)
+            {
+                if ((int) $companyData['companyID'] === $selectedCompanyFilterID)
+                {
+                    $selectedCompanyFilterName = (string) $companyData['name'];
+                    break;
+                }
+            }
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('dataGrid', $dataGrid);
         $this->_template->assign('userID', $_SESSION['CATS']->getUserID());
         $this->_template->assign('errMessage', $errMessage);
         $this->_template->assign('jobOrderFilters', $jobOrderFilters);
+        $this->_template->assign('companiesRS', $companiesRS);
+        $this->_template->assign('selectedCompanyFilterID', $selectedCompanyFilterID);
+        $this->_template->assign('selectedCompanyFilterName', $selectedCompanyFilterName);
         $this->_template->assign('canManageRecruiterAllocation', $this->canManageRecruiterAllocation());
 
         if (!eval(Hooks::get('JO_LIST_BY_VIEW'))) return;

@@ -85,6 +85,9 @@
                 .my-notes-page .notes-panel-body {
                     padding: 12px;
                 }
+                .my-notes-page .notes-panel-body--compact {
+                    padding-bottom: 8px;
+                }
                 .my-notes-page .notes-field {
                     margin-bottom: 10px;
                 }
@@ -243,6 +246,50 @@
                 .my-notes-page .notes-recipient-tools .notes-input {
                     flex: 1 1 190px;
                 }
+                .my-notes-page .notes-filter-form {
+                    margin: 0;
+                }
+                .my-notes-page .notes-filter-row {
+                    display: grid;
+                    grid-template-columns: minmax(240px, 1fr) 150px 130px 130px auto;
+                    gap: 8px;
+                    align-items: end;
+                }
+                .my-notes-page .notes-filter-field--grow {
+                    min-width: 0;
+                }
+                .my-notes-page .notes-filter-actions {
+                    display: flex;
+                    gap: 6px;
+                    align-items: center;
+                    white-space: nowrap;
+                }
+                .my-notes-page .notes-link-button {
+                    display: inline-flex;
+                    align-items: center;
+                    border: 1px solid #c8d7e5;
+                    background: #fff;
+                    color: #1f4a6d;
+                    border-radius: 6px;
+                    padding: 5px 9px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-decoration: none;
+                }
+                .my-notes-page .notes-archive-group {
+                    margin: 0 0 8px 0;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    background: #edf4fb;
+                    border: 1px solid #d6e2ef;
+                    font-size: 12px;
+                    color: #264b68;
+                    font-weight: 700;
+                }
+                .my-notes-page .notes-item.is-archived {
+                    border-color: #cfdbe8;
+                    background: #fcfdff;
+                }
                 .my-notes-page .todo-toolbar {
                     display: flex;
                     justify-content: space-between;
@@ -389,6 +436,9 @@
                 @media (max-width: 1120px) {
                     .my-notes-page .notes-grid {
                         grid-template-columns: 1fr;
+                    }
+                    .my-notes-page .notes-filter-row {
+                        grid-template-columns: 1fr 1fr;
                     }
                     .my-notes-page .kanban-board {
                         grid-template-columns: 1fr 1fr;
@@ -704,6 +754,10 @@ echo json_encode(
                                         <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=addPersonalItem">
                                             <input type="hidden" name="itemType" value="note" />
                                             <input type="hidden" name="view" value="notes" />
+                                            <input type="hidden" name="noteMode" value="<?php echo(htmlspecialchars((string) $this->noteMode, ENT_QUOTES)); ?>" />
+                                            <input type="hidden" name="noteSearch" value="<?php echo(htmlspecialchars((string) $this->noteSearch, ENT_QUOTES)); ?>" />
+                                            <input type="hidden" name="archiveYear" value="<?php echo((int) $this->archiveYear); ?>" />
+                                            <input type="hidden" name="archiveMonth" value="<?php echo((int) $this->archiveMonth); ?>" />
                                             <input type="hidden" name="securityToken" value="<?php $this->_($this->addPersonalItemToken); ?>" />
                                             <div class="notes-field">
                                                 <label class="notes-label" for="noteTitle">Title (optional)</label>
@@ -720,10 +774,71 @@ echo json_encode(
 
                                 <div class="notes-panel">
                                     <div class="notes-panel-head">My Notes</div>
+                                    <div class="notes-panel-body notes-panel-body--compact">
+                                        <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>" class="notes-filter-form">
+                                            <input type="hidden" name="m" value="home" />
+                                            <input type="hidden" name="a" value="myNotes" />
+                                            <input type="hidden" name="view" value="notes" />
+                                            <div class="notes-filter-row">
+                                                <div class="notes-field notes-filter-field--grow">
+                                                    <label class="notes-label" for="noteSearchFilter">Search notes</label>
+                                                    <input class="notes-input" id="noteSearchFilter" name="noteSearch" maxlength="200" value="<?php echo(htmlspecialchars((string) $this->noteSearch, ENT_QUOTES)); ?>" placeholder="Search in title or note body..." />
+                                                </div>
+                                                <div class="notes-field">
+                                                    <label class="notes-label" for="noteModeFilter">View</label>
+                                                    <select class="notes-input" id="noteModeFilter" name="noteMode">
+                                                        <option value="active"<?php if ((string) $this->noteMode === 'active') echo(' selected="selected"'); ?>>Active</option>
+                                                        <option value="archived"<?php if ((string) $this->noteMode === 'archived') echo(' selected="selected"'); ?>>Archived</option>
+                                                        <option value="all"<?php if ((string) $this->noteMode === 'all') echo(' selected="selected"'); ?>>All</option>
+                                                    </select>
+                                                </div>
+                                                <div class="notes-field">
+                                                    <label class="notes-label" for="noteArchiveYearFilter">Year</label>
+                                                    <select class="notes-input" id="noteArchiveYearFilter" name="archiveYear">
+                                                        <option value="0">All years</option>
+                                                        <?php if (!empty($this->noteArchiveYears)): ?>
+                                                            <?php foreach ($this->noteArchiveYears as $archiveYearOption): ?>
+                                                                <option value="<?php echo((int) $archiveYearOption); ?>"<?php if ((int) $this->archiveYear === (int) $archiveYearOption) echo(' selected="selected"'); ?>>
+                                                                    <?php echo((int) $archiveYearOption); ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        <?php endif; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="notes-field">
+                                                    <label class="notes-label" for="noteArchiveMonthFilter">Month</label>
+                                                    <select class="notes-input" id="noteArchiveMonthFilter" name="archiveMonth">
+                                                        <option value="0">All months</option>
+                                                        <?php for ($monthOption = 1; $monthOption <= 12; $monthOption++): ?>
+                                                            <option value="<?php echo((int) $monthOption); ?>"<?php if ((int) $this->archiveMonth === (int) $monthOption) echo(' selected="selected"'); ?>>
+                                                                <?php echo(htmlspecialchars(date('F', mktime(0, 0, 0, $monthOption, 1, 2000)), ENT_QUOTES)); ?>
+                                                            </option>
+                                                        <?php endfor; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="notes-filter-actions notes-field">
+                                                    <button type="submit" class="ui2-button ui2-button--primary">Apply</button>
+                                                    <a class="notes-link-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=myNotes&amp;view=notes">Clear</a>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        <div class="notes-help">
+                                            Active notes: <?php echo((int) $this->summary['notesCount']); ?> |
+                                            Archived notes: <?php echo((int) $this->summary['archivedNotesCount']); ?>
+                                        </div>
+                                    </div>
                                     <div class="notes-list">
                                         <?php if (!empty($this->noteItems)): ?>
+                                            <?php $archiveGroupKey = ''; ?>
                                             <?php foreach ($this->noteItems as $noteItem): ?>
-                                                <div class="notes-item">
+                                                <?php $isArchived = !empty($noteItem['isArchived']); ?>
+                                                <?php if ((string) $this->noteMode === 'archived' && !empty($noteItem['archiveBucketKey']) && $archiveGroupKey !== (string) $noteItem['archiveBucketKey']): ?>
+                                                    <?php $archiveGroupKey = (string) $noteItem['archiveBucketKey']; ?>
+                                                    <div class="notes-archive-group">
+                                                        <?php $this->_($noteItem['archiveBucketLabel']); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="notes-item<?php if ($isArchived) echo(' is-archived'); ?>">
                                                     <div class="notes-item-head">
                                                         <div class="notes-item-title">
                                                             <?php if ($noteItem['title'] !== ''): ?>
@@ -734,34 +849,79 @@ echo json_encode(
                                                         </div>
                                                         <div class="notes-item-meta"><?php $this->_($noteItem['dateCreated']); ?></div>
                                                     </div>
+                                                    <div class="notes-item-tags">
+                                                        <?php if ($isArchived): ?>
+                                                            <span class="notes-pill done">Archived</span>
+                                                        <?php else: ?>
+                                                            <span class="notes-pill">Active</span>
+                                                        <?php endif; ?>
+                                                    </div>
                                                     <div class="notes-item-body"><?php echo($noteItem['bodyHTML']); ?></div>
                                                     <div class="notes-item-actions">
-                                                        <button
-                                                            type="button"
-                                                            class="notes-inline-button"
-                                                            onclick="MyNotes_togglePanel('appendNotePanel<?php echo((int) $noteItem['itemID']); ?>');"
-                                                        >Edit</button>
-                                                        <button
-                                                            type="button"
-                                                            class="notes-inline-button"
-                                                            onclick="MyNotes_togglePanel('sendNotePanel<?php echo((int) $noteItem['itemID']); ?>');"
-                                                        >Forward Note</button>
-                                                        <form class="notes-inline-form" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=movePersonalNoteToTodo">
-                                                            <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
-                                                            <input type="hidden" name="securityToken" value="<?php $this->_($this->movePersonalNoteToTodoToken); ?>" />
-                                                            <button type="submit" class="notes-inline-button primary">Move to To-do</button>
-                                                        </form>
+                                                        <?php if (!$isArchived): ?>
+                                                            <button
+                                                                type="button"
+                                                                class="notes-inline-button"
+                                                                onclick="MyNotes_togglePanel('appendNotePanel<?php echo((int) $noteItem['itemID']); ?>');"
+                                                            >Edit</button>
+                                                            <button
+                                                                type="button"
+                                                                class="notes-inline-button"
+                                                                onclick="MyNotes_togglePanel('sendNotePanel<?php echo((int) $noteItem['itemID']); ?>');"
+                                                            >Forward Note</button>
+                                                            <form class="notes-inline-form" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=movePersonalNoteToTodo">
+                                                                <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
+                                                                <input type="hidden" name="noteMode" value="<?php echo(htmlspecialchars((string) $this->noteMode, ENT_QUOTES)); ?>" />
+                                                                <input type="hidden" name="noteSearch" value="<?php echo(htmlspecialchars((string) $this->noteSearch, ENT_QUOTES)); ?>" />
+                                                                <input type="hidden" name="archiveYear" value="<?php echo((int) $this->archiveYear); ?>" />
+                                                                <input type="hidden" name="archiveMonth" value="<?php echo((int) $this->archiveMonth); ?>" />
+                                                                <input type="hidden" name="securityToken" value="<?php $this->_($this->movePersonalNoteToTodoToken); ?>" />
+                                                                <button type="submit" class="notes-inline-button primary">Move to To-do</button>
+                                                            </form>
+                                                            <form class="notes-inline-form" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=setPersonalNoteArchived" onsubmit="return confirm('Archive this note?');">
+                                                                <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
+                                                                <input type="hidden" name="isArchived" value="1" />
+                                                                <input type="hidden" name="view" value="notes" />
+                                                                <input type="hidden" name="noteMode" value="<?php echo(htmlspecialchars((string) $this->noteMode, ENT_QUOTES)); ?>" />
+                                                                <input type="hidden" name="noteSearch" value="<?php echo(htmlspecialchars((string) $this->noteSearch, ENT_QUOTES)); ?>" />
+                                                                <input type="hidden" name="archiveYear" value="<?php echo((int) $this->archiveYear); ?>" />
+                                                                <input type="hidden" name="archiveMonth" value="<?php echo((int) $this->archiveMonth); ?>" />
+                                                                <input type="hidden" name="securityToken" value="<?php $this->_($this->setPersonalNoteArchivedToken); ?>" />
+                                                                <button type="submit" class="notes-inline-button">Archive</button>
+                                                            </form>
+                                                        <?php else: ?>
+                                                            <form class="notes-inline-form" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=setPersonalNoteArchived">
+                                                                <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
+                                                                <input type="hidden" name="isArchived" value="0" />
+                                                                <input type="hidden" name="view" value="notes" />
+                                                                <input type="hidden" name="noteMode" value="<?php echo(htmlspecialchars((string) $this->noteMode, ENT_QUOTES)); ?>" />
+                                                                <input type="hidden" name="noteSearch" value="<?php echo(htmlspecialchars((string) $this->noteSearch, ENT_QUOTES)); ?>" />
+                                                                <input type="hidden" name="archiveYear" value="<?php echo((int) $this->archiveYear); ?>" />
+                                                                <input type="hidden" name="archiveMonth" value="<?php echo((int) $this->archiveMonth); ?>" />
+                                                                <input type="hidden" name="securityToken" value="<?php $this->_($this->setPersonalNoteArchivedToken); ?>" />
+                                                                <button type="submit" class="notes-inline-button primary">Unarchive</button>
+                                                            </form>
+                                                        <?php endif; ?>
                                                         <form class="notes-inline-form" method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deletePersonalItem" onsubmit="return confirm('Delete this note?');">
                                                             <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
                                                             <input type="hidden" name="view" value="notes" />
+                                                            <input type="hidden" name="noteMode" value="<?php echo(htmlspecialchars((string) $this->noteMode, ENT_QUOTES)); ?>" />
+                                                            <input type="hidden" name="noteSearch" value="<?php echo(htmlspecialchars((string) $this->noteSearch, ENT_QUOTES)); ?>" />
+                                                            <input type="hidden" name="archiveYear" value="<?php echo((int) $this->archiveYear); ?>" />
+                                                            <input type="hidden" name="archiveMonth" value="<?php echo((int) $this->archiveMonth); ?>" />
                                                             <input type="hidden" name="securityToken" value="<?php $this->_($this->deletePersonalItemToken); ?>" />
                                                             <button type="submit" class="notes-inline-button danger">Delete</button>
                                                         </form>
                                                     </div>
+                                                    <?php if (!$isArchived): ?>
                                                     <div class="notes-inline-panel" id="appendNotePanel<?php echo((int) $noteItem['itemID']); ?>" style="display: none;">
                                                         <div class="notes-inline-panel-title">Edit this note</div>
                                                         <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=updatePersonalNote">
                                                             <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
+                                                            <input type="hidden" name="noteMode" value="<?php echo(htmlspecialchars((string) $this->noteMode, ENT_QUOTES)); ?>" />
+                                                            <input type="hidden" name="noteSearch" value="<?php echo(htmlspecialchars((string) $this->noteSearch, ENT_QUOTES)); ?>" />
+                                                            <input type="hidden" name="archiveYear" value="<?php echo((int) $this->archiveYear); ?>" />
+                                                            <input type="hidden" name="archiveMonth" value="<?php echo((int) $this->archiveMonth); ?>" />
                                                             <input type="hidden" name="securityToken" value="<?php $this->_($this->updatePersonalNoteToken); ?>" />
                                                             <div class="notes-field">
                                                                 <label class="notes-label">Title (optional)</label>
@@ -786,6 +946,10 @@ echo json_encode(
                                                         <?php if (!empty($this->shareTargetUsers)): ?>
                                                             <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=sendPersonalNote">
                                                                 <input type="hidden" name="itemID" value="<?php echo((int) $noteItem['itemID']); ?>" />
+                                                                <input type="hidden" name="noteMode" value="<?php echo(htmlspecialchars((string) $this->noteMode, ENT_QUOTES)); ?>" />
+                                                                <input type="hidden" name="noteSearch" value="<?php echo(htmlspecialchars((string) $this->noteSearch, ENT_QUOTES)); ?>" />
+                                                                <input type="hidden" name="archiveYear" value="<?php echo((int) $this->archiveYear); ?>" />
+                                                                <input type="hidden" name="archiveMonth" value="<?php echo((int) $this->archiveMonth); ?>" />
                                                                 <input type="hidden" name="securityToken" value="<?php $this->_($this->sendPersonalNoteToken); ?>" />
                                                                 <div class="notes-recipient-tools">
                                                                     <input
@@ -831,11 +995,16 @@ echo json_encode(
                                                             <div class="notes-help">No users available to receive notes.</div>
                                                         <?php endif; ?>
                                                     </div>
+                                                    <?php endif; ?>
                                                 </div>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <div class="notes-empty">
-                                                No notes yet. Add your first note from the panel on the left.
+                                                <?php if ((string) $this->noteMode === 'active' && trim((string) $this->noteSearch) === '' && (int) $this->archiveYear === 0 && (int) $this->archiveMonth === 0): ?>
+                                                    No notes yet. Add your first note from the panel on the left.
+                                                <?php else: ?>
+                                                    No notes matched your filters.
+                                                <?php endif; ?>
                                             </div>
                                         <?php endif; ?>
                                     </div>

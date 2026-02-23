@@ -95,6 +95,7 @@ class PersonalDashboard
         {
             return array(
                 'notesCount' => 0,
+                'archivedNotesCount' => 0,
                 'todoOpenCount' => 0,
                 'todoDoneCount' => 0,
                 'reminderDueCount' => 0,
@@ -107,7 +108,8 @@ class PersonalDashboard
 
         $sql = sprintf(
             "SELECT
-                SUM(CASE WHEN item_type = 'note' THEN 1 ELSE 0 END) AS notesCount,
+                SUM(CASE WHEN item_type = 'note' AND IFNULL(is_completed, 0) = 0 THEN 1 ELSE 0 END) AS notesCount,
+                SUM(CASE WHEN item_type = 'note' AND IFNULL(is_completed, 0) = 1 THEN 1 ELSE 0 END) AS archivedNotesCount,
                 SUM(CASE WHEN item_type = 'todo' AND IFNULL(task_status, 'open') IN ('open', 'in_progress', 'blocked') THEN 1 ELSE 0 END) AS todoOpenCount,
                 SUM(CASE WHEN item_type = 'todo' AND IFNULL(task_status, 'open') = 'done' AND (date_completed IS NULL OR date_completed >= DATE_SUB(NOW(), INTERVAL 7 DAY)) THEN 1 ELSE 0 END) AS todoDoneCount,
                 SUM(CASE WHEN item_type = 'todo' AND is_completed = 0 AND reminder_at IS NOT NULL AND reminder_at <= NOW() THEN 1 ELSE 0 END) AS reminderDueCount
@@ -129,6 +131,7 @@ class PersonalDashboard
         {
             return array(
                 'notesCount' => 0,
+                'archivedNotesCount' => 0,
                 'todoOpenCount' => 0,
                 'todoDoneCount' => 0,
                 'reminderDueCount' => 0,
@@ -141,6 +144,7 @@ class PersonalDashboard
 
         return array(
             'notesCount' => (int) $row['notesCount'],
+            'archivedNotesCount' => (int) $row['archivedNotesCount'],
             'todoOpenCount' => (int) $row['todoOpenCount'],
             'todoDoneCount' => (int) $row['todoDoneCount'],
             'reminderDueCount' => (int) $row['reminderDueCount'],
@@ -151,7 +155,7 @@ class PersonalDashboard
         );
     }
 
-    public function getItems($userID, $itemType, $limit = 200)
+    public function getItems($userID, $itemType, $limit = 200, $options = array())
     {
         if (!$this->isSchemaAvailable())
         {
@@ -170,10 +174,57 @@ class PersonalDashboard
             $limit = 200;
         }
 
+        if (!is_array($options))
+        {
+            $options = array();
+        }
+
+        $extraWhere = '';
         if ($itemType === 'note')
         {
+            $noteMode = 'active';
+            if (isset($options['noteMode']))
+            {
+                $noteModeRaw = strtolower(trim((string) $options['noteMode']));
+                if (in_array($noteModeRaw, array('active', 'archived', 'all'), true))
+                {
+                    $noteMode = $noteModeRaw;
+                }
+            }
+
+            if ($noteMode === 'active')
+            {
+                $extraWhere .= " AND IFNULL(is_completed, 0) = 0";
+            }
+            else if ($noteMode === 'archived')
+            {
+                $extraWhere .= " AND IFNULL(is_completed, 0) = 1";
+            }
+
+            $archiveYear = isset($options['archiveYear']) ? (int) $options['archiveYear'] : 0;
+            $archiveMonth = isset($options['archiveMonth']) ? (int) $options['archiveMonth'] : 0;
+            if ($archiveYear > 0)
+            {
+                $extraWhere .= " AND YEAR(IFNULL(date_modified, date_created)) = " . $this->_db->makeQueryInteger($archiveYear);
+            }
+            if ($archiveMonth >= 1 && $archiveMonth <= 12)
+            {
+                $extraWhere .= " AND MONTH(IFNULL(date_modified, date_created)) = " . $this->_db->makeQueryInteger($archiveMonth);
+            }
+
+            $noteSearch = '';
+            if (isset($options['noteSearch']))
+            {
+                $noteSearch = trim((string) $options['noteSearch']);
+            }
+            if ($noteSearch !== '')
+            {
+                $noteSearch = substr($noteSearch, 0, 200);
+                $searchLike = $this->_db->makeQueryString('%' . $noteSearch . '%');
+                $extraWhere .= " AND (title LIKE " . $searchLike . " OR body LIKE " . $searchLike . ")";
+            }
+
             $orderBy = "IFNULL(date_modified, date_created) DESC, user_personal_item_id DESC";
-            $extraWhere = '';
         }
         else
         {
@@ -187,6 +238,8 @@ class PersonalDashboard
                 item_type AS itemType,
                 title,
                 body,
+                date_created AS dateCreatedRaw,
+                date_modified AS dateModifiedRaw,
                 due_date AS dueDateISO,
                 DATE_FORMAT(due_date, '%%m-%%d-%%y') AS dueDateDisplay,
                 priority,
@@ -222,6 +275,8 @@ class PersonalDashboard
         {
             $items[$index]['title'] = trim((string) $item['title']);
             $items[$index]['body'] = trim((string) $item['body']);
+            $items[$index]['dateCreatedRaw'] = trim((string) $item['dateCreatedRaw']);
+            $items[$index]['dateModifiedRaw'] = trim((string) $item['dateModifiedRaw']);
             $items[$index]['dueDateISO'] = trim((string) $item['dueDateISO']);
             $items[$index]['priority'] = $this->normalizePriority($item['priority'], self::PRIORITY_MEDIUM);
             $items[$index]['taskStatus'] = $this->normalizeTodoStatus($item['taskStatus'], self::STATUS_OPEN);
@@ -231,6 +286,78 @@ class PersonalDashboard
         }
 
         return $items;
+    }
+
+    public function getNoteArchiveBuckets($userID, $noteSearch = '')
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return array();
+        }
+
+        $noteSearch = trim((string) $noteSearch);
+        if (strlen($noteSearch) > 200)
+        {
+            $noteSearch = substr($noteSearch, 0, 200);
+        }
+
+        $searchWhere = '';
+        if ($noteSearch !== '')
+        {
+            $searchLike = $this->_db->makeQueryString('%' . $noteSearch . '%');
+            $searchWhere = " AND (title LIKE " . $searchLike . " OR body LIKE " . $searchLike . ")";
+        }
+
+        $sql = sprintf(
+            "SELECT
+                YEAR(IFNULL(date_modified, date_created)) AS archiveYear,
+                MONTH(IFNULL(date_modified, date_created)) AS archiveMonth,
+                COUNT(*) AS notesCount
+             FROM
+                user_personal_item
+             WHERE
+                site_id = %s
+                AND user_id = %s
+                AND item_type = 'note'
+                AND IFNULL(is_completed, 0) = 1
+                " . $searchWhere . "
+             GROUP BY
+                YEAR(IFNULL(date_modified, date_created)),
+                MONTH(IFNULL(date_modified, date_created))
+             ORDER BY
+                archiveYear DESC,
+                archiveMonth DESC",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($userID)
+        );
+
+        $rows = $this->_db->getAllAssoc($sql);
+        if (empty($rows))
+        {
+            return array();
+        }
+
+        $buckets = array();
+        foreach ($rows as $row)
+        {
+            $year = (int) $row['archiveYear'];
+            $month = (int) $row['archiveMonth'];
+            if ($year <= 0 || $month <= 0 || $month > 12)
+            {
+                continue;
+            }
+
+            $label = date('F Y', mktime(0, 0, 0, $month, 1, $year));
+            $buckets[] = array(
+                'year' => $year,
+                'month' => $month,
+                'count' => (int) $row['notesCount'],
+                'key' => sprintf('%04d-%02d', $year, $month),
+                'label' => $label
+            );
+        }
+
+        return $buckets;
     }
 
     public function addItem($userID, $itemType, $title, $body, $dueDate, $priority = self::PRIORITY_MEDIUM, $reminderAt = '', $taskStatus = self::STATUS_OPEN)
@@ -728,6 +855,43 @@ class PersonalDashboard
                 AND user_id = %s",
             $this->_db->makeQueryString($title),
             $this->_db->makeQueryString($body),
+            $this->_db->makeQueryInteger($itemID),
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($userID)
+        ));
+
+        return array('success' => true);
+    }
+
+    public function setNoteArchived($itemID, $userID, $isArchived)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return array('success' => false, 'error' => 'schema');
+        }
+
+        $item = $this->getItem($itemID, $userID);
+        if (empty($item))
+        {
+            return array('success' => false, 'error' => 'notfound');
+        }
+
+        if ($item['itemType'] !== 'note')
+        {
+            return array('success' => false, 'error' => 'invalidType');
+        }
+
+        $archiveValue = ((int) $isArchived > 0) ? 1 : 0;
+        $this->_db->query(sprintf(
+            "UPDATE user_personal_item
+             SET
+                is_completed = %s,
+                date_modified = NOW()
+             WHERE
+                user_personal_item_id = %s
+                AND site_id = %s
+                AND user_id = %s",
+            $this->_db->makeQueryInteger($archiveValue),
             $this->_db->makeQueryInteger($itemID),
             $this->_db->makeQueryInteger($this->_siteID),
             $this->_db->makeQueryInteger($userID)
