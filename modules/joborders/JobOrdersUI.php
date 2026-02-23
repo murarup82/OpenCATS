@@ -51,6 +51,7 @@ include_once(LEGACY_ROOT . '/lib/JobOrderTypes.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 include_once(LEGACY_ROOT . '/lib/UserRoles.php');
 include_once(LEGACY_ROOT . '/lib/Users.php');
+include_once(LEGACY_ROOT . '/lib/JobOrderMessages.php');
 
 
 class JobOrdersUI extends UserInterface
@@ -75,6 +76,9 @@ class JobOrdersUI extends UserInterface
      * list view.
      */
     const TRUNCATE_CLIENT_NAME = 28;
+    const PROFILE_COMMENT_ACTIVITY_TYPE = 400;
+    const PROFILE_COMMENT_MARKER = '[JOBORDER_COMMENT]';
+    const PROFILE_COMMENT_MAXLEN = 4000;
 
 
     public function __construct()
@@ -198,6 +202,30 @@ class JobOrdersUI extends UserInterface
                     $this->search();
                 }
 
+                break;
+
+            case 'postMessage':
+                if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onPostJobOrderMessage();
+                break;
+
+            case 'deleteMessageThread':
+                if ($this->getUserAccessLevel('joborders.show') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onDeleteJobOrderMessageThread();
+                break;
+
+            case 'addProfileComment':
+                if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onAddProfileComment();
                 break;
 
             /* Change candidate-joborder status. */
@@ -430,6 +458,102 @@ class JobOrdersUI extends UserInterface
 
         $jobOrderID = $_GET['jobOrderID'];
 
+        $jobOrderCommentFlashMessage = '';
+        $jobOrderCommentFlashIsError = false;
+        if (isset($_GET['comment']))
+        {
+            $commentStatus = $this->getTrimmedInput('comment', $_GET);
+            switch ($commentStatus)
+            {
+                case 'added':
+                    $jobOrderCommentFlashMessage = 'Comment added.';
+                    break;
+
+                case 'empty':
+                    $jobOrderCommentFlashMessage = 'Comment text is required.';
+                    $jobOrderCommentFlashIsError = true;
+                    break;
+
+                case 'tooLong':
+                    $jobOrderCommentFlashMessage = 'Comment is too long.';
+                    $jobOrderCommentFlashIsError = true;
+                    break;
+
+                case 'invalid':
+                case 'token':
+                    $jobOrderCommentFlashMessage = 'Invalid comment request.';
+                    $jobOrderCommentFlashIsError = true;
+                    break;
+
+                case 'failed':
+                    $jobOrderCommentFlashMessage = 'Failed to save comment.';
+                    $jobOrderCommentFlashIsError = true;
+                    break;
+            }
+        }
+        $jobOrderCommentsInitiallyOpen = (
+            (isset($_GET['showComments']) && $_GET['showComments'] === '1') ||
+            $jobOrderCommentFlashMessage !== ''
+        );
+
+        $jobOrderMessageFlashMessage = '';
+        $jobOrderMessageFlashIsError = false;
+        if (isset($_GET['msg']))
+        {
+            $msgStatus = $this->getTrimmedInput('msg', $_GET);
+            switch ($msgStatus)
+            {
+                case 'sent':
+                    $jobOrderMessageFlashMessage = 'Message sent.';
+                    break;
+
+                case 'empty':
+                    $jobOrderMessageFlashMessage = 'Message cannot be empty.';
+                    $jobOrderMessageFlashIsError = true;
+                    break;
+
+                case 'tooLong':
+                    $jobOrderMessageFlashMessage = 'Message is too long.';
+                    $jobOrderMessageFlashIsError = true;
+                    break;
+
+                case 'schema':
+                    $jobOrderMessageFlashMessage = 'Inbox tables are missing. Apply schema migrations first.';
+                    $jobOrderMessageFlashIsError = true;
+                    break;
+
+                case 'token':
+                case 'invalid':
+                    $jobOrderMessageFlashMessage = 'Invalid message request.';
+                    $jobOrderMessageFlashIsError = true;
+                    break;
+
+                case 'forbidden':
+                    $jobOrderMessageFlashMessage = 'You do not have access to this thread.';
+                    $jobOrderMessageFlashIsError = true;
+                    break;
+
+                case 'deleted':
+                    $jobOrderMessageFlashMessage = 'Thread removed from your inbox.';
+                    break;
+
+                case 'deletefailed':
+                    $jobOrderMessageFlashMessage = 'Unable to delete thread.';
+                    $jobOrderMessageFlashIsError = true;
+                    break;
+
+                default:
+                    $jobOrderMessageFlashMessage = 'Unable to send message.';
+                    $jobOrderMessageFlashIsError = true;
+                    break;
+            }
+        }
+
+        $jobOrderMessagesInitiallyOpen = (
+            (isset($_GET['showMessages']) && $_GET['showMessages'] === '1') ||
+            $jobOrderMessageFlashMessage !== ''
+        );
+
         $showClosed = false;
         if (isset($_GET['showClosed']) && ($_GET['showClosed'] == '1' || $_GET['showClosed'] === 'true'))
         {
@@ -544,6 +668,59 @@ class JobOrdersUI extends UserInterface
         $graphs = new graphs();
         $pipelineGraph = $graphs->miniJobOrderPipeline(450, 250, array($jobOrderID));
 
+        $jobOrderComments = $this->getJobOrderProfileComments($jobOrderID);
+        $jobOrderCommentCategories = $this->getJobOrderCommentCategories();
+        $canAddJobOrderComment = (
+            !$isPopup &&
+            $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT
+        );
+
+        $jobOrderMessages = new JobOrderMessages($this->_siteID);
+        $jobOrderMessagingEnabled = $jobOrderMessages->isSchemaAvailable();
+        $jobOrderMessageThread = array();
+        $jobOrderMessageThreadID = 0;
+        $jobOrderThreadVisibleToCurrentUser = false;
+        $jobOrderThreadMessages = array();
+        $jobOrderMessageMentionHintNames = array();
+        $jobOrderMessageMentionAutocompleteValues = array();
+        if ($jobOrderMessagingEnabled)
+        {
+            $jobOrderMessageThread = $jobOrderMessages->getThreadByJobOrder($jobOrderID);
+            if (!empty($jobOrderMessageThread))
+            {
+                $jobOrderMessageThreadID = (int) $jobOrderMessageThread['threadID'];
+                $jobOrderThreadVisibleToCurrentUser = $jobOrderMessages->isUserParticipant(
+                    $jobOrderMessageThreadID,
+                    $this->_userID
+                );
+                if ($jobOrderThreadVisibleToCurrentUser)
+                {
+                    $jobOrderMessages->markThreadRead($jobOrderMessageThreadID, $this->_userID);
+                    $jobOrderThreadMessages = $jobOrderMessages->getMessagesByThread($jobOrderMessageThreadID, 100);
+                }
+            }
+
+            $mentionUsers = $jobOrderMessages->getMentionableUsers();
+            foreach ($mentionUsers as $mentionUser)
+            {
+                $fullName = trim($mentionUser['fullName']);
+                $userName = trim($mentionUser['userName']);
+                $mentionLabel = ($fullName !== '') ? $fullName : $userName;
+                if ($mentionLabel === '')
+                {
+                    continue;
+                }
+                $jobOrderMessageMentionAutocompleteValues[] = $mentionLabel;
+
+                if (count($jobOrderMessageMentionHintNames) >= 5)
+                {
+                    break;
+                }
+
+                $jobOrderMessageMentionHintNames[] = $mentionLabel;
+            }
+        }
+
         $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
         $hiringPlanRS = $jobOrderHiringPlans->getByJobOrder($jobOrderID);
         foreach ($hiringPlanRS as $index => $planRow)
@@ -606,9 +783,41 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('privledgedUser', $privledgedUser);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('showClosedPipeline', $showClosed);
+        $this->_template->assign('jobOrderComments', $jobOrderComments);
+        $this->_template->assign('jobOrderCommentCategories', $jobOrderCommentCategories);
+        $this->_template->assign('jobOrderCommentCount', count($jobOrderComments));
+        $this->_template->assign('canAddJobOrderComment', $canAddJobOrderComment);
+        $this->_template->assign('jobOrderCommentsInitiallyOpen', $jobOrderCommentsInitiallyOpen);
+        $this->_template->assign('jobOrderCommentFlashMessage', $jobOrderCommentFlashMessage);
+        $this->_template->assign('jobOrderCommentFlashIsError', $jobOrderCommentFlashIsError);
+        $this->_template->assign('jobOrderMessagingEnabled', $jobOrderMessagingEnabled);
+        $this->_template->assign('jobOrderMessageThread', $jobOrderMessageThread);
+        $this->_template->assign('jobOrderMessageThreadID', $jobOrderMessageThreadID);
+        $this->_template->assign('jobOrderThreadVisibleToCurrentUser', $jobOrderThreadVisibleToCurrentUser);
+        $this->_template->assign('jobOrderThreadMessages', $jobOrderThreadMessages);
+        $this->_template->assign('jobOrderMessageMentionHintNames', $jobOrderMessageMentionHintNames);
+        $this->_template->assign(
+            'jobOrderMessageMentionAutocompleteValues',
+            array_values(array_unique($jobOrderMessageMentionAutocompleteValues))
+        );
+        $this->_template->assign('jobOrderMessageFlashMessage', $jobOrderMessageFlashMessage);
+        $this->_template->assign('jobOrderMessageFlashIsError', $jobOrderMessageFlashIsError);
+        $this->_template->assign('jobOrderMessagesInitiallyOpen', $jobOrderMessagesInitiallyOpen);
         $this->_template->assign(
             'deleteAttachmentToken',
             $this->getCSRFToken('joborders.deleteAttachment')
+        );
+        $this->_template->assign(
+            'addCommentToken',
+            $this->getCSRFToken('joborders.addProfileComment')
+        );
+        $this->_template->assign(
+            'postJobOrderMessageToken',
+            $this->getCSRFToken('joborders.postMessage')
+        );
+        $this->_template->assign(
+            'deleteJobOrderMessageThreadToken',
+            $this->getCSRFToken('joborders.deleteMessageThread')
         );
 
         if (!eval(Hooks::get('JO_SHOW'))) return;
@@ -2688,6 +2897,299 @@ class JobOrdersUI extends UserInterface
         CATSUtility::transferRelativeURI(
             'm=joborders&a=show&jobOrderID=' . $jobOrderID
         );
+    }
+
+    private function onAddProfileComment()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('jobOrderID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
+        }
+
+        $jobOrderID = (int) $_POST['jobOrderID'];
+        $jobOrders = new JobOrders($this->_siteID);
+        if (empty($jobOrders->get($jobOrderID)))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified job order ID could not be found.');
+        }
+
+        $redirectParams = array('showComments' => '1');
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('joborders.addProfileComment', $securityToken))
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array_merge(
+                $redirectParams,
+                array('comment' => 'token')
+            ));
+        }
+
+        $jobOrderComment = $this->getTrimmedInput('commentText', $_POST);
+        if ($jobOrderComment === '')
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array_merge(
+                $redirectParams,
+                array('comment' => 'empty')
+            ));
+        }
+
+        if (strlen($jobOrderComment) > self::PROFILE_COMMENT_MAXLEN)
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array_merge(
+                $redirectParams,
+                array('comment' => 'tooLong')
+            ));
+        }
+
+        $jobOrderCommentCategory = $this->getTrimmedInput('commentCategory', $_POST);
+        $jobOrderCommentCategories = $this->getJobOrderCommentCategories();
+        if (!in_array($jobOrderCommentCategory, $jobOrderCommentCategories, true))
+        {
+            $jobOrderCommentCategory = 'General';
+        }
+
+        $activityEntries = new ActivityEntries($this->_siteID);
+        $activityID = $activityEntries->add(
+            $jobOrderID,
+            DATA_ITEM_JOBORDER,
+            self::PROFILE_COMMENT_ACTIVITY_TYPE,
+            htmlspecialchars(
+                $this->makeJobOrderProfileComment(
+                    $jobOrderCommentCategory,
+                    $jobOrderComment
+                ),
+                ENT_QUOTES
+            ),
+            $this->_userID,
+            -1
+        );
+
+        if (empty($activityID))
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array_merge(
+                $redirectParams,
+                array('comment' => 'failed')
+            ));
+        }
+
+        $this->redirectToJobOrderShow($jobOrderID, array_merge(
+            $redirectParams,
+            array('comment' => 'added')
+        ));
+    }
+
+    private function onPostJobOrderMessage()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('jobOrderID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
+        }
+
+        $jobOrderID = (int) $_POST['jobOrderID'];
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('joborders.postMessage', $securityToken))
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'token'));
+        }
+
+        $jobOrders = new JobOrders($this->_siteID);
+        if (empty($jobOrders->get($jobOrderID)))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified job order ID could not be found.');
+        }
+
+        $jobOrderMessages = new JobOrderMessages($this->_siteID);
+        if (!$jobOrderMessages->isSchemaAvailable())
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'schema'));
+        }
+
+        $messageBody = $this->getTrimmedInput('messageBody', $_POST);
+        $result = $jobOrderMessages->postMessageForJobOrder(
+            $jobOrderID,
+            $this->_userID,
+            $messageBody
+        );
+
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            $this->redirectToJobOrderShow($jobOrderID, array(
+                'showMessages' => '1',
+                'msg' => $error
+            ));
+        }
+
+        $this->redirectToJobOrderShow($jobOrderID, array(
+            'showMessages' => '1',
+            'msg' => 'sent'
+        ));
+    }
+
+    private function onDeleteJobOrderMessageThread()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('jobOrderID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
+        }
+
+        if (!$this->isRequiredIDValid('threadID', $_POST))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid thread ID.');
+        }
+
+        $jobOrderID = (int) $_POST['jobOrderID'];
+        $threadID = (int) $_POST['threadID'];
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('joborders.deleteMessageThread', $securityToken))
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'token'));
+        }
+
+        $jobOrderMessages = new JobOrderMessages($this->_siteID);
+        if (!$jobOrderMessages->isSchemaAvailable())
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'schema'));
+        }
+
+        $thread = $jobOrderMessages->getThread($threadID);
+        if (empty($thread) || (int) $thread['jobOrderID'] !== $jobOrderID)
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'invalid'));
+        }
+
+        if (!$jobOrderMessages->isUserParticipant($threadID, $this->_userID))
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'forbidden'));
+        }
+
+        if (!$jobOrderMessages->archiveThreadForUser($threadID, $this->_userID))
+        {
+            $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'deletefailed'));
+        }
+
+        $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'deleted'));
+    }
+
+    private function getJobOrderProfileComments($jobOrderID)
+    {
+        $activityEntries = new ActivityEntries($this->_siteID);
+        $activityRS = $activityEntries->getAllByDataItem($jobOrderID, DATA_ITEM_JOBORDER);
+        if (empty($activityRS))
+        {
+            return array();
+        }
+
+        $comments = array();
+        foreach ($activityRS as $activityData)
+        {
+            $parsedComment = $this->parseJobOrderProfileComment($activityData['notes']);
+            if ($parsedComment === false)
+            {
+                continue;
+            }
+
+            $enteredBy = trim(
+                $activityData['enteredByFirstName'] . ' ' . $activityData['enteredByLastName']
+            );
+            if ($enteredBy === '')
+            {
+                $enteredBy = 'Unknown User';
+            }
+
+            $comments[] = array(
+                'activityID' => (int) $activityData['activityID'],
+                'dateCreated' => $activityData['dateCreated'],
+                'enteredBy' => $enteredBy,
+                'category' => $parsedComment['category'],
+                'commentHTML' => nl2br(htmlspecialchars($parsedComment['comment'], ENT_QUOTES))
+            );
+        }
+
+        return array_reverse($comments);
+    }
+
+    private function getJobOrderCommentCategories()
+    {
+        return array(
+            'General',
+            'HR Comment',
+            'Sales Comment',
+            'Delivery Comment',
+            'Internal Note'
+        );
+    }
+
+    private function makeJobOrderProfileComment($category, $comment)
+    {
+        return self::PROFILE_COMMENT_MARKER . '[' . $category . '] ' . $comment;
+    }
+
+    private function parseJobOrderProfileComment($note)
+    {
+        $decoded = html_entity_decode((string) $note, ENT_QUOTES);
+        if (strpos($decoded, self::PROFILE_COMMENT_MARKER) !== 0)
+        {
+            return false;
+        }
+
+        $payload = trim(substr($decoded, strlen(self::PROFILE_COMMENT_MARKER)));
+        if ($payload === '')
+        {
+            return false;
+        }
+
+        $category = 'General';
+        $comment = $payload;
+        if (preg_match('/^\[([^\]]+)\]\s*(.*)$/s', $payload, $matches))
+        {
+            if (trim($matches[1]) !== '')
+            {
+                $category = trim($matches[1]);
+            }
+            $comment = trim($matches[2]);
+        }
+
+        if ($comment === '')
+        {
+            return false;
+        }
+
+        return array(
+            'category' => $category,
+            'comment' => $comment
+        );
+    }
+
+    private function redirectToJobOrderShow($jobOrderID, $params = array())
+    {
+        $transferURI = 'm=joborders&a=show&jobOrderID=' . (int) $jobOrderID;
+        if (!empty($params))
+        {
+            $queryParts = array();
+            foreach ($params as $key => $value)
+            {
+                $queryParts[] = rawurlencode($key) . '=' . rawurlencode((string) $value);
+            }
+            $transferURI .= '&' . implode('&', $queryParts);
+        }
+
+        CATSUtility::transferRelativeURI($transferURI);
     }
 
     //Only accessable by MSA users - hides this job order from everybody by

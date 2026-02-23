@@ -1,12 +1,12 @@
 <?php
 /*
  * CATS
- * Candidate Messages Library
+ * Job Order Messages Library
  */
 
 include_once(LEGACY_ROOT . '/lib/DatabaseConnection.php');
 
-class CandidateMessages
+class JobOrderMessages
 {
     const MESSAGE_MAXLEN = 4000;
 
@@ -29,10 +29,10 @@ class CandidateMessages
         }
 
         $requiredTables = array(
-            'candidate_message_thread',
-            'candidate_message',
-            'candidate_message_participant',
-            'candidate_message_mention'
+            'joborder_message_thread',
+            'joborder_message',
+            'joborder_message_participant',
+            'joborder_message_mention'
         );
 
         foreach ($requiredTables as $tableName)
@@ -138,7 +138,7 @@ class CandidateMessages
         return array_keys($mentionedUserIDs);
     }
 
-    public function getThreadByCandidate($candidateID)
+    public function getThreadByJobOrder($jobOrderID)
     {
         if (!$this->isSchemaAvailable())
         {
@@ -147,24 +147,27 @@ class CandidateMessages
 
         $sql = sprintf(
             "SELECT
-                t.candidate_message_thread_id AS threadID,
-                t.candidate_id AS candidateID,
+                t.joborder_message_thread_id AS threadID,
+                t.job_order_id AS jobOrderID,
                 t.last_message_id AS lastMessageID,
                 t.last_message_by AS lastMessageBy,
                 t.last_message_at AS lastMessageAtRaw,
                 DATE_FORMAT(t.last_message_at, '%%m-%%d-%%y (%%h:%%i %%p)') AS lastMessageAt,
-                c.first_name AS candidateFirstName,
-                c.last_name AS candidateLastName
+                jo.title AS jobOrderTitle,
+                company.name AS companyName
              FROM
-                candidate_message_thread t
-             LEFT JOIN candidate c
-                ON c.candidate_id = t.candidate_id
-                AND c.site_id = t.site_id
+                joborder_message_thread t
+             LEFT JOIN joborder jo
+                ON jo.joborder_id = t.job_order_id
+                AND jo.site_id = t.site_id
+             LEFT JOIN company company
+                ON company.company_id = jo.company_id
+                AND company.site_id = jo.site_id
              WHERE
                 t.site_id = %s
-                AND t.candidate_id = %s",
+                AND t.job_order_id = %s",
             $this->_db->makeQueryInteger($this->_siteID),
-            $this->_db->makeQueryInteger($candidateID)
+            $this->_db->makeQueryInteger($jobOrderID)
         );
 
         $row = $this->_db->getAssoc($sql);
@@ -185,22 +188,25 @@ class CandidateMessages
 
         $sql = sprintf(
             "SELECT
-                t.candidate_message_thread_id AS threadID,
-                t.candidate_id AS candidateID,
+                t.joborder_message_thread_id AS threadID,
+                t.job_order_id AS jobOrderID,
                 t.last_message_id AS lastMessageID,
                 t.last_message_by AS lastMessageBy,
                 t.last_message_at AS lastMessageAtRaw,
                 DATE_FORMAT(t.last_message_at, '%%m-%%d-%%y (%%h:%%i %%p)') AS lastMessageAt,
-                c.first_name AS candidateFirstName,
-                c.last_name AS candidateLastName
+                jo.title AS jobOrderTitle,
+                company.name AS companyName
              FROM
-                candidate_message_thread t
-             LEFT JOIN candidate c
-                ON c.candidate_id = t.candidate_id
-                AND c.site_id = t.site_id
+                joborder_message_thread t
+             LEFT JOIN joborder jo
+                ON jo.joborder_id = t.job_order_id
+                AND jo.site_id = t.site_id
+             LEFT JOIN company company
+                ON company.company_id = jo.company_id
+                AND company.site_id = jo.site_id
              WHERE
                 t.site_id = %s
-                AND t.candidate_message_thread_id = %s",
+                AND t.joborder_message_thread_id = %s",
             $this->_db->makeQueryInteger($this->_siteID),
             $this->_db->makeQueryInteger($threadID)
         );
@@ -232,9 +238,9 @@ class CandidateMessages
 
         $sql = sprintf(
             "SELECT
-                candidate_message_participant_id AS participantID
+                joborder_message_participant_id AS participantID
              FROM
-                candidate_message_participant
+                joborder_message_participant
              WHERE
                 site_id = %s
                 AND thread_id = %s
@@ -259,7 +265,7 @@ class CandidateMessages
         }
 
         $sql = sprintf(
-            "UPDATE candidate_message_participant
+            "UPDATE joborder_message_participant
              SET
                 is_archived = 1,
                 date_modified = NOW()
@@ -287,7 +293,7 @@ class CandidateMessages
         return true;
     }
 
-    public function postMessageForCandidate($candidateID, $senderUserID, $body)
+    public function postMessageForJobOrder($jobOrderID, $senderUserID, $body)
     {
         if (!$this->isSchemaAvailable())
         {
@@ -314,7 +320,7 @@ class CandidateMessages
             );
         }
 
-        $threadID = $this->ensureThreadForCandidate($candidateID, $senderUserID);
+        $threadID = $this->ensureThreadForJobOrder($jobOrderID, $senderUserID);
         if ($threadID <= 0)
         {
             return array(
@@ -362,14 +368,14 @@ class CandidateMessages
             );
         }
 
-        $candidateID = (int) $thread['candidateID'];
+        $jobOrderID = (int) $thread['jobOrderID'];
         $mentionedUserIDs = $this->extractMentionedUserIDs($body, $senderUserID);
 
         $sql = sprintf(
-            "INSERT INTO candidate_message (
+            "INSERT INTO joborder_message (
                 site_id,
                 thread_id,
-                candidate_id,
+                job_order_id,
                 sender_user_id,
                 body,
                 date_created
@@ -378,7 +384,7 @@ class CandidateMessages
             )",
             $this->_db->makeQueryInteger($this->_siteID),
             $this->_db->makeQueryInteger($threadID),
-            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
             $this->_db->makeQueryInteger($senderUserID),
             $this->_db->makeQueryString($body)
         );
@@ -396,7 +402,7 @@ class CandidateMessages
         foreach ($mentionedUserIDs as $mentionedUserID)
         {
             $this->_db->query(sprintf(
-                "INSERT IGNORE INTO candidate_message_mention (
+                "INSERT IGNORE INTO joborder_message_mention (
                     site_id,
                     message_id,
                     mentioned_user_id,
@@ -417,14 +423,14 @@ class CandidateMessages
         }
 
         $this->_db->query(sprintf(
-            "UPDATE candidate_message_thread
+            "UPDATE joborder_message_thread
              SET
                 last_message_id = %s,
                 last_message_by = %s,
                 last_message_at = NOW(),
                 date_modified = NOW()
              WHERE
-                candidate_message_thread_id = %s
+                joborder_message_thread_id = %s
                 AND site_id = %s",
             $this->_db->makeQueryInteger($messageID),
             $this->_db->makeQueryInteger($senderUserID),
@@ -455,7 +461,7 @@ class CandidateMessages
 
         $sql = sprintf(
             "SELECT
-                m.candidate_message_id AS messageID,
+                m.joborder_message_id AS messageID,
                 m.thread_id AS threadID,
                 m.sender_user_id AS senderUserID,
                 m.body AS body,
@@ -469,11 +475,11 @@ class CandidateMessages
                     SEPARATOR ', '
                 ) AS mentionedUsers
              FROM
-                candidate_message m
+                joborder_message m
              LEFT JOIN user sender
                 ON sender.user_id = m.sender_user_id
-             LEFT JOIN candidate_message_mention mention
-                ON mention.message_id = m.candidate_message_id
+             LEFT JOIN joborder_message_mention mention
+                ON mention.message_id = m.joborder_message_id
                 AND mention.site_id = m.site_id
              LEFT JOIN user mentioned
                 ON mentioned.user_id = mention.mentioned_user_id
@@ -481,7 +487,7 @@ class CandidateMessages
                 m.site_id = %s
                 AND m.thread_id = %s
              GROUP BY
-                m.candidate_message_id,
+                m.joborder_message_id,
                 m.thread_id,
                 m.sender_user_id,
                 m.body,
@@ -534,23 +540,23 @@ class CandidateMessages
 
         $sql = sprintf(
             "SELECT
-                t.candidate_message_thread_id AS threadID,
-                t.candidate_id AS candidateID,
+                t.joborder_message_thread_id AS threadID,
+                t.job_order_id AS jobOrderID,
                 t.last_message_id AS lastMessageID,
                 t.last_message_by AS lastMessageBy,
                 t.last_message_at AS lastMessageAtRaw,
                 DATE_FORMAT(t.last_message_at, '%%m-%%d-%%y (%%h:%%i %%p)') AS lastMessageAt,
-                c.first_name AS candidateFirstName,
-                c.last_name AS candidateLastName,
+                jo.title AS jobOrderTitle,
+                company.name AS companyName,
                 sender.first_name AS lastSenderFirstName,
                 sender.last_name AS lastSenderLastName,
                 m.body AS lastMessageBody,
                 (
                     SELECT COUNT(*)
-                    FROM candidate_message unread
+                    FROM joborder_message unread
                     WHERE
                         unread.site_id = t.site_id
-                        AND unread.thread_id = t.candidate_message_thread_id
+                        AND unread.thread_id = t.joborder_message_thread_id
                         AND unread.sender_user_id <> %s
                         AND (
                             participant.last_read_at IS NULL OR
@@ -558,15 +564,18 @@ class CandidateMessages
                         )
                 ) AS unreadCount
              FROM
-                candidate_message_participant participant
-             INNER JOIN candidate_message_thread t
-                ON t.candidate_message_thread_id = participant.thread_id
+                joborder_message_participant participant
+             INNER JOIN joborder_message_thread t
+                ON t.joborder_message_thread_id = participant.thread_id
                 AND t.site_id = participant.site_id
-             LEFT JOIN candidate c
-                ON c.candidate_id = t.candidate_id
-                AND c.site_id = t.site_id
-             LEFT JOIN candidate_message m
-                ON m.candidate_message_id = t.last_message_id
+             LEFT JOIN joborder jo
+                ON jo.joborder_id = t.job_order_id
+                AND jo.site_id = t.site_id
+             LEFT JOIN company company
+                ON company.company_id = jo.company_id
+                AND company.site_id = jo.site_id
+             LEFT JOIN joborder_message m
+                ON m.joborder_message_id = t.last_message_id
                 AND m.site_id = t.site_id
              LEFT JOIN user sender
                 ON sender.user_id = t.last_message_by
@@ -592,10 +601,10 @@ class CandidateMessages
 
         foreach ($threads as $index => $thread)
         {
-            $candidateName = trim($thread['candidateFirstName'] . ' ' . $thread['candidateLastName']);
-            if ($candidateName === '')
+            $jobOrderTitle = trim((string) $thread['jobOrderTitle']);
+            if ($jobOrderTitle === '')
             {
-                $candidateName = 'Candidate #' . (int) $thread['candidateID'];
+                $jobOrderTitle = 'Job Order #' . (int) $thread['jobOrderID'];
             }
 
             $lastSenderName = trim($thread['lastSenderFirstName'] . ' ' . $thread['lastSenderLastName']);
@@ -610,7 +619,7 @@ class CandidateMessages
                 $snippet = substr($snippet, 0, 140) . '...';
             }
 
-            $threads[$index]['candidateName'] = $candidateName;
+            $threads[$index]['jobOrderTitle'] = $jobOrderTitle;
             $threads[$index]['lastSenderName'] = $lastSenderName;
             $threads[$index]['snippet'] = $snippet;
             $threads[$index]['unreadCount'] = (int) $thread['unreadCount'];
@@ -629,9 +638,9 @@ class CandidateMessages
         $sql = sprintf(
             "SELECT COUNT(*) AS unreadThreadCount
              FROM
-                candidate_message_participant participant
-             INNER JOIN candidate_message_thread t
-                ON t.candidate_message_thread_id = participant.thread_id
+                joborder_message_participant participant
+             INNER JOIN joborder_message_thread t
+                ON t.joborder_message_thread_id = participant.thread_id
                 AND t.site_id = participant.site_id
              WHERE
                 participant.site_id = %s
@@ -639,10 +648,10 @@ class CandidateMessages
                 AND participant.is_archived = 0
                 AND EXISTS (
                     SELECT 1
-                    FROM candidate_message unread
+                    FROM joborder_message unread
                     WHERE
                         unread.site_id = t.site_id
-                        AND unread.thread_id = t.candidate_message_thread_id
+                        AND unread.thread_id = t.joborder_message_thread_id
                         AND unread.sender_user_id <> %s
                         AND (
                             participant.last_read_at IS NULL OR
@@ -677,18 +686,18 @@ class CandidateMessages
         return trim((string) $body);
     }
 
-    private function ensureThreadForCandidate($candidateID, $createdBy)
+    private function ensureThreadForJobOrder($jobOrderID, $createdBy)
     {
-        $thread = $this->getThreadByCandidate($candidateID);
+        $thread = $this->getThreadByJobOrder($jobOrderID);
         if (!empty($thread))
         {
             return (int) $thread['threadID'];
         }
 
         $this->_db->query(sprintf(
-            "INSERT INTO candidate_message_thread (
+            "INSERT INTO joborder_message_thread (
                 site_id,
-                candidate_id,
+                job_order_id,
                 created_by,
                 date_created,
                 date_modified
@@ -696,7 +705,7 @@ class CandidateMessages
                 %s, %s, %s, NOW(), NOW()
             )",
             $this->_db->makeQueryInteger($this->_siteID),
-            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
             $this->_db->makeQueryInteger($createdBy)
         ));
 
@@ -707,7 +716,7 @@ class CandidateMessages
             return $threadID;
         }
 
-        $thread = $this->getThreadByCandidate($candidateID);
+        $thread = $this->getThreadByJobOrder($jobOrderID);
         if (!empty($thread))
         {
             $threadID = (int) $thread['threadID'];
@@ -729,9 +738,9 @@ class CandidateMessages
 
         $participant = $this->_db->getAssoc(sprintf(
             "SELECT
-                candidate_message_participant_id AS participantID
+                joborder_message_participant_id AS participantID
              FROM
-                candidate_message_participant
+                joborder_message_participant
              WHERE
                 site_id = %s
                 AND thread_id = %s
@@ -747,13 +756,13 @@ class CandidateMessages
             if ($markRead)
             {
                 $this->_db->query(sprintf(
-                    "UPDATE candidate_message_participant
+                    "UPDATE joborder_message_participant
                      SET
                         is_archived = 0,
                         last_read_at = NOW(),
                         date_modified = NOW()
                      WHERE
-                        candidate_message_participant_id = %s
+                        joborder_message_participant_id = %s
                         AND site_id = %s",
                     $this->_db->makeQueryInteger($participant['participantID']),
                     $this->_db->makeQueryInteger($this->_siteID)
@@ -762,12 +771,12 @@ class CandidateMessages
             else
             {
                 $this->_db->query(sprintf(
-                    "UPDATE candidate_message_participant
+                    "UPDATE joborder_message_participant
                      SET
                         is_archived = 0,
                         date_modified = NOW()
                      WHERE
-                        candidate_message_participant_id = %s
+                        joborder_message_participant_id = %s
                         AND site_id = %s",
                     $this->_db->makeQueryInteger($participant['participantID']),
                     $this->_db->makeQueryInteger($this->_siteID)
@@ -779,7 +788,7 @@ class CandidateMessages
 
         $lastReadAtSQL = $markRead ? 'NOW()' : 'NULL';
         $this->_db->query(sprintf(
-            "INSERT INTO candidate_message_participant (
+            "INSERT INTO joborder_message_participant (
                 site_id,
                 thread_id,
                 user_id,

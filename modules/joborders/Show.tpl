@@ -3,9 +3,9 @@ include_once('./vendor/autoload.php');
 use OpenCATS\UI\QuickActionMenu;
 ?>
 <?php if ($this->isPopup): ?>
-    <?php TemplateUtility::printHeader('Job Order - '.$this->data['title'], array('js/sorttable.js', 'js/match.js', 'js/pipeline.js', 'js/attachment.js')); ?>
+    <?php TemplateUtility::printHeader('Job Order - '.$this->data['title'], array('js/sorttable.js', 'js/match.js', 'js/pipeline.js', 'js/attachment.js', 'js/mentionAutocomplete.js')); ?>
 <?php else: ?>
-    <?php TemplateUtility::printHeader('Job Order - '.$this->data['title'], array( 'js/sorttable.js', 'js/match.js', 'js/pipeline.js', 'js/attachment.js')); ?>
+    <?php TemplateUtility::printHeader('Job Order - '.$this->data['title'], array('js/sorttable.js', 'js/match.js', 'js/pipeline.js', 'js/attachment.js', 'js/mentionAutocomplete.js')); ?>
     <?php TemplateUtility::printHeaderBlock(); ?>
     <?php TemplateUtility::printTabs($this->active); ?>
         <div id="main">
@@ -383,6 +383,221 @@ use OpenCATS\UI\QuickActionMenu;
                     </td>
                 </tr>
             </table>
+
+            <div class="ui2-card ui2-card--section" id="jobOrderCommentsSection">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Team Comments</div>
+                    <div class="ui2-card-actions">
+                        <?php if (!empty($this->canAddJobOrderComment)): ?>
+                            <button
+                                type="button"
+                                class="ui2-button ui2-button--secondary"
+                                onclick="JobOrderComments_openComposer();"
+                            >Add Comment</button>
+                        <?php endif; ?>
+                        <button
+                            type="button"
+                            class="ui2-button ui2-button--secondary"
+                            id="jobOrderCommentsToggleButton"
+                            onclick="JobOrderComments_toggle();"
+                        ><?php if (!empty($this->jobOrderCommentsInitiallyOpen)): ?>Hide<?php else: ?>Show<?php endif; ?> Comments (<?php echo((int) $this->jobOrderCommentCount); ?>)</button>
+                    </div>
+                </div>
+                <?php if (!empty($this->jobOrderCommentFlashMessage)): ?>
+                    <div
+                        class="ui2-ai-status"
+                        style="margin-top: 8px; <?php if (!empty($this->jobOrderCommentFlashIsError)): ?>color: #b00000; border-left-color: #b00000;<?php endif; ?>"
+                    >
+                        <?php $this->_($this->jobOrderCommentFlashMessage); ?>
+                    </div>
+                <?php endif; ?>
+                <div
+                    id="jobOrderCommentsPanel"
+                    style="<?php if (empty($this->jobOrderCommentsInitiallyOpen)) echo('display: none;'); ?> margin-top: 8px;"
+                >
+                    <?php if (!empty($this->canAddJobOrderComment)): ?>
+                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=addProfileComment">
+                            <input type="hidden" name="jobOrderID" value="<?php echo($this->jobOrderID); ?>" />
+                            <input type="hidden" name="securityToken" value="<?php $this->_($this->addCommentToken); ?>" />
+                            <table class="detailsInside ui2-details-table" style="margin-bottom: 8px;">
+                                <tr>
+                                    <td class="vertical" style="width: 130px;">Comment Type:</td>
+                                    <td class="data">
+                                        <select name="commentCategory" class="ui2-select">
+                                            <?php foreach ($this->jobOrderCommentCategories as $commentCategory): ?>
+                                                <option value="<?php echo(htmlspecialchars($commentCategory, ENT_QUOTES)); ?>"><?php $this->_($commentCategory); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="vertical">Comment:</td>
+                                    <td class="data">
+                                        <textarea
+                                            name="commentText"
+                                            id="jobOrderCommentText"
+                                            class="ui2-textarea"
+                                            rows="6"
+                                            style="width: 100%; min-height: 160px;"
+                                            maxlength="4000"
+                                            required="required"
+                                        ></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="vertical"></td>
+                                    <td class="data">
+                                        <button type="submit" class="ui2-button ui2-button--primary">Save Comment</button>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    <?php endif; ?>
+
+                    <table class="ui2-table">
+                        <tr>
+                            <th align="left" width="150">Date</th>
+                            <th align="left" width="140">Entered By</th>
+                            <th align="left" width="160">Type</th>
+                            <th align="left">Comment</th>
+                        </tr>
+                        <?php if (!empty($this->jobOrderComments)): ?>
+                            <?php foreach ($this->jobOrderComments as $rowNumber => $jobOrderComment): ?>
+                                <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
+                                    <td valign="top"><?php $this->_($jobOrderComment['dateCreated']); ?></td>
+                                    <td valign="top"><?php $this->_($jobOrderComment['enteredBy']); ?></td>
+                                    <td valign="top"><span class="pipelineClosedTag"><?php $this->_($jobOrderComment['category']); ?></span></td>
+                                    <td valign="top"><?php echo($jobOrderComment['commentHTML']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4">(No comments yet)</td>
+                            </tr>
+                        <?php endif; ?>
+                    </table>
+                </div>
+            </div>
+
+            <div class="ui2-card ui2-card--section" id="jobOrderMessagesSection">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Team Inbox (Internal)</div>
+                    <?php if (!empty($this->jobOrderMessagingEnabled)): ?>
+                        <div class="ui2-card-actions">
+                            <button
+                                type="button"
+                                class="ui2-button ui2-button--secondary"
+                                onclick="JobOrderMessages_openComposer();"
+                            >New Message</button>
+                            <button
+                                type="button"
+                                class="ui2-button ui2-button--secondary"
+                                id="jobOrderMessagesToggleButton"
+                                onclick="JobOrderMessages_toggle();"
+                            ><?php if (!empty($this->jobOrderMessagesInitiallyOpen)): ?>Hide<?php else: ?>Show<?php endif; ?> Thread</button>
+                            <?php if (!empty($this->jobOrderMessageThreadID) && !empty($this->jobOrderThreadVisibleToCurrentUser)): ?>
+                                <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox&amp;threadKey=<?php echo(rawurlencode('joborder:' . (int) $this->jobOrderMessageThreadID)); ?>">
+                                    Open My Inbox
+                                </a>
+                                <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=deleteMessageThread" style="display:inline;" onsubmit="return confirm('Remove this thread from your inbox?');">
+                                    <input type="hidden" name="jobOrderID" value="<?php echo((int) $this->jobOrderID); ?>" />
+                                    <input type="hidden" name="threadID" value="<?php echo((int) $this->jobOrderMessageThreadID); ?>" />
+                                    <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteJobOrderMessageThreadToken); ?>" />
+                                    <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
+                                </form>
+                            <?php else: ?>
+                                <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox">
+                                    Open My Inbox
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php if (empty($this->jobOrderMessagingEnabled)): ?>
+                    <div class="ui2-ai-status" style="margin-top: 8px; color:#b00000; border-left-color:#b00000;">
+                        Messaging tables are missing. Apply schema migrations from Settings -> Schema Migrations.
+                    </div>
+                <?php else: ?>
+                    <?php if (!empty($this->jobOrderMessageFlashMessage)): ?>
+                        <div class="ui2-ai-status" style="margin-top: 8px; <?php if (!empty($this->jobOrderMessageFlashIsError)): ?>color:#b00000; border-left-color:#b00000;<?php endif; ?>">
+                            <?php $this->_($this->jobOrderMessageFlashMessage); ?>
+                        </div>
+                    <?php endif; ?>
+                    <div
+                        id="jobOrderMessagesPanel"
+                        style="<?php if (empty($this->jobOrderMessagesInitiallyOpen)) echo('display: none;'); ?> margin-top: 8px;"
+                    >
+                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=postMessage">
+                            <input type="hidden" name="jobOrderID" value="<?php echo((int) $this->jobOrderID); ?>" />
+                            <input type="hidden" name="securityToken" value="<?php $this->_($this->postJobOrderMessageToken); ?>" />
+                            <table class="detailsInside ui2-details-table" style="margin-bottom: 8px;">
+                                <tr>
+                                    <td class="vertical" style="width: 130px;">Message:</td>
+                                    <td class="data">
+                                        <textarea
+                                            name="messageBody"
+                                            id="jobOrderMessageBody"
+                                            class="ui2-textarea"
+                                            rows="6"
+                                            style="width: 100%; min-height: 160px;"
+                                            maxlength="4000"
+                                            required="required"
+                                            placeholder="Type a message and mention teammates with @First Last."
+                                        ></textarea>
+                                    </td>
+                                </tr>
+                                <?php if (!empty($this->jobOrderMessageMentionHintNames)): ?>
+                                    <tr>
+                                        <td class="vertical">Mention Help:</td>
+                                        <td class="data">
+                                            <?php foreach ($this->jobOrderMessageMentionHintNames as $hintIndex => $mentionHintName): ?>
+                                                <?php if ($hintIndex > 0): ?>, <?php endif; ?>
+                                                @<?php $this->_($mentionHintName); ?>
+                                            <?php endforeach; ?>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                                <tr>
+                                    <td class="vertical"></td>
+                                    <td class="data">
+                                        <button type="submit" class="ui2-button ui2-button--primary">Send Message</button>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+
+                        <?php if (!empty($this->jobOrderMessageThreadID) && empty($this->jobOrderThreadVisibleToCurrentUser)): ?>
+                            <div class="ui2-ai-status" style="margin-top: 8px;">
+                                You are not part of this thread yet. Send a message and mention teammates to start collaborating.
+                            </div>
+                        <?php elseif (!empty($this->jobOrderThreadVisibleToCurrentUser)): ?>
+                            <table class="ui2-table">
+                                <tr>
+                                    <th align="left" width="150">Date</th>
+                                    <th align="left" width="140">From</th>
+                                    <th align="left" width="180">Mentions</th>
+                                    <th align="left">Message</th>
+                                </tr>
+                                <?php if (!empty($this->jobOrderThreadMessages)): ?>
+                                    <?php foreach ($this->jobOrderThreadMessages as $rowNumber => $threadMessage): ?>
+                                        <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
+                                            <td valign="top"><?php $this->_($threadMessage['dateCreated']); ?></td>
+                                            <td valign="top"><?php $this->_($threadMessage['senderName']); ?></td>
+                                            <td valign="top"><?php if (!empty($threadMessage['mentionedUsers'])) $this->_($threadMessage['mentionedUsers']); else echo('--'); ?></td>
+                                            <td valign="top"><?php echo($threadMessage['bodyHTML']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="4">(No messages yet)</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </table>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <div class="ui2-card ui2-card--section">
                 <div class="ui2-card-header">
                     <div class="ui2-card-title">Hiring Plan</div>
@@ -487,6 +702,63 @@ use OpenCATS\UI\QuickActionMenu;
             </script>
             </div>
             </div>
+            <script type="text/javascript">
+                function JobOrderComments_toggle(forceOpen)
+                {
+                    var panel = document.getElementById('jobOrderCommentsPanel');
+                    var button = document.getElementById('jobOrderCommentsToggleButton');
+                    if (!panel || !button)
+                    {
+                        return;
+                    }
+
+                    var shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : (panel.style.display === 'none');
+                    panel.style.display = shouldOpen ? '' : 'none';
+                    button.innerHTML = button.innerHTML.replace(/^(Show|Hide)/, shouldOpen ? 'Hide' : 'Show');
+                }
+
+                function JobOrderComments_openComposer()
+                {
+                    JobOrderComments_toggle(true);
+                    var textArea = document.getElementById('jobOrderCommentText');
+                    if (textArea)
+                    {
+                        textArea.focus();
+                    }
+                }
+
+                function JobOrderMessages_toggle(forceOpen)
+                {
+                    var panel = document.getElementById('jobOrderMessagesPanel');
+                    var button = document.getElementById('jobOrderMessagesToggleButton');
+                    if (!panel || !button)
+                    {
+                        return;
+                    }
+
+                    var shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : (panel.style.display === 'none');
+                    panel.style.display = shouldOpen ? '' : 'none';
+                    button.innerHTML = button.innerHTML.replace(/^(Show|Hide)/, shouldOpen ? 'Hide' : 'Show');
+                }
+
+                function JobOrderMessages_openComposer()
+                {
+                    JobOrderMessages_toggle(true);
+                    var textArea = document.getElementById('jobOrderMessageBody');
+                    if (textArea)
+                    {
+                        textArea.focus();
+                    }
+                }
+
+                if (typeof MentionAutocomplete !== 'undefined')
+                {
+                    MentionAutocomplete.bind(
+                        'jobOrderMessageBody',
+                        <?php echo json_encode(isset($this->jobOrderMessageMentionAutocompleteValues) ? $this->jobOrderMessageMentionAutocompleteValues : array()); ?>
+                    );
+                }
+            </script>
 <?php if (!$this->isPopup): ?>
         </div>
     </div>

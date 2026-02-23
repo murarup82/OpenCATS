@@ -33,6 +33,7 @@ include_once(LEGACY_ROOT . '/lib/Dashboard.php');
 include_once(LEGACY_ROOT . '/lib/JobOrders.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
+include_once(LEGACY_ROOT . '/lib/JobOrderMessages.php');
 
 class HomeUI extends UserInterface
 {
@@ -67,7 +68,7 @@ class HomeUI extends UserInterface
                 break;
 
             case 'inbox':
-                if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
+                if (!$this->canAccessAnyInbox())
                 {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
@@ -75,7 +76,7 @@ class HomeUI extends UserInterface
                 break;
 
             case 'postInboxMessage':
-                if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT)
+                if (!$this->canPostAnyInboxMessage())
                 {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
@@ -83,7 +84,7 @@ class HomeUI extends UserInterface
                 break;
 
             case 'deleteInboxThread':
-                if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
+                if (!$this->canAccessAnyInbox())
                 {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
@@ -117,6 +118,22 @@ class HomeUI extends UserInterface
         }
     }
 
+
+    private function canAccessAnyInbox()
+    {
+        return (
+            $this->getUserAccessLevel('candidates.show') >= ACCESS_LEVEL_READ ||
+            $this->getUserAccessLevel('joborders.show') >= ACCESS_LEVEL_READ
+        );
+    }
+
+    private function canPostAnyInboxMessage()
+    {
+        return (
+            $this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT ||
+            $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT
+        );
+    }
 
     private function home()
     {        
@@ -185,7 +202,10 @@ class HomeUI extends UserInterface
     private function inbox()
     {
         $candidateMessages = new CandidateMessages($this->_siteID);
-        $schemaAvailable = $candidateMessages->isSchemaAvailable();
+        $jobOrderMessages = new JobOrderMessages($this->_siteID);
+        $candidateSchemaAvailable = $candidateMessages->isSchemaAvailable();
+        $jobOrderSchemaAvailable = $jobOrderMessages->isSchemaAvailable();
+        $schemaAvailable = ($candidateSchemaAvailable || $jobOrderSchemaAvailable);
 
         $flashMessage = '';
         $flashIsError = false;
@@ -240,10 +260,21 @@ class HomeUI extends UserInterface
             }
         }
 
+        $selectedThreadType = '';
         $selectedThreadID = 0;
-        if ($this->isOptionalIDValid('threadID', $_GET))
+        $selectedThreadKey = $this->getTrimmedInput('threadKey', $_GET);
+        if ($selectedThreadKey !== '' && strpos($selectedThreadKey, ':') !== false)
         {
+            $parts = explode(':', $selectedThreadKey, 2);
+            $selectedThreadType = strtolower(trim($parts[0]));
+            $selectedThreadID = (int) trim($parts[1]);
+        }
+        else if ($this->isOptionalIDValid('threadID', $_GET))
+        {
+            /* Backward compatibility for old links (candidate-only). */
+            $selectedThreadType = 'candidate';
             $selectedThreadID = (int) $_GET['threadID'];
+            $selectedThreadKey = 'candidate:' . $selectedThreadID;
         }
 
         $threads = array();
@@ -254,58 +285,192 @@ class HomeUI extends UserInterface
         $mentionAutocompleteValues = array();
         if ($schemaAvailable)
         {
-            $threads = $candidateMessages->getInboxThreads($this->_userID, 250);
-            if (
-                $selectedThreadID > 0 &&
-                !$candidateMessages->isUserParticipant($selectedThreadID, $this->_userID)
-            )
+            if ($candidateSchemaAvailable)
+            {
+                $candidateThreads = $candidateMessages->getInboxThreads($this->_userID, 250);
+                foreach ($candidateThreads as $thread)
+                {
+                    $thread['threadType'] = 'candidate';
+                    $thread['threadKey'] = 'candidate:' . (int) $thread['threadID'];
+                    $thread['entityType'] = 'Candidate';
+                    $thread['entityName'] = $thread['candidateName'];
+                    $thread['entitySubName'] = '';
+                    $thread['openURL'] = CATSUtility::getIndexName() . '?m=candidates&a=show&candidateID=' . (int) $thread['candidateID'] . '&showMessages=1';
+                    $thread['openLabel'] = 'Open Candidate';
+                    $threads[] = $thread;
+                }
+            }
+
+            if ($jobOrderSchemaAvailable)
+            {
+                $jobOrderThreads = $jobOrderMessages->getInboxThreads($this->_userID, 250);
+                foreach ($jobOrderThreads as $thread)
+                {
+                    $entityName = trim((string) $thread['jobOrderTitle']);
+                    if ($entityName === '')
+                    {
+                        $entityName = 'Job Order #' . (int) $thread['jobOrderID'];
+                    }
+
+                    $companyName = trim((string) $thread['companyName']);
+                    $thread['threadType'] = 'joborder';
+                    $thread['threadKey'] = 'joborder:' . (int) $thread['threadID'];
+                    $thread['entityType'] = 'Job Order';
+                    $thread['entityName'] = $entityName;
+                    $thread['entitySubName'] = $companyName;
+                    $thread['openURL'] = CATSUtility::getIndexName() . '?m=joborders&a=show&jobOrderID=' . (int) $thread['jobOrderID'] . '&showMessages=1';
+                    $thread['openLabel'] = 'Open Job Order';
+                    $threads[] = $thread;
+                }
+            }
+
+            if (!empty($threads))
+            {
+                usort($threads, function ($a, $b) {
+                    $aTS = strtotime((string) $a['lastMessageAtRaw']);
+                    $bTS = strtotime((string) $b['lastMessageAtRaw']);
+                    if ($aTS === $bTS)
+                    {
+                        return 0;
+                    }
+                    return ($aTS > $bTS) ? -1 : 1;
+                });
+            }
+
+            $threadByKey = array();
+            foreach ($threads as $thread)
+            {
+                $threadByKey[$thread['threadKey']] = $thread;
+            }
+
+            if (($selectedThreadID <= 0 || $selectedThreadType === '') && !empty($threads))
+            {
+                $selectedThreadType = $threads[0]['threadType'];
+                $selectedThreadID = (int) $threads[0]['threadID'];
+                $selectedThreadKey = $threads[0]['threadKey'];
+            }
+
+            if ($selectedThreadID > 0 && $selectedThreadType !== '')
+            {
+                $selectedThreadKey = $selectedThreadType . ':' . $selectedThreadID;
+                if (!isset($threadByKey[$selectedThreadKey]))
+                {
+                    $selectedThreadID = 0;
+                    $selectedThreadType = '';
+                    if ($flashMessage === '')
+                    {
+                        $flashMessage = 'You do not have access to this thread.';
+                        $flashIsError = true;
+                    }
+                }
+                else if ($selectedThreadType === 'candidate')
+                {
+                    if (!$candidateSchemaAvailable || !$candidateMessages->isUserParticipant($selectedThreadID, $this->_userID))
+                    {
+                        $selectedThreadID = 0;
+                        $selectedThreadType = '';
+                        if ($flashMessage === '')
+                        {
+                            $flashMessage = 'You do not have access to this thread.';
+                            $flashIsError = true;
+                        }
+                    }
+                    else
+                    {
+                        $selectedThread = $candidateMessages->getThread($selectedThreadID);
+                        if (!empty($selectedThread))
+                        {
+                            $candidateMessages->markThreadRead($selectedThreadID, $this->_userID);
+                            $messages = $candidateMessages->getMessagesByThread($selectedThreadID, 250);
+                            $selectedThread['threadType'] = 'candidate';
+                            $selectedThread['entityType'] = 'Candidate';
+                            $selectedThread['entityName'] = trim($selectedThread['candidateFirstName'] . ' ' . $selectedThread['candidateLastName']);
+                            if ($selectedThread['entityName'] === '')
+                            {
+                                $selectedThread['entityName'] = 'Candidate #' . (int) $selectedThread['candidateID'];
+                            }
+                            $selectedThread['entitySubName'] = '';
+                            $selectedThread['openURL'] = CATSUtility::getIndexName() . '?m=candidates&a=show&candidateID=' . (int) $selectedThread['candidateID'] . '&showMessages=1';
+                            $selectedThread['openLabel'] = 'Open Candidate';
+                        }
+                    }
+                }
+                else if ($selectedThreadType === 'joborder')
+                {
+                    if (!$jobOrderSchemaAvailable || !$jobOrderMessages->isUserParticipant($selectedThreadID, $this->_userID))
+                    {
+                        $selectedThreadID = 0;
+                        $selectedThreadType = '';
+                        if ($flashMessage === '')
+                        {
+                            $flashMessage = 'You do not have access to this thread.';
+                            $flashIsError = true;
+                        }
+                    }
+                    else
+                    {
+                        $selectedThread = $jobOrderMessages->getThread($selectedThreadID);
+                        if (!empty($selectedThread))
+                        {
+                            $jobOrderMessages->markThreadRead($selectedThreadID, $this->_userID);
+                            $messages = $jobOrderMessages->getMessagesByThread($selectedThreadID, 250);
+                            $selectedThread['threadType'] = 'joborder';
+                            $selectedThread['entityType'] = 'Job Order';
+                            $selectedThread['entityName'] = trim((string) $selectedThread['jobOrderTitle']);
+                            if ($selectedThread['entityName'] === '')
+                            {
+                                $selectedThread['entityName'] = 'Job Order #' . (int) $selectedThread['jobOrderID'];
+                            }
+                            $selectedThread['entitySubName'] = trim((string) $selectedThread['companyName']);
+                            $selectedThread['openURL'] = CATSUtility::getIndexName() . '?m=joborders&a=show&jobOrderID=' . (int) $selectedThread['jobOrderID'] . '&showMessages=1';
+                            $selectedThread['openLabel'] = 'Open Job Order';
+                        }
+                    }
+                }
+            }
+
+            if ($selectedThreadID <= 0 || $selectedThreadType === '')
+            {
+                $selectedThreadKey = '';
+            }
+            else if (empty($selectedThread))
             {
                 $selectedThreadID = 0;
+                $selectedThreadType = '';
+                $selectedThreadKey = '';
                 if ($flashMessage === '')
                 {
-                    $flashMessage = 'You do not have access to this thread.';
+                    $flashMessage = 'Unable to open the selected thread.';
                     $flashIsError = true;
                 }
             }
 
-            if ($selectedThreadID <= 0 && !empty($threads))
+            if ($candidateSchemaAvailable)
             {
-                $selectedThreadID = (int) $threads[0]['threadID'];
+                $mentionUsers = $candidateMessages->getMentionableUsers();
+            }
+            else if ($jobOrderSchemaAvailable)
+            {
+                $mentionUsers = $jobOrderMessages->getMentionableUsers();
             }
 
-            if ($selectedThreadID > 0)
-            {
-                $selectedThread = $candidateMessages->getThread($selectedThreadID);
-                if (!empty($selectedThread))
-                {
-                    $candidateMessages->markThreadRead($selectedThreadID, $this->_userID);
-                    $messages = $candidateMessages->getMessagesByThread($selectedThreadID, 250);
-                }
-            }
-
-            $mentionUsers = $candidateMessages->getMentionableUsers();
             foreach ($mentionUsers as $mentionUser)
             {
                 $fullName = trim($mentionUser['fullName']);
-                if ($fullName !== '')
-                {
-                    $mentionAutocompleteValues[] = $fullName;
-                }
                 $userName = trim($mentionUser['userName']);
-                if ($userName !== '')
+                $mentionLabel = ($fullName !== '') ? $fullName : $userName;
+                if ($mentionLabel === '')
                 {
-                    $mentionAutocompleteValues[] = $userName;
+                    continue;
                 }
+                $mentionAutocompleteValues[] = $mentionLabel;
 
                 if (count($mentionHintNames) >= 5)
                 {
                     break;
                 }
 
-                if ($fullName !== '')
-                {
-                    $mentionHintNames[] = $fullName;
-                }
+                $mentionHintNames[] = $mentionLabel;
             }
         }
 
@@ -315,6 +480,8 @@ class HomeUI extends UserInterface
         $this->_template->assign('flashMessage', $flashMessage);
         $this->_template->assign('flashIsError', $flashIsError);
         $this->_template->assign('threads', $threads);
+        $this->_template->assign('selectedThreadKey', $selectedThreadKey);
+        $this->_template->assign('selectedThreadType', $selectedThreadType);
         $this->_template->assign('selectedThreadID', $selectedThreadID);
         $this->_template->assign('selectedThread', $selectedThread);
         $this->_template->assign('messages', $messages);
@@ -345,33 +512,60 @@ class HomeUI extends UserInterface
         }
 
         $threadID = (int) $_POST['threadID'];
+        $threadType = strtolower($this->getTrimmedInput('threadType', $_POST));
+        if ($threadType !== 'joborder')
+        {
+            $threadType = 'candidate';
+        }
         $body = $this->getTrimmedInput('messageBody', $_POST);
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        $threadKey = $threadType . ':' . $threadID;
 
         if (!$this->isCSRFTokenValid('home.postInboxMessage', $securityToken))
         {
-            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=token');
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=token');
         }
 
-        $candidateMessages = new CandidateMessages($this->_siteID);
-        if (!$candidateMessages->isSchemaAvailable())
+        if ($threadType === 'joborder')
         {
-            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
-        }
+            $jobOrderMessages = new JobOrderMessages($this->_siteID);
+            if (!$jobOrderMessages->isSchemaAvailable())
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
+            }
 
-        if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
+            if (!$jobOrderMessages->isUserParticipant($threadID, $this->_userID))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
+
+            $result = $jobOrderMessages->postMessageToThread($threadID, $this->_userID, $body);
+        }
+        else
         {
-            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=forbidden');
+            $candidateMessages = new CandidateMessages($this->_siteID);
+            if (!$candidateMessages->isSchemaAvailable())
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
+            }
+
+            if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
+
+            $result = $candidateMessages->postMessageToThread($threadID, $this->_userID, $body);
         }
 
-        $result = $candidateMessages->postMessageToThread($threadID, $this->_userID, $body);
         if (empty($result['success']))
         {
             $error = isset($result['error']) ? $result['error'] : 'failed';
-            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=' . rawurlencode($error));
+            CATSUtility::transferRelativeURI(
+                'm=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=' . rawurlencode($error)
+            );
         }
 
-        CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=sent');
+        CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=sent');
     }
 
     private function onDeleteInboxThread()
@@ -387,26 +581,53 @@ class HomeUI extends UserInterface
         }
 
         $threadID = (int) $_POST['threadID'];
+        $threadType = strtolower($this->getTrimmedInput('threadType', $_POST));
+        if ($threadType !== 'joborder')
+        {
+            $threadType = 'candidate';
+        }
+        $threadKey = $threadType . ':' . $threadID;
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.deleteInboxThread', $securityToken))
         {
-            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=token');
+            CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=token');
         }
 
-        $candidateMessages = new CandidateMessages($this->_siteID);
-        if (!$candidateMessages->isSchemaAvailable())
+        if ($threadType === 'joborder')
         {
-            CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
-        }
+            $jobOrderMessages = new JobOrderMessages($this->_siteID);
+            if (!$jobOrderMessages->isSchemaAvailable())
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
+            }
 
-        if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
-        {
-            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=forbidden');
-        }
+            if (!$jobOrderMessages->isUserParticipant($threadID, $this->_userID))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
 
-        if (!$candidateMessages->archiveThreadForUser($threadID, $this->_userID))
+            if (!$jobOrderMessages->archiveThreadForUser($threadID, $this->_userID))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=deletefailed');
+            }
+        }
+        else
         {
-            CATSUtility::transferRelativeURI('m=home&a=inbox&threadID=' . $threadID . '&msg=deletefailed');
+            $candidateMessages = new CandidateMessages($this->_siteID);
+            if (!$candidateMessages->isSchemaAvailable())
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
+            }
+
+            if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
+
+            if (!$candidateMessages->archiveThreadForUser($threadID, $this->_userID))
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=deletefailed');
+            }
         }
 
         CATSUtility::transferRelativeURI('m=home&a=inbox&msg=deleted');

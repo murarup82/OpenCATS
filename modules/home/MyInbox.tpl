@@ -253,7 +253,7 @@
 
             <?php if (empty($this->schemaAvailable)): ?>
                 <div class="ui2-ai-status" style="color:#b00000; border-left-color:#b00000;">
-                    Candidate inbox tables are missing. Apply schema migrations from Settings -> Schema Migrations.
+                    Inbox tables are missing. Apply schema migrations from Settings -> Schema Migrations.
                 </div>
             <?php else: ?>
                 <div class="my-inbox-page">
@@ -269,15 +269,21 @@
                                 <?php if (!empty($this->threads)): ?>
                                     <?php foreach ($this->threads as $thread): ?>
                                         <a
-                                            class="inbox-thread-item<?php if ((int) $this->selectedThreadID === (int) $thread['threadID']) echo(' selected'); ?>"
-                                            href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox&amp;threadID=<?php echo((int) $thread['threadID']); ?>"
+                                            class="inbox-thread-item<?php if (!empty($this->selectedThreadKey) && $this->selectedThreadKey === $thread['threadKey']) echo(' selected'); ?>"
+                                            href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox&amp;threadKey=<?php echo(rawurlencode($thread['threadKey'])); ?>"
                                         >
                                             <div class="inbox-thread-top">
-                                                <div class="inbox-thread-name"><?php $this->_($thread['candidateName']); ?></div>
+                                                <div class="inbox-thread-name"><?php $this->_($thread['entityName']); ?></div>
                                                 <div class="inbox-thread-time"><?php $this->_($thread['lastMessageAt']); ?></div>
                                             </div>
                                             <div class="inbox-thread-bottom">
-                                                <div class="inbox-thread-snippet"><?php $this->_($thread['snippet']); ?></div>
+                                                <div class="inbox-thread-snippet">
+                                                    [<?php $this->_($thread['entityType']); ?>]
+                                                    <?php if (!empty($thread['entitySubName'])): ?>
+                                                        <?php $this->_($thread['entitySubName']); ?> -
+                                                    <?php endif; ?>
+                                                    <?php $this->_($thread['snippet']); ?>
+                                                </div>
                                                 <?php if ((int) $thread['unreadCount'] > 0): ?>
                                                     <span class="inbox-unread-badge"><?php echo((int) $thread['unreadCount']); ?></span>
                                                 <?php else: ?>
@@ -297,15 +303,21 @@
                                 <div class="inbox-pane-header">
                                     <div>
                                         <div class="inbox-reading-title">
-                                            <?php $this->_($this->selectedThread['candidateFirstName']); ?> <?php $this->_($this->selectedThread['candidateLastName']); ?>
+                                            <?php $this->_($this->selectedThread['entityName']); ?>
                                         </div>
-                                        <div class="inbox-pane-subtitle">Conversation history</div>
+                                        <div class="inbox-pane-subtitle">
+                                            <?php $this->_($this->selectedThread['entityType']); ?> conversation history
+                                            <?php if (!empty($this->selectedThread['entitySubName'])): ?>
+                                                | <?php $this->_($this->selectedThread['entitySubName']); ?>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                     <div class="inbox-reading-actions">
-                                        <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo((int) $this->selectedThread['candidateID']); ?>&amp;showMessages=1">
-                                            Open Candidate
+                                        <a class="ui2-button ui2-button--secondary" href="<?php echo($this->selectedThread['openURL']); ?>">
+                                            <?php $this->_($this->selectedThread['openLabel']); ?>
                                         </a>
                                         <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="display:inline;" onsubmit="return confirm('Remove this thread from your inbox?');">
+                                            <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
                                             <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
                                             <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteInboxThreadToken); ?>" />
                                             <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
@@ -334,6 +346,7 @@
 
                                 <div class="inbox-composer">
                                     <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=postInboxMessage">
+                                        <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
                                         <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
                                         <input type="hidden" name="securityToken" value="<?php $this->_($this->postInboxMessageToken); ?>" />
                                         <textarea

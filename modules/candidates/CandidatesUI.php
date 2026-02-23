@@ -1195,25 +1195,20 @@ class CandidatesUI extends UserInterface
             foreach ($mentionUsers as $mentionUser)
             {
                 $fullName = trim($mentionUser['fullName']);
-                if ($fullName !== '')
-                {
-                    $candidateMessageMentionAutocompleteValues[] = $fullName;
-                }
                 $userName = trim($mentionUser['userName']);
-                if ($userName !== '')
+                $mentionLabel = ($fullName !== '') ? $fullName : $userName;
+                if ($mentionLabel === '')
                 {
-                    $candidateMessageMentionAutocompleteValues[] = $userName;
+                    continue;
                 }
+                $candidateMessageMentionAutocompleteValues[] = $mentionLabel;
 
                 if (count($candidateMessageMentionHintNames) >= 5)
                 {
                     break;
                 }
 
-                if ($fullName !== '')
-                {
-                    $candidateMessageMentionHintNames[] = $fullName;
-                }
+                $candidateMessageMentionHintNames[] = $mentionLabel;
             }
         }
 

@@ -40,6 +40,8 @@ include_once(LEGACY_ROOT . '/lib/Candidates.php');
 include_once(LEGACY_ROOT . '/lib/DateUtility.php');
 include_once(LEGACY_ROOT . '/lib/SystemInfo.php');
 include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
+include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
+include_once(LEGACY_ROOT . '/lib/JobOrderMessages.php');
 
 use OpenCATS\UI\QuickActionMenu;
 
@@ -1159,13 +1161,22 @@ class TemplateUtility
             $itemsByKey['home']['action'] = 'home';
         }
 
-        if ($_SESSION['CATS']->getAccessLevel('candidates.show') >= ACCESS_LEVEL_READ)
+        if (
+            $_SESSION['CATS']->getAccessLevel('candidates.show') >= ACCESS_LEVEL_READ ||
+            $_SESSION['CATS']->getAccessLevel('joborders.show') >= ACCESS_LEVEL_READ
+        )
         {
             if ($rolePagePermissions === null ||
                 $rolePagePermissions->isPageAllowedForUser($currentUserID, 'home', $currentAccessLevel))
             {
+                $inboxUnreadCount = self::_getUnreadInboxNotificationCount();
+                $inboxLabel = 'My Inbox';
+                if ($inboxUnreadCount > 0)
+                {
+                    $inboxLabel .= ' <span class="ui2-sidebar-badge">' . (int) $inboxUnreadCount . '</span>';
+                }
                 $itemsByKey['home_inbox'] = array(
-                    'label' => 'My Inbox',
+                    'label' => $inboxLabel,
                     'href' => $indexName . '?m=home&amp;a=inbox',
                     'module' => 'home',
                     'action' => 'inbox',
@@ -1240,6 +1251,41 @@ class TemplateUtility
         echo '<a class="ui2-sidebar-link ui2-sidebar-link--utility" href="', $indexName, '?m=logout"><span class="ui2-sidebar-icon ui2-sidebar-icon--default" aria-hidden="true"></span>Logout</a>', "\n";
         echo '</div>', "\n";
         echo '</nav>', "\n";
+    }
+
+    private static function _getUnreadInboxNotificationCount()
+    {
+        static $cachedCount = null;
+
+        if ($cachedCount !== null)
+        {
+            return $cachedCount;
+        }
+
+        if (!isset($_SESSION['CATS']) || !$_SESSION['CATS']->isLoggedIn())
+        {
+            $cachedCount = 0;
+            return 0;
+        }
+
+        $siteID = (int) $_SESSION['CATS']->getSiteID();
+        $userID = (int) $_SESSION['CATS']->getUserID();
+        $total = 0;
+
+        $candidateMessages = new CandidateMessages($siteID);
+        if ($candidateMessages->isSchemaAvailable())
+        {
+            $total += (int) $candidateMessages->getUnreadThreadCount($userID);
+        }
+
+        $jobOrderMessages = new JobOrderMessages($siteID);
+        if ($jobOrderMessages->isSchemaAvailable())
+        {
+            $total += (int) $jobOrderMessages->getUnreadThreadCount($userID);
+        }
+
+        $cachedCount = $total;
+        return $total;
     }
 
     /**
