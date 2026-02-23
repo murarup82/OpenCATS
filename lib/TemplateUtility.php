@@ -1401,7 +1401,7 @@ class TemplateUtility
 
         echo '<style type="text/css">';
         echo '.global-feedback-wrap{margin:18px auto 8px auto;}';
-        echo '.ui2-sidebar-enabled .global-feedback-wrap{margin-left:220px;margin-right:0;width:calc(100% - 220px);}';
+        echo '.ui2-sidebar-enabled .global-feedback-wrap{margin-left:236px;margin-right:0;width:calc(100% - 236px);}';
         echo '.global-feedback-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#00425B;color:#fff;border-radius:4px;flex-wrap:wrap;}';
         echo '.ui2 .global-feedback-bar,.ui2-body .global-feedback-bar{background:var(--ui2-sidebar-bg,var(--ui2-primary,#00425B));}';
         echo '.global-feedback-copy{min-width:260px;flex:1 1 auto;}';
@@ -1434,7 +1434,7 @@ class TemplateUtility
 
         echo '<div class="global-feedback-bar">', "\n";
         echo '<div class="global-feedback-copy">', "\n";
-        echo '<div class="global-feedback-title">Help Improve OpenCATS</div>', "\n";
+        echo '<div class="global-feedback-title">Improve Avel Technologies ATS System</div>', "\n";
         echo '<div class="global-feedback-subtitle">Please use the &quot;Submit Feedback&quot; button to report bugs or request new features.</div>', "\n";
         echo '</div>', "\n";
         echo '<div class="global-feedback-actions">', "\n";

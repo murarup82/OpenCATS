@@ -197,7 +197,7 @@
                             </th>
                             <th>
                                 Days
-                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Calendar days between demand received and first submission (target &lt; 3)." />
+                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Business days (Mon-Fri) between demand received and first submission; weekends excluded (target &lt; 3)." />
                             </th>
                         </tr>
                     </thead>

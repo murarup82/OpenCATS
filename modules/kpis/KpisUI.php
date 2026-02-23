@@ -811,10 +811,7 @@ class KpisUI extends UserInterface
                 $daysClass = '';
                 if ($receivedDate !== null && $submittedDate !== null)
                 {
-                    $receivedDate->setTime(0, 0, 0);
-                    $submittedDate->setTime(0, 0, 0);
-                    $seconds = $submittedDate->getTimestamp() - $receivedDate->getTimestamp();
-                    $days = (int) floor($seconds / 86400);
+                    $days = $this->countBusinessDaysBetween($receivedDate, $submittedDate);
                     $daysValue = $days;
                     if ($days === 0)
                     {
@@ -1629,6 +1626,34 @@ class KpisUI extends UserInterface
         }
 
         return $date->format('m-d-y');
+    }
+
+    private function countBusinessDaysBetween(DateTime $startDate, DateTime $endDate)
+    {
+        $start = clone $startDate;
+        $end = clone $endDate;
+        $start->setTime(0, 0, 0);
+        $end->setTime(0, 0, 0);
+
+        if ($end < $start)
+        {
+            return 0;
+        }
+
+        $days = 0;
+        $cursor = clone $start;
+        $cursor->modify('+1 day');
+        while ($cursor <= $end)
+        {
+            $weekday = (int) $cursor->format('N');
+            if ($weekday <= 5)
+            {
+                ++$days;
+            }
+            $cursor->modify('+1 day');
+        }
+
+        return $days;
     }
 
     private function isTruthyExtraField($value)

@@ -2105,20 +2105,15 @@ class HomeUI extends UserInterface
 
         if ($threadType === 'joborder')
         {
-            if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
-            {
-                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
-            }
-
             $jobOrderMessages = new JobOrderMessages($this->_siteID);
             if (!$jobOrderMessages->isSchemaAvailable())
             {
                 CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
             }
 
-            if (!$jobOrderMessages->isUserParticipant($threadID, $this->_userID))
+            if (empty($jobOrderMessages->getThread($threadID)))
             {
-                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=invalid');
             }
 
             if (!$jobOrderMessages->deleteThread($threadID))
@@ -2128,20 +2123,15 @@ class HomeUI extends UserInterface
         }
         else
         {
-            if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT)
-            {
-                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
-            }
-
             $candidateMessages = new CandidateMessages($this->_siteID);
             if (!$candidateMessages->isSchemaAvailable())
             {
                 CATSUtility::transferRelativeURI('m=home&a=inbox&msg=schema');
             }
 
-            if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
+            if (empty($candidateMessages->getThread($threadID)))
             {
-                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=invalid');
             }
 
             if (!$candidateMessages->deleteThread($threadID))
