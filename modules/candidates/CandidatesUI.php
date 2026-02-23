@@ -205,7 +205,7 @@ class CandidatesUI extends UserInterface
                 break;
 
             case 'deleteMessageThread':
-                if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ) {
+                if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT) {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
                 $this->onDeleteCandidateMessageThread();
@@ -721,7 +721,7 @@ class CandidatesUI extends UserInterface
                     break;
 
                 case 'deleted':
-                    $candidateMessageFlashMessage = 'Thread removed from your inbox.';
+                    $candidateMessageFlashMessage = 'Thread deleted for all users.';
                     break;
 
                 case 'deletefailed':
@@ -3395,7 +3395,7 @@ class CandidatesUI extends UserInterface
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'forbidden'));
         }
 
-        if (!$candidateMessages->archiveThreadForUser($threadID, $this->_userID))
+        if (!$candidateMessages->deleteThread($threadID))
         {
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'deletefailed'));
         }

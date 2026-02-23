@@ -15,6 +15,11 @@ class PersonalDashboard
     const PRIORITY_MEDIUM = 'medium';
     const PRIORITY_HIGH = 'high';
 
+    const STATUS_OPEN = 'open';
+    const STATUS_IN_PROGRESS = 'in_progress';
+    const STATUS_BLOCKED = 'blocked';
+    const STATUS_DONE = 'done';
+
     private $_db;
     private $_siteID;
     private $_schemaAvailable;
@@ -48,6 +53,7 @@ class PersonalDashboard
             'body',
             'due_date',
             'priority',
+            'task_status',
             'reminder_at',
             'is_completed'
         );
@@ -73,6 +79,16 @@ class PersonalDashboard
         );
     }
 
+    public function getAllowedTodoStatuses()
+    {
+        return array(
+            self::STATUS_OPEN,
+            self::STATUS_IN_PROGRESS,
+            self::STATUS_BLOCKED,
+            self::STATUS_DONE
+        );
+    }
+
     public function getSummary($userID)
     {
         if (!$this->isSchemaAvailable())
@@ -81,16 +97,25 @@ class PersonalDashboard
                 'notesCount' => 0,
                 'todoOpenCount' => 0,
                 'todoDoneCount' => 0,
-                'reminderDueCount' => 0
+                'reminderDueCount' => 0,
+                'todoStatusOpenCount' => 0,
+                'todoStatusInProgressCount' => 0,
+                'todoStatusBlockedCount' => 0,
+                'todoStatusDoneCount' => 0
             );
         }
 
         $sql = sprintf(
             "SELECT
                 SUM(CASE WHEN item_type = 'note' THEN 1 ELSE 0 END) AS notesCount,
-                SUM(CASE WHEN item_type = 'todo' AND is_completed = 0 THEN 1 ELSE 0 END) AS todoOpenCount,
-                SUM(CASE WHEN item_type = 'todo' AND is_completed = 1 THEN 1 ELSE 0 END) AS todoDoneCount,
+                SUM(CASE WHEN item_type = 'todo' AND IFNULL(task_status, 'open') IN ('open', 'in_progress', 'blocked') THEN 1 ELSE 0 END) AS todoOpenCount,
+                SUM(CASE WHEN item_type = 'todo' AND IFNULL(task_status, 'open') = 'done' AND (date_completed IS NULL OR date_completed >= DATE_SUB(NOW(), INTERVAL 7 DAY)) THEN 1 ELSE 0 END) AS todoDoneCount,
                 SUM(CASE WHEN item_type = 'todo' AND is_completed = 0 AND reminder_at IS NOT NULL AND reminder_at <= NOW() THEN 1 ELSE 0 END) AS reminderDueCount
+                ,
+                SUM(CASE WHEN item_type = 'todo' AND IFNULL(task_status, 'open') = 'open' THEN 1 ELSE 0 END) AS todoStatusOpenCount,
+                SUM(CASE WHEN item_type = 'todo' AND IFNULL(task_status, 'open') = 'in_progress' THEN 1 ELSE 0 END) AS todoStatusInProgressCount,
+                SUM(CASE WHEN item_type = 'todo' AND IFNULL(task_status, 'open') = 'blocked' THEN 1 ELSE 0 END) AS todoStatusBlockedCount,
+                SUM(CASE WHEN item_type = 'todo' AND IFNULL(task_status, 'open') = 'done' AND (date_completed IS NULL OR date_completed >= DATE_SUB(NOW(), INTERVAL 7 DAY)) THEN 1 ELSE 0 END) AS todoStatusDoneCount
              FROM
                 user_personal_item
              WHERE
@@ -106,7 +131,11 @@ class PersonalDashboard
                 'notesCount' => 0,
                 'todoOpenCount' => 0,
                 'todoDoneCount' => 0,
-                'reminderDueCount' => 0
+                'reminderDueCount' => 0,
+                'todoStatusOpenCount' => 0,
+                'todoStatusInProgressCount' => 0,
+                'todoStatusBlockedCount' => 0,
+                'todoStatusDoneCount' => 0
             );
         }
 
@@ -114,7 +143,11 @@ class PersonalDashboard
             'notesCount' => (int) $row['notesCount'],
             'todoOpenCount' => (int) $row['todoOpenCount'],
             'todoDoneCount' => (int) $row['todoDoneCount'],
-            'reminderDueCount' => (int) $row['reminderDueCount']
+            'reminderDueCount' => (int) $row['reminderDueCount'],
+            'todoStatusOpenCount' => (int) $row['todoStatusOpenCount'],
+            'todoStatusInProgressCount' => (int) $row['todoStatusInProgressCount'],
+            'todoStatusBlockedCount' => (int) $row['todoStatusBlockedCount'],
+            'todoStatusDoneCount' => (int) $row['todoStatusDoneCount']
         );
     }
 
@@ -140,10 +173,12 @@ class PersonalDashboard
         if ($itemType === 'note')
         {
             $orderBy = "IFNULL(date_modified, date_created) DESC, user_personal_item_id DESC";
+            $extraWhere = '';
         }
         else
         {
-            $orderBy = "is_completed ASC, (reminder_at IS NULL) ASC, reminder_at ASC, (due_date IS NULL) ASC, due_date ASC, IFNULL(date_modified, date_created) DESC, user_personal_item_id DESC";
+            $orderBy = "FIELD(IFNULL(task_status, 'open'), 'open', 'in_progress', 'blocked', 'done') ASC, (reminder_at IS NULL) ASC, reminder_at ASC, (due_date IS NULL) ASC, due_date ASC, IFNULL(date_modified, date_created) DESC, user_personal_item_id DESC";
+            $extraWhere = "AND (IFNULL(task_status, 'open') <> 'done' OR date_completed IS NULL OR date_completed >= DATE_SUB(NOW(), INTERVAL 7 DAY))";
         }
 
         $sql = sprintf(
@@ -155,6 +190,7 @@ class PersonalDashboard
                 due_date AS dueDateISO,
                 DATE_FORMAT(due_date, '%%m-%%d-%%y') AS dueDateDisplay,
                 priority,
+                task_status AS taskStatus,
                 reminder_at AS reminderAtRaw,
                 DATE_FORMAT(reminder_at, '%%m-%%d-%%y (%%h:%%i %%p)') AS reminderAtDisplay,
                 is_completed AS isCompleted,
@@ -167,6 +203,7 @@ class PersonalDashboard
                 site_id = %s
                 AND user_id = %s
                 AND item_type = %s
+                " . $extraWhere . "
              ORDER BY
                 " . $orderBy . "
              LIMIT %s",
@@ -187,6 +224,7 @@ class PersonalDashboard
             $items[$index]['body'] = trim((string) $item['body']);
             $items[$index]['dueDateISO'] = trim((string) $item['dueDateISO']);
             $items[$index]['priority'] = $this->normalizePriority($item['priority'], self::PRIORITY_MEDIUM);
+            $items[$index]['taskStatus'] = $this->normalizeTodoStatus($item['taskStatus'], self::STATUS_OPEN);
             $items[$index]['reminderAtRaw'] = trim((string) $item['reminderAtRaw']);
             $items[$index]['reminderAtDisplay'] = trim((string) $item['reminderAtDisplay']);
             $items[$index]['isCompleted'] = (int) $item['isCompleted'];
@@ -195,7 +233,7 @@ class PersonalDashboard
         return $items;
     }
 
-    public function addItem($userID, $itemType, $title, $body, $dueDate, $priority = self::PRIORITY_MEDIUM, $reminderAt = '')
+    public function addItem($userID, $itemType, $title, $body, $dueDate, $priority = self::PRIORITY_MEDIUM, $reminderAt = '', $taskStatus = self::STATUS_OPEN)
     {
         if (!$this->isSchemaAvailable())
         {
@@ -229,6 +267,9 @@ class PersonalDashboard
         $dueDateSQL = 'NULL';
         $prioritySQL = $this->_db->makeQueryString(self::PRIORITY_MEDIUM);
         $reminderAtSQL = 'NULL';
+        $taskStatusSQL = $this->_db->makeQueryString(self::STATUS_OPEN);
+        $isCompletedSQL = '0';
+        $dateCompletedSQL = 'NULL';
 
         if ($itemType === 'todo')
         {
@@ -258,6 +299,19 @@ class PersonalDashboard
             {
                 $reminderAtSQL = $this->_db->makeQueryString($normalizedReminderAt);
             }
+
+            $normalizedTaskStatus = $this->normalizeTodoStatus($taskStatus, '');
+            if ($normalizedTaskStatus === '')
+            {
+                return array('success' => false, 'error' => 'badStatus');
+            }
+            $taskStatusSQL = $this->_db->makeQueryString($normalizedTaskStatus);
+
+            if ($normalizedTaskStatus === self::STATUS_DONE)
+            {
+                $isCompletedSQL = '1';
+                $dateCompletedSQL = 'NOW()';
+            }
         }
 
         $this->_db->query(sprintf(
@@ -269,12 +323,14 @@ class PersonalDashboard
                 body,
                 due_date,
                 priority,
+                task_status,
                 reminder_at,
                 is_completed,
+                date_completed,
                 date_created,
                 date_modified
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, 0, NOW(), NOW()
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
             )",
             $this->_db->makeQueryInteger($this->_siteID),
             $this->_db->makeQueryInteger($userID),
@@ -283,7 +339,10 @@ class PersonalDashboard
             $this->_db->makeQueryString($body),
             $dueDateSQL,
             $prioritySQL,
-            $reminderAtSQL
+            $taskStatusSQL,
+            $reminderAtSQL,
+            $isCompletedSQL,
+            $dateCompletedSQL
         ));
 
         $itemID = (int) $this->_db->getLastInsertID();
@@ -318,6 +377,7 @@ class PersonalDashboard
              SET
                 item_type = 'todo',
                 priority = %s,
+                task_status = %s,
                 reminder_at = NULL,
                 is_completed = 0,
                 date_completed = NULL,
@@ -325,8 +385,9 @@ class PersonalDashboard
              WHERE
                 user_personal_item_id = %s
                 AND site_id = %s
-                AND user_id = %s",
+            AND user_id = %s",
             $this->_db->makeQueryString(self::PRIORITY_MEDIUM),
+            $this->_db->makeQueryString(self::STATUS_OPEN),
             $this->_db->makeQueryInteger($itemID),
             $this->_db->makeQueryInteger($this->_siteID),
             $this->_db->makeQueryInteger($userID)
@@ -355,10 +416,14 @@ class PersonalDashboard
 
         $isCompleted = ((int) $isCompleted > 0) ? 1 : 0;
         $dateCompletedSQL = ($isCompleted === 1) ? 'NOW()' : 'NULL';
+        $taskStatusSQL = ($isCompleted === 1)
+            ? $this->_db->makeQueryString(self::STATUS_DONE)
+            : $this->_db->makeQueryString(self::STATUS_OPEN);
 
         $this->_db->query(sprintf(
             "UPDATE user_personal_item
              SET
+                task_status = %s,
                 is_completed = %s,
                 date_completed = %s,
                 date_modified = NOW()
@@ -366,6 +431,160 @@ class PersonalDashboard
                 user_personal_item_id = %s
                 AND site_id = %s
                 AND user_id = %s",
+            $taskStatusSQL,
+            $this->_db->makeQueryInteger($isCompleted),
+            $dateCompletedSQL,
+            $this->_db->makeQueryInteger($itemID),
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($userID)
+        ));
+
+        return array('success' => true);
+    }
+
+    public function setTodoStatus($itemID, $userID, $taskStatus)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return array('success' => false, 'error' => 'schema');
+        }
+
+        $item = $this->getItem($itemID, $userID);
+        if (empty($item))
+        {
+            return array('success' => false, 'error' => 'notfound');
+        }
+
+        if ($item['itemType'] !== 'todo')
+        {
+            return array('success' => false, 'error' => 'invalidType');
+        }
+
+        $normalizedTaskStatus = $this->normalizeTodoStatus($taskStatus, '');
+        if ($normalizedTaskStatus === '')
+        {
+            return array('success' => false, 'error' => 'badStatus');
+        }
+
+        $isCompleted = ($normalizedTaskStatus === self::STATUS_DONE) ? 1 : 0;
+        $dateCompletedSQL = ($isCompleted === 1) ? 'NOW()' : 'NULL';
+
+        $this->_db->query(sprintf(
+            "UPDATE user_personal_item
+             SET
+                task_status = %s,
+                is_completed = %s,
+                date_completed = %s,
+                date_modified = NOW()
+             WHERE
+                user_personal_item_id = %s
+                AND site_id = %s
+                AND user_id = %s",
+            $this->_db->makeQueryString($normalizedTaskStatus),
+            $this->_db->makeQueryInteger($isCompleted),
+            $dateCompletedSQL,
+            $this->_db->makeQueryInteger($itemID),
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($userID)
+        ));
+
+        return array('success' => true);
+    }
+
+    public function updateTodoItem($itemID, $userID, $title, $body, $dueDate, $priority, $reminderAt, $taskStatus)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return array('success' => false, 'error' => 'schema');
+        }
+
+        $item = $this->getItem($itemID, $userID);
+        if (empty($item))
+        {
+            return array('success' => false, 'error' => 'notfound');
+        }
+
+        if ($item['itemType'] !== 'todo')
+        {
+            return array('success' => false, 'error' => 'invalidType');
+        }
+
+        $title = trim((string) $title);
+        $body = trim((string) $body);
+        if ($body === '')
+        {
+            return array('success' => false, 'error' => 'empty');
+        }
+
+        if (strlen($title) > self::TITLE_MAXLEN)
+        {
+            return array('success' => false, 'error' => 'titleTooLong');
+        }
+
+        if (strlen($body) > self::BODY_MAXLEN)
+        {
+            return array('success' => false, 'error' => 'tooLong');
+        }
+
+        $normalizedDueDate = $this->normalizeDueDate($dueDate);
+        if ($normalizedDueDate === false)
+        {
+            return array('success' => false, 'error' => 'badDate');
+        }
+        $dueDateSQL = 'NULL';
+        if ($normalizedDueDate !== null)
+        {
+            $dueDateSQL = $this->_db->makeQueryString($normalizedDueDate);
+        }
+
+        $normalizedPriority = $this->normalizePriority($priority, '');
+        if ($normalizedPriority === '')
+        {
+            return array('success' => false, 'error' => 'badPriority');
+        }
+
+        $normalizedReminderAt = $this->normalizeReminderAt($reminderAt);
+        if ($normalizedReminderAt === false)
+        {
+            return array('success' => false, 'error' => 'badReminder');
+        }
+        $reminderAtSQL = 'NULL';
+        if ($normalizedReminderAt !== null)
+        {
+            $reminderAtSQL = $this->_db->makeQueryString($normalizedReminderAt);
+        }
+
+        $normalizedTaskStatus = $this->normalizeTodoStatus($taskStatus, '');
+        if ($normalizedTaskStatus === '')
+        {
+            return array('success' => false, 'error' => 'badStatus');
+        }
+
+        $isCompleted = ($normalizedTaskStatus === self::STATUS_DONE) ? 1 : 0;
+        $dateCompletedSQL = ($isCompleted === 1) ? 'NOW()' : 'NULL';
+
+        $this->_db->query(sprintf(
+            "UPDATE user_personal_item
+             SET
+                title = %s,
+                body = %s,
+                due_date = %s,
+                priority = %s,
+                reminder_at = %s,
+                task_status = %s,
+                is_completed = %s,
+                date_completed = %s,
+                date_modified = NOW()
+             WHERE
+                user_personal_item_id = %s
+                AND site_id = %s
+                AND user_id = %s",
+            $this->_db->makeQueryString($title),
+            $this->_db->makeQueryString($body),
+            $dueDateSQL,
+            $this->_db->makeQueryString($normalizedPriority),
+            $reminderAtSQL,
+            $this->_db->makeQueryString($normalizedTaskStatus),
             $this->_db->makeQueryInteger($isCompleted),
             $dateCompletedSQL,
             $this->_db->makeQueryInteger($itemID),
@@ -403,12 +622,171 @@ class PersonalDashboard
         return array('success' => true);
     }
 
+    public function appendToNote($itemID, $userID, $appendBody)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return array('success' => false, 'error' => 'schema');
+        }
+
+        $appendBody = trim((string) $appendBody);
+        if ($appendBody === '')
+        {
+            return array('success' => false, 'error' => 'empty');
+        }
+
+        if (strlen($appendBody) > self::BODY_MAXLEN)
+        {
+            return array('success' => false, 'error' => 'tooLong');
+        }
+
+        $item = $this->getItem($itemID, $userID);
+        if (empty($item))
+        {
+            return array('success' => false, 'error' => 'notfound');
+        }
+
+        if ($item['itemType'] !== 'note')
+        {
+            return array('success' => false, 'error' => 'invalidType');
+        }
+
+        $body = trim((string) $item['body']);
+        if ($body !== '')
+        {
+            $body .= "\n\n";
+        }
+        $body .= $appendBody;
+
+        if (strlen($body) > self::BODY_MAXLEN)
+        {
+            return array('success' => false, 'error' => 'tooLong');
+        }
+
+        $this->_db->query(sprintf(
+            "UPDATE user_personal_item
+             SET
+                body = %s,
+                date_modified = NOW()
+             WHERE
+                user_personal_item_id = %s
+                AND site_id = %s
+                AND user_id = %s",
+            $this->_db->makeQueryString($body),
+            $this->_db->makeQueryInteger($itemID),
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($userID)
+        ));
+
+        return array('success' => true);
+    }
+
+    public function sendNoteToUsers($itemID, $fromUserID, $recipientUserIDs, $senderDisplayName = '')
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return array('success' => false, 'error' => 'schema');
+        }
+
+        $item = $this->getItem($itemID, $fromUserID);
+        if (empty($item))
+        {
+            return array('success' => false, 'error' => 'notfound');
+        }
+
+        if ($item['itemType'] !== 'note')
+        {
+            return array('success' => false, 'error' => 'invalidType');
+        }
+
+        if (!is_array($recipientUserIDs))
+        {
+            $recipientUserIDs = array();
+        }
+
+        $recipientUserIDs = array_values(array_unique(array_filter(array_map('intval', $recipientUserIDs))));
+        $fromUserID = (int) $fromUserID;
+        $validUserIDs = array();
+        foreach ($recipientUserIDs as $recipientUserID)
+        {
+            if ($recipientUserID <= 0 || $recipientUserID === $fromUserID)
+            {
+                continue;
+            }
+            $validUserIDs[] = $recipientUserID;
+        }
+
+        if (empty($validUserIDs))
+        {
+            return array('success' => false, 'error' => 'noRecipients');
+        }
+
+        $senderDisplayName = trim((string) $senderDisplayName);
+        if ($senderDisplayName === '')
+        {
+            $senderDisplayName = 'a teammate';
+        }
+
+        $sharedTitle = trim((string) $item['title']);
+        if ($sharedTitle === '')
+        {
+            $sharedTitle = 'Shared note from ' . $senderDisplayName;
+        }
+
+        $sharedPrefix = '[Shared by ' . $senderDisplayName . ' on ' . date('Y-m-d H:i') . ']';
+        $sharedBody = trim((string) $item['body']);
+        if ($sharedBody === '')
+        {
+            $sharedBody = $sharedPrefix;
+        }
+        else
+        {
+            $sharedBody = $sharedPrefix . "\n\n" . $sharedBody;
+        }
+
+        if (strlen($sharedBody) > self::BODY_MAXLEN)
+        {
+            $sharedBody = substr($sharedBody, 0, self::BODY_MAXLEN);
+        }
+
+        $sentCount = 0;
+        foreach ($validUserIDs as $recipientUserID)
+        {
+            $result = $this->addItem(
+                (int) $recipientUserID,
+                'note',
+                $sharedTitle,
+                $sharedBody,
+                '',
+                self::PRIORITY_MEDIUM,
+                ''
+            );
+            if (!empty($result['success']))
+            {
+                $sentCount++;
+            }
+        }
+
+        if ($sentCount <= 0)
+        {
+            return array('success' => false, 'error' => 'failed');
+        }
+
+        return array(
+            'success' => true,
+            'sentCount' => $sentCount
+        );
+    }
+
     private function getItem($itemID, $userID)
     {
         $row = $this->_db->getAssoc(sprintf(
             "SELECT
                 user_personal_item_id AS itemID,
-                item_type AS itemType
+                item_type AS itemType,
+                task_status AS taskStatus,
+                title,
+                body
              FROM
                 user_personal_item
              WHERE
@@ -426,6 +804,9 @@ class PersonalDashboard
         }
 
         $row['itemType'] = $this->normalizeType($row['itemType']);
+        $row['taskStatus'] = $this->normalizeTodoStatus($row['taskStatus'], self::STATUS_OPEN);
+        $row['title'] = trim((string) $row['title']);
+        $row['body'] = trim((string) $row['body']);
         return $row;
     }
 
@@ -454,6 +835,23 @@ class PersonalDashboard
         }
 
         return $priority;
+    }
+
+    private function normalizeTodoStatus($taskStatus, $defaultStatus)
+    {
+        $taskStatus = strtolower(trim((string) $taskStatus));
+        if ($taskStatus === '')
+        {
+            return $defaultStatus;
+        }
+
+        $allowedStatuses = $this->getAllowedTodoStatuses();
+        if (!in_array($taskStatus, $allowedStatuses, true))
+        {
+            return $defaultStatus;
+        }
+
+        return $taskStatus;
     }
 
     private function normalizeDueDate($dueDate)

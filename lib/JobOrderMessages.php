@@ -282,6 +282,62 @@ class JobOrderMessages
         return true;
     }
 
+    public function deleteThread($threadID)
+    {
+        if (!$this->isSchemaAvailable())
+        {
+            return false;
+        }
+
+        $threadID = (int) $threadID;
+        if ($threadID <= 0)
+        {
+            return false;
+        }
+
+        $this->_db->query(sprintf(
+            "DELETE mention
+             FROM joborder_message_mention mention
+             INNER JOIN joborder_message message
+                ON message.joborder_message_id = mention.message_id
+                AND message.site_id = mention.site_id
+             WHERE
+                message.site_id = %s
+                AND message.thread_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($threadID)
+        ));
+
+        $this->_db->query(sprintf(
+            "DELETE FROM joborder_message
+             WHERE
+                site_id = %s
+                AND thread_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($threadID)
+        ));
+
+        $this->_db->query(sprintf(
+            "DELETE FROM joborder_message_participant
+             WHERE
+                site_id = %s
+                AND thread_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($threadID)
+        ));
+
+        $this->_db->query(sprintf(
+            "DELETE FROM joborder_message_thread
+             WHERE
+                site_id = %s
+                AND joborder_message_thread_id = %s",
+            $this->_db->makeQueryInteger($this->_siteID),
+            $this->_db->makeQueryInteger($threadID)
+        ));
+
+        return true;
+    }
+
     public function markThreadRead($threadID, $userID)
     {
         if (!$this->isSchemaAvailable())

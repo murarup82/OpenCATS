@@ -316,12 +316,17 @@
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo($this->selectedThread['openURL']); ?>">
                                             <?php $this->_($this->selectedThread['openLabel']); ?>
                                         </a>
-                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="display:inline;" onsubmit="return confirm('Remove this thread from your inbox?');">
-                                            <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
-                                            <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
-                                            <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteInboxThreadToken); ?>" />
-                                            <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
-                                        </form>
+                                        <?php if (
+                                            ($this->selectedThread['threadType'] === 'candidate' && $this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT) ||
+                                            ($this->selectedThread['threadType'] === 'joborder' && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
+                                        ): ?>
+                                            <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=deleteInboxThread" style="display:inline;" onsubmit="return confirm('Delete this thread for all users? This cannot be undone. A new thread will start on next message.');">
+                                                <input type="hidden" name="threadType" value="<?php $this->_($this->selectedThread['threadType']); ?>" />
+                                                <input type="hidden" name="threadID" value="<?php echo((int) $this->selectedThread['threadID']); ?>" />
+                                                <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteInboxThreadToken); ?>" />
+                                                <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
+                                            </form>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 

@@ -213,7 +213,7 @@ class JobOrdersUI extends UserInterface
                 break;
 
             case 'deleteMessageThread':
-                if ($this->getUserAccessLevel('joborders.show') < ACCESS_LEVEL_READ)
+                if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
                 {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
@@ -534,7 +534,7 @@ class JobOrdersUI extends UserInterface
                     break;
 
                 case 'deleted':
-                    $jobOrderMessageFlashMessage = 'Thread removed from your inbox.';
+                    $jobOrderMessageFlashMessage = 'Thread deleted for all users.';
                     break;
 
                 case 'deletefailed':
@@ -3078,7 +3078,7 @@ class JobOrdersUI extends UserInterface
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'forbidden'));
         }
 
-        if (!$jobOrderMessages->archiveThreadForUser($threadID, $this->_userID))
+        if (!$jobOrderMessages->deleteThread($threadID))
         {
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'deletefailed'));
         }

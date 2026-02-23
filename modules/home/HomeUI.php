@@ -35,6 +35,7 @@ include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderMessages.php');
 include_once(LEGACY_ROOT . '/lib/PersonalDashboard.php');
+include_once(LEGACY_ROOT . '/lib/Users.php');
 
 class HomeUI extends UserInterface
 {
@@ -93,8 +94,24 @@ class HomeUI extends UserInterface
                 $this->onTogglePersonalTodo();
                 break;
 
+            case 'setPersonalTodoStatus':
+                $this->onSetPersonalTodoStatus();
+                break;
+
+            case 'updatePersonalTodo':
+                $this->onUpdatePersonalTodo();
+                break;
+
             case 'deletePersonalItem':
                 $this->onDeletePersonalItem();
+                break;
+
+            case 'appendPersonalNote':
+                $this->onAppendPersonalNote();
+                break;
+
+            case 'sendPersonalNote':
+                $this->onSendPersonalNote();
                 break;
 
             case 'postInboxMessage':
@@ -106,7 +123,7 @@ class HomeUI extends UserInterface
                 break;
 
             case 'deleteInboxThread':
-                if (!$this->canAccessAnyInbox())
+                if (!$this->canPostAnyInboxMessage())
                 {
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
@@ -262,7 +279,7 @@ class HomeUI extends UserInterface
                     break;
 
                 case 'deleted':
-                    $flashMessage = 'Thread removed from your inbox.';
+                    $flashMessage = 'Thread deleted for all users.';
                     break;
 
                 case 'deletefailed':
@@ -550,6 +567,11 @@ class HomeUI extends UserInterface
 
         if ($threadType === 'joborder')
         {
+            if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
+
             $jobOrderMessages = new JobOrderMessages($this->_siteID);
             if (!$jobOrderMessages->isSchemaAvailable())
             {
@@ -624,8 +646,24 @@ class HomeUI extends UserInterface
                     $flashMessage = 'To-do reopened.';
                     break;
 
+                case 'todoStatusChanged':
+                    $flashMessage = 'To-do status updated.';
+                    break;
+
+                case 'todoUpdated':
+                    $flashMessage = 'To-do updated.';
+                    break;
+
                 case 'deleted':
                     $flashMessage = 'Item deleted.';
+                    break;
+
+                case 'noteAppended':
+                    $flashMessage = 'Note updated.';
+                    break;
+
+                case 'noteSent':
+                    $flashMessage = 'Note sent to selected users.';
                     break;
 
                 case 'token':
@@ -664,6 +702,16 @@ class HomeUI extends UserInterface
                     $flashIsError = true;
                     break;
 
+                case 'badStatus':
+                    $flashMessage = 'Invalid to-do status.';
+                    $flashIsError = true;
+                    break;
+
+                case 'noRecipients':
+                    $flashMessage = 'Select at least one recipient.';
+                    $flashIsError = true;
+                    break;
+
                 case 'schema':
                     $flashMessage = 'My Notes / To-do table is missing. Apply schema migrations first.';
                     $flashIsError = true;
@@ -685,17 +733,56 @@ class HomeUI extends UserInterface
             'notesCount' => 0,
             'todoOpenCount' => 0,
             'todoDoneCount' => 0,
-            'reminderDueCount' => 0
+            'reminderDueCount' => 0,
+            'todoStatusOpenCount' => 0,
+            'todoStatusInProgressCount' => 0,
+            'todoStatusBlockedCount' => 0,
+            'todoStatusDoneCount' => 0
         );
         $noteItems = array();
         $todoItems = array();
         $todoPriorities = array();
+        $todoStatuses = array();
+        $todoItemsByStatus = array(
+            'open' => array(),
+            'in_progress' => array(),
+            'blocked' => array(),
+            'done' => array()
+        );
+        $shareTargetUsers = array();
         if ($schemaAvailable)
         {
             $summary = $personalDashboard->getSummary($this->_userID);
             $noteItems = $personalDashboard->getItems($this->_userID, 'note', 250);
             $todoItems = $personalDashboard->getItems($this->_userID, 'todo', 250);
             $todoPriorities = $personalDashboard->getAllowedPriorities();
+            $todoStatuses = $personalDashboard->getAllowedTodoStatuses();
+
+            $users = new Users($this->_siteID);
+            $usersRS = $users->getSelectList();
+            foreach ($usersRS as $userData)
+            {
+                $userID = (int) $userData['userID'];
+                if ($userID <= 0 || $userID === (int) $this->_userID)
+                {
+                    continue;
+                }
+
+                $fullName = trim($userData['firstName'] . ' ' . $userData['lastName']);
+                if ($fullName === '')
+                {
+                    $fullName = trim((string) $userData['username']);
+                }
+                if ($fullName === '')
+                {
+                    continue;
+                }
+
+                $shareTargetUsers[] = array(
+                    'userID' => $userID,
+                    'fullName' => $fullName
+                );
+            }
 
             $todayISO = date('Y-m-d');
             $nowISO = date('Y-m-d H:i:s');
@@ -719,6 +806,16 @@ class HomeUI extends UserInterface
                     trim((string) $todoItem['reminderAtRaw']) !== '' &&
                     trim((string) $todoItem['reminderAtRaw']) <= $nowISO
                 );
+                if (empty($todoItems[$index]['taskStatus']))
+                {
+                    $todoItems[$index]['taskStatus'] = 'open';
+                }
+
+                if (!isset($todoItemsByStatus[$todoItems[$index]['taskStatus']]))
+                {
+                    $todoItems[$index]['taskStatus'] = 'open';
+                }
+                $todoItemsByStatus[$todoItems[$index]['taskStatus']][] = $todoItems[$index];
             }
         }
 
@@ -731,7 +828,10 @@ class HomeUI extends UserInterface
         $this->_template->assign('summary', $summary);
         $this->_template->assign('noteItems', $noteItems);
         $this->_template->assign('todoItems', $todoItems);
+        $this->_template->assign('todoStatuses', $todoStatuses);
+        $this->_template->assign('todoItemsByStatus', $todoItemsByStatus);
         $this->_template->assign('todoPriorities', $todoPriorities);
+        $this->_template->assign('shareTargetUsers', $shareTargetUsers);
         $this->_template->assign(
             'addPersonalItemToken',
             $this->getCSRFToken('home.addPersonalItem')
@@ -745,8 +845,24 @@ class HomeUI extends UserInterface
             $this->getCSRFToken('home.togglePersonalTodo')
         );
         $this->_template->assign(
+            'setPersonalTodoStatusToken',
+            $this->getCSRFToken('home.setPersonalTodoStatus')
+        );
+        $this->_template->assign(
+            'updatePersonalTodoToken',
+            $this->getCSRFToken('home.updatePersonalTodo')
+        );
+        $this->_template->assign(
             'deletePersonalItemToken',
             $this->getCSRFToken('home.deletePersonalItem')
+        );
+        $this->_template->assign(
+            'appendPersonalNoteToken',
+            $this->getCSRFToken('home.appendPersonalNote')
+        );
+        $this->_template->assign(
+            'sendPersonalNoteToken',
+            $this->getCSRFToken('home.sendPersonalNote')
         );
 
         $this->_template->display('./modules/home/MyNotes.tpl');
@@ -780,6 +896,11 @@ class HomeUI extends UserInterface
         $dueDate = $this->getTrimmedInput('dueDate', $_POST);
         $priority = $this->getTrimmedInput('priority', $_POST);
         $reminderAt = $this->getTrimmedInput('reminderAt', $_POST);
+        $taskStatus = $this->getTrimmedInput('taskStatus', $_POST);
+        if ($taskStatus === '')
+        {
+            $taskStatus = 'open';
+        }
 
         $result = $personalDashboard->addItem(
             $this->_userID,
@@ -788,7 +909,8 @@ class HomeUI extends UserInterface
             $body,
             $dueDate,
             $priority,
-            $reminderAt
+            $reminderAt,
+            $taskStatus
         );
 
         if (empty($result['success']))
@@ -891,6 +1013,111 @@ class HomeUI extends UserInterface
         $this->redirectToMyNotes('todos', $message);
     }
 
+    private function onSetPersonalTodoStatus()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('todos', 'invalid');
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.setPersonalTodoStatus', $securityToken))
+        {
+            $this->redirectToMyNotes('todos', 'token');
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $taskStatus = strtolower($this->getTrimmedInput('taskStatus', $_POST));
+        if ($taskStatus === '')
+        {
+            $taskStatus = 'open';
+        }
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes('todos', 'schema');
+        }
+
+        $result = $personalDashboard->setTodoStatus($itemID, $this->_userID, $taskStatus);
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes('todos', $error);
+        }
+
+        $this->redirectToMyNotes('todos', 'todoStatusChanged');
+    }
+
+    private function onUpdatePersonalTodo()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('todos', 'invalid');
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.updatePersonalTodo', $securityToken))
+        {
+            $this->redirectToMyNotes('todos', 'token');
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $title = $this->getTrimmedInput('title', $_POST);
+        $body = $this->getTrimmedInput('body', $_POST);
+        $dueDate = $this->getTrimmedInput('dueDate', $_POST);
+        $priority = $this->getTrimmedInput('priority', $_POST);
+        $reminderAt = $this->getTrimmedInput('reminderAt', $_POST);
+        $taskStatus = strtolower($this->getTrimmedInput('taskStatus', $_POST));
+        if ($taskStatus === '')
+        {
+            $taskStatus = 'open';
+        }
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes('todos', 'schema');
+        }
+
+        $result = $personalDashboard->updateTodoItem(
+            $itemID,
+            $this->_userID,
+            $title,
+            $body,
+            $dueDate,
+            $priority,
+            $reminderAt,
+            $taskStatus
+        );
+
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes('todos', $error);
+        }
+
+        $this->redirectToMyNotes('todos', 'todoUpdated');
+    }
+
     private function onDeletePersonalItem()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
@@ -925,6 +1152,144 @@ class HomeUI extends UserInterface
         }
 
         $this->redirectToMyNotes($view, 'deleted');
+    }
+
+    private function onAppendPersonalNote()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('notes', 'invalid');
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.appendPersonalNote', $securityToken))
+        {
+            $this->redirectToMyNotes('notes', 'token');
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $appendBody = $this->getTrimmedInput('appendBody', $_POST);
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes('notes', 'schema');
+        }
+
+        $result = $personalDashboard->appendToNote($itemID, $this->_userID, $appendBody);
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes('notes', $error);
+        }
+
+        $this->redirectToMyNotes('notes', 'noteAppended');
+    }
+
+    private function onSendPersonalNote()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('notes', 'invalid');
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.sendPersonalNote', $securityToken))
+        {
+            $this->redirectToMyNotes('notes', 'token');
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $recipientUserIDs = array();
+        if (isset($_POST['recipientUserIDs']) && is_array($_POST['recipientUserIDs']))
+        {
+            foreach ($_POST['recipientUserIDs'] as $recipientUserIDRaw)
+            {
+                $recipientUserID = (int) $recipientUserIDRaw;
+                if ($recipientUserID > 0)
+                {
+                    $recipientUserIDs[$recipientUserID] = true;
+                }
+            }
+            $recipientUserIDs = array_keys($recipientUserIDs);
+        }
+
+        if (empty($recipientUserIDs))
+        {
+            $this->redirectToMyNotes('notes', 'noRecipients');
+        }
+
+        $users = new Users($this->_siteID);
+        $usersRS = $users->getSelectList();
+        $allowedUserIDs = array();
+        foreach ($usersRS as $userData)
+        {
+            $allowedUserIDs[(int) $userData['userID']] = true;
+        }
+
+        $validRecipientUserIDs = array();
+        foreach ($recipientUserIDs as $recipientUserID)
+        {
+            if ($recipientUserID === (int) $this->_userID)
+            {
+                continue;
+            }
+            if (!isset($allowedUserIDs[$recipientUserID]))
+            {
+                continue;
+            }
+            $validRecipientUserIDs[] = $recipientUserID;
+        }
+
+        if (empty($validRecipientUserIDs))
+        {
+            $this->redirectToMyNotes('notes', 'noRecipients');
+        }
+
+        $senderDisplayName = trim((string) $_SESSION['CATS']->getFullName());
+        if ($senderDisplayName === '')
+        {
+            $senderDisplayName = trim((string) $_SESSION['CATS']->getUsername());
+        }
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes('notes', 'schema');
+        }
+
+        $result = $personalDashboard->sendNoteToUsers(
+            $itemID,
+            $this->_userID,
+            $validRecipientUserIDs,
+            $senderDisplayName
+        );
+
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes('notes', $error);
+        }
+
+        $this->redirectToMyNotes('notes', 'noteSent');
     }
 
     private function getMyNotesView($source, $defaultView = 'notes')
@@ -981,6 +1346,11 @@ class HomeUI extends UserInterface
 
         if ($threadType === 'joborder')
         {
+            if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
+
             $jobOrderMessages = new JobOrderMessages($this->_siteID);
             if (!$jobOrderMessages->isSchemaAvailable())
             {
@@ -992,13 +1362,18 @@ class HomeUI extends UserInterface
                 CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
             }
 
-            if (!$jobOrderMessages->archiveThreadForUser($threadID, $this->_userID))
+            if (!$jobOrderMessages->deleteThread($threadID))
             {
                 CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=deletefailed');
             }
         }
         else
         {
+            if ($this->getUserAccessLevel('candidates.edit') < ACCESS_LEVEL_EDIT)
+            {
+                CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
+            }
+
             $candidateMessages = new CandidateMessages($this->_siteID);
             if (!$candidateMessages->isSchemaAvailable())
             {
@@ -1010,7 +1385,7 @@ class HomeUI extends UserInterface
                 CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=forbidden');
             }
 
-            if (!$candidateMessages->archiveThreadForUser($threadID, $this->_userID))
+            if (!$candidateMessages->deleteThread($threadID))
             {
                 CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=deletefailed');
             }

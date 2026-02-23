@@ -490,12 +490,14 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox&amp;threadID=<?php echo((int) $this->candidateMessageThreadID); ?>">
                                             Open My Inbox
                                         </a>
-                                        <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteMessageThread" style="display:inline;" onsubmit="return confirm('Remove this thread from your inbox?');">
-                                            <input type="hidden" name="candidateID" value="<?php echo((int) $this->candidateID); ?>" />
-                                            <input type="hidden" name="threadID" value="<?php echo((int) $this->candidateMessageThreadID); ?>" />
-                                            <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteCandidateMessageThreadToken); ?>" />
-                                            <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
-                                        </form>
+                                        <?php if ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT): ?>
+                                            <form method="post" action="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=deleteMessageThread" style="display:inline;" onsubmit="return confirm('Delete this thread for all users? This cannot be undone. A new thread will start on next message.');">
+                                                <input type="hidden" name="candidateID" value="<?php echo((int) $this->candidateID); ?>" />
+                                                <input type="hidden" name="threadID" value="<?php echo((int) $this->candidateMessageThreadID); ?>" />
+                                                <input type="hidden" name="securityToken" value="<?php $this->_($this->deleteCandidateMessageThreadToken); ?>" />
+                                                <button type="submit" class="ui2-button ui2-button--danger">Delete Thread</button>
+                                            </form>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=home&amp;a=inbox">
                                             Open My Inbox
