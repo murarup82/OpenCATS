@@ -98,6 +98,40 @@ use OpenCATS\UI\QuickActionMenu;
                 </table>
             <?php endif; ?>
 
+            <style type="text/css">
+                .jobOrderCommentsBadge
+                {
+                    display: inline-block;
+                    margin-left: 8px;
+                    min-width: 20px;
+                    padding: 1px 7px;
+                    border-radius: 999px;
+                    background: #e9f7ee;
+                    border: 1px solid #9ecab1;
+                    color: #1f6f3c;
+                    font-size: 11px;
+                    line-height: 16px;
+                    text-align: center;
+                    font-weight: bold;
+                    vertical-align: middle;
+                }
+
+                #jobOrderCommentsToggleButton.jobOrderCommentsHasItems
+                {
+                    background: #e8f7ef;
+                    border-color: #8cc8a4;
+                    color: #1f6f3c;
+                    font-weight: 600;
+                }
+
+                #jobOrderCommentsToggleButton.jobOrderCommentsHasItems.is-open
+                {
+                    background: #ffeef5;
+                    border-color: #e5a6c1;
+                    color: #8c2e58;
+                }
+            </style>
+
             <div class="ui2-grid">
                 <div class="ui2-col-main">
                     <div class="ui2-card ui2-card--section">
@@ -386,7 +420,12 @@ use OpenCATS\UI\QuickActionMenu;
 
             <div class="ui2-card ui2-card--section" id="jobOrderCommentsSection">
                 <div class="ui2-card-header">
-                    <div class="ui2-card-title">Team Comments</div>
+                    <div class="ui2-card-title">
+                        Team Comments
+                        <?php if ((int) $this->jobOrderCommentCount > 0): ?>
+                            <span class="jobOrderCommentsBadge"><?php echo((int) $this->jobOrderCommentCount); ?></span>
+                        <?php endif; ?>
+                    </div>
                     <div class="ui2-card-actions">
                         <?php if (!empty($this->canAddJobOrderComment)): ?>
                             <button
@@ -397,8 +436,9 @@ use OpenCATS\UI\QuickActionMenu;
                         <?php endif; ?>
                         <button
                             type="button"
-                            class="ui2-button ui2-button--secondary"
+                            class="ui2-button ui2-button--secondary<?php if ((int) $this->jobOrderCommentCount > 0): ?> jobOrderCommentsHasItems<?php endif; ?><?php if (!empty($this->jobOrderCommentsInitiallyOpen) && (int) $this->jobOrderCommentCount > 0): ?> is-open<?php endif; ?>"
                             id="jobOrderCommentsToggleButton"
+                            data-has-comments="<?php echo(((int) $this->jobOrderCommentCount > 0) ? '1' : '0'); ?>"
                             onclick="JobOrderComments_toggle();"
                         ><?php if (!empty($this->jobOrderCommentsInitiallyOpen)): ?>Hide<?php else: ?>Show<?php endif; ?> Comments (<?php echo((int) $this->jobOrderCommentCount); ?>)</button>
                     </div>
@@ -717,6 +757,19 @@ use OpenCATS\UI\QuickActionMenu;
                     var shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : (panel.style.display === 'none');
                     panel.style.display = shouldOpen ? '' : 'none';
                     button.innerHTML = button.innerHTML.replace(/^(Show|Hide)/, shouldOpen ? 'Hide' : 'Show');
+                    button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+
+                    if (button.getAttribute('data-has-comments') === '1')
+                    {
+                        if (shouldOpen)
+                        {
+                            button.className += (button.className.indexOf(' is-open') === -1) ? ' is-open' : '';
+                        }
+                        else
+                        {
+                            button.className = button.className.replace(/\bis-open\b/g, '').replace(/\s{2,}/g, ' ').replace(/^\s+|\s+$/g, '');
+                        }
+                    }
                 }
 
                 function JobOrderComments_openComposer()
