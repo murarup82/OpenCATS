@@ -34,6 +34,7 @@ include_once(LEGACY_ROOT . '/lib/JobOrders.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderMessages.php');
+include_once(LEGACY_ROOT . '/lib/PersonalDashboard.php');
 
 class HomeUI extends UserInterface
 {
@@ -47,7 +48,8 @@ class HomeUI extends UserInterface
         $this->_moduleTabText = 'Overview';
         $this->_subTabs = array(
             'Dashboard' => CATSUtility::getIndexName() . '?m=home&amp;a=home',
-            'My Inbox'  => CATSUtility::getIndexName() . '?m=home&amp;a=inbox'
+            'My Inbox'  => CATSUtility::getIndexName() . '?m=home&amp;a=inbox',
+            'My Notes & To-do' => CATSUtility::getIndexName() . '?m=home&amp;a=myNotes'
         );
     }
 
@@ -73,6 +75,26 @@ class HomeUI extends UserInterface
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
                 $this->inbox();
+                break;
+
+            case 'myNotes':
+                $this->myNotes();
+                break;
+
+            case 'addPersonalItem':
+                $this->onAddPersonalItem();
+                break;
+
+            case 'movePersonalNoteToTodo':
+                $this->onMovePersonalNoteToTodo();
+                break;
+
+            case 'togglePersonalTodo':
+                $this->onTogglePersonalTodo();
+                break;
+
+            case 'deletePersonalItem':
+                $this->onDeletePersonalItem();
                 break;
 
             case 'postInboxMessage':
@@ -566,6 +588,370 @@ class HomeUI extends UserInterface
         }
 
         CATSUtility::transferRelativeURI('m=home&a=inbox&threadKey=' . rawurlencode($threadKey) . '&msg=sent');
+    }
+
+    private function myNotes()
+    {
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        $schemaAvailable = $personalDashboard->isSchemaAvailable();
+
+        $view = $this->getMyNotesView($_GET, 'notes');
+
+        $flashMessage = '';
+        $flashIsError = false;
+        if (isset($_GET['msg']))
+        {
+            $msgStatus = $this->getTrimmedInput('msg', $_GET);
+            switch ($msgStatus)
+            {
+                case 'noteAdded':
+                    $flashMessage = 'Note added.';
+                    break;
+
+                case 'todoAdded':
+                    $flashMessage = 'To-do added.';
+                    break;
+
+                case 'movedToTodo':
+                    $flashMessage = 'Note moved to To-do List.';
+                    break;
+
+                case 'todoCompleted':
+                    $flashMessage = 'To-do marked as completed.';
+                    break;
+
+                case 'todoReopened':
+                    $flashMessage = 'To-do reopened.';
+                    break;
+
+                case 'deleted':
+                    $flashMessage = 'Item deleted.';
+                    break;
+
+                case 'token':
+                case 'invalid':
+                    $flashMessage = 'Invalid request.';
+                    $flashIsError = true;
+                    break;
+
+                case 'empty':
+                    $flashMessage = 'Details are required.';
+                    $flashIsError = true;
+                    break;
+
+                case 'titleTooLong':
+                    $flashMessage = 'Title is too long.';
+                    $flashIsError = true;
+                    break;
+
+                case 'tooLong':
+                    $flashMessage = 'Item details are too long.';
+                    $flashIsError = true;
+                    break;
+
+                case 'badDate':
+                    $flashMessage = 'Invalid due date.';
+                    $flashIsError = true;
+                    break;
+
+                case 'badPriority':
+                    $flashMessage = 'Invalid priority.';
+                    $flashIsError = true;
+                    break;
+
+                case 'badReminder':
+                    $flashMessage = 'Invalid reminder date/time.';
+                    $flashIsError = true;
+                    break;
+
+                case 'schema':
+                    $flashMessage = 'My Notes / To-do table is missing. Apply schema migrations first.';
+                    $flashIsError = true;
+                    break;
+
+                case 'notfound':
+                    $flashMessage = 'Item was not found.';
+                    $flashIsError = true;
+                    break;
+
+                default:
+                    $flashMessage = 'Unable to save changes.';
+                    $flashIsError = true;
+                    break;
+            }
+        }
+
+        $summary = array(
+            'notesCount' => 0,
+            'todoOpenCount' => 0,
+            'todoDoneCount' => 0,
+            'reminderDueCount' => 0
+        );
+        $noteItems = array();
+        $todoItems = array();
+        $todoPriorities = array();
+        if ($schemaAvailable)
+        {
+            $summary = $personalDashboard->getSummary($this->_userID);
+            $noteItems = $personalDashboard->getItems($this->_userID, 'note', 250);
+            $todoItems = $personalDashboard->getItems($this->_userID, 'todo', 250);
+            $todoPriorities = $personalDashboard->getAllowedPriorities();
+
+            $todayISO = date('Y-m-d');
+            $nowISO = date('Y-m-d H:i:s');
+            foreach ($noteItems as $index => $noteItem)
+            {
+                $noteItems[$index]['title'] = trim((string) $noteItem['title']);
+                $noteItems[$index]['bodyHTML'] = nl2br(htmlspecialchars((string) $noteItem['body'], ENT_QUOTES));
+            }
+
+            foreach ($todoItems as $index => $todoItem)
+            {
+                $todoItems[$index]['title'] = trim((string) $todoItem['title']);
+                $todoItems[$index]['bodyHTML'] = nl2br(htmlspecialchars((string) $todoItem['body'], ENT_QUOTES));
+                $todoItems[$index]['isOverdue'] = (
+                    (int) $todoItem['isCompleted'] === 0 &&
+                    trim((string) $todoItem['dueDateISO']) !== '' &&
+                    trim((string) $todoItem['dueDateISO']) < $todayISO
+                );
+                $todoItems[$index]['isReminderDue'] = (
+                    (int) $todoItem['isCompleted'] === 0 &&
+                    trim((string) $todoItem['reminderAtRaw']) !== '' &&
+                    trim((string) $todoItem['reminderAtRaw']) <= $nowISO
+                );
+            }
+        }
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'My Notes & To-do');
+        $this->_template->assign('view', $view);
+        $this->_template->assign('schemaAvailable', $schemaAvailable);
+        $this->_template->assign('flashMessage', $flashMessage);
+        $this->_template->assign('flashIsError', $flashIsError);
+        $this->_template->assign('summary', $summary);
+        $this->_template->assign('noteItems', $noteItems);
+        $this->_template->assign('todoItems', $todoItems);
+        $this->_template->assign('todoPriorities', $todoPriorities);
+        $this->_template->assign(
+            'addPersonalItemToken',
+            $this->getCSRFToken('home.addPersonalItem')
+        );
+        $this->_template->assign(
+            'movePersonalNoteToTodoToken',
+            $this->getCSRFToken('home.movePersonalNoteToTodo')
+        );
+        $this->_template->assign(
+            'togglePersonalTodoToken',
+            $this->getCSRFToken('home.togglePersonalTodo')
+        );
+        $this->_template->assign(
+            'deletePersonalItemToken',
+            $this->getCSRFToken('home.deletePersonalItem')
+        );
+
+        $this->_template->display('./modules/home/MyNotes.tpl');
+    }
+
+    private function onAddPersonalItem()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        $itemType = strtolower($this->getTrimmedInput('itemType', $_POST));
+        $defaultView = ($itemType === 'todo') ? 'todos' : 'notes';
+        $view = $this->getMyNotesView($_POST, $defaultView);
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.addPersonalItem', $securityToken))
+        {
+            $this->redirectToMyNotes($view, 'token');
+        }
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes($view, 'schema');
+        }
+
+        $title = $this->getTrimmedInput('title', $_POST);
+        $body = $this->getTrimmedInput('body', $_POST);
+        $dueDate = $this->getTrimmedInput('dueDate', $_POST);
+        $priority = $this->getTrimmedInput('priority', $_POST);
+        $reminderAt = $this->getTrimmedInput('reminderAt', $_POST);
+
+        $result = $personalDashboard->addItem(
+            $this->_userID,
+            $itemType,
+            $title,
+            $body,
+            $dueDate,
+            $priority,
+            $reminderAt
+        );
+
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes($view, $error);
+        }
+
+        if ($itemType === 'todo')
+        {
+            $this->redirectToMyNotes('todos', 'todoAdded');
+        }
+
+        $this->redirectToMyNotes('notes', 'noteAdded');
+    }
+
+    private function onMovePersonalNoteToTodo()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('notes', 'invalid');
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.movePersonalNoteToTodo', $securityToken))
+        {
+            $this->redirectToMyNotes('notes', 'token');
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes('notes', 'schema');
+        }
+
+        $result = $personalDashboard->moveNoteToTodo($itemID, $this->_userID);
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes('notes', $error);
+        }
+
+        $this->redirectToMyNotes('todos', 'movedToTodo');
+    }
+
+    private function onTogglePersonalTodo()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('todos', 'invalid');
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.togglePersonalTodo', $securityToken))
+        {
+            $this->redirectToMyNotes('todos', 'token');
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $isCompleted = $this->getTrimmedInput('isCompleted', $_POST);
+        $nextState = ((int) $isCompleted > 0) ? 1 : 0;
+
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes('todos', 'schema');
+        }
+
+        $result = $personalDashboard->setTodoCompleted($itemID, $this->_userID, $nextState);
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($error === 'invalidType')
+            {
+                $error = 'invalid';
+            }
+            $this->redirectToMyNotes('todos', $error);
+        }
+
+        $message = ($nextState === 1) ? 'todoCompleted' : 'todoReopened';
+        $this->redirectToMyNotes('todos', $message);
+    }
+
+    private function onDeletePersonalItem()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
+        }
+
+        if (!$this->isRequiredIDValid('itemID', $_POST))
+        {
+            $this->redirectToMyNotes('notes', 'invalid');
+        }
+
+        $view = $this->getMyNotesView($_POST, 'notes');
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('home.deletePersonalItem', $securityToken))
+        {
+            $this->redirectToMyNotes($view, 'token');
+        }
+
+        $itemID = (int) $_POST['itemID'];
+        $personalDashboard = new PersonalDashboard($this->_siteID);
+        if (!$personalDashboard->isSchemaAvailable())
+        {
+            $this->redirectToMyNotes($view, 'schema');
+        }
+
+        $result = $personalDashboard->deleteItem($itemID, $this->_userID);
+        if (empty($result['success']))
+        {
+            $error = isset($result['error']) ? $result['error'] : 'failed';
+            $this->redirectToMyNotes($view, $error);
+        }
+
+        $this->redirectToMyNotes($view, 'deleted');
+    }
+
+    private function getMyNotesView($source, $defaultView = 'notes')
+    {
+        if (!is_array($source) || !isset($source['view']))
+        {
+            return $defaultView;
+        }
+
+        $view = strtolower(trim((string) $source['view']));
+        if ($view === 'todos')
+        {
+            return 'todos';
+        }
+
+        return 'notes';
+    }
+
+    private function redirectToMyNotes($view, $msg = '')
+    {
+        $view = ($view === 'todos') ? 'todos' : 'notes';
+        $transferURI = 'm=home&a=myNotes&view=' . $view;
+        if ($msg !== '')
+        {
+            $transferURI .= '&msg=' . rawurlencode($msg);
+        }
+        CATSUtility::transferRelativeURI($transferURI);
     }
 
     private function onDeleteInboxThread()

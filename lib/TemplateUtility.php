@@ -1111,6 +1111,7 @@ class TemplateUtility
         $iconMap = array(
             'home' => 'home',
             'home_inbox' => 'activity',
+            'home_notes' => 'activity',
             'dashboard' => 'home',
             'candidates' => 'candidates',
             'joborders' => 'joborders',
@@ -1161,6 +1162,18 @@ class TemplateUtility
             $itemsByKey['home']['action'] = 'home';
         }
 
+        if ($rolePagePermissions === null ||
+            $rolePagePermissions->isPageAllowedForUser($currentUserID, 'home', $currentAccessLevel))
+        {
+            $itemsByKey['home_notes'] = array(
+                'label' => 'My Notes & To-do',
+                'href' => $indexName . '?m=home&amp;a=myNotes',
+                'module' => 'home',
+                'action' => 'myNotes',
+                'icon' => 'activity'
+            );
+        }
+
         if (
             $_SESSION['CATS']->getAccessLevel('candidates.show') >= ACCESS_LEVEL_READ ||
             $_SESSION['CATS']->getAccessLevel('joborders.show') >= ACCESS_LEVEL_READ
@@ -1186,7 +1199,7 @@ class TemplateUtility
         }
 
           $groups = array(
-              array('label' => 'Overview', 'modules' => array('dashboard', 'home', 'home_inbox', 'activity')),
+              array('label' => 'Overview', 'modules' => array('dashboard', 'home', 'home_inbox', 'home_notes', 'activity')),
             array('label' => 'Core Recruiting', 'modules' => array('candidates', 'joborders', 'companies', 'contacts')),
             array('label' => 'Sourcing & Lists', 'modules' => array('sourcing', 'lists')),
             array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports')),
