@@ -166,5 +166,20 @@
         </div>
     </div>
 
+<script type="text/javascript">
+function JobOrders_toggleMonitored(checkboxElement, jobOrderID)
+{
+    var monitoredValue = (checkboxElement && checkboxElement.checked) ? '1' : '0';
+    var currentURL = (window.location.search && window.location.search.length > 1)
+        ? window.location.search.substring(1)
+        : 'm=joborders&a=listByView';
+
+    window.location.href = '<?php echo CATSUtility::getIndexName(); ?>?m=joborders&a=setMonitoredJobOrder'
+        + '&jobOrderID=' + encodeURIComponent(jobOrderID)
+        + '&value=' + encodeURIComponent(monitoredValue)
+        + '&currentURL=' + encodeURIComponent(currentURL);
+}
+</script>
+
 <?php TemplateUtility::printFooter(); ?>
 

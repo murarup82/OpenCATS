@@ -37,6 +37,7 @@ include_once(LEGACY_ROOT . '/lib/JobOrderMessages.php');
 include_once(LEGACY_ROOT . '/lib/PersonalDashboard.php');
 include_once(LEGACY_ROOT . '/lib/FeedbackSettings.php');
 include_once(LEGACY_ROOT . '/lib/Users.php');
+include_once(LEGACY_ROOT . '/lib/UserRoles.php');
 
 class HomeUI extends UserInterface
 {
@@ -213,9 +214,17 @@ class HomeUI extends UserInterface
 
     private function canDeleteAnyInboxThread()
     {
-        return (
-            $_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT) >= ACCESS_LEVEL_SA
-        );
+        $userRoles = new UserRoles($this->_siteID);
+        if ($userRoles->isSchemaAvailable())
+        {
+            $role = $userRoles->getForUser($this->_userID);
+            if (!empty($role) && !empty($role['roleKey']))
+            {
+                return in_array($role['roleKey'], array('site_admin', 'hr_manager'), true);
+            }
+        }
+
+        return ($_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT) >= ACCESS_LEVEL_DELETE);
     }
 
     private function home()

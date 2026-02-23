@@ -385,6 +385,14 @@ class JobOrdersUI extends UserInterface
                 }
                 break;
 
+            case 'setMonitoredJobOrder':
+                if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onSetMonitoredJobOrder();
+                break;
+
             /* Main job orders page. */
             case 'listByView':
             default:
@@ -1790,6 +1798,71 @@ class JobOrdersUI extends UserInterface
         if (!eval(Hooks::get('JO_ON_DELETE_POST'))) return;
 
         CATSUtility::transferRelativeURI('m=joborders&a=listByView');
+    }
+
+    private function onSetMonitoredJobOrder()
+    {
+        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
+        }
+
+        $jobOrderID = (int) $_GET['jobOrderID'];
+        $value = strtolower($this->getTrimmedInput('value', $_GET));
+        $isMonitored = in_array($value, array('1', 'yes', 'y', 'true', 'on'), true);
+        $redirectURI = $this->sanitizeListTransferURI(
+            $this->getTrimmedInput('currentURL', $_GET)
+        );
+
+        $jobOrders = new JobOrders($this->_siteID);
+        $jobOrderData = $jobOrders->get($jobOrderID);
+        if (empty($jobOrderData))
+        {
+            CATSUtility::transferRelativeURI($redirectURI);
+        }
+
+        $jobOrders->extraFields->setValue(
+            'Monitored JO',
+            $isMonitored ? 'Yes' : 'No',
+            $jobOrderID
+        );
+
+        CATSUtility::transferRelativeURI($redirectURI);
+    }
+
+    private function sanitizeListTransferURI($rawURI)
+    {
+        $defaultURI = 'm=joborders&a=listByView';
+        $rawURI = trim((string) $rawURI);
+        if ($rawURI === '')
+        {
+            return $defaultURI;
+        }
+
+        $rawURI = str_replace(array("\r", "\n"), '', $rawURI);
+        if (strpos($rawURI, 'index.php?') === 0)
+        {
+            $rawURI = substr($rawURI, strlen('index.php?'));
+        }
+        $rawURI = ltrim($rawURI, '?');
+
+        if ($rawURI === '')
+        {
+            return $defaultURI;
+        }
+
+        $rawURILower = strtolower($rawURI);
+        if (strpos($rawURILower, 'http://') === 0 || strpos($rawURILower, 'https://') === 0 || strpos($rawURILower, '//') === 0)
+        {
+            return $defaultURI;
+        }
+
+        if (strpos($rawURI, 'm=') !== 0)
+        {
+            return $defaultURI;
+        }
+
+        return $rawURI;
     }
 
     /*

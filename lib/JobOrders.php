@@ -1227,6 +1227,32 @@ class JobOrdersDataGrid extends DataGrid
                                       'exportRender'   => 'return $rsData[\'type\'];',
                                       'filter'         => 'joborder.type'),
 
+            'Monitored JO' =>   array('select'         => 'IF(LOWER(TRIM(IFNULL((SELECT extra_field.value
+                                                                                FROM extra_field
+                                                                                WHERE extra_field.data_item_id = joborder.joborder_id
+                                                                                  AND extra_field.site_id = '.$this->_siteID.'
+                                                                                  AND extra_field.data_item_type = '.DATA_ITEM_JOBORDER.'
+                                                                                  AND LOWER(extra_field.field_name) = \'monitored jo\'
+                                                                                ORDER BY extra_field.extra_field_id DESC
+                                                                                LIMIT 1), \'\'))) IN (\'yes\', \'y\', \'1\', \'true\', \'on\'), 1, 0) AS monitoredJOFlag',
+                                      'pagerRender'    => '
+                                                        $isMonitored = ((int) $rsData[\'monitoredJOFlag\'] === 1);
+                                                        $label = $isMonitored ? \'Yes\' : \'No\';
+
+                                                        if ($_SESSION[\'CATS\']->getAccessLevel(\'joborders.edit\') >= ACCESS_LEVEL_EDIT)
+                                                        {
+                                                            $checked = $isMonitored ? \' checked="checked"\' : \'\';
+                                                            return \'<input type="checkbox" class="jobordersMonitoredToggle" title="Toggle Monitored JO"\' . $checked . \' onclick="JobOrders_toggleMonitored(this, \'.$rsData[\'jobOrderID\'].\');" /> \'.$label;
+                                                        }
+
+                                                        return $label;
+                                                    ',
+                                      'sortableColumn' => 'monitoredJOFlag',
+                                      'pagerWidth'     => 70,
+                                      'pagerOptional'  => true,
+                                      'alphaNavigation'=> false,
+                                      'exportRender'   => 'return (((int) $rsData[\'monitoredJOFlag\'] === 1) ? \'Yes\' : \'No\');'),
+
             'Status' =>         array('select'         => 'joborder.status AS status',
                                       'pagerRender'    => 'return $rsData[\'status\'];',
                                       'exportRender'   => 'return $rsData[\'status\'];',
