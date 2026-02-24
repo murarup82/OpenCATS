@@ -99,6 +99,40 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 <p class="warning">This Candidate is hidden.  Only CATS Administrators can view it or search for it.  To make it visible by the site users, click <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0" style="font-weight:bold;">Here.</a></p>
             <?php endif; ?>
 
+            <style type="text/css">
+                .candidateCommentsBadge
+                {
+                    display: inline-block;
+                    margin-left: 8px;
+                    min-width: 20px;
+                    padding: 1px 7px;
+                    border-radius: 999px;
+                    background: #e9f7ee;
+                    border: 1px solid #9ecab1;
+                    color: #1f6f3c;
+                    font-size: 11px;
+                    line-height: 16px;
+                    text-align: center;
+                    font-weight: bold;
+                    vertical-align: middle;
+                }
+
+                #candidateCommentsToggleButton.candidateCommentsHasItems
+                {
+                    background: #e8f7ef;
+                    border-color: #8cc8a4;
+                    color: #1f6f3c;
+                    font-weight: 600;
+                }
+
+                #candidateCommentsToggleButton.candidateCommentsHasItems.is-open
+                {
+                    background: #ffeef5;
+                    border-color: #e5a6c1;
+                    color: #8c2e58;
+                }
+            </style>
+
             <div class="ui2-grid">
                 <div class="ui2-col-main">
                     <div class="ui2-card ui2-card--section">
@@ -377,7 +411,12 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 
                     <div class="ui2-card ui2-card--section" id="candidateCommentsSection">
                         <div class="ui2-card-header">
-                            <div class="ui2-card-title">Team Comments</div>
+                            <div class="ui2-card-title">
+                                Team Comments
+                                <?php if ((int) $this->candidateCommentCount > 0): ?>
+                                    <span class="candidateCommentsBadge"><?php echo((int) $this->candidateCommentCount); ?></span>
+                                <?php endif; ?>
+                            </div>
                             <div class="ui2-card-actions">
                                 <?php if (!empty($this->canAddCandidateComment)): ?>
                                     <button
@@ -388,8 +427,9 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 <?php endif; ?>
                                 <button
                                     type="button"
-                                    class="ui2-button ui2-button--secondary"
+                                    class="ui2-button ui2-button--secondary<?php if ((int) $this->candidateCommentCount > 0): ?> candidateCommentsHasItems<?php endif; ?><?php if (!empty($this->candidateCommentsInitiallyOpen) && (int) $this->candidateCommentCount > 0): ?> is-open<?php endif; ?>"
                                     id="candidateCommentsToggleButton"
+                                    data-has-comments="<?php echo(((int) $this->candidateCommentCount > 0) ? '1' : '0'); ?>"
                                     onclick="CandidateComments_toggle();"
                                 ><?php if (!empty($this->candidateCommentsInitiallyOpen)): ?>Hide<?php else: ?>Show<?php endif; ?> Comments (<?php echo((int) $this->candidateCommentCount); ?>)</button>
                             </div>
@@ -1089,6 +1129,19 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             var shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : (panel.style.display === 'none');
             panel.style.display = shouldOpen ? '' : 'none';
             button.innerHTML = button.innerHTML.replace(/^(Show|Hide)/, shouldOpen ? 'Hide' : 'Show');
+            button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+
+            if (button.getAttribute('data-has-comments') === '1')
+            {
+                if (shouldOpen)
+                {
+                    button.className += (button.className.indexOf(' is-open') === -1) ? ' is-open' : '';
+                }
+                else
+                {
+                    button.className = button.className.replace(/\bis-open\b/g, '').replace(/\s{2,}/g, ' ').replace(/^\s+|\s+$/g, '');
+                }
+            }
         }
 
         function CandidateComments_openComposer()

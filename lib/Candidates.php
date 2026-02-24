@@ -1969,8 +1969,29 @@ class CandidatesDataGrid extends DataGrid
             ),
 
             'First Name' =>     array(
-                'select'         => 'candidate.first_name AS firstName',
-                'pagerRender'    => 'if ($rsData[\'isHot\'] == 1) $className =  \'jobLinkHot\'; else $className = \'jobLinkCold\'; return \'<a href="' . CATSUtility::getIndexName() . '?m=candidates&amp;a=show&amp;candidateID=\'.$rsData[\'candidateID\'].\'" class="\'.$className.\'">\'.htmlspecialchars($rsData[\'firstName\']).\'</a>\';',
+                'select'         => 'candidate.first_name AS firstName,
+                                    (
+                                        SELECT
+                                            COUNT(*)
+                                        FROM
+                                            activity AS candidate_comment_activity
+                                        WHERE
+                                            candidate_comment_activity.data_item_id = candidate.candidate_id
+                                        AND
+                                            candidate_comment_activity.data_item_type = ' . DATA_ITEM_CANDIDATE . '
+                                        AND
+                                            candidate_comment_activity.site_id = ' . $this->_siteID . '
+                                        AND
+                                            candidate_comment_activity.type = 400
+                                        AND
+                                            candidate_comment_activity.notes LIKE \'[CANDIDATE_COMMENT]%\'
+                                    ) AS profileCommentCount',
+                'pagerRender'    => '
+                                    $className = ($rsData[\'isHot\'] == 1) ? \'jobLinkHot\' : \'jobLinkCold\';
+                                    $commentCount = isset($rsData[\'profileCommentCount\']) ? (int) $rsData[\'profileCommentCount\'] : 0;
+                                    return \'<a href="' . CATSUtility::getIndexName() . '?m=candidates&amp;a=show&amp;candidateID=\'.$rsData[\'candidateID\'].\'" class="\'.$className.\'">\'.htmlspecialchars($rsData[\'firstName\']).\'</a>\'
+                                        . \'<span class="candidateCommentCountMeta" data-comment-count="\'.$commentCount.\'" style="display:none;"></span>\';
+                                  ',
                 'sortableColumn' => 'firstName',
                 'pagerWidth'     => 75,
                 'pagerOptional'  => false,
@@ -2031,6 +2052,26 @@ class CandidatesDataGrid extends DataGrid
                 'sortableColumn'    => 'keySkills',
                 'pagerWidth'   => 210,
                 'filter'         => 'candidate.key_skills'
+            ),
+
+            'Comments' =>      array(
+                'select'         => '',
+                'pagerRender'    => '
+                                    $commentCount = isset($rsData[\'profileCommentCount\']) ? (int) $rsData[\'profileCommentCount\'] : 0;
+                                    if ($commentCount > 0)
+                                    {
+                                        return \'<span class="candidateCommentCountBadge" data-comment-count="\'.$commentCount.\'">\'.$commentCount.\'</span>\';
+                                    }
+                                    return \'<span class="candidateCommentCountBadge candidateCommentCountBadge--empty" data-comment-count="0">0</span>\';
+                                  ',
+                'sortableColumn' => 'profileCommentCount',
+                'pagerAlign'     => 'center',
+                'pagerWidth'     => 60,
+                'pagerOptional'  => true,
+                'alphaNavigation'=> false,
+                'exportRender'   => 'return isset($rsData[\'profileCommentCount\']) ? (int) $rsData[\'profileCommentCount\'] : 0;',
+                'filterHaving'   => 'profileCommentCount',
+                'filterTypes'    => '===>=<'
             ),
 
             'Recent Status' => array(
