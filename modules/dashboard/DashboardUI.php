@@ -133,6 +133,38 @@ class DashboardUI extends UserInterface
                 candidate_joborder.status AS statusID,
                 candidate_joborder.is_active AS isActive,
                 candidate_joborder.rating_value AS ratingValue,
+                (
+                    SELECT
+                        COUNT(*)
+                    FROM
+                        activity AS candidate_comment_activity
+                    WHERE
+                        candidate_comment_activity.data_item_id = candidate.candidate_id
+                    AND
+                        candidate_comment_activity.data_item_type = %s
+                    AND
+                        candidate_comment_activity.site_id = %s
+                    AND
+                        candidate_comment_activity.type = 400
+                    AND
+                        candidate_comment_activity.notes LIKE '[CANDIDATE_COMMENT]%%'
+                ) AS candidateCommentCount,
+                (
+                    SELECT
+                        COUNT(*)
+                    FROM
+                        activity AS joborder_comment_activity
+                    WHERE
+                        joborder_comment_activity.data_item_id = joborder.joborder_id
+                    AND
+                        joborder_comment_activity.data_item_type = %s
+                    AND
+                        joborder_comment_activity.site_id = %s
+                    AND
+                        joborder_comment_activity.type = 400
+                    AND
+                        joborder_comment_activity.notes LIKE '[JOBORDER_COMMENT]%%'
+                ) AS jobOrderCommentCount,
                 candidate_joborder_status.short_description AS status,
                 COALESCE(history.lastStatusChange, candidate_joborder.date_modified) AS lastStatusChange,
                 DATE_FORMAT(COALESCE(history.lastStatusChange, candidate_joborder.date_modified), '%%m-%%d-%%y (%%h:%%i %%p)') AS lastStatusChangeDisplay
@@ -176,6 +208,10 @@ class DashboardUI extends UserInterface
                 lastStatusChange DESC,
                 candidate_joborder.date_modified DESC
             LIMIT %s, %s",
+            $db->makeQueryInteger(DATA_ITEM_CANDIDATE),
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryInteger(DATA_ITEM_JOBORDER),
+            $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
@@ -193,6 +229,12 @@ class DashboardUI extends UserInterface
 
         foreach ($rows as $index => $row)
         {
+            $candidateCommentCount = isset($row['candidateCommentCount']) ? (int) $row['candidateCommentCount'] : 0;
+            $jobOrderCommentCount = isset($row['jobOrderCommentCount']) ? (int) $row['jobOrderCommentCount'] : 0;
+            $rows[$index]['candidateCommentCount'] = $candidateCommentCount;
+            $rows[$index]['jobOrderCommentCount'] = $jobOrderCommentCount;
+            $rows[$index]['totalCommentCount'] = $candidateCommentCount + $jobOrderCommentCount;
+
             $rows[$index]['ratingLine'] = TemplateUtility::getRatingObject(
                 $row['ratingValue'],
                 $row['candidateJobOrderID'],

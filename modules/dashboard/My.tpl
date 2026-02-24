@@ -37,6 +37,29 @@
                     padding-left: 10px;
                     padding-right: 10px;
                 }
+                .my-dashboard .dashboardCommentBadge {
+                    display: inline-block;
+                    min-width: 20px;
+                    margin-right: 4px;
+                    padding: 1px 6px;
+                    border-radius: 999px;
+                    border: 1px solid #8cc8a4;
+                    background: #e8f7ef;
+                    color: #1f6f3c;
+                    font-size: 11px;
+                    font-weight: 600;
+                    line-height: 15px;
+                    text-align: center;
+                }
+                .my-dashboard .dashboardCommentBadge--empty {
+                    border-color: #cdd8e3;
+                    background: #f3f6f9;
+                    color: #677787;
+                    font-weight: 500;
+                }
+                .my-dashboard tr.dashboardRowHasComments td {
+                    background-color: #f2fcf5 !important;
+                }
             </style>
             <div class="ui2-page my-dashboard">
                 <div class="ui2-header">
@@ -109,6 +132,7 @@
                                 <th>Match</th>
                                 <th>Location</th>
                                 <th>Current Status</th>
+                                <th>Comments</th>
                                 <th>Last Status Change</th>
                                 <th>Actions</th>
                             </tr>
@@ -116,11 +140,22 @@
                         <tbody>
                             <?php if (empty($this->rows)): ?>
                                 <tr>
-                                    <td colspan="8">No pipeline entries found.</td>
+                                    <td colspan="9">No pipeline entries found.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($this->rows as $row): ?>
-                                    <tr<?php if ((int) $row['isActive'] === 0) echo(' class="pipelineClosedRow"'); ?>>
+                                    <?php
+                                        $rowClasses = array();
+                                        if ((int) $row['isActive'] === 0)
+                                        {
+                                            $rowClasses[] = 'pipelineClosedRow';
+                                        }
+                                        if (!empty($row['totalCommentCount']))
+                                        {
+                                            $rowClasses[] = 'dashboardRowHasComments';
+                                        }
+                                    ?>
+                                    <tr<?php if (!empty($rowClasses)) echo(' class="' . implode(' ', $rowClasses) . '"'); ?>>
                                         <td>
                                             <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($row['candidateID']); ?>">
                                                 <?php $this->_($row['firstName']); ?> <?php $this->_($row['lastName']); ?>
@@ -155,6 +190,16 @@
                                             <?php if ((int) $row['isActive'] === 0): ?>
                                                 <span class="pipelineClosedTag">Closed</span>
                                             <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="dashboardCommentBadge<?php if ((int) $row['candidateCommentCount'] <= 0) echo(' dashboardCommentBadge--empty'); ?>"
+                                                title="Candidate comments"
+                                            >C <?php echo((int) $row['candidateCommentCount']); ?></span>
+                                            <span
+                                                class="dashboardCommentBadge<?php if ((int) $row['jobOrderCommentCount'] <= 0) echo(' dashboardCommentBadge--empty'); ?>"
+                                                title="Job order comments"
+                                            >JO <?php echo((int) $row['jobOrderCommentCount']); ?></span>
                                         </td>
                                         <td><?php $this->_($row['lastStatusChangeDisplay']); ?></td>
                                         <td>

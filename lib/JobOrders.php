@@ -1192,8 +1192,24 @@ class JobOrdersDataGrid extends DataGrid
                                         'filter'         => 'joborder.client_job_id',
                                         'filterTypes'   => '===>=<'),
 
-            'Title' =>       array('select'         => 'joborder.title AS title',
-                                      'pagerRender'    => 'if ($rsData[\'isHot\'] == 1) $className =  \'jobLinkHot\'; else $className = \'jobLinkCold\'; return \'<a href="'.CATSUtility::getIndexName().'?m=joborders&amp;a=show&amp;jobOrderID=\'.$rsData[\'jobOrderID\'].\'" class="\'.$className.\'">\'.htmlspecialchars($rsData[\'title\']).\'</a>\';',
+            'Title' =>       array('select'         => 'joborder.title AS title,
+                                                         (
+                                                             SELECT
+                                                                 COUNT(*)
+                                                             FROM
+                                                                 activity AS joborder_comment_activity
+                                                             WHERE
+                                                                 joborder_comment_activity.data_item_id = joborder.joborder_id
+                                                             AND
+                                                                 joborder_comment_activity.data_item_type = '.DATA_ITEM_JOBORDER.'
+                                                             AND
+                                                                 joborder_comment_activity.site_id = '.$this->_siteID.'
+                                                             AND
+                                                                 joborder_comment_activity.type = 400
+                                                             AND
+                                                                 joborder_comment_activity.notes LIKE \'[JOBORDER_COMMENT]%\'
+                                                         ) AS profileCommentCount',
+                                      'pagerRender'    => '$className = ($rsData[\'isHot\'] == 1) ? \'jobLinkHot\' : \'jobLinkCold\'; $commentCount = isset($rsData[\'profileCommentCount\']) ? (int) $rsData[\'profileCommentCount\'] : 0; return \'<a href="'.CATSUtility::getIndexName().'?m=joborders&amp;a=show&amp;jobOrderID=\'.$rsData[\'jobOrderID\'].\'" class="\'.$className.\'">\'.htmlspecialchars($rsData[\'title\']).\'</a>\' . \'<span class="jobOrderCommentCountMeta" data-comment-count="\'.$commentCount.\'" style="display:none;"></span>\';',
                                       'sortableColumn' => 'title',
                                       'pagerWidth'     => 165,
                                       'pagerOptional'  => false,
@@ -1252,6 +1268,17 @@ class JobOrdersDataGrid extends DataGrid
                                       'pagerOptional'  => true,
                                       'alphaNavigation'=> false,
                                       'exportRender'   => 'return (((int) $rsData[\'monitoredJOFlag\'] === 1) ? \'Yes\' : \'No\');'),
+
+            'Team Comments' => array('select'         => '',
+                                      'pagerRender'    => '$commentCount = isset($rsData[\'profileCommentCount\']) ? (int) $rsData[\'profileCommentCount\'] : 0; if ($commentCount > 0) { return \'<span class="jobOrderCommentCountBadge" data-comment-count="\'.$commentCount.\'">\'.$commentCount.\'</span>\'; } return \'<span class="jobOrderCommentCountBadge jobOrderCommentCountBadge--empty" data-comment-count="0">0</span>\';',
+                                      'sortableColumn' => 'profileCommentCount',
+                                      'pagerAlign'     => 'center',
+                                      'pagerWidth'     => 70,
+                                      'pagerOptional'  => true,
+                                      'alphaNavigation'=> false,
+                                      'exportRender'   => 'return isset($rsData[\'profileCommentCount\']) ? (int) $rsData[\'profileCommentCount\'] : 0;',
+                                      'filterHaving'   => 'profileCommentCount',
+                                      'filterTypes'    => '===>=<'),
 
             'Status' =>         array('select'         => 'joborder.status AS status',
                                       'pagerRender'    => 'return $rsData[\'status\'];',

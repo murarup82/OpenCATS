@@ -2,9 +2,13 @@
 <?php TemplateUtility::printHeader('Job Orders', array( 'js/highlightrows.js',  'js/sweetTitles.js', 'js/export.js', 'js/dataGrid.js', 'js/dataGridFilters.js')); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active); ?>
+<?php $md5InstanceName = md5($this->dataGrid->getInstanceName()); ?>
     <style type="text/css">
     div.addJobOrderButton { background: #4172E3 url(images/nodata/jobOrdersButton.jpg); cursor: pointer; width: 337px; height: 67px; }
     div.addJobOrderButton:hover { background: #4172E3 url(images/nodata/jobOrdersButton-o.jpg); cursor: pointer; width: 337px; height: 67px; }
+    .jobOrderCommentCountBadge { display:inline-block; min-width:18px; padding:1px 6px; border-radius:999px; border:1px solid #8cc8a4; background:#e8f7ef; color:#1f6f3c; font-weight:bold; font-size:11px; line-height:14px; text-align:center; }
+    .jobOrderCommentCountBadge--empty { border-color:#cdd8e3; background:#f3f6f9; color:#677787; font-weight:normal; }
+    tr.jobOrderRowHasComments td { background-color:#f2fcf5 !important; }
     </style>
     <div id="main">
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?><?php echo !$this->totalJobOrders ? ' style="background-color: #E6EEFF; padding: 0;"' : ''; ?>>
@@ -127,6 +131,47 @@
             <div class="ui2-card ui2-datatable-card ui2-datatable-card--avel">
                 <?php $this->dataGrid->draw();  ?>
             </div>
+            <script type="text/javascript">
+            (function ()
+            {
+                var table = document.getElementById('table<?php echo $md5InstanceName; ?>');
+                if (!table)
+                {
+                    return;
+                }
+
+                var markers = table.getElementsByTagName('span');
+                for (var i = 0; i < markers.length; i++)
+                {
+                    var marker = markers[i];
+                    if (!marker.className || marker.className.indexOf('jobOrderCommentCountMeta') === -1)
+                    {
+                        continue;
+                    }
+
+                    var count = parseInt(marker.getAttribute('data-comment-count'), 10);
+                    if (isNaN(count) || count <= 0)
+                    {
+                        continue;
+                    }
+
+                    var row = marker;
+                    while (row && row.tagName !== 'TR')
+                    {
+                        row = row.parentNode;
+                    }
+                    if (!row)
+                    {
+                        continue;
+                    }
+
+                    if (row.className.indexOf('jobOrderRowHasComments') === -1)
+                    {
+                        row.className += (row.className ? ' ' : '') + 'jobOrderRowHasComments';
+                    }
+                }
+            })();
+            </script>
 
             <div class="ui2-datatable-footer">
                 <div class="ui2-datatable-footer-left">
