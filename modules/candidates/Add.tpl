@@ -31,7 +31,7 @@
                 <tr>
                     <td class="tdVertical">
                         <div id="candidateAlreadyInSystemSimple">
-                            This profile may already be in the system.&nbsp;&nbsp;Possible duplicate candidate profile:&nbsp;&nbsp;
+                            Potential duplicate detected: a candidate with matching contact data may already exist.&nbsp;&nbsp;Open existing profile:&nbsp;&nbsp;
                             <a href="javascript:void(0);" onclick="window.open('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID='+candidateIsAlreadyInSystemID);">
                                 <img src="images/new_window.gif" border="0" />
                                 <img src="images/candidate_small.gif" border="0" />
@@ -39,8 +39,8 @@
                             </a>
                         </div>
                         <div id="dupCheckBanner" style="display: none;">
-                            <div id="dupCheckTitle"></div>
-                            <div id="dupCheckMessage"></div>
+                            <div id="dupCheckTitle">Potential duplicate candidate detected</div>
+                            <div id="dupCheckMessage">Please review similar candidate profiles before creating a new profile.</div>
                             <div id="dupCheckTable" style="display: none;"></div>
                             <div id="dupCheckActions">
                                 <input type="button" class="button ui2-button--secondary" id="dupCheckReview" value="Review matches" />
@@ -508,13 +508,18 @@
                 }
                 #dupCheckBanner {
                     display: none;
+                    padding: 6px 8px;
+                    border-left: 4px solid #f0a000;
+                    background: #fff8d6;
                 }
                 #dupCheckTitle {
                     font-weight: bold;
                     margin-bottom: 4px;
+                    color: #6c5200;
                 }
                 #dupCheckMessage {
                     margin: 6px 0;
+                    color: #4a3a00;
                 }
                 #dupCheckTable {
                     margin-top: 6px;

@@ -14,13 +14,44 @@ function _dupBannerGetNodes()
     };
 }
 
+function _dupBannerSetFallbackCopy(nodes, fallbackTitle, fallbackMessage)
+{
+    if (!nodes)
+    {
+        return;
+    }
+
+    if (nodes.title && _dupBannerTrim(nodes.title.innerHTML) === '')
+    {
+        nodes.title.innerHTML = fallbackTitle || 'Potential duplicate candidate detected';
+    }
+    if (nodes.message && _dupBannerTrim(nodes.message.innerHTML) === '')
+    {
+        nodes.message.innerHTML = fallbackMessage || 'Please review possible duplicates before adding a new candidate profile.';
+    }
+}
+
 function _dupBannerIsHidden(node)
 {
     if (!node)
     {
         return true;
     }
-    return (node.style.display === 'none');
+    if (node.style.display === 'none')
+    {
+        return true;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function')
+    {
+        var computed = window.getComputedStyle(node, null);
+        if (computed && computed.display === 'none')
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function _dupBannerEnsureVisible(nodes)
@@ -35,13 +66,14 @@ function _dupBannerEnsureVisible(nodes)
 
     if (simpleHidden && dupHidden)
     {
-        if (nodes.simple)
-        {
-            nodes.simple.style.display = '';
-        }
-        else if (nodes.dup)
+        if (nodes.dup)
         {
             nodes.dup.style.display = '';
+            _dupBannerSetFallbackCopy(nodes);
+        }
+        else if (nodes.simple)
+        {
+            nodes.simple.style.display = '';
         }
     }
 }
@@ -71,14 +103,11 @@ function showDupCheckBanner(fallbackTitle, fallbackMessage)
     if (nodes.simple) nodes.simple.style.display = 'none';
     if (nodes.dup) nodes.dup.style.display = '';
 
-    if (nodes.title && _dupBannerTrim(nodes.title.innerHTML) === '')
-    {
-        nodes.title.innerHTML = fallbackTitle || 'Possible duplicate found';
-    }
-    if (nodes.message && _dupBannerTrim(nodes.message.innerHTML) === '')
-    {
-        nodes.message.innerHTML = fallbackMessage || 'This profile may already be in the system.';
-    }
+    _dupBannerSetFallbackCopy(
+        nodes,
+        fallbackTitle || 'Potential duplicate candidate detected',
+        fallbackMessage || 'Please review possible duplicates before adding a new candidate profile.'
+    );
 
     _dupBannerEnsureVisible(nodes);
 }
@@ -397,13 +426,13 @@ var CandidateDuplicateCheck = (function ()
         var isHard = (type === 'hard');
         if (titleNode)
         {
-            titleNode.innerHTML = isHard ? 'Possible duplicate found' : 'Similar candidate profiles found';
+            titleNode.innerHTML = isHard ? 'Exact duplicate detected (same email or phone)' : 'Potential duplicate candidate detected';
         }
         if (messageNode)
         {
             messageNode.innerHTML = isHard
-                ? 'A candidate with the same email/phone already exists. Please open the existing profile.'
-                : 'Similar candidate profiles were found. Please review before creating a duplicate.';
+                ? 'A candidate with the same email or phone already exists. Open the existing profile and update it instead of creating a new one.'
+                : 'Similar candidate profiles were found. Review the matches before creating a new candidate profile.';
         }
         if (tableNode)
         {
@@ -434,14 +463,14 @@ var CandidateDuplicateCheck = (function ()
         state.lastType = type;
         configureBanner(type, state.lastMatches);
         var fallbackTitle = (type === 'hard')
-            ? 'Possible duplicate found'
-            : 'Similar candidate profiles found';
+            ? 'Exact duplicate detected (same email or phone)'
+            : 'Potential duplicate candidate detected';
         var fallbackMessage = (type === 'hard')
-            ? 'A candidate with the same email/phone already exists. Please open the existing profile.'
-            : 'Similar candidate profiles were found. Please review before creating a duplicate.';
+            ? 'A candidate with the same email or phone already exists. Open the existing profile and update it instead of creating a new one.'
+            : 'Similar candidate profiles were found. Review the matches before creating a new candidate profile.';
         if (type === 'hard')
         {
-            blockAddCandidateButton('Duplicate candidate detected. Please open the existing profile.');
+            blockAddCandidateButton('Exact duplicate detected. Open the existing profile.');
         }
         else
         {
@@ -687,6 +716,14 @@ var CandidateDuplicateCheck = (function ()
 
         bindActions();
         bindFieldChangeReset();
+
+        // Recover from stale UI states where the yellow banner is visible but both message blocks are hidden.
+        var nodes = _dupBannerGetNodes();
+        if (nodes.table && !_dupBannerIsHidden(nodes.table))
+        {
+            _dupBannerSetFallbackCopy(nodes);
+            _dupBannerEnsureVisible(nodes);
+        }
     }
 
     return {
