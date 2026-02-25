@@ -18,9 +18,19 @@
             <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>" style="margin-bottom: 6px;">
                 <input type="hidden" name="m" value="kpis" />
                 <input type="hidden" name="officialReports" value="0" />
+                <input type="hidden" name="showDeadline" value="0" />
+                <input type="hidden" name="hideZeroOpenPositions" value="0" />
                 <label for="officialReports" class="noteUnsizedSpan" style="margin-right: 10px;">
                     <input type="checkbox" id="officialReports" name="officialReports" value="1"<?php if (!empty($this->officialReports)): ?> checked="checked"<?php endif; ?> onchange="this.form.submit();" />
                     Official Reports
+                </label>
+                <label for="showDeadline" class="noteUnsizedSpan" style="margin-right: 10px;">
+                    <input type="checkbox" id="showDeadline" name="showDeadline" value="1"<?php if (!empty($this->showDeadline)): ?> checked="checked"<?php endif; ?> onchange="this.form.submit();" />
+                    Show time to deadline
+                </label>
+                <label for="hideZeroOpenPositions" class="noteUnsizedSpan" style="margin-right: 10px;">
+                    <input type="checkbox" id="hideZeroOpenPositions" name="hideZeroOpenPositions" value="1"<?php if (!isset($this->hideZeroOpenPositions) || !empty($this->hideZeroOpenPositions)): ?> checked="checked"<?php endif; ?> onchange="this.form.submit();" />
+                    Hide Total Open Positions = 0
                 </label>
                 <span class="noteUnsizedSpan">Company KPI summary (Week: <?php $this->_($this->weekLabel); ?>)</span>
             </form>
@@ -123,17 +133,21 @@
             <?php endif; ?>
 
             <?php if (!empty($this->jobOrderKpiRows)): ?>
+                <?php $table2ColumnCount = !empty($this->showDeadline) ? 8 : 7; ?>
                 <table class="kpiTable" style="margin-top: 12px;">
                     <thead>
                         <tr>
-                            <th colspan="7">(Q) Client Interview : Acceptance</th>
+                            <th colspan="<?php echo((int) $table2ColumnCount); ?>">(Q) Client Interview : Acceptance</th>
                         </tr>
                         <tr>
                             <th>Role</th>
-                            <th>
-                                Time to deadline
-                                <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Expected Completion Date minus today (days). Negative = overdue; '-' = not set; gray = invalid date." />
-                            </th>
+                            <th>Status</th>
+                            <?php if (!empty($this->showDeadline)): ?>
+                                <th>
+                                    Time to deadline
+                                    <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Expected Completion Date minus today (days). Negative = overdue; '-' = not set; gray = invalid date." />
+                                </th>
+                            <?php endif; ?>
                             <th>Client</th>
                             <th>
                                 Total open positions
@@ -161,9 +175,12 @@
                                         <?php echo(htmlspecialchars($row['title'])); ?>
                                     </a>
                                 </td>
-                                <td<?php if (!empty($row['timeToDeadlineClass'])): ?> class="<?php echo(htmlspecialchars($row['timeToDeadlineClass'])); ?>"<?php endif; ?>>
-                                    <?php echo(htmlspecialchars($row['timeToDeadline'])); ?>
-                                </td>
+                                <td><?php echo(htmlspecialchars($row['status'])); ?></td>
+                                <?php if (!empty($this->showDeadline)): ?>
+                                    <td<?php if (!empty($row['timeToDeadlineClass'])): ?> class="<?php echo(htmlspecialchars($row['timeToDeadlineClass'])); ?>"<?php endif; ?>>
+                                        <?php echo(htmlspecialchars($row['timeToDeadline'])); ?>
+                                    </td>
+                                <?php endif; ?>
                                 <td><?php echo(htmlspecialchars($row['companyName'])); ?></td>
                                 <td><?php echo((int) $row['totalOpenPositions']); ?></td>
                                 <td><?php echo((int) $row['submittedCount']); ?></td>
@@ -175,7 +192,9 @@
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-                <p class="noteUnsizedSpan">Time to deadline uses "<?php $this->_($this->expectedCompletionFieldName); ?>" (date - today). Official Reports filter applies.</p>
+                <?php if (!empty($this->showDeadline)): ?>
+                    <p class="noteUnsizedSpan">Time to deadline uses "<?php $this->_($this->expectedCompletionFieldName); ?>" (date - today). Official Reports filter applies.</p>
+                <?php endif; ?>
             <?php endif; ?>
 
             <?php if (!empty($this->requestQualifiedRows)): ?>

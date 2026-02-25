@@ -49,6 +49,8 @@ class KpisUI extends UserInterface
         $db = DatabaseConnection::getInstance();
         $siteID = $this->_siteID;
         $officialReports = true;
+        $showDeadline = false;
+        $hideZeroOpenPositions = true;
         if (isset($_GET['officialReports']))
         {
             if ($_GET['officialReports'] == '0' || $_GET['officialReports'] === 'false')
@@ -58,6 +60,28 @@ class KpisUI extends UserInterface
             else
             {
                 $officialReports = true;
+            }
+        }
+        if (isset($_GET['showDeadline']))
+        {
+            if ($_GET['showDeadline'] == '0' || $_GET['showDeadline'] === 'false')
+            {
+                $showDeadline = false;
+            }
+            else
+            {
+                $showDeadline = true;
+            }
+        }
+        if (isset($_GET['hideZeroOpenPositions']))
+        {
+            if ($_GET['hideZeroOpenPositions'] == '0' || $_GET['hideZeroOpenPositions'] === 'false')
+            {
+                $hideZeroOpenPositions = false;
+            }
+            else
+            {
+                $hideZeroOpenPositions = true;
             }
         }
 
@@ -180,6 +204,7 @@ class KpisUI extends UserInterface
                 joborder_id AS jobOrderID,
                 title,
                 company_id AS companyID,
+                status,
                 date_created AS dateCreated,
                 openings_available AS openingsAvailable,
                 openings
@@ -200,6 +225,7 @@ class KpisUI extends UserInterface
                 'jobOrderID' => (int) $row['jobOrderID'],
                 'title' => $row['title'],
                 'companyID' => (int) $row['companyID'],
+                'status' => $row['status'],
                 'dateCreated' => $row['dateCreated'],
                 'openingsAvailable' => (int) $row['openingsAvailable'],
                 'openings' => (int) $row['openings']
@@ -733,6 +759,10 @@ class KpisUI extends UserInterface
 
             $jobOrderID = $jobOrder['jobOrderID'];
             $openPositions = isset($openPositionsByJobOrder[$jobOrderID]) ? $openPositionsByJobOrder[$jobOrderID] : 0;
+            if ($hideZeroOpenPositions && $openPositions <= 0)
+            {
+                continue;
+            }
             $submittedCount = isset($submittedByJobOrder[$jobOrderID]) ? $submittedByJobOrder[$jobOrderID] : 0;
             $hiredCount = isset($hiredByJobOrder[$jobOrderID]) ? $hiredByJobOrder[$jobOrderID] : 0;
             $acceptedCount = isset($acceptedByJobOrder[$jobOrderID]) ? $acceptedByJobOrder[$jobOrderID] : 0;
@@ -752,6 +782,7 @@ class KpisUI extends UserInterface
             $jobOrderKpiRows[] = array(
                 'jobOrderID' => $jobOrderID,
                 'title' => $jobOrder['title'],
+                'status' => $jobOrder['status'],
                 'companyName' => $companyName,
                 'timeToDeadline' => $deadlineDisplay['value'],
                 'timeToDeadlineClass' => $deadlineDisplay['class'],
@@ -988,6 +1019,8 @@ class KpisUI extends UserInterface
         $this->_template->assign('weekLabel', $weekLabel);
         $this->_template->assign('expectedConversionFieldName', self::EXPECTED_CONVERSION_FIELD);
         $this->_template->assign('officialReports', $officialReports);
+        $this->_template->assign('showDeadline', $showDeadline);
+        $this->_template->assign('hideZeroOpenPositions', $hideZeroOpenPositions);
         $this->_template->assign('monitoredJobOrderFieldName', self::MONITORED_JOBORDER_FIELD);
         $this->_template->assign('expectedCompletionFieldName', self::EXPECTED_COMPLETION_FIELD);
         $this->_template->assign('candidateSourceRows', $candidateSourceRows);
