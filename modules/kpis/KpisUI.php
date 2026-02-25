@@ -426,7 +426,7 @@ class KpisUI extends UserInterface
 
         $assignedByJobOrder = array();
         $hiredByJobOrder = array();
-        $approvedByJobOrder = array();
+        $approvedEverByJobOrder = array();
         $eligibleJobOrderIDs = array();
         foreach ($jobOrders as $jobOrder)
         {
@@ -476,66 +476,28 @@ class KpisUI extends UserInterface
                 }
             }
 
-            $approvedStatuses = array(
-                PIPELINE_STATUS_CUSTOMER_APPROVED,
-                PIPELINE_STATUS_AVEL_APPROVED,
-                PIPELINE_STATUS_OFFER_NEGOTIATION,
-                PIPELINE_STATUS_OFFER_ACCEPTED,
-                PIPELINE_STATUS_HIRED
-            );
             $approvedRS = $db->getAllAssoc(sprintf(
                 "SELECT
-                    latest.joborder_id AS jobOrderID,
-                    COUNT(*) AS candidateCount
+                    joborder_id AS jobOrderID,
+                    COUNT(DISTINCT candidate_id) AS candidateCount
                 FROM
-                    (
-                        SELECT
-                            cjh.candidate_id,
-                            cjh.joborder_id,
-                            cjh.status_to
-                        FROM
-                            candidate_joborder_status_history AS cjh
-                        WHERE
-                            cjh.site_id = %s
-                        AND
-                            cjh.joborder_id IN (%s)
-                        AND
-                            NOT EXISTS
-                            (
-                                SELECT
-                                    1
-                                FROM
-                                    candidate_joborder_status_history AS newer
-                                WHERE
-                                    newer.site_id = cjh.site_id
-                                AND
-                                    newer.candidate_id = cjh.candidate_id
-                                AND
-                                    newer.joborder_id = cjh.joborder_id
-                                AND
-                                    (
-                                        newer.date > cjh.date
-                                        OR
-                                        (
-                                            newer.date = cjh.date
-                                        AND
-                                            newer.candidate_joborder_status_history_id > cjh.candidate_joborder_status_history_id
-                                        )
-                                    )
-                            )
-                    ) AS latest
+                    candidate_joborder_status_history
                 WHERE
-                    latest.status_to IN (%s)
+                    site_id = %s
+                AND
+                    joborder_id IN (%s)
+                AND
+                    status_to = %s
                 GROUP BY
-                    latest.joborder_id",
+                    joborder_id",
                 $db->makeQueryInteger($siteID),
                 $this->formatIntegerList($eligibleJobOrderIDs),
-                $this->formatIntegerList($approvedStatuses)
+                $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_APPROVED)
             ));
 
             foreach ($approvedRS as $row)
             {
-                $approvedByJobOrder[(int) $row['jobOrderID']] = (int) $row['candidateCount'];
+                $approvedEverByJobOrder[(int) $row['jobOrderID']] = (int) $row['candidateCount'];
             }
         }
 
@@ -793,7 +755,7 @@ class KpisUI extends UserInterface
             }
             $assignedCount = isset($assignedByJobOrder[$jobOrderID]) ? $assignedByJobOrder[$jobOrderID] : 0;
             $hiredCount = isset($hiredByJobOrder[$jobOrderID]) ? $hiredByJobOrder[$jobOrderID] : 0;
-            $approvedCount = isset($approvedByJobOrder[$jobOrderID]) ? $approvedByJobOrder[$jobOrderID] : 0;
+            $approvedEverCount = isset($approvedEverByJobOrder[$jobOrderID]) ? $approvedEverByJobOrder[$jobOrderID] : 0;
 
             $deadlineValue = isset($expectedCompletionByJobOrder[$jobOrderID]) ?
                 $expectedCompletionByJobOrder[$jobOrderID] : '';
@@ -805,7 +767,8 @@ class KpisUI extends UserInterface
                 $companyName = $companyData[$jobOrder['companyID']]['companyName'];
             }
 
-            $hiringRate = $this->formatAcceptanceRate($approvedCount, $assignedCount);
+            $acceptanceRate = $this->formatAcceptanceRate($approvedEverCount, $assignedCount);
+            $hiringRate = $this->formatCompletionRate($hiredCount, $openPositions);
 
             $jobOrderKpiRows[] = array(
                 'jobOrderID' => $jobOrderID,
@@ -816,9 +779,9 @@ class KpisUI extends UserInterface
                 'timeToDeadlineClass' => $deadlineDisplay['class'],
                 'totalOpenPositions' => $openPositions,
                 'assignedCount' => $assignedCount,
-                'hiringRate' => $hiringRate['display'],
-                'hiringRateClass' => $this->getAcceptanceRateClass($hiringRate['percent']),
-                'completionRate' => $this->formatCompletionRate($hiredCount, $openPositions)
+                'acceptanceRate' => $acceptanceRate['display'],
+                'acceptanceRateClass' => $this->getAcceptanceRateClass($acceptanceRate['percent']),
+                'hiringRate' => $hiringRate
             );
         }
 
