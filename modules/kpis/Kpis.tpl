@@ -280,14 +280,15 @@
                 $officialReportsChecked = !empty($this->officialReports);
                 $showDeadlineChecked = !empty($this->showDeadline);
                 $showCompletionRateChecked = !empty($this->showCompletionRate);
+                $showExpectedFilledChecked = !empty($this->showExpectedFilled);
                 $hideZeroOpenChecked = (!empty($this->hideZeroOpenPositions));
                 $candidateSourceScope = isset($this->candidateSourceScope) ? $this->candidateSourceScope : 'all';
                 $jobOrderScope = isset($this->jobOrderScope) ? $this->jobOrderScope : 'all';
                 $jobOrderScopeAllChecked = ($jobOrderScope !== 'open');
                 $jobOrderScopeLabel = isset($this->jobOrderScopeLabel) ? $this->jobOrderScopeLabel : 'All Job Orders (Open + Closed + Cancelled)';
                 $filledPositionsTitle = $jobOrderScopeAllChecked ?
-                    'Candidates currently in status &quot;Hired&quot; for all job orders.' :
-                    'Candidates currently in status &quot;Hired&quot; for open job orders only.';
+                    'Candidates whose latest status is &quot;Hired&quot; for all job orders, including future-dated hired statuses.' :
+                    'Candidates whose latest status is &quot;Hired&quot; for open job orders only, including future-dated hired statuses.';
             ?>
 
             <?php if (empty($this->kpiRows)): ?>
@@ -326,6 +327,11 @@
                                                 <option value="all"<?php if ($jobOrderScope === 'all'): ?> selected="selected"<?php endif; ?>>All Job Orders (Open + Closed + Cancelled)</option>
                                             </select>
                                         </label>
+                                        <input type="hidden" name="showExpectedFilled" value="0" />
+                                        <label class="kpiToggleRow">
+                                            <input type="checkbox" name="showExpectedFilled" value="1"<?php if ($showExpectedFilledChecked): ?> checked="checked"<?php endif; ?> />
+                                            Show Expected filled
+                                        </label>
                                         <p class="kpiConfigNote">Applies to Positions Open, Client Interview : Acceptance, and Request to qualified candidate.</p>
                                         <div class="kpiConfigActions">
                                             <input type="submit" class="button" value="Apply" />
@@ -357,12 +363,14 @@
                                         Expected conversion
                                         <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Range of &quot;Conversion Rate&quot; extra field values for this client's open job orders (empty = 0%)." />
                                     </th>
+                                    <?php if (!empty($this->showExpectedFilled)): ?>
+                                        <th>
+                                            Expected filled
+                                            <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Sum of open positions x conversion rate, minus filled positions, floored at 0." />
+                                        </th>
+                                    <?php endif; ?>
                                     <th>
-                                        Expected filled
-                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Sum of open positions x conversion rate, minus filled positions, floored at 0." />
-                                    </th>
-                                    <th>
-                                        Expected in FC
+                                        Expected in forecast
                                         <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Total planned openings across all hiring plans, minus filled positions, floored at 0." />
                                     </th>
                                 </tr>
@@ -379,7 +387,9 @@
                                         <td><?php echo((int) $row['totalOpenPositions']); ?></td>
                                         <td><?php echo((int) $row['filledPositions']); ?></td>
                                         <td><?php echo(htmlspecialchars($row['expectedConversionDisplay'])); ?></td>
-                                        <td><?php echo((int) $row['expectedFilled']); ?></td>
+                                        <?php if (!empty($this->showExpectedFilled)): ?>
+                                            <td><?php echo((int) $row['expectedFilled']); ?></td>
+                                        <?php endif; ?>
                                         <td><?php echo((int) $row['expectedInFullPlan']); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -391,7 +401,9 @@
                                     <td><?php echo((int) $this->totals['totalOpenPositions']); ?></td>
                                     <td><?php echo((int) $this->totals['filledPositions']); ?></td>
                                     <td></td>
-                                    <td><?php echo((int) $this->totals['expectedFilled']); ?></td>
+                                    <?php if (!empty($this->showExpectedFilled)): ?>
+                                        <td><?php echo((int) $this->totals['expectedFilled']); ?></td>
+                                    <?php endif; ?>
                                     <td><?php echo((int) $this->totals['expectedInFullPlan']); ?></td>
                                 </tr>
                                 <tr>
@@ -400,7 +412,9 @@
                                     <td><?php if ($this->totalsDiff['totalOpenPositions'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['totalOpenPositions']); ?></td>
                                     <td><?php if ($this->totalsDiff['filledPositions'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['filledPositions']); ?></td>
                                     <td></td>
-                                    <td><?php if ($this->totalsDiff['expectedFilled'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['expectedFilled']); ?></td>
+                                    <?php if (!empty($this->showExpectedFilled)): ?>
+                                        <td><?php if ($this->totalsDiff['expectedFilled'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['expectedFilled']); ?></td>
+                                    <?php endif; ?>
                                     <td><?php if ($this->totalsDiff['expectedInFullPlan'] > 0) echo('+'); ?><?php echo((int) $this->totalsDiff['expectedInFullPlan']); ?></td>
                                 </tr>
                             </tfoot>
@@ -432,6 +446,7 @@
                                         <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
                                         <input type="hidden" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
                                         <input type="hidden" name="showDeadline" value="0" />
+                                        <input type="hidden" name="showExpectedFilled" value="<?php echo($showExpectedFilledChecked ? 1 : 0); ?>" />
                                         <label class="kpiToggleRow">
                                             <input type="checkbox" name="showDeadline" value="1"<?php if ($showDeadlineChecked): ?> checked="checked"<?php endif; ?> />
                                             Show time to deadline
@@ -592,6 +607,7 @@
                                         <input type="hidden" name="jobOrderScope" value="<?php echo(htmlspecialchars($jobOrderScope)); ?>" />
                                         <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
                                         <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="showExpectedFilled" value="<?php echo($showExpectedFilledChecked ? 1 : 0); ?>" />
                                         <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
                                         <input type="hidden" name="trendView" value="<?php echo(htmlspecialchars($this->candidateTrendView)); ?>" />
                                         <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
@@ -689,6 +705,7 @@
                                     <input type="hidden" name="jobOrderScope" value="<?php echo(htmlspecialchars($jobOrderScope)); ?>" />
                                     <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
                                     <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
+                                    <input type="hidden" name="showExpectedFilled" value="<?php echo($showExpectedFilledChecked ? 1 : 0); ?>" />
                                     <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
                                     <label class="kpiToggleRow">
                                         View:
@@ -756,10 +773,10 @@
                     <summary>Fields and formulas</summary>
                     <p><code>New positions this week</code>: active hiring-plan openings for job orders created this week.</p>
                     <p><code>Total open positions</code>: hiring-plan openings in the active KPI window, capped by <code>joborder.openings_available</code>.</p>
-                    <p><code>Filled positions</code>: candidates whose latest JO status is <code>Hired</code>, grouped by company, filtered by JO scope.</p>
+                    <p><code>Filled positions</code>: candidates whose latest JO status is <code>Hired</code>, grouped by company, filtered by JO scope (including future-dated hired statuses).</p>
                     <p><code>Expected conversion</code>: extra field <code>Conversion Rate</code> from JO (empty = <code>0%</code>).</p>
                     <p><code>Expected filled</code>: <code>round(sum(open_positions * conversion_rate)) - filled_positions</code>, floored at <code>0</code>.</p>
-                    <p><code>Expected in FC</code>: <code>total_planned_openings - filled_positions</code>, floored at <code>0</code>.</p>
+                    <p><code>Expected in forecast</code>: <code>total_planned_openings - filled_positions</code>, floored at <code>0</code>.</p>
                 </details>
             </div>
 

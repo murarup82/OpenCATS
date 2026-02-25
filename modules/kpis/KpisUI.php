@@ -66,6 +66,9 @@ class KpisUI extends UserInterface
         $showCompletionRateRaw = isset($_GET['showCompletionRate']) ?
             $_GET['showCompletionRate'] :
             $kpiStoredPrefs['showCompletionRate'];
+        $showExpectedFilledRaw = isset($_GET['showExpectedFilled']) ?
+            $_GET['showExpectedFilled'] :
+            $kpiStoredPrefs['showExpectedFilled'];
         $hideZeroOpenPositionsRaw = isset($_GET['hideZeroOpenPositions']) ?
             $_GET['hideZeroOpenPositions'] :
             $kpiStoredPrefs['hideZeroOpenPositions'];
@@ -89,6 +92,7 @@ class KpisUI extends UserInterface
             $officialReportsRaw = $kpiDefaultPrefs['officialReports'];
             $showDeadlineRaw = $kpiDefaultPrefs['showDeadline'];
             $showCompletionRateRaw = $kpiDefaultPrefs['showCompletionRate'];
+            $showExpectedFilledRaw = $kpiDefaultPrefs['showExpectedFilled'];
             $hideZeroOpenPositionsRaw = $kpiDefaultPrefs['hideZeroOpenPositions'];
             $candidateSourceScopeRaw = $kpiDefaultPrefs['candidateSourceScope'];
             $jobOrderScopeRaw = $kpiDefaultPrefs['jobOrderScope'];
@@ -100,6 +104,7 @@ class KpisUI extends UserInterface
         $officialReports = $this->normalizeBooleanFlag($officialReportsRaw, true);
         $showDeadline = $this->normalizeBooleanFlag($showDeadlineRaw, false);
         $showCompletionRate = $this->normalizeBooleanFlag($showCompletionRateRaw, false);
+        $showExpectedFilled = $this->normalizeBooleanFlag($showExpectedFilledRaw, false);
         $hideZeroOpenPositions = $this->normalizeBooleanFlag($hideZeroOpenPositionsRaw, false);
         $candidateSourceScope = $this->normalizeCandidateSourceScope($candidateSourceScopeRaw);
         $jobOrderScope = $this->normalizeJobOrderScope($jobOrderScopeRaw);
@@ -248,7 +253,6 @@ class KpisUI extends UserInterface
                 }
             }
 
-            $now = new DateTime();
             $filledCurrentRS = $db->getAllAssoc(sprintf(
                 "SELECT
                     last_status.joborder_id AS jobOrderID,
@@ -266,8 +270,6 @@ class KpisUI extends UserInterface
                             AND jo.site_id = cjh.site_id
                         WHERE
                             cjh.site_id = %s
-                        AND
-                            cjh.date <= %s
                         %s
                         %s
                         GROUP BY
@@ -285,7 +287,6 @@ class KpisUI extends UserInterface
                 GROUP BY
                     last_status.joborder_id",
                 $db->makeQueryInteger($siteID),
-                $db->makeQueryString($now->format('Y-m-d H:i:s')),
                 $jobOrderStatusHistoryFilter,
                 $monitoredFilterHistory,
                 $db->makeQueryInteger($siteID),
@@ -360,7 +361,8 @@ class KpisUI extends UserInterface
             new DateTime(),
             $officialReports,
             $monitoredJobOrders,
-            $jobOrderScope
+            $jobOrderScope,
+            true
         );
         $filledDisplayByCompanyLastWeek = $this->getCompanyFilledCounts(
             $db,
@@ -1013,6 +1015,7 @@ class KpisUI extends UserInterface
             'jobOrderScope' => $jobOrderScope,
             'showDeadline' => ($showDeadline ? 1 : 0),
             'showCompletionRate' => ($showCompletionRate ? 1 : 0),
+            'showExpectedFilled' => ($showExpectedFilled ? 1 : 0),
             'hideZeroOpenPositions' => ($hideZeroOpenPositions ? 1 : 0),
             'candidateSourceScope' => $candidateSourceScope,
             'trendView' => $trendView,
@@ -1058,6 +1061,7 @@ class KpisUI extends UserInterface
         $this->_template->assign('officialReports', $officialReports);
         $this->_template->assign('showDeadline', $showDeadline);
         $this->_template->assign('showCompletionRate', $showCompletionRate);
+        $this->_template->assign('showExpectedFilled', $showExpectedFilled);
         $this->_template->assign('hideZeroOpenPositions', $hideZeroOpenPositions);
         $this->_template->assign('jobOrderScope', $jobOrderScope);
         $this->_template->assign('jobOrderScopeLabel', $this->getJobOrderScopeLabel($jobOrderScope));
@@ -1786,6 +1790,7 @@ class KpisUI extends UserInterface
             'jobOrderScope' => 'all',
             'showDeadline' => 0,
             'showCompletionRate' => 0,
+            'showExpectedFilled' => 0,
             'hideZeroOpenPositions' => 0,
             'candidateSourceScope' => 'all',
             'trendView' => 'weekly',
@@ -1923,7 +1928,7 @@ class KpisUI extends UserInterface
         return $jobOrders;
     }
 
-    private function getCompanyFilledCounts($db, $siteID, DateTime $asOf, $officialReports, $monitoredJobOrders, $jobOrderScope)
+    private function getCompanyFilledCounts($db, $siteID, DateTime $asOf, $officialReports, $monitoredJobOrders, $jobOrderScope, $includeFutureStatuses = false)
     {
         if ($officialReports && empty($monitoredJobOrders))
         {
@@ -1946,6 +1951,11 @@ class KpisUI extends UserInterface
             $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
             $monitoredFilter = sprintf('AND cjh.joborder_id IN (%s)', $monitoredIDs);
         }
+        $dateFilter = '';
+        if (!$includeFutureStatuses)
+        {
+            $dateFilter = 'AND cjh.date <= ' . $db->makeQueryString($asOf->format('Y-m-d H:i:s'));
+        }
 
         $rows = $db->getAllAssoc(sprintf(
             "SELECT
@@ -1964,8 +1974,7 @@ class KpisUI extends UserInterface
                         AND jo.site_id = cjh.site_id
                     WHERE
                         cjh.site_id = %s
-                    AND
-                        cjh.date <= %s
+                    %s
                     %s
                     %s
                     GROUP BY
@@ -1986,7 +1995,7 @@ class KpisUI extends UserInterface
             GROUP BY
                 jo_final.company_id",
             $db->makeQueryInteger($siteID),
-            $db->makeQueryString($asOf->format('Y-m-d H:i:s')),
+            $dateFilter,
             $scopeFilter,
             $monitoredFilter,
             $db->makeQueryInteger($siteID),
