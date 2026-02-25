@@ -100,7 +100,7 @@ class KpisUI extends UserInterface
         $officialReports = $this->normalizeBooleanFlag($officialReportsRaw, true);
         $showDeadline = $this->normalizeBooleanFlag($showDeadlineRaw, false);
         $showCompletionRate = $this->normalizeBooleanFlag($showCompletionRateRaw, false);
-        $hideZeroOpenPositions = $this->normalizeBooleanFlag($hideZeroOpenPositionsRaw, true);
+        $hideZeroOpenPositions = $this->normalizeBooleanFlag($hideZeroOpenPositionsRaw, false);
         $candidateSourceScope = $this->normalizeCandidateSourceScope($candidateSourceScopeRaw);
         $jobOrderScope = $this->normalizeJobOrderScope($jobOrderScopeRaw);
 
@@ -422,7 +422,7 @@ class KpisUI extends UserInterface
             }
         }
 
-        $assignedByJobOrder = array();
+        $submittedByJobOrder = array();
         $hiredByJobOrder = array();
         $approvedEverByJobOrder = array();
         $eligibleJobOrderIDs = array();
@@ -455,7 +455,7 @@ class KpisUI extends UserInterface
                     status_to",
                 $db->makeQueryInteger($siteID),
                 $this->formatIntegerList($eligibleJobOrderIDs),
-                $db->makeQueryInteger(PIPELINE_STATUS_ALLOCATED),
+                $db->makeQueryInteger(PIPELINE_STATUS_PROPOSED_TO_CUSTOMER),
                 $db->makeQueryInteger(PIPELINE_STATUS_HIRED)
             ));
 
@@ -464,9 +464,9 @@ class KpisUI extends UserInterface
                 $jobOrderID = (int) $row['jobOrderID'];
                 $statusTo = (int) $row['statusTo'];
                 $count = (int) $row['candidateCount'];
-                if ($statusTo === PIPELINE_STATUS_ALLOCATED)
+                if ($statusTo === PIPELINE_STATUS_PROPOSED_TO_CUSTOMER)
                 {
-                    $assignedByJobOrder[$jobOrderID] = $count;
+                    $submittedByJobOrder[$jobOrderID] = $count;
                 }
                 else if ($statusTo === PIPELINE_STATUS_HIRED)
                 {
@@ -756,7 +756,7 @@ class KpisUI extends UserInterface
             {
                 continue;
             }
-            $assignedCount = isset($assignedByJobOrder[$jobOrderID]) ? $assignedByJobOrder[$jobOrderID] : 0;
+            $submittedCount = isset($submittedByJobOrder[$jobOrderID]) ? $submittedByJobOrder[$jobOrderID] : 0;
             $hiredCount = isset($hiredByJobOrder[$jobOrderID]) ? $hiredByJobOrder[$jobOrderID] : 0;
             $approvedEverCount = isset($approvedEverByJobOrder[$jobOrderID]) ? $approvedEverByJobOrder[$jobOrderID] : 0;
 
@@ -770,8 +770,8 @@ class KpisUI extends UserInterface
                 $companyName = $companyData[$jobOrder['companyID']]['companyName'];
             }
 
-            $acceptanceRate = $this->formatAcceptanceRate($approvedEverCount, $assignedCount);
-            $hiringRate = $this->formatCompletionRate($hiredCount, $openPositions);
+            $acceptanceRate = $this->formatAcceptanceRate($approvedEverCount, $submittedCount);
+            $hiringRate = $this->formatHiringRate($hiredCount, $submittedCount);
 
             $jobOrderKpiRows[] = array(
                 'jobOrderID' => $jobOrderID,
@@ -781,7 +781,7 @@ class KpisUI extends UserInterface
                 'timeToDeadline' => $deadlineDisplay['value'],
                 'timeToDeadlineClass' => $deadlineDisplay['class'],
                 'totalOpenPositions' => $openPositions,
-                'assignedCount' => $assignedCount,
+                'submittedCount' => $submittedCount,
                 'acceptanceRate' => $acceptanceRate['display'],
                 'acceptanceRateClass' => $this->getAcceptanceRateClass($acceptanceRate['percent']),
                 'hiringRate' => $hiringRate
@@ -1551,17 +1551,17 @@ class KpisUI extends UserInterface
         );
     }
 
-    private function formatCompletionRate($hiredCount, $totalOpenPositions)
+    private function formatHiringRate($hiredCount, $submittedCount)
     {
         $hiredCount = (int) $hiredCount;
-        $totalOpenPositions = (int) $totalOpenPositions;
-        if ($totalOpenPositions <= 0)
+        $submittedCount = (int) $submittedCount;
+        if ($submittedCount <= 0)
         {
-            return '0%';
+            return sprintf('%d - 0%%', $hiredCount);
         }
 
-        $percent = (int) round(($hiredCount / $totalOpenPositions) * 100);
-        return $percent . '%';
+        $percent = (int) round(($hiredCount / $submittedCount) * 100);
+        return sprintf('%d - %d/%d (%d%%)', $hiredCount, $hiredCount, $submittedCount, $percent);
     }
 
     private function getAcceptanceRateClass($percent)
@@ -1786,7 +1786,7 @@ class KpisUI extends UserInterface
             'jobOrderScope' => 'all',
             'showDeadline' => 0,
             'showCompletionRate' => 0,
-            'hideZeroOpenPositions' => 1,
+            'hideZeroOpenPositions' => 0,
             'candidateSourceScope' => 'all',
             'trendView' => 'weekly',
             'trendStart' => '',

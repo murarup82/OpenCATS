@@ -280,7 +280,7 @@
                 $officialReportsChecked = !empty($this->officialReports);
                 $showDeadlineChecked = !empty($this->showDeadline);
                 $showCompletionRateChecked = !empty($this->showCompletionRate);
-                $hideZeroOpenChecked = (!isset($this->hideZeroOpenPositions) || !empty($this->hideZeroOpenPositions));
+                $hideZeroOpenChecked = (!empty($this->hideZeroOpenPositions));
                 $candidateSourceScope = isset($this->candidateSourceScope) ? $this->candidateSourceScope : 'all';
                 $jobOrderScope = isset($this->jobOrderScope) ? $this->jobOrderScope : 'all';
                 $jobOrderScopeAllChecked = ($jobOrderScope !== 'open');
@@ -469,16 +469,16 @@
                                         <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Openings planned in the current hiring window, capped by openings available." />
                                     </th>
                                     <th>
-                                        Assigned candidates
-                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Distinct candidates in status &quot;Allocated&quot; for this job order." />
+                                        Submitted to customer
+                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Distinct candidates that reached status &quot;Proposed to Customer&quot; for this job order." />
                                     </th>
                                     <th>
                                         Acceptance Rate
-                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Candidates that reached status &quot;Customer Approved&quot; at any time / assigned candidates (Allocated)." />
+                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Candidates that reached status &quot;Customer Approved&quot; at any time / candidates submitted to customer." />
                                     </th>
                                     <th>
                                         Hiring Rate
-                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Hired / total open positions in KPI window. For closed job orders this can be 0, resulting in 0%." />
+                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Displays hired count first, then hired/submitted-to-customer ratio with percent (e.g. 1 - 1/3 (33%))." />
                                     </th>
                                 </tr>
                             </thead>
@@ -498,7 +498,7 @@
                                         <?php endif; ?>
                                         <td><?php echo(htmlspecialchars($row['companyName'])); ?></td>
                                         <td><?php echo((int) $row['totalOpenPositions']); ?></td>
-                                        <td><?php echo((int) $row['assignedCount']); ?></td>
+                                        <td><?php echo((int) $row['submittedCount']); ?></td>
                                         <td<?php if (!empty($row['acceptanceRateClass'])): ?> class="<?php echo(htmlspecialchars($row['acceptanceRateClass'])); ?>"<?php endif; ?>>
                                             <?php echo(htmlspecialchars($row['acceptanceRate'])); ?>
                                         </td>
@@ -765,15 +765,15 @@
 
             <div id="kpiHelpTemplate-interview-acceptance" class="kpiHelpTemplate">
                 <h4>Overview</h4>
-                <p>This table tracks candidate progression per job order from assignment to customer approval and final hiring.</p>
+                <p>This table tracks candidate progression per job order from customer submission to approval and final hiring.</p>
                 <p>It highlights pipeline quality with Acceptance Rate and Hiring Rate.</p>
                 <details>
                     <summary>Fields and formulas</summary>
-                    <p><code>Assigned candidates</code>: distinct candidates that reached status <code>Allocated</code>.</p>
-                    <p><code>Acceptance Rate</code>: candidates that reached <code>Customer Approved</code> at least once, divided by assigned candidates.</p>
-                    <p>Formula: <code>acceptance = approved_ever / assigned</code>.</p>
-                    <p><code>Hiring Rate</code>: candidates in <code>Hired</code> divided by <code>Total open positions</code>.</p>
-                    <p>Formula: <code>hiring = hired / total_open_positions</code>.</p>
+                    <p><code>Submitted to customer</code>: distinct candidates that reached status <code>Proposed to Customer</code>.</p>
+                    <p><code>Acceptance Rate</code>: candidates that reached <code>Customer Approved</code> at least once, divided by candidates submitted to customer.</p>
+                    <p>Formula: <code>acceptance = approved_ever / submitted_to_customer</code>.</p>
+                    <p><code>Hiring Rate</code>: shows hired count, then hired divided by submitted-to-customer.</p>
+                    <p>Formula display: <code>hired_count - hired_count/submitted_to_customer (percent)</code>.</p>
                     <p><code>Time to deadline</code>: value from extra field <code>Expected Completion Date</code> minus today (days).</p>
                 </details>
             </div>
