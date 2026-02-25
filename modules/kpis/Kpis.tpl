@@ -12,7 +12,10 @@
                     <img src="images/reports.gif" width="24" height="24" border="0" alt="KPIs" />
                     <h2>KPIs</h2>
                 </div>
-                <span class="noteUnsizedSpan kpiWeekBadge">Week: <?php $this->_($this->weekLabel); ?></span>
+                <div class="kpiMetaBadges">
+                    <span class="noteUnsizedSpan kpiWeekBadge">Week: <?php $this->_($this->weekLabel); ?></span>
+                    <span class="noteUnsizedSpan kpiWeekBadge">Data as of: <?php echo(htmlspecialchars($this->dataAsOfLabel)); ?></span>
+                </div>
             </div>
 
             <style type="text/css">
@@ -35,6 +38,7 @@
                     font-weight: bold;
                     color: #075872;
                 }
+                .kpiMetaBadges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
                 .kpiCard {
                     margin-top: 12px;
                     border: 1px solid #dbe5ec;
@@ -65,6 +69,18 @@
                 }
                 .kpiChipOn { border-color: #9acbb3; background: #ecfaf2; color: #18603c; }
                 .kpiChipOff { border-color: #dbc7c7; background: #fbf1f1; color: #8b2f2f; }
+                .kpiSectionActions { display: flex; align-items: center; gap: 8px; }
+                .kpiDetailsButton {
+                    cursor: pointer;
+                    border: 1px solid #bfd5e0;
+                    background: #ffffff;
+                    color: #0c4f67;
+                    border-radius: 8px;
+                    padding: 4px 10px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                .kpiDetailsButton:hover { background: #eaf4f9; }
                 .kpiConfig { position: relative; }
                 .kpiConfig summary {
                     list-style: none;
@@ -93,6 +109,17 @@
                 }
                 .kpiConfigPanel .kpiToggleRow { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
                 .kpiConfigPanel .kpiToggleRow:last-of-type { margin-bottom: 10px; }
+                .kpiConfigActions { display: flex; align-items: center; gap: 8px; }
+                .kpiResetButton {
+                    cursor: pointer;
+                    border: 1px solid #d4c3c3;
+                    background: #ffffff;
+                    color: #7a3e3e;
+                    border-radius: 6px;
+                    padding: 3px 8px;
+                    font-size: 12px;
+                }
+                .kpiResetButton:hover { background: #fff6f6; }
                 .kpiConfigPanel .kpiConfigNote {
                     margin: 2px 0 10px;
                     padding: 6px 8px;
@@ -177,6 +204,67 @@
                 }
                 .kpiSourceMixBody { padding: 10px; text-align: center; }
                 .kpiSourceMixBody img { max-width: 100%; height: auto; }
+                .kpiHelpTemplate { display: none; }
+                .kpiHelpModal {
+                    position: fixed;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(9, 33, 51, 0.55);
+                    z-index: 9000;
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 18px;
+                    box-sizing: border-box;
+                }
+                .kpiHelpModal.kpiHelpOpen { display: flex; }
+                .kpiHelpDialog {
+                    width: min(860px, 100%);
+                    max-height: calc(100vh - 36px);
+                    overflow: auto;
+                    border-radius: 12px;
+                    border: 1px solid #c8d9e3;
+                    background: #ffffff;
+                    box-shadow: 0 18px 40px rgba(0, 27, 46, 0.32);
+                }
+                .kpiHelpHead {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 10px;
+                    padding: 12px 14px;
+                    border-bottom: 1px solid #e2ecf2;
+                    background: #f8fbfd;
+                }
+                .kpiHelpTitle { margin: 0; font-size: 18px; color: #0c4f67; }
+                .kpiHelpClose {
+                    cursor: pointer;
+                    border: 1px solid #c7d9e4;
+                    background: #ffffff;
+                    color: #285567;
+                    border-radius: 8px;
+                    padding: 3px 8px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                .kpiHelpBody { padding: 14px; color: #244a5a; }
+                .kpiHelpBody h4 { margin: 0 0 8px; color: #0c4f67; }
+                .kpiHelpBody p { margin: 0 0 8px; line-height: 1.45; }
+                .kpiHelpBody details {
+                    margin-top: 8px;
+                    border: 1px solid #d9e6ee;
+                    border-radius: 8px;
+                    background: #fafcff;
+                    padding: 8px 10px;
+                }
+                .kpiHelpBody details summary { cursor: pointer; font-weight: bold; color: #0c4f67; }
+                .kpiHelpBody code {
+                    background: #eff5fa;
+                    border-radius: 4px;
+                    padding: 0 4px;
+                }
                 @media (max-width: 1080px) {
                     .kpiTrendPanel { flex-direction: column; }
                     .kpiSourceMixCard { width: 100%; flex: 1 1 auto; }
@@ -194,9 +282,10 @@
                 $showCompletionRateChecked = !empty($this->showCompletionRate);
                 $hideZeroOpenChecked = (!isset($this->hideZeroOpenPositions) || !empty($this->hideZeroOpenPositions));
                 $candidateSourceScope = isset($this->candidateSourceScope) ? $this->candidateSourceScope : 'all';
-                $filledPositionsScope = isset($this->filledPositionsScope) ? $this->filledPositionsScope : 'all';
-                $filledPositionsAllChecked = ($filledPositionsScope !== 'open');
-                $filledPositionsTitle = $filledPositionsAllChecked ?
+                $jobOrderScope = isset($this->jobOrderScope) ? $this->jobOrderScope : 'all';
+                $jobOrderScopeAllChecked = ($jobOrderScope !== 'open');
+                $jobOrderScopeLabel = isset($this->jobOrderScopeLabel) ? $this->jobOrderScopeLabel : 'All Job Orders (Open + Closed + Cancelled)';
+                $filledPositionsTitle = $jobOrderScopeAllChecked ?
                     'Candidates currently in status &quot;Hired&quot; for all job orders.' :
                     'Candidates currently in status &quot;Hired&quot; for open job orders only.';
             ?>
@@ -209,37 +298,43 @@
                         <div class="kpiSectionTitleWrap">
                             <h3 class="kpiSectionTitle">Positions Open</h3>
                             <span class="kpiChip <?php echo($officialReportsChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">Official Reports: <?php echo($officialReportsChecked ? 'On' : 'Off'); ?></span>
-                            <span class="kpiChip <?php echo($filledPositionsAllChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">Filled Scope: <?php echo($filledPositionsAllChecked ? 'All JO' : 'Open JO'); ?></span>
+                            <span class="kpiChip <?php echo($jobOrderScopeAllChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">JO Scope: <?php echo(htmlspecialchars($jobOrderScopeLabel)); ?></span>
                         </div>
-                        <details class="kpiConfig">
-                            <summary>Configure</summary>
-                            <div class="kpiConfigPanel">
-                                <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
-                                    <input type="hidden" name="m" value="kpis" />
-                                    <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="candidateSourceScope" value="<?php echo(htmlspecialchars($candidateSourceScope)); ?>" />
-                                    <input type="hidden" name="trendView" value="<?php echo(htmlspecialchars($this->candidateTrendView)); ?>" />
-                                    <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
-                                    <input type="hidden" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
-                                    <input type="hidden" name="officialReports" value="0" />
-                                    <label class="kpiToggleRow">
-                                        <input type="checkbox" name="officialReports" value="1"<?php if ($officialReportsChecked): ?> checked="checked"<?php endif; ?> />
-                                        Official Reports
-                                    </label>
-                                    <label class="kpiToggleRow">
-                                        Filled positions:
-                                        <select name="filledPositionsScope" class="inputbox">
-                                            <option value="all"<?php if ($filledPositionsScope === 'all'): ?> selected="selected"<?php endif; ?>>All job orders</option>
-                                            <option value="open"<?php if ($filledPositionsScope === 'open'): ?> selected="selected"<?php endif; ?>>Open job orders only</option>
-                                        </select>
-                                    </label>
-                                    <p class="kpiConfigNote">Applies to all KPI cards.</p>
-                                    <input type="submit" class="button" value="Apply" />
-                                </form>
-                            </div>
-                        </details>
+                        <div class="kpiSectionActions">
+                            <button type="button" class="kpiDetailsButton" data-kpi-help-key="positions-open" data-kpi-help-title="Positions Open">Details</button>
+                            <details class="kpiConfig">
+                                <summary>Configure</summary>
+                                <div class="kpiConfigPanel">
+                                    <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
+                                        <input type="hidden" name="m" value="kpis" />
+                                        <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="candidateSourceScope" value="<?php echo(htmlspecialchars($candidateSourceScope)); ?>" />
+                                        <input type="hidden" name="trendView" value="<?php echo(htmlspecialchars($this->candidateTrendView)); ?>" />
+                                        <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
+                                        <input type="hidden" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
+                                        <input type="hidden" name="officialReports" value="0" />
+                                        <label class="kpiToggleRow">
+                                            <input type="checkbox" name="officialReports" value="1"<?php if ($officialReportsChecked): ?> checked="checked"<?php endif; ?> />
+                                            Official Reports
+                                        </label>
+                                        <label class="kpiToggleRow">
+                                            Job orders:
+                                            <select name="jobOrderScope" class="inputbox">
+                                                <option value="open"<?php if ($jobOrderScope === 'open'): ?> selected="selected"<?php endif; ?>>Only Open JO</option>
+                                                <option value="all"<?php if ($jobOrderScope === 'all'): ?> selected="selected"<?php endif; ?>>All Job Orders (Open + Closed + Cancelled)</option>
+                                            </select>
+                                        </label>
+                                        <p class="kpiConfigNote">Applies to Positions Open, Client Interview : Acceptance, and Request to qualified candidate.</p>
+                                        <div class="kpiConfigActions">
+                                            <input type="submit" class="button" value="Apply" />
+                                            <button type="submit" class="kpiResetButton" name="resetKpiFilters" value="1">Reset filters</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </details>
+                        </div>
                     </div>
                     <div class="kpiTableScroll">
                         <table class="kpiTable">
@@ -318,36 +413,43 @@
                 <div class="kpiCard">
                     <div class="kpiSectionHeader">
                         <div class="kpiSectionTitleWrap">
-                            <h3 class="kpiSectionTitle">(Q) Client Interview : Acceptance</h3>
+                            <h3 class="kpiSectionTitle">Client Interview : Acceptance</h3>
+                            <span class="kpiChip <?php echo($jobOrderScopeAllChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">JO Scope: <?php echo(htmlspecialchars($jobOrderScopeLabel)); ?></span>
                             <span class="kpiChip <?php echo($showDeadlineChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">Deadline: <?php echo($showDeadlineChecked ? 'On' : 'Off'); ?></span>
                             <span class="kpiChip <?php echo($hideZeroOpenChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">Hide Open=0: <?php echo($hideZeroOpenChecked ? 'On' : 'Off'); ?></span>
                         </div>
-                        <details class="kpiConfig">
-                            <summary>Configure</summary>
-                            <div class="kpiConfigPanel">
-                                <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
-                                    <input type="hidden" name="m" value="kpis" />
-                                    <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="filledPositionsScope" value="<?php echo(htmlspecialchars($filledPositionsScope)); ?>" />
-                                    <input type="hidden" name="candidateSourceScope" value="<?php echo(htmlspecialchars($candidateSourceScope)); ?>" />
-                                    <input type="hidden" name="trendView" value="<?php echo(htmlspecialchars($this->candidateTrendView)); ?>" />
-                                    <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
-                                    <input type="hidden" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
-                                    <input type="hidden" name="showDeadline" value="0" />
-                                    <label class="kpiToggleRow">
-                                        <input type="checkbox" name="showDeadline" value="1"<?php if ($showDeadlineChecked): ?> checked="checked"<?php endif; ?> />
-                                        Show time to deadline
-                                    </label>
-                                    <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="hideZeroOpenPositions" value="0" />
-                                    <label class="kpiToggleRow">
-                                        <input type="checkbox" name="hideZeroOpenPositions" value="1"<?php if ($hideZeroOpenChecked): ?> checked="checked"<?php endif; ?> />
-                                        Hide Total Open Positions = 0
-                                    </label>
-                                    <input type="submit" class="button" value="Apply" />
-                                </form>
-                            </div>
-                        </details>
+                        <div class="kpiSectionActions">
+                            <button type="button" class="kpiDetailsButton" data-kpi-help-key="interview-acceptance" data-kpi-help-title="Client Interview : Acceptance">Details</button>
+                            <details class="kpiConfig">
+                                <summary>Configure</summary>
+                                <div class="kpiConfigPanel">
+                                    <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
+                                        <input type="hidden" name="m" value="kpis" />
+                                        <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="jobOrderScope" value="<?php echo(htmlspecialchars($jobOrderScope)); ?>" />
+                                        <input type="hidden" name="candidateSourceScope" value="<?php echo(htmlspecialchars($candidateSourceScope)); ?>" />
+                                        <input type="hidden" name="trendView" value="<?php echo(htmlspecialchars($this->candidateTrendView)); ?>" />
+                                        <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
+                                        <input type="hidden" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
+                                        <input type="hidden" name="showDeadline" value="0" />
+                                        <label class="kpiToggleRow">
+                                            <input type="checkbox" name="showDeadline" value="1"<?php if ($showDeadlineChecked): ?> checked="checked"<?php endif; ?> />
+                                            Show time to deadline
+                                        </label>
+                                        <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="hideZeroOpenPositions" value="0" />
+                                        <label class="kpiToggleRow">
+                                            <input type="checkbox" name="hideZeroOpenPositions" value="1"<?php if ($hideZeroOpenChecked): ?> checked="checked"<?php endif; ?> />
+                                            Hide Total Open Positions = 0
+                                        </label>
+                                        <div class="kpiConfigActions">
+                                            <input type="submit" class="button" value="Apply" />
+                                            <button type="submit" class="kpiResetButton" name="resetKpiFilters" value="1">Reset filters</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </details>
+                        </div>
                     </div>
                     <div class="kpiTableScroll">
                         <table class="kpiTable">
@@ -376,7 +478,7 @@
                                     </th>
                                     <th>
                                         Hiring Rate
-                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Hired / total open positions." />
+                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Hired / total open positions in KPI window. For closed job orders this can be 0, resulting in 0%." />
                                     </th>
                                 </tr>
                             </thead>
@@ -418,8 +520,14 @@
                 <div class="kpiCard">
                     <div class="kpiSectionHeader">
                         <div class="kpiSectionTitleWrap">
-                            <h3 class="kpiSectionTitle">(S) Request to qualified candidate</h3>
+                            <h3 class="kpiSectionTitle">Request to qualified candidate</h3>
                             <span class="kpiChip">Target: &lt; 3 days</span>
+                            <span class="kpiChip <?php echo($jobOrderScopeAllChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">JO Scope: <?php echo(htmlspecialchars($jobOrderScopeLabel)); ?></span>
+                            <span class="kpiChip <?php echo($officialReportsChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">Official Reports: <?php echo($officialReportsChecked ? 'On' : 'Off'); ?></span>
+                            <span class="kpiChip <?php echo($hideZeroOpenChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">Hide Open=0: <?php echo($hideZeroOpenChecked ? 'On' : 'Off'); ?></span>
+                        </div>
+                        <div class="kpiSectionActions">
+                            <button type="button" class="kpiDetailsButton" data-kpi-help-key="request-qualified" data-kpi-help-title="Request to qualified candidate">Details</button>
                         </div>
                     </div>
                     <div class="kpiTableScroll">
@@ -473,31 +581,37 @@
                             <h3 class="kpiSectionTitle">New Candidates</h3>
                             <span class="kpiChip">Source: <?php echo(htmlspecialchars(isset($this->candidateSourceScopeLabel) ? $this->candidateSourceScopeLabel : 'All')); ?></span>
                         </div>
-                        <details class="kpiConfig">
-                            <summary>Configure</summary>
-                            <div class="kpiConfigPanel">
-                                <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
-                                    <input type="hidden" name="m" value="kpis" />
-                                    <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="filledPositionsScope" value="<?php echo(htmlspecialchars($filledPositionsScope)); ?>" />
-                                    <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
-                                    <input type="hidden" name="trendView" value="<?php echo(htmlspecialchars($this->candidateTrendView)); ?>" />
-                                    <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
-                                    <input type="hidden" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
-                                    <label class="kpiToggleRow">
-                                        Source:
-                                        <select name="candidateSourceScope" class="inputbox">
-                                            <option value="all"<?php if ($candidateSourceScope === 'all'): ?> selected="selected"<?php endif; ?>>All</option>
-                                            <option value="internal"<?php if ($candidateSourceScope === 'internal'): ?> selected="selected"<?php endif; ?>>Internal</option>
-                                            <option value="partner"<?php if ($candidateSourceScope === 'partner'): ?> selected="selected"<?php endif; ?>>Partner</option>
-                                        </select>
-                                    </label>
-                                    <input type="submit" class="button" value="Apply" />
-                                </form>
-                            </div>
-                        </details>
+                        <div class="kpiSectionActions">
+                            <button type="button" class="kpiDetailsButton" data-kpi-help-key="new-candidates" data-kpi-help-title="New Candidates">Details</button>
+                            <details class="kpiConfig">
+                                <summary>Configure</summary>
+                                <div class="kpiConfigPanel">
+                                    <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
+                                        <input type="hidden" name="m" value="kpis" />
+                                        <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="jobOrderScope" value="<?php echo(htmlspecialchars($jobOrderScope)); ?>" />
+                                        <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
+                                        <input type="hidden" name="trendView" value="<?php echo(htmlspecialchars($this->candidateTrendView)); ?>" />
+                                        <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
+                                        <input type="hidden" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
+                                        <label class="kpiToggleRow">
+                                            Source:
+                                            <select name="candidateSourceScope" class="inputbox">
+                                                <option value="all"<?php if ($candidateSourceScope === 'all'): ?> selected="selected"<?php endif; ?>>All</option>
+                                                <option value="internal"<?php if ($candidateSourceScope === 'internal'): ?> selected="selected"<?php endif; ?>>Internal</option>
+                                                <option value="partner"<?php if ($candidateSourceScope === 'partner'): ?> selected="selected"<?php endif; ?>>Partner</option>
+                                            </select>
+                                        </label>
+                                        <div class="kpiConfigActions">
+                                            <input type="submit" class="button" value="Apply" />
+                                            <button type="submit" class="kpiResetButton" name="resetKpiFilters" value="1">Reset filters</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </details>
+                        </div>
                     </div>
                     <div class="kpiTableScroll">
                         <table class="kpiTable kpiCandidateTable">
@@ -564,43 +678,49 @@
                         <span class="kpiChip">Source: <?php echo(htmlspecialchars(isset($this->candidateSourceScopeLabel) ? $this->candidateSourceScopeLabel : 'All')); ?></span>
                         <span class="kpiChip"><?php echo(htmlspecialchars($this->candidateTrendStart)); ?> to <?php echo(htmlspecialchars($this->candidateTrendEnd)); ?></span>
                     </div>
-                    <details class="kpiConfig">
-                        <summary>Configure</summary>
-                        <div class="kpiConfigPanel">
-                            <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
-                                <input type="hidden" name="m" value="kpis" />
-                                <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
-                                <input type="hidden" name="filledPositionsScope" value="<?php echo(htmlspecialchars($filledPositionsScope)); ?>" />
-                                <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
-                                <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
-                                <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
-                                <label class="kpiToggleRow">
-                                    View:
-                                    <select name="trendView" class="inputbox">
-                                        <option value="weekly"<?php if ($this->candidateTrendView === 'weekly'): ?> selected="selected"<?php endif; ?>>Weekly</option>
-                                        <option value="monthly"<?php if ($this->candidateTrendView === 'monthly'): ?> selected="selected"<?php endif; ?>>Monthly</option>
-                                    </select>
-                                </label>
-                                <label class="kpiToggleRow">
-                                    Source:
-                                    <select name="candidateSourceScope" class="inputbox">
-                                        <option value="all"<?php if ($candidateSourceScope === 'all'): ?> selected="selected"<?php endif; ?>>All</option>
-                                        <option value="internal"<?php if ($candidateSourceScope === 'internal'): ?> selected="selected"<?php endif; ?>>Internal</option>
-                                        <option value="partner"<?php if ($candidateSourceScope === 'partner'): ?> selected="selected"<?php endif; ?>>Partner</option>
-                                    </select>
-                                </label>
-                                <label class="kpiToggleRow">
-                                    Start:
-                                    <input type="date" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
-                                </label>
-                                <label class="kpiToggleRow">
-                                    End:
-                                    <input type="date" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
-                                </label>
-                                <input type="submit" class="button" value="Apply" />
-                            </form>
-                        </div>
-                    </details>
+                    <div class="kpiSectionActions">
+                        <button type="button" class="kpiDetailsButton" data-kpi-help-key="new-candidates-trend" data-kpi-help-title="New Candidates Trend">Details</button>
+                        <details class="kpiConfig">
+                            <summary>Configure</summary>
+                            <div class="kpiConfigPanel">
+                                <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
+                                    <input type="hidden" name="m" value="kpis" />
+                                    <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
+                                    <input type="hidden" name="jobOrderScope" value="<?php echo(htmlspecialchars($jobOrderScope)); ?>" />
+                                    <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
+                                    <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
+                                    <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
+                                    <label class="kpiToggleRow">
+                                        View:
+                                        <select name="trendView" class="inputbox">
+                                            <option value="weekly"<?php if ($this->candidateTrendView === 'weekly'): ?> selected="selected"<?php endif; ?>>Weekly</option>
+                                            <option value="monthly"<?php if ($this->candidateTrendView === 'monthly'): ?> selected="selected"<?php endif; ?>>Monthly</option>
+                                        </select>
+                                    </label>
+                                    <label class="kpiToggleRow">
+                                        Source:
+                                        <select name="candidateSourceScope" class="inputbox">
+                                            <option value="all"<?php if ($candidateSourceScope === 'all'): ?> selected="selected"<?php endif; ?>>All</option>
+                                            <option value="internal"<?php if ($candidateSourceScope === 'internal'): ?> selected="selected"<?php endif; ?>>Internal</option>
+                                            <option value="partner"<?php if ($candidateSourceScope === 'partner'): ?> selected="selected"<?php endif; ?>>Partner</option>
+                                        </select>
+                                    </label>
+                                    <label class="kpiToggleRow">
+                                        Start:
+                                        <input type="date" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
+                                    </label>
+                                    <label class="kpiToggleRow">
+                                        End:
+                                        <input type="date" name="trendEnd" value="<?php echo(htmlspecialchars($this->candidateTrendEnd)); ?>" />
+                                    </label>
+                                    <div class="kpiConfigActions">
+                                        <input type="submit" class="button" value="Apply" />
+                                        <button type="submit" class="kpiResetButton" name="resetKpiFilters" value="1">Reset filters</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </details>
+                    </div>
                 </div>
                 <div class="kpiTrendPanel">
                     <div class="kpiTrendChart">
@@ -627,6 +747,237 @@
                     </div>
                 </div>
             </div>
+
+            <div id="kpiHelpTemplate-positions-open" class="kpiHelpTemplate">
+                <h4>Overview</h4>
+                <p>This table shows staffing progress per client for the selected job order scope and official-report filter.</p>
+                <p>It answers: how many positions are planned, how many are already filled, and what the expected fill is based on conversion assumptions.</p>
+                <details>
+                    <summary>Fields and formulas</summary>
+                    <p><code>New positions this week</code>: active hiring-plan openings for job orders created this week.</p>
+                    <p><code>Total open positions</code>: hiring-plan openings in the active KPI window, capped by <code>joborder.openings_available</code>.</p>
+                    <p><code>Filled positions</code>: candidates whose latest JO status is <code>Hired</code>, grouped by company, filtered by JO scope.</p>
+                    <p><code>Expected conversion</code>: extra field <code>Conversion Rate</code> from JO (empty = <code>0%</code>).</p>
+                    <p><code>Expected filled</code>: <code>round(sum(open_positions * conversion_rate)) - filled_positions</code>, floored at <code>0</code>.</p>
+                    <p><code>Expected in FC</code>: <code>total_planned_openings - filled_positions</code>, floored at <code>0</code>.</p>
+                </details>
+            </div>
+
+            <div id="kpiHelpTemplate-interview-acceptance" class="kpiHelpTemplate">
+                <h4>Overview</h4>
+                <p>This table tracks candidate progression per job order from assignment to customer approval and final hiring.</p>
+                <p>It highlights pipeline quality with Acceptance Rate and Hiring Rate.</p>
+                <details>
+                    <summary>Fields and formulas</summary>
+                    <p><code>Assigned candidates</code>: distinct candidates that reached status <code>Allocated</code>.</p>
+                    <p><code>Acceptance Rate</code>: candidates that reached <code>Customer Approved</code> at least once, divided by assigned candidates.</p>
+                    <p>Formula: <code>acceptance = approved_ever / assigned</code>.</p>
+                    <p><code>Hiring Rate</code>: candidates in <code>Hired</code> divided by <code>Total open positions</code>.</p>
+                    <p>Formula: <code>hiring = hired / total_open_positions</code>.</p>
+                    <p><code>Time to deadline</code>: value from extra field <code>Expected Completion Date</code> minus today (days).</p>
+                </details>
+            </div>
+
+            <div id="kpiHelpTemplate-request-qualified" class="kpiHelpTemplate">
+                <h4>Overview</h4>
+                <p>This table measures responsiveness: how quickly the first qualified candidate is submitted after a request is received.</p>
+                <p>Target is under 3 business days.</p>
+                <details>
+                    <summary>Fields and formulas</summary>
+                    <p><code>Date demand received</code>: <code>joborder.date_created</code>.</p>
+                    <p><code>Date first qualified candidate submitted</code>: first date a candidate reached <code>Proposed to Customer</code>.</p>
+                    <p><code>Days</code>: business days between the two dates (Monday-Friday, weekends excluded).</p>
+                    <p>Color rules: <code>0</code> light green, <code>1-3</code> green, <code>&gt; 3</code> red, missing value gray.</p>
+                </details>
+            </div>
+
+            <div id="kpiHelpTemplate-new-candidates" class="kpiHelpTemplate">
+                <h4>Overview</h4>
+                <p>This table compares weekly candidate inflow and key pipeline milestones against last week.</p>
+                <p>It supports source scope filtering: All, Internal, or Partner.</p>
+                <details>
+                    <summary>Fields and formulas</summary>
+                    <p>Source rows aggregate candidate creation counts by grouped source categories.</p>
+                    <p>Metric rows count distinct candidates reaching each pipeline status during the selected week.</p>
+                    <p><code>Delta vs LW</code>: <code>this_week - last_week</code>.</p>
+                </details>
+            </div>
+
+            <div id="kpiHelpTemplate-new-candidates-trend" class="kpiHelpTemplate">
+                <h4>Overview</h4>
+                <p>This chart shows candidate creation trend over time (weekly or monthly), with optional source filtering.</p>
+                <p>The pie chart shows current database distribution between Internal and Partner sources.</p>
+                <details>
+                    <summary>Fields and formulas</summary>
+                    <p>Trend buckets are built from <code>candidate.date_created</code> between selected start/end dates.</p>
+                    <p>Pie values are computed from current total candidates grouped by source classification.</p>
+                </details>
+            </div>
+
+            <div id="kpiHelpModal" class="kpiHelpModal" aria-hidden="true">
+                <div class="kpiHelpDialog" role="dialog" aria-modal="true" aria-labelledby="kpiHelpTitle">
+                    <div class="kpiHelpHead">
+                        <h3 id="kpiHelpTitle" class="kpiHelpTitle">KPI Details</h3>
+                        <button type="button" id="kpiHelpClose" class="kpiHelpClose">Close</button>
+                    </div>
+                    <div id="kpiHelpBody" class="kpiHelpBody"></div>
+                </div>
+            </div>
+
+            <script type="text/javascript">
+                (function()
+                {
+                    var modal = document.getElementById('kpiHelpModal');
+                    var body = document.getElementById('kpiHelpBody');
+                    var title = document.getElementById('kpiHelpTitle');
+                    var closeBtn = document.getElementById('kpiHelpClose');
+                    if (!modal || !body || !title || !closeBtn)
+                    {
+                        return;
+                    }
+                    var activeTrigger = null;
+                    var bodyOverflow = '';
+
+                    function isModalOpen()
+                    {
+                        return (modal.className.indexOf('kpiHelpOpen') !== -1);
+                    }
+
+                    function getFocusableElements()
+                    {
+                        var selectors = 'a[href], button, textarea, input, select, [tabindex]';
+                        var nodeList = modal.querySelectorAll(selectors);
+                        var focusable = [];
+                        var i;
+                        for (i = 0; i < nodeList.length; i++)
+                        {
+                            var el = nodeList[i];
+                            if (el.disabled)
+                            {
+                                continue;
+                            }
+                            if (el.getAttribute('tabindex') === '-1')
+                            {
+                                continue;
+                            }
+                            if (el.offsetWidth <= 0 && el.offsetHeight <= 0 && el !== document.activeElement)
+                            {
+                                continue;
+                            }
+                            focusable.push(el);
+                        }
+
+                        return focusable;
+                    }
+
+                    function openHelp(key, label)
+                    {
+                        var template = document.getElementById('kpiHelpTemplate-' + key);
+                        if (!template)
+                        {
+                            return;
+                        }
+                        title.innerHTML = label || 'KPI Details';
+                        body.innerHTML = template.innerHTML;
+                        modal.className = 'kpiHelpModal kpiHelpOpen';
+                        modal.setAttribute('aria-hidden', 'false');
+                        activeTrigger = document.activeElement;
+                        bodyOverflow = document.body.style.overflow || '';
+                        document.body.style.overflow = 'hidden';
+                        window.setTimeout(function()
+                        {
+                            closeBtn.focus();
+                        }, 0);
+                    }
+
+                    function closeHelp()
+                    {
+                        modal.className = 'kpiHelpModal';
+                        modal.setAttribute('aria-hidden', 'true');
+                        body.innerHTML = '';
+                        document.body.style.overflow = bodyOverflow;
+                        if (activeTrigger && activeTrigger.focus)
+                        {
+                            activeTrigger.focus();
+                        }
+                        activeTrigger = null;
+                    }
+
+                    var buttons = document.querySelectorAll('.kpiDetailsButton');
+                    var i;
+                    for (i = 0; i < buttons.length; i++)
+                    {
+                        buttons[i].onclick = function()
+                        {
+                            var key = this.getAttribute('data-kpi-help-key');
+                            var label = this.getAttribute('data-kpi-help-title');
+                            openHelp(key, label);
+                        };
+                    }
+
+                    closeBtn.onclick = closeHelp;
+                    modal.onclick = function(event)
+                    {
+                        if (event.target === modal)
+                        {
+                            closeHelp();
+                        }
+                    };
+                    function handleKeydown(event)
+                    {
+                        event = event || window.event;
+                        if (!isModalOpen())
+                        {
+                            return;
+                        }
+
+                        if (event.key === 'Escape' || event.keyCode === 27)
+                        {
+                            closeHelp();
+                            return;
+                        }
+
+                        var isTab = (event.key === 'Tab' || event.keyCode === 9);
+                        if (!isTab)
+                        {
+                            return;
+                        }
+
+                        var focusable = getFocusableElements();
+                        if (!focusable.length)
+                        {
+                            return;
+                        }
+
+                        var first = focusable[0];
+                        var last = focusable[focusable.length - 1];
+                        var current = document.activeElement;
+                        var shift = !!event.shiftKey;
+
+                        if (shift && current === first)
+                        {
+                            if (event.preventDefault) event.preventDefault();
+                            else event.returnValue = false;
+                            last.focus();
+                        }
+                        else if (!shift && current === last)
+                        {
+                            if (event.preventDefault) event.preventDefault();
+                            else event.returnValue = false;
+                            first.focus();
+                        }
+                    }
+
+                    if (document.addEventListener)
+                    {
+                        document.addEventListener('keydown', handleKeydown);
+                    }
+                    else if (document.attachEvent)
+                    {
+                        document.attachEvent('onkeydown', handleKeydown);
+                    }
+                })();
+            </script>
 
             </div>
         </div>
