@@ -69,16 +69,16 @@
                 .kpiConfig summary {
                     list-style: none;
                     cursor: pointer;
-                    border: 1px solid #bfd5e0;
-                    background: #ffffff;
-                    color: #0c4f67;
+                    border: 1px solid #0a6e8b;
+                    background: #0b8fb3;
+                    color: #ffffff;
                     border-radius: 8px;
                     padding: 4px 10px;
                     font-size: 12px;
                     font-weight: bold;
                 }
                 .kpiConfig summary::-webkit-details-marker { display: none; }
-                .kpiConfig[open] summary { background: #eaf4f9; }
+                .kpiConfig[open] summary { background: #0a6e8b; }
                 .kpiConfigPanel {
                     position: absolute;
                     right: 0;
@@ -93,7 +93,16 @@
                 }
                 .kpiConfigPanel .kpiToggleRow { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
                 .kpiConfigPanel .kpiToggleRow:last-of-type { margin-bottom: 10px; }
-                .kpiConfigPanel .kpiConfigNote { margin: 0 0 10px; color: #5d7483; }
+                .kpiConfigPanel .kpiConfigNote {
+                    margin: 2px 0 10px;
+                    padding: 6px 8px;
+                    border: 1px solid #d7e5ef;
+                    border-radius: 6px;
+                    background: #f5f9fc;
+                    color: #4d6675;
+                    font-size: 12px;
+                    line-height: 1.3;
+                }
                 .kpiTableScroll { overflow-x: auto; }
                 .kpiTable { width: 100%; border-collapse: collapse; }
                 .kpiTable th {
@@ -185,6 +194,11 @@
                 $showCompletionRateChecked = !empty($this->showCompletionRate);
                 $hideZeroOpenChecked = (!isset($this->hideZeroOpenPositions) || !empty($this->hideZeroOpenPositions));
                 $candidateSourceScope = isset($this->candidateSourceScope) ? $this->candidateSourceScope : 'all';
+                $filledPositionsScope = isset($this->filledPositionsScope) ? $this->filledPositionsScope : 'all';
+                $filledPositionsAllChecked = ($filledPositionsScope !== 'open');
+                $filledPositionsTitle = $filledPositionsAllChecked ?
+                    'Candidates currently in status &quot;Hired&quot; for all job orders.' :
+                    'Candidates currently in status &quot;Hired&quot; for open job orders only.';
             ?>
 
             <?php if (empty($this->kpiRows)): ?>
@@ -195,6 +209,7 @@
                         <div class="kpiSectionTitleWrap">
                             <h3 class="kpiSectionTitle">Positions Open</h3>
                             <span class="kpiChip <?php echo($officialReportsChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">Official Reports: <?php echo($officialReportsChecked ? 'On' : 'Off'); ?></span>
+                            <span class="kpiChip <?php echo($filledPositionsAllChecked ? 'kpiChipOn' : 'kpiChipOff'); ?>">Filled Scope: <?php echo($filledPositionsAllChecked ? 'All JO' : 'Open JO'); ?></span>
                         </div>
                         <details class="kpiConfig">
                             <summary>Configure</summary>
@@ -213,7 +228,14 @@
                                         <input type="checkbox" name="officialReports" value="1"<?php if ($officialReportsChecked): ?> checked="checked"<?php endif; ?> />
                                         Official Reports
                                     </label>
-                                    <p class="noteUnsizedSpan kpiConfigNote">This option applies to all KPI tables.</p>
+                                    <label class="kpiToggleRow">
+                                        Filled positions:
+                                        <select name="filledPositionsScope" class="inputbox">
+                                            <option value="all"<?php if ($filledPositionsScope === 'all'): ?> selected="selected"<?php endif; ?>>All job orders</option>
+                                            <option value="open"<?php if ($filledPositionsScope === 'open'): ?> selected="selected"<?php endif; ?>>Open job orders only</option>
+                                        </select>
+                                    </label>
+                                    <p class="kpiConfigNote">Applies to all KPI cards.</p>
                                     <input type="submit" class="button" value="Apply" />
                                 </form>
                             </div>
@@ -234,7 +256,7 @@
                                     </th>
                                     <th>
                                         Filled positions
-                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="Candidates currently in status &quot;Hired&quot; for open job orders." />
+                                        <img class="kpiInfoIcon" src="images/information.gif" width="12" height="12" alt="Info" title="<?php echo($filledPositionsTitle); ?>" />
                                     </th>
                                     <th>
                                         Expected conversion
@@ -306,6 +328,7 @@
                                 <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
                                     <input type="hidden" name="m" value="kpis" />
                                     <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
+                                    <input type="hidden" name="filledPositionsScope" value="<?php echo(htmlspecialchars($filledPositionsScope)); ?>" />
                                     <input type="hidden" name="candidateSourceScope" value="<?php echo(htmlspecialchars($candidateSourceScope)); ?>" />
                                     <input type="hidden" name="trendView" value="<?php echo(htmlspecialchars($this->candidateTrendView)); ?>" />
                                     <input type="hidden" name="trendStart" value="<?php echo(htmlspecialchars($this->candidateTrendStart)); ?>" />
@@ -456,6 +479,7 @@
                                 <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
                                     <input type="hidden" name="m" value="kpis" />
                                     <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
+                                    <input type="hidden" name="filledPositionsScope" value="<?php echo(htmlspecialchars($filledPositionsScope)); ?>" />
                                     <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
                                     <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
                                     <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
@@ -546,6 +570,7 @@
                             <form method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
                                 <input type="hidden" name="m" value="kpis" />
                                 <input type="hidden" name="officialReports" value="<?php echo($officialReportsChecked ? 1 : 0); ?>" />
+                                <input type="hidden" name="filledPositionsScope" value="<?php echo(htmlspecialchars($filledPositionsScope)); ?>" />
                                 <input type="hidden" name="showDeadline" value="<?php echo($showDeadlineChecked ? 1 : 0); ?>" />
                                 <input type="hidden" name="showCompletionRate" value="<?php echo($showCompletionRateChecked ? 1 : 0); ?>" />
                                 <input type="hidden" name="hideZeroOpenPositions" value="<?php echo($hideZeroOpenChecked ? 1 : 0); ?>" />
@@ -582,14 +607,14 @@
                         <img src="<?php echo($this->candidateTrendGraphURL); ?>" alt="New Candidates Trend" />
                     </div>
                     <div class="kpiSourceMixCard">
-                        <div class="kpiSourceMixHead">Candidate Source Mix</div>
+                        <div class="kpiSourceMixHead">Candidate Source Distribution</div>
                         <div class="kpiSourceMixBody">
                             <div class="noteUnsizedSpan" style="margin-bottom: 4px;">
                                 Total in database:
                                 <strong><?php echo((int) $this->candidateSourceSnapshot['total']); ?></strong>
                             </div>
                             <?php if (!empty($this->candidateSourcePieURL)): ?>
-                                <img src="<?php echo(htmlspecialchars($this->candidateSourcePieURL)); ?>" alt="Candidate Source Mix Pie" />
+                                <img src="<?php echo(htmlspecialchars($this->candidateSourcePieURL)); ?>" alt="Candidate Source Distribution Pie" />
                             <?php else: ?>
                                 <div class="noteUnsizedSpan">No candidates to chart yet.</div>
                             <?php endif; ?>
@@ -601,7 +626,6 @@
                         </div>
                     </div>
                 </div>
-                <p class="noteUnsizedSpan kpiHint">Trend counts candidates by creation date. Source filter (<?php echo(htmlspecialchars(isset($this->candidateSourceScopeLabel) ? $this->candidateSourceScopeLabel : 'All')); ?>) applies. Official Reports does not apply to trend.</p>
             </div>
 
             </div>
