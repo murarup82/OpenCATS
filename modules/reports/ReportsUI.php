@@ -31,6 +31,7 @@ include_once(LEGACY_ROOT . '/lib/Statistics.php');
 include_once(LEGACY_ROOT . '/lib/DateUtility.php');
 include_once(LEGACY_ROOT . '/lib/Candidates.php');
 include_once(LEGACY_ROOT . '/lib/CommonErrors.php');
+include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
 
 class ReportsUI extends UserInterface
 {
@@ -43,6 +44,7 @@ class ReportsUI extends UserInterface
         $this->_moduleName = 'reports';
         $this->_moduleTabText = 'Reports';
         $this->_subTabs = array(
+                'Customer Dashboard' => CATSUtility::getIndexName() . '?m=reports&amp;a=customerDashboard',
                 'EEO Reports' => CATSUtility::getIndexName() . '?m=reports&amp;a=customizeEEOReport'
             );
     }
@@ -55,6 +57,10 @@ class ReportsUI extends UserInterface
         $action = $this->getAction();
         switch ($action)
         {
+            case 'customerDashboard':
+                $this->customerDashboard();
+                break;
+
             case 'graphView':
                 $this->graphView();
                 break;
@@ -170,6 +176,887 @@ class ReportsUI extends UserInterface
         $this->_template->assign('active', $this);
         $this->_template->assign('statisticsData', $statisticsData);
         $this->_template->display('./modules/reports/Reports.tpl');
+    }
+
+    private function customerDashboard()
+    {
+        $db = DatabaseConnection::getInstance();
+
+        $companiesRS = $this->getCompanyListForDashboard($db);
+        $rangeOptions = array(
+            30 => 'Last 30 days',
+            90 => 'Last 90 days',
+            180 => 'Last 180 days',
+            365 => 'Last 365 days'
+        );
+
+        $rangeDays = (int) $this->getTrimmedInput('rangeDays', $_GET);
+        if (!isset($rangeOptions[$rangeDays]))
+        {
+            $rangeDays = 90;
+        }
+
+        $selectedCompanyID = (int) $this->getTrimmedInput('companyID', $_GET);
+        $selectedCompanyName = '';
+        foreach ($companiesRS as $companyData)
+        {
+            if ((int) $companyData['companyID'] === $selectedCompanyID)
+            {
+                $selectedCompanyName = $companyData['name'];
+                break;
+            }
+        }
+
+        if ($selectedCompanyName === '' && !empty($companiesRS))
+        {
+            $selectedCompanyID = (int) $companiesRS[0]['companyID'];
+            $selectedCompanyName = $companiesRS[0]['name'];
+        }
+
+        $rangeEnd = new DateTime('now');
+        $rangeEnd->setTime(23, 59, 59);
+        $rangeStart = clone $rangeEnd;
+        $rangeStart->setTime(0, 0, 0);
+        $rangeStart->modify('-' . ($rangeDays - 1) . ' days');
+
+        $dashboardData = array();
+        if ($selectedCompanyID > 0)
+        {
+            $dashboardData = $this->getCustomerDashboardData(
+                $db,
+                $selectedCompanyID,
+                $rangeStart,
+                $rangeEnd
+            );
+        }
+
+        if (!eval(Hooks::get('REPORTS_CUSTOMER_DASHBOARD'))) return;
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Customer Dashboard');
+        $this->_template->assign('companiesRS', $companiesRS);
+        $this->_template->assign('selectedCompanyID', $selectedCompanyID);
+        $this->_template->assign('selectedCompanyName', $selectedCompanyName);
+        $this->_template->assign('rangeDays', $rangeDays);
+        $this->_template->assign('rangeOptions', $rangeOptions);
+        $this->_template->assign('rangeStartLabel', $rangeStart->format('M j, Y'));
+        $this->_template->assign('rangeEndLabel', $rangeEnd->format('M j, Y'));
+        $this->_template->assign('dashboardData', $dashboardData);
+        $this->_template->display('./modules/reports/CustomerDashboard.tpl');
+    }
+
+    private function getCompanyListForDashboard($db)
+    {
+        return $db->getAllAssoc(sprintf(
+            "SELECT
+                company_id AS companyID,
+                name
+            FROM
+                company
+            WHERE
+                site_id = %s
+            ORDER BY
+                name ASC",
+            $db->makeQueryInteger($this->_siteID)
+        ));
+    }
+
+    private function getCustomerDashboardData($db, $companyID, $rangeStart, $rangeEnd)
+    {
+        $summaryRS = $db->getAssoc(sprintf(
+            "SELECT
+                COUNT(*) AS totalJobOrders
+            FROM
+                joborder
+            WHERE
+                site_id = %s
+            AND
+                company_id = %s",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID)
+        ));
+        if (empty($summaryRS))
+        {
+            $summaryRS = array('totalJobOrders' => 0);
+        }
+
+        $openJobRowsRaw = $this->getCustomerOpenJobHealthRows($db, $companyID);
+        $openJobRows = array();
+        $atRiskJobs = array();
+        $aging = array(
+            'bucket0to15' => 0,
+            'bucket16to30' => 0,
+            'bucket31plus' => 0
+        );
+        $slaHits = 0;
+        $todayTimestamp = time();
+
+        foreach ($openJobRowsRaw as $row)
+        {
+            $daysOpen = (int) $row['daysOpen'];
+            if ($daysOpen <= 15)
+            {
+                ++$aging['bucket0to15'];
+            }
+            else if ($daysOpen <= 30)
+            {
+                ++$aging['bucket16to30'];
+            }
+            else
+            {
+                ++$aging['bucket31plus'];
+            }
+
+            $lastPipelineDateRaw = trim((string) $row['lastPipelineDate']);
+            $lastPipelineDateLabel = 'No pipeline activity';
+            $daysSinceActivity = null;
+            if ($lastPipelineDateRaw !== '' && strpos($lastPipelineDateRaw, '1000-01-01') !== 0)
+            {
+                $lastPipelineTimestamp = strtotime($lastPipelineDateRaw);
+                if ($lastPipelineTimestamp !== false)
+                {
+                    $daysSinceActivity = (int) floor(($todayTimestamp - $lastPipelineTimestamp) / 86400);
+                    if ($daysSinceActivity < 0)
+                    {
+                        $daysSinceActivity = 0;
+                    }
+                    if ($daysSinceActivity <= 7)
+                    {
+                        ++$slaHits;
+                    }
+
+                    $lastPipelineDateLabel = date('M j, Y', $lastPipelineTimestamp);
+                }
+            }
+
+            $riskScore = 0;
+            $riskReasons = array();
+            $activeCandidates = (int) $row['activeCandidates'];
+            $openingsAvailable = (int) $row['openingsAvailable'];
+
+            if ($activeCandidates <= 0)
+            {
+                $riskScore += 3;
+                $riskReasons[] = 'No active candidates in pipeline';
+            }
+
+            if ($daysSinceActivity === null)
+            {
+                $riskScore += 2;
+                $riskReasons[] = 'No recorded pipeline activity';
+            }
+            else if ($daysSinceActivity > 14)
+            {
+                $riskScore += 2;
+                $riskReasons[] = 'No candidate movement in ' . $daysSinceActivity . ' days';
+            }
+
+            if ($daysOpen > 45)
+            {
+                ++$riskScore;
+                $riskReasons[] = 'Open for ' . $daysOpen . ' days';
+            }
+
+            if ($openingsAvailable > 0 && $activeCandidates < $openingsAvailable && $daysOpen > 21)
+            {
+                ++$riskScore;
+                $riskReasons[] = 'Pipeline coverage lower than openings';
+            }
+
+            if ($riskScore >= 4)
+            {
+                $healthLabel = 'At Risk';
+                $healthClass = 'risk';
+            }
+            else if ($riskScore >= 2)
+            {
+                $healthLabel = 'Watch';
+                $healthClass = 'watch';
+            }
+            else
+            {
+                $healthLabel = 'Healthy';
+                $healthClass = 'healthy';
+            }
+
+            $openJobRow = array(
+                'jobOrderID' => (int) $row['jobOrderID'],
+                'title' => $row['title'],
+                'status' => $row['status'],
+                'openingsAvailable' => $openingsAvailable,
+                'activeCandidates' => $activeCandidates,
+                'daysOpen' => $daysOpen,
+                'lastPipelineDateLabel' => $lastPipelineDateLabel,
+                'daysSinceActivity' => $daysSinceActivity,
+                'healthLabel' => $healthLabel,
+                'healthClass' => $healthClass,
+                'riskScore' => $riskScore,
+                'riskReasonsLabel' => implode('; ', $riskReasons)
+            );
+            $openJobRows[] = $openJobRow;
+
+            if ($riskScore >= 2)
+            {
+                $atRiskJobs[] = $openJobRow;
+            }
+        }
+
+        $openJobOrders = count($openJobRows);
+        $slaHitRate = null;
+        if ($openJobOrders > 0)
+        {
+            $slaHitRate = ((float) $slaHits / (float) $openJobOrders) * 100.0;
+        }
+
+        $activePipelineRS = $db->getAssoc(sprintf(
+            "SELECT
+                COUNT(*) AS activePipelineCount
+            FROM
+                candidate_joborder AS cjo
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjo.joborder_id
+                AND jo.site_id = cjo.site_id
+            WHERE
+                cjo.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                jo.status IN %s
+            AND
+                cjo.is_active = 1
+            AND
+                cjo.status NOT IN (%s, %s)",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            JobOrderStatuses::getOpenStatusSQL(),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger(PIPELINE_STATUS_REJECTED)
+        ));
+        $activePipelineCount = empty($activePipelineRS) ? 0 : (int) $activePipelineRS['activePipelineCount'];
+
+        $hireLagRS = $db->getAllAssoc(sprintf(
+            "SELECT
+                DATEDIFF(first_hire.firstHireDate, jo.date_created) AS daysToFill
+            FROM
+                (
+                    SELECT
+                        cjh.candidate_id,
+                        cjh.joborder_id,
+                        MIN(cjh.date) AS firstHireDate
+                    FROM
+                        candidate_joborder_status_history AS cjh
+                    INNER JOIN joborder AS jo_hire
+                        ON jo_hire.joborder_id = cjh.joborder_id
+                        AND jo_hire.site_id = cjh.site_id
+                    WHERE
+                        cjh.site_id = %s
+                    AND
+                        jo_hire.company_id = %s
+                    AND
+                        cjh.status_to = %s
+                    GROUP BY
+                        cjh.candidate_id,
+                        cjh.joborder_id
+                ) AS first_hire
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = first_hire.joborder_id
+                AND jo.site_id = %s
+            WHERE
+                first_hire.firstHireDate >= %s
+            AND
+                first_hire.firstHireDate <= %s
+            ORDER BY
+                daysToFill ASC",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
+            $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s'))
+        ));
+
+        $daysToFillValues = array();
+        foreach ($hireLagRS as $row)
+        {
+            $daysToFill = (int) $row['daysToFill'];
+            if ($daysToFill < 0)
+            {
+                $daysToFill = 0;
+            }
+            $daysToFillValues[] = $daysToFill;
+        }
+        $hiresInRange = count($daysToFillValues);
+        $medianDaysToFill = $this->getMedianInteger($daysToFillValues);
+
+        $offerRS = $db->getAssoc(sprintf(
+            "SELECT
+                COUNT(DISTINCT IF(cjh.status_to = %s, CONCAT(cjh.candidate_id, '-', cjh.joborder_id), NULL)) AS offersMade,
+                COUNT(DISTINCT IF(cjh.status_to IN (%s, %s), CONCAT(cjh.candidate_id, '-', cjh.joborder_id), NULL)) AS offersAccepted
+            FROM
+                candidate_joborder_status_history AS cjh
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjh.joborder_id
+                AND jo.site_id = cjh.site_id
+            WHERE
+                cjh.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                cjh.date >= %s
+            AND
+                cjh.date <= %s",
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_ACCEPTED),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
+            $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s'))
+        ));
+        $offersMade = empty($offerRS) ? 0 : (int) $offerRS['offersMade'];
+        $offersAccepted = empty($offerRS) ? 0 : (int) $offerRS['offersAccepted'];
+        $offerAcceptanceRate = null;
+        if ($offersMade > 0)
+        {
+            $offerAcceptanceRate = ((float) $offersAccepted / (float) $offersMade) * 100.0;
+        }
+
+        $funnelData = $this->getCustomerFunnelStages($db, $companyID);
+        $activityTrendData = $this->getCustomerWeeklyActivity($db, $companyID);
+        $sourceQualityRows = $this->getCustomerSourceQuality($db, $companyID, $rangeStart, $rangeEnd);
+        $rejectionReasonRows = $this->getCustomerRejectionReasons($db, $companyID, $rangeStart, $rangeEnd);
+        $upcomingOutcomes = $this->getCustomerUpcomingOutcomes($db, $companyID);
+
+        $insightLine = '';
+        if (!empty($funnelData['biggestDropoff']))
+        {
+            $insightLine = sprintf(
+                'Largest stage drop-off: %s -> %s (%s drop).',
+                $funnelData['biggestDropoff']['from'],
+                $funnelData['biggestDropoff']['to'],
+                $funnelData['biggestDropoff']['dropLabel']
+            );
+        }
+        else if (count($atRiskJobs) > 0)
+        {
+            $insightLine = count($atRiskJobs) . ' open job order(s) are currently flagged as at risk.';
+        }
+        else
+        {
+            $insightLine = 'Pipeline movement is stable for the selected period.';
+        }
+
+        return array(
+            'snapshot' => array(
+                'totalJobOrders' => (int) $summaryRS['totalJobOrders'],
+                'openJobOrders' => $openJobOrders,
+                'hiresInRange' => $hiresInRange,
+                'medianDaysToFill' => $medianDaysToFill,
+                'activePipelineCount' => $activePipelineCount,
+                'offersMade' => $offersMade,
+                'offersAccepted' => $offersAccepted,
+                'offerAcceptanceRate' => $offerAcceptanceRate,
+                'offerAcceptanceLabel' => $this->formatPercentValue($offerAcceptanceRate),
+                'slaHitRate' => $slaHitRate,
+                'slaHitLabel' => $this->formatPercentValue($slaHitRate)
+            ),
+            'aging' => $aging,
+            'openJobRows' => $openJobRows,
+            'atRiskJobs' => $atRiskJobs,
+            'funnelStages' => $funnelData['stages'],
+            'funnelConversions' => $funnelData['conversions'],
+            'biggestDropoff' => $funnelData['biggestDropoff'],
+            'activityTrendRows' => $activityTrendData['rows'],
+            'activityTrendMax' => $activityTrendData['maxValue'],
+            'sourceQualityRows' => $sourceQualityRows,
+            'rejectionReasonRows' => $rejectionReasonRows,
+            'upcomingOutcomes' => $upcomingOutcomes,
+            'insightLine' => $insightLine
+        );
+    }
+
+    private function getCustomerOpenJobHealthRows($db, $companyID)
+    {
+        return $db->getAllAssoc(sprintf(
+            "SELECT
+                jo.joborder_id AS jobOrderID,
+                jo.title,
+                jo.status,
+                jo.openings_available AS openingsAvailable,
+                DATEDIFF(NOW(), jo.date_created) AS daysOpen,
+                COUNT(DISTINCT IF(cjo.is_active = 1 AND cjo.status NOT IN (%s, %s), cjo.candidate_id, NULL)) AS activeCandidates,
+                MAX(cjh.date) AS lastPipelineDate
+            FROM
+                joborder AS jo
+            LEFT JOIN candidate_joborder AS cjo
+                ON cjo.joborder_id = jo.joborder_id
+                AND cjo.site_id = jo.site_id
+            LEFT JOIN candidate_joborder_status_history AS cjh
+                ON cjh.joborder_id = jo.joborder_id
+                AND cjh.site_id = jo.site_id
+            WHERE
+                jo.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                jo.status IN %s
+            GROUP BY
+                jo.joborder_id
+            ORDER BY
+                daysOpen DESC,
+                jo.title ASC",
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger(PIPELINE_STATUS_REJECTED),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            JobOrderStatuses::getOpenStatusSQL()
+        ));
+    }
+
+    private function getCustomerFunnelStages($db, $companyID)
+    {
+        $funnelCountsRS = $db->getAllAssoc(sprintf(
+            "SELECT
+                cjo.status AS statusID,
+                COUNT(*) AS pipelineCount
+            FROM
+                candidate_joborder AS cjo
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjo.joborder_id
+                AND jo.site_id = cjo.site_id
+            WHERE
+                cjo.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                jo.status IN %s
+            AND
+                cjo.is_active = 1
+            GROUP BY
+                cjo.status",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            JobOrderStatuses::getOpenStatusSQL()
+        ));
+
+        $countByStatus = array();
+        foreach ($funnelCountsRS as $row)
+        {
+            $countByStatus[(int) $row['statusID']] = (int) $row['pipelineCount'];
+        }
+
+        $stageMeta = array(
+            array('statusID' => PIPELINE_STATUS_ALLOCATED, 'label' => 'Allocated'),
+            array('statusID' => PIPELINE_STATUS_DELIVERY_VALIDATED, 'label' => 'Delivery Validated'),
+            array('statusID' => PIPELINE_STATUS_PROPOSED_TO_CUSTOMER, 'label' => 'Proposed to Customer'),
+            array('statusID' => PIPELINE_STATUS_CUSTOMER_INTERVIEW, 'label' => 'Customer Interview'),
+            array('statusID' => PIPELINE_STATUS_CUSTOMER_APPROVED, 'label' => 'Customer Approved'),
+            array('statusID' => PIPELINE_STATUS_AVEL_APPROVED, 'label' => 'Avel Approved'),
+            array('statusID' => PIPELINE_STATUS_OFFER_NEGOTIATION, 'label' => 'Offer Negotiation'),
+            array('statusID' => PIPELINE_STATUS_OFFER_ACCEPTED, 'label' => 'Offer Accepted'),
+            array('statusID' => PIPELINE_STATUS_HIRED, 'label' => 'Hired')
+        );
+
+        $maxCount = 0;
+        $stages = array();
+        foreach ($stageMeta as $stage)
+        {
+            $count = isset($countByStatus[$stage['statusID']]) ? $countByStatus[$stage['statusID']] : 0;
+            if ($count > $maxCount)
+            {
+                $maxCount = $count;
+            }
+            $stages[] = array(
+                'statusID' => $stage['statusID'],
+                'label' => $stage['label'],
+                'count' => $count
+            );
+        }
+
+        if ($maxCount <= 0)
+        {
+            $maxCount = 1;
+        }
+        foreach ($stages as $index => $stage)
+        {
+            $stages[$index]['barWidth'] = (int) round(($stage['count'] / $maxCount) * 100);
+        }
+
+        $conversions = array();
+        $biggestDropoff = array();
+        $maxDropPercent = -1;
+        for ($i = 1; $i < count($stages); ++$i)
+        {
+            $previousStage = $stages[$i - 1];
+            $currentStage = $stages[$i];
+            if ($previousStage['count'] <= 0)
+            {
+                continue;
+            }
+
+            $conversionPercent = ((float) $currentStage['count'] / (float) $previousStage['count']) * 100.0;
+            $conversions[] = array(
+                'from' => $previousStage['label'],
+                'to' => $currentStage['label'],
+                'rate' => $conversionPercent,
+                'rateLabel' => $this->formatPercentValue($conversionPercent)
+            );
+
+            if ($currentStage['count'] < $previousStage['count'])
+            {
+                $dropPercent = ((float) ($previousStage['count'] - $currentStage['count']) / (float) $previousStage['count']) * 100.0;
+                if ($dropPercent > $maxDropPercent)
+                {
+                    $maxDropPercent = $dropPercent;
+                    $biggestDropoff = array(
+                        'from' => $previousStage['label'],
+                        'to' => $currentStage['label'],
+                        'dropPercent' => $dropPercent,
+                        'dropLabel' => $this->formatPercentValue($dropPercent)
+                    );
+                }
+            }
+        }
+
+        return array(
+            'stages' => $stages,
+            'conversions' => $conversions,
+            'biggestDropoff' => $biggestDropoff
+        );
+    }
+
+    private function getCustomerWeeklyActivity($db, $companyID)
+    {
+        $rows = $db->getAllAssoc(sprintf(
+            "SELECT
+                DATE_FORMAT(cjh.date, '%%x-W%%v') AS weekLabel,
+                MIN(DATE(cjh.date)) AS weekStartDate,
+                SUM(IF(cjh.status_to = %s, 1, 0)) AS submissionsCount,
+                SUM(IF(cjh.status_to = %s, 1, 0)) AS interviewsCount,
+                SUM(IF(cjh.status_to = %s, 1, 0)) AS offersCount,
+                SUM(IF(cjh.status_to = %s, 1, 0)) AS hiresCount
+            FROM
+                candidate_joborder_status_history AS cjh
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjh.joborder_id
+                AND jo.site_id = cjh.site_id
+            WHERE
+                cjh.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                cjh.date >= DATE_SUB(CURDATE(), INTERVAL 56 DAY)
+            GROUP BY
+                weekLabel
+            ORDER BY
+                weekStartDate ASC",
+            $db->makeQueryInteger(PIPELINE_STATUS_PROPOSED_TO_CUSTOMER),
+            $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_INTERVIEW),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID)
+        ));
+
+        $maxValue = 0;
+        $trendRows = array();
+        foreach ($rows as $row)
+        {
+            $submissions = (int) $row['submissionsCount'];
+            $interviews = (int) $row['interviewsCount'];
+            $offers = (int) $row['offersCount'];
+            $hires = (int) $row['hiresCount'];
+
+            $maxValue = max($maxValue, $submissions, $interviews, $offers, $hires);
+            $trendRows[] = array(
+                'weekLabel' => $row['weekLabel'],
+                'submissionsCount' => $submissions,
+                'interviewsCount' => $interviews,
+                'offersCount' => $offers,
+                'hiresCount' => $hires
+            );
+        }
+
+        if ($maxValue <= 0)
+        {
+            $maxValue = 1;
+        }
+        foreach ($trendRows as $index => $row)
+        {
+            $trendRows[$index]['submissionsWidth'] = (int) round(($row['submissionsCount'] / $maxValue) * 100);
+            $trendRows[$index]['interviewsWidth'] = (int) round(($row['interviewsCount'] / $maxValue) * 100);
+            $trendRows[$index]['offersWidth'] = (int) round(($row['offersCount'] / $maxValue) * 100);
+            $trendRows[$index]['hiresWidth'] = (int) round(($row['hiresCount'] / $maxValue) * 100);
+        }
+
+        return array(
+            'rows' => $trendRows,
+            'maxValue' => $maxValue
+        );
+    }
+
+    private function getCustomerSourceQuality($db, $companyID, $rangeStart, $rangeEnd)
+    {
+        $rows = $db->getAllAssoc(sprintf(
+            "SELECT
+                CASE
+                    WHEN candidate.source IS NULL THEN 'N/A'
+                    WHEN TRIM(candidate.source) = '' THEN 'N/A'
+                    WHEN LOWER(TRIM(candidate.source)) = '(none)' THEN 'N/A'
+                    ELSE candidate.source
+                END AS source,
+                COUNT(DISTINCT IF(cjh.status_to IN (%s, %s, %s, %s, %s, %s), CONCAT(cjh.candidate_id, '-', cjh.joborder_id), NULL)) AS interviewPathCount,
+                COUNT(DISTINCT IF(cjh.status_to = %s, CONCAT(cjh.candidate_id, '-', cjh.joborder_id), NULL)) AS hireCount
+            FROM
+                candidate_joborder_status_history AS cjh
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjh.joborder_id
+                AND jo.site_id = cjh.site_id
+            INNER JOIN candidate
+                ON candidate.candidate_id = cjh.candidate_id
+                AND candidate.site_id = cjh.site_id
+            WHERE
+                cjh.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                cjh.date >= %s
+            AND
+                cjh.date <= %s
+            GROUP BY
+                source
+            HAVING
+                interviewPathCount > 0
+                OR hireCount > 0
+            ORDER BY
+                hireCount DESC,
+                interviewPathCount DESC,
+                source ASC
+            LIMIT 8",
+            $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_INTERVIEW),
+            $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_APPROVED),
+            $db->makeQueryInteger(PIPELINE_STATUS_AVEL_APPROVED),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_ACCEPTED),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
+            $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s'))
+        ));
+
+        $sourceQualityRows = array();
+        foreach ($rows as $row)
+        {
+            $interviewCount = (int) $row['interviewPathCount'];
+            $hireCount = (int) $row['hireCount'];
+            $hireRate = null;
+            if ($interviewCount > 0)
+            {
+                $hireRate = ((float) $hireCount / (float) $interviewCount) * 100.0;
+            }
+
+            $sourceQualityRows[] = array(
+                'source' => $row['source'],
+                'interviewPathCount' => $interviewCount,
+                'hireCount' => $hireCount,
+                'hireRate' => $hireRate,
+                'hireRateLabel' => $this->formatPercentValue($hireRate)
+            );
+        }
+
+        return $sourceQualityRows;
+    }
+
+    private function getCustomerRejectionReasons($db, $companyID, $rangeStart, $rangeEnd)
+    {
+        return $db->getAllAssoc(sprintf(
+            "SELECT
+                rejection_reason.label AS label,
+                COUNT(*) AS rejectionCount
+            FROM
+                status_history_rejection_reason
+            INNER JOIN rejection_reason
+                ON rejection_reason.rejection_reason_id = status_history_rejection_reason.rejection_reason_id
+            INNER JOIN candidate_joborder_status_history AS cjh
+                ON cjh.candidate_joborder_status_history_id = status_history_rejection_reason.status_history_id
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjh.joborder_id
+                AND jo.site_id = cjh.site_id
+            WHERE
+                cjh.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                cjh.date >= %s
+            AND
+                cjh.date <= %s
+            GROUP BY
+                rejection_reason.label
+            ORDER BY
+                rejectionCount DESC,
+                rejection_reason.label ASC
+            LIMIT 5",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
+            $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s'))
+        ));
+    }
+
+    private function getCustomerUpcomingOutcomes($db, $companyID)
+    {
+        $upcomingInterviewsRS = $db->getAllAssoc(sprintf(
+            "SELECT
+                DATE_FORMAT(calendar_event.date, '%%m-%%d-%%y (%%h:%%i %%p)') AS interviewDate,
+                calendar_event.title AS interviewTitle,
+                jo.joborder_id AS jobOrderID,
+                jo.title AS jobOrderTitle
+            FROM
+                calendar_event
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = calendar_event.joborder_id
+                AND jo.site_id = calendar_event.site_id
+            WHERE
+                calendar_event.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                calendar_event.type = %s
+            AND
+                calendar_event.date >= NOW()
+            AND
+                calendar_event.date <= DATE_ADD(NOW(), INTERVAL 7 DAY)
+            ORDER BY
+                calendar_event.date ASC
+            LIMIT 6",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryInteger(400)
+        ));
+
+        $upcomingInterviewCountRS = $db->getAssoc(sprintf(
+            "SELECT
+                COUNT(*) AS upcomingInterviewCount
+            FROM
+                calendar_event
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = calendar_event.joborder_id
+                AND jo.site_id = calendar_event.site_id
+            WHERE
+                calendar_event.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                calendar_event.type = %s
+            AND
+                calendar_event.date >= NOW()
+            AND
+                calendar_event.date <= DATE_ADD(NOW(), INTERVAL 7 DAY)",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryInteger(400)
+        ));
+
+        $pipelineOutcomeRS = $db->getAssoc(sprintf(
+            "SELECT
+                SUM(IF(cjo.status = %s, 1, 0)) AS pendingInterviewCount,
+                SUM(IF(cjo.status IN (%s, %s), 1, 0)) AS pendingOfferCount,
+                SUM(IF(cjo.status = %s AND cjo.date_modified < DATE_SUB(NOW(), INTERVAL 7 DAY), 1, 0)) AS overdueOfferCount
+            FROM
+                candidate_joborder AS cjo
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjo.joborder_id
+                AND jo.site_id = cjo.site_id
+            WHERE
+                cjo.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                jo.status IN %s
+            AND
+                cjo.is_active = 1",
+            $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_INTERVIEW),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_ACCEPTED),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            JobOrderStatuses::getOpenStatusSQL()
+        ));
+
+        if (empty($upcomingInterviewCountRS))
+        {
+            $upcomingInterviewCountRS = array('upcomingInterviewCount' => 0);
+        }
+        if (empty($pipelineOutcomeRS))
+        {
+            $pipelineOutcomeRS = array(
+                'pendingInterviewCount' => 0,
+                'pendingOfferCount' => 0,
+                'overdueOfferCount' => 0
+            );
+        }
+
+        return array(
+            'upcomingInterviewCount' => (int) $upcomingInterviewCountRS['upcomingInterviewCount'],
+            'pendingInterviewCount' => (int) $pipelineOutcomeRS['pendingInterviewCount'],
+            'pendingOfferCount' => (int) $pipelineOutcomeRS['pendingOfferCount'],
+            'overdueOfferCount' => (int) $pipelineOutcomeRS['overdueOfferCount'],
+            'upcomingInterviewsRS' => $upcomingInterviewsRS
+        );
+    }
+
+    private function getMedianInteger($values)
+    {
+        if (empty($values))
+        {
+            return null;
+        }
+
+        sort($values, SORT_NUMERIC);
+        $count = count($values);
+        $middleIndex = (int) floor($count / 2);
+
+        if (($count % 2) === 1)
+        {
+            return (int) $values[$middleIndex];
+        }
+
+        $leftValue = (int) $values[$middleIndex - 1];
+        $rightValue = (int) $values[$middleIndex];
+        return (int) round(($leftValue + $rightValue) / 2);
+    }
+
+    private function formatPercentValue($value)
+    {
+        if ($value === null)
+        {
+            return 'N/A';
+        }
+
+        $value = (float) $value;
+        if ($value < 0)
+        {
+            $value = 0;
+        }
+        if ($value <= 0.0001)
+        {
+            return '0%';
+        }
+
+        if ($value >= 99.95)
+        {
+            return '100%';
+        }
+
+        if ($value >= 10)
+        {
+            return sprintf('%.0f%%', round($value));
+        }
+
+        return sprintf('%.1f%%', round($value, 1));
     }
 
     private function graphView()

@@ -25,11 +25,12 @@
                     $showEEOReportLink = true;
                 }
             ?>
-            <?php if ($showEEOReportLink): ?>
-                <div style="margin: 6px 0 12px 0;">
+            <div style="margin: 6px 0 12px 0; display: flex; flex-wrap: wrap; gap: 8px;">
+                <a class="ui2-button ui2-button--primary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=reports&amp;a=customerDashboard">Customer Dashboard</a>
+                <?php if ($showEEOReportLink): ?>
                     <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=reports&amp;a=customizeEEOReport">EEO Reports</a>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+            </div>
 
             <table border="0" width="925">
                 <tr>

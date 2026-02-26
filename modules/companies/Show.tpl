@@ -39,6 +39,11 @@ use OpenCATS\UI\QuickActionMenu;
                                     <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />Edit
                                 </a>
                             <?php endif; ?>
+                            <?php if ($this->getUserAccessLevel('reports') >= ACCESS_LEVEL_READ): ?>
+                                <a id="customer_dashboard_link" class="ui2-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=reports&amp;a=customerDashboard&amp;companyID=<?php echo($this->companyID); ?>">
+                                    <img src="images/reportsSmall.gif" width="16" height="16" class="absmiddle" alt="dashboard" border="0" />Recruitment Dashboard
+                                </a>
+                            <?php endif; ?>
                             <?php if ($this->privledgedUser): ?>
                                 <a id="history_link" class="ui2-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=200&amp;dataItemID=<?php echo($this->companyID); ?>">
                                     <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />View History
