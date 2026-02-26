@@ -32,9 +32,15 @@ include_once(LEGACY_ROOT . '/lib/DateUtility.php');
 include_once(LEGACY_ROOT . '/lib/Candidates.php');
 include_once(LEGACY_ROOT . '/lib/CommonErrors.php');
 include_once(LEGACY_ROOT . '/lib/JobOrderStatuses.php');
+include_once(LEGACY_ROOT . '/lib/ReportsSettings.php');
 
 class ReportsUI extends UserInterface
 {
+    const CUSTOMER_DASH_SLA_ACTIVITY_DAYS = 5;
+    const CUSTOMER_DASH_RISK_NO_ACTIVITY_DAYS = 10;
+    const CUSTOMER_DASH_RISK_LONG_OPEN_DAYS = 30;
+    const CUSTOMER_DASH_RISK_LOW_COVERAGE_DAYS = 14;
+
     public function __construct()
     {
         parent::__construct();
@@ -219,6 +225,8 @@ class ReportsUI extends UserInterface
         $rangeStart->setTime(0, 0, 0);
         $rangeStart->modify('-' . ($rangeDays - 1) . ' days');
 
+        $thresholds = $this->getCustomerDashboardThresholds();
+
         $dashboardData = array();
         if ($selectedCompanyID > 0)
         {
@@ -226,7 +234,8 @@ class ReportsUI extends UserInterface
                 $db,
                 $selectedCompanyID,
                 $rangeStart,
-                $rangeEnd
+                $rangeEnd,
+                $thresholds
             );
         }
 
@@ -261,7 +270,27 @@ class ReportsUI extends UserInterface
         ));
     }
 
-    private function getCustomerDashboardData($db, $companyID, $rangeStart, $rangeEnd)
+    private function getCustomerDashboardThresholds()
+    {
+        $thresholds = array(
+            'slaActivityDays' => self::CUSTOMER_DASH_SLA_ACTIVITY_DAYS,
+            'riskNoActivityDays' => self::CUSTOMER_DASH_RISK_NO_ACTIVITY_DAYS,
+            'riskLongOpenDays' => self::CUSTOMER_DASH_RISK_LONG_OPEN_DAYS,
+            'riskLowCoverageDays' => self::CUSTOMER_DASH_RISK_LOW_COVERAGE_DAYS
+        );
+
+        $reportsSettings = new ReportsSettings($this->_siteID);
+        $reportsSettingsRS = $reportsSettings->getAll();
+
+        $thresholds['slaActivityDays'] = (int) $reportsSettingsRS[ReportsSettings::SETTING_SLA_ACTIVITY_DAYS];
+        $thresholds['riskNoActivityDays'] = (int) $reportsSettingsRS[ReportsSettings::SETTING_RISK_NO_ACTIVITY_DAYS];
+        $thresholds['riskLongOpenDays'] = (int) $reportsSettingsRS[ReportsSettings::SETTING_RISK_LONG_OPEN_DAYS];
+        $thresholds['riskLowCoverageDays'] = (int) $reportsSettingsRS[ReportsSettings::SETTING_RISK_LOW_COVERAGE_DAYS];
+
+        return $thresholds;
+    }
+
+    private function getCustomerDashboardData($db, $companyID, $rangeStart, $rangeEnd, $thresholds)
     {
         $summaryRS = $db->getAssoc(sprintf(
             "SELECT
@@ -320,7 +349,7 @@ class ReportsUI extends UserInterface
                     {
                         $daysSinceActivity = 0;
                     }
-                    if ($daysSinceActivity <= 7)
+                    if ($daysSinceActivity <= (int) $thresholds['slaActivityDays'])
                     {
                         ++$slaHits;
                     }
@@ -345,19 +374,19 @@ class ReportsUI extends UserInterface
                 $riskScore += 2;
                 $riskReasons[] = 'No recorded pipeline activity';
             }
-            else if ($daysSinceActivity > 14)
+            else if ($daysSinceActivity > (int) $thresholds['riskNoActivityDays'])
             {
                 $riskScore += 2;
                 $riskReasons[] = 'No candidate movement in ' . $daysSinceActivity . ' days';
             }
 
-            if ($daysOpen > 45)
+            if ($daysOpen > (int) $thresholds['riskLongOpenDays'])
             {
                 ++$riskScore;
                 $riskReasons[] = 'Open for ' . $daysOpen . ' days';
             }
 
-            if ($openingsAvailable > 0 && $activeCandidates < $openingsAvailable && $daysOpen > 21)
+            if ($openingsAvailable > 0 && $activeCandidates < $openingsAvailable && $daysOpen > (int) $thresholds['riskLowCoverageDays'])
             {
                 ++$riskScore;
                 $riskReasons[] = 'Pipeline coverage lower than openings';
@@ -558,7 +587,10 @@ class ReportsUI extends UserInterface
                 'offerAcceptanceRate' => $offerAcceptanceRate,
                 'offerAcceptanceLabel' => $this->formatPercentValue($offerAcceptanceRate),
                 'slaHitRate' => $slaHitRate,
-                'slaHitLabel' => $this->formatPercentValue($slaHitRate)
+                'slaHitLabel' => $this->formatPercentValue($slaHitRate),
+                'slaWindowDays' => (int) $thresholds['slaActivityDays'],
+                'riskNoActivityDays' => (int) $thresholds['riskNoActivityDays'],
+                'riskLongOpenDays' => (int) $thresholds['riskLongOpenDays']
             ),
             'aging' => $aging,
             'openJobRows' => $openJobRows,

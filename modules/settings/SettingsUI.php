@@ -49,6 +49,7 @@ include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/Tags.php');
 include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
 include_once(LEGACY_ROOT . '/lib/FeedbackSettings.php');
+include_once(LEGACY_ROOT . '/lib/ReportsSettings.php');
 include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowSettings.php');
 include_once(LEGACY_ROOT . '/lib/TalentFitFlowClient.php');
@@ -500,7 +501,11 @@ class SettingsUI extends UserInterface
                 }
                 if ($this->isPostBack())
                 {
-
+                    if ($this->getUserAccessLevel('settings.administration') < ACCESS_LEVEL_SA)
+                    {
+                        CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                    }
+                    $this->onReports();
                 }
                 else
                 {
@@ -3002,9 +3007,45 @@ class SettingsUI extends UserInterface
      */
     private function reports()
     {
+        $reportsSettings = new ReportsSettings($this->_siteID);
+        $reportsSettingsRS = $reportsSettings->getAll();
+
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
+        $this->_template->assign('reportsSettings', $reportsSettingsRS);
+        $this->_template->assign('reportsSaved', isset($_GET['saved']));
         $this->_template->display('./modules/settings/CustomizeReports.tpl');
+    }
+
+    private function onReports()
+    {
+        $reportsSettings = new ReportsSettings($this->_siteID);
+
+        $settingMap = array(
+            ReportsSettings::SETTING_SLA_ACTIVITY_DAYS => 'SLA activity window must be a whole number between 1 and 30 days.',
+            ReportsSettings::SETTING_RISK_NO_ACTIVITY_DAYS => 'No-activity risk threshold must be a whole number between 2 and 60 days.',
+            ReportsSettings::SETTING_RISK_LONG_OPEN_DAYS => 'Long-open risk threshold must be a whole number between 5 and 180 days.',
+            ReportsSettings::SETTING_RISK_LOW_COVERAGE_DAYS => 'Low-coverage threshold must be a whole number between 2 and 90 days.'
+        );
+
+        foreach ($settingMap as $settingName => $errorMessage)
+        {
+            $valueRaw = $this->getTrimmedInput($settingName, $_POST);
+            if (!ctype_digit((string) $valueRaw))
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, $errorMessage);
+            }
+
+            $valueSanitized = $reportsSettings->sanitizeThresholdValue($settingName, $valueRaw);
+            if ((int) $valueSanitized !== (int) $valueRaw)
+            {
+                CommonErrors::fatal(COMMONERROR_MISSINGFIELDS, $this, $errorMessage);
+            }
+
+            $reportsSettings->set($settingName, (string) $valueSanitized);
+        }
+
+        CATSUtility::transferRelativeURI('m=settings&a=reports&saved=1');
     }
 
     /*

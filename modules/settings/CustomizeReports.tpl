@@ -1,5 +1,5 @@
-<?php /* $Id: CustomizeReports.tpl 1535 2007-01-22 17:55:29Z will $ */ ?>
-<?php TemplateUtility::printHeader('Settings', array('modules/settings/validator.js')); ?>
+<?php /* Reports Settings */ ?>
+<?php TemplateUtility::printHeader('Settings'); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs($this->active, $this->subActive); ?>
     <div id="main">
@@ -15,37 +15,72 @@
                 </tr>
             </table>
 
-            <p class="note">Report Settings</p>
-            <table>
+            <p class="note">Customer Dashboard Thresholds</p>
+
+            <?php if ($this->reportsSaved): ?>
+                <p class="noteGood">Report settings saved successfully.</p>
+            <?php endif; ?>
+
+            <table class="searchTable" width="100%">
                 <tr>
                     <td>
-                        <form name="editCalendarForm" id="editCalendarForm" action="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=customizeCalendar" method="post">
+                        <form action="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=reports" method="post" autocomplete="off">
                             <input type="hidden" name="postback" value="postback" />
-                            <table class="editTable" width="700">
-                                <tr>
-                                    <td class="tdVertical" style="width:250px;">
-                                        URL to logo image for report:
-                                    </td>
-                                    <td class="tdData">
-                                        <input type="textbox" class="textbox" name="reportImageURL" style="width:400px;">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="tdVertical" style="width:250px;">
-                                        Text caption for logo:
-                                    </td>
-                                    <td class="tdData">
-                                        <input type="textbox" class="textbox" name="reportImageURL" style="width:400px;">
-                                    </td>
-                                </tr>
-                            </table>
-                            <input type="submit" class="button" name="submit" id="submit" value="Save" />&nbsp;
-                            <input type="reset"  class="button" name="reset"  id="reset"  value="Reset" />&nbsp;
+
+                            <label for="customerDashboardSLAActivityDays">SLA activity window (days):</label><br />
+                            <input
+                                type="text"
+                                name="customerDashboardSLAActivityDays"
+                                id="customerDashboardSLAActivityDays"
+                                value="<?php echo((int) $this->reportsSettings['customerDashboardSLAActivityDays']); ?>"
+                                style="width: 60px;"
+                            />
+                            <span class="noteUnsized">Open jobs with candidate movement inside this window are counted as SLA hits. Allowed range: 1-30.</span>
+
+                            <br /><br />
+
+                            <label for="customerDashboardRiskNoActivityDays">No-activity risk threshold (days):</label><br />
+                            <input
+                                type="text"
+                                name="customerDashboardRiskNoActivityDays"
+                                id="customerDashboardRiskNoActivityDays"
+                                value="<?php echo((int) $this->reportsSettings['customerDashboardRiskNoActivityDays']); ?>"
+                                style="width: 60px;"
+                            />
+                            <span class="noteUnsized">A job is flagged when no candidate movement exceeds this value. Allowed range: 2-60.</span>
+
+                            <br /><br />
+
+                            <label for="customerDashboardRiskLongOpenDays">Long-open risk threshold (days):</label><br />
+                            <input
+                                type="text"
+                                name="customerDashboardRiskLongOpenDays"
+                                id="customerDashboardRiskLongOpenDays"
+                                value="<?php echo((int) $this->reportsSettings['customerDashboardRiskLongOpenDays']); ?>"
+                                style="width: 60px;"
+                            />
+                            <span class="noteUnsized">Open jobs older than this limit add risk score. Allowed range: 5-180.</span>
+
+                            <br /><br />
+
+                            <label for="customerDashboardRiskLowCoverageDays">Low-coverage threshold (days):</label><br />
+                            <input
+                                type="text"
+                                name="customerDashboardRiskLowCoverageDays"
+                                id="customerDashboardRiskLowCoverageDays"
+                                value="<?php echo((int) $this->reportsSettings['customerDashboardRiskLowCoverageDays']); ?>"
+                                style="width: 60px;"
+                            />
+                            <span class="noteUnsized">After this many open days, jobs with fewer active candidates than openings gain risk score. Allowed range: 2-90.</span>
+
+                            <br /><br />
+
+                            <input type="submit" class="button" value="Save Settings" />
+                            <input type="button" class="button" value="Back" onclick="document.location.href='<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=administration';" />
                         </form>
                     </td>
                 </tr>
             </table>
-
         </div>
     </div>
 <?php TemplateUtility::printFooter(); ?>

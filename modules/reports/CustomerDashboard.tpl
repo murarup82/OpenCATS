@@ -354,7 +354,10 @@
                                 'offerAcceptanceLabel' => 'N/A',
                                 'offersAccepted' => 0,
                                 'offersMade' => 0,
-                                'slaHitLabel' => 'N/A'
+                                'slaHitLabel' => 'N/A',
+                                'slaWindowDays' => 5,
+                                'riskNoActivityDays' => 10,
+                                'riskLongOpenDays' => 30
                             ),
                             $snapshot
                         );
@@ -394,6 +397,9 @@
                         <?php else: ?>
                             No insight available yet for this customer.
                         <?php endif; ?>
+                        <span class="customerDashMuted">
+                            (SLA <?php echo((int) $snapshot['slaWindowDays']); ?>d, risk if no movement ><?php echo((int) $snapshot['riskNoActivityDays']); ?>d or open ><?php echo((int) $snapshot['riskLongOpenDays']); ?>d)
+                        </span>
                     </div>
 
                     <div class="customerDashCards">
@@ -418,7 +424,7 @@
                             <div class="customerDashCardMeta"><?php echo((int) $snapshot['offersAccepted']); ?> accepted from <?php echo((int) $snapshot['offersMade']); ?> offers</div>
                         </div>
                         <div class="customerDashCard">
-                            <div class="customerDashCardLabel">SLA Hit Rate (7-day activity)</div>
+                            <div class="customerDashCardLabel">SLA Hit Rate (<?php echo((int) $snapshot['slaWindowDays']); ?>-day activity)</div>
                             <div class="customerDashCardValue"><?php $this->_($snapshot['slaHitLabel']); ?></div>
                             <div class="customerDashCardMeta">Open jobs with recent candidate movement</div>
                         </div>
