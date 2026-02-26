@@ -66,6 +66,10 @@ class ReportsUI extends UserInterface
                 $this->customerDashboard();
                 break;
 
+            case 'customerDashboardDetails':
+                $this->customerDashboardDetails();
+                break;
+
             case 'graphView':
                 $this->graphView();
                 break;
@@ -233,6 +237,117 @@ class ReportsUI extends UserInterface
         }
         $activityStatusIDs = $activityTypeOptions[$activityType]['statusIDs'];
 
+        $selectedCompanyID = (int) $this->getTrimmedInput('companyID', $_GET);
+        $selectedCompanyName = '';
+        foreach ($companiesRS as $companyData)
+        {
+            if ((int) $companyData['companyID'] === $selectedCompanyID)
+            {
+                $selectedCompanyName = $companyData['name'];
+                break;
+            }
+        }
+
+        if ($selectedCompanyName === '' && !empty($companiesRS))
+        {
+            $selectedCompanyID = (int) $companiesRS[0]['companyID'];
+            $selectedCompanyName = $companiesRS[0]['name'];
+        }
+
+        $rangeEnd = new DateTime('now');
+        $rangeEnd->setTime(23, 59, 59);
+        $rangeStart = clone $rangeEnd;
+        $rangeStart->setTime(0, 0, 0);
+        $rangeStart->modify('-' . ($rangeDays - 1) . ' days');
+
+        $thresholds = $this->getCustomerDashboardThresholds();
+
+        $dashboardData = array();
+        if ($selectedCompanyID > 0)
+        {
+            $dashboardData = $this->getCustomerDashboardData(
+                $db,
+                $selectedCompanyID,
+                $rangeStart,
+                $rangeEnd,
+                $thresholds,
+                $activityStatusIDs
+            );
+        }
+
+        if (!eval(Hooks::get('REPORTS_CUSTOMER_DASHBOARD'))) return;
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('subActive', 'Customer Dashboard');
+        $this->_template->assign('companiesRS', $companiesRS);
+        $this->_template->assign('selectedCompanyID', $selectedCompanyID);
+        $this->_template->assign('selectedCompanyName', $selectedCompanyName);
+        $this->_template->assign('rangeDays', $rangeDays);
+        $this->_template->assign('rangeOptions', $rangeOptions);
+        $activityTypeTemplateOptions = array();
+        foreach ($activityTypeOptions as $key => $meta)
+        {
+            $activityTypeTemplateOptions[$key] = $meta['label'];
+        }
+        $this->_template->assign('activityType', $activityType);
+        $this->_template->assign('activityTypeOptions', $activityTypeTemplateOptions);
+        $this->_template->assign('activityTypeLabel', $activityTypeOptions[$activityType]['label']);
+        $this->_template->assign('rangeStartLabel', $rangeStart->format('M j, Y'));
+        $this->_template->assign('rangeEndLabel', $rangeEnd->format('M j, Y'));
+        $this->_template->assign('dashboardData', $dashboardData);
+        $this->_template->display('./modules/reports/CustomerDashboard.tpl');
+    }
+
+    private function customerDashboardDetails()
+    {
+        $db = DatabaseConnection::getInstance();
+
+        $companiesRS = $this->getCompanyListForDashboard($db);
+        $rangeOptions = array(
+            30 => 'Last 30 days',
+            90 => 'Last 90 days',
+            180 => 'Last 180 days',
+            365 => 'Last 365 days'
+        );
+        $activityTypeOptions = array(
+            'all' => array(
+                'label' => 'All Moves',
+                'statusIDs' => array()
+            ),
+            'interview' => array(
+                'label' => 'Interview Moves',
+                'statusIDs' => array(
+                    PIPELINE_STATUS_CUSTOMER_INTERVIEW
+                )
+            ),
+            'offer' => array(
+                'label' => 'Offer Moves',
+                'statusIDs' => array(
+                    PIPELINE_STATUS_OFFER_NEGOTIATION,
+                    PIPELINE_STATUS_OFFER_ACCEPTED
+                )
+            ),
+            'hire' => array(
+                'label' => 'Hire Moves',
+                'statusIDs' => array(
+                    PIPELINE_STATUS_HIRED
+                )
+            )
+        );
+
+        $rangeDays = (int) $this->getTrimmedInput('rangeDays', $_GET);
+        if (!isset($rangeOptions[$rangeDays]))
+        {
+            $rangeDays = 90;
+        }
+
+        $activityType = $this->getTrimmedInput('activityType', $_GET);
+        if (!isset($activityTypeOptions[$activityType]))
+        {
+            $activityType = 'all';
+        }
+        $activityStatusIDs = $activityTypeOptions[$activityType]['statusIDs'];
+
         $focusMetric = $this->getTrimmedInput('focusMetric', $_GET);
         $allowedFocusMetrics = array(
             'openJobOrders',
@@ -272,8 +387,6 @@ class ReportsUI extends UserInterface
         $rangeStart->setTime(0, 0, 0);
         $rangeStart->modify('-' . ($rangeDays - 1) . ' days');
 
-        $thresholds = $this->getCustomerDashboardThresholds();
-
         $dashboardData = array();
         if ($selectedCompanyID > 0)
         {
@@ -282,34 +395,32 @@ class ReportsUI extends UserInterface
                 $selectedCompanyID,
                 $rangeStart,
                 $rangeEnd,
-                $thresholds,
+                $this->getCustomerDashboardThresholds(),
                 $activityStatusIDs,
                 $focusMetric
             );
         }
 
-        if (!eval(Hooks::get('REPORTS_CUSTOMER_DASHBOARD'))) return;
+        $cardDetail = (isset($dashboardData['cardDetail']) && is_array($dashboardData['cardDetail'])) ? $dashboardData['cardDetail'] : array();
+        if (empty($cardDetail))
+        {
+            CATSUtility::transferRelativeURI('m=reports&a=customerDashboard&companyID=' . urlencode($selectedCompanyID) . '&rangeDays=' . urlencode($rangeDays) . '&activityType=' . urlencode($activityType));
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Customer Dashboard');
-        $this->_template->assign('companiesRS', $companiesRS);
         $this->_template->assign('selectedCompanyID', $selectedCompanyID);
         $this->_template->assign('selectedCompanyName', $selectedCompanyName);
         $this->_template->assign('rangeDays', $rangeDays);
-        $this->_template->assign('rangeOptions', $rangeOptions);
-        $activityTypeTemplateOptions = array();
-        foreach ($activityTypeOptions as $key => $meta)
-        {
-            $activityTypeTemplateOptions[$key] = $meta['label'];
-        }
+        $this->_template->assign('rangeLabel', $rangeOptions[$rangeDays]);
         $this->_template->assign('activityType', $activityType);
-        $this->_template->assign('activityTypeOptions', $activityTypeTemplateOptions);
         $this->_template->assign('activityTypeLabel', $activityTypeOptions[$activityType]['label']);
         $this->_template->assign('focusMetric', $focusMetric);
         $this->_template->assign('rangeStartLabel', $rangeStart->format('M j, Y'));
         $this->_template->assign('rangeEndLabel', $rangeEnd->format('M j, Y'));
-        $this->_template->assign('dashboardData', $dashboardData);
-        $this->_template->display('./modules/reports/CustomerDashboard.tpl');
+        $this->_template->assign('cardDetail', $cardDetail);
+        $this->_template->display('./modules/reports/CustomerDashboardDetails.tpl');
     }
 
     private function getCompanyListForDashboard($db)

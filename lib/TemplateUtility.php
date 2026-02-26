@@ -1270,6 +1270,13 @@ class TemplateUtility
                         }
                         if (!$isActive &&
                             $item['module'] === 'reports' &&
+                            $item['action'] === 'customerDashboard' &&
+                            $currentAction === 'customerDashboardDetails')
+                        {
+                            $isActive = true;
+                        }
+                        if (!$isActive &&
+                            $item['module'] === 'reports' &&
                             $item['action'] === 'reports' &&
                             ($currentAction === '' || $currentAction === 'reports'))
                         {

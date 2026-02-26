@@ -199,7 +199,7 @@ class RolePagePermissions
 
         if ($moduleName == 'reports')
         {
-            if ($action == 'customerdashboard')
+            if ($action == 'customerdashboard' || $action == 'customerdashboarddetails')
             {
                 return 'reports_customer_dashboard';
             }
