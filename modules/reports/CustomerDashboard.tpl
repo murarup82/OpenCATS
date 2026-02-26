@@ -72,12 +72,6 @@
                     .customerDashFilterField select {
                         min-width: 260px;
                     }
-                    .customerDashFilterActions {
-                        margin-left: auto;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
                     .customerDashInsight {
                         margin-bottom: 12px;
                         border: 1px solid #cfdebc;
@@ -294,10 +288,6 @@
                         .customerDashFilters {
                             display: block;
                         }
-                        .customerDashFilterActions {
-                            margin-left: 0;
-                            margin-top: 8px;
-                        }
                         .customerDashCards {
                             grid-template-columns: 1fr;
                         }
@@ -308,7 +298,8 @@
                     }
                 </style>
 
-                <form class="customerDashFilters" method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
+                <?php $selectedActivityType = isset($this->activityType) ? (string) $this->activityType : 'all'; ?>
+                <form id="customerDashFiltersForm" class="customerDashFilters" method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
                     <input type="hidden" name="m" value="reports" />
                     <input type="hidden" name="a" value="customerDashboard" />
 
@@ -334,8 +325,15 @@
                         </select>
                     </div>
 
-                    <div class="customerDashFilterActions">
-                        <input type="submit" class="button ui2-button ui2-button--primary" value="Apply" />
+                    <div class="customerDashFilterField">
+                        <label for="customerDashActivityType">Activity Type</label>
+                        <select id="customerDashActivityType" name="activityType" class="inputbox">
+                            <?php foreach ($this->activityTypeOptions as $optionKey => $optionLabel): ?>
+                                <option value="<?php echo(htmlspecialchars($optionKey)); ?>"<?php if ($selectedActivityType === (string) $optionKey): ?> selected="selected"<?php endif; ?>>
+                                    <?php echo(htmlspecialchars($optionLabel)); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </form>
 
@@ -381,14 +379,16 @@
                         $upcomingOutcomes = array_merge(
                             array(
                                 'upcomingInterviewCount' => 0,
+                                'recentActivityCount' => 0,
                                 'pendingInterviewCount' => 0,
                                 'pendingOfferCount' => 0,
                                 'overdueOfferCount' => 0,
-                                'upcomingInterviewsRS' => array()
+                                'upcomingInterviewsRS' => array(),
+                                'recentPipelineActivityRS' => array()
                             ),
                             $upcomingOutcomes
                         );
-                        $upcomingInterviewsRS = isset($upcomingOutcomes['upcomingInterviewsRS']) ? $upcomingOutcomes['upcomingInterviewsRS'] : array();
+                        $recentPipelineActivityRS = isset($upcomingOutcomes['recentPipelineActivityRS']) ? $upcomingOutcomes['recentPipelineActivityRS'] : array();
                     ?>
 
                     <div class="customerDashInsight">
@@ -482,8 +482,8 @@
                             <div class="customerDashPanelBody">
                                 <div class="customerDashValueRows">
                                     <div class="customerDashValueItem">
-                                        <div class="customerDashValueItemLabel">Scheduled interviews</div>
-                                        <div class="customerDashValueItemValue"><?php echo((int) $upcomingOutcomes['upcomingInterviewCount']); ?></div>
+                                        <div class="customerDashValueItemLabel">Recent <?php echo(htmlspecialchars($this->activityTypeLabel)); ?> (7d)</div>
+                                        <div class="customerDashValueItemValue"><?php echo((int) $upcomingOutcomes['recentActivityCount']); ?></div>
                                     </div>
                                     <div class="customerDashValueItem">
                                         <div class="customerDashValueItemLabel">Pending interviews</div>
@@ -606,6 +606,7 @@
                                             <th>Status</th>
                                             <th>Health</th>
                                             <th>Days Open</th>
+                                            <th>Open Positions (Avail/Total)</th>
                                             <th>Active Candidates</th>
                                             <th>Last Activity</th>
                                             <th>Risk Drivers</th>
@@ -622,6 +623,7 @@
                                                 <td><?php $this->_($row['status']); ?></td>
                                                 <td><span class="customerDashHealth <?php $this->_($row['healthClass']); ?>"><?php $this->_($row['healthLabel']); ?></span></td>
                                                 <td><?php echo((int) $row['daysOpen']); ?></td>
+                                                <td><?php echo((int) $row['openingsAvailable']); ?> / <?php echo((int) $row['openingsTotal']); ?></td>
                                                 <td><?php echo((int) $row['activeCandidates']); ?></td>
                                                 <td><?php $this->_($row['lastPipelineDateLabel']); ?></td>
                                                 <td><?php $this->_($row['riskReasonsLabel']); ?></td>
@@ -661,24 +663,30 @@
                         </div>
 
                         <div class="customerDashPanel">
-                            <div class="customerDashPanelHeader">Upcoming Interview Schedule</div>
+                            <div class="customerDashPanelHeader">Recent Pipeline Activity: <?php echo(htmlspecialchars($this->activityTypeLabel)); ?> (Last 14 Days)</div>
                             <div class="customerDashPanelBody">
-                                <?php if (empty($upcomingInterviewsRS)): ?>
-                                    <p class="customerDashMuted">No interview events scheduled in the next 7 days.</p>
+                                <?php if (empty($recentPipelineActivityRS)): ?>
+                                    <p class="customerDashMuted">No matching pipeline activity in the last 14 days.</p>
                                 <?php else: ?>
                                     <table class="customerDashTable">
                                         <thead>
                                             <tr>
                                                 <th>Date</th>
-                                                <th>Event</th>
+                                                <th>Candidate</th>
+                                                <th>Stage Move</th>
                                                 <th>Job Order</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($upcomingInterviewsRS as $row): ?>
+                                            <?php foreach ($recentPipelineActivityRS as $row): ?>
                                                 <tr>
-                                                    <td><?php $this->_($row['interviewDate']); ?></td>
-                                                    <td><?php $this->_($row['interviewTitle']); ?></td>
+                                                    <td><?php $this->_($row['activityDate']); ?></td>
+                                                    <td>
+                                                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo((int) $row['candidateID']); ?>">
+                                                            <?php $this->_($row['candidateName']); ?>
+                                                        </a>
+                                                    </td>
+                                                    <td><?php $this->_($row['stageMoveLabel']); ?></td>
                                                     <td>
                                                         <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $row['jobOrderID']); ?>">
                                                             <?php $this->_($row['jobOrderTitle']); ?>
@@ -696,4 +704,36 @@
             </div>
         </div>
     </div>
+    <script type="text/javascript">
+        (function() {
+            var form = document.getElementById('customerDashFiltersForm');
+            var companySelect = document.getElementById('customerDashCompanyID');
+            var rangeSelect = document.getElementById('customerDashRangeDays');
+            var activityTypeSelect = document.getElementById('customerDashActivityType');
+
+            if (!form)
+            {
+                return;
+            }
+
+            var onFilterChange = function() {
+                form.submit();
+            };
+
+            if (companySelect)
+            {
+                companySelect.addEventListener('change', onFilterChange);
+            }
+
+            if (rangeSelect)
+            {
+                rangeSelect.addEventListener('change', onFilterChange);
+            }
+
+            if (activityTypeSelect)
+            {
+                activityTypeSelect.addEventListener('change', onFilterChange);
+            }
+        })();
+    </script>
 <?php TemplateUtility::printFooter(); ?>

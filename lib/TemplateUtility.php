@@ -1167,6 +1167,17 @@ class TemplateUtility
             $itemsByKey['home']['action'] = 'home';
         }
 
+        if (isset($itemsByKey['reports']))
+        {
+            $itemsByKey['reports_customer_dashboard'] = array(
+                'label' => 'Customer Dashboard',
+                'href' => $indexName . '?m=reports&amp;a=customerDashboard',
+                'module' => 'reports',
+                'action' => 'customerDashboard',
+                'icon' => 'reports'
+            );
+        }
+
         if ($rolePagePermissions === null ||
             $rolePagePermissions->isPageAllowedForUser($currentUserID, 'home', $currentAccessLevel))
         {
@@ -1207,7 +1218,7 @@ class TemplateUtility
               array('label' => 'Overview', 'modules' => array('dashboard', 'home', 'home_inbox', 'home_notes', 'activity')),
             array('label' => 'Core Recruiting', 'modules' => array('candidates', 'joborders', 'companies', 'contacts')),
             array('label' => 'Sourcing & Lists', 'modules' => array('sourcing', 'lists')),
-            array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports')),
+            array('label' => 'Insights & Reporting', 'modules' => array('kpis', 'reports_customer_dashboard', 'reports')),
             array('label' => 'Planning & Admin', 'modules' => array('calendar', 'gdpr_consents', 'settings', 'settings_admin'))
         );
 

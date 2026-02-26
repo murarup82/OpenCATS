@@ -195,12 +195,44 @@ class ReportsUI extends UserInterface
             180 => 'Last 180 days',
             365 => 'Last 365 days'
         );
+        $activityTypeOptions = array(
+            'all' => array(
+                'label' => 'All Moves',
+                'statusIDs' => array()
+            ),
+            'interview' => array(
+                'label' => 'Interview Moves',
+                'statusIDs' => array(
+                    PIPELINE_STATUS_CUSTOMER_INTERVIEW
+                )
+            ),
+            'offer' => array(
+                'label' => 'Offer Moves',
+                'statusIDs' => array(
+                    PIPELINE_STATUS_OFFER_NEGOTIATION,
+                    PIPELINE_STATUS_OFFER_ACCEPTED
+                )
+            ),
+            'hire' => array(
+                'label' => 'Hire Moves',
+                'statusIDs' => array(
+                    PIPELINE_STATUS_HIRED
+                )
+            )
+        );
 
         $rangeDays = (int) $this->getTrimmedInput('rangeDays', $_GET);
         if (!isset($rangeOptions[$rangeDays]))
         {
             $rangeDays = 90;
         }
+
+        $activityType = $this->getTrimmedInput('activityType', $_GET);
+        if (!isset($activityTypeOptions[$activityType]))
+        {
+            $activityType = 'all';
+        }
+        $activityStatusIDs = $activityTypeOptions[$activityType]['statusIDs'];
 
         $selectedCompanyID = (int) $this->getTrimmedInput('companyID', $_GET);
         $selectedCompanyName = '';
@@ -235,7 +267,8 @@ class ReportsUI extends UserInterface
                 $selectedCompanyID,
                 $rangeStart,
                 $rangeEnd,
-                $thresholds
+                $thresholds,
+                $activityStatusIDs
             );
         }
 
@@ -248,6 +281,14 @@ class ReportsUI extends UserInterface
         $this->_template->assign('selectedCompanyName', $selectedCompanyName);
         $this->_template->assign('rangeDays', $rangeDays);
         $this->_template->assign('rangeOptions', $rangeOptions);
+        $activityTypeTemplateOptions = array();
+        foreach ($activityTypeOptions as $key => $meta)
+        {
+            $activityTypeTemplateOptions[$key] = $meta['label'];
+        }
+        $this->_template->assign('activityType', $activityType);
+        $this->_template->assign('activityTypeOptions', $activityTypeTemplateOptions);
+        $this->_template->assign('activityTypeLabel', $activityTypeOptions[$activityType]['label']);
         $this->_template->assign('rangeStartLabel', $rangeStart->format('M j, Y'));
         $this->_template->assign('rangeEndLabel', $rangeEnd->format('M j, Y'));
         $this->_template->assign('dashboardData', $dashboardData);
@@ -290,7 +331,7 @@ class ReportsUI extends UserInterface
         return $thresholds;
     }
 
-    private function getCustomerDashboardData($db, $companyID, $rangeStart, $rangeEnd, $thresholds)
+    private function getCustomerDashboardData($db, $companyID, $rangeStart, $rangeEnd, $thresholds, $activityStatusIDs = array())
     {
         $summaryRS = $db->getAssoc(sprintf(
             "SELECT
@@ -362,34 +403,48 @@ class ReportsUI extends UserInterface
             $riskReasons = array();
             $activeCandidates = (int) $row['activeCandidates'];
             $openingsAvailable = (int) $row['openingsAvailable'];
-
-            if ($activeCandidates <= 0)
+            $openingsTotal = (int) $row['openingsTotal'];
+            if ($openingsTotal < $openingsAvailable)
             {
-                $riskScore += 3;
-                $riskReasons[] = 'No active candidates in pipeline';
+                $openingsTotal = $openingsAvailable;
             }
+            $hasOpenDemand = ($openingsAvailable > 0);
 
-            if ($daysSinceActivity === null)
+            if ($hasOpenDemand)
+            {
+                if ($activeCandidates <= 0)
+                {
+                    $riskScore += 3;
+                    $riskReasons[] = 'No active candidates in pipeline';
+                }
+
+                if ($daysSinceActivity === null)
+                {
+                    $riskScore += 2;
+                    $riskReasons[] = 'No recorded pipeline activity';
+                }
+                else if ($daysSinceActivity > (int) $thresholds['riskNoActivityDays'])
+                {
+                    $riskScore += 2;
+                    $riskReasons[] = 'No candidate movement in ' . $daysSinceActivity . ' days';
+                }
+
+                if ($daysOpen > (int) $thresholds['riskLongOpenDays'])
+                {
+                    ++$riskScore;
+                    $riskReasons[] = 'Open for ' . $daysOpen . ' days';
+                }
+
+                if ($activeCandidates < $openingsAvailable && $daysOpen > (int) $thresholds['riskLowCoverageDays'])
+                {
+                    ++$riskScore;
+                    $riskReasons[] = 'Pipeline coverage lower than openings';
+                }
+            }
+            else if ($daysOpen > (int) $thresholds['riskLongOpenDays'])
             {
                 $riskScore += 2;
-                $riskReasons[] = 'No recorded pipeline activity';
-            }
-            else if ($daysSinceActivity > (int) $thresholds['riskNoActivityDays'])
-            {
-                $riskScore += 2;
-                $riskReasons[] = 'No candidate movement in ' . $daysSinceActivity . ' days';
-            }
-
-            if ($daysOpen > (int) $thresholds['riskLongOpenDays'])
-            {
-                ++$riskScore;
-                $riskReasons[] = 'Open for ' . $daysOpen . ' days';
-            }
-
-            if ($openingsAvailable > 0 && $activeCandidates < $openingsAvailable && $daysOpen > (int) $thresholds['riskLowCoverageDays'])
-            {
-                ++$riskScore;
-                $riskReasons[] = 'Pipeline coverage lower than openings';
+                $riskReasons[] = 'No openings available; still open for ' . $daysOpen . ' days';
             }
 
             if ($riskScore >= 4)
@@ -412,6 +467,7 @@ class ReportsUI extends UserInterface
                 'jobOrderID' => (int) $row['jobOrderID'],
                 'title' => $row['title'],
                 'status' => $row['status'],
+                'openingsTotal' => $openingsTotal,
                 'openingsAvailable' => $openingsAvailable,
                 'activeCandidates' => $activeCandidates,
                 'daysOpen' => $daysOpen,
@@ -554,7 +610,7 @@ class ReportsUI extends UserInterface
         $activityTrendData = $this->getCustomerWeeklyActivity($db, $companyID);
         $sourceQualityRows = $this->getCustomerSourceQuality($db, $companyID, $rangeStart, $rangeEnd);
         $rejectionReasonRows = $this->getCustomerRejectionReasons($db, $companyID, $rangeStart, $rangeEnd);
-        $upcomingOutcomes = $this->getCustomerUpcomingOutcomes($db, $companyID);
+        $upcomingOutcomes = $this->getCustomerUpcomingOutcomes($db, $companyID, $activityStatusIDs);
 
         $insightLine = '';
         if (!empty($funnelData['biggestDropoff']))
@@ -614,6 +670,7 @@ class ReportsUI extends UserInterface
                 jo.joborder_id AS jobOrderID,
                 jo.title,
                 jo.status,
+                jo.openings AS openingsTotal,
                 jo.openings_available AS openingsAvailable,
                 DATEDIFF(NOW(), jo.date_created) AS daysOpen,
                 COUNT(DISTINCT IF(cjo.is_active = 1 AND cjo.status NOT IN (%s, %s), cjo.candidate_id, NULL)) AS activeCandidates,
@@ -937,59 +994,80 @@ class ReportsUI extends UserInterface
         ));
     }
 
-    private function getCustomerUpcomingOutcomes($db, $companyID)
+    private function getCustomerUpcomingOutcomes($db, $companyID, $activityStatusIDs = array())
     {
-        $upcomingInterviewsRS = $db->getAllAssoc(sprintf(
+        $activityStatusSQLValues = array();
+        foreach ($activityStatusIDs as $statusID)
+        {
+            $statusID = (int) $statusID;
+            if ($statusID > 0)
+            {
+                $activityStatusSQLValues[] = $db->makeQueryInteger($statusID);
+            }
+        }
+        $activityStatusFilterSQL = '';
+        if (!empty($activityStatusSQLValues))
+        {
+            $activityStatusFilterSQL = ' AND cjh.status_to IN (' . implode(', ', $activityStatusSQLValues) . ')';
+        }
+
+        $recentActivityRSRaw = $db->getAllAssoc(sprintf(
             "SELECT
-                DATE_FORMAT(calendar_event.date, '%%m-%%d-%%y (%%h:%%i %%p)') AS interviewDate,
-                calendar_event.title AS interviewTitle,
+                DATE_FORMAT(cjh.date, '%%m-%%d-%%y (%%h:%%i %%p)') AS activityDate,
+                cjh.candidate_id AS candidateID,
+                candidate.first_name AS firstName,
+                candidate.last_name AS lastName,
+                cjh.status_from AS statusFromID,
+                cjh.status_to AS statusToID,
                 jo.joborder_id AS jobOrderID,
                 jo.title AS jobOrderTitle
             FROM
-                calendar_event
+                candidate_joborder_status_history AS cjh
             INNER JOIN joborder AS jo
-                ON jo.joborder_id = calendar_event.joborder_id
-                AND jo.site_id = calendar_event.site_id
+                ON jo.joborder_id = cjh.joborder_id
+                AND jo.site_id = cjh.site_id
+            INNER JOIN candidate
+                ON candidate.candidate_id = cjh.candidate_id
+                AND candidate.site_id = cjh.site_id
             WHERE
-                calendar_event.site_id = %s
+                cjh.site_id = %s
             AND
                 jo.company_id = %s
+            %s
             AND
-                calendar_event.type = %s
-            AND
-                calendar_event.date >= NOW()
-            AND
-                calendar_event.date <= DATE_ADD(NOW(), INTERVAL 7 DAY)
+                cjh.date >= DATE_SUB(NOW(), INTERVAL 14 DAY)
             ORDER BY
-                calendar_event.date ASC
-            LIMIT 6",
+                cjh.date DESC
+            LIMIT 8",
             $db->makeQueryInteger($this->_siteID),
             $db->makeQueryInteger($companyID),
-            $db->makeQueryInteger(400)
+            $activityStatusFilterSQL
         ));
 
-        $upcomingInterviewCountRS = $db->getAssoc(sprintf(
+        $recentActivityCountRS = $db->getAssoc(sprintf(
             "SELECT
-                COUNT(*) AS upcomingInterviewCount
+                COUNT(*) AS recentActivityCount
             FROM
-                calendar_event
+                candidate_joborder_status_history AS cjh
             INNER JOIN joborder AS jo
-                ON jo.joborder_id = calendar_event.joborder_id
-                AND jo.site_id = calendar_event.site_id
+                ON jo.joborder_id = cjh.joborder_id
+                AND jo.site_id = cjh.site_id
             WHERE
-                calendar_event.site_id = %s
+                cjh.site_id = %s
             AND
                 jo.company_id = %s
+            %s
             AND
-                calendar_event.type = %s
-            AND
-                calendar_event.date >= NOW()
-            AND
-                calendar_event.date <= DATE_ADD(NOW(), INTERVAL 7 DAY)",
+                cjh.date >= DATE_SUB(NOW(), INTERVAL 7 DAY)",
             $db->makeQueryInteger($this->_siteID),
             $db->makeQueryInteger($companyID),
-            $db->makeQueryInteger(400)
+            $activityStatusFilterSQL
         ));
+
+        if (empty($recentActivityCountRS))
+        {
+            $recentActivityCountRS = array('recentActivityCount' => 0);
+        }
 
         $pipelineOutcomeRS = $db->getAssoc(sprintf(
             "SELECT
@@ -1018,10 +1096,6 @@ class ReportsUI extends UserInterface
             JobOrderStatuses::getOpenStatusSQL()
         ));
 
-        if (empty($upcomingInterviewCountRS))
-        {
-            $upcomingInterviewCountRS = array('upcomingInterviewCount' => 0);
-        }
         if (empty($pipelineOutcomeRS))
         {
             $pipelineOutcomeRS = array(
@@ -1031,13 +1105,76 @@ class ReportsUI extends UserInterface
             );
         }
 
+        $recentPipelineActivityRS = array();
+        foreach ($recentActivityRSRaw as $row)
+        {
+            $candidateName = trim($row['firstName'] . ' ' . $row['lastName']);
+            if ($candidateName === '')
+            {
+                $candidateName = 'Candidate #' . (int) $row['candidateID'];
+            }
+
+            $fromStatusID = (int) $row['statusFromID'];
+            $toStatusID = (int) $row['statusToID'];
+            $toStatusLabel = $this->getPipelineStatusLabel($toStatusID);
+            if ($fromStatusID > 0)
+            {
+                $stageMoveLabel = $this->getPipelineStatusLabel($fromStatusID) . ' -> ' . $toStatusLabel;
+            }
+            else
+            {
+                $stageMoveLabel = 'Moved to ' . $toStatusLabel;
+            }
+
+            $recentPipelineActivityRS[] = array(
+                'activityDate' => $row['activityDate'],
+                'candidateID' => (int) $row['candidateID'],
+                'candidateName' => $candidateName,
+                'stageMoveLabel' => $stageMoveLabel,
+                'jobOrderID' => (int) $row['jobOrderID'],
+                'jobOrderTitle' => $row['jobOrderTitle']
+            );
+        }
+
         return array(
-            'upcomingInterviewCount' => (int) $upcomingInterviewCountRS['upcomingInterviewCount'],
+            'upcomingInterviewCount' => (int) $recentActivityCountRS['recentActivityCount'],
+            'recentActivityCount' => (int) $recentActivityCountRS['recentActivityCount'],
             'pendingInterviewCount' => (int) $pipelineOutcomeRS['pendingInterviewCount'],
             'pendingOfferCount' => (int) $pipelineOutcomeRS['pendingOfferCount'],
             'overdueOfferCount' => (int) $pipelineOutcomeRS['overdueOfferCount'],
-            'upcomingInterviewsRS' => $upcomingInterviewsRS
+            'upcomingInterviewsRS' => $recentPipelineActivityRS,
+            'recentPipelineActivityRS' => $recentPipelineActivityRS
         );
+    }
+
+    private function getPipelineStatusLabel($statusID)
+    {
+        $statusID = (int) $statusID;
+
+        $labels = array(
+            PIPELINE_STATUS_ALLOCATED => 'Allocated',
+            PIPELINE_STATUS_DELIVERY_VALIDATED => 'Delivery Validated',
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER => 'Proposed to Customer',
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW => 'Customer Interview',
+            PIPELINE_STATUS_CUSTOMER_APPROVED => 'Customer Approved',
+            PIPELINE_STATUS_AVEL_APPROVED => 'Avel Approved',
+            PIPELINE_STATUS_OFFER_NEGOTIATION => 'Offer Negotiation',
+            PIPELINE_STATUS_OFFER_ACCEPTED => 'Offer Accepted',
+            PIPELINE_STATUS_HIRED => 'Hired',
+            PIPELINE_STATUS_REJECTED => 'Rejected'
+        );
+
+        if (isset($labels[$statusID]))
+        {
+            return $labels[$statusID];
+        }
+
+        if ($statusID <= 0)
+        {
+            return 'New';
+        }
+
+        return 'Status #' . $statusID;
     }
 
     private function getMedianInteger($values)
