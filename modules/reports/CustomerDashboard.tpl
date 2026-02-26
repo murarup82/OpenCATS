@@ -111,8 +111,12 @@
                         line-height: 1.05;
                     }
                     .customerDashCardValueLink {
+                        display: inline-block;
                         color: inherit;
                         text-decoration: none;
+                        font-size: inherit;
+                        font-weight: inherit;
+                        line-height: inherit;
                         border-bottom: 1px dotted #7ea5b7;
                     }
                     .customerDashCardValueLink:hover {
@@ -449,6 +453,8 @@
                         </span>
                     </div>
 
+                    <div class="customerDashMuted" style="margin-bottom: 8px;">Click a metric value to view its underlying records.</div>
+
                     <div class="customerDashCards">
                         <div class="customerDashCard<?php if ($selectedFocusMetric === 'openJobOrders'): ?> customerDashCard--active<?php endif; ?>">
                             <div class="customerDashCardLabel">Open Job Orders</div>
@@ -475,9 +481,9 @@
                             <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=offerAcceptance#customerDashCardDetailPanel"><?php $this->_($snapshot['offerAcceptanceLabel']); ?></a></div>
                             <div class="customerDashCardMeta"><?php echo((int) $snapshot['offersAccepted']); ?> accepted from <?php echo((int) $snapshot['offersMade']); ?> offers</div>
                         </div>
-                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'slaHitRate'): ?> customerDashCard--active<?php endif; ?>">
+                        <div class="customerDashCard">
                             <div class="customerDashCardLabel">SLA Hit Rate (<?php echo((int) $snapshot['slaWindowDays']); ?>-day activity)</div>
-                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=slaHitRate#customerDashCardDetailPanel"><?php $this->_($snapshot['slaHitLabel']); ?></a></div>
+                            <div class="customerDashCardValue"><?php $this->_($snapshot['slaHitLabel']); ?></div>
                             <div class="customerDashCardMeta">Open jobs with recent candidate movement</div>
                         </div>
                         <div class="customerDashCard<?php if ($selectedFocusMetric === 'aging0to15'): ?> customerDashCard--active<?php endif; ?>">
@@ -499,12 +505,12 @@
 
                     <?php if (!empty($selectedFocusMetric) && !empty($cardDetail)): ?>
                         <div class="customerDashPanel" id="customerDashCardDetailPanel" style="margin-bottom: 12px;">
-                            <div class="customerDashPanelHeader"><?php $this->_($cardDetail['title']); ?></div>
+                            <div class="customerDashPanelHeader"><?php $this->_($cardDetail['title']); ?> (<?php echo((int) count($cardDetail['rows'])); ?>)</div>
                             <div class="customerDashPanelBody">
                                 <?php if (empty($cardDetail['rows'])): ?>
                                     <p class="customerDashMuted"><?php $this->_($cardDetail['emptyLabel']); ?></p>
                                 <?php else: ?>
-                                    <?php if (in_array($cardDetail['key'], array('openJobOrders', 'slaHitRate', 'aging0to15', 'aging16to30', 'aging31plus'))): ?>
+                                    <?php if (in_array($cardDetail['key'], array('openJobOrders', 'aging0to15', 'aging16to30', 'aging31plus'))): ?>
                                         <table class="customerDashTable">
                                             <thead>
                                                 <tr>
@@ -897,6 +903,7 @@
             var companySelect = document.getElementById('customerDashCompanyID');
             var rangeSelect = document.getElementById('customerDashRangeDays');
             var activityTypeSelect = document.getElementById('customerDashActivityType');
+            var detailPanel = document.getElementById('customerDashCardDetailPanel');
 
             if (!form)
             {
@@ -920,6 +927,13 @@
             if (activityTypeSelect)
             {
                 activityTypeSelect.addEventListener('change', onFilterChange);
+            }
+
+            if (detailPanel)
+            {
+                setTimeout(function() {
+                    detailPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 40);
             }
         })();
     </script>

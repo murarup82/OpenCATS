@@ -240,7 +240,6 @@ class ReportsUI extends UserInterface
             'confirmedFutureHires',
             'activePipeline',
             'offerAcceptance',
-            'slaHitRate',
             'aging0to15',
             'aging16to30',
             'aging31plus'
@@ -1024,14 +1023,6 @@ class ReportsUI extends UserInterface
                     'title' => 'Offer Outcomes in Selected Window',
                     'emptyLabel' => 'No offer activity was found in the selected window.',
                     'rows' => $offerBreakdownRows
-                );
-
-            case 'slaHitRate':
-                return array(
-                    'key' => $focusMetric,
-                    'title' => 'SLA Hit Jobs',
-                    'emptyLabel' => 'No open jobs met the SLA activity threshold.',
-                    'rows' => $slaHitRows
                 );
 
             case 'aging0to15':
