@@ -835,6 +835,10 @@ class ReportsUI extends UserInterface
                 jo.company_id = %s
             AND
                 cjh.date >= DATE_SUB(CURDATE(), INTERVAL 56 DAY)
+            AND
+                cjh.date <= NOW()
+            AND
+                cjh.status_to IN (%s, %s, %s, %s)
             GROUP BY
                 weekLabel
             ORDER BY
@@ -844,7 +848,11 @@ class ReportsUI extends UserInterface
             $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
             $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
             $db->makeQueryInteger($this->_siteID),
-            $db->makeQueryInteger($companyID)
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryInteger(PIPELINE_STATUS_PROPOSED_TO_CUSTOMER),
+            $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_INTERVIEW),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED)
         ));
 
         $maxValue = 0;
@@ -1017,7 +1025,6 @@ class ReportsUI extends UserInterface
                 cjh.candidate_id AS candidateID,
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
-                cjh.status_from AS statusFromID,
                 cjh.status_to AS statusToID,
                 jo.joborder_id AS jobOrderID,
                 jo.title AS jobOrderTitle
@@ -1114,23 +1121,15 @@ class ReportsUI extends UserInterface
                 $candidateName = 'Candidate #' . (int) $row['candidateID'];
             }
 
-            $fromStatusID = (int) $row['statusFromID'];
             $toStatusID = (int) $row['statusToID'];
             $toStatusLabel = $this->getPipelineStatusLabel($toStatusID);
-            if ($fromStatusID > 0)
-            {
-                $stageMoveLabel = $this->getPipelineStatusLabel($fromStatusID) . ' -> ' . $toStatusLabel;
-            }
-            else
-            {
-                $stageMoveLabel = 'Moved to ' . $toStatusLabel;
-            }
 
             $recentPipelineActivityRS[] = array(
                 'activityDate' => $row['activityDate'],
                 'candidateID' => (int) $row['candidateID'],
                 'candidateName' => $candidateName,
-                'stageMoveLabel' => $stageMoveLabel,
+                'stageToLabel' => $toStatusLabel,
+                'stageToSlug' => $this->getPipelineStatusSlug($toStatusID),
                 'jobOrderID' => (int) $row['jobOrderID'],
                 'jobOrderTitle' => $row['jobOrderTitle']
             );
@@ -1175,6 +1174,31 @@ class ReportsUI extends UserInterface
         }
 
         return 'Status #' . $statusID;
+    }
+
+    private function getPipelineStatusSlug($statusID)
+    {
+        $statusID = (int) $statusID;
+
+        $slugs = array(
+            PIPELINE_STATUS_ALLOCATED => 'allocated',
+            PIPELINE_STATUS_DELIVERY_VALIDATED => 'delivery-validated',
+            PIPELINE_STATUS_PROPOSED_TO_CUSTOMER => 'proposed-to-customer',
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW => 'customer-interview',
+            PIPELINE_STATUS_CUSTOMER_APPROVED => 'customer-approved',
+            PIPELINE_STATUS_AVEL_APPROVED => 'avel-approved',
+            PIPELINE_STATUS_OFFER_NEGOTIATION => 'offer-negotiation',
+            PIPELINE_STATUS_OFFER_ACCEPTED => 'offer-accepted',
+            PIPELINE_STATUS_HIRED => 'hired',
+            PIPELINE_STATUS_REJECTED => 'rejected'
+        );
+
+        if (isset($slugs[$statusID]))
+        {
+            return $slugs[$statusID];
+        }
+
+        return 'unknown';
     }
 
     private function getMedianInteger($values)

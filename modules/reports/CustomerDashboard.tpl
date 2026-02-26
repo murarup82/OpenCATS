@@ -172,6 +172,30 @@
                         margin-right: 6px;
                         margin-bottom: 6px;
                     }
+                    .customerDashStatusPill {
+                        display: inline-block;
+                        padding: 2px 8px;
+                        border-radius: 10px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        line-height: 1.3;
+                        border: 1px solid #d1d9de;
+                        color: #1f2933;
+                        background: #f2f4f6;
+                        white-space: nowrap;
+                    }
+                    .customerDashStatusPill.status-allocated { background: #e6f0ff; color: #1d4ed8; border-color: #c7ddff; }
+                    .customerDashStatusPill.status-delivery-validated { background: #e6f7f4; color: #0f766e; border-color: #c5ece6; }
+                    .customerDashStatusPill.status-proposed-to-customer { background: #f3e8ff; color: #6b21a8; border-color: #e3d0ff; }
+                    .customerDashStatusPill.status-customer-interview { background: #fff7ed; color: #b45309; border-color: #fde0b6; }
+                    .customerDashStatusPill.status-customer-approved { background: #eef2ff; color: #4f46e5; border-color: #d6dcff; }
+                    .customerDashStatusPill.status-avel-approved { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+                    .customerDashStatusPill.status-offer-negotiation,
+                    .customerDashStatusPill.status-offer-negociation { background: #fff1f2; color: #c2410c; border-color: #fed7aa; }
+                    .customerDashStatusPill.status-offer-accepted { background: #ecfdf3; color: #15803d; border-color: #bbf7d0; }
+                    .customerDashStatusPill.status-hired { background: #dcfce7; color: #166534; border-color: #86efac; }
+                    .customerDashStatusPill.status-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+                    .customerDashStatusPill.status-unknown { background: #f2f4f6; color: #4c5a61; border-color: #d1d9de; }
                     .customerDashTable {
                         width: 100%;
                         border-collapse: collapse;
@@ -673,7 +697,7 @@
                                             <tr>
                                                 <th>Date</th>
                                                 <th>Candidate</th>
-                                                <th>Stage Move</th>
+                                                <th>Reached State</th>
                                                 <th>Job Order</th>
                                             </tr>
                                         </thead>
@@ -686,7 +710,11 @@
                                                             <?php $this->_($row['candidateName']); ?>
                                                         </a>
                                                     </td>
-                                                    <td><?php $this->_($row['stageMoveLabel']); ?></td>
+                                                    <td>
+                                                        <span class="customerDashStatusPill status-<?php echo(htmlspecialchars($row['stageToSlug'])); ?>">
+                                                            <?php $this->_($row['stageToLabel']); ?>
+                                                        </span>
+                                                    </td>
                                                     <td>
                                                         <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $row['jobOrderID']); ?>">
                                                             <?php $this->_($row['jobOrderTitle']); ?>
