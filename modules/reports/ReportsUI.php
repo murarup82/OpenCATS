@@ -50,7 +50,6 @@ class ReportsUI extends UserInterface
         $this->_moduleName = 'reports';
         $this->_moduleTabText = 'Reports';
         $this->_subTabs = array(
-                'Customer Dashboard' => CATSUtility::getIndexName() . '?m=reports&amp;a=customerDashboard',
                 'EEO Reports' => CATSUtility::getIndexName() . '?m=reports&amp;a=customizeEEOReport'
             );
     }
@@ -234,6 +233,23 @@ class ReportsUI extends UserInterface
         }
         $activityStatusIDs = $activityTypeOptions[$activityType]['statusIDs'];
 
+        $focusMetric = $this->getTrimmedInput('focusMetric', $_GET);
+        $allowedFocusMetrics = array(
+            'openJobOrders',
+            'currentHires',
+            'confirmedFutureHires',
+            'activePipeline',
+            'offerAcceptance',
+            'slaHitRate',
+            'aging0to15',
+            'aging16to30',
+            'aging31plus'
+        );
+        if (!in_array($focusMetric, $allowedFocusMetrics))
+        {
+            $focusMetric = '';
+        }
+
         $selectedCompanyID = (int) $this->getTrimmedInput('companyID', $_GET);
         $selectedCompanyName = '';
         foreach ($companiesRS as $companyData)
@@ -268,7 +284,8 @@ class ReportsUI extends UserInterface
                 $rangeStart,
                 $rangeEnd,
                 $thresholds,
-                $activityStatusIDs
+                $activityStatusIDs,
+                $focusMetric
             );
         }
 
@@ -289,6 +306,7 @@ class ReportsUI extends UserInterface
         $this->_template->assign('activityType', $activityType);
         $this->_template->assign('activityTypeOptions', $activityTypeTemplateOptions);
         $this->_template->assign('activityTypeLabel', $activityTypeOptions[$activityType]['label']);
+        $this->_template->assign('focusMetric', $focusMetric);
         $this->_template->assign('rangeStartLabel', $rangeStart->format('M j, Y'));
         $this->_template->assign('rangeEndLabel', $rangeEnd->format('M j, Y'));
         $this->_template->assign('dashboardData', $dashboardData);
@@ -331,7 +349,7 @@ class ReportsUI extends UserInterface
         return $thresholds;
     }
 
-    private function getCustomerDashboardData($db, $companyID, $rangeStart, $rangeEnd, $thresholds, $activityStatusIDs = array())
+    private function getCustomerDashboardData($db, $companyID, $rangeStart, $rangeEnd, $thresholds, $activityStatusIDs = array(), $focusMetric = '')
     {
         $summaryRS = $db->getAssoc(sprintf(
             "SELECT
@@ -493,85 +511,46 @@ class ReportsUI extends UserInterface
             $slaHitRate = ((float) $slaHits / (float) $openJobOrders) * 100.0;
         }
 
-        $activePipelineRS = $db->getAssoc(sprintf(
-            "SELECT
-                COUNT(*) AS activePipelineCount
-            FROM
-                candidate_joborder AS cjo
-            INNER JOIN joborder AS jo
-                ON jo.joborder_id = cjo.joborder_id
-                AND jo.site_id = cjo.site_id
-            WHERE
-                cjo.site_id = %s
-            AND
-                jo.company_id = %s
-            AND
-                jo.status IN %s
-            AND
-                cjo.is_active = 1
-            AND
-                cjo.status NOT IN (%s, %s)",
-            $db->makeQueryInteger($this->_siteID),
-            $db->makeQueryInteger($companyID),
-            JobOrderStatuses::getOpenStatusSQL(),
-            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
-            $db->makeQueryInteger(PIPELINE_STATUS_REJECTED)
-        ));
-        $activePipelineCount = empty($activePipelineRS) ? 0 : (int) $activePipelineRS['activePipelineCount'];
-
-        $hireLagRS = $db->getAllAssoc(sprintf(
-            "SELECT
-                DATEDIFF(first_hire.firstHireDate, jo.date_created) AS daysToFill
-            FROM
-                (
-                    SELECT
-                        cjh.candidate_id,
-                        cjh.joborder_id,
-                        MIN(cjh.date) AS firstHireDate
-                    FROM
-                        candidate_joborder_status_history AS cjh
-                    INNER JOIN joborder AS jo_hire
-                        ON jo_hire.joborder_id = cjh.joborder_id
-                        AND jo_hire.site_id = cjh.site_id
-                    WHERE
-                        cjh.site_id = %s
-                    AND
-                        jo_hire.company_id = %s
-                    AND
-                        cjh.status_to = %s
-                    GROUP BY
-                        cjh.candidate_id,
-                        cjh.joborder_id
-                ) AS first_hire
-            INNER JOIN joborder AS jo
-                ON jo.joborder_id = first_hire.joborder_id
-                AND jo.site_id = %s
-            WHERE
-                first_hire.firstHireDate >= %s
-            AND
-                first_hire.firstHireDate <= %s
-            ORDER BY
-                daysToFill ASC",
-            $db->makeQueryInteger($this->_siteID),
-            $db->makeQueryInteger($companyID),
-            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
-            $db->makeQueryInteger($this->_siteID),
-            $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
-            $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s'))
-        ));
-
-        $daysToFillValues = array();
-        foreach ($hireLagRS as $row)
+        $aging0Rows = array();
+        $aging16Rows = array();
+        $aging31Rows = array();
+        $slaHitRows = array();
+        foreach ($openJobRows as $openJobRow)
         {
-            $daysToFill = (int) $row['daysToFill'];
-            if ($daysToFill < 0)
+            if ($openJobRow['daysOpen'] <= 15)
             {
-                $daysToFill = 0;
+                $aging0Rows[] = $openJobRow;
             }
-            $daysToFillValues[] = $daysToFill;
+            else if ($openJobRow['daysOpen'] <= 30)
+            {
+                $aging16Rows[] = $openJobRow;
+            }
+            else
+            {
+                $aging31Rows[] = $openJobRow;
+            }
+
+            if ($openJobRow['daysSinceActivity'] !== null &&
+                $openJobRow['daysSinceActivity'] <= (int) $thresholds['slaActivityDays'])
+            {
+                $slaHitRows[] = $openJobRow;
+            }
         }
-        $hiresInRange = count($daysToFillValues);
+
+        $activePipelineRows = $this->getCustomerActivePipelineRows($db, $companyID);
+        $activePipelineCount = count($activePipelineRows);
+
+        $hireRowsInRange = $this->getCustomerHireRows($db, $companyID, $rangeStart, $rangeEnd, false);
+        $daysToFillValues = array();
+        foreach ($hireRowsInRange as $row)
+        {
+            $daysToFillValues[] = (int) $row['daysToFill'];
+        }
+        $hiresInRange = count($hireRowsInRange);
         $medianDaysToFill = $this->getMedianInteger($daysToFillValues);
+
+        $futureHireRows = $this->getCustomerHireRows($db, $companyID, null, null, true);
+        $confirmedFutureHires = count($futureHireRows);
 
         $offerRS = $db->getAssoc(sprintf(
             "SELECT
@@ -605,12 +584,25 @@ class ReportsUI extends UserInterface
         {
             $offerAcceptanceRate = ((float) $offersAccepted / (float) $offersMade) * 100.0;
         }
+        $offerBreakdownRows = $this->getCustomerOfferBreakdownRows($db, $companyID, $rangeStart, $rangeEnd);
 
         $funnelData = $this->getCustomerFunnelStages($db, $companyID);
         $activityTrendData = $this->getCustomerWeeklyActivity($db, $companyID);
         $sourceQualityRows = $this->getCustomerSourceQuality($db, $companyID, $rangeStart, $rangeEnd);
         $rejectionReasonRows = $this->getCustomerRejectionReasons($db, $companyID, $rangeStart, $rangeEnd);
         $upcomingOutcomes = $this->getCustomerUpcomingOutcomes($db, $companyID, $activityStatusIDs);
+        $cardDetail = $this->getCustomerCardDetail(
+            $focusMetric,
+            $openJobRows,
+            $aging0Rows,
+            $aging16Rows,
+            $aging31Rows,
+            $slaHitRows,
+            $hireRowsInRange,
+            $futureHireRows,
+            $activePipelineRows,
+            $offerBreakdownRows
+        );
 
         $insightLine = '';
         if (!empty($funnelData['biggestDropoff']))
@@ -636,6 +628,7 @@ class ReportsUI extends UserInterface
                 'totalJobOrders' => (int) $summaryRS['totalJobOrders'],
                 'openJobOrders' => $openJobOrders,
                 'hiresInRange' => $hiresInRange,
+                'confirmedFutureHires' => $confirmedFutureHires,
                 'medianDaysToFill' => $medianDaysToFill,
                 'activePipelineCount' => $activePipelineCount,
                 'offersMade' => $offersMade,
@@ -651,6 +644,15 @@ class ReportsUI extends UserInterface
             'aging' => $aging,
             'openJobRows' => $openJobRows,
             'atRiskJobs' => $atRiskJobs,
+            'hireRowsInRange' => $hireRowsInRange,
+            'futureHireRows' => $futureHireRows,
+            'activePipelineRows' => $activePipelineRows,
+            'offerBreakdownRows' => $offerBreakdownRows,
+            'slaHitRows' => $slaHitRows,
+            'aging0Rows' => $aging0Rows,
+            'aging16Rows' => $aging16Rows,
+            'aging31Rows' => $aging31Rows,
+            'cardDetail' => $cardDetail,
             'funnelStages' => $funnelData['stages'],
             'funnelConversions' => $funnelData['conversions'],
             'biggestDropoff' => $funnelData['biggestDropoff'],
@@ -700,6 +702,364 @@ class ReportsUI extends UserInterface
             $db->makeQueryInteger($companyID),
             JobOrderStatuses::getOpenStatusSQL()
         ));
+    }
+
+    private function getCustomerActivePipelineRows($db, $companyID)
+    {
+        $rows = $db->getAllAssoc(sprintf(
+            "SELECT
+                cjo.candidate_id AS candidateID,
+                candidate.first_name AS firstName,
+                candidate.last_name AS lastName,
+                cjo.status AS statusID,
+                jo.joborder_id AS jobOrderID,
+                jo.title AS jobOrderTitle,
+                DATE_FORMAT(cjo.date_modified, '%%m-%%d-%%y (%%h:%%i %%p)') AS lastUpdatedLabel
+            FROM
+                candidate_joborder AS cjo
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjo.joborder_id
+                AND jo.site_id = cjo.site_id
+            INNER JOIN candidate
+                ON candidate.candidate_id = cjo.candidate_id
+                AND candidate.site_id = cjo.site_id
+            WHERE
+                cjo.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                jo.status IN %s
+            AND
+                cjo.is_active = 1
+            AND
+                cjo.status NOT IN (%s, %s)
+            ORDER BY
+                cjo.date_modified DESC,
+                candidate.last_name ASC,
+                candidate.first_name ASC",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            JobOrderStatuses::getOpenStatusSQL(),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger(PIPELINE_STATUS_REJECTED)
+        ));
+
+        $outputRows = array();
+        foreach ($rows as $row)
+        {
+            $candidateName = trim($row['firstName'] . ' ' . $row['lastName']);
+            if ($candidateName === '')
+            {
+                $candidateName = 'Candidate #' . (int) $row['candidateID'];
+            }
+
+            $statusID = (int) $row['statusID'];
+            $outputRows[] = array(
+                'candidateID' => (int) $row['candidateID'],
+                'candidateName' => $candidateName,
+                'statusLabel' => $this->getPipelineStatusLabel($statusID),
+                'statusSlug' => $this->getPipelineStatusSlug($statusID),
+                'jobOrderID' => (int) $row['jobOrderID'],
+                'jobOrderTitle' => $row['jobOrderTitle'],
+                'lastUpdatedLabel' => $row['lastUpdatedLabel']
+            );
+        }
+
+        return $outputRows;
+    }
+
+    private function getCustomerHireRows($db, $companyID, $rangeStart = null, $rangeEnd = null, $futureOnly = false)
+    {
+        $subqueryExtraFiltersSQL = '';
+        if ($futureOnly)
+        {
+            $subqueryExtraFiltersSQL .= "\n                    AND\n                        cjh.date > NOW()";
+        }
+
+        $extraFiltersSQL = '';
+        if ($rangeStart instanceof DateTime)
+        {
+            $extraFiltersSQL .= "\n            AND\n                first_hire.firstHireDate >= " . $db->makeQueryString($rangeStart->format('Y-m-d H:i:s'));
+        }
+        if ($rangeEnd instanceof DateTime)
+        {
+            $extraFiltersSQL .= "\n            AND\n                first_hire.firstHireDate <= " . $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s'));
+        }
+        if ($futureOnly)
+        {
+            $extraFiltersSQL .= "\n            AND\n                first_hire.firstHireDate > NOW()";
+        }
+
+        $orderBySQL = ($futureOnly ? 'first_hire.firstHireDate ASC' : 'first_hire.firstHireDate DESC');
+
+        $rows = $db->getAllAssoc(sprintf(
+            "SELECT
+                first_hire.candidate_id AS candidateID,
+                candidate.first_name AS firstName,
+                candidate.last_name AS lastName,
+                first_hire.joborder_id AS jobOrderID,
+                jo.title AS jobOrderTitle,
+                DATE_FORMAT(first_hire.firstHireDate, '%%m-%%d-%%y (%%h:%%i %%p)') AS hireDateLabel,
+                DATEDIFF(first_hire.firstHireDate, jo.date_created) AS daysToFill
+            FROM
+                (
+                    SELECT
+                        cjh.candidate_id,
+                        cjh.joborder_id,
+                        MIN(cjh.date) AS firstHireDate
+                    FROM
+                        candidate_joborder_status_history AS cjh
+                    INNER JOIN joborder AS jo_hire
+                        ON jo_hire.joborder_id = cjh.joborder_id
+                        AND jo_hire.site_id = cjh.site_id
+                    WHERE
+                        cjh.site_id = %s
+                    AND
+                        jo_hire.company_id = %s
+                    AND
+                        cjh.status_to = %s
+                    %s
+                    GROUP BY
+                        cjh.candidate_id,
+                        cjh.joborder_id
+                ) AS first_hire
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = first_hire.joborder_id
+                AND jo.site_id = %s
+            INNER JOIN candidate
+                ON candidate.candidate_id = first_hire.candidate_id
+                AND candidate.site_id = jo.site_id
+            WHERE
+                1 = 1
+            %s
+            ORDER BY
+                %s",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $subqueryExtraFiltersSQL,
+            $db->makeQueryInteger($this->_siteID),
+            $extraFiltersSQL,
+            $orderBySQL
+        ));
+
+        $outputRows = array();
+        foreach ($rows as $row)
+        {
+            $candidateName = trim($row['firstName'] . ' ' . $row['lastName']);
+            if ($candidateName === '')
+            {
+                $candidateName = 'Candidate #' . (int) $row['candidateID'];
+            }
+
+            $daysToFill = (int) $row['daysToFill'];
+            if ($daysToFill < 0)
+            {
+                $daysToFill = 0;
+            }
+
+            $outputRows[] = array(
+                'candidateID' => (int) $row['candidateID'],
+                'candidateName' => $candidateName,
+                'jobOrderID' => (int) $row['jobOrderID'],
+                'jobOrderTitle' => $row['jobOrderTitle'],
+                'hireDateLabel' => $row['hireDateLabel'],
+                'daysToFill' => $daysToFill
+            );
+        }
+
+        return $outputRows;
+    }
+
+    private function getCustomerOfferBreakdownRows($db, $companyID, $rangeStart, $rangeEnd)
+    {
+        $rows = $db->getAllAssoc(sprintf(
+            "SELECT
+                cjh.candidate_id AS candidateID,
+                candidate.first_name AS firstName,
+                candidate.last_name AS lastName,
+                cjh.joborder_id AS jobOrderID,
+                jo.title AS jobOrderTitle,
+                MIN(IF(cjh.status_to = %s, cjh.date, NULL)) AS offerDateRaw,
+                DATE_FORMAT(MIN(IF(cjh.status_to = %s, cjh.date, NULL)), '%%m-%%d-%%y (%%h:%%i %%p)') AS offerDateLabel,
+                MAX(IF(cjh.status_to IN (%s, %s), 1, 0)) AS acceptedInWindow,
+                MAX(IF(cjh.status_to = %s, 1, 0)) AS hiredInWindow
+            FROM
+                candidate_joborder_status_history AS cjh
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjh.joborder_id
+                AND jo.site_id = cjh.site_id
+            INNER JOIN candidate
+                ON candidate.candidate_id = cjh.candidate_id
+                AND candidate.site_id = cjh.site_id
+            WHERE
+                cjh.site_id = %s
+            AND
+                jo.company_id = %s
+            AND
+                cjh.date >= %s
+            AND
+                cjh.date <= %s
+            AND
+                cjh.status_to IN (%s, %s, %s)
+            GROUP BY
+                cjh.candidate_id,
+                cjh.joborder_id
+            HAVING
+                offerDateRaw IS NOT NULL
+                OR acceptedInWindow = 1
+                OR hiredInWindow = 1
+            ORDER BY
+                offerDateRaw DESC,
+                candidate.last_name ASC,
+                candidate.first_name ASC",
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_ACCEPTED),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($companyID),
+            $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
+            $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s')),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_NEGOTIATION),
+            $db->makeQueryInteger(PIPELINE_STATUS_OFFER_ACCEPTED),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED)
+        ));
+
+        $outputRows = array();
+        foreach ($rows as $row)
+        {
+            $candidateName = trim($row['firstName'] . ' ' . $row['lastName']);
+            if ($candidateName === '')
+            {
+                $candidateName = 'Candidate #' . (int) $row['candidateID'];
+            }
+
+            $hiredInWindow = ((int) $row['hiredInWindow'] === 1);
+            $acceptedInWindow = ((int) $row['acceptedInWindow'] === 1);
+            $outcomeLabel = 'Pending';
+            $outcomeSlug = 'offer-negotiation';
+            if ($hiredInWindow)
+            {
+                $outcomeLabel = 'Hired';
+                $outcomeSlug = 'hired';
+            }
+            else if ($acceptedInWindow)
+            {
+                $outcomeLabel = 'Accepted';
+                $outcomeSlug = 'offer-accepted';
+            }
+
+            $offerDateLabel = trim((string) $row['offerDateLabel']);
+            if ($offerDateLabel === '')
+            {
+                $offerDateLabel = 'N/A';
+            }
+
+            $outputRows[] = array(
+                'candidateID' => (int) $row['candidateID'],
+                'candidateName' => $candidateName,
+                'jobOrderID' => (int) $row['jobOrderID'],
+                'jobOrderTitle' => $row['jobOrderTitle'],
+                'offerDateLabel' => $offerDateLabel,
+                'outcomeLabel' => $outcomeLabel,
+                'outcomeSlug' => $outcomeSlug
+            );
+        }
+
+        return $outputRows;
+    }
+
+    private function getCustomerCardDetail(
+        $focusMetric,
+        $openJobRows,
+        $aging0Rows,
+        $aging16Rows,
+        $aging31Rows,
+        $slaHitRows,
+        $hireRowsInRange,
+        $futureHireRows,
+        $activePipelineRows,
+        $offerBreakdownRows
+    )
+    {
+        switch ($focusMetric)
+        {
+            case 'openJobOrders':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'Open Job Orders',
+                    'emptyLabel' => 'No open job orders found for this customer.',
+                    'rows' => $openJobRows
+                );
+
+            case 'currentHires':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'Current Hires in Selected Window',
+                    'emptyLabel' => 'No hires were recorded in the selected window.',
+                    'rows' => $hireRowsInRange
+                );
+
+            case 'confirmedFutureHires':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'Confirmed Future Hires',
+                    'emptyLabel' => 'No future-dated hires were found.',
+                    'rows' => $futureHireRows
+                );
+
+            case 'activePipeline':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'Active Pipeline Candidates',
+                    'emptyLabel' => 'No active pipeline candidates found.',
+                    'rows' => $activePipelineRows
+                );
+
+            case 'offerAcceptance':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'Offer Outcomes in Selected Window',
+                    'emptyLabel' => 'No offer activity was found in the selected window.',
+                    'rows' => $offerBreakdownRows
+                );
+
+            case 'slaHitRate':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'SLA Hit Jobs',
+                    'emptyLabel' => 'No open jobs met the SLA activity threshold.',
+                    'rows' => $slaHitRows
+                );
+
+            case 'aging0to15':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'Aging 0-15 Days',
+                    'emptyLabel' => 'No open jobs in the 0-15 day bucket.',
+                    'rows' => $aging0Rows
+                );
+
+            case 'aging16to30':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'Aging 16-30 Days',
+                    'emptyLabel' => 'No open jobs in the 16-30 day bucket.',
+                    'rows' => $aging16Rows
+                );
+
+            case 'aging31plus':
+                return array(
+                    'key' => $focusMetric,
+                    'title' => 'Aging 31+ Days',
+                    'emptyLabel' => 'No open jobs in the 31+ day bucket.',
+                    'rows' => $aging31Rows
+                );
+        }
+
+        return array();
     }
 
     private function getCustomerFunnelStages($db, $companyID)

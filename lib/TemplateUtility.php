@@ -1169,6 +1169,14 @@ class TemplateUtility
 
         if (isset($itemsByKey['reports']))
         {
+            $itemsByKey['reports']['href'] = $indexName . '?m=reports&amp;a=reports';
+            $itemsByKey['reports']['action'] = 'reports';
+        }
+
+        if (isset($modules['reports']) &&
+            ($rolePagePermissions === null ||
+            $rolePagePermissions->isPageAllowedForUser($currentUserID, 'reports_customer_dashboard', $currentAccessLevel)))
+        {
             $itemsByKey['reports_customer_dashboard'] = array(
                 'label' => 'Customer Dashboard',
                 'href' => $indexName . '?m=reports&amp;a=customerDashboard',
@@ -1257,6 +1265,13 @@ class TemplateUtility
                             $item['module'] === 'home' &&
                             $item['action'] === 'home' &&
                             $currentAction === '')
+                        {
+                            $isActive = true;
+                        }
+                        if (!$isActive &&
+                            $item['module'] === 'reports' &&
+                            $item['action'] === 'reports' &&
+                            ($currentAction === '' || $currentAction === 'reports'))
                         {
                             $isActive = true;
                         }

@@ -113,6 +113,11 @@ class RolePagePermissions
                 'module' => 'reports',
                 'action' => ''
             ),
+            'reports_customer_dashboard' => array(
+                'label' => 'Customer Dashboard',
+                'module' => 'reports',
+                'action' => 'customerDashboard'
+            ),
             'calendar' => array(
                 'label' => 'Calendar',
                 'module' => 'calendar',
@@ -190,6 +195,16 @@ class RolePagePermissions
             }
 
             return 'settings_admin';
+        }
+
+        if ($moduleName == 'reports')
+        {
+            if ($action == 'customerdashboard')
+            {
+                return 'reports_customer_dashboard';
+            }
+
+            return 'reports';
         }
 
         $pages = self::getPageDefinitions();
@@ -725,6 +740,11 @@ class RolePagePermissions
             return $rolePermissions[$pageKey];
         }
 
+        if ($pageKey == 'reports_customer_dashboard' && isset($rolePermissions['reports']))
+        {
+            return $rolePermissions['reports'];
+        }
+
         return $this->getDefaultPermission($role['roleKey'], $pageKey);
     }
 
@@ -799,6 +819,7 @@ class RolePagePermissions
                 'lists' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'kpis' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'reports' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
+                'reports_customer_dashboard' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'calendar' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'gdpr_consents' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_SA),
                 'settings' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
@@ -816,6 +837,7 @@ class RolePagePermissions
                 'lists' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'kpis' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'reports' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
+                'reports_customer_dashboard' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'calendar' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'gdpr_consents' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'settings' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
@@ -833,6 +855,7 @@ class RolePagePermissions
                 'lists' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'kpis' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'reports' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
+                'reports_customer_dashboard' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'calendar' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'gdpr_consents' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'settings' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
@@ -850,6 +873,7 @@ class RolePagePermissions
                 'lists' => array('isVisible' => 1, 'requiredAccessLevel' => ACCESS_LEVEL_READ),
                 'kpis' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'reports' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
+                'reports_customer_dashboard' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'calendar' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'gdpr_consents' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),
                 'settings' => array('isVisible' => 0, 'requiredAccessLevel' => ACCESS_LEVEL_DISABLED),

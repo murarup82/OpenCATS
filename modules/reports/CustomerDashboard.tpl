@@ -94,6 +94,11 @@
                         padding: 11px;
                         box-shadow: 0 1px 3px rgba(13, 45, 72, 0.06);
                     }
+                    .customerDashCard--active {
+                        border-color: #86bfd4;
+                        box-shadow: 0 2px 8px rgba(9, 90, 120, 0.15);
+                        background: #f9fdff;
+                    }
                     .customerDashCardLabel {
                         color: #486777;
                         font-size: 12px;
@@ -104,6 +109,15 @@
                         color: #0a4f69;
                         font-weight: bold;
                         line-height: 1.05;
+                    }
+                    .customerDashCardValueLink {
+                        color: inherit;
+                        text-decoration: none;
+                        border-bottom: 1px dotted #7ea5b7;
+                    }
+                    .customerDashCardValueLink:hover {
+                        color: #0b6d8d;
+                        border-bottom-color: #0b6d8d;
                     }
                     .customerDashCardMeta {
                         margin-top: 5px;
@@ -322,10 +336,16 @@
                     }
                 </style>
 
-                <?php $selectedActivityType = isset($this->activityType) ? (string) $this->activityType : 'all'; ?>
+                <?php
+                    $selectedActivityType = isset($this->activityType) ? (string) $this->activityType : 'all';
+                    $selectedFocusMetric = isset($this->focusMetric) ? (string) $this->focusMetric : '';
+                ?>
                 <form id="customerDashFiltersForm" class="customerDashFilters" method="get" action="<?php echo(CATSUtility::getIndexName()); ?>">
                     <input type="hidden" name="m" value="reports" />
                     <input type="hidden" name="a" value="customerDashboard" />
+                    <?php if ($selectedFocusMetric !== ''): ?>
+                        <input type="hidden" name="focusMetric" value="<?php echo(htmlspecialchars($selectedFocusMetric)); ?>" />
+                    <?php endif; ?>
 
                     <div class="customerDashFilterField">
                         <label for="customerDashCompanyID">Customer</label>
@@ -371,6 +391,7 @@
                                 'openJobOrders' => 0,
                                 'totalJobOrders' => 0,
                                 'hiresInRange' => 0,
+                                'confirmedFutureHires' => 0,
                                 'medianDaysToFill' => null,
                                 'activePipelineCount' => 0,
                                 'offerAcceptanceLabel' => 'N/A',
@@ -413,6 +434,8 @@
                             $upcomingOutcomes
                         );
                         $recentPipelineActivityRS = isset($upcomingOutcomes['recentPipelineActivityRS']) ? $upcomingOutcomes['recentPipelineActivityRS'] : array();
+                        $cardDetail = isset($this->dashboardData['cardDetail']) ? $this->dashboardData['cardDetail'] : array();
+                        $dashboardBaseURL = CATSUtility::getIndexName() . '?m=reports&amp;a=customerDashboard&amp;companyID=' . (int) $this->selectedCompanyID . '&amp;rangeDays=' . (int) $this->rangeDays . '&amp;activityType=' . urlencode($selectedActivityType);
                     ?>
 
                     <div class="customerDashInsight">
@@ -427,47 +450,183 @@
                     </div>
 
                     <div class="customerDashCards">
-                        <div class="customerDashCard">
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'openJobOrders'): ?> customerDashCard--active<?php endif; ?>">
                             <div class="customerDashCardLabel">Open Job Orders</div>
-                            <div class="customerDashCardValue"><?php echo((int) $snapshot['openJobOrders']); ?></div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=openJobOrders#customerDashCardDetailPanel"><?php echo((int) $snapshot['openJobOrders']); ?></a></div>
                             <div class="customerDashCardMeta">Total job orders: <?php echo((int) $snapshot['totalJobOrders']); ?></div>
                         </div>
-                        <div class="customerDashCard">
-                            <div class="customerDashCardLabel">Hires (Window)</div>
-                            <div class="customerDashCardValue"><?php echo((int) $snapshot['hiresInRange']); ?></div>
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'currentHires'): ?> customerDashCard--active<?php endif; ?>">
+                            <div class="customerDashCardLabel">Current Hires (Window)</div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=currentHires#customerDashCardDetailPanel"><?php echo((int) $snapshot['hiresInRange']); ?></a></div>
                             <div class="customerDashCardMeta">Median time-to-fill: <?php if ($snapshot['medianDaysToFill'] === null): ?>N/A<?php else: ?><?php echo((int) $snapshot['medianDaysToFill']); ?> days<?php endif; ?></div>
                         </div>
-                        <div class="customerDashCard">
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'confirmedFutureHires'): ?> customerDashCard--active<?php endif; ?>">
+                            <div class="customerDashCardLabel">Confirmed Hires (Future)</div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=confirmedFutureHires#customerDashCardDetailPanel"><?php echo((int) $snapshot['confirmedFutureHires']); ?></a></div>
+                            <div class="customerDashCardMeta">Future-dated hires already confirmed</div>
+                        </div>
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'activePipeline'): ?> customerDashCard--active<?php endif; ?>">
                             <div class="customerDashCardLabel">Active Pipeline Candidates</div>
-                            <div class="customerDashCardValue"><?php echo((int) $snapshot['activePipelineCount']); ?></div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=activePipeline#customerDashCardDetailPanel"><?php echo((int) $snapshot['activePipelineCount']); ?></a></div>
                             <div class="customerDashCardMeta">Current active entries for open job orders</div>
                         </div>
-                        <div class="customerDashCard">
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'offerAcceptance'): ?> customerDashCard--active<?php endif; ?>">
                             <div class="customerDashCardLabel">Offer Acceptance Rate</div>
-                            <div class="customerDashCardValue"><?php $this->_($snapshot['offerAcceptanceLabel']); ?></div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=offerAcceptance#customerDashCardDetailPanel"><?php $this->_($snapshot['offerAcceptanceLabel']); ?></a></div>
                             <div class="customerDashCardMeta"><?php echo((int) $snapshot['offersAccepted']); ?> accepted from <?php echo((int) $snapshot['offersMade']); ?> offers</div>
                         </div>
-                        <div class="customerDashCard">
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'slaHitRate'): ?> customerDashCard--active<?php endif; ?>">
                             <div class="customerDashCardLabel">SLA Hit Rate (<?php echo((int) $snapshot['slaWindowDays']); ?>-day activity)</div>
-                            <div class="customerDashCardValue"><?php $this->_($snapshot['slaHitLabel']); ?></div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=slaHitRate#customerDashCardDetailPanel"><?php $this->_($snapshot['slaHitLabel']); ?></a></div>
                             <div class="customerDashCardMeta">Open jobs with recent candidate movement</div>
                         </div>
-                        <div class="customerDashCard">
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'aging0to15'): ?> customerDashCard--active<?php endif; ?>">
                             <div class="customerDashCardLabel">Aging 0-15 days</div>
-                            <div class="customerDashCardValue"><?php echo((int) $aging['bucket0to15']); ?></div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=aging0to15#customerDashCardDetailPanel"><?php echo((int) $aging['bucket0to15']); ?></a></div>
                             <div class="customerDashCardMeta">Fresh openings</div>
                         </div>
-                        <div class="customerDashCard">
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'aging16to30'): ?> customerDashCard--active<?php endif; ?>">
                             <div class="customerDashCardLabel">Aging 16-30 days</div>
-                            <div class="customerDashCardValue"><?php echo((int) $aging['bucket16to30']); ?></div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=aging16to30#customerDashCardDetailPanel"><?php echo((int) $aging['bucket16to30']); ?></a></div>
                             <div class="customerDashCardMeta">Needs active funneling</div>
                         </div>
-                        <div class="customerDashCard">
+                        <div class="customerDashCard<?php if ($selectedFocusMetric === 'aging31plus'): ?> customerDashCard--active<?php endif; ?>">
                             <div class="customerDashCardLabel">Aging 31+ days</div>
-                            <div class="customerDashCardValue"><?php echo((int) $aging['bucket31plus']); ?></div>
+                            <div class="customerDashCardValue"><a class="customerDashCardValueLink" href="<?php echo($dashboardBaseURL); ?>&amp;focusMetric=aging31plus#customerDashCardDetailPanel"><?php echo((int) $aging['bucket31plus']); ?></a></div>
                             <div class="customerDashCardMeta">Potential delivery risk</div>
                         </div>
                     </div>
+
+                    <?php if (!empty($selectedFocusMetric) && !empty($cardDetail)): ?>
+                        <div class="customerDashPanel" id="customerDashCardDetailPanel" style="margin-bottom: 12px;">
+                            <div class="customerDashPanelHeader"><?php $this->_($cardDetail['title']); ?></div>
+                            <div class="customerDashPanelBody">
+                                <?php if (empty($cardDetail['rows'])): ?>
+                                    <p class="customerDashMuted"><?php $this->_($cardDetail['emptyLabel']); ?></p>
+                                <?php else: ?>
+                                    <?php if (in_array($cardDetail['key'], array('openJobOrders', 'slaHitRate', 'aging0to15', 'aging16to30', 'aging31plus'))): ?>
+                                        <table class="customerDashTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Job Order</th>
+                                                    <th>Status</th>
+                                                    <th>Health</th>
+                                                    <th>Days Open</th>
+                                                    <th>Open Positions (Avail/Total)</th>
+                                                    <th>Active Candidates</th>
+                                                    <th>Last Activity</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($cardDetail['rows'] as $row): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $row['jobOrderID']); ?>">
+                                                                <?php $this->_($row['title']); ?>
+                                                            </a>
+                                                        </td>
+                                                        <td><?php $this->_($row['status']); ?></td>
+                                                        <td><span class="customerDashHealth <?php $this->_($row['healthClass']); ?>"><?php $this->_($row['healthLabel']); ?></span></td>
+                                                        <td><?php echo((int) $row['daysOpen']); ?></td>
+                                                        <td><?php echo((int) $row['openingsAvailable']); ?> / <?php echo((int) $row['openingsTotal']); ?></td>
+                                                        <td><?php echo((int) $row['activeCandidates']); ?></td>
+                                                        <td><?php $this->_($row['lastPipelineDateLabel']); ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    <?php elseif (in_array($cardDetail['key'], array('currentHires', 'confirmedFutureHires'))): ?>
+                                        <table class="customerDashTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Candidate</th>
+                                                    <th>Job Order</th>
+                                                    <th>Hire Date</th>
+                                                    <th>Days to Fill</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($cardDetail['rows'] as $row): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo((int) $row['candidateID']); ?>">
+                                                                <?php $this->_($row['candidateName']); ?>
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $row['jobOrderID']); ?>">
+                                                                <?php $this->_($row['jobOrderTitle']); ?>
+                                                            </a>
+                                                        </td>
+                                                        <td><?php $this->_($row['hireDateLabel']); ?></td>
+                                                        <td><?php echo((int) $row['daysToFill']); ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    <?php elseif ($cardDetail['key'] === 'activePipeline'): ?>
+                                        <table class="customerDashTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Candidate</th>
+                                                    <th>Job Order</th>
+                                                    <th>Current Status</th>
+                                                    <th>Last Updated</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($cardDetail['rows'] as $row): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo((int) $row['candidateID']); ?>">
+                                                                <?php $this->_($row['candidateName']); ?>
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $row['jobOrderID']); ?>">
+                                                                <?php $this->_($row['jobOrderTitle']); ?>
+                                                            </a>
+                                                        </td>
+                                                        <td><span class="customerDashStatusPill status-<?php echo(htmlspecialchars($row['statusSlug'])); ?>"><?php $this->_($row['statusLabel']); ?></span></td>
+                                                        <td><?php $this->_($row['lastUpdatedLabel']); ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    <?php elseif ($cardDetail['key'] === 'offerAcceptance'): ?>
+                                        <table class="customerDashTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Candidate</th>
+                                                    <th>Job Order</th>
+                                                    <th>Offer Date</th>
+                                                    <th>Outcome</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($cardDetail['rows'] as $row): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo((int) $row['candidateID']); ?>">
+                                                                <?php $this->_($row['candidateName']); ?>
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=show&amp;jobOrderID=<?php echo((int) $row['jobOrderID']); ?>">
+                                                                <?php $this->_($row['jobOrderTitle']); ?>
+                                                            </a>
+                                                        </td>
+                                                        <td><?php $this->_($row['offerDateLabel']); ?></td>
+                                                        <td><span class="customerDashStatusPill status-<?php echo(htmlspecialchars($row['outcomeSlug'])); ?>"><?php $this->_($row['outcomeLabel']); ?></span></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <div class="customerDashGrid2">
                         <div class="customerDashPanel">
