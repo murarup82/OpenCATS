@@ -106,17 +106,25 @@
                         line-height: 1.05;
                     }
                     .customerDashCardValueLink {
-                        display: inline-block;
+                        display: inline;
                         color: inherit;
                         text-decoration: none;
-                        font-size: 26px;
-                        font-weight: bold;
-                        line-height: 1.05;
-                        border-bottom: 1px dotted #7ea5b7;
+                        border-bottom: 0;
                     }
-                    .customerDashCardValueLink:hover {
-                        color: #0b6d8d;
-                        border-bottom-color: #0b6d8d;
+                    .customerDashCardValue .customerDashCardValueLink,
+                    .customerDashCardValue .customerDashCardValueLink:link,
+                    .customerDashCardValue .customerDashCardValueLink:visited,
+                    .customerDashCardValue .customerDashCardValueLink:active {
+                        font-size: 26px !important;
+                        font-weight: bold !important;
+                        line-height: 1.05 !important;
+                        color: #0a4f69 !important;
+                        text-decoration: none !important;
+                    }
+                    .customerDashCardValue .customerDashCardValueLink:hover {
+                        color: #0b6d8d !important;
+                        text-decoration: underline !important;
+                        text-underline-offset: 2px;
                     }
                     .customerDashCardMeta {
                         margin-top: 5px;
