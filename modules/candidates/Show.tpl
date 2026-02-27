@@ -62,8 +62,8 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="add to job order" border="0" />Add to Job Order
                                     </a>
                                 <?php endif; ?>
-                                <a id="candidate_expand_all_link" class="ui2-button ui2-button--secondary" href="#" onclick="CandidateSection_expandAll(); return false;">
-                                    Expand All Sections
+                                <a id="candidate_expand_all_link" class="ui2-button ui2-button--secondary" href="#" onclick="CandidateSection_toggleAll(); return false;">
+                                    Hide Details
                                 </a>
                             </div>
                             <?php if ($showCandidateDangerActions): ?>
@@ -1725,6 +1725,8 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             {
                 card.className += ' candidateShowCard--collapsed';
             }
+
+            CandidateSection_updateToggleAllLabel();
         }
 
         function CandidateSection_expand(sectionID)
@@ -1743,6 +1745,62 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             for (var i = 0; i < cards.length; i++)
             {
                 CandidateSection_setExpanded(cards[i], true);
+            }
+            CandidateSection_updateToggleAllLabel();
+        }
+
+        function CandidateSection_collapseAll()
+        {
+            var cards = document.querySelectorAll('.candidateShowCard--collapsible');
+            for (var i = 0; i < cards.length; i++)
+            {
+                CandidateSection_setExpanded(cards[i], false);
+            }
+            CandidateSection_updateToggleAllLabel();
+        }
+
+        function CandidateSection_updateToggleAllLabel()
+        {
+            var link = document.getElementById('candidate_expand_all_link');
+            if (!link)
+            {
+                return;
+            }
+
+            var cards = document.querySelectorAll('.candidateShowCard--collapsible');
+            var hasCollapsed = false;
+            for (var i = 0; i < cards.length; i++)
+            {
+                if (cards[i].className.indexOf('candidateShowCard--collapsed') !== -1)
+                {
+                    hasCollapsed = true;
+                    break;
+                }
+            }
+
+            link.innerHTML = hasCollapsed ? 'Expand All Sections' : 'Hide Details';
+        }
+
+        function CandidateSection_toggleAll()
+        {
+            var cards = document.querySelectorAll('.candidateShowCard--collapsible');
+            var hasCollapsed = false;
+            for (var i = 0; i < cards.length; i++)
+            {
+                if (cards[i].className.indexOf('candidateShowCard--collapsed') !== -1)
+                {
+                    hasCollapsed = true;
+                    break;
+                }
+            }
+
+            if (hasCollapsed)
+            {
+                CandidateSection_expandAll();
+            }
+            else
+            {
+                CandidateSection_collapseAll();
             }
         }
 
@@ -1794,8 +1852,9 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 actions.appendChild(toggleButton);
 
                 card.setAttribute('data-collapsible-ready', '1');
-                CandidateSection_setExpanded(card, card.className.indexOf('candidateShowCard--expanded') !== -1);
+                CandidateSection_setExpanded(card, true);
             }
+            CandidateSection_updateToggleAllLabel();
         }
 
         CandidateSection_init();

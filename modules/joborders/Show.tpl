@@ -56,8 +56,8 @@ use OpenCATS\UI\QuickActionMenu;
                                         <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="add candidate" border="0" />Add Candidate
                                     </a>
                                 <?php endif; ?>
-                                <a id="joborder_expand_all_link" class="ui2-button ui2-button--secondary" href="#" onclick="JobOrderSection_expandAll(); return false;">
-                                    Expand All Sections
+                                <a id="joborder_expand_all_link" class="ui2-button ui2-button--secondary" href="#" onclick="JobOrderSection_toggleAll(); return false;">
+                                    Hide Details
                                 </a>
                             </div>
                             <?php if ($showJobOrderDangerActions): ?>
@@ -1052,6 +1052,8 @@ use OpenCATS\UI\QuickActionMenu;
                     {
                         card.className += ' jobOrderShowCard--collapsed';
                     }
+
+                    JobOrderSection_updateToggleAllLabel();
                 }
 
                 function JobOrderSection_expand(sectionID)
@@ -1070,6 +1072,62 @@ use OpenCATS\UI\QuickActionMenu;
                     for (var i = 0; i < cards.length; i++)
                     {
                         JobOrderSection_setExpanded(cards[i], true);
+                    }
+                    JobOrderSection_updateToggleAllLabel();
+                }
+
+                function JobOrderSection_collapseAll()
+                {
+                    var cards = document.querySelectorAll('.jobOrderShowCard--collapsible');
+                    for (var i = 0; i < cards.length; i++)
+                    {
+                        JobOrderSection_setExpanded(cards[i], false);
+                    }
+                    JobOrderSection_updateToggleAllLabel();
+                }
+
+                function JobOrderSection_updateToggleAllLabel()
+                {
+                    var link = document.getElementById('joborder_expand_all_link');
+                    if (!link)
+                    {
+                        return;
+                    }
+
+                    var cards = document.querySelectorAll('.jobOrderShowCard--collapsible');
+                    var hasCollapsed = false;
+                    for (var i = 0; i < cards.length; i++)
+                    {
+                        if (cards[i].className.indexOf('jobOrderShowCard--collapsed') !== -1)
+                        {
+                            hasCollapsed = true;
+                            break;
+                        }
+                    }
+
+                    link.innerHTML = hasCollapsed ? 'Expand All Sections' : 'Hide Details';
+                }
+
+                function JobOrderSection_toggleAll()
+                {
+                    var cards = document.querySelectorAll('.jobOrderShowCard--collapsible');
+                    var hasCollapsed = false;
+                    for (var i = 0; i < cards.length; i++)
+                    {
+                        if (cards[i].className.indexOf('jobOrderShowCard--collapsed') !== -1)
+                        {
+                            hasCollapsed = true;
+                            break;
+                        }
+                    }
+
+                    if (hasCollapsed)
+                    {
+                        JobOrderSection_expandAll();
+                    }
+                    else
+                    {
+                        JobOrderSection_collapseAll();
                     }
                 }
 
@@ -1121,8 +1179,9 @@ use OpenCATS\UI\QuickActionMenu;
                         actions.appendChild(toggleButton);
 
                         card.setAttribute('data-collapsible-ready', '1');
-                        JobOrderSection_setExpanded(card, card.className.indexOf('jobOrderShowCard--expanded') !== -1);
+                        JobOrderSection_setExpanded(card, true);
                     }
+                    JobOrderSection_updateToggleAllLabel();
                 }
 
                 JobOrderSection_init();
