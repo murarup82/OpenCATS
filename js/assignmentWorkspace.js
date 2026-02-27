@@ -157,9 +157,9 @@
                 }
 
                 if (this.config.mode === 'candidateToJobs') {
-                    rows.push(this.renderJobOrderRow(results[i]));
+                    rows.push(this.renderJobOrderRow(results[i], visibleCount));
                 } else {
-                    rows.push(this.renderCandidateRow(results[i]));
+                    rows.push(this.renderCandidateRow(results[i], visibleCount));
                 }
                 visibleCount++;
             }
@@ -178,13 +178,14 @@
             this.updateSelectionCount();
         },
 
-        renderJobOrderRow: function(data) {
+        renderJobOrderRow: function(data, rankIndex) {
             var jobOrderID = parseInt(data.jobOrderID, 10);
             var inPipeline = parseInt(data.inPipeline, 10) === 1;
             var selectCell = '<input type="checkbox" class="assignmentWorkspaceSelect" value="' + jobOrderID + '"' + (inPipeline ? ' disabled="disabled"' : '') + ' />';
             var addCell = inPipeline
                 ? '<span class="assignmentWorkspaceBadge">In Pipeline</span>'
                 : '<a class="ui2-button ui2-button--primary" href="#" onclick="return AssignmentWorkspace.addSingle(' + jobOrderID + ');">Add</a>';
+            var fitCell = this.renderFitCell(data, rankIndex);
 
             return ''
                 + '<tr>'
@@ -196,17 +197,19 @@
                 + '<td>' + this.escapeHTML(this.formatOpenings(data.openingsAvailable, data.openings)) + '</td>'
                 + '<td>' + this.escapeHTML(data.ownerName || '--') + '</td>'
                 + '<td>' + this.escapeHTML(data.dateModified || '--') + '</td>'
+                + '<td>' + fitCell + '</td>'
                 + '<td>' + addCell + '</td>'
                 + '</tr>';
         },
 
-        renderCandidateRow: function(data) {
+        renderCandidateRow: function(data, rankIndex) {
             var candidateID = parseInt(data.candidateID, 10);
             var inPipeline = parseInt(data.inPipeline, 10) === 1;
             var selectCell = '<input type="checkbox" class="assignmentWorkspaceSelect" value="' + candidateID + '"' + (inPipeline ? ' disabled="disabled"' : '') + ' />';
             var addCell = inPipeline
                 ? '<span class="assignmentWorkspaceBadge">In Pipeline</span>'
                 : '<a class="ui2-button ui2-button--primary" href="#" onclick="return AssignmentWorkspace.addSingle(' + candidateID + ');">Add</a>';
+            var fitCell = this.renderFitCell(data, rankIndex);
 
             var duplicateIcon = '';
             if (parseInt(data.isDuplicateCandidate, 10) === 1) {
@@ -221,8 +224,35 @@
                 + '<td>' + this.escapeHTML(data.email || '--') + '</td>'
                 + '<td>' + this.escapeHTML(data.ownerName || '--') + '</td>'
                 + '<td>' + this.escapeHTML(data.dateModified || '--') + '</td>'
+                + '<td>' + fitCell + '</td>'
                 + '<td>' + addCell + '</td>'
                 + '</tr>';
+        },
+
+        renderFitCell: function(data, rankIndex) {
+            var score = parseInt(data.matchScore, 10);
+            if (isNaN(score)) {
+                score = 0;
+            }
+
+            var summary = this.escapeHTML(data.matchSummary || '');
+            var scoreClass = 'assignmentWorkspaceFitScore';
+            if (score >= 75) {
+                scoreClass += ' assignmentWorkspaceFitScore--high';
+            } else if (score >= 50) {
+                scoreClass += ' assignmentWorkspaceFitScore--medium';
+            } else {
+                scoreClass += ' assignmentWorkspaceFitScore--low';
+            }
+
+            var html = '<span class="' + scoreClass + '">' + this.escapeHTML(String(score)) + '</span>';
+            if (rankIndex === 0) {
+                html += ' <span class="assignmentWorkspaceBadge">Top match</span>';
+            }
+            if (summary !== '') {
+                html += '<div class="assignmentWorkspaceFitSummary">' + summary + '</div>';
+            }
+            return html;
         },
 
         addSelected: function() {
@@ -327,9 +357,9 @@
 
         getColumnCount: function() {
             if (this.config.mode === 'candidateToJobs') {
-                return 9;
+                return 10;
             }
-            return 7;
+            return 8;
         },
 
         formatOpenings: function(openingsAvailable, openingsTotal) {

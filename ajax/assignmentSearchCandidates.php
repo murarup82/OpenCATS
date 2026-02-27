@@ -23,6 +23,140 @@ function assignmentSearchCandidates_jsonError($message)
     );
 }
 
+function assignmentSearchCandidates_tokenize($text)
+{
+    $text = strtolower((string) $text);
+    $text = preg_replace('/[^a-z0-9]+/', ' ', $text);
+    $text = trim(preg_replace('/\s+/', ' ', $text));
+    if ($text === '')
+    {
+        return array();
+    }
+
+    $stopWords = array(
+        'and' => true, 'the' => true, 'for' => true, 'with' => true, 'from' => true,
+        'this' => true, 'that' => true, 'are' => true, 'you' => true, 'your' => true,
+        'job' => true, 'order' => true, 'candidate' => true, 'role' => true
+    );
+
+    $tokens = array();
+    foreach (explode(' ', $text) as $token)
+    {
+        if (strlen($token) < 3)
+        {
+            continue;
+        }
+        if (isset($stopWords[$token]))
+        {
+            continue;
+        }
+        $tokens[$token] = true;
+    }
+
+    return array_keys($tokens);
+}
+
+function assignmentSearchCandidates_daysOldFromTimestamp($timestamp)
+{
+    $timestamp = (int) $timestamp;
+    if ($timestamp <= 0)
+    {
+        return 9999;
+    }
+
+    $diff = time() - $timestamp;
+    if ($diff <= 0)
+    {
+        return 0;
+    }
+
+    return (int) floor($diff / 86400);
+}
+
+function assignmentSearchCandidates_makeScore($row, $jobTokens, $query)
+{
+    $score = 0;
+    $reasons = array();
+
+    $candidateTokens = assignmentSearchCandidates_tokenize(
+        $row['firstName'] . ' ' . $row['lastName'] . ' ' . $row['keySkills']
+    );
+    if (!empty($jobTokens) && !empty($candidateTokens))
+    {
+        $common = count(array_intersect($jobTokens, $candidateTokens));
+        $ratio = $common / max(1, min(10, count($jobTokens)));
+        $tokenScore = (int) round(min(1, $ratio) * 55);
+        if ($tokenScore > 0)
+        {
+            $score += $tokenScore;
+            $reasons[] = 'Skills overlap with role';
+        }
+    }
+
+    $daysOld = assignmentSearchCandidates_daysOldFromTimestamp($row['dateModifiedTS']);
+    if ($daysOld <= 7)
+    {
+        $score += 15;
+        $reasons[] = 'Recently updated profile';
+    }
+    else if ($daysOld <= 30)
+    {
+        $score += 10;
+    }
+    else if ($daysOld <= 90)
+    {
+        $score += 5;
+    }
+    else
+    {
+        $score += 1;
+    }
+
+    if ((int) $row['isHot'] === 1)
+    {
+        $score += 10;
+        $reasons[] = 'Hot candidate';
+    }
+
+    if ((int) $row['isDuplicateCandidate'] === 1)
+    {
+        $score -= 15;
+        $reasons[] = 'Duplicate warning';
+    }
+
+    $query = trim((string) $query);
+    if ($query !== '')
+    {
+        $queryLower = strtolower($query);
+        $haystack = strtolower(
+            $row['firstName'] . ' ' . $row['lastName'] . ' '
+            . $row['email'] . ' ' . $row['keySkills']
+        );
+        if (strpos($haystack, $queryLower) !== false)
+        {
+            $score += 10;
+            $reasons[] = 'Matches search terms';
+        }
+    }
+
+    if ($score > 100)
+    {
+        $score = 100;
+    }
+    if ($score < 0)
+    {
+        $score = 0;
+    }
+
+    $summary = '';
+    if (!empty($reasons))
+    {
+        $summary = implode('; ', array_slice($reasons, 0, 3));
+    }
+
+    return array($score, $summary);
+}
+
 if ($_SESSION['CATS']->getAccessLevel('joborders.considerCandidateSearch') < ACCESS_LEVEL_EDIT)
 {
     assignmentSearchCandidates_jsonError('Invalid user level for action.');
@@ -38,6 +172,30 @@ if (!isset($_REQUEST['jobOrderID']) || !ctype_digit((string) $_REQUEST['jobOrder
 $jobOrderID = (int) $_REQUEST['jobOrderID'];
 $siteID = $interface->getSiteID();
 $db = DatabaseConnection::getInstance();
+
+$jobOrderSQL = sprintf(
+    "SELECT
+        title AS title,
+        description AS description
+    FROM
+        joborder
+    WHERE
+        joborder_id = %s
+    AND
+        site_id = %s
+    LIMIT 1",
+    $db->makeQueryInteger($jobOrderID),
+    $db->makeQueryInteger($siteID)
+);
+$jobOrderData = $db->getAssoc($jobOrderSQL);
+if (empty($jobOrderData))
+{
+    assignmentSearchCandidates_jsonError('Job order not found.');
+    return;
+}
+$jobTokens = assignmentSearchCandidates_tokenize(
+    $jobOrderData['title'] . ' ' . $jobOrderData['description']
+);
 
 $query = '';
 if (isset($_REQUEST['query']))
@@ -105,8 +263,10 @@ $sql = sprintf(
         candidate.first_name AS firstName,
         candidate.last_name AS lastName,
         candidate.email1 AS email,
+        candidate.is_hot AS isHot,
         candidate.key_skills AS keySkills,
         DATE_FORMAT(candidate.date_modified, '%%m-%%d-%%y') AS dateModified,
+        UNIX_TIMESTAMP(candidate.date_modified) AS dateModifiedTS,
         IF(candidate_duplicates.new_candidate_id IS NULL, 0, 1) AS isDuplicateCandidate,
         TRIM(CONCAT(
             IFNULL(owner_user.first_name, ''),
@@ -141,6 +301,42 @@ $results = $db->getAllAssoc($sql);
 if (!is_array($results))
 {
     $results = array();
+}
+
+foreach ($results as $index => $row)
+{
+    list($matchScore, $matchSummary) = assignmentSearchCandidates_makeScore(
+        $row,
+        $jobTokens,
+        $query
+    );
+    $results[$index]['matchScore'] = $matchScore;
+    $results[$index]['matchSummary'] = $matchSummary;
+}
+
+usort(
+    $results,
+    function($left, $right)
+    {
+        $leftScore = (int) $left['matchScore'];
+        $rightScore = (int) $right['matchScore'];
+        if ($leftScore === $rightScore)
+        {
+            $leftTS = (int) $left['dateModifiedTS'];
+            $rightTS = (int) $right['dateModifiedTS'];
+            if ($leftTS === $rightTS)
+            {
+                return 0;
+            }
+            return ($leftTS > $rightTS) ? -1 : 1;
+        }
+        return ($leftScore > $rightScore) ? -1 : 1;
+    }
+);
+
+foreach ($results as $index => $row)
+{
+    unset($results[$index]['dateModifiedTS']);
 }
 
 assignmentSearchCandidates_jsonResponse(
