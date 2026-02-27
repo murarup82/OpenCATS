@@ -55,8 +55,6 @@ class ListsUI extends UserInterface
         $this->_moduleTabText = 'Lists';
         $this->_subTabs = array(
             'Show Lists'     => CATSUtility::getIndexName() . '?m=lists'
-           /* 'New Static List' => CATSUtility::getIndexName() . '?m=lists&a=newListStatic*al=' . ACCESS_LEVEL_EDIT  . '@lists.newListStatic', */
-           /* 'New Dynamic List' => CATSUtility::getIndexName() . '?m=lists&a=newListDynamic*al=' . ACCESS_LEVEL_EDIT . '@lists.newListDynamic' */
         );
     }
 

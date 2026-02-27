@@ -123,8 +123,8 @@ cats_makeDefaultEnvironment = function()
     }
 
     cats_toolbarAddButton(
-        'Your version of the CATS Toolbar is out of date.  Please click here to get the newest copy.',
-        'Your version of the CATS Toolbar is out of date.  Please click here to get the newest copy.',
+        'The CATS Firefox Toolbar has been retired. Click here for details.',
+        'The CATS Firefox Toolbar has been retired. Click here for details.',
         'cats_doAuthenticated(\'content.document.location.href = cats_getBaseURL()+\\\'?m=toolbar&a=install\\\';\');',
         button,
         'cats_mainButton'

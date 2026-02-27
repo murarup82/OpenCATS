@@ -107,6 +107,16 @@ class ImportUI extends UserInterface
                 $this->importUploadFile();
                 break;
 
+            case 'importUploadResume':
+                // Legacy route used by bulk resume import templates.
+                $this->importUploadResume();
+                break;
+
+            case 'commit':
+                // Legacy endpoint from deprecated commit UI; keep as safe alias.
+                $this->viewPending();
+                break;
+
             case 'whatIsBulkResumes':
                 $this->whatIsBulkResumes();
                 break;

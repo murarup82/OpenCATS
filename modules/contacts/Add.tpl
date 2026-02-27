@@ -211,7 +211,7 @@
                 </table>
                 <input type="submit" class="button" value="Add Contact" />&nbsp;
                 <input type="reset"  class="button" value="Reset" />&nbsp;
-                <input type="button" class="button" value="Back to Contacts" onclick="javascript:goToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=listRecent');" />
+                <input type="button" class="button" value="Back to Contacts" onclick="javascript:goToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=contacts&amp;a=listByView');" />
             </form>
 
             <script type="text/javascript">

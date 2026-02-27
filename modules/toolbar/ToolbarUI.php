@@ -83,7 +83,18 @@ class ToolbarUI extends UserInterface
             case 'getLicenseKey':
                 $this->getLicenseKey();
                 break;
+
+            case 'install':
+                $this->install();
+                break;
         }
+    }
+
+    private function install()
+    {
+        // Legacy installer endpoint for old Firefox toolbar builds.
+        $this->_template->assign('active', $this);
+        $this->_template->display('./modules/toolbar/install.tpl');
     }
 
     private function _authenticate()
