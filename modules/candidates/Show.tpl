@@ -57,14 +57,6 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <img src="images/actions/edit.gif" width="16" height="16" class="absmiddle" alt="edit" border="0" />Edit
                                     </a>
                                 <?php endif; ?>
-                                <?php if ($this->privledgedUser): ?>
-                                    <a id="history_link" class="ui2-button" href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=100&amp;dataItemID=<?php echo($this->candidateID); ?>">
-                                        <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />View History
-                                    </a>
-                                <?php endif; ?>
-                                <a id="transform_cv_link" class="ui2-button" href="#" onclick="CandidateTransformCV.open(); return false;">
-                                    <img src="images/parser/transfer.gif" width="16" height="16" class="absmiddle" alt="transform" border="0" />Transform CV
-                                </a>
                                 <?php if ($this->getUserAccessLevel('candidates.considerForJobSearch') >= ACCESS_LEVEL_EDIT): ?>
                                     <a id="add_to_joborder_link" class="ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=considerForJobSearch&amp;candidateID=<?php echo($this->candidateID); ?>', 1120, 760, null); return false;">
                                         <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="add to job order" border="0" />Add to Job Order
@@ -95,14 +87,41 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <?php endif; ?>
                 </div>
 
-            <?php if (!$this->isPopup && !empty($canLinkDuplicate)): ?>
+            <?php if (!$this->isPopup && (!empty($canLinkDuplicate) || !empty($this->privledgedUser))): ?>
                 <div class="candidateShowMaintenance">
-                    <span class="candidateShowMaintenanceLabel">Data Maintenance:</span>
-                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=linkDuplicate&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
-                        <img src="images/actions/duplicates.png" width="16" height="16" class="absmiddle" alt="link duplicate" border="0" />Link duplicate profile
-                    </a>
+                    <span class="candidateShowMaintenanceLabel">More Actions:</span>
+                    <?php if (!empty($this->privledgedUser)): ?>
+                        <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=viewItemHistory&amp;dataItemType=100&amp;dataItemID=<?php echo($this->candidateID); ?>">
+                            <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle" border="0" alt="view history" />View History
+                        </a>
+                    <?php endif; ?>
+                    <?php if (!empty($canLinkDuplicate)): ?>
+                        <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=linkDuplicate&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
+                            <img src="images/actions/duplicates.png" width="16" height="16" class="absmiddle" alt="link duplicate" border="0" />Link duplicate profile
+                        </a>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
+
+            <div class="candidateShowIdentity">
+                <div class="candidateShowIdentityName <?php echo($this->data['titleClass']); ?>">
+                    <?php $this->_($this->data['firstName']); ?> <?php $this->_($this->data['lastName']); ?>
+                    <?php if ($this->data['isActive'] != 1): ?>
+                        <span class="candidateShowPill candidateShowPill--pending">Inactive</span>
+                    <?php endif; ?>
+                </div>
+                <div class="candidateShowIdentityMeta">
+                    <?php if (!empty($this->data['email1'])): ?>
+                        <a href="mailto:<?php $this->_($this->data['email1']); ?>"><?php $this->_($this->data['email1']); ?></a>
+                    <?php endif; ?>
+                    <?php if (!empty($this->data['phoneCell'])): ?>
+                        <span><?php $this->_($this->data['phoneCell']); ?></span>
+                    <?php endif; ?>
+                    <?php if (!empty($this->data['city']) || !empty($this->data['country'])): ?>
+                        <span><?php $this->_($this->data['city']); ?><?php if (!empty($this->data['city']) && !empty($this->data['country'])): ?>, <?php endif; ?><?php $this->_($this->data['country']); ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
 
             <?php if ($this->data['isAdminHidden'] == 1): ?>
                 <p class="warning">This Candidate is hidden.  Only CATS Administrators can view it or search for it.  To make it visible by the site users, click <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0" style="font-weight:bold;">Here.</a></p>
@@ -157,6 +176,19 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     margin-bottom: 0;
                 }
 
+                .candidateShowPage .ui2-card--section.candidateShowCard--collapsible .ui2-card-header
+                {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                }
+
+                .candidateShowPage .ui2-card--section.candidateShowCard--collapsible .ui2-card-title
+                {
+                    flex: 1 1 auto;
+                }
+
                 .candidateShowPage .ui2-card-title
                 {
                     font-size: 14px;
@@ -175,15 +207,17 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 
                 .candidateShowPage .ui2-details-table .vertical
                 {
-                    width: 168px;
+                    width: 178px;
                     background: #f9fcfe;
                     color: #3f6170;
                     font-weight: bold;
+                    padding: 8px 12px;
                 }
 
                 .candidateShowPage .ui2-details-table .data
                 {
                     color: #1e3843;
+                    padding: 8px 12px;
                 }
 
                 .candidateShowPage .ui2-table th
@@ -306,9 +340,13 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 .candidateShowMaintenance
                 {
                     margin: -2px 0 10px 0;
-                    text-align: right;
                     color: #59707c;
                     font-size: 12px;
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: center;
+                    gap: 10px;
+                    flex-wrap: wrap;
                 }
 
                 .candidateShowMaintenanceLabel
@@ -323,12 +361,66 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     color: #4e6470;
                     text-decoration: none;
                     font-weight: 600;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
                 }
 
                 .candidateShowMaintenance a:hover
                 {
                     color: #0b6d8d;
                     text-decoration: underline;
+                }
+
+                .candidateShowIdentity
+                {
+                    margin: 0 0 10px 0;
+                    border: 1px solid #d8e5ec;
+                    border-radius: 12px;
+                    background: linear-gradient(120deg, #f6fbff 0%, #ecf7fd 100%);
+                    padding: 12px;
+                    box-shadow: 0 1px 3px rgba(13, 45, 72, 0.06);
+                }
+
+                .candidateShowIdentityName
+                {
+                    font-size: 28px;
+                    line-height: 1.1;
+                    font-weight: 700;
+                    color: #0a4f69;
+                    margin-bottom: 5px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                }
+
+                .candidateShowIdentityMeta
+                {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 12px;
+                    color: #416271;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+
+                .candidateShowIdentityMeta span
+                {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+
+                .candidateShowCardBody
+                {
+                    display: block;
+                }
+
+                .candidateShowCard--collapsed .candidateShowCardBody
+                {
+                    display: none;
                 }
 
                 .candidateShowPage a:not(.ui2-button)
@@ -457,6 +549,11 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     {
                         grid-template-columns: 1fr;
                     }
+
+                    .candidateShowIdentityName
+                    {
+                        font-size: 22px;
+                    }
                 }
 
                 .candidateCommentsBadge
@@ -489,6 +586,12 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     background: #ffeef5;
                     border-color: #e5a6c1;
                     color: #8c2e58;
+                }
+
+                .candidateShowCardToggle
+                {
+                    min-width: 82px;
+                    text-align: center;
                 }
             </style>
 
@@ -581,7 +684,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 
             <div class="ui2-grid">
                 <div class="ui2-col-main">
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Candidate Details</div>
                         </div>
@@ -741,7 +844,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     </div>
 
             <?php if($this->EEOSettingsRS['enabled'] == 1): ?>
-                <div class="ui2-card ui2-card--section">
+                <div class="ui2-card ui2-card--section candidateShowCard--collapsible">
                     <div class="ui2-card-header">
                         <div class="ui2-card-title">EEO Information</div>
                     </div>
@@ -783,7 +886,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 </table>
                 </div>
             <?php endif; ?>
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Misc Notes</div>
                         </div>
@@ -855,7 +958,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         </table>
                     </div>
 
-                    <div class="ui2-card ui2-card--section" id="candidateCommentsSection">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible<?php if (!empty($this->candidateCommentsInitiallyOpen)): ?> candidateShowCard--expanded<?php endif; ?>" id="candidateCommentsSection">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">
                                 Team Comments
@@ -956,7 +1059,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         </div>
                     </div>
 
-                    <div class="ui2-card ui2-card--section" id="candidateMessagesSection">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible<?php if (!empty($this->candidateMessagesInitiallyOpen)): ?> candidateShowCard--expanded<?php endif; ?>" id="candidateMessagesSection">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Team Inbox (Internal)</div>
                             <?php if (!empty($this->candidateMessagingEnabled)): ?>
@@ -1077,9 +1180,16 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         <?php endif; ?>
                     </div>
 
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Attachments</div>
+                            <?php if (!$this->isPopup): ?>
+                                <div class="ui2-card-actions">
+                                    <a class="ui2-button ui2-button--secondary" href="#" onclick="CandidateTransformCV.open(); return false;">
+                                        <img src="images/parser/transfer.gif" width="16" height="16" class="absmiddle" alt="transform" border="0" />Transform CV
+                                    </a>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <table class="attachmentsTable ui2-attachments-table">
                             <?php foreach ($this->attachmentsRS as $rowNumber => $attachmentsData): ?>
@@ -1128,7 +1238,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     </div>
                 </div>
                 <div class="ui2-col-side">
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible<?php if (!empty($this->gdprFlashMessage) || !empty($this->gdprDeletionRequired) || !empty($this->gdprLegacyProofWarning)): ?> candidateShowCard--expanded<?php endif; ?>">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">GDPR</div>
                             <?php if (!$this->isPopup && !empty($this->gdprSendEnabled)): ?>
@@ -1221,7 +1331,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             <?php if (!empty($this->gdprFlashMessage)) $this->_($this->gdprFlashMessage); ?>
                         </div>
                     </div>
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Ownership</div>
                             <?php if (!empty($this->ownershipEditEnabled)): ?>
@@ -1266,7 +1376,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             </div>
                         <?php endif; ?>
                     </div>
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Pipeline &amp; Source</div>
                         </div>
@@ -1285,7 +1395,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             </tr>
                         </table>
                     </div>
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section candidateShowCard--collapsible">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Tags</div>
                             <?php if (!$this->isPopup){ ?>
@@ -1375,7 +1485,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             <br clear="all" />
             <br />
 
-            <div class="ui2-card ui2-card--section">
+            <div class="ui2-card ui2-card--section candidateShowCard--collapsible candidateShowCard--expanded">
                 <div class="ui2-card-header">
                     <div class="ui2-card-title">Job Orders for Candidates</div>
                     <?php if (!$this->isPopup): ?>
@@ -1505,7 +1615,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             <br clear="all" />
             <br />
 
-            <div class="ui2-card ui2-card--section">
+            <div class="ui2-card ui2-card--section candidateShowCard--collapsible">
                 <div class="ui2-card-header">
                     <div class="ui2-card-title">Lists</div>
                     <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT): ?>
@@ -1586,6 +1696,98 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 <?php endif; ?>
 
     <script type="text/javascript">
+        function CandidateSection_setExpanded(card, shouldOpen)
+        {
+            if (!card)
+            {
+                return;
+            }
+
+            var body = card.querySelector('.candidateShowCardBody');
+            var toggle = card.querySelector('.candidateShowCardToggle');
+            if (!body || !toggle)
+            {
+                return;
+            }
+
+            body.style.display = shouldOpen ? '' : 'none';
+            toggle.innerHTML = shouldOpen ? 'Collapse' : 'Expand';
+            toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+
+            if (shouldOpen)
+            {
+                card.className = card.className.replace(/\bcandidateShowCard--collapsed\b/g, '').replace(/\s{2,}/g, ' ').replace(/^\s+|\s+$/g, '');
+            }
+            else if (card.className.indexOf('candidateShowCard--collapsed') === -1)
+            {
+                card.className += ' candidateShowCard--collapsed';
+            }
+        }
+
+        function CandidateSection_expand(sectionID)
+        {
+            var card = document.getElementById(sectionID);
+            if (!card)
+            {
+                return;
+            }
+            CandidateSection_setExpanded(card, true);
+        }
+
+        function CandidateSection_init()
+        {
+            var cards = document.querySelectorAll('.candidateShowCard--collapsible');
+            for (var i = 0; i < cards.length; i++)
+            {
+                var card = cards[i];
+                if (card.getAttribute('data-collapsible-ready') === '1')
+                {
+                    continue;
+                }
+
+                var header = card.querySelector('.ui2-card-header');
+                if (!header)
+                {
+                    continue;
+                }
+
+                var body = document.createElement('div');
+                body.className = 'candidateShowCardBody';
+                body.id = 'candidateShowCardBody' + i;
+
+                while (header.nextSibling)
+                {
+                    body.appendChild(header.nextSibling);
+                }
+                card.appendChild(body);
+
+                var actions = header.querySelector('.ui2-card-actions');
+                if (!actions)
+                {
+                    actions = document.createElement('div');
+                    actions.className = 'ui2-card-actions';
+                    header.appendChild(actions);
+                }
+
+                var toggleButton = document.createElement('button');
+                toggleButton.type = 'button';
+                toggleButton.className = 'ui2-button ui2-button--secondary candidateShowCardToggle';
+                toggleButton.onclick = (function (targetCard)
+                {
+                    return function ()
+                    {
+                        CandidateSection_setExpanded(targetCard, targetCard.className.indexOf('candidateShowCard--collapsed') !== -1);
+                    };
+                }(card));
+                actions.appendChild(toggleButton);
+
+                card.setAttribute('data-collapsible-ready', '1');
+                CandidateSection_setExpanded(card, card.className.indexOf('candidateShowCard--expanded') !== -1);
+            }
+        }
+
+        CandidateSection_init();
+
         function CandidateComments_toggle(forceOpen)
         {
             var panel = document.getElementById('candidateCommentsPanel');
@@ -1615,6 +1817,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 
         function CandidateComments_openComposer()
         {
+            CandidateSection_expand('candidateCommentsSection');
             CandidateComments_toggle(true);
             var textArea = document.getElementById('candidateCommentText');
             if (textArea)
@@ -1639,6 +1842,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 
         function CandidateMessages_openComposer()
         {
+            CandidateSection_expand('candidateMessagesSection');
             CandidateMessages_toggle(true);
             var textArea = document.getElementById('candidateMessageBody');
             if (textArea)
