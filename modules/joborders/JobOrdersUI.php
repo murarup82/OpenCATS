@@ -2329,7 +2329,19 @@ class JobOrdersUI extends UserInterface
 
         $statusRS = $pipelines->getStatusesForPicking();
 
-        $selectedStatusID = $pipelineData['statusID'];
+        $selectedStatusID = (int) $pipelineData['statusID'];
+        $requestedStatusID = -1;
+        if ($this->isOptionalIDValid('statusID', $input))
+        {
+            $requestedStatusID = (int) $input['statusID'];
+        }
+        if (
+            $requestedStatusID > 0 &&
+            ResultSetUtility::findRowByColumnValue($statusRS, 'statusID', $requestedStatusID) !== false
+        )
+        {
+            $selectedStatusID = $requestedStatusID;
+        }
 
         /* Override default send email behavior with site specific send email behavior. */
         $mailerSettings = new MailerSettings($this->_siteID);

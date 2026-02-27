@@ -26,6 +26,142 @@
 <?php endif; ?>
 
 <style type="text/css">
+    .pipeline-status-modal
+    {
+        padding: 8px;
+        color: #1f3440;
+    }
+
+    .pipeline-status-modal #changePipelineStatusForm
+    {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .pipeline-status-modal .ui2-card
+    {
+        border: 1px solid #d8e5ec;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(13, 45, 72, 0.06);
+        overflow: hidden;
+        margin: 0;
+    }
+
+    .pipeline-status-modal .pipeline-status-intro
+    {
+        margin: 0 0 10px 0;
+        border: 1px solid #d8e5ec;
+        border-radius: 10px;
+        background: linear-gradient(120deg, #f6fbff 0%, #ecf7fd 100%);
+        padding: 10px 12px;
+    }
+
+    .pipeline-status-modal .pipeline-status-intro-title
+    {
+        font-weight: 700;
+        color: #104b62;
+        margin-bottom: 2px;
+    }
+
+    .pipeline-status-modal .pipeline-status-intro-text
+    {
+        color: #456472;
+        font-size: 12px;
+    }
+
+    .pipeline-status-modal .editTable
+    {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 8px;
+    }
+
+    .pipeline-status-modal .editTable .tdVertical
+    {
+        width: 180px;
+        padding: 6px 10px 0 10px;
+        vertical-align: top;
+        font-weight: 700;
+        color: #365b6c;
+    }
+
+    .pipeline-status-modal .editTable .tdData
+    {
+        padding: 10px 12px;
+        vertical-align: top;
+        border: 1px solid #dce7ef;
+        border-radius: 10px;
+        background: #f9fcfe;
+    }
+
+    .pipeline-status-modal .editTable input[type="text"],
+    .pipeline-status-modal .editTable textarea,
+    .pipeline-status-modal .editTable select
+    {
+        box-sizing: border-box;
+        max-width: 100%;
+        border: 1px solid #c8d8e3;
+        border-radius: 8px;
+        padding: 6px 8px;
+        background: #ffffff;
+    }
+
+    .pipeline-status-modal .editTable textarea
+    {
+        min-height: 84px;
+    }
+
+    .pipeline-status-modal #statusComment,
+    .pipeline-status-modal #customMessage,
+    .pipeline-status-modal #activityNote
+    {
+        width: 100% !important;
+    }
+
+    .pipeline-status-modal #changeStatusSpanB
+    {
+        font-weight: 700;
+    }
+
+    .pipeline-status-modal .pipeline-status-checkbox
+    {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 8px 8px 0;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid #d3e1ea;
+        background: #ffffff;
+        color: #2d5364;
+    }
+
+    .pipeline-status-modal .pipeline-status-actions
+    {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #d8e5ec;
+    }
+
+    .pipeline-status-modal .pipeline-status-actions-main
+    {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .pipeline-status-modal .pipeline-status-help
+    {
+        font-size: 11px;
+        color: #607684;
+    }
+
     .pipeline-status-modal .status-pill {
         display: inline-block;
         padding: 2px 8px;
@@ -50,6 +186,34 @@
     .pipeline-status-modal .status-hired { background: #dcfce7; color: #166534; border-color: #86efac; }
     .pipeline-status-modal .status-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
     .pipeline-status-modal .status-unknown { background: #f2f4f6; color: #4c5a61; border-color: #d1d9de; }
+
+    @media (max-width: 700px)
+    {
+        .pipeline-status-modal .editTable,
+        .pipeline-status-modal .editTable tbody,
+        .pipeline-status-modal .editTable tr,
+        .pipeline-status-modal .editTable td
+        {
+            display: block;
+            width: 100% !important;
+        }
+
+        .pipeline-status-modal .editTable .tdVertical
+        {
+            padding: 0 2px 4px 2px;
+        }
+
+        .pipeline-status-modal .editTable .tdData
+        {
+            margin-bottom: 8px;
+        }
+
+        .pipeline-status-modal .pipeline-status-actions
+        {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
 </style>
 
 <div class="ui2 pipeline-status-modal">
@@ -357,7 +521,17 @@
         <input type="hidden" id="regardingID" name="regardingID" value="<?php echo($this->selectedJobOrderID); ?>" />
 <?php endif; ?>
 
-        <div class="ui2-card ui2-card--section" style="width: 560px;">
+        <div class="pipeline-status-intro">
+            <?php if ($this->onlyScheduleEvent): ?>
+                <div class="pipeline-status-intro-title">Schedule Event</div>
+                <div class="pipeline-status-intro-text">Create an event and keep the pipeline collaboration context.</div>
+            <?php else: ?>
+                <div class="pipeline-status-intro-title">Finalize Pipeline Transition</div>
+                <div class="pipeline-status-intro-text">Choose the new stage and complete required details (comment, rejection reason, transition date).</div>
+            <?php endif; ?>
+        </div>
+
+        <div class="ui2-card ui2-card--section">
         <table class="editTable" width="100%">
             <tr id="visibleTR" <?php if ($this->onlyScheduleEvent): ?>style="display:none;"<?php endif; ?>>
                 <td class="tdVertical">
@@ -483,7 +657,7 @@
                 <td class="tdData">
                     <div style="margin-bottom: 4px;">
                         <?php foreach ($this->rejectionReasons as $reason): ?>
-                            <label>
+                            <label class="pipeline-status-checkbox">
                                 <input type="checkbox" name="rejectionReasonIDs[]" value="<?php echo($reason['reasonID']); ?>" onclick="AS_onRejectionReasonChange();" />
                                 <?php $this->_($reason['label']); ?>
                             </label><br />
@@ -635,13 +809,18 @@
             </tr>
 
         </table>
-        <input type="button" class="button ui2-button ui2-button--secondary" name="details" id="details" value="Details" onclick="AS_openPipelineStatusDetails();" />&nbsp;
-        <input type="submit" class="button ui2-button ui2-button--primary" name="submit" id="submit" value="Save" />&nbsp;
+        <div class="pipeline-status-actions">
+            <div class="pipeline-status-help">Use <b>Details</b> to edit full pipeline history when needed.</div>
+            <div class="pipeline-status-actions-main">
+                <input type="button" class="button ui2-button ui2-button--secondary" name="details" id="details" value="Details" onclick="AS_openPipelineStatusDetails();" />
+                <input type="submit" class="button ui2-button ui2-button--primary" name="submit" id="submit" value="Save" />
 <?php if ($this->isJobOrdersMode): ?>
-        <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=dashboard&amp;a=my');" />
+                <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=dashboard&amp;a=my');" />
 <?php else: ?>
-        <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=dashboard&amp;a=my');" />
+                <input type="button" class="button ui2-button ui2-button--secondary" name="close" value="Cancel" onclick="parentGoToURL('<?php echo(CATSUtility::getIndexName()); ?>?m=dashboard&amp;a=my');" />
 <?php endif; ?>
+            </div>
+        </div>
         </div>
 
 <script type="text/javascript">

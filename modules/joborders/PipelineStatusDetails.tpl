@@ -5,12 +5,38 @@
     .pipeline-status-details {
         font-size: 13px;
         line-height: 1.35;
+        color: #1f3340;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 8px;
+    }
+    .pipeline-status-details .ui2-card {
+        border: 1px solid #d8e5ec;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(13, 45, 72, 0.06);
+        overflow: hidden;
+    }
+    .pipeline-status-details .ui2-header {
+        border: 0;
+        background: linear-gradient(120deg, #f7fcff 0%, #eef7fd 100%);
+        border-bottom: 1px solid #d8e5ec;
+        padding: 12px;
+        margin: 0;
     }
     .pipeline-status-details .ui2-header h2 {
-        font-size: 18px;
+        font-size: 20px;
+        color: #0d4c64;
+        margin: 0;
     }
-    .pipeline-status-details .ui2-table td {
-        font-size: 13px;
+    .pipeline-status-details .ui2-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .pipeline-status-details .ui2-muted {
+        color: #587281;
     }
     .pipeline-status-details .ui2-input {
         font-size: 12px;
@@ -20,22 +46,73 @@
         font-size: 12px;
         padding: 5px 10px;
     }
+    .pipeline-status-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        gap: 10px;
+        margin: 12px;
+    }
+    .pipeline-status-summary-card {
+        border: 1px solid #d8e5ec;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 9px 10px;
+    }
+    .pipeline-status-summary-label {
+        font-size: 11px;
+        color: #4f6c79;
+    }
+    .pipeline-status-summary-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0b4c66;
+        line-height: 1.1;
+    }
+    .pipeline-status-summary-meta {
+        margin-top: 3px;
+        font-size: 11px;
+        color: #607986;
+    }
+    .pipeline-status-summary-value--compact {
+        font-size: 16px;
+        line-height: 1.2;
+        font-weight: 600;
+    }
     .pipeline-status-details .ui2-table {
-        width: 100%;
+        width: calc(100% - 24px);
+        margin: 0 12px 12px 12px;
         table-layout: fixed;
+        border: 1px solid #dce7ef;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .pipeline-status-details .ui2-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #0f6886;
+        color: #ffffff;
+        border-color: #0f6886;
     }
     .pipeline-status-details .ui2-table th,
     .pipeline-status-details .ui2-table td {
         white-space: normal;
         vertical-align: top;
     }
+    .pipeline-status-details .ui2-table td {
+        font-size: 13px;
+        border-color: #dce7ef;
+    }
+    .pipeline-status-details .ui2-table tbody tr:nth-child(even) td {
+        background: #f9fcfe;
+    }
     .pipeline-status-details .ui2-table th:nth-child(1),
     .pipeline-status-details .ui2-table td:nth-child(1) {
-        width: 13%;
+        width: 14%;
     }
     .pipeline-status-details .ui2-table th:nth-child(2),
     .pipeline-status-details .ui2-table td:nth-child(2) {
-        width: 16%;
+        width: 17%;
     }
     .pipeline-status-details .ui2-table th:nth-child(3),
     .pipeline-status-details .ui2-table td:nth-child(3) {
@@ -49,12 +126,32 @@
     }
     .pipeline-status-details .ui2-table th:nth-child(5),
     .pipeline-status-details .ui2-table td:nth-child(5) {
-        width: 6%;
+        width: 8%;
         text-align: center;
     }
     .pipeline-status-details .ui2-table th:nth-child(6),
     .pipeline-status-details .ui2-table td:nth-child(6) {
-        width: 22%;
+        width: 18%;
+    }
+    .pipeline-status-details .pipeline-auto-pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid #d4e0e7;
+        background: #f4f8fb;
+        color: #4a6270;
+    }
+    .pipeline-status-details .pipeline-auto-pill--yes {
+        background: #e8f7ef;
+        border-color: #b7e1c8;
+        color: #1f6f3c;
+    }
+    .pipeline-status-details .pipeline-auto-pill--no {
+        background: #f3f6f9;
+        border-color: #d4dde5;
+        color: #607281;
     }
     .pipeline-status-details .edit-cell {
         min-width: 0;
@@ -70,11 +167,6 @@
         min-width: 0;
         box-sizing: border-box;
     }
-    .pipeline-status-details .ui2-header-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
     .pipeline-status-details .edit-mode-toggle {
         display: inline-flex;
         align-items: center;
@@ -86,6 +178,17 @@
     }
     .pipeline-status-details .edit-mode-toggle input[type="checkbox"] {
         margin: 0;
+    }
+    .pipeline-status-details .pipeline-note-block {
+        margin-top: 4px;
+        padding: 5px 7px;
+        border-radius: 8px;
+        background: #f4f8fb;
+        border: 1px solid #dbe6ee;
+    }
+    .pipeline-status-details .pipeline-status-edit-actions {
+        margin: 0 12px 12px 12px;
+        text-align: right;
     }
     .pipeline-status-details.edit-column-hidden .ui2-table th:nth-child(6),
     .pipeline-status-details.edit-column-hidden .ui2-table td:nth-child(6),
@@ -119,6 +222,16 @@
     .pipeline-status-details .status-hired { background: #dcfce7; color: #166534; border-color: #86efac; }
     .pipeline-status-details .status-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
     .pipeline-status-details .status-unknown { background: #f2f4f6; color: #4c5a61; border-color: #d1d9de; }
+    @media (max-width: 1200px) {
+        .pipeline-status-summary {
+            grid-template-columns: repeat(2, minmax(160px, 1fr));
+        }
+    }
+    @media (max-width: 760px) {
+        .pipeline-status-summary {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <div class="ui2 ui2-theme-avel pipeline-status-details">
@@ -154,6 +267,72 @@
             <input type="hidden" name="postback" value="postback" />
             <input type="hidden" name="pipelineID" value="<?php echo((int) $this->pipelineID); ?>" />
         <?php endif; ?>
+
+        <?php
+            $historyRows = is_array($this->statusHistoryRS) ? $this->statusHistoryRS : array();
+            $totalTransitions = count($historyRows);
+            $autoTransitions = 0;
+            $editedTransitions = 0;
+            $latestTransitionRaw = '';
+            $latestTransitionDisplay = '--';
+
+            foreach ($historyRows as $row)
+            {
+                $commentForMeta = trim($row['commentText']);
+                $isAutoTransition = false;
+                if ($commentForMeta !== '' && strpos($commentForMeta, '[AUTO] ') === 0)
+                {
+                    $isAutoTransition = true;
+                }
+                if ((int) $row['commentIsSystem'] === 1)
+                {
+                    $isAutoTransition = true;
+                }
+
+                if ($isAutoTransition)
+                {
+                    $autoTransitions++;
+                }
+                if (!empty($row['editedAt']))
+                {
+                    $editedTransitions++;
+                }
+                if (!empty($row['dateRaw']) && (empty($latestTransitionRaw) || strcmp($row['dateRaw'], $latestTransitionRaw) > 0))
+                {
+                    $latestTransitionRaw = $row['dateRaw'];
+                    $latestTransitionDisplay = $row['dateDisplay'];
+                }
+            }
+
+            $autoRate = 0;
+            if ($totalTransitions > 0)
+            {
+                $autoRate = (int) round(($autoTransitions * 100) / $totalTransitions);
+            }
+        ?>
+
+        <div class="pipeline-status-summary">
+            <div class="pipeline-status-summary-card">
+                <div class="pipeline-status-summary-label">Total transitions</div>
+                <div class="pipeline-status-summary-value"><?php echo((int) $totalTransitions); ?></div>
+                <div class="pipeline-status-summary-meta">Timeline events recorded</div>
+            </div>
+            <div class="pipeline-status-summary-card">
+                <div class="pipeline-status-summary-label">Auto transitions</div>
+                <div class="pipeline-status-summary-value"><?php echo((int) $autoTransitions); ?></div>
+                <div class="pipeline-status-summary-meta"><?php echo((int) $autoRate); ?>% system-generated</div>
+            </div>
+            <div class="pipeline-status-summary-card">
+                <div class="pipeline-status-summary-label">Edited entries</div>
+                <div class="pipeline-status-summary-value"><?php echo((int) $editedTransitions); ?></div>
+                <div class="pipeline-status-summary-meta">Audit trail corrections</div>
+            </div>
+            <div class="pipeline-status-summary-card">
+                <div class="pipeline-status-summary-label">Latest transition</div>
+                <div class="pipeline-status-summary-value pipeline-status-summary-value--compact"><?php $this->_($latestTransitionDisplay); ?></div>
+                <div class="pipeline-status-summary-meta">Most recent status change</div>
+            </div>
+        </div>
         <table class="ui2-table">
             <thead>
                 <tr>
@@ -161,17 +340,19 @@
                     <th>From -&gt; To</th>
                     <th>Entered By</th>
                     <th>Comment</th>
-                    <th>Auto?</th>
-                    <th>Edit</th>
+                    <th>Origin</th>
+                    <?php if (!empty($this->canEditHistory)): ?>
+                        <th>Edit</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($this->statusHistoryRS)): ?>
+                <?php if (empty($historyRows)): ?>
                     <tr>
-                        <td colspan="6">No status history entries found.</td>
+                        <td colspan="<?php echo(!empty($this->canEditHistory) ? 6 : 5); ?>">No status history entries found.</td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($this->statusHistoryRS as $row): ?>
+                    <?php foreach ($historyRows as $row): ?>
                         <?php
                             $comment = trim($row['commentText']);
                             $auto = false;
@@ -236,12 +417,15 @@
                                     <span class="ui2-muted">--</span>
                                 <?php endif; ?>
 
-                                <?php if (!empty($row['rejectionReasons'])): ?>
-                                    <div class="ui2-muted">Rejection reasons: <?php $this->_($row['rejectionReasons']); ?></div>
-                                <?php endif; ?>
-
-                                <?php if (!empty($row['rejectionReasonOther'])): ?>
-                                    <div class="ui2-muted">Other reason: <?php $this->_($row['rejectionReasonOther']); ?></div>
+                                <?php if (!empty($row['rejectionReasons']) || !empty($row['rejectionReasonOther'])): ?>
+                                    <div class="pipeline-note-block">
+                                        <?php if (!empty($row['rejectionReasons'])): ?>
+                                            <div class="ui2-muted">Rejection reasons: <?php $this->_($row['rejectionReasons']); ?></div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($row['rejectionReasonOther'])): ?>
+                                            <div class="ui2-muted">Other reason: <?php $this->_($row['rejectionReasonOther']); ?></div>
+                                        <?php endif; ?>
+                                    </div>
                                 <?php endif; ?>
 
                                 <?php if (!empty($row['editedAt'])): ?>
@@ -257,16 +441,20 @@
                                             $editNote = '(No edit note)';
                                         }
                                     ?>
-                                    <div class="ui2-muted">
+                                    <div class="pipeline-note-block ui2-muted">
                                         Edited by <?php $this->_($editedByName); ?>
                                         on <?php $this->_($row['editedAtDisplay']); ?>:
                                         <?php $this->_($editNote); ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo($auto ? 'Yes' : 'No'); ?></td>
                             <td>
-                                <?php if (!empty($this->canEditHistory)): ?>
+                                <span class="pipeline-auto-pill <?php echo($auto ? 'pipeline-auto-pill--yes' : 'pipeline-auto-pill--no'); ?>">
+                                    <?php echo($auto ? 'Auto' : 'Manual'); ?>
+                                </span>
+                            </td>
+                            <?php if (!empty($this->canEditHistory)): ?>
+                                <td>
                                     <div class="edit-cell">
                                         <input type="hidden" name="historyID[]" value="<?php echo((int) $row['historyID']); ?>" />
                                         <input type="hidden" name="originalDate[<?php echo((int) $row['historyID']); ?>]" value="<?php $this->_($dateEditInput); ?>" />
@@ -275,17 +463,15 @@
                                             <input type="text" name="editNote[<?php echo((int) $row['historyID']); ?>]" class="inputbox ui2-input ui2-input--sm edit-note-input" placeholder="Edit note (optional)" />
                                         </div>
                                     </div>
-                                <?php else: ?>
-                                    <span class="ui2-muted">--</span>
-                                <?php endif; ?>
-                            </td>
+                                </td>
+                            <?php endif; ?>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </tbody>
         </table>
         <?php if (!empty($this->canEditHistory)): ?>
-            <div class="pipeline-status-edit-actions" style="margin-top: 12px; text-align: right;">
+            <div class="pipeline-status-edit-actions">
                 <button class="ui2-button ui2-button--primary" type="submit">Save Changes</button>
             </div>
         </form>

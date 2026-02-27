@@ -82,13 +82,28 @@ class DashboardUI extends UserInterface
         {
             $dashboardScope = 'mine';
         }
-        else if ($requestedScope === 'mine')
+        else if ($requestedScope === 'all')
         {
-            $dashboardScope = 'mine';
+            $dashboardScope = 'all';
         }
         else
         {
-            $dashboardScope = 'all';
+            $dashboardScope = 'mine';
+        }
+
+        $requestedView = strtolower(trim($this->getTrimmedInput('view', $_GET)));
+        if ($requestedView === 'kanban' || $requestedView === 'list')
+        {
+            $dashboardView = $requestedView;
+        }
+        else
+        {
+            $dashboardView = ($dashboardScope === 'mine') ? 'kanban' : 'list';
+        }
+
+        if ($dashboardScope !== 'mine' && $dashboardView === 'kanban')
+        {
+            $dashboardView = 'list';
         }
 
         $statusFilter = '';
@@ -281,6 +296,7 @@ class DashboardUI extends UserInterface
         $this->_template->assign('jobOrderOptions', $jobOrderOptions);
         $this->_template->assign('showScopeSwitcher', $canViewAllDashboardRows ? 1 : 0);
         $this->_template->assign('dashboardScope', $dashboardScope);
+        $this->_template->assign('dashboardView', $dashboardView);
         $this->_template->assign(
             'jobOrderScopeLabel',
             ($dashboardScope === 'all') ? 'All job orders' : 'All my assigned job orders'
