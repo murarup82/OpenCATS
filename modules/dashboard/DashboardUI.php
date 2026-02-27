@@ -106,11 +106,6 @@ class DashboardUI extends UserInterface
             $dashboardView = ($dashboardScope === 'mine') ? 'kanban' : 'list';
         }
 
-        if ($dashboardScope !== 'mine' && $dashboardView === 'kanban')
-        {
-            $dashboardView = 'list';
-        }
-
         $companyOptions = $this->getDashboardCompanies($showClosed, $dashboardScope === 'all');
         $selectedCompanyName = '';
         foreach ($companyOptions as $companyOption)
@@ -360,6 +355,7 @@ class DashboardUI extends UserInterface
         $this->_template->assign('entriesPerPage', $entriesPerPage);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('canChangeStatus', $this->canChangeStatus());
+        $this->_template->assign('canAssignToJobOrder', $this->canAssignToJobOrder());
         $this->_template->assign('active', $this);
 
         if (!eval(Hooks::get('DASHBOARD_MY'))) return;
@@ -482,6 +478,11 @@ class DashboardUI extends UserInterface
         }
 
         return ($_SESSION['CATS']->getAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT);
+    }
+
+    private function canAssignToJobOrder()
+    {
+        return ($_SESSION['CATS']->getAccessLevel('joborders.considerCandidateSearch') >= ACCESS_LEVEL_EDIT);
     }
 }
 

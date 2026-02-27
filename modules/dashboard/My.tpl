@@ -190,6 +190,60 @@
                     font-size: 11px;
                     line-height: 1.4;
                 }
+                .my-dashboard .dashboard-filters-toolbar {
+                    display: grid;
+                    grid-template-columns: repeat(5, minmax(170px, 1fr));
+                    gap: 10px;
+                    align-items: end;
+                }
+                .my-dashboard .dashboard-filter-block {
+                    border: 1px solid #dbe7ef;
+                    border-radius: 10px;
+                    background: #f8fbfe;
+                    padding: 8px 10px;
+                }
+                .my-dashboard .dashboard-filter-label {
+                    display: block;
+                    margin-bottom: 6px;
+                    color: #4c6775;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 0.01em;
+                    text-transform: uppercase;
+                }
+                .my-dashboard .dashboard-filter-block select.ui2-input {
+                    width: 100%;
+                }
+                .my-dashboard .dashboard-filter-block .ui2-inline {
+                    gap: 6px;
+                }
+                .my-dashboard .dashboard-filter-block .ui2-button {
+                    min-width: 80px;
+                }
+                .my-dashboard .dashboard-filter-toggle {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 13px;
+                    color: #2f4f5f;
+                    font-weight: 600;
+                    min-height: 34px;
+                }
+                @media (max-width: 1380px) {
+                    .my-dashboard .dashboard-filters-toolbar {
+                        grid-template-columns: repeat(3, minmax(170px, 1fr));
+                    }
+                }
+                @media (max-width: 960px) {
+                    .my-dashboard .dashboard-filters-toolbar {
+                        grid-template-columns: repeat(2, minmax(170px, 1fr));
+                    }
+                }
+                @media (max-width: 640px) {
+                    .my-dashboard .dashboard-filters-toolbar {
+                        grid-template-columns: 1fr;
+                    }
+                }
             </style>
             <div class="ui2-page my-dashboard">
                 <div class="ui2-header">
@@ -204,10 +258,10 @@
                         <input type="hidden" name="a" value="my" />
                         <input type="hidden" id="dashboardScopeInput" name="scope" value="<?php $this->_($this->dashboardScope); ?>" />
                         <input type="hidden" id="dashboardViewInput" name="view" value="<?php $this->_($this->dashboardView); ?>" />
-                        <div class="ui2-datatable-toolbar">
+                        <div class="ui2-datatable-toolbar dashboard-filters-toolbar">
                             <?php if (!empty($this->showScopeSwitcher)): ?>
-                                <div>
-                                    <label>Scope</label><br />
+                                <div class="dashboard-filter-block">
+                                    <span class="dashboard-filter-label">Scope</span>
                                     <span class="ui2-inline">
                                         <button
                                             type="button"
@@ -222,8 +276,8 @@
                                     </span>
                                 </div>
                             <?php endif; ?>
-                            <div>
-                                <label>View</label><br />
+                            <div class="dashboard-filter-block">
+                                <span class="dashboard-filter-label">View</span>
                                 <span class="ui2-inline">
                                     <button
                                         type="button"
@@ -237,8 +291,8 @@
                                     >List</button>
                                 </span>
                             </div>
-                            <div>
-                                <label for="dashboardCompany">Customer</label><br />
+                            <div class="dashboard-filter-block">
+                                <label class="dashboard-filter-label" for="dashboardCompany">Customer</label>
                                 <select id="dashboardCompany" name="companyID" class="inputbox ui2-input ui2-input--md">
                                     <option value="0">All customers</option>
                                     <?php foreach ($this->companyOptions as $option): ?>
@@ -248,8 +302,8 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div>
-                                <label for="dashboardJobOrder">Job Order</label><br />
+                            <div class="dashboard-filter-block">
+                                <label class="dashboard-filter-label" for="dashboardJobOrder">Job Order</label>
                                 <select id="dashboardJobOrder" name="jobOrderID" class="inputbox ui2-input ui2-input--md">
                                     <option value="0"><?php $this->_($this->jobOrderScopeLabel); ?></option>
                                     <?php foreach ($this->jobOrderOptions as $option): ?>
@@ -259,8 +313,16 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div>
-                                <label for="dashboardStatus">Status</label><br />
+                            <?php if (!empty($this->canAssignToJobOrder)): ?>
+                                <div class="dashboard-filter-block">
+                                    <span class="dashboard-filter-label">Action</span>
+                                    <a class="button ui2-button ui2-button--primary" href="#" onclick="dashboardOpenAssignWorkspace(); return false;">
+                                        Assign Candidate
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                            <div class="dashboard-filter-block">
+                                <label class="dashboard-filter-label" for="dashboardStatus">Status</label>
                                 <select id="dashboardStatus" name="statusID" class="inputbox ui2-input ui2-input--md">
                                     <option value="0">All statuses</option>
                                     <?php foreach ($this->statusOptions as $option): ?>
@@ -270,8 +332,9 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div>
-                                <label>
+                            <div class="dashboard-filter-block">
+                                <span class="dashboard-filter-label">Visibility</span>
+                                <label class="dashboard-filter-toggle">
                                     <input type="checkbox" name="showClosed" value="1" <?php if (!empty($this->showClosed)) echo('checked="checked"'); ?> />
                                     Show Closed
                                 </label>
@@ -279,7 +342,7 @@
                         </div>
                     </form>
 
-                    <?php $useKanban = ($this->dashboardScope === 'mine' && $this->dashboardView === 'kanban'); ?>
+                    <?php $useKanban = ($this->dashboardView === 'kanban'); ?>
                     <?php if ($useKanban): ?>
                         <?php
                             $kanbanColumns = array();
@@ -485,7 +548,9 @@
                                             <td>
                                                 <?php if (!empty($this->canChangeStatus)): ?>
                                                     <span class="ui2-inline">
-                                                        <a class="button ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=addActivityChangeStatus&amp;jobOrderID=<?php echo($row['jobOrderID']); ?>&amp;candidateID=<?php echo($row['candidateID']); ?>&amp;enforceOwner=1&amp;refreshParent=1', 600, 550, null); return false;">Change Status</a>
+                                                        <?php if (!empty($this->canChangeStatus)): ?>
+                                                            <a class="button ui2-button ui2-button--secondary" href="#" onclick="dashboardOpenStatusModal(<?php echo((int) $row['candidateID']); ?>, <?php echo((int) $row['jobOrderID']); ?>, null); return false;">Change Status</a>
+                                                        <?php endif; ?>
                                                         <a class="button ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=pipelineStatusDetails&amp;pipelineID=<?php echo($row['candidateJobOrderID']); ?>', 1200, 760, null); return false;">Details</a>
                                                     </span>
                                                 <?php else: ?>
@@ -544,36 +609,21 @@
         {
             var form = document.getElementById('dashboardFilters');
             var scopeInput = document.getElementById('dashboardScopeInput');
-            var viewInput = document.getElementById('dashboardViewInput');
-            if (!form || !scopeInput || !viewInput)
+            if (!form || !scopeInput)
             {
                 return;
             }
             scopeInput.value = scopeValue;
-            if (scopeValue === 'mine')
-            {
-                viewInput.value = 'kanban';
-            }
-            else if (viewInput.value === 'kanban')
-            {
-                viewInput.value = 'list';
-            }
             form.submit();
         }
 
         function setDashboardView(viewValue)
         {
             var form = document.getElementById('dashboardFilters');
-            var scopeInput = document.getElementById('dashboardScopeInput');
             var viewInput = document.getElementById('dashboardViewInput');
-            if (!form || !viewInput || !scopeInput)
+            if (!form || !viewInput)
             {
                 return;
-            }
-
-            if (viewValue === 'kanban' && scopeInput.value !== 'mine')
-            {
-                scopeInput.value = 'mine';
             }
             viewInput.value = viewValue;
             form.submit();
@@ -581,16 +631,38 @@
 
         function dashboardOpenStatusModal(candidateID, jobOrderID, targetStatusID)
         {
+            var enforceOwner = <?php echo(($this->dashboardScope === 'mine') ? '1' : '0'); ?>;
             var url = '<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&a=addActivityChangeStatus'
                 + '&jobOrderID=' + encodeURIComponent(jobOrderID)
                 + '&candidateID=' + encodeURIComponent(candidateID)
-                + '&enforceOwner=1'
+                + '&enforceOwner=' + encodeURIComponent(enforceOwner)
                 + '&refreshParent=1';
             if (targetStatusID !== null && parseInt(targetStatusID, 10) > 0)
             {
                 url += '&statusID=' + encodeURIComponent(targetStatusID);
             }
             showPopWin(url, 700, 620, null);
+        }
+
+        function dashboardOpenAssignWorkspace()
+        {
+            var jobOrderSelect = document.getElementById('dashboardJobOrder');
+            if (!jobOrderSelect)
+            {
+                return;
+            }
+
+            var jobOrderID = parseInt(jobOrderSelect.value, 10);
+            if (isNaN(jobOrderID) || jobOrderID <= 0)
+            {
+                alert('Please select a Job Order first, then click Assign Candidate.');
+                jobOrderSelect.focus();
+                return;
+            }
+
+            var url = '<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&a=considerCandidateSearch'
+                + '&jobOrderID=' + encodeURIComponent(jobOrderID);
+            showPopWin(url, 1120, 760, null);
         }
 
         (function () {
