@@ -1883,6 +1883,28 @@ class JobOrdersUI extends UserInterface
         $jobOrderTitle = (!empty($jobOrderData) && !empty($jobOrderData['title']))
             ? $jobOrderData['title']
             : '';
+        $pipelines = new Pipelines($this->_siteID);
+        $assignmentStatusOptions = array();
+        foreach ($pipelines->getStatusesForPicking() as $statusRow)
+        {
+            $statusID = (int) $statusRow['statusID'];
+            if ($statusID === PIPELINE_STATUS_HIRED || $statusID === PIPELINE_STATUS_REJECTED)
+            {
+                continue;
+            }
+
+            $assignmentStatusOptions[] = array(
+                'statusID' => $statusID,
+                'status' => $statusRow['status']
+            );
+        }
+        if (empty($assignmentStatusOptions))
+        {
+            $assignmentStatusOptions[] = array(
+                'statusID' => PIPELINE_STATUS_ALLOCATED,
+                'status' => 'Allocated'
+            );
+        }
 
         if (!eval(Hooks::get('JO_CONSIDER_CANDIDATE_SEARCH'))) return;
 
@@ -1890,6 +1912,12 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('isResultsMode', false);
         $this->_template->assign('jobOrderID', $jobOrderID);
         $this->_template->assign('jobOrderTitle', $jobOrderTitle);
+        $this->_template->assign('assignmentStatusOptions', $assignmentStatusOptions);
+        $this->_template->assign('defaultAssignmentStatusID', PIPELINE_STATUS_ALLOCATED);
+        $this->_template->assign(
+            'canSetStatusOnAdd',
+            ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT)
+        );
         $this->_template->assign(
             'canUseQuickAddCandidate',
             ($this->getUserAccessLevel('candidates.add') >= ACCESS_LEVEL_EDIT)
@@ -1924,6 +1952,28 @@ class JobOrdersUI extends UserInterface
         $jobOrderTitle = (!empty($jobOrderData) && !empty($jobOrderData['title']))
             ? $jobOrderData['title']
             : '';
+        $pipelinesForStatuses = new Pipelines($this->_siteID);
+        $assignmentStatusOptions = array();
+        foreach ($pipelinesForStatuses->getStatusesForPicking() as $statusRow)
+        {
+            $statusID = (int) $statusRow['statusID'];
+            if ($statusID === PIPELINE_STATUS_HIRED || $statusID === PIPELINE_STATUS_REJECTED)
+            {
+                continue;
+            }
+
+            $assignmentStatusOptions[] = array(
+                'statusID' => $statusID,
+                'status' => $statusRow['status']
+            );
+        }
+        if (empty($assignmentStatusOptions))
+        {
+            $assignmentStatusOptions[] = array(
+                'statusID' => PIPELINE_STATUS_ALLOCATED,
+                'status' => 'Allocated'
+            );
+        }
 
         $query = $this->getTrimmedInput('wildCardString', $_POST);
 
@@ -1972,6 +2022,12 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('isResultsMode', true);
         $this->_template->assign('jobOrderID', $jobOrderID);
         $this->_template->assign('jobOrderTitle', $jobOrderTitle);
+        $this->_template->assign('assignmentStatusOptions', $assignmentStatusOptions);
+        $this->_template->assign('defaultAssignmentStatusID', PIPELINE_STATUS_ALLOCATED);
+        $this->_template->assign(
+            'canSetStatusOnAdd',
+            ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT)
+        );
         $this->_template->assign(
             'canUseQuickAddCandidate',
             ($this->getUserAccessLevel('candidates.add') >= ACCESS_LEVEL_EDIT)

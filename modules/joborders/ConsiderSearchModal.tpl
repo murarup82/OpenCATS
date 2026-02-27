@@ -110,6 +110,18 @@
                     Only show candidates not already active in this pipeline
                 </label>
                 <a href="#" id="assignmentRefreshButton" class="ui2-button ui2-button--secondary">Refresh</a>
+                <label style="margin-left: 12px;">
+                    Stage on Add:
+                    <select id="assignmentTargetStatus" class="selectBox" <?php if (empty($this->canSetStatusOnAdd)) echo('disabled="disabled"'); ?>>
+                        <?php foreach ($this->assignmentStatusOptions as $statusRow): ?>
+                            <option value="<?php echo((int) $statusRow['statusID']); ?>" <?php if ((int) $statusRow['statusID'] === (int) $this->defaultAssignmentStatusID) echo('selected="selected"'); ?>>
+                                <?php $this->_($statusRow['status']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <button type="button" id="assignmentAddSelected" class="ui2-button ui2-button--primary" disabled="disabled">Add Selected</button>
+                <span id="assignmentSelectionCount" style="font-weight: bold; color: #1d5f85;">0 selected</span>
                 <?php if (!empty($this->canUseQuickAddCandidate)): ?>
                     <a class="ui2-button ui2-button--secondary" href="<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=addCandidateModal&amp;jobOrderID=<?php echo($this->jobOrderID); ?>">
                         Quick Add Candidate
@@ -122,6 +134,9 @@
 
         <table class="sortable ui2-table assignmentWorkspaceTable" width="100%">
             <tr>
+                <th align="center" width="30">
+                    <input type="checkbox" id="assignmentSelectAll" title="Select all visible rows" />
+                </th>
                 <th align="left">Candidate</th>
                 <th align="left">Key Skills</th>
                 <th align="left">Email</th>
@@ -150,6 +165,11 @@
             refreshButtonId: 'assignmentRefreshButton',
             statusId: 'assignmentStatus',
             resultsBodyId: 'assignmentResultsBody',
+            selectAllCheckboxId: 'assignmentSelectAll',
+            bulkAddButtonId: 'assignmentAddSelected',
+            selectionCountId: 'assignmentSelectionCount',
+            stageSelectId: 'assignmentTargetStatus',
+            defaultTargetStatusID: '<?php echo((int) $this->defaultAssignmentStatusID); ?>',
             maxResults: 40,
             jobOrderID: '<?php $this->_($this->jobOrderID); ?>'
         });

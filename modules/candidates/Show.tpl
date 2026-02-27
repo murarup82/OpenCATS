@@ -65,6 +65,11 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                 <a id="transform_cv_link" class="ui2-button" href="#" onclick="CandidateTransformCV.open(); return false;">
                                     <img src="images/parser/transfer.gif" width="16" height="16" class="absmiddle" alt="transform" border="0" />Transform CV
                                 </a>
+                                <?php if ($this->getUserAccessLevel('candidates.considerForJobSearch') >= ACCESS_LEVEL_EDIT): ?>
+                                    <a id="add_to_joborder_link" class="ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=considerForJobSearch&amp;candidateID=<?php echo($this->candidateID); ?>', 1120, 760, null); return false;">
+                                        <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="add to job order" border="0" />Add to Job Order
+                                    </a>
+                                <?php endif; ?>
                             </div>
                             <?php if ($showCandidateDangerActions): ?>
                                 <div class="ui2-action-group ui2-action-group--danger">

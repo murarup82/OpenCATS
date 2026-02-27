@@ -9,6 +9,7 @@
         config: null,
         searchTimer: null,
         activeRequest: null,
+        activeAddRequest: null,
 
         init: function(config) {
             this.config = config || {};
@@ -44,6 +45,21 @@
                 refreshButton.onclick = function() {
                     self.loadResults();
                     return false;
+                };
+            }
+
+            var bulkAddButton = this.byId(this.config.bulkAddButtonId);
+            if (bulkAddButton) {
+                bulkAddButton.onclick = function() {
+                    self.addSelected();
+                    return false;
+                };
+            }
+
+            var selectAll = this.byId(this.config.selectAllCheckboxId);
+            if (selectAll) {
+                selectAll.onclick = function() {
+                    self.toggleSelectAll(selectAll.checked);
                 };
             }
         },
@@ -154,17 +170,25 @@
 
             body.innerHTML = rows.join('');
             this.renderStatus('Showing ' + visibleCount + ' result(s).', false);
+            var selectAll = this.byId(this.config.selectAllCheckboxId);
+            if (selectAll) {
+                selectAll.checked = false;
+            }
+            this.bindRowSelectionEvents();
+            this.updateSelectionCount();
         },
 
         renderJobOrderRow: function(data) {
             var jobOrderID = parseInt(data.jobOrderID, 10);
             var inPipeline = parseInt(data.inPipeline, 10) === 1;
+            var selectCell = '<input type="checkbox" class="assignmentWorkspaceSelect" value="' + jobOrderID + '"' + (inPipeline ? ' disabled="disabled"' : '') + ' />';
             var addCell = inPipeline
                 ? '<span class="assignmentWorkspaceBadge">In Pipeline</span>'
-                : '<a class="ui2-button ui2-button--primary" href="' + this.escapeHTML(this.buildCandidateToJobAddURL(jobOrderID)) + '">Add</a>';
+                : '<a class="ui2-button ui2-button--primary" href="#" onclick="return AssignmentWorkspace.addSingle(' + jobOrderID + ');">Add</a>';
 
             return ''
                 + '<tr>'
+                + '<td align="center">' + selectCell + '</td>'
                 + '<td>' + this.escapeHTML(data.clientJobID || '--') + '</td>'
                 + '<td>' + this.escapeHTML(data.title || '') + '</td>'
                 + '<td>' + this.escapeHTML(data.companyName || '') + '</td>'
@@ -179,9 +203,10 @@
         renderCandidateRow: function(data) {
             var candidateID = parseInt(data.candidateID, 10);
             var inPipeline = parseInt(data.inPipeline, 10) === 1;
+            var selectCell = '<input type="checkbox" class="assignmentWorkspaceSelect" value="' + candidateID + '"' + (inPipeline ? ' disabled="disabled"' : '') + ' />';
             var addCell = inPipeline
                 ? '<span class="assignmentWorkspaceBadge">In Pipeline</span>'
-                : '<a class="ui2-button ui2-button--primary" href="' + this.escapeHTML(this.buildJobToCandidateAddURL(candidateID)) + '">Add</a>';
+                : '<a class="ui2-button ui2-button--primary" href="#" onclick="return AssignmentWorkspace.addSingle(' + candidateID + ');">Add</a>';
 
             var duplicateIcon = '';
             if (parseInt(data.isDuplicateCandidate, 10) === 1) {
@@ -190,6 +215,7 @@
 
             return ''
                 + '<tr>'
+                + '<td align="center">' + selectCell + '</td>'
                 + '<td>' + duplicateIcon + this.escapeHTML((data.firstName || '') + ' ' + (data.lastName || '')) + '</td>'
                 + '<td>' + this.escapeHTML(data.keySkills || '--') + '</td>'
                 + '<td>' + this.escapeHTML(data.email || '--') + '</td>'
@@ -199,32 +225,111 @@
                 + '</tr>';
         },
 
-        buildCandidateToJobAddURL: function(jobOrderID) {
-            var url = this.getIndexName()
-                + '?m=candidates&a=addToPipeline&getback=getback'
-                + '&jobOrderID=' + encodeURIComponent(jobOrderID);
-
-            if (this.config.candidateIDArrayStored) {
-                url += '&candidateIDArrayStored=' + encodeURIComponent(this.config.candidateIDArrayStored);
-            } else if (this.config.singleCandidateID) {
-                url += '&candidateID=' + encodeURIComponent(this.config.singleCandidateID);
+        addSelected: function() {
+            var selectedIDs = this.getSelectedIDs();
+            if (selectedIDs.length === 0) {
+                this.renderError('Please select at least one row first.');
+                return false;
             }
 
-            return url;
+            return this.submitAdd(selectedIDs, false);
         },
 
-        buildJobToCandidateAddURL: function(candidateID) {
-            return this.getIndexName()
-                + '?m=joborders&a=addToPipeline&getback=getback'
-                + '&jobOrderID=' + encodeURIComponent(this.config.jobOrderID || 0)
-                + '&candidateID=' + encodeURIComponent(candidateID);
+        addSingle: function(entityID) {
+            return this.submitAdd([parseInt(entityID, 10)], true);
+        },
+
+        submitAdd: function(entityIDs, isSingle) {
+            var self = this;
+            var ids = this.normalizeIDs(entityIDs);
+            if (ids.length === 0) {
+                this.renderError('Nothing selected to add.');
+                return false;
+            }
+
+            var confirmMessage = isSingle
+                ? 'Add the selected entry to pipeline?'
+                : 'Add the selected entries to pipeline?';
+            if (!window.confirm(confirmMessage)) {
+                return false;
+            }
+
+            if (this.activeAddRequest && this.activeAddRequest.abort) {
+                try {
+                    this.activeAddRequest.abort();
+                } catch (ignoreAbortError) {
+                }
+            }
+
+            var postData = [];
+            postData.push('f=assignmentBulkAdd');
+            postData.push('mode=' + encodeURIComponent(this.config.mode || ''));
+            postData.push('targetStatusID=' + encodeURIComponent(this.getTargetStatusID()));
+
+            if (this.config.mode === 'candidateToJobs') {
+                postData.push('jobOrderIDs=' + encodeURIComponent(ids.join(',')));
+                if (this.config.candidateIDArrayStored) {
+                    postData.push('candidateIDArrayStored=' + encodeURIComponent(this.config.candidateIDArrayStored));
+                } else if (this.config.singleCandidateID) {
+                    postData.push('candidateID=' + encodeURIComponent(this.config.singleCandidateID));
+                }
+            } else {
+                postData.push('jobOrderID=' + encodeURIComponent(this.config.jobOrderID || 0));
+                postData.push('candidateIDs=' + encodeURIComponent(ids.join(',')));
+            }
+
+            this.renderStatus('Applying assignment...', false);
+
+            var http = new XMLHttpRequest();
+            this.activeAddRequest = http;
+            http.onreadystatechange = function() {
+                if (http.readyState !== 4) {
+                    return;
+                }
+
+                self.activeAddRequest = null;
+
+                if (http.status < 200 || http.status >= 300) {
+                    self.renderError('Add request failed (' + http.status + ').');
+                    return;
+                }
+
+                var payload = self.parseJSON(http.responseText);
+                if (!payload || !payload.success) {
+                    self.renderError(payload && payload.message ? payload.message : 'Failed to add selected entries.');
+                    return;
+                }
+
+                var summary = 'Added ' + payload.addedCount + ' of ' + payload.requestedCount + ' assignment(s).';
+                if (payload.statusAppliedCount > 0) {
+                    summary += ' Stage applied on ' + payload.statusAppliedCount + '.';
+                }
+                if (payload.skippedInPipelineCount > 0) {
+                    summary += ' Skipped already in pipeline: ' + payload.skippedInPipelineCount + '.';
+                }
+                if (payload.skippedHiredCount > 0) {
+                    summary += ' Skipped already hired: ' + payload.skippedHiredCount + '.';
+                }
+                if (payload.skippedErrorCount > 0) {
+                    summary += ' Skipped with errors: ' + payload.skippedErrorCount + '.';
+                }
+
+                self.renderStatus(summary, false);
+                self.loadResults();
+            };
+
+            http.open('POST', 'ajax.php', true);
+            http.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+            http.send(postData.join('&'));
+
+            return false;
         },
 
         getColumnCount: function() {
             if (this.config.mode === 'candidateToJobs') {
-                return 8;
+                return 9;
             }
-            return 6;
+            return 7;
         },
 
         formatOpenings: function(openingsAvailable, openingsTotal) {
@@ -258,6 +363,121 @@
                 return false;
             }
             return !!el.checked;
+        },
+
+        getTargetStatusID: function() {
+            var stageSelect = this.byId(this.config.stageSelectId);
+            if (!stageSelect || stageSelect.disabled) {
+                return this.config.defaultTargetStatusID || 9000;
+            }
+            var selected = parseInt(stageSelect.value, 10);
+            if (isNaN(selected) || selected <= 0) {
+                return this.config.defaultTargetStatusID || 9000;
+            }
+            return selected;
+        },
+
+        getSelectedIDs: function() {
+            var body = this.byId(this.config.resultsBodyId);
+            var selected = [];
+            if (!body) {
+                return selected;
+            }
+
+            var inputs = body.getElementsByTagName('input');
+            for (var i = 0; i < inputs.length; i++) {
+                if (!inputs[i] || inputs[i].type !== 'checkbox') {
+                    continue;
+                }
+                if (inputs[i].className.indexOf('assignmentWorkspaceSelect') === -1) {
+                    continue;
+                }
+                if (inputs[i].disabled || !inputs[i].checked) {
+                    continue;
+                }
+
+                var value = parseInt(inputs[i].value, 10);
+                if (!isNaN(value) && value > 0) {
+                    selected.push(value);
+                }
+            }
+
+            return this.normalizeIDs(selected);
+        },
+
+        normalizeIDs: function(values) {
+            var unique = {};
+            var output = [];
+            for (var i = 0; i < values.length; i++) {
+                var value = parseInt(values[i], 10);
+                if (isNaN(value) || value <= 0) {
+                    continue;
+                }
+                if (unique[value]) {
+                    continue;
+                }
+                unique[value] = true;
+                output.push(value);
+            }
+            return output;
+        },
+
+        toggleSelectAll: function(isChecked) {
+            var body = this.byId(this.config.resultsBodyId);
+            if (!body) {
+                return;
+            }
+
+            var inputs = body.getElementsByTagName('input');
+            for (var i = 0; i < inputs.length; i++) {
+                if (!inputs[i] || inputs[i].type !== 'checkbox') {
+                    continue;
+                }
+                if (inputs[i].className.indexOf('assignmentWorkspaceSelect') === -1) {
+                    continue;
+                }
+                if (inputs[i].disabled) {
+                    continue;
+                }
+
+                inputs[i].checked = !!isChecked;
+            }
+
+            this.updateSelectionCount();
+        },
+
+        bindRowSelectionEvents: function() {
+            var self = this;
+            var body = this.byId(this.config.resultsBodyId);
+            if (!body) {
+                return;
+            }
+
+            var inputs = body.getElementsByTagName('input');
+            for (var i = 0; i < inputs.length; i++) {
+                if (!inputs[i] || inputs[i].type !== 'checkbox') {
+                    continue;
+                }
+                if (inputs[i].className.indexOf('assignmentWorkspaceSelect') === -1) {
+                    continue;
+                }
+                inputs[i].onclick = function() {
+                    self.updateSelectionCount();
+                };
+            }
+        },
+
+        updateSelectionCount: function() {
+            var selected = this.getSelectedIDs().length;
+            var countEl = this.byId(this.config.selectionCountId);
+            if (countEl) {
+                countEl.innerHTML = this.escapeHTML(String(selected) + ' selected');
+            }
+
+            var addButton = this.byId(this.config.bulkAddButtonId);
+            if (addButton) {
+                addButton.disabled = (selected === 0);
+            }
         },
 
         renderStatus: function(message, isError) {

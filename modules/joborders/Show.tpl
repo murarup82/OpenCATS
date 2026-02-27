@@ -51,6 +51,11 @@ use OpenCATS\UI\QuickActionMenu;
                                         <img src="images/icon_clock.gif" width="16" height="16" class="absmiddle"  border="0" />View History
                                     </a>
                                 <?php endif; ?>
+                                <?php if ($this->getUserAccessLevel('joborders.considerCandidateSearch') >= ACCESS_LEVEL_EDIT && !isset($this->frozen)): ?>
+                                    <a id="add_candidate_to_joborder_link" class="ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=considerCandidateSearch&amp;jobOrderID=<?php echo($this->jobOrderID); ?>', 1120, 760, null); return false;">
+                                        <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="add candidate" border="0" />Add Candidate
+                                    </a>
+                                <?php endif; ?>
                             </div>
                             <?php if ($showJobOrderDangerActions): ?>
                                 <div class="ui2-action-group ui2-action-group--danger">

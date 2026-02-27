@@ -2203,6 +2203,29 @@ class CandidatesUI extends UserInterface
             }
         }
 
+        $pipelines = new Pipelines($this->_siteID);
+        $assignmentStatusOptions = array();
+        foreach ($pipelines->getStatusesForPicking() as $statusRow)
+        {
+            $statusID = (int) $statusRow['statusID'];
+            if ($statusID === PIPELINE_STATUS_HIRED || $statusID === PIPELINE_STATUS_REJECTED)
+            {
+                continue;
+            }
+
+            $assignmentStatusOptions[] = array(
+                'statusID' => $statusID,
+                'status' => $statusRow['status']
+            );
+        }
+        if (empty($assignmentStatusOptions))
+        {
+            $assignmentStatusOptions[] = array(
+                'statusID' => PIPELINE_STATUS_ALLOCATED,
+                'status' => 'Allocated'
+            );
+        }
+
         if (!eval(Hooks::get('CANDIDATE_ON_CONSIDER_FOR_JOB_SEARCH'))) return;
 
         $this->_template->assign('isFinishedMode', false);
@@ -2211,6 +2234,12 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('isMultipleCandidates', (count($candidateIDArray) > 1));
         $this->_template->assign('singleCandidateID', $singleCandidateID);
         $this->_template->assign('candidateDisplayName', $candidateDisplayName);
+        $this->_template->assign('assignmentStatusOptions', $assignmentStatusOptions);
+        $this->_template->assign('defaultAssignmentStatusID', PIPELINE_STATUS_ALLOCATED);
+        $this->_template->assign(
+            'canSetStatusOnAdd',
+            ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT)
+        );
         $this->_template->display('./modules/candidates/ConsiderSearchModal.tpl');
     }
 
