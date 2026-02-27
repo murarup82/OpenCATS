@@ -2178,82 +2178,39 @@ class CandidatesUI extends UserInterface
             }
         }
 
-        /* Bail out to prevent an error if the POST string doesn't even contain
-         * a field named 'wildCardString' at all.
-         */
-        if (!isset($_POST['wildCardString']) && isset($_POST['mode'])) {
-            CommonErrors::fatal(COMMONERROR_WILDCARDSTRING, $this, 'No wild card string specified.');
+        if (empty($candidateIDArray))
+        {
+            CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'No candidate selected.');
+            return;
         }
 
-        $query = $this->getTrimmedInput('wildCardString', $_POST);
-        $mode  = $this->getTrimmedInput('mode', $_POST);
-
-        /* Execute the search. */
-        $search = new SearchJobOrders($this->_siteID);
-        switch ($mode) {
-            case 'searchByJobTitle':
-                $rs = $search->byTitle($query, 'title', 'ASC', true);
-                $resultsMode = true;
-                break;
-
-            case 'searchByCompanyName':
-                $rs = $search->byCompanyName($query, 'title', 'ASC', true);
-                $resultsMode = true;
-                break;
-
-            default:
-                $rs = $search->recentlyModified('DESC', true, 5);
-                $resultsMode = false;
-                break;
-        }
-
-        $pipelines = new Pipelines($this->_siteID);
-        $pipelinesRS = $pipelines->getCandidatePipeline($candidateIDArray[0]);
-
-        foreach ($rs as $rowIndex => $row) {
-            if (ResultSetUtility::findRowByColumnValue(
-                $pipelinesRS,
-                'jobOrderID',
-                $row['jobOrderID']
-            ) !== false && count($candidateIDArray) == 1) {
-                $rs[$rowIndex]['inPipeline'] = true;
-            } else {
-                $rs[$rowIndex]['inPipeline'] = false;
+        $singleCandidateID = 0;
+        $candidateDisplayName = 'Selected Candidate';
+        if (count($candidateIDArray) === 1)
+        {
+            $singleCandidateID = (int) $candidateIDArray[0];
+            $candidates = new Candidates($this->_siteID);
+            $candidateData = $candidates->get($singleCandidateID);
+            if (!empty($candidateData))
+            {
+                $candidateDisplayName = trim(
+                    $candidateData['firstName'] . ' ' . $candidateData['lastName']
+                );
+                if ($candidateDisplayName === '')
+                {
+                    $candidateDisplayName = 'Candidate #' . $singleCandidateID;
+                }
             }
-
-            /* Convert '00-00-00' dates to empty strings. */
-            $rs[$rowIndex]['startDate'] = DateUtility::fixZeroDate(
-                $row['startDate']
-            );
-
-            if ($row['isHot'] == 1) {
-                $rs[$rowIndex]['linkClass'] = 'jobLinkHot';
-            } else {
-                $rs[$rowIndex]['linkClass'] = 'jobLinkCold';
-            }
-
-            $rs[$rowIndex]['recruiterAbbrName'] = StringUtility::makeInitialName(
-                $row['recruiterFirstName'],
-                $row['recruiterLastName'],
-                false,
-                LAST_NAME_MAXLEN
-            );
-
-            $rs[$rowIndex]['ownerAbbrName'] = StringUtility::makeInitialName(
-                $row['ownerFirstName'],
-                $row['ownerLastName'],
-                false,
-                LAST_NAME_MAXLEN
-            );
         }
 
         if (!eval(Hooks::get('CANDIDATE_ON_CONSIDER_FOR_JOB_SEARCH'))) return;
 
-        $this->_template->assign('rs', $rs);
         $this->_template->assign('isFinishedMode', false);
-        $this->_template->assign('isResultsMode', $resultsMode);
         $this->_template->assign('candidateIDArray', $candidateIDArray);
         $this->_template->assign('candidateIDArrayStored', $_SESSION['CATS']->storeData($candidateIDArray));
+        $this->_template->assign('isMultipleCandidates', (count($candidateIDArray) > 1));
+        $this->_template->assign('singleCandidateID', $singleCandidateID);
+        $this->_template->assign('candidateDisplayName', $candidateDisplayName);
         $this->_template->display('./modules/candidates/ConsiderSearchModal.tpl');
     }
 

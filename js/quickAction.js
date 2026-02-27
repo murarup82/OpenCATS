@@ -119,5 +119,5 @@ function showQuickActionAddToList(menuDataItemType, menuDataItemId)
 function showQuickActionAddToPipeline(menuDataItemId)
 {
     /* Create a popup window for adding this candidate to the job order / pipeline */
-    showPopWin(CATSIndexName + '?m=candidates&a=considerForJobSearch&candidateID=' + menuDataItemId, 750, 390, null);
+    showPopWin(CATSIndexName + '?m=candidates&a=considerForJobSearch&candidateID=' + menuDataItemId, 1120, 760, null);
 };
