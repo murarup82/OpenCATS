@@ -47,8 +47,8 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         <?php
                             $showCandidateDangerActions =
                                 ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE) ||
-                                ($this->getUserAccessLevel('candidates.administrativeHideShow') >= ACCESS_LEVEL_MULTI_SA) ||
-                                ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA);
+                                ($this->getUserAccessLevel('candidates.administrativeHideShow') >= ACCESS_LEVEL_MULTI_SA);
+                            $canLinkDuplicate = ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA);
                         ?>
                         <div class="ui2-header-actions">
                             <div class="ui2-action-group">
@@ -89,16 +89,20 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                             </a>
                                         <?php endif; ?>
                                     <?php endif; ?>
-                                    <?php if ($this->getUserAccessLevel('candidates.duplicates') >= ACCESS_LEVEL_SA): ?>
-                                        <a class="ui2-button ui2-button--danger" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=linkDuplicate&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
-                                            <img src="images/actions/duplicates.png" width="16" height="16" class="absmiddle" alt="add duplicate" border="0" />Link duplicate
-                                        </a>
-                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
+
+            <?php if (!$this->isPopup && !empty($canLinkDuplicate)): ?>
+                <div class="candidateShowMaintenance">
+                    <span class="candidateShowMaintenanceLabel">Data Maintenance:</span>
+                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=linkDuplicate&amp;candidateID=<?php echo($this->candidateID); ?>', 750, 390, null); return false;">
+                        <img src="images/actions/duplicates.png" width="16" height="16" class="absmiddle" alt="link duplicate" border="0" />Link duplicate profile
+                    </a>
+                </div>
+            <?php endif; ?>
 
             <?php if ($this->data['isAdminHidden'] == 1): ?>
                 <p class="warning">This Candidate is hidden.  Only CATS Administrators can view it or search for it.  To make it visible by the site users, click <a href="<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=administrativeHideShow&amp;candidateID=<?php echo($this->candidateID); ?>&amp;state=0" style="font-weight:bold;">Here.</a></p>
@@ -192,6 +196,16 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 .candidateShowPage .ui2-table td
                 {
                     border-color: #dce6ec;
+                }
+
+                .candidateShowPipelineTable
+                {
+                    table-layout: fixed;
+                }
+
+                .candidateShowPipelineTable td
+                {
+                    vertical-align: middle;
                 }
 
                 .candidateShowSummary
@@ -288,6 +302,132 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     font-weight: bold;
                     color: #365767;
                 }
+
+                .candidateShowMaintenance
+                {
+                    margin: -2px 0 10px 0;
+                    text-align: right;
+                    color: #59707c;
+                    font-size: 12px;
+                }
+
+                .candidateShowMaintenanceLabel
+                {
+                    margin-right: 6px;
+                    font-weight: 600;
+                    color: #6b7f89;
+                }
+
+                .candidateShowMaintenance a
+                {
+                    color: #4e6470;
+                    text-decoration: none;
+                    font-weight: 600;
+                }
+
+                .candidateShowMaintenance a:hover
+                {
+                    color: #0b6d8d;
+                    text-decoration: underline;
+                }
+
+                .candidateShowPage a:not(.ui2-button)
+                {
+                    color: #0c6280;
+                }
+
+                .candidateShowPage .ui2-table td a:not(.ui2-button)
+                {
+                    color: #0c5f78;
+                    text-decoration: none;
+                    font-weight: 600;
+                }
+
+                .candidateShowPage .ui2-table td a:not(.ui2-button):hover
+                {
+                    color: #0b6d8d;
+                    text-decoration: underline;
+                }
+
+                .candidateShowPage .ui2-table tbody tr:nth-child(even) td
+                {
+                    background: #f9fcfe;
+                }
+
+                .candidateShowPill
+                {
+                    display: inline-block;
+                    padding: 2px 8px;
+                    border-radius: 999px;
+                    border: 1px solid #d0dde3;
+                    background: #f5f8fa;
+                    color: #31505d;
+                    font-size: 11px;
+                    font-weight: 700;
+                    line-height: 1.3;
+                    white-space: nowrap;
+                }
+
+                .candidateShowPill--count
+                {
+                    min-width: 24px;
+                    text-align: center;
+                }
+
+                .candidateShowPill--source
+                {
+                    max-width: 240px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    vertical-align: middle;
+                }
+
+                .candidateShowPill--yes,
+                .candidateShowPill--accepted,
+                .candidateShowPill--confirmed
+                {
+                    background: #e8f8ee;
+                    border-color: #b7e6c9;
+                    color: #166534;
+                }
+
+                .candidateShowPill--pending,
+                .candidateShowPill--sent
+                {
+                    background: #fff7e6;
+                    border-color: #f6ddb3;
+                    color: #9a6100;
+                }
+
+                .candidateShowPill--declined,
+                .candidateShowPill--rejected,
+                .candidateShowPill--expired,
+                .candidateShowPill--deleted,
+                .candidateShowPill--no
+                {
+                    background: #fdeaea;
+                    border-color: #f2c7c7;
+                    color: #9a2b2b;
+                }
+
+                .candidateShowPill--unknown
+                {
+                    background: #f3f6f8;
+                    border-color: #d7e0e5;
+                    color: #5f7180;
+                }
+
+                .candidateShowPill--stage-allocated { background: #e6f0ff; color: #1d4ed8; border-color: #c7ddff; }
+                .candidateShowPill--stage-delivery-validated { background: #e6f7f4; color: #0f766e; border-color: #c5ece6; }
+                .candidateShowPill--stage-proposed-to-customer { background: #f3e8ff; color: #6b21a8; border-color: #e3d0ff; }
+                .candidateShowPill--stage-customer-interview { background: #fff7ed; color: #b45309; border-color: #fde0b6; }
+                .candidateShowPill--stage-customer-approved { background: #eef2ff; color: #4f46e5; border-color: #d6dcff; }
+                .candidateShowPill--stage-avel-approved { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+                .candidateShowPill--stage-offer-negotiation,
+                .candidateShowPill--stage-offer-negociation { background: #fff1f2; color: #c2410c; border-color: #fed7aa; }
+                .candidateShowPill--stage-offer-accepted,
+                .candidateShowPill--stage-hired { background: #ecfdf3; color: #15803d; border-color: #bbf7d0; }
+                .candidateShowPill--stage-rejected { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
 
                 .candidateShowPage .pipelineClosedTag
                 {
@@ -390,6 +530,31 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 
                 $commentCount = isset($this->candidateCommentCount) ? (int) $this->candidateCommentCount : 0;
                 $listCount = is_array($this->lists) ? count($this->lists) : 0;
+                $gdprSignedValue = isset($this->data['gdprSignedText']) ? trim((string) $this->data['gdprSignedText']) : '';
+                $gdprSignedClass = 'unknown';
+                if (strcasecmp($gdprSignedValue, 'yes') === 0)
+                {
+                    $gdprSignedClass = 'yes';
+                }
+                else if (strcasecmp($gdprSignedValue, 'no') === 0)
+                {
+                    $gdprSignedClass = 'no';
+                }
+
+                $gdprStatusRaw = '';
+                if (!empty($this->gdprLatestRequest['rawStatus']))
+                {
+                    $gdprStatusRaw = (string) $this->gdprLatestRequest['rawStatus'];
+                }
+                else if (!empty($this->gdprLatestRequest['status']))
+                {
+                    $gdprStatusRaw = (string) $this->gdprLatestRequest['status'];
+                }
+                $gdprStatusSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $gdprStatusRaw), '-'));
+                if ($gdprStatusSlug === '')
+                {
+                    $gdprStatusSlug = 'unknown';
+                }
             ?>
             <div class="candidateShowSummary">
                 <div class="candidateShowMetric">
@@ -778,7 +943,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
                                             <td valign="top"><?php $this->_($candidateComment['dateCreated']); ?></td>
                                             <td valign="top"><?php $this->_($candidateComment['enteredBy']); ?></td>
-                                            <td valign="top"><span class="pipelineClosedTag"><?php $this->_($candidateComment['category']); ?></span></td>
+                                            <td valign="top"><span class="candidateShowPill candidateShowPill--unknown"><?php $this->_($candidateComment['category']); ?></span></td>
                                             <td valign="top"><?php echo($candidateComment['commentHTML']); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -982,7 +1147,11 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         <table class="detailsInside ui2-details-table">
                             <tr>
                                 <td class="vertical">GDPR Signed:</td>
-                                <td class="data"><?php $this->_($this->data['gdprSignedText']); ?></td>
+                                <td class="data">
+                                    <span class="candidateShowPill candidateShowPill--<?php echo(htmlspecialchars($gdprSignedClass)); ?>">
+                                        <?php $this->_($this->data['gdprSignedText']); ?>
+                                    </span>
+                                </td>
                             </tr>
                             <tr>
                                 <td class="vertical">GDPR Expiration Date:</td>
@@ -996,7 +1165,11 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             </tr>
                             <tr>
                                 <td class="vertical">Latest Request Status:</td>
-                                <td class="data"><?php $this->_($this->gdprLatestRequest['status']); ?></td>
+                                <td class="data">
+                                    <span class="candidateShowPill candidateShowPill--<?php echo(htmlspecialchars($gdprStatusSlug)); ?>">
+                                        <?php $this->_($this->gdprLatestRequest['status']); ?>
+                                    </span>
+                                </td>
                             </tr>
                             <?php if (!empty($this->gdprLegacyConsent)): ?>
                                 <tr>
@@ -1100,15 +1273,15 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         <table class="detailsInside ui2-details-table">
                             <tr>
                                 <td class="vertical">Pipeline:</td>
-                                <td class="data"><?php $this->_($this->data['pipeline']); ?></td>
+                                <td class="data"><span class="candidateShowPill candidateShowPill--count"><?php $this->_($this->data['pipeline']); ?></span></td>
                             </tr>
                             <tr>
                                 <td class="vertical">Proposed to Customer:</td>
-                                <td class="data"><?php $this->_($this->data['submitted']); ?></td>
+                                <td class="data"><span class="candidateShowPill candidateShowPill--count"><?php $this->_($this->data['submitted']); ?></span></td>
                             </tr>
                             <tr>
                                 <td class="vertical">Source:</td>
-                                <td class="data"><?php $this->_($this->data['source']); ?></td>
+                                <td class="data"><span class="candidateShowPill candidateShowPill--source"><?php $this->_($this->data['source']); ?></span></td>
                             </tr>
                         </table>
                     </div>
@@ -1222,7 +1395,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         Show Closed
                     </label>
                 </p>
-                <table class="sortablepair ui2-table">
+                <table class="sortablepair ui2-table candidateShowPipelineTable">
                 <tr>
                     <th></th>
                     <th align="left">Match</th>
@@ -1272,7 +1445,17 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         <td valign="top"><?php $this->_($pipelinesData['dateCreated']) ?></td>
                         <td valign="top"><?php $this->_($pipelinesData['addedByAbbrName']) ?></td>
                         <td valign="top" nowrap="nowrap">
-                            <?php $this->_($pipelinesData['status']) ?>
+                            <?php
+                                $pipelineStatusLabel = isset($pipelinesData['status']) ? (string) $pipelinesData['status'] : '--';
+                                $pipelineStatusSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $pipelineStatusLabel), '-'));
+                                if ($pipelineStatusSlug === '')
+                                {
+                                    $pipelineStatusSlug = 'unknown';
+                                }
+                            ?>
+                            <span class="candidateShowPill candidateShowPill--stage-<?php echo(htmlspecialchars($pipelineStatusSlug)); ?>">
+                                <?php echo(htmlspecialchars($pipelineStatusLabel)); ?>
+                            </span>
                             <?php if ((int) $pipelinesData['isActive'] === 0): ?>
                                 <span class="pipelineClosedTag">Closed</span>
                             <?php endif; ?>
