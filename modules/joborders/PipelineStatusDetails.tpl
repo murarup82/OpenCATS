@@ -258,7 +258,7 @@
                         Enable edit mode
                     </label>
                 <?php endif; ?>
-                <a class="ui2-button ui2-button--secondary" href="#" onclick="window.close(); return false;">Close</a>
+                <a class="ui2-button ui2-button--secondary" href="#" onclick="return PipelineStatusDetails_close();">Close</a>
             </div>
         </div>
 
@@ -480,6 +480,45 @@
 </div>
 
 <script type="text/javascript">
+    function PipelineStatusDetails_close()
+    {
+        if (typeof parentHidePopWin === 'function')
+        {
+            try { parentHidePopWin(); } catch (e) {}
+            return false;
+        }
+        if (typeof hidePopWin === 'function')
+        {
+            try { hidePopWin(false); } catch (e) {}
+            return false;
+        }
+        if (window.parent && window.parent !== window)
+        {
+            if (typeof window.parent.hidePopWinRefresh === 'function')
+            {
+                try { window.parent.hidePopWinRefresh(false); } catch (e) {}
+                return false;
+            }
+            if (typeof window.parent.hidePopWin === 'function')
+            {
+                try { window.parent.hidePopWin(false); } catch (e) {}
+                return false;
+            }
+        }
+        if (window.opener && !window.opener.closed)
+        {
+            try { window.close(); } catch (e) {}
+            return false;
+        }
+
+        try { window.close(); } catch (e) {}
+        if (!window.closed && window.history && window.history.length > 1)
+        {
+            try { window.history.back(); } catch (e) {}
+        }
+        return false;
+    }
+
     (function () {
         function resizeAndCenter() {
             var body = document.body;

@@ -565,7 +565,7 @@
                         </div>
                     <?php endif; ?>
 
-                    <?php if (!empty($this->totalRows)): ?>
+                    <?php if (!$useKanban && !empty($this->totalRows)): ?>
                         <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 Showing

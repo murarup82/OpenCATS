@@ -105,6 +105,7 @@ class DashboardUI extends UserInterface
         {
             $dashboardView = ($dashboardScope === 'mine') ? 'kanban' : 'list';
         }
+        $isKanbanView = ($dashboardView === 'kanban');
 
         $companyOptions = $this->getDashboardCompanies($showClosed, $dashboardScope === 'all');
         $selectedCompanyName = '';
@@ -170,6 +171,16 @@ class DashboardUI extends UserInterface
                 'AND (joborder.recruiter = %s OR joborder.owner = %s)',
                 $db->makeQueryInteger($userID),
                 $db->makeQueryInteger($userID)
+            );
+        }
+
+        $limitSQL = '';
+        if (!$isKanbanView)
+        {
+            $limitSQL = sprintf(
+                'LIMIT %s, %s',
+                $db->makeQueryInteger($offset),
+                $db->makeQueryInteger($entriesPerPage)
             );
         }
 
@@ -262,7 +273,7 @@ class DashboardUI extends UserInterface
             ORDER BY
                 lastStatusChange DESC,
                 candidate_joborder.date_modified DESC
-            LIMIT %s, %s",
+            %s",
             $db->makeQueryInteger(DATA_ITEM_CANDIDATE),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger(DATA_ITEM_JOBORDER),
@@ -276,12 +287,18 @@ class DashboardUI extends UserInterface
             $jobOrderFilter,
             $companyFilter,
             $statusFilterByID,
-            $db->makeQueryInteger($offset),
-            $db->makeQueryInteger($entriesPerPage)
+            $limitSQL
         );
 
         $rows = $db->getAllAssoc($sql);
-        $totalRows = (int) $db->getColumn('SELECT FOUND_ROWS()', 0, 0);
+        if ($isKanbanView)
+        {
+            $totalRows = count($rows);
+        }
+        else
+        {
+            $totalRows = (int) $db->getColumn('SELECT FOUND_ROWS()', 0, 0);
+        }
 
         foreach ($rows as $index => $row)
         {
@@ -320,7 +337,7 @@ class DashboardUI extends UserInterface
         $statusOptions = $pipelines->getStatusesForPicking();
 
         $totalPages = 1;
-        if ($entriesPerPage > 0)
+        if (!$isKanbanView && $entriesPerPage > 0)
         {
             $totalPages = (int) ceil($totalRows / $entriesPerPage);
             if ($totalPages <= 0)
@@ -366,10 +383,10 @@ class DashboardUI extends UserInterface
     private function getDashboardJobOrders($includeClosed, $includeAll, $companyID = 0)
     {
         $db = DatabaseConnection::getInstance();
-        $statusFilter = '';
+        $pipelineFilter = '';
         if (!$includeClosed)
         {
-            $statusFilter = 'AND joborder.status IN ' . JobOrderStatuses::getOpenStatusSQL();
+            $pipelineFilter = 'AND candidate_joborder.is_active = 1';
         }
 
         $assignmentFilter = '';
@@ -389,16 +406,20 @@ class DashboardUI extends UserInterface
         }
 
         $sql = sprintf(
-            "SELECT
+            "SELECT DISTINCT
                 joborder.joborder_id AS jobOrderID,
                 joborder.title AS title,
                 company.name AS companyName
             FROM
-                joborder
+                candidate_joborder
+            INNER JOIN joborder
+                ON joborder.joborder_id = candidate_joborder.joborder_id
+                AND joborder.site_id = candidate_joborder.site_id
             LEFT JOIN company
                 ON joborder.company_id = company.company_id
+                AND company.site_id = joborder.site_id
             WHERE
-                joborder.site_id = %s
+                candidate_joborder.site_id = %s
             %s
             %s
             %s
@@ -406,8 +427,8 @@ class DashboardUI extends UserInterface
                 joborder.date_created DESC",
             $db->makeQueryInteger($this->_siteID),
             $assignmentFilter,
-            $statusFilter,
-            $companyFilter
+            $companyFilter,
+            $pipelineFilter
         );
 
         return $db->getAllAssoc($sql);
@@ -416,10 +437,10 @@ class DashboardUI extends UserInterface
     private function getDashboardCompanies($includeClosed, $includeAll)
     {
         $db = DatabaseConnection::getInstance();
-        $statusFilter = '';
+        $pipelineFilter = '';
         if (!$includeClosed)
         {
-            $statusFilter = 'AND joborder.status IN ' . JobOrderStatuses::getOpenStatusSQL();
+            $pipelineFilter = 'AND candidate_joborder.is_active = 1';
         }
 
         $assignmentFilter = '';
@@ -437,19 +458,22 @@ class DashboardUI extends UserInterface
                 company.company_id AS companyID,
                 company.name AS name
             FROM
-                joborder
+                candidate_joborder
+            INNER JOIN joborder
+                ON joborder.joborder_id = candidate_joborder.joborder_id
+                AND joborder.site_id = candidate_joborder.site_id
             INNER JOIN company
                 ON company.company_id = joborder.company_id
                 AND company.site_id = joborder.site_id
             WHERE
-                joborder.site_id = %s
+                candidate_joborder.site_id = %s
             %s
             %s
             ORDER BY
                 company.name ASC",
             $db->makeQueryInteger($this->_siteID),
             $assignmentFilter,
-            $statusFilter
+            $pipelineFilter
         );
 
         return $db->getAllAssoc($sql);

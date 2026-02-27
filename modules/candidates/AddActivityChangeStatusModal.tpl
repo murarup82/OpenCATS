@@ -96,6 +96,7 @@
     }
 
     .pipeline-status-modal .editTable input[type="text"],
+    .pipeline-status-modal .editTable input[type="date"],
     .pipeline-status-modal .editTable textarea,
     .pipeline-status-modal .editTable select
     {
@@ -117,6 +118,12 @@
     .pipeline-status-modal #activityNote
     {
         width: 100% !important;
+    }
+
+    .pipeline-status-modal .transition-date-input
+    {
+        width: 180px;
+        font-size: 13px;
     }
 
     .pipeline-status-modal #changeStatusSpanB
@@ -404,7 +411,32 @@
             transitionDateRow.style.display = requiresTransitionDate ? 'table-row' : 'none';
         }
 
+        AS_syncTransitionDateField();
         AS_onRejectionReasonChange();
+    }
+
+    function AS_formatTransitionDateToLegacy(isoDate)
+    {
+        if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate))
+        {
+            return '';
+        }
+
+        var parts = isoDate.split('-');
+        var year = parts[0].substr(2, 2);
+        return parts[1] + '-' + parts[2] + '-' + year;
+    }
+
+    function AS_syncTransitionDateField()
+    {
+        var modernField = document.getElementById('transitionDateModern');
+        var legacyField = document.getElementById('transitionDate');
+        if (!modernField || !legacyField)
+        {
+            return;
+        }
+
+        legacyField.value = AS_formatTransitionDateToLegacy(modernField.value);
     }
 
     function AS_onRejectionReasonChange()
@@ -511,7 +543,7 @@
     }
 </script>
 
-    <form name="changePipelineStatusForm" id="changePipelineStatusForm" action="<?php echo(CATSUtility::getIndexName()); ?>?m=<?php if ($this->isJobOrdersMode): ?>joborders<?php else: ?>candidates<?php endif; ?>&amp;a=addActivityChangeStatus<?php if ($this->onlyScheduleEvent): ?>&amp;onlyScheduleEvent=true<?php endif; ?>" method="post" onsubmit="return checkActivityForm(document.changePipelineStatusForm);" autocomplete="off">
+    <form name="changePipelineStatusForm" id="changePipelineStatusForm" action="<?php echo(CATSUtility::getIndexName()); ?>?m=<?php if ($this->isJobOrdersMode): ?>joborders<?php else: ?>candidates<?php endif; ?>&amp;a=addActivityChangeStatus<?php if ($this->onlyScheduleEvent): ?>&amp;onlyScheduleEvent=true<?php endif; ?>" method="post" onsubmit="AS_syncTransitionDateField(); return checkActivityForm(document.changePipelineStatusForm);" autocomplete="off">
         <input type="hidden" name="postback" id="postback" value="postback" />
         <input type="hidden" id="candidateID" name="candidateID" value="<?php echo($this->candidateID); ?>" />
         <?php if (!empty($this->enforceOwner)): ?>
@@ -672,10 +704,18 @@
             <?php endif; ?>
             <tr id="transitionDateTR" style="display: none;">
                 <td class="tdVertical">
-                    <label id="transitionDateLabel" for="transitionDate">Transition Date:</label>
+                    <label id="transitionDateLabel" for="transitionDateModern">Transition Date:</label>
                 </td>
                 <td class="tdData">
-                    <script type="text/javascript">DateInput('transitionDate', false, 'MM-DD-YY', '<?php echo(date('m-d-y')); ?>', -1);</script>
+                    <input
+                        type="date"
+                        id="transitionDateModern"
+                        class="inputbox ui2-input transition-date-input"
+                        value="<?php echo(date('Y-m-d')); ?>"
+                        onchange="AS_syncTransitionDateField();"
+                        oninput="AS_syncTransitionDateField();"
+                    />
+                    <input type="hidden" id="transitionDate" name="transitionDate" value="<?php echo(date('m-d-y')); ?>" />
                 </td>
             </tr>
            <tr id="addActivityTR" <?php if ($this->onlyScheduleEvent || $hideActivity): ?>style="display:none;"<?php endif; ?>>
@@ -839,6 +879,11 @@
         AS_refreshRejectionUI();
     }
 
+    if (typeof AS_syncTransitionDateField === 'function')
+    {
+        AS_syncTransitionDateField();
+    }
+
     function AS_resizePopWin()
     {
         if (!window.parent || !window.parent.gPopupContainer || !window.parent.gPopFrameIFrame || !window.parent.centerPopWin)
@@ -898,6 +943,17 @@
                 };
             })(el);
         }
+    }
+
+    var transitionDateModern = document.getElementById('transitionDateModern');
+    if (transitionDateModern)
+    {
+        transitionDateModern.onchange = function ()
+        {
+            AS_syncTransitionDateField();
+            AS_resizePopWin();
+        };
+        transitionDateModern.oninput = AS_syncTransitionDateField;
     }
 </script>
     </form>
