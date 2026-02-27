@@ -70,13 +70,13 @@
                 }
                 .my-dashboard .dashboard-kanban-board {
                     display: flex;
-                    gap: 12px;
+                    gap: 10px;
                     overflow-x: auto;
                     padding-bottom: 6px;
                 }
                 .my-dashboard .dashboard-kanban-column {
-                    min-width: 280px;
-                    width: 280px;
+                    min-width: 240px;
+                    width: 240px;
                     border: 1px solid #d9e5ec;
                     border-radius: 10px;
                     background: #f8fbfd;
@@ -105,12 +105,12 @@
                     color: #3f5a67;
                 }
                 .my-dashboard .dashboard-kanban-dropzone {
-                    padding: 10px;
+                    padding: 8px;
                     overflow-y: auto;
                     min-height: 120px;
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: 7px;
                     transition: background-color 0.15s ease, box-shadow 0.15s ease;
                 }
                 .my-dashboard .dashboard-kanban-dropzone.is-drop-target {
@@ -128,7 +128,7 @@
                     border-radius: 10px;
                     background: #ffffff;
                     box-shadow: 0 1px 2px rgba(10, 35, 55, 0.06);
-                    padding: 9px;
+                    padding: 8px;
                     cursor: grab;
                 }
                 .my-dashboard .dashboard-kanban-card.is-closed {
@@ -155,7 +155,7 @@
                 .my-dashboard .dashboard-kanban-card-subtitle {
                     font-size: 12px;
                     color: #234f63;
-                    margin-bottom: 4px;
+                    margin-bottom: 2px;
                 }
                 .my-dashboard .dashboard-kanban-card-subtitle a {
                     color: #1d5f7c;
@@ -167,7 +167,7 @@
                 .my-dashboard .dashboard-kanban-card-meta {
                     font-size: 11px;
                     color: #607987;
-                    margin-bottom: 6px;
+                    margin-bottom: 4px;
                 }
                 .my-dashboard .dashboard-kanban-card-row {
                     display: flex;
@@ -183,7 +183,7 @@
                 .my-dashboard .dashboard-kanban-card-actions {
                     display: flex;
                     gap: 6px;
-                    margin-top: 6px;
+                    margin-top: 4px;
                 }
                 .my-dashboard .dashboard-kanban-card-actions .ui2-button {
                     padding: 3px 8px;
@@ -238,6 +238,17 @@
                                 </span>
                             </div>
                             <div>
+                                <label for="dashboardCompany">Customer</label><br />
+                                <select id="dashboardCompany" name="companyID" class="inputbox ui2-input ui2-input--md">
+                                    <option value="0">All customers</option>
+                                    <?php foreach ($this->companyOptions as $option): ?>
+                                        <option value="<?php $this->_($option['companyID']); ?>" <?php if ((int) $this->companyID === (int) $option['companyID']) echo('selected'); ?>>
+                                            <?php $this->_($option['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div>
                                 <label for="dashboardJobOrder">Job Order</label><br />
                                 <select id="dashboardJobOrder" name="jobOrderID" class="inputbox ui2-input ui2-input--md">
                                     <option value="0"><?php $this->_($this->jobOrderScopeLabel); ?></option>
@@ -271,13 +282,23 @@
                     <?php $useKanban = ($this->dashboardScope === 'mine' && $this->dashboardView === 'kanban'); ?>
                     <?php if ($useKanban): ?>
                         <?php
-                            $kanbanColumns = array(array('statusID' => 0, 'status' => 'No Status'));
+                            $kanbanColumns = array();
+                            $fallbackStatusID = 0;
                             foreach ($this->statusOptions as $statusOption)
                             {
+                                if ($fallbackStatusID <= 0)
+                                {
+                                    $fallbackStatusID = (int) $statusOption['statusID'];
+                                }
                                 $kanbanColumns[] = array(
                                     'statusID' => (int) $statusOption['statusID'],
                                     'status' => $statusOption['status']
                                 );
+                            }
+
+                            if (empty($kanbanColumns))
+                            {
+                                $kanbanColumns[] = array('statusID' => 0, 'status' => 'Pipeline');
                             }
 
                             $rowsByStatus = array();
@@ -286,7 +307,7 @@
                                 $bucketStatusID = (int) $row['statusID'];
                                 if ($bucketStatusID <= 0)
                                 {
-                                    $bucketStatusID = 0;
+                                    $bucketStatusID = $fallbackStatusID;
                                 }
                                 if (!isset($rowsByStatus[$bucketStatusID]))
                                 {
@@ -335,7 +356,7 @@
                                                         $cardStatusID = (int) $row['statusID'];
                                                         if ($cardStatusID <= 0)
                                                         {
-                                                            $cardStatusID = 0;
+                                                            $cardStatusID = $fallbackStatusID;
                                                         }
                                                         $canDragCard = (!empty($this->canChangeStatus) && $cardStatusID !== (int) PIPELINE_STATUS_REJECTED);
                                                     ?>
@@ -369,20 +390,8 @@
                                                                 <span class="pipelineClosedTag">Closed</span>
                                                             <?php endif; ?>
                                                         </div>
-                                                        <div class="dashboard-kanban-card-row">
-                                                            <span class="dashboardCommentBadge<?php if ((int) $row['candidateCommentCount'] <= 0) echo(' dashboardCommentBadge--empty'); ?>" title="Candidate comments">
-                                                                C <?php echo((int) $row['candidateCommentCount']); ?>
-                                                            </span>
-                                                            <span class="dashboardCommentBadge<?php if ((int) $row['jobOrderCommentCount'] <= 0) echo(' dashboardCommentBadge--empty'); ?>" title="Job order comments">
-                                                                JO <?php echo((int) $row['jobOrderCommentCount']); ?>
-                                                            </span>
-                                                            <span class="dashboard-kanban-time"><?php $this->_($row['lastStatusChangeDisplay']); ?></span>
-                                                        </div>
                                                         <div class="dashboard-kanban-card-actions">
                                                             <a class="ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=joborders&amp;a=pipelineStatusDetails&amp;pipelineID=<?php echo($row['candidateJobOrderID']); ?>', 1200, 760, null); return false;">Details</a>
-                                                            <?php if (!empty($this->canChangeStatus)): ?>
-                                                                <a class="ui2-button ui2-button--secondary" href="#" onclick="dashboardOpenStatusModal(<?php echo((int) $row['candidateID']); ?>, <?php echo((int) $row['jobOrderID']); ?>, null); return false;">Change</a>
-                                                            <?php endif; ?>
                                                         </div>
                                                     </div>
                                                 <?php endforeach; ?>
@@ -511,6 +520,7 @@
                                     if (!empty($this->showScopeSwitcher)) $params[] = 'scope=' . urlencode($this->dashboardScope);
                                     if (!empty($this->dashboardView)) $params[] = 'view=' . urlencode($this->dashboardView);
                                     if (!empty($this->showClosed)) $params[] = 'showClosed=1';
+                                    if (!empty($this->companyID)) $params[] = 'companyID=' . (int) $this->companyID;
                                     if (!empty($this->jobOrderID)) $params[] = 'jobOrderID=' . (int) $this->jobOrderID;
                                     if (!empty($this->statusID)) $params[] = 'statusID=' . (int) $this->statusID;
                                     $base = $base . (count($params) ? '&' . implode('&', $params) : '');
@@ -587,9 +597,20 @@
             var form = document.getElementById('dashboardFilters');
             if (!form) return;
             var autoSubmit = function () { form.submit(); };
+            var company = document.getElementById('dashboardCompany');
             var jobOrder = document.getElementById('dashboardJobOrder');
             var status = document.getElementById('dashboardStatus');
             var showClosed = form.querySelector('input[name="showClosed"]');
+            if (company)
+            {
+                company.onchange = function () {
+                    if (jobOrder)
+                    {
+                        jobOrder.value = '0';
+                    }
+                    autoSubmit();
+                };
+            }
             if (jobOrder) jobOrder.onchange = autoSubmit;
             if (status) status.onchange = autoSubmit;
             if (showClosed) showClosed.onchange = autoSubmit;

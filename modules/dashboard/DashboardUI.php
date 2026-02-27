@@ -48,8 +48,13 @@ class DashboardUI extends UserInterface
     private function myDashboard()
     {
         $showClosed = $this->isChecked('showClosed', $_GET);
+        $companyID = (int) $this->getTrimmedInput('companyID', $_GET);
         $jobOrderID = (int) $this->getTrimmedInput('jobOrderID', $_GET);
         $statusID = (int) $this->getTrimmedInput('statusID', $_GET);
+        if ($companyID < 0)
+        {
+            $companyID = 0;
+        }
         if ($jobOrderID < 0)
         {
             $jobOrderID = 0;
@@ -106,6 +111,39 @@ class DashboardUI extends UserInterface
             $dashboardView = 'list';
         }
 
+        $companyOptions = $this->getDashboardCompanies($showClosed, $dashboardScope === 'all');
+        $selectedCompanyName = '';
+        foreach ($companyOptions as $companyOption)
+        {
+            if ((int) $companyOption['companyID'] === $companyID)
+            {
+                $selectedCompanyName = $companyOption['name'];
+                break;
+            }
+        }
+        if ($companyID > 0 && $selectedCompanyName === '')
+        {
+            $companyID = 0;
+        }
+
+        $jobOrderOptions = $this->getDashboardJobOrders($showClosed, $dashboardScope === 'all', $companyID);
+        if ($jobOrderID > 0)
+        {
+            $jobOrderFound = false;
+            foreach ($jobOrderOptions as $jobOrderOption)
+            {
+                if ((int) $jobOrderOption['jobOrderID'] === $jobOrderID)
+                {
+                    $jobOrderFound = true;
+                    break;
+                }
+            }
+            if (!$jobOrderFound)
+            {
+                $jobOrderID = 0;
+            }
+        }
+
         $statusFilter = '';
         if (!$showClosed)
         {
@@ -116,6 +154,12 @@ class DashboardUI extends UserInterface
         if ($jobOrderID > 0)
         {
             $jobOrderFilter = 'AND candidate_joborder.joborder_id = ' . $db->makeQueryInteger($jobOrderID);
+        }
+
+        $companyFilter = '';
+        if ($companyID > 0)
+        {
+            $companyFilter = 'AND joborder.company_id = ' . $db->makeQueryInteger($companyID);
         }
 
         $statusFilterByID = '';
@@ -219,6 +263,7 @@ class DashboardUI extends UserInterface
             %s
             %s
             %s
+            %s
             ORDER BY
                 lastStatusChange DESC,
                 candidate_joborder.date_modified DESC
@@ -234,6 +279,7 @@ class DashboardUI extends UserInterface
             $assignmentFilter,
             $statusFilter,
             $jobOrderFilter,
+            $companyFilter,
             $statusFilterByID,
             $db->makeQueryInteger($offset),
             $db->makeQueryInteger($entriesPerPage)
@@ -275,7 +321,6 @@ class DashboardUI extends UserInterface
             }
         }
 
-        $jobOrderOptions = $this->getDashboardJobOrders($showClosed, $dashboardScope === 'all');
         $pipelines = new Pipelines($this->_siteID);
         $statusOptions = $pipelines->getStatusesForPicking();
 
@@ -291,16 +336,23 @@ class DashboardUI extends UserInterface
 
         $this->_template->assign('rows', $rows);
         $this->_template->assign('showClosed', $showClosed);
+        $this->_template->assign('companyID', $companyID);
         $this->_template->assign('jobOrderID', $jobOrderID);
         $this->_template->assign('statusID', $statusID);
+        $this->_template->assign('companyOptions', $companyOptions);
         $this->_template->assign('jobOrderOptions', $jobOrderOptions);
         $this->_template->assign('showScopeSwitcher', $canViewAllDashboardRows ? 1 : 0);
         $this->_template->assign('dashboardScope', $dashboardScope);
         $this->_template->assign('dashboardView', $dashboardView);
-        $this->_template->assign(
-            'jobOrderScopeLabel',
-            ($dashboardScope === 'all') ? 'All job orders' : 'All my assigned job orders'
-        );
+        if ($companyID > 0 && $selectedCompanyName !== '')
+        {
+            $jobOrderScopeLabel = 'All job orders for ' . $selectedCompanyName;
+        }
+        else
+        {
+            $jobOrderScopeLabel = ($dashboardScope === 'all') ? 'All job orders' : 'All my assigned job orders';
+        }
+        $this->_template->assign('jobOrderScopeLabel', $jobOrderScopeLabel);
         $this->_template->assign('statusOptions', $statusOptions);
         $this->_template->assign('page', $page);
         $this->_template->assign('totalPages', $totalPages);
@@ -315,7 +367,57 @@ class DashboardUI extends UserInterface
         $this->_template->display('./modules/dashboard/My.tpl');
     }
 
-    private function getDashboardJobOrders($includeClosed, $includeAll)
+    private function getDashboardJobOrders($includeClosed, $includeAll, $companyID = 0)
+    {
+        $db = DatabaseConnection::getInstance();
+        $statusFilter = '';
+        if (!$includeClosed)
+        {
+            $statusFilter = 'AND joborder.status IN ' . JobOrderStatuses::getOpenStatusSQL();
+        }
+
+        $assignmentFilter = '';
+        if (!$includeAll)
+        {
+            $assignmentFilter = sprintf(
+                'AND (joborder.recruiter = %s OR joborder.owner = %s)',
+                $db->makeQueryInteger($this->_userID),
+                $db->makeQueryInteger($this->_userID)
+            );
+        }
+
+        $companyFilter = '';
+        if ((int) $companyID > 0)
+        {
+            $companyFilter = 'AND joborder.company_id = ' . $db->makeQueryInteger((int) $companyID);
+        }
+
+        $sql = sprintf(
+            "SELECT
+                joborder.joborder_id AS jobOrderID,
+                joborder.title AS title,
+                company.name AS companyName
+            FROM
+                joborder
+            LEFT JOIN company
+                ON joborder.company_id = company.company_id
+            WHERE
+                joborder.site_id = %s
+            %s
+            %s
+            %s
+            ORDER BY
+                joborder.date_created DESC",
+            $db->makeQueryInteger($this->_siteID),
+            $assignmentFilter,
+            $statusFilter,
+            $companyFilter
+        );
+
+        return $db->getAllAssoc($sql);
+    }
+
+    private function getDashboardCompanies($includeClosed, $includeAll)
     {
         $db = DatabaseConnection::getInstance();
         $statusFilter = '';
@@ -335,20 +437,20 @@ class DashboardUI extends UserInterface
         }
 
         $sql = sprintf(
-            "SELECT
-                joborder.joborder_id AS jobOrderID,
-                joborder.title AS title,
-                company.name AS companyName
+            "SELECT DISTINCT
+                company.company_id AS companyID,
+                company.name AS name
             FROM
                 joborder
-            LEFT JOIN company
-                ON joborder.company_id = company.company_id
+            INNER JOIN company
+                ON company.company_id = joborder.company_id
+                AND company.site_id = joborder.site_id
             WHERE
                 joborder.site_id = %s
             %s
             %s
             ORDER BY
-                joborder.date_created DESC",
+                company.name ASC",
             $db->makeQueryInteger($this->_siteID),
             $assignmentFilter,
             $statusFilter
