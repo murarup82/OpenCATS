@@ -62,6 +62,9 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                                         <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="add to job order" border="0" />Add to Job Order
                                     </a>
                                 <?php endif; ?>
+                                <a id="candidate_expand_all_link" class="ui2-button ui2-button--secondary" href="#" onclick="CandidateSection_expandAll(); return false;">
+                                    Expand All Sections
+                                </a>
                             </div>
                             <?php if ($showCandidateDangerActions): ?>
                                 <div class="ui2-action-group ui2-action-group--danger">
@@ -1732,6 +1735,15 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 return;
             }
             CandidateSection_setExpanded(card, true);
+        }
+
+        function CandidateSection_expandAll()
+        {
+            var cards = document.querySelectorAll('.candidateShowCard--collapsible');
+            for (var i = 0; i < cards.length; i++)
+            {
+                CandidateSection_setExpanded(cards[i], true);
+            }
         }
 
         function CandidateSection_init()

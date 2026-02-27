@@ -56,6 +56,9 @@ use OpenCATS\UI\QuickActionMenu;
                                         <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="add candidate" border="0" />Add Candidate
                                     </a>
                                 <?php endif; ?>
+                                <a id="joborder_expand_all_link" class="ui2-button ui2-button--secondary" href="#" onclick="JobOrderSection_expandAll(); return false;">
+                                    Expand All Sections
+                                </a>
                             </div>
                             <?php if ($showJobOrderDangerActions): ?>
                                 <div class="ui2-action-group ui2-action-group--danger">
@@ -148,6 +151,19 @@ use OpenCATS\UI\QuickActionMenu;
                     border-bottom: 1px solid #d8e5ec;
                     padding: 9px 12px;
                     margin-bottom: 0;
+                }
+
+                .jobOrderShowPage .ui2-card--section.jobOrderShowCard--collapsible .ui2-card-header
+                {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                }
+
+                .jobOrderShowPage .ui2-card--section.jobOrderShowCard--collapsible .ui2-card-title
+                {
+                    flex: 1 1 auto;
                 }
 
                 .jobOrderShowPage .ui2-card-title
@@ -336,6 +352,22 @@ use OpenCATS\UI\QuickActionMenu;
                     border-color: #e5a6c1;
                     color: #8c2e58;
                 }
+
+                .jobOrderShowCardToggle
+                {
+                    min-width: 82px;
+                    text-align: center;
+                }
+
+                .jobOrderShowCardBody
+                {
+                    display: block;
+                }
+
+                .jobOrderShowCard--collapsed .jobOrderShowCardBody
+                {
+                    display: none;
+                }
             </style>
 
             <?php
@@ -372,7 +404,7 @@ use OpenCATS\UI\QuickActionMenu;
 
             <div class="ui2-grid">
                 <div class="ui2-col-main">
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section jobOrderShowCard--collapsible jobOrderShowCard--expanded">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Job Order Details</div>
                         </div>
@@ -470,7 +502,7 @@ use OpenCATS\UI\QuickActionMenu;
                     </div>
                 </div>
                 <div class="ui2-col-side">
-                    <div class="ui2-card ui2-card--section">
+                    <div class="ui2-card ui2-card--section jobOrderShowCard--collapsible">
                         <div class="ui2-card-header">
                             <div class="ui2-card-title">Status &amp; Ownership</div>
                         </div>
@@ -564,7 +596,7 @@ use OpenCATS\UI\QuickActionMenu;
             </div>
             <?php endif; ?>
 
-            <div class="ui2-card ui2-card--section">
+            <div class="ui2-card ui2-card--section jobOrderShowCard--collapsible">
                 <div class="ui2-card-header">
                     <div class="ui2-card-title">Description, Notes &amp; Attachments</div>
                 </div>
@@ -663,7 +695,7 @@ use OpenCATS\UI\QuickActionMenu;
                 </table>
             </div>
 
-            <div class="ui2-card ui2-card--section" id="jobOrderCommentsSection">
+            <div class="ui2-card ui2-card--section jobOrderShowCard--collapsible<?php if (!empty($this->jobOrderCommentsInitiallyOpen)): ?> jobOrderShowCard--expanded<?php endif; ?>" id="jobOrderCommentsSection">
                 <div class="ui2-card-header">
                     <div class="ui2-card-title">
                         Team Comments
@@ -764,7 +796,7 @@ use OpenCATS\UI\QuickActionMenu;
                 </div>
             </div>
 
-            <div class="ui2-card ui2-card--section" id="jobOrderMessagesSection">
+            <div class="ui2-card ui2-card--section jobOrderShowCard--collapsible<?php if (!empty($this->jobOrderMessagesInitiallyOpen)): ?> jobOrderShowCard--expanded<?php endif; ?>" id="jobOrderMessagesSection">
                 <div class="ui2-card-header">
                     <div class="ui2-card-title">Team Inbox (Internal)</div>
                     <?php if (!empty($this->jobOrderMessagingEnabled)): ?>
@@ -885,7 +917,7 @@ use OpenCATS\UI\QuickActionMenu;
                 <?php endif; ?>
             </div>
 
-            <div class="ui2-card ui2-card--section">
+            <div class="ui2-card ui2-card--section jobOrderShowCard--collapsible">
                 <div class="ui2-card-header">
                     <div class="ui2-card-title">Hiring Plan</div>
                             <?php if (!$this->isPopup && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT): ?>
@@ -927,7 +959,7 @@ use OpenCATS\UI\QuickActionMenu;
             <br clear="all" />
             <br />
 
-            <div class="ui2-card ui2-card--section">
+            <div class="ui2-card ui2-card--section jobOrderShowCard--collapsible jobOrderShowCard--expanded">
                 <div class="ui2-card-header">
                     <div class="ui2-card-title">Candidate in Job Order</div>
                     <?php if (!$this->isPopup): ?>
@@ -994,6 +1026,107 @@ use OpenCATS\UI\QuickActionMenu;
             </div>
             </div>
             <script type="text/javascript">
+                function JobOrderSection_setExpanded(card, shouldOpen)
+                {
+                    if (!card)
+                    {
+                        return;
+                    }
+
+                    var body = card.querySelector('.jobOrderShowCardBody');
+                    var toggle = card.querySelector('.jobOrderShowCardToggle');
+                    if (!body || !toggle)
+                    {
+                        return;
+                    }
+
+                    body.style.display = shouldOpen ? '' : 'none';
+                    toggle.innerHTML = shouldOpen ? 'Collapse' : 'Expand';
+                    toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+
+                    if (shouldOpen)
+                    {
+                        card.className = card.className.replace(/\bjobOrderShowCard--collapsed\b/g, '').replace(/\s{2,}/g, ' ').replace(/^\s+|\s+$/g, '');
+                    }
+                    else if (card.className.indexOf('jobOrderShowCard--collapsed') === -1)
+                    {
+                        card.className += ' jobOrderShowCard--collapsed';
+                    }
+                }
+
+                function JobOrderSection_expand(sectionID)
+                {
+                    var card = document.getElementById(sectionID);
+                    if (!card)
+                    {
+                        return;
+                    }
+                    JobOrderSection_setExpanded(card, true);
+                }
+
+                function JobOrderSection_expandAll()
+                {
+                    var cards = document.querySelectorAll('.jobOrderShowCard--collapsible');
+                    for (var i = 0; i < cards.length; i++)
+                    {
+                        JobOrderSection_setExpanded(cards[i], true);
+                    }
+                }
+
+                function JobOrderSection_init()
+                {
+                    var cards = document.querySelectorAll('.jobOrderShowCard--collapsible');
+                    for (var i = 0; i < cards.length; i++)
+                    {
+                        var card = cards[i];
+                        if (card.getAttribute('data-collapsible-ready') === '1')
+                        {
+                            continue;
+                        }
+
+                        var header = card.querySelector('.ui2-card-header');
+                        if (!header)
+                        {
+                            continue;
+                        }
+
+                        var body = document.createElement('div');
+                        body.className = 'jobOrderShowCardBody';
+                        body.id = 'jobOrderShowCardBody' + i;
+
+                        while (header.nextSibling)
+                        {
+                            body.appendChild(header.nextSibling);
+                        }
+                        card.appendChild(body);
+
+                        var actions = header.querySelector('.ui2-card-actions');
+                        if (!actions)
+                        {
+                            actions = document.createElement('div');
+                            actions.className = 'ui2-card-actions';
+                            header.appendChild(actions);
+                        }
+
+                        var toggleButton = document.createElement('button');
+                        toggleButton.type = 'button';
+                        toggleButton.className = 'ui2-button ui2-button--secondary jobOrderShowCardToggle';
+                        toggleButton.onclick = (function (targetCard)
+                        {
+                            return function ()
+                            {
+                                JobOrderSection_setExpanded(targetCard, targetCard.className.indexOf('jobOrderShowCard--collapsed') !== -1);
+                            };
+                        }(card));
+                        actions.appendChild(toggleButton);
+
+                        card.setAttribute('data-collapsible-ready', '1');
+                        JobOrderSection_setExpanded(card, card.className.indexOf('jobOrderShowCard--expanded') !== -1);
+                    }
+                }
+
+                JobOrderSection_init();
+
                 function JobOrderComments_toggle(forceOpen)
                 {
                     var panel = document.getElementById('jobOrderCommentsPanel');
@@ -1004,6 +1137,10 @@ use OpenCATS\UI\QuickActionMenu;
                     }
 
                     var shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : (panel.style.display === 'none');
+                    if (shouldOpen)
+                    {
+                        JobOrderSection_expand('jobOrderCommentsSection');
+                    }
                     panel.style.display = shouldOpen ? '' : 'none';
                     button.innerHTML = button.innerHTML.replace(/^(Show|Hide)/, shouldOpen ? 'Hide' : 'Show');
                     button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
@@ -1023,6 +1160,7 @@ use OpenCATS\UI\QuickActionMenu;
 
                 function JobOrderComments_openComposer()
                 {
+                    JobOrderSection_expand('jobOrderCommentsSection');
                     JobOrderComments_toggle(true);
                     var textArea = document.getElementById('jobOrderCommentText');
                     if (textArea)
@@ -1041,12 +1179,17 @@ use OpenCATS\UI\QuickActionMenu;
                     }
 
                     var shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : (panel.style.display === 'none');
+                    if (shouldOpen)
+                    {
+                        JobOrderSection_expand('jobOrderMessagesSection');
+                    }
                     panel.style.display = shouldOpen ? '' : 'none';
                     button.innerHTML = button.innerHTML.replace(/^(Show|Hide)/, shouldOpen ? 'Hide' : 'Show');
                 }
 
                 function JobOrderMessages_openComposer()
                 {
+                    JobOrderSection_expand('jobOrderMessagesSection');
                     JobOrderMessages_toggle(true);
                     var textArea = document.getElementById('jobOrderMessageBody');
                     if (textArea)
