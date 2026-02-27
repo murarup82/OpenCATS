@@ -15,7 +15,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
 <?php endif; ?>
 
         <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
-            <div class="ui2-page">
+            <div class="ui2-page candidateShowPage">
                 <div class="ui2-header">
                     <div class="ui2-header-title">
                         <table>
@@ -105,6 +105,220 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             <?php endif; ?>
 
             <style type="text/css">
+                .candidateShowPage
+                {
+                    max-width: 1480px;
+                    margin: 0 auto;
+                    padding-bottom: 18px;
+                }
+
+                .candidateShowPage .ui2-header
+                {
+                    border: 1px solid #d8e5ec;
+                    border-radius: 12px;
+                    background: #ffffff;
+                    box-shadow: 0 1px 3px rgba(13, 45, 72, 0.06);
+                    padding: 10px 12px;
+                    margin-bottom: 10px;
+                }
+
+                .candidateShowPage .ui2-grid
+                {
+                    gap: 10px;
+                }
+
+                .candidateShowPage .ui2-col-main,
+                .candidateShowPage .ui2-col-side
+                {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                .candidateShowPage .ui2-card
+                {
+                    border: 1px solid #d8e5ec;
+                    border-radius: 12px;
+                    background: #ffffff;
+                    box-shadow: 0 1px 3px rgba(13, 45, 72, 0.06);
+                    overflow: hidden;
+                    padding: 0;
+                }
+
+                .candidateShowPage .ui2-card-header
+                {
+                    background: #f3f8fb;
+                    border-bottom: 1px solid #d8e5ec;
+                    padding: 9px 12px;
+                    margin-bottom: 0;
+                }
+
+                .candidateShowPage .ui2-card-title
+                {
+                    font-size: 14px;
+                    color: #124f66;
+                }
+
+                .candidateShowPage .ui2-card--section
+                {
+                    margin-bottom: 0;
+                }
+
+                .candidateShowPage .ui2-details-table
+                {
+                    border-color: #dce6ec;
+                }
+
+                .candidateShowPage .ui2-details-table .vertical
+                {
+                    width: 168px;
+                    background: #f9fcfe;
+                    color: #3f6170;
+                    font-weight: bold;
+                }
+
+                .candidateShowPage .ui2-details-table .data
+                {
+                    color: #1e3843;
+                }
+
+                .candidateShowPage .ui2-table th
+                {
+                    background: #0f6886;
+                    border: 1px solid #0f6886;
+                    color: #ffffff;
+                }
+
+                .candidateShowPage .ui2-table td
+                {
+                    border-color: #dce6ec;
+                }
+
+                .candidateShowSummary
+                {
+                    display: grid;
+                    grid-template-columns: repeat(4, minmax(180px, 1fr));
+                    gap: 10px;
+                    margin: 0 0 10px 0;
+                }
+
+                .candidateShowMetric
+                {
+                    border: 1px solid #d8e5ec;
+                    border-radius: 12px;
+                    background: #ffffff;
+                    padding: 11px;
+                    box-shadow: 0 1px 3px rgba(13, 45, 72, 0.06);
+                }
+
+                .candidateShowMetricLabel
+                {
+                    color: #486777;
+                    font-size: 12px;
+                    margin-bottom: 4px;
+                }
+
+                .candidateShowMetricValue
+                {
+                    font-size: 26px;
+                    color: #0a4f69;
+                    font-weight: bold;
+                    line-height: 1.05;
+                }
+
+                .candidateShowMetricMeta
+                {
+                    margin-top: 5px;
+                    color: #5f7380;
+                    font-size: 11px;
+                }
+
+                .candidateShowName
+                {
+                    font-weight: bold;
+                    color: #0a4f69;
+                }
+
+                .candidateShowStatusInactive
+                {
+                    color: #b45309;
+                    font-size: 11px;
+                    font-weight: bold;
+                }
+
+                .candidateShowProfileImage
+                {
+                    border: 1px solid #dce6ec;
+                    border-radius: 10px;
+                    overflow: hidden;
+                }
+
+                .candidateShowProfileImage .vertical
+                {
+                    text-align: center;
+                    background: #f9fcfe;
+                    color: #486777;
+                }
+
+                .candidateShowSectionActions
+                {
+                    padding: 9px 12px;
+                    border-top: 1px solid #dce6ec;
+                    background: #f9fcfe;
+                }
+
+                .candidateShowSectionActions a
+                {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .candidateShowInlineTools
+                {
+                    margin: 0;
+                    padding: 9px 12px;
+                    border-bottom: 1px solid #dce6ec;
+                    background: #f9fcfe;
+                }
+
+                .candidateShowInlineTools label
+                {
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #365767;
+                }
+
+                .candidateShowPage .pipelineClosedTag
+                {
+                    display: inline-block;
+                    margin-left: 6px;
+                    padding: 1px 7px;
+                    border-radius: 999px;
+                    border: 1px solid #d6dde3;
+                    background: #f4f7f9;
+                    color: #5b6770;
+                    font-size: 10px;
+                    line-height: 1.5;
+                    text-transform: uppercase;
+                }
+
+                @media (max-width: 1200px)
+                {
+                    .candidateShowSummary
+                    {
+                        grid-template-columns: repeat(2, minmax(180px, 1fr));
+                    }
+                }
+
+                @media (max-width: 760px)
+                {
+                    .candidateShowSummary
+                    {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
                 .candidateCommentsBadge
                 {
                     display: inline-block;
@@ -138,6 +352,68 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                 }
             </style>
 
+            <?php
+                $pipelineTotalCount = is_array($this->pipelinesRS) ? count($this->pipelinesRS) : 0;
+                $pipelineOpenCount = 0;
+                $pipelineClosedCount = 0;
+                if (is_array($this->pipelinesRS))
+                {
+                    foreach ($this->pipelinesRS as $pipelineRow)
+                    {
+                        if (isset($pipelineRow['isActive']) && (int) $pipelineRow['isActive'] === 1)
+                        {
+                            $pipelineOpenCount++;
+                        }
+                        else
+                        {
+                            $pipelineClosedCount++;
+                        }
+                    }
+                }
+
+                $attachmentFileCount = 0;
+                $profileImageCount = 0;
+                if (is_array($this->attachmentsRS))
+                {
+                    foreach ($this->attachmentsRS as $attachmentRow)
+                    {
+                        if (isset($attachmentRow['isProfileImage']) && $attachmentRow['isProfileImage'] == '1')
+                        {
+                            $profileImageCount++;
+                        }
+                        else
+                        {
+                            $attachmentFileCount++;
+                        }
+                    }
+                }
+
+                $commentCount = isset($this->candidateCommentCount) ? (int) $this->candidateCommentCount : 0;
+                $listCount = is_array($this->lists) ? count($this->lists) : 0;
+            ?>
+            <div class="candidateShowSummary">
+                <div class="candidateShowMetric">
+                    <div class="candidateShowMetricLabel">Open Pipeline Entries</div>
+                    <div class="candidateShowMetricValue"><?php echo((int) $pipelineOpenCount); ?></div>
+                    <div class="candidateShowMetricMeta">Total pipeline entries: <?php echo((int) $pipelineTotalCount); ?></div>
+                </div>
+                <div class="candidateShowMetric">
+                    <div class="candidateShowMetricLabel">Team Comments</div>
+                    <div class="candidateShowMetricValue"><?php echo((int) $commentCount); ?></div>
+                    <div class="candidateShowMetricMeta">Closed pipeline entries: <?php echo((int) $pipelineClosedCount); ?></div>
+                </div>
+                <div class="candidateShowMetric">
+                    <div class="candidateShowMetricLabel">Attachments</div>
+                    <div class="candidateShowMetricValue"><?php echo((int) $attachmentFileCount); ?></div>
+                    <div class="candidateShowMetricMeta">Profile images: <?php echo((int) $profileImageCount); ?></div>
+                </div>
+                <div class="candidateShowMetric">
+                    <div class="candidateShowMetricLabel">Candidate Lists</div>
+                    <div class="candidateShowMetricValue"><?php echo((int) $listCount); ?></div>
+                    <div class="candidateShowMetricMeta">Saved lists linked to this profile</div>
+                </div>
+            </div>
+
             <div class="ui2-grid">
                 <div class="ui2-col-main">
                     <div class="ui2-card ui2-card--section">
@@ -161,11 +437,11 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                             <tr>
                                 <td class="vertical">Name:</td>
                                 <td class="data">
-                                    <span style="font-weight: bold;" class="<?php echo($this->data['titleClass']); ?>">
+                                    <span class="candidateShowName <?php echo($this->data['titleClass']); ?>">
                                         <?php $this->_($this->data['firstName']); ?>
                                         <?php $this->_($this->data['lastName']); ?>
                                         <?php if ($this->data['isActive'] != 1): ?>
-                                            &nbsp;<span style="color:orange;">(INACTIVE)</span>
+                                            &nbsp;<span class="candidateShowStatusInactive">(INACTIVE)</span>
                                         <?php endif; ?>
                                         <?php TemplateUtility::printSingleQuickActionMenu(new CandidateQuickActionMenu(DATA_ITEM_CANDIDATE, $this->data['candidateID'], $_SESSION['CATS']->getAccessLevel('candidates.edit'))); ?>
                                     </span>
@@ -264,7 +540,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <?php foreach ($this->attachmentsRS as $rowNumber => $attachmentsData): ?>
                          <?php if ($attachmentsData['isProfileImage'] == '1'): ?>
                             <td width="135" height="100%"  valign="top">
-                                <table class="detailsInside">
+                                <table class="detailsInside ui2-details-table candidateShowProfileImage">
                                     <tr>
                                         <td style="text-align:center;" class="vertical">
                                             <?php if (!$this->isPopup): ?>
@@ -673,13 +949,15 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                         </table>
                         <?php if (!$this->isPopup): ?>
                             <?php if ($this->getUserAccessLevel('candidates.createAttachment') >= ACCESS_LEVEL_EDIT): ?>
-                                <?php if (isset($this->attachmentLinkHTML)): ?>
-                                    <?php echo($this->attachmentLinkHTML); ?>
-                                <?php else: ?>
-                                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=createAttachment&amp;candidateID=<?php echo($this->candidateID); ?>', 400, 125, null); return false;">
-                                <?php endif; ?>
-                                    <img src="images/paperclip_add.gif" width="16" height="16" border="0" alt="Add Attachment" class="absmiddle" />&nbsp;Add Attachment
-                                </a>
+                                <div class="candidateShowSectionActions">
+                                    <?php if (isset($this->attachmentLinkHTML)): ?>
+                                        <?php echo($this->attachmentLinkHTML); ?>
+                                    <?php else: ?>
+                                        <a class="ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=createAttachment&amp;candidateID=<?php echo($this->candidateID); ?>', 400, 125, null); return false;">
+                                            <img src="images/paperclip_add.gif" width="16" height="16" border="0" alt="Add Attachment" class="absmiddle" />&nbsp;Add Attachment
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>
@@ -930,14 +1208,14 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     <?php if (!$this->isPopup): ?>
                         <?php if ($this->getUserAccessLevel('candidates.considerForJobSearch') >= ACCESS_LEVEL_EDIT): ?>
                             <div class="ui2-card-actions">
-                                <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=considerForJobSearch&amp;candidateID=<?php echo($this->candidateID); ?>', 1120, 760, null); return false;">
+                                <a class="ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=considerForJobSearch&amp;candidateID=<?php echo($this->candidateID); ?>', 1120, 760, null); return false;">
                                     <img src="images/consider.gif" width="16" height="16" class="absmiddle" alt="Add to Job Order" border="0" />&nbsp;Add This Candidate to Job Order
                                 </a>
                             </div>
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
-                <p style="margin: 4px 0 8px 0;">
+                <p class="candidateShowInlineTools">
                     <label>
                         <input type="checkbox" id="pipelineShowClosedCandidate" <?php if (!empty($this->showClosedPipeline)) echo('checked="checked"'); ?>
                             onclick="window.location.href='<?php echo(CATSUtility::getIndexName()); ?>?m=candidates&amp;a=show&amp;candidateID=<?php echo($this->candidateID); ?>&amp;showClosed=' + (this.checked ? 1 : 0);" />
@@ -1026,7 +1304,7 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
                     </tr>
                     <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>" id="pipelineDetails<?php echo($rowNumber); ?>" style="display:none;">
                         <td colspan="11" align="center">
-                            <table width="98%" border="1" class="detailsOutside" style="margin: 5px;">
+                            <table width="98%" border="1" class="detailsOutside ui2-details-table" style="margin: 5px;">
                                 <tr>
                                     <td align="left" style="padding: 6px 6px 6px 6px; background-color: white; clear: both;">
                                         <div style="overflow: auto; height: 200px;" id="pipelineInner<?php echo($rowNumber); ?>">
@@ -1044,31 +1322,34 @@ use OpenCATS\UI\CandidateDuplicateQuickActionMenu;
             <br clear="all" />
             <br />
 
-            <p class="note">Lists</p>
-            <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT): ?>
-                <p style="margin: 6px 0 8px 0;">
-                    <a href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=lists&amp;a=quickActionAddToListModal&amp;dataItemType=<?php echo DATA_ITEM_CANDIDATE; ?>&amp;dataItemID=<?php echo $this->candidateID; ?>', 720, 520, null); return false;">
-                        Manage Candidate Lists
-                    </a>
-                </p>
-            <?php endif; ?>
-
-            <table id="listsTable" class="sortable">
-                <tr>
-                    <th align="left" width="250">Name</th>
-                </tr>
-                <?php foreach($this->lists as $rowNumber => $list): ?>
-                    <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
-                        <td>
-                            <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_READ): ?>
-                                <a href="index.php?m=lists&a=showList&savedListID=<?php echo $list['listID']; ?>"><?php $this->_($list['name']); ?></a>
-                            <?php else: ?>
-                                <?php $this->_($list['name']); ?>
-                            <?php endif; ?>
-                        </td>
+            <div class="ui2-card ui2-card--section">
+                <div class="ui2-card-header">
+                    <div class="ui2-card-title">Lists</div>
+                    <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT): ?>
+                        <div class="ui2-card-actions">
+                            <a class="ui2-button ui2-button--secondary" href="#" onclick="showPopWin('<?php echo(CATSUtility::getIndexName()); ?>?m=lists&amp;a=quickActionAddToListModal&amp;dataItemType=<?php echo DATA_ITEM_CANDIDATE; ?>&amp;dataItemID=<?php echo $this->candidateID; ?>', 720, 520, null); return false;">
+                                Manage Candidate Lists
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <table id="listsTable" class="sortable ui2-table">
+                    <tr>
+                        <th align="left" width="250">Name</th>
                     </tr>
-                <?php endforeach; ?>
-            </table>
+                    <?php foreach($this->lists as $rowNumber => $list): ?>
+                        <tr class="<?php TemplateUtility::printAlternatingRowClass($rowNumber); ?>">
+                            <td>
+                                <?php if ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_READ): ?>
+                                    <a href="index.php?m=lists&a=showList&savedListID=<?php echo $list['listID']; ?>"><?php $this->_($list['name']); ?></a>
+                                <?php else: ?>
+                                    <?php $this->_($list['name']); ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+            </div>
             </div>
 
 <?php if (!$this->isPopup): ?>

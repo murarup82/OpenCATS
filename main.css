@@ -948,15 +948,15 @@ span.validationError
     left: 0px;
     width: 100%;
     height: 100%;
-    opacity: .40;
-    -moz-opacity: .40;
-    filter: alpha(opacity=40);
+    opacity: .48;
+    -moz-opacity: .48;
+    filter: alpha(opacity=48);
     /* this hack is so it works in IE
      * I find setting the color in the css gives me more flexibility
      * than the PNG solution.
      */
     background-color: transparent !important;
-    background-color: #333;
+    background-color: #163748;
     /* background-image\**\: url('images/maskBG.gif') !important; */
     background-image: none;
     background-repeat: repeat;
@@ -975,8 +975,11 @@ span.validationError
 
 #popupInner
 {
-    border: 1px solid #000;
-    background-color: #eee;
+    border: 1px solid #c7dce8;
+    border-radius: 12px;
+    background: #f2f7fb;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(10, 45, 66, 0.28);
 }
 
 #popupFrame
@@ -990,15 +993,12 @@ span.validationError
 
 #popupTitleBar
 {
-    background-color: #486cae;
+    background: linear-gradient(90deg, #0f6886 0%, #0a566f 100%);
     color: #fff;
     font-weight: bold;
-    height: 1.3em;
-    padding: 5px;
-    border-bottom: 1px solid #000;
-    border-top: 1px solid #78a3f2;
-    border-left: 1px solid #78a3f2;
-    border-right: 1px solid #204095;
+    min-height: 24px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #0a5067;
     position: relative;
     z-index: 203;
 }
@@ -1006,7 +1006,9 @@ span.validationError
 #popupTitle
 {
     float: left;
-    font: normal normal bold 17px Arial, Tahoma, sans-serif;
+    font: normal normal 600 18px "Segoe UI", Arial, Tahoma, sans-serif;
+    line-height: 24px;
+    letter-spacing: 0.1px;
 }
 
 #popupControls
@@ -1014,6 +1016,17 @@ span.validationError
     float: right;
     cursor: pointer;
     /*cursor: hand;*/
+}
+
+#popupControls img
+{
+    border-radius: 4px;
+    opacity: 0.9;
+}
+
+#popupControls img:hover
+{
+    opacity: 1;
 }
 
 span.moreText

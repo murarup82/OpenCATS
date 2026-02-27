@@ -100,25 +100,6 @@
             border-radius: 8px !important;
         }
 
-        .assignmentWorkspaceStageField
-        {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: #2f5669;
-            font-weight: bold;
-        }
-
-        .assignmentWorkspaceStageField select
-        {
-            height: 34px;
-            border: 1px solid #bcd3df;
-            border-radius: 8px;
-            background: #fbfeff;
-            font-size: 13px;
-        }
-
         .assignmentWorkspaceSelectionCount
         {
             font-weight: bold;
@@ -302,16 +283,6 @@
                     Include closed job orders
                 </label>
                 <a href="#" id="assignmentRefreshButton" class="ui2-button ui2-button--secondary">Refresh</a>
-                <label class="assignmentWorkspaceStageField">
-                    Stage on Add:
-                    <select id="assignmentTargetStatus" class="selectBox" <?php if (empty($this->canSetStatusOnAdd)) echo('disabled="disabled"'); ?>>
-                        <?php foreach ($this->assignmentStatusOptions as $statusRow): ?>
-                            <option value="<?php echo((int) $statusRow['statusID']); ?>" <?php if ((int) $statusRow['statusID'] === (int) $this->defaultAssignmentStatusID) echo('selected="selected"'); ?>>
-                                <?php $this->_($statusRow['status']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </label>
                 <button type="button" id="assignmentAddSelected" class="ui2-button ui2-button--primary" disabled="disabled">Add Selected</button>
                 <span id="assignmentSelectionCount" class="assignmentWorkspaceSelectionCount">0 selected</span>
             </div>
@@ -364,7 +335,6 @@
             selectAllCheckboxId: 'assignmentSelectAll',
             bulkAddButtonId: 'assignmentAddSelected',
             selectionCountId: 'assignmentSelectionCount',
-            stageSelectId: 'assignmentTargetStatus',
             defaultTargetStatusID: '<?php echo((int) $this->defaultAssignmentStatusID); ?>',
             maxResults: 40,
             candidateIDArrayStored: '<?php $this->_($this->candidateIDArrayStored); ?>',
