@@ -16,7 +16,9 @@
     --shell-focus-ring: 0 0 0 3px rgba(0, 151, 189, 0.18);
 }
 
-.ui2-body #contents.ui2-page {
+.ui2-body #contents.ui2-page,
+body.ui2-sidebar-enabled #contents.ui2-page,
+body.ui2-theme-avel #contents.ui2-page {
     max-width: none;
     width: 100%;
     margin: 0;
