@@ -34,6 +34,29 @@ function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
 }
 
+function ensureModernUIURL(url: string): string {
+  const raw = String(url || '').trim();
+  if (raw === '') {
+    return raw;
+  }
+
+  try {
+    const parsed = new URL(raw, window.location.href);
+    parsed.searchParams.set('ui', 'modern');
+    if (parsed.origin === window.location.origin) {
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+    return parsed.toString();
+  } catch (error) {
+    const hasQuery = raw.includes('?');
+    const hasUI = /(?:\?|&)ui=/.test(raw);
+    if (hasUI) {
+      return raw.replace(/([?&])ui=[^&#]*/i, '$1ui=modern');
+    }
+    return `${raw}${hasQuery ? '&' : '?'}ui=modern`;
+  }
+}
+
 function formatQuestionnaireDate(value: unknown): string {
   const raw = String(value || '').trim();
   if (raw === '') {
@@ -174,7 +197,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         actions={
           <>
             {permissions.canEditCandidate ? (
-              <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.editURL)}>
+              <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(decodeLegacyURL(data.actions.editURL))}>
                 Edit Candidate
               </a>
             ) : null}
@@ -217,7 +240,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               {candidate.duplicates.length > 0 ? (
                 <div className="avel-candidate-hero__duplicates">
                   {candidate.duplicates.map((duplicate) => (
-                    <a key={duplicate.candidateID} className="modern-chip modern-chip--info" href={duplicate.showURL}>
+                    <a key={duplicate.candidateID} className="modern-chip modern-chip--info" href={ensureModernUIURL(duplicate.showURL)}>
                       Duplicate #{duplicate.candidateID}
                     </a>
                   ))}

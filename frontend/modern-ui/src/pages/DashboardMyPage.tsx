@@ -72,6 +72,29 @@ function createStatusClassName(statusLabel: string): string {
   return `modern-status modern-status--${toStatusSlug(statusLabel)}`;
 }
 
+function ensureModernUIURL(url: string): string {
+  const raw = String(url || '').trim();
+  if (raw === '') {
+    return raw;
+  }
+
+  try {
+    const parsed = new URL(raw, window.location.href);
+    parsed.searchParams.set('ui', 'modern');
+    if (parsed.origin === window.location.origin) {
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+    return parsed.toString();
+  } catch (error) {
+    const hasQuery = raw.includes('?');
+    const hasUI = /(?:\?|&)ui=/.test(raw);
+    if (hasUI) {
+      return raw.replace(/([?&])ui=[^&#]*/i, '$1ui=modern');
+    }
+    return `${raw}${hasQuery ? '&' : '?'}ui=modern`;
+  }
+}
+
 export function DashboardMyPage({ bootstrap }: Props) {
   const [data, setData] = useState<DashboardModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -255,28 +278,33 @@ export function DashboardMyPage({ bootstrap }: Props) {
   }
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredRows = data.rows.filter((row) => {
-    if (localStatusID !== 'all' && String(row.statusID) !== localStatusID) {
-      return false;
-    }
+  const filteredRows = data.rows
+    .filter((row) => {
+      if (localStatusID !== 'all' && String(row.statusID) !== localStatusID) {
+        return false;
+      }
 
-    if (normalizedSearch === '') {
-      return true;
-    }
+      if (normalizedSearch === '') {
+        return true;
+      }
 
-    const searchable = [
-      row.candidateName,
-      row.jobOrderTitle,
-      row.companyName,
-      row.location,
-      row.statusLabel
-    ]
-      .map((value) => toSearchText(value))
-      .join(' ')
-      .toLowerCase();
+      const searchable = [
+        row.candidateName,
+        row.jobOrderTitle,
+        row.companyName,
+        row.location,
+        row.statusLabel
+      ]
+        .map((value) => toSearchText(value))
+        .join(' ')
+        .toLowerCase();
 
-    return searchable.includes(normalizedSearch);
-  });
+      return searchable.includes(normalizedSearch);
+    })
+    .map((row) => ({
+      ...row,
+      candidateURL: ensureModernUIURL(row.candidateURL)
+    }));
 
   const byStatusID = new Map<number, StatusCatalogEntry>();
   data.options.statuses.forEach((statusOption) => {

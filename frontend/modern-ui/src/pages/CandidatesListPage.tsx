@@ -48,6 +48,29 @@ function toBooleanString(value: boolean): string {
   return value ? '1' : '0';
 }
 
+function ensureModernUIURL(url: string): string {
+  const raw = String(url || '').trim();
+  if (raw === '') {
+    return raw;
+  }
+
+  try {
+    const parsed = new URL(raw, window.location.href);
+    parsed.searchParams.set('ui', 'modern');
+    if (parsed.origin === window.location.origin) {
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+    return parsed.toString();
+  } catch (error) {
+    const hasQuery = raw.includes('?');
+    const hasUI = /(?:\?|&)ui=/.test(raw);
+    if (hasUI) {
+      return raw.replace(/([?&])ui=[^&#]*/i, '$1ui=modern');
+    }
+    return `${raw}${hasQuery ? '&' : '?'}ui=modern`;
+  }
+}
+
 export function CandidatesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -249,7 +272,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
         actions={
           <>
             {permissions.canAddCandidate ? (
-              <a className="modern-btn modern-btn--secondary" href={`${bootstrap.indexName}?m=candidates&a=add&ui=legacy`}>
+              <a className="modern-btn modern-btn--secondary" href={`${bootstrap.indexName}?m=candidates&a=add&ui=modern`}>
                 Add Candidate
               </a>
             ) : null}
@@ -446,7 +469,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 {data.rows.map((row) => (
                   <tr key={row.candidateID}>
                     <td>
-                      <a className="modern-link" href={row.candidateURL}>
+                      <a className="modern-link" href={ensureModernUIURL(row.candidateURL)}>
                         {toDisplayText(row.fullName)}
                       </a>
                     </td>
@@ -468,11 +491,11 @@ export function CandidatesListPage({ bootstrap }: Props) {
                     <td>{toDisplayText(row.modifiedDate)}</td>
                     <td>
                       <div className="modern-table-actions">
-                        <a className="modern-btn modern-btn--mini modern-btn--secondary" href={row.candidateURL}>
+                        <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateURL)}>
                           View
                         </a>
                         {permissions.canEditCandidate ? (
-                          <a className="modern-btn modern-btn--mini modern-btn--secondary" href={row.candidateEditURL}>
+                          <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateEditURL)}>
                             Edit
                           </a>
                         ) : null}
