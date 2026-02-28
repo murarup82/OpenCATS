@@ -47,6 +47,7 @@ class DashboardUI extends UserInterface
 
     private function myDashboard()
     {
+        $responseFormat = strtolower(trim($this->getTrimmedInput('format', $_GET)));
         $showClosed = $this->isChecked('showClosed', $_GET);
         $companyID = (int) $this->getTrimmedInput('companyID', $_GET);
         $jobOrderID = (int) $this->getTrimmedInput('jobOrderID', $_GET);
@@ -346,6 +347,29 @@ class DashboardUI extends UserInterface
             }
         }
 
+        if ($responseFormat === 'modern-json')
+        {
+            $this->renderModernDashboardJSON(
+                $rows,
+                $companyOptions,
+                $jobOrderOptions,
+                $statusOptions,
+                $showClosed,
+                $companyID,
+                $jobOrderID,
+                $statusID,
+                $dashboardScope,
+                $dashboardView,
+                $canViewAllDashboardRows,
+                $jobOrderScopeLabel,
+                $page,
+                $totalPages,
+                $totalRows,
+                $entriesPerPage
+            );
+            return;
+        }
+
         $this->_template->assign('rows', $rows);
         $this->_template->assign('showClosed', $showClosed);
         $this->_template->assign('companyID', $companyID);
@@ -378,6 +402,145 @@ class DashboardUI extends UserInterface
         if (!eval(Hooks::get('DASHBOARD_MY'))) return;
 
         $this->_template->display('./modules/dashboard/My.tpl');
+    }
+
+    private function renderModernDashboardJSON(
+        $rows,
+        $companyOptions,
+        $jobOrderOptions,
+        $statusOptions,
+        $showClosed,
+        $companyID,
+        $jobOrderID,
+        $statusID,
+        $dashboardScope,
+        $dashboardView,
+        $canViewAllDashboardRows,
+        $jobOrderScopeLabel,
+        $page,
+        $totalPages,
+        $totalRows,
+        $entriesPerPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $responseRows = array();
+
+        foreach ($rows as $row)
+        {
+            $firstName = isset($row['firstName']) ? trim($row['firstName']) : '';
+            $lastName = isset($row['lastName']) ? trim($row['lastName']) : '';
+            $fullName = trim($firstName . ' ' . $lastName);
+            if ($fullName === '')
+            {
+                $fullName = '--';
+            }
+
+            $statusLabel = isset($row['status']) ? trim($row['status']) : '--';
+            if ($statusLabel === '')
+            {
+                $statusLabel = '--';
+            }
+
+            $responseRows[] = array(
+                'candidateID' => (int) $row['candidateID'],
+                'candidateName' => $fullName,
+                'candidateURL' => sprintf(
+                    '%s?m=candidates&a=show&candidateID=%d',
+                    $baseURL,
+                    (int) $row['candidateID']
+                ),
+                'jobOrderID' => (int) $row['jobOrderID'],
+                'jobOrderTitle' => (isset($row['jobOrderTitle']) ? $row['jobOrderTitle'] : ''),
+                'jobOrderURL' => sprintf(
+                    '%s?m=joborders&a=show&jobOrderID=%d',
+                    $baseURL,
+                    (int) $row['jobOrderID']
+                ),
+                'companyID' => (int) $row['companyID'],
+                'companyName' => (isset($row['companyName']) ? $row['companyName'] : ''),
+                'statusID' => (int) $row['statusID'],
+                'statusLabel' => $statusLabel,
+                'statusSlug' => $this->toStatusSlug($statusLabel),
+                'lastStatusChangeDisplay' => (isset($row['lastStatusChangeDisplay']) ? $row['lastStatusChangeDisplay'] : '--'),
+                'location' => (isset($row['location']) ? $row['location'] : '--'),
+                'isActive' => (int) $row['isActive']
+            );
+        }
+
+        $statusOptionValues = array();
+        foreach ($statusOptions as $statusOption)
+        {
+            $statusOptionValues[] = array(
+                'statusID' => (int) $statusOption['statusID'],
+                'status' => (isset($statusOption['status']) ? $statusOption['status'] : '')
+            );
+        }
+
+        $companyOptionValues = array();
+        foreach ($companyOptions as $companyOption)
+        {
+            $companyOptionValues[] = array(
+                'companyID' => (int) $companyOption['companyID'],
+                'name' => (isset($companyOption['name']) ? $companyOption['name'] : '')
+            );
+        }
+
+        $jobOrderOptionValues = array();
+        foreach ($jobOrderOptions as $jobOrderOption)
+        {
+            $jobOrderOptionValues[] = array(
+                'jobOrderID' => (int) $jobOrderOption['jobOrderID'],
+                'title' => (isset($jobOrderOption['title']) ? $jobOrderOption['title'] : ''),
+                'companyName' => (isset($jobOrderOption['companyName']) ? $jobOrderOption['companyName'] : '')
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'scope' => $dashboardScope,
+                'view' => $dashboardView,
+                'showClosed' => ((bool) $showClosed),
+                'canViewAllScopes' => ((bool) $canViewAllDashboardRows),
+                'jobOrderScopeLabel' => $jobOrderScopeLabel,
+                'page' => (int) $page,
+                'totalPages' => (int) $totalPages,
+                'totalRows' => (int) $totalRows,
+                'entriesPerPage' => (int) $entriesPerPage
+            ),
+            'filters' => array(
+                'companyID' => (int) $companyID,
+                'jobOrderID' => (int) $jobOrderID,
+                'statusID' => (int) $statusID
+            ),
+            'options' => array(
+                'companies' => $companyOptionValues,
+                'jobOrders' => $jobOrderOptionValues,
+                'statuses' => $statusOptionValues
+            ),
+            'rows' => $responseRows
+        );
+
+        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+        echo json_encode($payload);
+    }
+
+    private function toStatusSlug($statusLabel)
+    {
+        $statusLabel = strtolower(trim((string) $statusLabel));
+        if ($statusLabel === '')
+        {
+            return 'unknown';
+        }
+
+        $statusSlug = preg_replace('/[^a-z0-9]+/', '-', $statusLabel);
+        $statusSlug = trim($statusSlug, '-');
+        if ($statusSlug === '')
+        {
+            $statusSlug = 'unknown';
+        }
+
+        return $statusSlug;
     }
 
     private function getDashboardJobOrders($includeClosed, $includeAll, $companyID = 0)

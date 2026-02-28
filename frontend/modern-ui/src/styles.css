@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: #1f3440;
+}
+
+body {
+  margin: 0;
+}
+
+.modern-state {
+  display: grid;
+  gap: 10px;
+  color: #31566b;
+}
+
+.modern-state--error {
+  color: #8f1d1d;
+}
+
+.modern-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #c6d7e2;
+  background: #ffffff;
+  color: #1f4a61;
+  text-decoration: none;
+  padding: 6px 10px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.modern-btn--secondary {
+  background: #f8fbfe;
+}
+
+.modern-dashboard {
+  display: grid;
+  gap: 12px;
+}
+
+.modern-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modern-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #eef6fb;
+  border: 1px solid #d5e8f3;
+  color: #294c5f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.modern-table-wrap {
+  border: 1px solid #d9e5ec;
+  border-radius: 12px;
+  overflow: auto;
+  background: #ffffff;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modern-table th {
+  background: #0f6f8f;
+  color: #ffffff;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px;
+}
+
+.modern-table td {
+  font-size: 13px;
+  padding: 10px;
+  border-top: 1px solid #e6eef3;
+}
+
+.modern-table a {
+  color: #0a5f7d;
+  text-decoration: none;
+}
+
+.modern-table a:hover {
+  text-decoration: underline;
+}
+

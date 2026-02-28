@@ -116,6 +116,23 @@
 - `config.ui.php.sample`
   - Copy-ready switch configuration template.
 
+## 3.1 First Real Migrated Page (Read-only)
+
+- Route: `index.php?m=dashboard&a=my`
+- Modern data contract (same action, JSON mode):
+  - `index.php?m=dashboard&a=my&format=modern-json`
+- Safety details:
+  - Uses existing dashboard permission gate (`joborders.show` read access).
+  - No POST/write endpoints added.
+  - No auth/session changes.
+  - UI switcher bypasses `format=modern-json` requests to avoid shell recursion.
+
+Response payload includes:
+- `meta` (scope, pagination, visibility, labels)
+- `filters` (selected company/job order/status)
+- `options` (companies, job orders, statuses)
+- `rows` (candidate/job/status read-only details and legacy deep links)
+
 ## 4. Deployment and Rollback
 
 ### Deployment
@@ -124,6 +141,12 @@
 3. Create `config.ui.php` from sample.
 4. Enable for a small route set and pilot cohort.
 5. Increase route coverage gradually.
+
+For first real migration:
+1. Copy `config.ui.php.sample` to `config.ui.php`.
+2. Set `UI_SWITCH_ENABLED=true`.
+3. Keep `UI_SWITCH_ROUTE_MAP = ['dashboard' => ['my']]`.
+4. Verify `public/modern-ui/app.bundle.js` is deployed.
 
 ### Rollback
 - Immediate rollback options:
@@ -139,4 +162,3 @@
 - Open question: should `settings`/admin routes be permanently excluded until later phase?
 - Open question: preferred source of truth for feature flags (file config vs env-only).
 - Open question: whether to add analytics table for switch telemetry instead of `error_log`.
-

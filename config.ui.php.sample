@@ -26,7 +26,7 @@ define('UI_SWITCH_OVERRIDE_BYPASS_ROUTE_MAP', false);
 define('UI_SWITCH_LOGGING', true);
 
 /* Optional bundle location for compiled React/Vue/etc app (same origin). */
-define('UI_SWITCH_MODERN_BUNDLE_URL', '');
+define('UI_SWITCH_MODERN_BUNDLE_URL', 'public/modern-ui/app.bundle.js');
 
 /* Optional dev URL for local proxy/iframe integration in non-prod. */
 define('UI_SWITCH_MODERN_DEV_SERVER_URL', '');
@@ -36,8 +36,7 @@ define('UI_SWITCH_MODERN_DEV_SERVER_URL', '');
  * - value: array of actions, or '*' for all module actions
  */
 $GLOBALS['UI_SWITCH_ROUTE_MAP'] = array(
-    'dashboard'  => array('my'),
-    'candidates' => array('show')
+    'dashboard'  => array('my')
 );
 
 /* Optional phased rollout by cohorts. Empty arrays = all users. */

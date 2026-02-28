@@ -48,6 +48,11 @@ class UIModeSwitcher
             return false;
         }
 
+        if (self::isDataContractRequest())
+        {
+            return false;
+        }
+
         if ($moduleName === '' || self::isExcludedRoute($moduleName, $action))
         {
             return false;
@@ -100,7 +105,7 @@ class UIModeSwitcher
         $template->assign('targetAction', $action);
         $template->assign('legacyURL', self::buildCurrentURLWithMode('legacy'));
         $template->assign('modernURL', self::buildCurrentURLWithMode('modern'));
-        $template->assign('bundleURL', self::getStringValue('UI_SWITCH_MODERN_BUNDLE_URL', 'OPENCATS_UI_BUNDLE_URL', ''));
+        $template->assign('bundleURL', self::getStringValue('UI_SWITCH_MODERN_BUNDLE_URL', 'OPENCATS_UI_BUNDLE_URL', 'public/modern-ui/app.bundle.js'));
         $template->assign('devServerURL', self::getStringValue('UI_SWITCH_MODERN_DEV_SERVER_URL', 'OPENCATS_UI_DEV_SERVER_URL', ''));
         $template->assign('bootstrapPayload', base64_encode(json_encode($bootstrap)));
         $template->display($templatePath);
@@ -475,6 +480,22 @@ class UIModeSwitcher
             {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    private static function isDataContractRequest()
+    {
+        if (!isset($_GET['format']))
+        {
+            return false;
+        }
+
+        $format = strtolower(trim((string) $_GET['format']));
+        if ($format === 'json' || $format === 'modern-json' || $format === 'api')
+        {
+            return true;
         }
 
         return false;
