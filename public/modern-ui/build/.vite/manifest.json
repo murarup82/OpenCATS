@@ -1,0 +1,12 @@
+{
+  "src/mount.tsx": {
+    "file": "app.bundle.js",
+    "name": "mount",
+    "src": "src/mount.tsx",
+    "isEntry": true
+  },
+  "style.css": {
+    "file": "style.css",
+    "src": "style.css"
+  }
+}

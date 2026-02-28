@@ -16,7 +16,9 @@ export async function fetchDashboardModernData(
     modernPage: MODERN_DASHBOARD_PAGE,
     query
   });
-  apiQuery.set('view', 'list');
+  if (!apiQuery.get('view')) {
+    apiQuery.set('view', 'kanban');
+  }
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<DashboardModernDataResponse>(url);
