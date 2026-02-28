@@ -321,6 +321,64 @@ class ListsUI extends UserInterface
 
         $dataItemDesc = TemplateUtility::getDataItemTypeDescription($dataItemType);
 
+        $responseFormat = strtolower(trim($this->getTrimmedInput('format', $_GET)));
+        $modernPage = strtolower(trim($this->getTrimmedInput('modernPage', $_GET)));
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'lists-quick-action-add')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $savedListValues = array();
+            foreach ($savedListsRS as $savedList)
+            {
+                $savedListValues[] = array(
+                    'savedListID' => (int) $savedList['savedListID'],
+                    'description' => (isset($savedList['description']) ? $savedList['description'] : ''),
+                    'numberEntries' => (int) $savedList['numberEntries']
+                );
+            }
+
+            $payload = array(
+                'meta' => array(
+                    'contractVersion' => 1,
+                    'contractKey' => 'lists.quickActionAddToList.v1',
+                    'modernPage' => 'lists-quick-action-add'
+                ),
+                'dataItem' => array(
+                    'type' => (int) $dataItemType,
+                    'typeLabel' => $dataItemDesc,
+                    'ids' => array_map('intval', $dataItemIDArray)
+                ),
+                'permissions' => array(
+                    'canManageLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_DELETE)
+                ),
+                'sessionCookie' => $_SESSION['CATS']->getCookie(),
+                'lists' => $savedListValues
+            );
+
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode($payload);
+            return;
+        }
+
         $this->_template->assign('dataItemDesc', $dataItemDesc);
         $this->_template->assign('savedListsRS', $savedListsRS);
         $this->_template->assign('dataItemType', $dataItemType);

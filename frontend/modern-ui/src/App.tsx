@@ -1,6 +1,7 @@
 import type { UIModeBootstrap } from './types';
 import { resolveModernRouteComponent } from './lib/routeRegistry';
 import { ErrorState } from './components/states/ErrorState';
+import { ModernOverlayHost } from './components/modals/ModernOverlayHost';
 
 type AppProps = {
   bootstrap: UIModeBootstrap;
@@ -14,7 +15,12 @@ export function App({ bootstrap }: AppProps) {
 
   if (pageComponent) {
     const PageComponent = pageComponent;
-    return <PageComponent bootstrap={bootstrap} />;
+    return (
+      <>
+        <PageComponent bootstrap={bootstrap} />
+        <ModernOverlayHost bootstrap={bootstrap} />
+      </>
+    );
   }
 
   return (

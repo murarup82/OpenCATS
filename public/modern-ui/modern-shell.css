@@ -22,6 +22,64 @@
     font-family: Lato, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
+.modern-shell-appbar-mount {
+    margin-bottom: -6px;
+}
+
+.modern-shell-appbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid #c5dae7;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #f5fbff 0%, #ecf6fd 100%);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.85);
+    padding: 8px 10px;
+}
+
+.modern-shell-appbar__left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.modern-shell-appbar__menu {
+    border: 1px solid #a7cadb;
+    border-radius: 999px;
+    min-height: 30px;
+    background: #ffffff;
+    color: #0f5673;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    padding: 0 12px;
+    cursor: pointer;
+}
+
+.modern-shell-appbar__menu:hover {
+    background: #eef8fd;
+    border-color: #7db2cb;
+}
+
+.modern-shell-appbar__route {
+    color: #355a6d;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modern-shell-appbar__right {
+    color: #537080;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
 .modern-shell-hero {
     display: flex;
     justify-content: space-between;
@@ -185,6 +243,86 @@
     border-radius: 999px;
     background: var(--shell-brand-600);
     animation: modern-shell-pulse 1.2s ease-in-out infinite;
+}
+
+.modern-shell-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 4px 4px 2px;
+}
+
+.modern-shell-sidebar-label {
+    color: rgba(255, 255, 255, 0.74);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.modern-shell-sidebar-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 999px;
+    min-height: 24px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0 9px;
+    cursor: pointer;
+}
+
+.modern-shell-sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar {
+    width: 78px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-logo img {
+    max-width: 58px;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-group-title,
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-link span:not(.ui2-sidebar-icon):not(.ui2-sidebar-badge),
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-user,
+.ui2-body.modern-shell-sidebar-collapsed .modern-shell-sidebar-label {
+    display: none;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-link {
+    justify-content: center;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-icon {
+    margin-right: 0;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-badge {
+    position: absolute;
+    right: 6px;
+    top: 5px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    font-size: 9px;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-link {
+    position: relative;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed.ui2-sidebar-enabled #main {
+    margin-left: 88px;
+    width: calc(100% - 88px);
 }
 
 .modern-shell-fallback {
@@ -385,6 +523,11 @@
     .modern-shell-hero-title {
         font-size: 30px;
     }
+
+    .modern-shell-appbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }
 
 @media (max-width: 700px) {
@@ -398,5 +541,9 @@
 
     .modern-shell-app-root {
         padding: 12px;
+    }
+
+    .modern-shell-appbar__right {
+        display: none;
     }
 }

@@ -64,6 +64,7 @@ TemplateUtility::printHeader('Modern UI Preview', array($modernShellStyleVersion
     <?php TemplateUtility::printQuickSearch(); ?>
     <div id="contents"<?php echo TemplateUtility::getUI2WrapperAttribute(); ?>>
         <div class="modern-shell-layout">
+            <div id="modernShellAppShellMount" class="modern-shell-appbar-mount"></div>
             <?php if (!empty($this->showShellChrome)): ?>
                 <div class="modern-shell-hero">
                     <div class="modern-shell-hero-main">
@@ -106,6 +107,7 @@ TemplateUtility::printHeader('Modern UI Preview', array($modernShellStyleVersion
                 data-dev-server-url="<?php echo(htmlspecialchars($this->devServerURL, ENT_QUOTES, 'UTF-8')); ?>"
                 data-client-logging="<?php echo($this->clientLoggingEnabled ? '1' : '0'); ?>"
                 data-auto-legacy-fallback-seconds="<?php echo((int) $this->autoLegacyFallbackSeconds); ?>"
+                data-app-shell="1"
             >
                 <div class="modern-shell-loading">
                     <span class="modern-shell-loading-dot"></span>

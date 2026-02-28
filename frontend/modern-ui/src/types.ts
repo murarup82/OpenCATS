@@ -55,3 +55,26 @@ export type DashboardModernDataResponse = {
     isActive: number;
   }>;
 };
+
+export type QuickActionAddToListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  dataItem: {
+    type: number;
+    typeLabel: string;
+    ids: number[];
+  };
+  permissions: {
+    canManageLists: boolean;
+    canDeleteLists: boolean;
+  };
+  sessionCookie: string;
+  lists: Array<{
+    savedListID: number;
+    description: string;
+    numberEntries: number;
+  }>;
+};

@@ -227,6 +227,112 @@
         return parsed;
     }
 
+    function parseURLSearchParams(rawURL) {
+        var normalizedURL = String(rawURL || '').replace(/&amp;/g, '&');
+        if (normalizedURL === '') {
+            return null;
+        }
+
+        try {
+            var parsed = new URL(normalizedURL, window.location.href);
+            return parsed.searchParams;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function installAppShellNavigation(root, bootstrap) {
+        if (typeof document === 'undefined' || !document.body) {
+            return;
+        }
+
+        var sidebar = document.querySelector('.ui2-sidebar');
+        if (!sidebar || sidebar.getAttribute('data-modern-shell-enhanced') === '1') {
+            return;
+        }
+
+        var storageKey = 'opencats-modern-shell-sidebar-collapsed';
+        var mount = document.getElementById('modernShellAppShellMount');
+
+        var shellHeader = document.createElement('div');
+        shellHeader.className = 'modern-shell-sidebar-header';
+
+        var shellLabel = document.createElement('span');
+        shellLabel.className = 'modern-shell-sidebar-label';
+        shellLabel.textContent = 'Workspace';
+
+        var shellToggle = document.createElement('button');
+        shellToggle.type = 'button';
+        shellToggle.className = 'modern-shell-sidebar-toggle';
+        shellToggle.setAttribute('aria-label', 'Toggle sidebar');
+
+        shellHeader.appendChild(shellLabel);
+        shellHeader.appendChild(shellToggle);
+        sidebar.insertBefore(shellHeader, sidebar.firstChild);
+
+        function applySidebarState(collapsed) {
+            document.body.classList.toggle('modern-shell-sidebar-collapsed', collapsed);
+            shellToggle.textContent = collapsed ? 'Expand' : 'Collapse';
+            shellToggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+            shellToggle.setAttribute('title', collapsed ? 'Expand navigation' : 'Collapse navigation');
+            try {
+                window.localStorage.setItem(storageKey, collapsed ? '1' : '0');
+            } catch (error) {}
+        }
+
+        function isCollapsed() {
+            try {
+                return window.localStorage.getItem(storageKey) === '1';
+            } catch (error) {
+                return false;
+            }
+        }
+
+        shellToggle.addEventListener('click', function () {
+            applySidebarState(!document.body.classList.contains('modern-shell-sidebar-collapsed'));
+        });
+
+        applySidebarState(isCollapsed());
+
+        if (mount) {
+            mount.innerHTML = '';
+
+            var appbar = document.createElement('div');
+            appbar.className = 'modern-shell-appbar';
+
+            var appbarLeft = document.createElement('div');
+            appbarLeft.className = 'modern-shell-appbar__left';
+
+            var appbarMenuButton = document.createElement('button');
+            appbarMenuButton.type = 'button';
+            appbarMenuButton.className = 'modern-shell-appbar__menu';
+            appbarMenuButton.textContent = 'Menu';
+            appbarMenuButton.addEventListener('click', function () {
+                applySidebarState(!document.body.classList.contains('modern-shell-sidebar-collapsed'));
+            });
+
+            var appbarRoute = document.createElement('div');
+            appbarRoute.className = 'modern-shell-appbar__route';
+            var moduleText = bootstrap && bootstrap.targetModule ? bootstrap.targetModule : 'dashboard';
+            var actionText = bootstrap && bootstrap.targetAction ? bootstrap.targetAction : '(default)';
+            appbarRoute.textContent = moduleText + ' / ' + actionText;
+
+            appbarLeft.appendChild(appbarMenuButton);
+            appbarLeft.appendChild(appbarRoute);
+
+            var appbarRight = document.createElement('div');
+            appbarRight.className = 'modern-shell-appbar__right';
+            appbarRight.textContent = 'Modern App Shell';
+
+            appbar.appendChild(appbarLeft);
+            appbar.appendChild(appbarRight);
+            mount.appendChild(appbar);
+        }
+
+        sidebar.setAttribute('data-modern-shell-enhanced', '1');
+        telemetry(root, 'info', 'shell.sidebar.enhanced');
+    }
+
     function installLegacyPopupBridge(root) {
         if (typeof window === 'undefined' || !document || !document.body) {
             return;
@@ -378,6 +484,34 @@
         });
 
         window.showPopWin = function (url, width, height, returnFunc) {
+            var searchParams = parseURLSearchParams(url);
+            if (searchParams && typeof window.CustomEvent === 'function') {
+                var moduleName = String(searchParams.get('m') || '').toLowerCase();
+                var actionName = String(searchParams.get('a') || '').toLowerCase();
+                if (moduleName === 'lists' && actionName === 'quickactionaddtolistmodal') {
+                    var dataItemType = parsePositiveInt(searchParams.get('dataItemType'));
+                    var dataItemID = parsePositiveInt(searchParams.get('dataItemID'));
+                    if (dataItemType > 0 && dataItemID > 0) {
+                        var openEvent = new CustomEvent('opencats:add-to-list:open', {
+                            cancelable: true,
+                            detail: {
+                                url: url,
+                                dataItemType: dataItemType,
+                                dataItemID: dataItemID
+                            }
+                        });
+                        var shouldFallback = window.dispatchEvent(openEvent);
+                        if (!shouldFallback) {
+                            telemetry(root, 'info', 'popup.bridge.handled-by-react', {
+                                module: moduleName,
+                                action: actionName
+                            });
+                            return;
+                        }
+                    }
+                }
+            }
+
             showPopup(url, width, height, returnFunc, null);
         };
 
@@ -399,6 +533,14 @@
 
         window.__openCATSModernPopupBridgeInstalled = true;
         telemetry(root, 'info', 'popup.bridge.installed');
+    }
+
+    function parsePositiveInt(value) {
+        var parsed = parseInt(value, 10);
+        if (isNaN(parsed) || parsed <= 0) {
+            return 0;
+        }
+        return parsed;
     }
 
     function mountExternalBundle(root, bootstrap) {
@@ -490,6 +632,7 @@
         ensureProcessShim();
         installLegacyPopupBridge(root);
         var bootstrap = decodeBootstrap(root);
+        installAppShellNavigation(root, bootstrap);
         telemetry(root, 'info', 'shell.boot', {
             module: bootstrap.targetModule || '',
             action: bootstrap.targetAction || '',
