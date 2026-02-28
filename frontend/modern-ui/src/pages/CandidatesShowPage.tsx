@@ -34,6 +34,24 @@ function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
 }
 
+function formatQuestionnaireDate(value: unknown): string {
+  const raw = String(value || '').trim();
+  if (raw === '') {
+    return '--';
+  }
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return raw;
+  }
+
+  return parsed.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
 function createStatusClassName(statusSlug: string): string {
   return `modern-status modern-status--${statusSlug || 'unknown'}`;
 }
@@ -184,9 +202,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 {candidate.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
               </div>
               <div className="avel-candidate-hero__meta">
-                <a className="modern-link" href={`mailto:${candidate.email1}`}>
-                  {toDisplayText(candidate.email1)}
-                </a>
+                {String(candidate.email1 || '').trim() !== '' ? (
+                  <a className="modern-link" href={`mailto:${candidate.email1}`}>
+                    {toDisplayText(candidate.email1)}
+                  </a>
+                ) : (
+                  <span>{toDisplayText(candidate.email1)}</span>
+                )}
                 <span>{toDisplayText(candidate.phoneCell)}</span>
                 <span>{`${toDisplayText(candidate.city)}, ${toDisplayText(candidate.country)}`}</span>
                 <span>Owner: {toDisplayText(candidate.owner)}</span>
@@ -290,6 +312,22 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               </div>
             </section>
           </div>
+
+          {data.eeoValues.length > 0 ? (
+            <section className="avel-list-panel">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">EEO Information</h2>
+                <p className="avel-list-panel__hint">Compliance-related candidate attributes.</p>
+              </div>
+              <div className="avel-candidate-details">
+                {data.eeoValues.map((item) => (
+                  <div key={item.fieldName}>
+                    <strong>{toDisplayText(item.fieldName)}:</strong> {toDisplayText(item.fieldValue)}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className="avel-list-panel">
             <div className="avel-list-panel__header">
@@ -477,6 +515,79 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 ))}
                 {data.lists.length === 0 ? <li>No lists linked.</li> : null}
               </ul>
+            </section>
+          </div>
+
+          <div className="avel-candidate-grid">
+            <section className="avel-list-panel">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Upcoming Events</h2>
+                <p className="avel-list-panel__hint">Calendar items linked to this profile.</p>
+              </div>
+              {data.calendar.length > 0 ? (
+                <ul className="avel-candidate-lists">
+                  {data.calendar.slice(0, 10).map((eventItem) => (
+                    <li key={eventItem.eventID}>
+                      <a className="modern-link" href={decodeLegacyURL(eventItem.eventURL)}>
+                        {toDisplayText(eventItem.dateShow)}: {toDisplayText(eventItem.title)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="modern-state modern-state--empty">No upcoming events.</div>
+              )}
+            </section>
+
+            <section className="avel-list-panel">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Questionnaires</h2>
+                <p className="avel-list-panel__hint">Submitted candidate questionnaires.</p>
+              </div>
+              {data.questionnaires.length > 0 ? (
+                <DataTable
+                  columns={[
+                    { key: 'title', title: 'Title' },
+                    { key: 'completed', title: 'Completed' },
+                    { key: 'description', title: 'Description' },
+                    { key: 'actions', title: 'Actions' }
+                  ]}
+                  hasRows={data.questionnaires.length > 0}
+                >
+                  {data.questionnaires.slice(0, 10).map((questionnaire, index) => {
+                    const row = questionnaire as Record<string, unknown>;
+                    const rawTitle = row['questionnaireTitle'];
+                    const title = toDisplayText(rawTitle);
+                    const titleEncoded = encodeURIComponent(String(rawTitle || ''));
+                    const viewURL =
+                      `${bootstrap.indexName}?m=candidates&a=show_questionnaire&candidateID=${candidate.candidateID}` +
+                      `&questionnaireTitle=${titleEncoded}&print=no&ui=legacy`;
+                    const printURL =
+                      `${bootstrap.indexName}?m=candidates&a=show_questionnaire&candidateID=${candidate.candidateID}` +
+                      `&questionnaireTitle=${titleEncoded}&print=yes&ui=legacy`;
+
+                    return (
+                      <tr key={`${title}-${index}`}>
+                        <td>{title}</td>
+                        <td>{formatQuestionnaireDate(row['questionnaireDate'])}</td>
+                        <td>{toDisplayText(row['questionnaireDescription'])}</td>
+                        <td>
+                          <div className="modern-table-actions">
+                            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={viewURL}>
+                              View
+                            </a>
+                            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={printURL}>
+                              Print
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </DataTable>
+              ) : (
+                <div className="modern-state modern-state--empty">No questionnaires available.</div>
+              )}
             </section>
           </div>
         </div>
