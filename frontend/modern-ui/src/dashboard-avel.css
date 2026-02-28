@@ -570,7 +570,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  padding: 11px 13px;
+  padding: 10px 12px;
   border-bottom: 1px solid #d3e3ed;
   background: linear-gradient(180deg, #ffffff 0%, #f0f8ff 100%);
 }
@@ -585,19 +585,97 @@
 
 .avel-dashboard-page .modern-kanban-board__hint {
   color: #648291;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
+}
+
+.avel-dashboard-page .modern-kanban-board__legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 7px 12px 8px;
+  border-bottom: 1px dashed #d4e3ed;
+  background: #f9fcff;
+}
+
+.avel-dashboard-page .modern-kanban-board__legend-label {
+  color: #627f90;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.avel-dashboard-page .modern-kanban-board__legend-item {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 8px;
+}
+
+.avel-dashboard-page .modern-kanban-board__legend-item--fresh {
+  border-color: #b7e7ca;
+  background: #eefdf4;
+  color: #1f7e49;
+}
+
+.avel-dashboard-page .modern-kanban-board__legend-item--active {
+  border-color: #eadf98;
+  background: #fffbe8;
+  color: #8a6f10;
+}
+
+.avel-dashboard-page .modern-kanban-board__legend-item--aging {
+  border-color: #efcfb4;
+  background: #fff6ec;
+  color: #9a6226;
+}
+
+.avel-dashboard-page .modern-kanban-board__legend-item--stale {
+  border-color: #eac0c0;
+  background: #fff2f2;
+  color: #a54b4b;
 }
 
 .avel-dashboard-page .modern-kanban-board {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
-  padding: 10px;
+  overflow-y: hidden;
+  padding: 8px 8px 10px;
+  scrollbar-gutter: stable both-edges;
+  scroll-behavior: smooth;
+  cursor: grab;
+}
+
+.avel-dashboard-page .modern-kanban-board:active {
+  cursor: grabbing;
+}
+
+.avel-dashboard-page .modern-kanban-board::-webkit-scrollbar {
+  height: 10px;
+}
+
+.avel-dashboard-page .modern-kanban-board::-webkit-scrollbar-track {
+  background: #e8f2f8;
+  border-radius: 999px;
+}
+
+.avel-dashboard-page .modern-kanban-board::-webkit-scrollbar-thumb {
+  background: #9ec4d8;
+  border-radius: 999px;
+}
+
+.avel-dashboard-page .modern-kanban-board::-webkit-scrollbar-thumb:hover {
+  background: #7baec8;
 }
 
 .avel-dashboard-page .modern-kanban-column {
-  width: 320px;
-  min-width: 320px;
+  flex: 0 0 276px;
+  width: 276px;
+  min-width: 276px;
   border: 1px solid var(--avel-border-strong);
   border-radius: 14px;
   background: linear-gradient(180deg, #fcfeff 0%, #f3f9fd 100%);
@@ -608,10 +686,10 @@
   border-bottom: 1px solid #d4e4ee;
   background: #edf6fc;
   border-radius: 14px 14px 0 0;
-  padding: 10px;
+  padding: 8px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
+  gap: 6px;
 }
 
 .avel-dashboard-page .modern-kanban-column__title-wrap {
@@ -625,7 +703,7 @@
   align-items: center;
   gap: 7px;
   color: var(--avel-800);
-  font-size: 0.79rem;
+  font-size: 0.74rem;
   letter-spacing: 0.02em;
 }
 
@@ -665,7 +743,7 @@
 
 .avel-dashboard-page .modern-kanban-column__subtitle {
   color: #688594;
-  font-size: 0.71rem;
+  font-size: 0.67rem;
 }
 
 .avel-dashboard-page .modern-kanban-column__count-wrap {
@@ -675,21 +753,21 @@
 }
 
 .avel-dashboard-page .modern-kanban-column__count {
-  min-width: 31px;
-  min-height: 31px;
-  border-radius: 10px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 8px;
   border: 1px solid #b9d5e5;
   background: #ffffff;
   color: var(--avel-800);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font: 700 0.87rem / 1 'Space Grotesk', 'Segoe UI', sans-serif;
+  font: 700 0.79rem / 1 'Space Grotesk', 'Segoe UI', sans-serif;
 }
 
 .avel-dashboard-page .modern-kanban-column__count-label {
   color: #658291;
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 800;
@@ -712,8 +790,8 @@
 
 .avel-dashboard-page .modern-kanban-column__cards {
   display: grid;
-  gap: 8px;
-  padding: 9px;
+  gap: 6px;
+  padding: 7px;
 }
 
 .avel-dashboard-page .modern-kanban-column__empty {
@@ -747,9 +825,9 @@
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 7px 18px rgba(0, 66, 91, 0.1);
-  padding: 10px;
+  padding: 8px;
   display: grid;
-  gap: 8px;
+  gap: 6px;
   transition: transform 170ms ease, box-shadow 170ms ease, border-color 170ms ease;
 }
 
@@ -769,24 +847,24 @@
 
 .avel-dashboard-page .modern-kanban-card__head {
   display: grid;
-  gap: 7px;
+  gap: 5px;
 }
 
 .avel-dashboard-page .modern-kanban-card__identity {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
 }
 
 .avel-dashboard-page .modern-kanban-card__avatar {
-  inline-size: 35px;
-  block-size: 35px;
-  border-radius: 10px;
+  inline-size: 31px;
+  block-size: 31px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font: 700 0.82rem / 1 'Space Grotesk', 'Segoe UI', sans-serif;
+  font: 700 0.73rem / 1 'Space Grotesk', 'Segoe UI', sans-serif;
   background: linear-gradient(160deg, var(--avel-500) 0%, var(--avel-800) 100%);
 }
 
@@ -797,12 +875,28 @@
 
 .avel-dashboard-page .modern-kanban-card__candidate {
   color: var(--avel-900);
-  font: 700 0.95rem / 1.1 'Space Grotesk', 'Segoe UI', sans-serif;
+  font: 700 0.86rem / 1.08 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-dashboard-page .modern-kanban-card__candidate--fresh {
+  color: #1f7e49;
+}
+
+.avel-dashboard-page .modern-kanban-card__candidate--active {
+  color: #8a6f10;
+}
+
+.avel-dashboard-page .modern-kanban-card__candidate--aging {
+  color: #9a6226;
+}
+
+.avel-dashboard-page .modern-kanban-card__candidate--stale {
+  color: #a54b4b;
 }
 
 .avel-dashboard-page .modern-kanban-card__identity-hint {
   color: #668392;
-  font-size: 0.69rem;
+  font-size: 0.63rem;
 }
 
 .avel-dashboard-page .modern-kanban-card__chips {
@@ -812,15 +906,14 @@
 }
 
 .avel-dashboard-page .modern-status,
-.avel-dashboard-page .modern-freshness,
 .avel-dashboard-page .modern-chip--pipeline {
   border-radius: 999px;
   border: 1px solid transparent;
-  font-size: 0.62rem;
+  font-size: 0.57rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1;
-  padding: 4px 8px;
+  padding: 3px 7px;
 }
 
 .avel-dashboard-page .modern-status {
@@ -850,42 +943,6 @@
   color: #9a6226;
 }
 
-.avel-dashboard-page .modern-freshness {
-  border-color: #d2e2ee;
-  background: #f5faff;
-  color: #4e7082;
-}
-
-.avel-dashboard-page .modern-freshness--fresh {
-  border-color: #b7e7ca;
-  background: #eefdf4;
-  color: #1f7e49;
-}
-
-.avel-dashboard-page .modern-freshness--active {
-  border-color: #b8dbef;
-  background: #edf8ff;
-  color: #1f6a8a;
-}
-
-.avel-dashboard-page .modern-freshness--aging {
-  border-color: #eecfac;
-  background: #fff8ef;
-  color: #9f6d2d;
-}
-
-.avel-dashboard-page .modern-freshness--stale {
-  border-color: #eac0c0;
-  background: #fff2f2;
-  color: #a54b4b;
-}
-
-.avel-dashboard-page .modern-freshness--unknown {
-  border-color: #d6dee6;
-  background: #f7f9fc;
-  color: #607280;
-}
-
 .avel-dashboard-page .modern-chip--pipeline.is-active {
   border-color: #b8d8e9;
   background: #ebf7ff;
@@ -902,7 +959,7 @@
   border: 1px solid #d4e5ef;
   border-radius: 9px;
   background: #f8fcff;
-  padding: 7px;
+  padding: 6px;
   display: grid;
   gap: 2px;
 }
@@ -911,12 +968,12 @@
   color: #6d8897;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 0.59rem;
+  font-size: 0.55rem;
   font-weight: 800;
 }
 
 .avel-dashboard-page .modern-kanban-card__job {
-  font-size: 0.79rem;
+  font-size: 0.74rem;
   font-weight: 700;
 }
 
@@ -924,9 +981,9 @@
   border: 1px dashed #d4e4ee;
   border-radius: 9px;
   background: #fbfdff;
-  padding: 7px;
+  padding: 5px 6px;
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
 
 .avel-dashboard-page .modern-kanban-card__fact {
@@ -936,34 +993,19 @@
   gap: 8px;
 }
 
-.avel-dashboard-page .modern-kanban-card__fact--summary {
-  justify-content: flex-start;
-  gap: 6px;
-}
-
-.avel-dashboard-page .modern-kanban-card__fact-sep {
-  color: #8aa4b2;
-}
-
 .avel-dashboard-page .modern-kanban-card__fact-key {
   color: #6d8897;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 0.58rem;
+  font-size: 0.53rem;
   font-weight: 800;
 }
 
 .avel-dashboard-page .modern-kanban-card__fact-value {
   color: #325568;
-  font-size: 0.74rem;
+  font-size: 0.69rem;
   font-weight: 700;
   text-align: right;
-}
-
-.avel-dashboard-page .modern-kanban-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
 }
 
 .avel-list-panel {
