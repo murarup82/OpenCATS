@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -32,29 +33,6 @@ function toDisplayText(value: unknown, fallback = '--'): string {
 
 function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
-}
-
-function ensureModernUIURL(url: string): string {
-  const raw = String(url || '').trim();
-  if (raw === '') {
-    return raw;
-  }
-
-  try {
-    const parsed = new URL(raw, window.location.href);
-    parsed.searchParams.set('ui', 'modern');
-    if (parsed.origin === window.location.origin) {
-      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    }
-    return parsed.toString();
-  } catch (error) {
-    const hasQuery = raw.includes('?');
-    const hasUI = /(?:\?|&)ui=/.test(raw);
-    if (hasUI) {
-      return raw.replace(/([?&])ui=[^&#]*/i, '$1ui=modern');
-    }
-    return `${raw}${hasQuery ? '&' : '?'}ui=modern`;
-  }
 }
 
 function formatQuestionnaireDate(value: unknown): string {
@@ -406,13 +384,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               {data.pipelines.items.map((pipeline) => (
                 <tr key={pipeline.candidateJobOrderID}>
                   <td>
-                    <a className="modern-link" href={decodeLegacyURL(pipeline.jobOrderURL)}>
+                    <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(pipeline.jobOrderURL))}>
                       {toDisplayText(pipeline.jobOrderTitle)}
                     </a>
                     {pipeline.clientJobID !== '' ? <div>{pipeline.clientJobID}</div> : null}
                   </td>
                   <td>
-                    <a className="modern-link" href={decodeLegacyURL(pipeline.companyURL)}>
+                    <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(pipeline.companyURL))}>
                       {toDisplayText(pipeline.companyName)}
                     </a>
                   </td>
@@ -531,7 +509,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               <ul className="avel-candidate-lists">
                 {data.lists.map((list) => (
                   <li key={list.listID}>
-                    <a className="modern-link" href={decodeLegacyURL(list.url)}>
+                    <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(list.url))}>
                       {toDisplayText(list.name)}
                     </a>
                   </li>
@@ -551,7 +529,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 <ul className="avel-candidate-lists">
                   {data.calendar.slice(0, 10).map((eventItem) => (
                     <li key={eventItem.eventID}>
-                      <a className="modern-link" href={decodeLegacyURL(eventItem.eventURL)}>
+                      <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(eventItem.eventURL))}>
                         {toDisplayText(eventItem.dateShow)}: {toDisplayText(eventItem.title)}
                       </a>
                     </li>

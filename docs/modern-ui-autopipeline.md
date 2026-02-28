@@ -9,6 +9,8 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 3. Candidate add/edit route bridge in modern shell (legacy-safe iframe).
 4. Full-width shell fix for `ui2-sidebar-enabled`.
 5. Candidate navigation links forced to `ui=modern` across dashboard and candidates pages.
+6. Shared modern URL utility applied across dashboard/candidate links.
+7. Expanded sample route map to run major modules inside modern shell compatibility mode.
 
 ## Next Queue
 
@@ -16,8 +18,7 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 2. Migrate `candidates.add` native modern form (same component mode as edit).
 3. Modernize candidate actions panel (delete/history/duplicate link) as native modal actions.
 4. Build native status change modal for dashboard/card actions (replace legacy popup for common transitions).
-5. Add modern route coverage for top menu modules in bridge mode (`joborders`, `companies`, `contacts`) for full-shell navigation tests.
-6. Convert high-usage list pages module-by-module from bridge to native (starting with `joborders.listByView`).
+5. Convert high-usage list pages module-by-module from compatibility shell to native (starting with `joborders.listByView`).
 
 ## Rules
 
@@ -25,4 +26,3 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 2. Use small, verifiable commits per slice.
 3. Run `npm run build` for `frontend/modern-ui` before bundle commits.
 4. Commit source and bundle artifacts separately.
-

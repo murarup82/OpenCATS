@@ -7,6 +7,7 @@ import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
+import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -46,29 +47,6 @@ function toDisplayText(value: unknown, fallback = '--'): string {
 
 function toBooleanString(value: boolean): string {
   return value ? '1' : '0';
-}
-
-function ensureModernUIURL(url: string): string {
-  const raw = String(url || '').trim();
-  if (raw === '') {
-    return raw;
-  }
-
-  try {
-    const parsed = new URL(raw, window.location.href);
-    parsed.searchParams.set('ui', 'modern');
-    if (parsed.origin === window.location.origin) {
-      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    }
-    return parsed.toString();
-  } catch (error) {
-    const hasQuery = raw.includes('?');
-    const hasUI = /(?:\?|&)ui=/.test(raw);
-    if (hasUI) {
-      return raw.replace(/([?&])ui=[^&#]*/i, '$1ui=modern');
-    }
-    return `${raw}${hasQuery ? '&' : '?'}ui=modern`;
-  }
 }
 
 export function CandidatesListPage({ bootstrap }: Props) {

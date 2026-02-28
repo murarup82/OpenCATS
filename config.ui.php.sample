@@ -51,8 +51,16 @@ define('UI_SWITCH_SHOW_SHELL_CHROME', false);
  * - value: array of actions, or '*' for all module actions
  */
 $GLOBALS['UI_SWITCH_ROUTE_MAP'] = array(
-    'dashboard'  => array('my'),
-    'candidates' => array('(default)', 'listByView', 'show', 'add', 'edit')
+    /* Native modern pages + compatibility shell for remaining actions in mapped modules. */
+    'dashboard'  => array('*'),
+    'candidates' => array('*'),
+    'joborders'  => array('*'),
+    'companies'  => array('*'),
+    'contacts'   => array('*'),
+    'activities' => array('*'),
+    'calendar'   => array('*'),
+    'lists'      => array('*'),
+    'reports'    => array('*')
 );
 
 /* Optional phased rollout by cohorts. Empty arrays = all users. */

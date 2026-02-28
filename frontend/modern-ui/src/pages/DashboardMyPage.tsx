@@ -9,6 +9,7 @@ import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
 import type { DashboardRow, DashboardStatusColumn } from '../components/dashboard/types';
+import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -70,29 +71,6 @@ function toStatusSlug(value: string): string {
 
 function createStatusClassName(statusLabel: string): string {
   return `modern-status modern-status--${toStatusSlug(statusLabel)}`;
-}
-
-function ensureModernUIURL(url: string): string {
-  const raw = String(url || '').trim();
-  if (raw === '') {
-    return raw;
-  }
-
-  try {
-    const parsed = new URL(raw, window.location.href);
-    parsed.searchParams.set('ui', 'modern');
-    if (parsed.origin === window.location.origin) {
-      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    }
-    return parsed.toString();
-  } catch (error) {
-    const hasQuery = raw.includes('?');
-    const hasUI = /(?:\?|&)ui=/.test(raw);
-    if (hasUI) {
-      return raw.replace(/([?&])ui=[^&#]*/i, '$1ui=modern');
-    }
-    return `${raw}${hasQuery ? '&' : '?'}ui=modern`;
-  }
 }
 
 export function DashboardMyPage({ bootstrap }: Props) {
@@ -516,7 +494,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
                         </a>
                       </td>
                       <td>
-                        <a className="modern-link" href={row.jobOrderURL}>
+                        <a className="modern-link" href={ensureModernUIURL(row.jobOrderURL)}>
                           {toDisplayText(row.jobOrderTitle)}
                         </a>
                       </td>

@@ -1,5 +1,6 @@
 import type { DashboardRow } from './types';
 import type { DragEvent as ReactDragEvent } from 'react';
+import { ensureModernUIURL } from '../../lib/navigation';
 
 type Props = {
   row: DashboardRow;
@@ -139,7 +140,7 @@ export function CandidateKanbanCard({
             {initials}
           </div>
           <div className="modern-kanban-card__identity-content">
-            <a className="modern-link modern-kanban-card__candidate" href={row.candidateURL}>
+            <a className="modern-link modern-kanban-card__candidate" href={ensureModernUIURL(row.candidateURL)}>
               {candidateName}
             </a>
             <div className="modern-kanban-card__identity-hint">Candidate profile</div>
@@ -157,7 +158,7 @@ export function CandidateKanbanCard({
 
       <div className="modern-kanban-card__job-wrap">
         <span className="modern-kanban-card__job-label">Job Order</span>
-        <a className="modern-link modern-kanban-card__job" href={row.jobOrderURL}>
+        <a className="modern-link modern-kanban-card__job" href={ensureModernUIURL(row.jobOrderURL)}>
           {jobOrderTitle}
         </a>
       </div>
