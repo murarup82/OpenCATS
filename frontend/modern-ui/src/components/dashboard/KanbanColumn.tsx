@@ -24,7 +24,10 @@ export function KanbanColumn({ column, totalVisibleRows, getStatusClassName, get
           <h4 className="modern-kanban-column__title">{column.statusLabel}</h4>
           <span className="modern-kanban-column__subtitle">{columnShare}% of visible pipeline</span>
         </div>
-        <span className="modern-kanban-column__count">{column.rows.length}</span>
+        <div className="modern-kanban-column__count-wrap">
+          <span className="modern-kanban-column__count">{column.rows.length}</span>
+          <span className="modern-kanban-column__count-label">candidates</span>
+        </div>
       </header>
       <div className="modern-kanban-column__progress" aria-hidden="true">
         <span className="modern-kanban-column__progress-fill" style={{ width: `${progressWidth}%` }} />

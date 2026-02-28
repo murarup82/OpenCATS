@@ -318,6 +318,14 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     { fresh: 0, stale: 0 }
   );
   const averagePerStatus = columns.length > 0 ? Math.round(filteredRows.length / columns.length) : 0;
+  const openCoverage = filteredRows.length > 0 ? Math.round((openRows / filteredRows.length) * 100) : 0;
+  const freshnessCoverage = filteredRows.length > 0 ? Math.round((freshnessCounts.fresh / filteredRows.length) * 100) : 0;
+  const leadingColumn = columns.reduce<DashboardStatusColumn | null>((leader, column) => {
+    if (!leader || column.rows.length > leader.rows.length) {
+      return column;
+    }
+    return leader;
+  }, null);
 
   const activeServerFilters: string[] = [];
   if (data.meta.scope === 'all') {
@@ -347,11 +355,12 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     const localStatus = statusCatalog.find((status) => String(status.statusID) === localStatusID);
     activeLocalFilters.push(`Quick status: ${localStatus ? localStatus.statusLabel : localStatusID}`);
   }
+  const activeFilterCount = activeServerFilters.length + activeLocalFilters.length;
 
   return (
     <PageContainer
       title="My Dashboard"
-      subtitle="Pipeline command center (read-only modern slice powered by existing ATS data contract)"
+      subtitle="Modern recruitment operations command center"
       actions={
         <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
           Open Legacy UI
@@ -359,6 +368,49 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
       }
     >
       <div className="modern-dashboard">
+        <section className="modern-command-center-hero">
+          <div className="modern-command-center-hero__main">
+            <span className="modern-command-center-hero__eyebrow">Delivery Pulse</span>
+            <h4 className="modern-command-center-hero__title">Recruitment Pipeline Command Center</h4>
+            <p className="modern-command-center-hero__copy">
+              Track active talent flow across stages, identify bottlenecks fast, and prepare delivery updates with one
+              consistent board view.
+            </p>
+            <div className="modern-command-center-hero__chips">
+              <span className="modern-command-center-chip">
+                Scope: {data.meta.scope === 'all' ? 'All Jobs' : 'My Assigned Jobs'}
+              </span>
+              <span className="modern-command-center-chip">
+                View: {viewMode === 'kanban' ? 'Kanban board' : 'List mode'}
+              </span>
+              <span className="modern-command-center-chip">
+                Filters: {activeFilterCount > 0 ? `${activeFilterCount} active` : 'None'}
+              </span>
+            </div>
+          </div>
+          <div className="modern-command-center-hero__stats">
+            <div className="modern-command-center-stat">
+              <span className="modern-command-center-stat__label">Top Stage</span>
+              <strong className="modern-command-center-stat__value">
+                {leadingColumn ? leadingColumn.statusLabel : '--'}
+              </strong>
+              <span className="modern-command-center-stat__hint">
+                {leadingColumn ? `${leadingColumn.rows.length} candidates in this lane` : 'No visible lanes'}
+              </span>
+            </div>
+            <div className="modern-command-center-stat">
+              <span className="modern-command-center-stat__label">Open Coverage</span>
+              <strong className="modern-command-center-stat__value">{openCoverage}%</strong>
+              <span className="modern-command-center-stat__hint">Share of visible candidates in open pipeline</span>
+            </div>
+            <div className="modern-command-center-stat">
+              <span className="modern-command-center-stat__label">Freshness Score</span>
+              <strong className="modern-command-center-stat__value">{freshnessCoverage}%</strong>
+              <span className="modern-command-center-stat__hint">Candidates updated in the last 3 days</span>
+            </div>
+          </div>
+        </section>
+
         <div className="modern-kpi-grid">
           <article className="modern-kpi modern-kpi--primary">
             <span className="modern-kpi__label">Visible Candidates</span>

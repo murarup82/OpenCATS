@@ -11,6 +11,10 @@ type Props = {
 export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName, getFreshness }: Props) {
   return (
     <div className="modern-kanban-board-wrap">
+      <div className="modern-kanban-board__header">
+        <span className="modern-kanban-board__title">Pipeline Lanes</span>
+        <span className="modern-kanban-board__hint">Horizontal scroll enabled for all workflow stages</span>
+      </div>
       <div className="modern-kanban-board" aria-label="Candidate pipeline board">
         {columns.map((column) => (
           <KanbanColumn

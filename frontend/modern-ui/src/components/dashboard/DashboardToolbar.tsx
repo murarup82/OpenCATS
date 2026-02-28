@@ -63,63 +63,15 @@ export function DashboardToolbar(props: Props) {
   const activeFilterCount = activeServerFilters.length + activeLocalFilters.length;
   const hasServerFilters = activeServerFilters.length > 0;
   const hasLocalFilters = activeLocalFilters.length > 0;
+  const canClearLocal = hasLocalFilters || searchTerm.trim() !== '';
+  const canResetServer = hasServerFilters || showClosed;
 
   return (
-    <section className="modern-kanban-toolbar modern-kanban-toolbar--sticky" aria-label="Dashboard controls">
-      <div className="modern-kanban-toolbar__top">
-        <label className="modern-kanban-search">
-          <span className="modern-kanban-toolbar__label">Search candidates or jobs</span>
-          <input
-            type="search"
-            value={searchTerm}
-            onChange={(event) => onSearchTermChange(event.target.value)}
-            placeholder="Candidate, job order, company, location..."
-          />
-        </label>
-
-        <div className="modern-kanban-toolbar__actions">
-          <div className={`modern-kanban-toolbar__active-counter${activeFilterCount > 0 ? ' is-active' : ''}`}>
-            {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
-          </div>
-          <div className="modern-segment" role="group" aria-label="View mode">
-            <button
-              type="button"
-              className={`modern-segment__btn${viewMode === 'kanban' ? ' is-active' : ''}`}
-              onClick={() => onViewModeChange('kanban')}
-            >
-              Kanban
-            </button>
-            <button
-              type="button"
-              className={`modern-segment__btn${viewMode === 'list' ? ' is-active' : ''}`}
-              onClick={() => onViewModeChange('list')}
-            >
-              List
-            </button>
-          </div>
-          <button
-            type="button"
-            className="modern-btn modern-btn--secondary"
-            onClick={onClearLocalFilters}
-            disabled={!hasLocalFilters && searchTerm.trim() === ''}
-          >
-            Clear Local
-          </button>
-          <button
-            type="button"
-            className="modern-btn modern-btn--secondary modern-btn--emphasis"
-            onClick={onResetServerFilters}
-            disabled={!hasServerFilters && !showClosed}
-          >
-            Reset Filters
-          </button>
-        </div>
-      </div>
-
-      <div className="modern-kanban-toolbar__bottom">
+    <section className="modern-command-bar modern-command-bar--sticky" aria-label="Dashboard controls">
+      <div className="modern-command-bar__row modern-command-bar__row--primary">
         {canViewAllScopes ? (
-          <div className="modern-kanban-toolbar__group modern-kanban-toolbar__group--scope">
-            <span className="modern-kanban-toolbar__label">Scope</span>
+          <div className="modern-command-group modern-command-group--scope">
+            <span className="modern-command-label">Scope</span>
             <div className="modern-segment modern-segment--scope" role="group" aria-label="Scope mode">
               <button
                 type="button"
@@ -139,8 +91,40 @@ export function DashboardToolbar(props: Props) {
           </div>
         ) : null}
 
-        <label className="modern-kanban-toolbar__group">
-          <span className="modern-kanban-toolbar__label">Customer</span>
+        <label className="modern-command-search">
+          <span className="modern-command-label">Search</span>
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => onSearchTermChange(event.target.value)}
+            placeholder="Search candidate, role, company, location"
+          />
+        </label>
+
+        <div className="modern-command-group modern-command-group--view">
+          <span className="modern-command-label">View</span>
+          <div className="modern-segment" role="group" aria-label="View mode">
+            <button
+              type="button"
+              className={`modern-segment__btn${viewMode === 'kanban' ? ' is-active' : ''}`}
+              onClick={() => onViewModeChange('kanban')}
+            >
+              Kanban
+            </button>
+            <button
+              type="button"
+              className={`modern-segment__btn${viewMode === 'list' ? ' is-active' : ''}`}
+              onClick={() => onViewModeChange('list')}
+            >
+              List
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="modern-command-bar__row modern-command-bar__row--filters">
+        <label className="modern-command-field">
+          <span className="modern-command-label">Customer</span>
           <select value={customerID} onChange={(event) => onCustomerChange(event.target.value)}>
             {customers.map((option) => (
               <option key={option.value} value={option.value}>
@@ -150,8 +134,8 @@ export function DashboardToolbar(props: Props) {
           </select>
         </label>
 
-        <label className="modern-kanban-toolbar__group">
-          <span className="modern-kanban-toolbar__label">Job Order</span>
+        <label className="modern-command-field">
+          <span className="modern-command-label">Job Order</span>
           <select value={jobOrderID} onChange={(event) => onJobOrderChange(event.target.value)}>
             {jobOrders.map((option) => (
               <option key={option.value} value={option.value}>
@@ -161,8 +145,8 @@ export function DashboardToolbar(props: Props) {
           </select>
         </label>
 
-        <label className="modern-kanban-toolbar__group">
-          <span className="modern-kanban-toolbar__label">Server Status Filter</span>
+        <label className="modern-command-field">
+          <span className="modern-command-label">Server Status</span>
           <select value={statusID} onChange={(event) => onStatusChange(event.target.value)}>
             {statuses.map((option) => (
               <option key={option.value} value={option.value}>
@@ -171,11 +155,9 @@ export function DashboardToolbar(props: Props) {
             ))}
           </select>
         </label>
-      </div>
 
-      <div className="modern-kanban-toolbar__meta">
-        <label className="modern-kanban-toolbar__group">
-          <span className="modern-kanban-toolbar__label">Board Status Focus</span>
+        <label className="modern-command-field">
+          <span className="modern-command-label">Board Focus</span>
           <select value={localStatusID} onChange={(event) => onLocalStatusChange(event.target.value)}>
             {localStatusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -185,7 +167,28 @@ export function DashboardToolbar(props: Props) {
           </select>
         </label>
 
-        <label className="modern-kanban-toolbar__toggle">
+        <div className="modern-command-actions">
+          <button
+            type="button"
+            className="modern-btn modern-btn--secondary"
+            onClick={onClearLocalFilters}
+            disabled={!canClearLocal}
+          >
+            Clear Local
+          </button>
+          <button
+            type="button"
+            className="modern-btn modern-btn--secondary modern-btn--emphasis"
+            onClick={onResetServerFilters}
+            disabled={!canResetServer}
+          >
+            Reset All Filters
+          </button>
+        </div>
+      </div>
+
+      <div className="modern-command-bar__row modern-command-bar__row--meta">
+        <label className="modern-command-toggle">
           <input
             type="checkbox"
             checked={showClosed}
@@ -194,22 +197,27 @@ export function DashboardToolbar(props: Props) {
           <span>Include closed job orders</span>
         </label>
 
-        {activeFilterCount > 0 ? (
-          <div className="modern-kanban-toolbar__active-list">
-            {activeServerFilters.map((filterLabel, index) => (
-              <span className="modern-active-filter modern-active-filter--server" key={`server-${index}-${filterLabel}`}>
-                {filterLabel}
-              </span>
-            ))}
-            {activeLocalFilters.map((filterLabel, index) => (
-              <span className="modern-active-filter modern-active-filter--local" key={`local-${index}-${filterLabel}`}>
-                {filterLabel}
-              </span>
-            ))}
+        <div className="modern-command-active">
+          <div className={`modern-command-active__count${activeFilterCount > 0 ? ' is-active' : ''}`}>
+            {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
           </div>
-        ) : (
-          <div className="modern-kanban-toolbar__active-empty">No active filters. Showing full pipeline slice.</div>
-        )}
+          {activeFilterCount > 0 ? (
+            <div className="modern-command-active__list">
+              {activeServerFilters.map((filterLabel, index) => (
+                <span className="modern-active-filter modern-active-filter--server" key={`server-${index}-${filterLabel}`}>
+                  {filterLabel}
+                </span>
+              ))}
+              {activeLocalFilters.map((filterLabel, index) => (
+                <span className="modern-active-filter modern-active-filter--local" key={`local-${index}-${filterLabel}`}>
+                  {filterLabel}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="modern-command-active__empty">No active filters. Board is showing the full available slice.</div>
+          )}
+        </div>
       </div>
     </section>
   );

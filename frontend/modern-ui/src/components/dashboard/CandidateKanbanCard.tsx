@@ -85,27 +85,34 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
         </div>
       </div>
 
-      <a className="modern-link modern-kanban-card__job" href={row.jobOrderURL}>
-        {jobOrderTitle}
-      </a>
+      <div className="modern-kanban-card__job-wrap">
+        <span className="modern-kanban-card__job-label">Role</span>
+        <a className="modern-link modern-kanban-card__job" href={row.jobOrderURL}>
+          {jobOrderTitle}
+        </a>
+      </div>
 
-      <div className="modern-kanban-card__meta">
-        <div className="modern-kanban-card__meta-item">
-          <span className="modern-kanban-card__meta-key">Location</span>
-          <span className="modern-kanban-card__meta-value">{location}</span>
+      <div className="modern-kanban-card__facts">
+        <div className="modern-kanban-card__fact">
+          <span className="modern-kanban-card__fact-key">Company</span>
+          <span className="modern-kanban-card__fact-value">{companyName}</span>
         </div>
-        <div className="modern-kanban-card__meta-item">
-          <span className="modern-kanban-card__meta-key">Last Updated</span>
-          <span className="modern-kanban-card__meta-value">{lastUpdated}</span>
+        <div className="modern-kanban-card__fact">
+          <span className="modern-kanban-card__fact-key">Location</span>
+          <span className="modern-kanban-card__fact-value">{location}</span>
+        </div>
+        <div className="modern-kanban-card__fact modern-kanban-card__fact--wide">
+          <span className="modern-kanban-card__fact-key">Last Updated</span>
+          <span className="modern-kanban-card__fact-value">{lastUpdated}</span>
         </div>
       </div>
 
       <div className="modern-kanban-card__actions">
         <a className="modern-btn modern-btn--ghost modern-btn--mini" href={row.candidateURL}>
-          View Candidate
+          View
         </a>
         <a className="modern-btn modern-btn--ghost modern-btn--mini" href={row.jobOrderURL}>
-          Job Details
+          Job
         </a>
         <a className="modern-btn modern-btn--ghost modern-btn--mini" href={withLegacyMode(row.candidateURL)}>
           Open Legacy
