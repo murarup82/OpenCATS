@@ -65,18 +65,20 @@ export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName }: P
       </div>
       <div
         ref={boardRef}
-        className="modern-kanban-board"
+        className="modern-kanban-board__viewport"
         aria-label="Candidate pipeline board"
         onWheel={handleBoardWheel}
       >
-        {columns.map((column) => (
-          <KanbanColumn
-            key={`${column.statusID}-${column.statusSlug}`}
-            column={column}
-            totalVisibleRows={totalVisibleRows}
-            getStatusClassName={getStatusClassName}
-          />
-        ))}
+        <div className="modern-kanban-board">
+          {columns.map((column) => (
+            <KanbanColumn
+              key={`${column.statusID}-${column.statusSlug}`}
+              column={column}
+              totalVisibleRows={totalVisibleRows}
+              getStatusClassName={getStatusClassName}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
