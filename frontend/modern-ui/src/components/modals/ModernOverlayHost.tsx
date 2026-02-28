@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { QuickActionAddToListModernDataResponse, UIModeBootstrap } from '../../types';
-import { callLegacyAjaxFunction, fetchQuickActionAddToListData } from '../../lib/api';
+import {
+  callLegacyAjaxFunction,
+  fetchAddToListDataFromPopupURL,
+  fetchQuickActionAddToListData
+} from '../../lib/api';
 import { Modal } from '../../ui-core';
 
 type Props = {
@@ -14,8 +18,9 @@ type AddToListEventDetail = {
 };
 
 type AddToListContext = {
-  dataItemType: number;
-  dataItemID: number;
+  sourceURL?: string;
+  dataItemType?: number;
+  dataItemID?: number;
 };
 
 type FeedbackConfig = {
@@ -23,6 +28,36 @@ type FeedbackConfig = {
   securityToken: string;
   returnQuery: string;
   pageURL: string;
+};
+
+type LegacyPopupMode = 'url' | 'html';
+
+type LegacyPopupState = {
+  mode: LegacyPopupMode;
+  title: string;
+  url: string;
+  html: string;
+  width: number;
+  height: number;
+  returnFunc: ((value?: unknown) => void) | null;
+};
+
+type LegacyPopupOpenDetail = {
+  mode?: LegacyPopupMode;
+  url?: string;
+  html?: string;
+  width?: number | string;
+  height?: number | string;
+  returnFunc?: unknown;
+};
+
+type LegacyPopupCloseDetail = {
+  callReturnFunc?: boolean;
+  refresh?: boolean;
+};
+
+type LegacyPopupTitleDetail = {
+  title?: unknown;
 };
 
 type GlobalFeedbackWindow = Window & {
@@ -36,6 +71,12 @@ function parsePositiveNumber(value: unknown): number {
     return 0;
   }
   return Math.floor(parsed);
+}
+
+function parsePopupDimension(value: unknown, fallback: number, minValue: number, maxValue: number): number {
+  const parsed = parsePositiveNumber(value);
+  const nextValue = parsed <= 0 ? fallback : parsed;
+  return Math.max(minValue, Math.min(nextValue, maxValue));
 }
 
 function toLegacyAjaxError(response: string): string {
@@ -66,6 +107,10 @@ export function ModernOverlayHost({ bootstrap }: Props) {
   const [feedbackType, setFeedbackType] = useState('bug');
   const [feedbackSubject, setFeedbackSubject] = useState('');
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [legacyPopup, setLegacyPopup] = useState<LegacyPopupState | null>(null);
+
+  const legacyPopupRef = useRef<LegacyPopupState | null>(null);
+  const legacyPopupFrameRef = useRef<HTMLIFrameElement | null>(null);
 
   const selectedCount = selectedListIDs.length;
 
@@ -92,6 +137,26 @@ export function ModernOverlayHost({ bootstrap }: Props) {
     [bootstrap]
   );
 
+  const loadAddToListDataFromURL = useCallback(async (url: string) => {
+    setAddModalLoading(true);
+    setAddModalError('');
+    setAddModalInfo('');
+    setSelectedListIDs([]);
+    setNewListName('');
+    setEditingListID(null);
+    setEditingListName('');
+
+    try {
+      const payload = await fetchAddToListDataFromPopupURL(bootstrap, url);
+      setAddData(payload);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load list modal data.';
+      setAddModalError(message);
+    } finally {
+      setAddModalLoading(false);
+    }
+  }, [bootstrap]);
+
   const closeAddModal = useCallback(() => {
     setAddModalOpen(false);
     setAddModalLoading(false);
@@ -107,8 +172,62 @@ export function ModernOverlayHost({ bootstrap }: Props) {
   }, []);
 
   useEffect(() => {
+    legacyPopupRef.current = legacyPopup;
+  }, [legacyPopup]);
+
+  const getLegacyPopupReturnValue = useCallback(() => {
+    const frame = legacyPopupFrameRef.current;
+    if (!frame) {
+      return undefined;
+    }
+
+    try {
+      const frameWindow = frame.contentWindow as (Window & { returnVal?: unknown }) | null;
+      if (frameWindow && typeof frameWindow.returnVal !== 'undefined') {
+        return frameWindow.returnVal;
+      }
+    } catch (error) {
+      return undefined;
+    }
+
+    return undefined;
+  }, []);
+
+  const closeLegacyPopup = useCallback(
+    (callReturnFunc: boolean, refresh: boolean) => {
+      const current = legacyPopupRef.current;
+      if (!current) {
+        return;
+      }
+
+      setLegacyPopup(null);
+
+      if (callReturnFunc && typeof current.returnFunc === 'function') {
+        const returnValue = current.mode === 'url' ? getLegacyPopupReturnValue() : undefined;
+        try {
+          current.returnFunc(returnValue);
+        } catch (error) {}
+      }
+
+      if (refresh) {
+        window.location.reload();
+      }
+    },
+    [getLegacyPopupReturnValue]
+  );
+
+  useEffect(() => {
     const handleAddToListOpen = (rawEvent: Event) => {
       const event = rawEvent as CustomEvent<AddToListEventDetail>;
+      const sourceURL = String(event.detail?.url || '');
+      if (sourceURL !== '') {
+        event.preventDefault();
+        setAddContext({ sourceURL });
+        setAddModalOpen(true);
+        void loadAddToListDataFromURL(sourceURL);
+        return;
+      }
+
       const nextDataItemType = parsePositiveNumber(event.detail?.dataItemType);
       const nextDataItemID = parsePositiveNumber(event.detail?.dataItemID);
       if (nextDataItemType <= 0 || nextDataItemID <= 0) {
@@ -128,7 +247,57 @@ export function ModernOverlayHost({ bootstrap }: Props) {
     return () => {
       window.removeEventListener('opencats:add-to-list:open', handleAddToListOpen as EventListener);
     };
-  }, [loadAddToListData]);
+  }, [loadAddToListData, loadAddToListDataFromURL]);
+
+  useEffect(() => {
+    const handleLegacyPopupOpen = (rawEvent: Event) => {
+      const event = rawEvent as CustomEvent<LegacyPopupOpenDetail>;
+      const detail = event.detail || {};
+      const maxWidth = Math.max(340, window.innerWidth - 44);
+      const maxHeight = Math.max(260, window.innerHeight - 120);
+
+      event.preventDefault();
+      setLegacyPopup({
+        mode: detail.mode === 'html' ? 'html' : 'url',
+        title: '',
+        url: String(detail.url || 'js/submodal/loading.html'),
+        html: String(detail.html || ''),
+        width: parsePopupDimension(detail.width, 760, 340, maxWidth),
+        height: parsePopupDimension(detail.height, 540, 260, maxHeight),
+        returnFunc: typeof detail.returnFunc === 'function' ? detail.returnFunc : null
+      });
+    };
+
+    const handleLegacyPopupClose = (rawEvent: Event) => {
+      const event = rawEvent as CustomEvent<LegacyPopupCloseDetail>;
+      if (!legacyPopupRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      closeLegacyPopup(event.detail?.callReturnFunc === true, event.detail?.refresh === true);
+    };
+
+    const handleLegacyPopupTitle = (rawEvent: Event) => {
+      const event = rawEvent as CustomEvent<LegacyPopupTitleDetail>;
+      if (!legacyPopupRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      const nextTitle = String(event.detail?.title || '');
+      setLegacyPopup((current) => (current ? { ...current, title: nextTitle } : current));
+    };
+
+    window.addEventListener('opencats:legacy-popup:open', handleLegacyPopupOpen as EventListener);
+    window.addEventListener('opencats:legacy-popup:close', handleLegacyPopupClose as EventListener);
+    window.addEventListener('opencats:legacy-popup:title', handleLegacyPopupTitle as EventListener);
+    return () => {
+      window.removeEventListener('opencats:legacy-popup:open', handleLegacyPopupOpen as EventListener);
+      window.removeEventListener('opencats:legacy-popup:close', handleLegacyPopupClose as EventListener);
+      window.removeEventListener('opencats:legacy-popup:title', handleLegacyPopupTitle as EventListener);
+    };
+  }, [closeLegacyPopup]);
 
   useEffect(() => {
     const win = window as GlobalFeedbackWindow;
@@ -240,7 +409,11 @@ export function ModernOverlayHost({ bootstrap }: Props) {
       }
 
       setNewListName('');
-      await loadAddToListData(context.dataItemType, context.dataItemID);
+      if (context.sourceURL) {
+        await loadAddToListDataFromURL(context.sourceURL);
+      } else if (context.dataItemType && context.dataItemID) {
+        await loadAddToListData(context.dataItemType, context.dataItemID);
+      }
       setAddModalInfo('List created successfully.');
     });
   };
@@ -554,6 +727,42 @@ export function ModernOverlayHost({ bootstrap }: Props) {
         ) : (
           <div className="modern-overlay-list-modal__empty">Feedback form is unavailable on this route.</div>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={legacyPopup !== null}
+        title={legacyPopup?.title || 'Dialog'}
+        onClose={() => closeLegacyPopup(false, false)}
+        closeLabel="Close"
+        size={
+          legacyPopup
+            ? legacyPopup.width <= 520
+              ? 'sm'
+              : legacyPopup.width <= 840
+                ? 'md'
+                : 'lg'
+            : 'md'
+        }
+        footer={
+          <button type="button" className="modern-btn modern-btn--secondary" onClick={() => closeLegacyPopup(false, false)}>
+            Close
+          </button>
+        }
+      >
+        {legacyPopup ? (
+          <div className="modern-overlay-legacy-popup" style={{ height: `${legacyPopup.height}px` }}>
+            {legacyPopup.mode === 'html' ? (
+              <div className="modern-overlay-legacy-popup__html" dangerouslySetInnerHTML={{ __html: legacyPopup.html }} />
+            ) : (
+              <iframe
+                ref={legacyPopupFrameRef}
+                className="modern-overlay-legacy-popup__iframe"
+                src={legacyPopup.url}
+                title={legacyPopup.title || 'Legacy popup'}
+              />
+            )}
+          </div>
+        ) : null}
       </Modal>
     </>
   );

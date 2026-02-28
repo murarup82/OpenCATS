@@ -488,46 +488,99 @@
             if (searchParams && typeof window.CustomEvent === 'function') {
                 var moduleName = String(searchParams.get('m') || '').toLowerCase();
                 var actionName = String(searchParams.get('a') || '').toLowerCase();
-                if (moduleName === 'lists' && actionName === 'quickactionaddtolistmodal') {
+                if (moduleName === 'lists' &&
+                    (actionName === 'quickactionaddtolistmodal' || actionName === 'addtolistfromdatagridmodal')) {
+                    var detail = {
+                        url: url
+                    };
                     var dataItemType = parsePositiveInt(searchParams.get('dataItemType'));
                     var dataItemID = parsePositiveInt(searchParams.get('dataItemID'));
-                    if (dataItemType > 0 && dataItemID > 0) {
-                        var openEvent = new CustomEvent('opencats:add-to-list:open', {
-                            cancelable: true,
-                            detail: {
-                                url: url,
-                                dataItemType: dataItemType,
-                                dataItemID: dataItemID
-                            }
+                    if (dataItemType > 0) {
+                        detail.dataItemType = dataItemType;
+                    }
+                    if (dataItemID > 0) {
+                        detail.dataItemID = dataItemID;
+                    }
+
+                    var openEvent = new CustomEvent('opencats:add-to-list:open', {
+                        cancelable: true,
+                        detail: detail
+                    });
+                    var shouldFallback = window.dispatchEvent(openEvent);
+                    if (!shouldFallback) {
+                        telemetry(root, 'info', 'popup.bridge.handled-by-react', {
+                            module: moduleName,
+                            action: actionName
                         });
-                        var shouldFallback = window.dispatchEvent(openEvent);
-                        if (!shouldFallback) {
-                            telemetry(root, 'info', 'popup.bridge.handled-by-react', {
-                                module: moduleName,
-                                action: actionName
-                            });
-                            return;
-                        }
+                        return;
                     }
                 }
+            }
+
+            if (!dispatchCancelableEvent('opencats:legacy-popup:open', {
+                mode: 'url',
+                url: url,
+                width: sanitizeDimension(width, 760),
+                height: sanitizeDimension(height, 540),
+                returnFunc: returnFunc
+            })) {
+                telemetry(root, 'info', 'popup.bridge.handled-by-react', {
+                    module: 'generic',
+                    action: 'showPopWin'
+                });
+                return;
             }
 
             showPopup(url, width, height, returnFunc, null);
         };
 
         window.showPopWinHTML = function (html, width, height, returnFunc) {
+            if (!dispatchCancelableEvent('opencats:legacy-popup:open', {
+                mode: 'html',
+                html: html,
+                width: sanitizeDimension(width, 760),
+                height: sanitizeDimension(height, 540),
+                returnFunc: returnFunc
+            })) {
+                telemetry(root, 'info', 'popup.bridge.handled-by-react', {
+                    module: 'generic',
+                    action: 'showPopWinHTML'
+                });
+                return;
+            }
+
             showPopup('', width, height, returnFunc, html);
         };
 
         window.hidePopWin = function (callReturnFunc) {
+            if (!dispatchCancelableEvent('opencats:legacy-popup:close', {
+                callReturnFunc: callReturnFunc === true,
+                refresh: false
+            })) {
+                return;
+            }
+
             hidePopup(callReturnFunc === true, false);
         };
 
         window.hidePopWinRefresh = function (callReturnFunc) {
+            if (!dispatchCancelableEvent('opencats:legacy-popup:close', {
+                callReturnFunc: callReturnFunc === true,
+                refresh: true
+            })) {
+                return;
+            }
+
             hidePopup(callReturnFunc === true, true);
         };
 
         window.setPopTitle = function (title) {
+            if (!dispatchCancelableEvent('opencats:legacy-popup:title', {
+                title: title
+            })) {
+                return;
+            }
+
             setTitle(title);
         };
 
@@ -541,6 +594,19 @@
             return 0;
         }
         return parsed;
+    }
+
+    function dispatchCancelableEvent(eventName, detail) {
+        if (typeof window.CustomEvent !== 'function') {
+            return true;
+        }
+
+        var event = new CustomEvent(eventName, {
+            cancelable: true,
+            detail: detail || {}
+        });
+
+        return window.dispatchEvent(event);
     }
 
     function mountExternalBundle(root, bootstrap) {

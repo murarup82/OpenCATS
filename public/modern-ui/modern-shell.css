@@ -16,6 +16,14 @@
     --shell-focus-ring: 0 0 0 3px rgba(0, 151, 189, 0.18);
 }
 
+.ui2-body #contents.ui2-page {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding-left: clamp(12px, 1.5vw, 24px);
+    padding-right: clamp(12px, 1.5vw, 24px);
+}
+
 .modern-shell-layout {
     display: grid;
     gap: 18px;

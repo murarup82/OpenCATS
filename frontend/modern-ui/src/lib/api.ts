@@ -63,6 +63,32 @@ export async function fetchQuickActionAddToListData(
   return data;
 }
 
+export async function fetchAddToListDataFromPopupURL(
+  bootstrap: UIModeBootstrap,
+  popupURL: string
+): Promise<QuickActionAddToListModernDataResponse> {
+  const url = new URL(String(popupURL || '').replace(/&amp;/g, '&'), window.location.href);
+  url.searchParams.set('format', 'modern-json');
+  url.searchParams.set('modernPage', 'lists-quick-action-add');
+  if (!url.searchParams.get('m')) {
+    url.searchParams.set('m', 'lists');
+  }
+  if (!url.searchParams.get('a')) {
+    url.searchParams.set('a', 'quickActionAddToListModal');
+  }
+
+  const data = await getJSON<QuickActionAddToListModernDataResponse>(url.toString());
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading list modal data.');
+  }
+
+  if (data.meta.contractKey !== 'lists.quickActionAddToList.v1') {
+    throw new Error('Unexpected list modal contract key.');
+  }
+
+  return data;
+}
+
 type LegacyAjaxResponse = {
   response: string;
   errorCode: string;

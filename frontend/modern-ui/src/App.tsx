@@ -1,7 +1,7 @@
 import type { UIModeBootstrap } from './types';
 import { resolveModernRouteComponent } from './lib/routeRegistry';
-import { ErrorState } from './components/states/ErrorState';
 import { ModernOverlayHost } from './components/modals/ModernOverlayHost';
+import { LegacyCompatPage } from './components/states/LegacyCompatPage';
 
 type AppProps = {
   bootstrap: UIModeBootstrap;
@@ -13,21 +13,19 @@ export function App({ bootstrap }: AppProps) {
     bootstrap.targetAction || ''
   );
 
-  if (pageComponent) {
-    const PageComponent = pageComponent;
-    return (
-      <>
-        <PageComponent bootstrap={bootstrap} />
-        <ModernOverlayHost bootstrap={bootstrap} />
-      </>
-    );
-  }
+  const content = (() => {
+    if (pageComponent) {
+      const PageComponent = pageComponent;
+      return <PageComponent bootstrap={bootstrap} />;
+    }
+
+    return <LegacyCompatPage bootstrap={bootstrap} />;
+  })();
 
   return (
-    <ErrorState
-      message="Route not migrated yet."
-      actionLabel="Open Legacy UI"
-      actionURL={bootstrap.legacyURL}
-    />
+    <>
+      {content}
+      <ModernOverlayHost bootstrap={bootstrap} />
+    </>
   );
 }
