@@ -1,5 +1,6 @@
 export const MODERN_JSON_FORMAT = 'modern-json';
 export const MODERN_DASHBOARD_PAGE = 'dashboard-my';
+export const MODERN_CANDIDATES_PAGE = 'candidates-list';
 export const MODERN_CONTRACT_VERSION = 1;
 
 export type ModernRequestParams = {
@@ -22,4 +23,3 @@ export function buildModernJSONRequestQuery(params: ModernRequestParams): URLSea
 
   return next;
 }
-

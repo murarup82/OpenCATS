@@ -1,10 +1,12 @@
 import type {
+  CandidatesListModernDataResponse,
   DashboardModernDataResponse,
   QuickActionAddToListModernDataResponse,
   UIModeBootstrap
 } from '../types';
 import { getJSON } from './httpClient';
 import {
+  MODERN_CANDIDATES_PAGE,
   MODERN_CONTRACT_VERSION,
   MODERN_DASHBOARD_PAGE,
   buildModernJSONRequestQuery
@@ -35,6 +37,30 @@ export async function fetchDashboardModernData(
     data.meta.contractKey !== 'dashboard.my.interactive.v1'
   ) {
     throw new Error('Unexpected dashboard contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchCandidatesListModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<CandidatesListModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'candidates',
+    action: 'listByView',
+    modernPage: MODERN_CANDIDATES_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<CandidatesListModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading candidates data.');
+  }
+
+  if (data.meta.contractKey !== 'candidates.listByView.v1') {
+    throw new Error('Unexpected candidates contract key.');
   }
 
   return data;

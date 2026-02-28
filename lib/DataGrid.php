@@ -1351,6 +1351,33 @@ class DataGrid
     }
 
     /**
+     * Returns the normalized parameter array used to build this datagrid.
+     *
+     * @return array datagrid parameters
+     */
+    public function getParameters()
+    {
+        return $this->_parameters;
+    }
+
+    /**
+     * Returns the current result set for this datagrid page.
+     *
+     * @return array result set rows
+     */
+    public function getRows()
+    {
+        $this->_getData();
+
+        if (!is_array($this->_rs))
+        {
+            return array();
+        }
+
+        return $this->_rs;
+    }
+
+    /**
      * Outputs an array of all of the exportable ID's.
      *
      * @return array id's

@@ -65,6 +65,69 @@ export type DashboardModernDataResponse = {
   }>;
 };
 
+export type CandidatesListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    totalCandidates: number;
+    sortBy: string;
+    sortDirection: string;
+    permissions: {
+      canAddCandidate: boolean;
+      canEditCandidate: boolean;
+      canDeleteCandidate: boolean;
+      canAddToList: boolean;
+      canAddToJobOrder: boolean;
+      canEmailCandidates: boolean;
+    };
+  };
+  filters: {
+    quickSearch: string;
+    sourceFilter: string;
+    onlyMyCandidates: boolean;
+    onlyHotCandidates: boolean;
+    onlyGdprUnsigned: boolean;
+    onlyInternalCandidates: boolean;
+    onlyActiveCandidates: boolean;
+  };
+  options: {
+    sources: Array<{
+      value: string;
+      label: string;
+    }>;
+  };
+  state: {
+    topLog: string;
+  };
+  rows: Array<{
+    candidateID: number;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    city: string;
+    country: string;
+    keySkills: string;
+    source: string;
+    ownerName: string;
+    createdDate: string;
+    modifiedDate: string;
+    isHot: boolean;
+    commentCount: number;
+    hasAttachment: boolean;
+    hasDuplicate: boolean;
+    isSubmitted: boolean;
+    candidateURL: string;
+    candidateEditURL: string;
+    addToListURL: string;
+    addToJobOrderURL: string;
+  }>;
+};
+
 export type QuickActionAddToListModernDataResponse = {
   meta: {
     contractVersion: number;

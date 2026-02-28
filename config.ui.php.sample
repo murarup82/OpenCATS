@@ -51,7 +51,8 @@ define('UI_SWITCH_SHOW_SHELL_CHROME', false);
  * - value: array of actions, or '*' for all module actions
  */
 $GLOBALS['UI_SWITCH_ROUTE_MAP'] = array(
-    'dashboard'  => array('my')
+    'dashboard'  => array('my'),
+    'candidates' => array('(default)', 'listByView')
 );
 
 /* Optional phased rollout by cohorts. Empty arrays = all users. */

@@ -408,27 +408,48 @@ class CandidatesUI extends UserInterface
      */
     private function listByView($errMessage = '')
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         // Log message that shows up on the top of the list page
         $topLog = '';
         $quickSearchQuery = '';
 
-        $dataGridProperties = DataGrid::getRecentParamaters("candidates:candidatesListByViewDataGrid");
-
-        /* If this is the first time we visited the datagrid this session, the recent paramaters will
-         * be empty.  Fill in some default values. */
-        if ($dataGridProperties == array()) {
+        if ($isModernJSON)
+        {
             $dataGridProperties = array(
                 'rangeStart'    => 0,
                 'maxResults'    => 15,
                 'filterVisible' => false,
                 'filter'        => 'IsActive==1'
             );
+            $this->applyModernListRequestToDataGridProperties($dataGridProperties);
+        }
+        else
+        {
+            $dataGridProperties = DataGrid::getRecentParamaters("candidates:candidatesListByViewDataGrid");
+
+            /* If this is the first time we visited the datagrid this session, the recent paramaters will
+             * be empty.  Fill in some default values. */
+            if ($dataGridProperties == array())
+            {
+                $dataGridProperties = array(
+                    'rangeStart'    => 0,
+                    'maxResults'    => 15,
+                    'filterVisible' => false,
+                    'filter'        => 'IsActive==1'
+                );
+            }
         }
 
-        if (isset($_GET['wildCardString'])) {
+        if (isset($_GET['wildCardString']))
+        {
             $quickSearchQuery = $this->getTrimmedInput('wildCardString', $_GET);
             $this->applyQuickSearchToDataGrid($dataGridProperties, $quickSearchQuery, $topLog);
-        } else if (isset($dataGridProperties['quickSearchQuery'])) {
+        }
+        else if (isset($dataGridProperties['quickSearchQuery']))
+        {
             $quickSearchQuery = $dataGridProperties['quickSearchQuery'];
         }
 
@@ -440,9 +461,43 @@ class CandidatesUI extends UserInterface
         $dataGrid = DataGrid::get("candidates:candidatesListByViewDataGrid", $dataGridProperties);
 
         $candidates = new Candidates($this->_siteID);
-        $this->_template->assign('totalCandidates', $candidates->getCount());
-        $this->_template->assign('sourcesRS', $candidates->getPossibleSources());
-        $this->_template->assign('sourceFilterValue', $dataGrid->getFilterValue('Source'));
+        $totalCandidates = $candidates->getCount();
+        $sourcesRS = $candidates->getPossibleSources();
+        $sourceFilterValue = $dataGrid->getFilterValue('Source');
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'candidates-list')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernCandidatesListJSON(
+                $dataGrid,
+                $totalCandidates,
+                $sourcesRS,
+                $sourceFilterValue,
+                $quickSearchQuery,
+                $topLog,
+                'candidates-list'
+            );
+            return;
+        }
+
+        $this->_template->assign('totalCandidates', $totalCandidates);
+        $this->_template->assign('sourcesRS', $sourcesRS);
+        $this->_template->assign('sourceFilterValue', $sourceFilterValue);
 
         $this->_template->assign('active', $this);
         $this->_template->assign('dataGrid', $dataGrid);
@@ -455,6 +510,264 @@ class CandidatesUI extends UserInterface
         if (!eval(Hooks::get('CANDIDATE_LIST_BY_VIEW'))) return;
 
         $this->_template->display('./modules/candidates/Candidates.tpl');
+    }
+
+    private function applyModernListRequestToDataGridProperties(&$dataGridProperties)
+    {
+        $allowedRowsPerPage = array(15, 30, 50, 100);
+
+        $maxResults = (int) $this->getTrimmedInput('maxResults', $_GET);
+        if (!in_array($maxResults, $allowedRowsPerPage, true))
+        {
+            $maxResults = 15;
+        }
+        $dataGridProperties['maxResults'] = $maxResults;
+
+        $page = (int) $this->getTrimmedInput('page', $_GET);
+        if ($page > 0)
+        {
+            $dataGridProperties['rangeStart'] = ($page - 1) * $maxResults;
+        }
+        else
+        {
+            $rangeStart = (int) $this->getTrimmedInput('rangeStart', $_GET);
+            if ($rangeStart < 0)
+            {
+                $rangeStart = 0;
+            }
+            $dataGridProperties['rangeStart'] = $rangeStart;
+        }
+
+        $sortBy = $this->getTrimmedInput('sortBy', $_GET);
+        if ($sortBy !== '')
+        {
+            $dataGridProperties['sortBy'] = $sortBy;
+        }
+
+        $sortDirection = strtoupper($this->getTrimmedInput('sortDirection', $_GET));
+        if ($sortDirection === 'ASC' || $sortDirection === 'DESC')
+        {
+            $dataGridProperties['sortDirection'] = $sortDirection;
+        }
+
+        $onlyMyCandidates = $this->getRequestBooleanFlag('onlyMyCandidates', false);
+        $onlyHotCandidates = $this->getRequestBooleanFlag('onlyHotCandidates', false);
+        $onlyGdprUnsigned = $this->getRequestBooleanFlag('onlyGdprUnsigned', false);
+        $onlyInternalCandidates = $this->getRequestBooleanFlag('onlyInternalCandidates', false);
+        $onlyActiveCandidates = $this->getRequestBooleanFlag('onlyActiveCandidates', true);
+        $sourceFilter = $this->getTrimmedInput('sourceFilter', $_GET);
+
+        $this->setDataGridFilter($dataGridProperties, 'OwnerID', '==', (string) $this->_userID, $onlyMyCandidates);
+        $this->setDataGridFilter($dataGridProperties, 'IsHot', '==', '1', $onlyHotCandidates);
+        $this->setDataGridFilter($dataGridProperties, 'GdprSigned', '==', '0', $onlyGdprUnsigned);
+        $this->setDataGridFilter($dataGridProperties, 'InternalCandidates', '=#', 'partner', $onlyInternalCandidates);
+        $this->setDataGridFilter($dataGridProperties, 'IsActive', '==', '1', $onlyActiveCandidates);
+        $this->setDataGridFilter($dataGridProperties, 'Source', '==', $sourceFilter, ($sourceFilter !== ''));
+    }
+
+    private function getRequestBooleanFlag($key, $defaultValue = false)
+    {
+        if (!isset($_GET[$key]))
+        {
+            return (bool) $defaultValue;
+        }
+
+        $rawValue = strtolower(trim((string) $_GET[$key]));
+        if ($rawValue === '' || $rawValue === '1' || $rawValue === 'true' || $rawValue === 'yes' || $rawValue === 'on')
+        {
+            return true;
+        }
+
+        if ($rawValue === '0' || $rawValue === 'false' || $rawValue === 'no' || $rawValue === 'off')
+        {
+            return false;
+        }
+
+        return (bool) $defaultValue;
+    }
+
+    private function setDataGridFilter(&$dataGridProperties, $columnName, $operator, $value, $enabled)
+    {
+        $existingFilter = '';
+        if (isset($dataGridProperties['filter']) && is_string($dataGridProperties['filter']))
+        {
+            $existingFilter = $this->removeFilterColumnFromDataGrid(
+                $dataGridProperties['filter'],
+                $columnName
+            );
+        }
+
+        if (!$enabled)
+        {
+            $dataGridProperties['filter'] = $existingFilter;
+            return;
+        }
+
+        $nextFilter = urlencode((string) $columnName) . $operator . urlencode((string) $value);
+        if ($existingFilter === '')
+        {
+            $dataGridProperties['filter'] = $nextFilter;
+            return;
+        }
+
+        $dataGridProperties['filter'] = $existingFilter . ',' . $nextFilter;
+    }
+
+    private function renderModernCandidatesListJSON(
+        $dataGrid,
+        $totalCandidates,
+        $sourcesRS,
+        $sourceFilterValue,
+        $quickSearchQuery,
+        $topLog,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $rows = $dataGrid->getRows();
+        $parameters = $dataGrid->getParameters();
+
+        $entriesPerPage = (isset($parameters['maxResults']) ? (int) $parameters['maxResults'] : 15);
+        if ($entriesPerPage <= 0)
+        {
+            $entriesPerPage = 15;
+        }
+
+        $totalRows = (int) $dataGrid->getNumberOfRows();
+        $totalPages = (int) ceil($totalRows / $entriesPerPage);
+        if ($totalPages <= 0)
+        {
+            $totalPages = 1;
+        }
+
+        $page = (int) $dataGrid->getCurrentPage();
+        if ($page <= 0)
+        {
+            $page = 1;
+        }
+
+        $responseRows = array();
+        foreach ($rows as $row)
+        {
+            $candidateID = (isset($row['candidateID']) ? (int) $row['candidateID'] : 0);
+            $firstName = (isset($row['firstName']) ? trim($row['firstName']) : '');
+            $lastName = (isset($row['lastName']) ? trim($row['lastName']) : '');
+            $fullName = trim($firstName . ' ' . $lastName);
+            if ($fullName === '')
+            {
+                $fullName = '--';
+            }
+
+            $ownerName = trim(
+                (isset($row['ownerFirstName']) ? $row['ownerFirstName'] : '') .
+                ' ' .
+                (isset($row['ownerLastName']) ? $row['ownerLastName'] : '')
+            );
+            if ($ownerName === '')
+            {
+                $ownerName = '--';
+            }
+
+            $responseRows[] = array(
+                'candidateID' => $candidateID,
+                'firstName' => ($firstName !== '' ? $firstName : '--'),
+                'lastName' => ($lastName !== '' ? $lastName : '--'),
+                'fullName' => $fullName,
+                'city' => (isset($row['city']) && trim($row['city']) !== '' ? trim($row['city']) : '--'),
+                'country' => (isset($row['country']) && trim($row['country']) !== '' ? trim($row['country']) : '--'),
+                'keySkills' => (isset($row['keySkills']) ? trim($row['keySkills']) : ''),
+                'source' => (isset($row['source']) && trim($row['source']) !== '' ? trim($row['source']) : '--'),
+                'ownerName' => $ownerName,
+                'createdDate' => (isset($row['dateCreated']) && trim($row['dateCreated']) !== '' ? trim($row['dateCreated']) : '--'),
+                'modifiedDate' => (isset($row['dateModified']) && trim($row['dateModified']) !== '' ? trim($row['dateModified']) : '--'),
+                'isHot' => (isset($row['isHot']) ? ((int) $row['isHot'] === 1) : false),
+                'commentCount' => (isset($row['profileCommentCount']) ? (int) $row['profileCommentCount'] : 0),
+                'hasAttachment' => (isset($row['attachmentPresent']) ? ((int) $row['attachmentPresent'] === 1) : false),
+                'hasDuplicate' => (isset($row['duplicatePresent']) ? ((int) $row['duplicatePresent'] === 1) : false),
+                'isSubmitted' => (isset($row['submitted']) ? ((int) $row['submitted'] === 1) : false),
+                'candidateURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'candidateEditURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'addToListURL' => sprintf(
+                    '%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy',
+                    $baseURL,
+                    DATA_ITEM_CANDIDATE,
+                    $candidateID
+                ),
+                'addToJobOrderURL' => sprintf(
+                    '%s?m=candidates&a=considerForJobSearch&candidateID=%d&ui=legacy',
+                    $baseURL,
+                    $candidateID
+                )
+            );
+        }
+
+        $sourceOptions = array(
+            array('value' => '', 'label' => 'All'),
+            array('value' => '(none)', 'label' => '(None)')
+        );
+        if (is_array($sourcesRS))
+        {
+            foreach ($sourcesRS as $sourceRow)
+            {
+                $sourceName = (isset($sourceRow['name']) ? trim($sourceRow['name']) : '');
+                if ($sourceName === '' || $sourceName === '(none)')
+                {
+                    continue;
+                }
+
+                $sourceOptions[] = array(
+                    'value' => $sourceName,
+                    'label' => $sourceName
+                );
+            }
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'candidates.listByView.v1',
+                'modernPage' => $modernPage,
+                'page' => $page,
+                'totalPages' => $totalPages,
+                'totalRows' => $totalRows,
+                'entriesPerPage' => $entriesPerPage,
+                'totalCandidates' => (int) $totalCandidates,
+                'sortBy' => (isset($parameters['sortBy']) ? (string) $parameters['sortBy'] : ''),
+                'sortDirection' => (isset($parameters['sortDirection']) ? (string) $parameters['sortDirection'] : ''),
+                'permissions' => array(
+                    'canAddCandidate' => ($this->getUserAccessLevel('candidates.add') >= ACCESS_LEVEL_EDIT),
+                    'canEditCandidate' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteCandidate' => ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE),
+                    'canAddToList' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT),
+                    'canAddToJobOrder' => ($this->getUserAccessLevel('pipelines.addToPipeline') >= ACCESS_LEVEL_EDIT),
+                    'canEmailCandidates' => (MAIL_MAILER != 0 &&
+                        $this->getUserAccessLevel('candidates.emailCandidates') >= ACCESS_LEVEL_SA)
+                )
+            ),
+            'filters' => array(
+                'quickSearch' => (string) $quickSearchQuery,
+                'sourceFilter' => (string) $sourceFilterValue,
+                'onlyMyCandidates' => ((int) $dataGrid->getFilterValue('OwnerID') === (int) $this->_userID),
+                'onlyHotCandidates' => ($dataGrid->getFilterValue('IsHot') === '1'),
+                'onlyGdprUnsigned' => ($dataGrid->getFilterValue('GdprSigned') === '0'),
+                'onlyInternalCandidates' => ($dataGrid->getFilterValue('InternalCandidates') !== ''),
+                'onlyActiveCandidates' => ($dataGrid->getFilterValue('IsActive') === '1')
+            ),
+            'options' => array(
+                'sources' => $sourceOptions
+            ),
+            'state' => array(
+                'topLog' => trim(strip_tags((string) $topLog))
+            ),
+            'rows' => $responseRows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function applyQuickSearchToDataGrid(&$dataGridProperties, $query, &$topLog)
