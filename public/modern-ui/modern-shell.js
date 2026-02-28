@@ -219,6 +219,188 @@
         document.head.appendChild(script);
     }
 
+    function sanitizeDimension(value, fallback) {
+        var parsed = parseInt(value, 10);
+        if (isNaN(parsed) || parsed <= 0) {
+            return fallback;
+        }
+        return parsed;
+    }
+
+    function installLegacyPopupBridge(root) {
+        if (typeof window === 'undefined' || !document || !document.body) {
+            return;
+        }
+
+        if (window.__openCATSModernPopupBridgeInstalled) {
+            return;
+        }
+
+        var overlay = document.createElement('div');
+        overlay.className = 'modern-legacy-popup-mask';
+        overlay.style.display = 'none';
+
+        var panel = document.createElement('div');
+        panel.className = 'modern-legacy-popup';
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-modal', 'true');
+        panel.setAttribute('aria-label', 'Popup dialog');
+
+        var titleBar = document.createElement('div');
+        titleBar.className = 'modern-legacy-popup__titlebar';
+
+        var titleNode = document.createElement('div');
+        titleNode.className = 'modern-legacy-popup__title';
+        titleNode.textContent = '';
+
+        var closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'modern-legacy-popup__close';
+        closeButton.textContent = 'Close';
+
+        var body = document.createElement('div');
+        body.className = 'modern-legacy-popup__body';
+
+        var iframe = document.createElement('iframe');
+        iframe.className = 'modern-legacy-popup__iframe';
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('allowtransparency', 'true');
+        iframe.style.display = '';
+        iframe.src = 'js/submodal/loading.html';
+
+        var htmlPane = document.createElement('div');
+        htmlPane.className = 'modern-legacy-popup__html';
+        htmlPane.style.display = 'none';
+
+        body.appendChild(iframe);
+        body.appendChild(htmlPane);
+        titleBar.appendChild(titleNode);
+        titleBar.appendChild(closeButton);
+        panel.appendChild(titleBar);
+        panel.appendChild(body);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+
+        var bridgeState = {
+            isOpen: false,
+            returnFunc: null
+        };
+
+        function getReturnValue() {
+            try {
+                if (iframe && iframe.contentWindow && typeof iframe.contentWindow.returnVal !== 'undefined') {
+                    return iframe.contentWindow.returnVal;
+                }
+            } catch (error) {}
+            return undefined;
+        }
+
+        function setTitle(title) {
+            titleNode.textContent = title == null ? '' : String(title);
+        }
+
+        function updateSize(width, height) {
+            var viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+            var viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+            var maxWidth = Math.max(340, viewportWidth - 44);
+            var maxHeight = Math.max(260, viewportHeight - 56);
+            var nextWidth = Math.min(width, maxWidth);
+            var nextHeight = Math.min(height, maxHeight);
+
+            panel.style.width = nextWidth + 'px';
+            body.style.height = nextHeight + 'px';
+        }
+
+        function showPopup(url, width, height, returnFunc, html) {
+            var safeWidth = sanitizeDimension(width, 760);
+            var safeHeight = sanitizeDimension(height, 540);
+
+            bridgeState.isOpen = true;
+            bridgeState.returnFunc = returnFunc;
+            window.gPopupIsShown = true;
+
+            setTitle('');
+            updateSize(safeWidth, safeHeight);
+            overlay.style.display = 'grid';
+
+            if (html == null) {
+                htmlPane.style.display = 'none';
+                iframe.style.display = '';
+                iframe.src = url || 'js/submodal/loading.html';
+            } else {
+                iframe.style.display = 'none';
+                iframe.src = 'js/submodal/loading.html';
+                htmlPane.style.display = '';
+                htmlPane.innerHTML = String(html);
+            }
+        }
+
+        function hidePopup(callReturnFunc, refreshAfterClose) {
+            if (!bridgeState.isOpen) {
+                return;
+            }
+
+            bridgeState.isOpen = false;
+            window.gPopupIsShown = false;
+            overlay.style.display = 'none';
+
+            var callback = bridgeState.returnFunc;
+            bridgeState.returnFunc = null;
+
+            if (callReturnFunc === true && typeof callback === 'function') {
+                callback(getReturnValue());
+            }
+
+            htmlPane.innerHTML = '';
+            htmlPane.style.display = 'none';
+            iframe.style.display = '';
+            iframe.src = 'js/submodal/loading.html';
+
+            if (refreshAfterClose) {
+                window.location.reload();
+            }
+        }
+
+        closeButton.addEventListener('click', function () {
+            hidePopup(false, false);
+        });
+
+        overlay.addEventListener('mousedown', function (event) {
+            if (event.target === overlay) {
+                hidePopup(false, false);
+            }
+        });
+
+        window.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && bridgeState.isOpen) {
+                hidePopup(false, false);
+            }
+        });
+
+        window.showPopWin = function (url, width, height, returnFunc) {
+            showPopup(url, width, height, returnFunc, null);
+        };
+
+        window.showPopWinHTML = function (html, width, height, returnFunc) {
+            showPopup('', width, height, returnFunc, html);
+        };
+
+        window.hidePopWin = function (callReturnFunc) {
+            hidePopup(callReturnFunc === true, false);
+        };
+
+        window.hidePopWinRefresh = function (callReturnFunc) {
+            hidePopup(callReturnFunc === true, true);
+        };
+
+        window.setPopTitle = function (title) {
+            setTitle(title);
+        };
+
+        window.__openCATSModernPopupBridgeInstalled = true;
+        telemetry(root, 'info', 'popup.bridge.installed');
+    }
+
     function mountExternalBundle(root, bootstrap) {
         ensureProcessShim();
         var modernAppHost = resolveModernAppHost();
@@ -306,6 +488,7 @@
         }
 
         ensureProcessShim();
+        installLegacyPopupBridge(root);
         var bootstrap = decodeBootstrap(root);
         telemetry(root, 'info', 'shell.boot', {
             module: bootstrap.targetModule || '',
