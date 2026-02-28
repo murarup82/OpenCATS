@@ -1,4 +1,26 @@
 (function () {
+    function resolveModernAppHost() {
+        if (window.OpenCATSModernApp && typeof window.OpenCATSModernApp.mount === 'function') {
+            return window.OpenCATSModernApp;
+        }
+
+        if (window.OpenCATSModernBundle && typeof window.OpenCATSModernBundle.mount === 'function') {
+            window.OpenCATSModernApp = {
+                mount: window.OpenCATSModernBundle.mount
+            };
+            return window.OpenCATSModernApp;
+        }
+
+        if (window.OpenCATSModernApp && typeof window.OpenCATSModernApp === 'function') {
+            window.OpenCATSModernApp = {
+                mount: window.OpenCATSModernApp
+            };
+            return window.OpenCATSModernApp;
+        }
+
+        return null;
+    }
+
     function telemetry(root, level, eventName, details) {
         var loggingEnabled = root.getAttribute('data-client-logging') !== '0';
         var payload = {
@@ -109,9 +131,10 @@
     }
 
     function mountExternalBundle(root, bootstrap) {
-        if (window.OpenCATSModernApp && typeof window.OpenCATSModernApp.mount === 'function') {
+        var modernAppHost = resolveModernAppHost();
+        if (modernAppHost) {
             try {
-                window.OpenCATSModernApp.mount(root, bootstrap);
+                modernAppHost.mount(root, bootstrap);
                 telemetry(root, 'info', 'bundle.mount.success', {
                     source: 'preloaded-global'
                 });
@@ -136,9 +159,10 @@
         loadScript(
             bundleURL,
             function () {
-                if (window.OpenCATSModernApp && typeof window.OpenCATSModernApp.mount === 'function') {
+                var loadedModernAppHost = resolveModernAppHost();
+                if (loadedModernAppHost) {
                     try {
-                        window.OpenCATSModernApp.mount(root, bootstrap);
+                        loadedModernAppHost.mount(root, bootstrap);
                         telemetry(root, 'info', 'bundle.mount.success', {
                             source: 'loaded-script',
                             bundleURL: bundleURL

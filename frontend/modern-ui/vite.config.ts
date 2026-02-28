@@ -37,7 +37,7 @@ export default defineConfig({
     manifest: true,
     lib: {
       entry: path.resolve(__dirname, 'src/mount.tsx'),
-      name: 'OpenCATSModernBundle',
+      name: 'OpenCATSModernApp',
       formats: ['iife'],
       fileName: () => 'app.bundle.js'
     }
