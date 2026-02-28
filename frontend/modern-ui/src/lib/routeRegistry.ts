@@ -28,6 +28,7 @@ const registry: Record<string, ModernRouteComponent> = {
   'lists.*': ModuleBridgePage,
   'reports.*': ModuleBridgePage,
   'home.*': ModuleBridgePage,
+  '*.*': ModuleBridgePage,
   'candidates.(default)': CandidatesListPage
 };
 
@@ -37,7 +38,8 @@ export function resolveModernRouteComponent(moduleName: string, actionName: stri
   const candidates = [
     `${moduleKey}.${actionKey}`,
     `${moduleKey}.(default)`,
-    `${moduleKey}.*`
+    `${moduleKey}.*`,
+    '*.*'
   ];
 
   for (const routeKey of candidates) {
