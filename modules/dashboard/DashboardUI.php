@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /*
  * CATS
  * My Dashboard Module
@@ -348,13 +348,25 @@ class DashboardUI extends UserInterface
             }
         }
 
+        if ($companyID > 0 && $selectedCompanyName !== '')
+        {
+            $jobOrderScopeLabel = 'All job orders for ' . $selectedCompanyName;
+        }
+        else
+        {
+            $jobOrderScopeLabel = ($dashboardScope === 'all') ? 'All job orders' : 'All my assigned job orders';
+        }
+
         if ($responseFormat === 'modern-json')
         {
             if ($modernPage !== '' && $modernPage !== 'dashboard-my')
             {
-                header('HTTP/1.1 400 Bad Request');
-                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
-                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
                 echo json_encode(array(
                     'error' => true,
                     'message' => 'Unsupported modern page contract.',
@@ -395,14 +407,6 @@ class DashboardUI extends UserInterface
         $this->_template->assign('showScopeSwitcher', $canViewAllDashboardRows ? 1 : 0);
         $this->_template->assign('dashboardScope', $dashboardScope);
         $this->_template->assign('dashboardView', $dashboardView);
-        if ($companyID > 0 && $selectedCompanyName !== '')
-        {
-            $jobOrderScopeLabel = 'All job orders for ' . $selectedCompanyName;
-        }
-        else
-        {
-            $jobOrderScopeLabel = ($dashboardScope === 'all') ? 'All job orders' : 'All my assigned job orders';
-        }
         $this->_template->assign('jobOrderScopeLabel', $jobOrderScopeLabel);
         $this->_template->assign('statusOptions', $statusOptions);
         $this->_template->assign('page', $page);
@@ -540,8 +544,11 @@ class DashboardUI extends UserInterface
             'rows' => $responseRows
         );
 
-        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
         echo json_encode($payload);
     }
 
