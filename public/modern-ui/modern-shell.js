@@ -293,6 +293,7 @@
         });
 
         applySidebarState(isCollapsed());
+        installSidebarGroupToggles(sidebar);
 
         if (mount) {
             mount.innerHTML = '';
@@ -331,6 +332,84 @@
 
         sidebar.setAttribute('data-modern-shell-enhanced', '1');
         telemetry(root, 'info', 'shell.sidebar.enhanced');
+    }
+
+    function installSidebarGroupToggles(sidebar) {
+        if (!sidebar || sidebar.getAttribute('data-modern-sidebar-groups') === '1') {
+            return;
+        }
+
+        var groups = sidebar.querySelectorAll('.ui2-sidebar-group');
+        var storagePrefix = 'opencats-modern-shell-group-collapsed-';
+
+        for (var i = 0; i < groups.length; i++) {
+            var group = groups[i];
+            var title = group.querySelector('.ui2-sidebar-group-title');
+            if (!title) {
+                continue;
+            }
+
+            var childrenToMove = [];
+            for (var childIndex = 0; childIndex < group.children.length; childIndex++) {
+                var childNode = group.children[childIndex];
+                if (childNode === title) {
+                    continue;
+                }
+                childrenToMove.push(childNode);
+            }
+
+            if (childrenToMove.length === 0) {
+                continue;
+            }
+
+            var panel = document.createElement('div');
+            panel.className = 'modern-shell-sidebar-group-panel';
+            panel.id = 'modernShellSidebarGroupPanel' + i;
+
+            for (var itemIndex = 0; itemIndex < childrenToMove.length; itemIndex++) {
+                panel.appendChild(childrenToMove[itemIndex]);
+            }
+            group.appendChild(panel);
+
+            title.classList.add('modern-shell-sidebar-group-title--toggle');
+            title.setAttribute('role', 'button');
+            title.setAttribute('tabindex', '0');
+            title.setAttribute('aria-controls', panel.id);
+
+            (function (groupNode, titleNode, panelNode, key) {
+                function setCollapsed(collapsed) {
+                    groupNode.classList.toggle('modern-shell-sidebar-group--collapsed', collapsed);
+                    titleNode.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                    panelNode.style.display = collapsed ? 'none' : '';
+                    try {
+                        window.localStorage.setItem(key, collapsed ? '1' : '0');
+                    } catch (error) {}
+                }
+
+                function getCollapsed() {
+                    try {
+                        return window.localStorage.getItem(key) === '1';
+                    } catch (error) {
+                        return false;
+                    }
+                }
+
+                titleNode.addEventListener('click', function () {
+                    setCollapsed(!groupNode.classList.contains('modern-shell-sidebar-group--collapsed'));
+                });
+
+                titleNode.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setCollapsed(!groupNode.classList.contains('modern-shell-sidebar-group--collapsed'));
+                    }
+                });
+
+                setCollapsed(getCollapsed());
+            })(group, title, panel, storagePrefix + String(i));
+        }
+
+        sidebar.setAttribute('data-modern-sidebar-groups', '1');
     }
 
     function installLegacyPopupBridge(root) {

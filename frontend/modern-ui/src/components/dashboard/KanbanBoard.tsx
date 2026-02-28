@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import type { WheelEvent as ReactWheelEvent } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import type { DashboardStatusColumn } from './types';
 
@@ -19,6 +20,25 @@ export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName }: P
     }
 
     board.scrollBy({ left: offset, behavior: 'smooth' });
+  };
+
+  const handleWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
+    // Keep mouse-wheel scrolling vertical by default; use Shift+wheel or buttons for horizontal lane moves.
+    if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+      return;
+    }
+
+    const board = boardRef.current;
+    if (!board) {
+      return;
+    }
+
+    event.preventDefault();
+    window.scrollBy({
+      top: event.deltaY,
+      left: 0,
+      behavior: 'auto'
+    });
   };
 
   return (
@@ -49,6 +69,7 @@ export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName }: P
         ref={boardRef}
         className="modern-kanban-board__viewport"
         aria-label="Candidate pipeline board"
+        onWheel={handleWheel}
       >
         <div className="modern-kanban-board">
           {columns.map((column) => (
