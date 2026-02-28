@@ -4,6 +4,7 @@ import { DashboardMyPage } from '../pages/DashboardMyPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
 import { CandidatesFormBridgePage } from '../pages/CandidatesFormBridgePage';
+import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 
 export type ModernRouteComponentProps = {
   bootstrap: UIModeBootstrap;
@@ -18,6 +19,15 @@ const registry: Record<string, ModernRouteComponent> = {
   'candidates.show': CandidatesShowPage,
   'candidates.add': CandidatesFormBridgePage,
   'candidates.edit': CandidatesFormBridgePage,
+  'candidates.*': ModuleBridgePage,
+  'joborders.*': ModuleBridgePage,
+  'companies.*': ModuleBridgePage,
+  'contacts.*': ModuleBridgePage,
+  'activities.*': ModuleBridgePage,
+  'calendar.*': ModuleBridgePage,
+  'lists.*': ModuleBridgePage,
+  'reports.*': ModuleBridgePage,
+  'home.*': ModuleBridgePage,
   'candidates.(default)': CandidatesListPage
 };
 
@@ -26,7 +36,8 @@ export function resolveModernRouteComponent(moduleName: string, actionName: stri
   const actionKey = (actionName || '').toLowerCase();
   const candidates = [
     `${moduleKey}.${actionKey}`,
-    `${moduleKey}.(default)`
+    `${moduleKey}.(default)`,
+    `${moduleKey}.*`
   ];
 
   for (const routeKey of candidates) {
