@@ -1925,17 +1925,20 @@ class TemplateUtility
 
         foreach ($headIncludes as $key => $filename)
         {
-            $extension = substr($filename, strrpos($filename, '.') + 1);
+            $filenameNoQuery = preg_replace('/\?.*/', '', (string) $filename);
+            $extension = strtolower(pathinfo($filenameNoQuery, PATHINFO_EXTENSION));
 
-            $filename .= $javascriptAntiCache;
+            $antiCacheQuery = ltrim($javascriptAntiCache, '?');
+            $separator = (strpos($filename, '?') === false) ? '?' : '&';
+            $filenameWithAntiCache = $filename . $separator . $antiCacheQuery;
 
             if ($extension == 'js')
             {
-                echo '<script type="text/javascript" src="', $filename, '"></script>', "\n";
+                echo '<script type="text/javascript" src="', $filenameWithAntiCache, '"></script>', "\n";
             }
             else if ($extension == 'css')
             {
-                echo '<style type="text/css" media="all">@import "', $filename, '";</style>', "\n";
+                echo '<style type="text/css" media="all">@import "', $filenameWithAntiCache, '";</style>', "\n";
             }
         }
 
