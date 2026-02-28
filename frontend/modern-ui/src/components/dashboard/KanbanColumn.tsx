@@ -21,7 +21,10 @@ export function KanbanColumn({ column, totalVisibleRows, getStatusClassName, get
     >
       <header className="modern-kanban-column__header">
         <div className="modern-kanban-column__title-wrap">
-          <h4 className="modern-kanban-column__title">{column.statusLabel}</h4>
+          <h4 className="modern-kanban-column__title">
+            <span className="modern-kanban-column__stage-dot" aria-hidden="true"></span>
+            {column.statusLabel}
+          </h4>
           <span className="modern-kanban-column__subtitle">{columnShare}% of visible pipeline</span>
         </div>
         <div className="modern-kanban-column__count-wrap">

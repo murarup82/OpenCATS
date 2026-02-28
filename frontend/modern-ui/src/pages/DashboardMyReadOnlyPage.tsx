@@ -297,13 +297,6 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     label: status.statusLabel
   }));
 
-  const openRows = filteredRows.filter((row) => row.isActive === 1).length;
-  const uniqueJobOrders = Object.keys(
-    filteredRows.reduce<Record<string, true>>((accumulator, row) => {
-      accumulator[String(row.jobOrderID)] = true;
-      return accumulator;
-    }, {})
-  ).length;
 
   const activeServerFilters: string[] = [];
   if (data.meta.scope === 'all') {
@@ -337,7 +330,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
   return (
     <PageContainer
       title="My Dashboard"
-      subtitle="Daily recruiter workspace"
+      subtitle="Recruiter workspace"
       actions={
         <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
           Open Legacy UI
@@ -345,13 +338,6 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
       }
     >
       <div className="modern-dashboard">
-        <div className="modern-workspace-strip" aria-label="Workspace summary">
-          <span className="modern-workspace-chip">Visible: {filteredRows.length}</span>
-          <span className="modern-workspace-chip">Open Pipeline: {openRows}</span>
-          <span className="modern-workspace-chip">Job Orders: {uniqueJobOrders}</span>
-          <span className="modern-workspace-chip">Scope: {data.meta.scope === 'all' ? 'All Jobs' : 'My Assigned Jobs'}</span>
-        </div>
-
         <DashboardToolbar
           canViewAllScopes={data.meta.canViewAllScopes}
           scope={data.meta.scope}

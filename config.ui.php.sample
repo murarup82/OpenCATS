@@ -40,6 +40,9 @@ define('UI_SWITCH_MODERN_DEV_SERVER_URL', '');
 define('UI_SWITCH_CLIENT_LOGGING', true);
 define('UI_SWITCH_CLIENT_AUTO_FALLBACK_SECONDS', 0);
 
+/* Show migration preview header/chrome in modern shell (recommended false in recruiter-facing environments). */
+define('UI_SWITCH_SHOW_SHELL_CHROME', false);
+
 /* Route map:
  * - key: module name
  * - value: array of actions, or '*' for all module actions

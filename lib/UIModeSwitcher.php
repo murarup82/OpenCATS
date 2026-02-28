@@ -100,6 +100,11 @@ class UIModeSwitcher
         );
 
         $template = new Template();
+        $showShellChrome = self::getBooleanValue('UI_SWITCH_SHOW_SHELL_CHROME', 'OPENCATS_UI_SHOW_SHELL_CHROME', false);
+        if (isset($_GET['ui_debug']) && trim((string) $_GET['ui_debug']) === '1')
+        {
+            $showShellChrome = true;
+        }
         $template->assign('active', null);
         $template->assign('targetModule', $moduleName);
         $template->assign('targetAction', $action);
@@ -110,6 +115,7 @@ class UIModeSwitcher
         $template->assign('clientLoggingEnabled', self::getBooleanValue('UI_SWITCH_CLIENT_LOGGING', 'OPENCATS_UI_CLIENT_LOGGING', true));
         $template->assign('autoLegacyFallbackSeconds', self::getIntegerValue('UI_SWITCH_CLIENT_AUTO_FALLBACK_SECONDS', 'OPENCATS_UI_CLIENT_AUTO_FALLBACK_SECONDS', 0));
         $template->assign('bootstrapPayload', base64_encode(json_encode($bootstrap)));
+        $template->assign('showShellChrome', $showShellChrome);
         $template->display($templatePath);
 
         self::logDecision('modern', $moduleName, $action, $bootstrap['resolvedBy']);

@@ -68,7 +68,9 @@ export function DashboardToolbar(props: Props) {
 
   return (
     <section className="modern-command-bar modern-command-bar--sticky" aria-label="Dashboard controls">
-      <div className="modern-command-bar__row modern-command-bar__row--primary">
+      <div
+        className={`modern-command-bar__row modern-command-bar__row--primary${canViewAllScopes ? '' : ' modern-command-bar__row--primary-noscope'}`}
+      >
         {canViewAllScopes ? (
           <div className="modern-command-group modern-command-group--scope">
             <span className="modern-command-label">Scope</span>
@@ -120,6 +122,25 @@ export function DashboardToolbar(props: Props) {
             </button>
           </div>
         </div>
+
+        <div className="modern-command-actions modern-command-actions--primary">
+          <button
+            type="button"
+            className="modern-btn modern-btn--secondary"
+            onClick={onClearLocalFilters}
+            disabled={!canClearLocal}
+          >
+            Clear Local
+          </button>
+          <button
+            type="button"
+            className="modern-btn modern-btn--secondary modern-btn--emphasis"
+            onClick={onResetServerFilters}
+            disabled={!canResetServer}
+          >
+            Reset Filters
+          </button>
+        </div>
       </div>
 
       <div className="modern-command-bar__row modern-command-bar__row--filters">
@@ -167,27 +188,6 @@ export function DashboardToolbar(props: Props) {
           </select>
         </label>
 
-        <div className="modern-command-actions">
-          <button
-            type="button"
-            className="modern-btn modern-btn--secondary"
-            onClick={onClearLocalFilters}
-            disabled={!canClearLocal}
-          >
-            Clear Local
-          </button>
-          <button
-            type="button"
-            className="modern-btn modern-btn--secondary modern-btn--emphasis"
-            onClick={onResetServerFilters}
-            disabled={!canResetServer}
-          >
-            Reset All Filters
-          </button>
-        </div>
-      </div>
-
-      <div className="modern-command-bar__row modern-command-bar__row--meta">
         <label className="modern-command-toggle">
           <input
             type="checkbox"
@@ -196,7 +196,9 @@ export function DashboardToolbar(props: Props) {
           />
           <span>Include closed job orders</span>
         </label>
+      </div>
 
+      <div className="modern-command-bar__row modern-command-bar__row--meta">
         <div className="modern-command-active">
           <div className={`modern-command-active__count${activeFilterCount > 0 ? ' is-active' : ''}`}>
             {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}

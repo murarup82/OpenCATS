@@ -86,23 +86,20 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
       </div>
 
       <div className="modern-kanban-card__job-wrap">
-        <span className="modern-kanban-card__job-label">Role</span>
+        <span className="modern-kanban-card__job-label">Job Order</span>
         <a className="modern-link modern-kanban-card__job" href={row.jobOrderURL}>
           {jobOrderTitle}
         </a>
       </div>
 
       <div className="modern-kanban-card__facts">
-        <div className="modern-kanban-card__fact">
-          <span className="modern-kanban-card__fact-key">Company</span>
+        <div className="modern-kanban-card__fact modern-kanban-card__fact--summary">
           <span className="modern-kanban-card__fact-value">{companyName}</span>
-        </div>
-        <div className="modern-kanban-card__fact">
-          <span className="modern-kanban-card__fact-key">Location</span>
+          <span className="modern-kanban-card__fact-sep">•</span>
           <span className="modern-kanban-card__fact-value">{location}</span>
         </div>
-        <div className="modern-kanban-card__fact modern-kanban-card__fact--wide">
-          <span className="modern-kanban-card__fact-key">Last Updated</span>
+        <div className="modern-kanban-card__fact">
+          <span className="modern-kanban-card__fact-key">Updated</span>
           <span className="modern-kanban-card__fact-value">{lastUpdated}</span>
         </div>
       </div>
