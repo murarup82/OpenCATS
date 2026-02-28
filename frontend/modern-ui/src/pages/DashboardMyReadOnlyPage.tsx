@@ -4,7 +4,6 @@ import type { DashboardModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
-import { StatChip } from '../components/primitives/StatChip';
 import { DataTable } from '../components/primitives/DataTable';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
@@ -29,6 +28,31 @@ type NavigationFilters = {
   showClosed?: boolean;
   page?: number;
 };
+
+function toDisplayText(value: unknown, fallback = '--'): string {
+  if (typeof value === 'string') {
+    const normalized = value.trim();
+    return normalized !== '' ? normalized : fallback;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return fallback;
+}
+
+function toSearchText(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return '';
+}
 
 function toStatusSlug(value: string): string {
   const slug = String(value || '')
@@ -137,6 +161,12 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     };
   }, [bootstrap, query]);
 
+  useEffect(() => {
+    const nextURL = new URL(window.location.href);
+    nextURL.searchParams.set('mode', viewMode);
+    window.history.replaceState({}, '', nextURL.toString());
+  }, [viewMode]);
+
   const navigateWithFilters = (next: NavigationFilters) => {
     if (!data) {
       return;
@@ -216,6 +246,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
       row.location,
       row.statusLabel
     ]
+      .map((value) => toSearchText(value))
       .join(' ')
       .toLowerCase();
 
@@ -226,19 +257,21 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     const byStatusID = new Map<number, StatusCatalogEntry>();
 
     data.options.statuses.forEach((statusOption) => {
+      const statusLabel = toDisplayText(statusOption.status);
       byStatusID.set(statusOption.statusID, {
         statusID: statusOption.statusID,
-        statusLabel: statusOption.status || '--',
-        statusSlug: toStatusSlug(statusOption.status || '--')
+        statusLabel,
+        statusSlug: toStatusSlug(statusLabel)
       });
     });
 
     data.rows.forEach((row) => {
       if (!byStatusID.has(row.statusID)) {
+        const statusLabel = toDisplayText(row.statusLabel);
         byStatusID.set(row.statusID, {
           statusID: row.statusID,
-          statusLabel: row.statusLabel || '--',
-          statusSlug: toStatusSlug(row.statusLabel || '--')
+          statusLabel,
+          statusSlug: toStatusSlug(statusLabel)
         });
       }
     });
@@ -291,6 +324,36 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     },
     { fresh: 0, stale: 0 }
   );
+  const averagePerStatus = columns.length > 0 ? Math.round(filteredRows.length / columns.length) : 0;
+
+  const activeServerFilters: string[] = [];
+  if (data.meta.scope === 'all') {
+    activeServerFilters.push('Scope: All Jobs');
+  }
+  if (data.filters.companyID > 0) {
+    const selectedCompany = data.options.companies.find((company) => company.companyID === data.filters.companyID);
+    activeServerFilters.push(`Customer: ${selectedCompany ? toDisplayText(selectedCompany.name) : data.filters.companyID}`);
+  }
+  if (data.filters.jobOrderID > 0) {
+    const selectedJobOrder = data.options.jobOrders.find((jobOrder) => jobOrder.jobOrderID === data.filters.jobOrderID);
+    activeServerFilters.push(`Job: ${selectedJobOrder ? toDisplayText(selectedJobOrder.title) : data.filters.jobOrderID}`);
+  }
+  if (data.filters.statusID > 0) {
+    const selectedStatus = data.options.statuses.find((status) => status.statusID === data.filters.statusID);
+    activeServerFilters.push(`Server status: ${selectedStatus ? toDisplayText(selectedStatus.status) : data.filters.statusID}`);
+  }
+  if (data.meta.showClosed) {
+    activeServerFilters.push('Show Closed');
+  }
+
+  const activeLocalFilters: string[] = [];
+  if (searchTerm.trim() !== '') {
+    activeLocalFilters.push(`Search: "${searchTerm.trim()}"`);
+  }
+  if (localStatusID !== 'all') {
+    const localStatus = statusCatalog.find((status) => String(status.statusID) === localStatusID);
+    activeLocalFilters.push(`Quick status: ${localStatus ? localStatus.statusLabel : localStatusID}`);
+  }
 
   return (
     <PageContainer
@@ -303,13 +366,34 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
       }
     >
       <div className="modern-dashboard">
-        <div className="modern-summary">
-          <StatChip>Total Rows: {data.meta.totalRows}</StatChip>
-          <StatChip>Visible: {filteredRows.length}</StatChip>
-          <StatChip>Open Pipeline: {openRows}</StatChip>
-          <StatChip>Job Orders: {uniqueJobOrders}</StatChip>
-          <StatChip>Fresh: {freshnessCounts.fresh}</StatChip>
-          <StatChip>Stale: {freshnessCounts.stale}</StatChip>
+        <div className="modern-kpi-grid">
+          <article className="modern-kpi modern-kpi--primary">
+            <span className="modern-kpi__label">Visible Candidates</span>
+            <strong className="modern-kpi__value">{filteredRows.length}</strong>
+            <span className="modern-kpi__hint">From {data.meta.totalRows} total rows</span>
+          </article>
+          <article className="modern-kpi">
+            <span className="modern-kpi__label">Open Pipeline</span>
+            <strong className="modern-kpi__value">{openRows}</strong>
+            <span className="modern-kpi__hint">Active assignments</span>
+          </article>
+          <article className="modern-kpi">
+            <span className="modern-kpi__label">Job Orders</span>
+            <strong className="modern-kpi__value">{uniqueJobOrders}</strong>
+            <span className="modern-kpi__hint">Distinct positions</span>
+          </article>
+          <article className="modern-kpi">
+            <span className="modern-kpi__label">Fresh / Stale</span>
+            <strong className="modern-kpi__value">
+              {freshnessCounts.fresh} / {freshnessCounts.stale}
+            </strong>
+            <span className="modern-kpi__hint">Recency quality signal</span>
+          </article>
+          <article className="modern-kpi">
+            <span className="modern-kpi__label">Stage Balance</span>
+            <strong className="modern-kpi__value">{averagePerStatus}</strong>
+            <span className="modern-kpi__hint">Avg candidates per stage</span>
+          </article>
         </div>
 
         <DashboardToolbar
@@ -323,26 +407,28 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
             { value: '', label: 'All customers' },
             ...data.options.companies.map((company) => ({
               value: String(company.companyID),
-              label: company.name
+              label: toDisplayText(company.name)
             }))
           ]}
           jobOrders={[
             { value: '', label: data.meta.jobOrderScopeLabel || 'All job orders' },
             ...data.options.jobOrders.map((jobOrder) => ({
               value: String(jobOrder.jobOrderID),
-              label: `${jobOrder.title}${jobOrder.companyName ? ` (${jobOrder.companyName})` : ''}`
+              label: `${toDisplayText(jobOrder.title)}${jobOrder.companyName ? ` (${toDisplayText(jobOrder.companyName)})` : ''}`
             }))
           ]}
           statuses={[
             { value: '', label: 'All statuses' },
             ...data.options.statuses.map((status) => ({
               value: String(status.statusID),
-              label: status.status
+              label: toDisplayText(status.status)
             }))
           ]}
           searchTerm={searchTerm}
           localStatusID={localStatusID}
           localStatusOptions={[{ value: 'all', label: 'All statuses' }, ...localStatusOptions]}
+          activeServerFilters={activeServerFilters}
+          activeLocalFilters={activeLocalFilters}
           viewMode={viewMode}
           onScopeChange={(scope) => navigateWithFilters({ scope, page: 1 })}
           onCustomerChange={(companyID) => navigateWithFilters({ companyID, jobOrderID: '', page: 1 })}
@@ -375,6 +461,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
             {viewMode === 'kanban' ? (
               <KanbanBoard
                 columns={columns}
+                totalVisibleRows={filteredRows.length}
                 getStatusClassName={createStatusClassName}
                 getFreshness={getFreshness}
               />
@@ -395,21 +482,21 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
                     <tr key={`${row.candidateID}-${row.jobOrderID}-${row.statusID}`}>
                       <td>
                         <a className="modern-link" href={row.candidateURL}>
-                          {row.candidateName}
+                          {toDisplayText(row.candidateName)}
                         </a>
                       </td>
                       <td>
                         <a className="modern-link" href={row.jobOrderURL}>
-                          {row.jobOrderTitle}
+                          {toDisplayText(row.jobOrderTitle)}
                         </a>
                       </td>
-                      <td>{row.companyName || '--'}</td>
+                      <td>{toDisplayText(row.companyName)}</td>
                       <td>
-                        <span className={createStatusClassName(row.statusLabel || '')}>
-                          {row.statusLabel || '--'}
+                        <span className={createStatusClassName(toDisplayText(row.statusLabel))}>
+                          {toDisplayText(row.statusLabel)}
                         </span>
                       </td>
-                      <td>{row.lastStatusChangeDisplay || '--'}</td>
+                      <td>{toDisplayText(row.lastStatusChangeDisplay)}</td>
                     </tr>
                   ))}
                 </DataTable>

@@ -16,6 +16,8 @@ type Props = {
   searchTerm: string;
   localStatusID: string;
   localStatusOptions: Option[];
+  activeServerFilters: string[];
+  activeLocalFilters: string[];
   viewMode: 'kanban' | 'list';
   onScopeChange: (scope: string) => void;
   onCustomerChange: (customerID: string) => void;
@@ -43,6 +45,8 @@ export function DashboardToolbar(props: Props) {
     searchTerm,
     localStatusID,
     localStatusOptions,
+    activeServerFilters,
+    activeLocalFilters,
     viewMode,
     onScopeChange,
     onCustomerChange,
@@ -56,8 +60,10 @@ export function DashboardToolbar(props: Props) {
     onClearLocalFilters
   } = props;
 
+  const activeFilterCount = activeServerFilters.length + activeLocalFilters.length;
+
   return (
-    <section className="modern-kanban-toolbar" aria-label="Dashboard controls">
+    <section className="modern-kanban-toolbar modern-kanban-toolbar--sticky" aria-label="Dashboard controls">
       <div className="modern-kanban-toolbar__top">
         <label className="modern-kanban-search">
           <span className="modern-kanban-toolbar__label">Search</span>
@@ -100,7 +106,7 @@ export function DashboardToolbar(props: Props) {
           <button type="button" className="modern-btn modern-btn--secondary" onClick={onClearLocalFilters}>
             Clear Local
           </button>
-          <button type="button" className="modern-btn modern-btn--secondary" onClick={onResetServerFilters}>
+          <button type="button" className="modern-btn modern-btn--secondary modern-btn--emphasis" onClick={onResetServerFilters}>
             Reset Filters
           </button>
         </div>
@@ -158,6 +164,30 @@ export function DashboardToolbar(props: Props) {
           />
           <span>Show Closed Job Orders</span>
         </label>
+      </div>
+
+      <div className="modern-kanban-toolbar__active">
+        <div className={`modern-kanban-toolbar__active-counter${activeFilterCount > 0 ? ' is-active' : ''}`}>
+          Active Filters: {activeFilterCount}
+        </div>
+        {activeFilterCount > 0 ? (
+          <div className="modern-kanban-toolbar__active-list">
+            {activeServerFilters.map((filterLabel, index) => (
+              <span className="modern-active-filter modern-active-filter--server" key={`server-${index}-${filterLabel}`}>
+                {filterLabel}
+              </span>
+            ))}
+            {activeLocalFilters.map((filterLabel, index) => (
+              <span className="modern-active-filter modern-active-filter--local" key={`local-${index}-${filterLabel}`}>
+                {filterLabel}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="modern-kanban-toolbar__active-empty">
+            No active filters. Showing full pipeline slice.
+          </div>
+        )}
       </div>
     </section>
   );

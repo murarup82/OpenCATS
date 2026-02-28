@@ -3,11 +3,12 @@ import type { DashboardStatusColumn, FreshnessInfo } from './types';
 
 type Props = {
   columns: DashboardStatusColumn[];
+  totalVisibleRows: number;
   getStatusClassName: (statusLabel: string) => string;
   getFreshness: (lastStatusChangeDisplay: string) => FreshnessInfo;
 };
 
-export function KanbanBoard({ columns, getStatusClassName, getFreshness }: Props) {
+export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName, getFreshness }: Props) {
   return (
     <div className="modern-kanban-board-wrap">
       <div className="modern-kanban-board" aria-label="Candidate pipeline board">
@@ -15,6 +16,7 @@ export function KanbanBoard({ columns, getStatusClassName, getFreshness }: Props
           <KanbanColumn
             key={`${column.statusID}-${column.statusSlug}`}
             column={column}
+            totalVisibleRows={totalVisibleRows}
             getStatusClassName={getStatusClassName}
             getFreshness={getFreshness}
           />
