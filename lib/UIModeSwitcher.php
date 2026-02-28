@@ -100,7 +100,7 @@ class UIModeSwitcher
         );
 
         $template = new Template();
-        $template->assign('active', $moduleName);
+        $template->assign('active', null);
         $template->assign('targetModule', $moduleName);
         $template->assign('targetAction', $action);
         $template->assign('legacyURL', self::buildCurrentURLWithMode('legacy'));

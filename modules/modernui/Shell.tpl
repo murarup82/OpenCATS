@@ -1,6 +1,6 @@
 <?php TemplateUtility::printHeader('Modern UI Preview', array('public/modern-ui/modern-shell.css', 'public/modern-ui/modern-shell.js')); ?>
 <?php TemplateUtility::printHeaderBlock(); ?>
-<?php TemplateUtility::printTabs($this->active); ?>
+<?php TemplateUtility::printTabs(null, '', $this->targetModule); ?>
 
 <div id="main">
     <?php TemplateUtility::printQuickSearch(); ?>
