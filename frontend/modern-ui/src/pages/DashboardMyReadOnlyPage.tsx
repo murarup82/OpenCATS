@@ -351,7 +351,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
   return (
     <PageContainer
       title="My Dashboard"
-      subtitle="Read-only modern Kanban demo with contract-driven data"
+      subtitle="Pipeline command center (read-only modern slice powered by existing ATS data contract)"
       actions={
         <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
           Open Legacy UI
@@ -363,7 +363,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
           <article className="modern-kpi modern-kpi--primary">
             <span className="modern-kpi__label">Visible Candidates</span>
             <strong className="modern-kpi__value">{filteredRows.length}</strong>
-            <span className="modern-kpi__hint">From {data.meta.totalRows} total rows</span>
+            <span className="modern-kpi__hint">Slice from {data.meta.totalRows} total rows</span>
           </article>
           <article className="modern-kpi">
             <span className="modern-kpi__label">Open Pipeline</span>

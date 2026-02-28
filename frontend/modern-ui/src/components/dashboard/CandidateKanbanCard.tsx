@@ -32,6 +32,24 @@ function withLegacyMode(url: string): string {
   return safeURL + (safeURL.includes('?') ? '&' : '?') + 'ui=legacy';
 }
 
+function getInitials(value: string): string {
+  const tokens = value
+    .split(' ')
+    .map((token) => token.trim())
+    .filter((token) => token !== '');
+
+  if (tokens.length === 0) {
+    return 'NA';
+  }
+
+  const initials = tokens
+    .slice(0, 2)
+    .map((token) => token.charAt(0).toUpperCase())
+    .join('');
+
+  return initials || 'NA';
+}
+
 export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) {
   const statusSlug = toDisplayText(row.statusSlug, 'unknown');
   const candidateName = toDisplayText(row.candidateName);
@@ -41,16 +59,29 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
   const location = toDisplayText(row.location);
   const lastUpdated = toDisplayText(row.lastStatusChangeDisplay);
   const isActive = Number(row.isActive) === 1;
+  const initials = getInitials(candidateName);
 
   return (
     <article className={`modern-kanban-card modern-kanban-card--${statusSlug}`}>
       <div className="modern-kanban-card__head">
-        <a className="modern-link modern-kanban-card__candidate" href={row.candidateURL}>
-          {candidateName}
-        </a>
+        <div className="modern-kanban-card__identity">
+          <div className="modern-kanban-card__avatar" aria-hidden="true">
+            {initials}
+          </div>
+          <div className="modern-kanban-card__identity-content">
+            <a className="modern-link modern-kanban-card__candidate" href={row.candidateURL}>
+              {candidateName}
+            </a>
+            <div className="modern-kanban-card__company">{companyName}</div>
+          </div>
+        </div>
+
         <div className="modern-kanban-card__chips">
           <span className={statusClassName}>{statusLabel}</span>
           <span className={`modern-freshness modern-freshness--${freshness.tone}`}>{freshness.label}</span>
+          <span className={`modern-chip modern-chip--pipeline ${isActive ? 'is-active' : 'is-closed'}`}>
+            {isActive ? 'Open Pipeline' : 'Closed'}
+          </span>
         </div>
       </div>
 
@@ -58,31 +89,25 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
         {jobOrderTitle}
       </a>
 
-      <div className="modern-kanban-card__company">{companyName}</div>
-
       <div className="modern-kanban-card__meta">
-        <span className="modern-kanban-card__meta-item">
+        <div className="modern-kanban-card__meta-item">
           <span className="modern-kanban-card__meta-key">Location</span>
-          <span>{location}</span>
-        </span>
-        <span className="modern-kanban-card__meta-item">
-          <span className="modern-kanban-card__meta-key">Updated</span>
-          <span>{lastUpdated}</span>
-        </span>
-        <span className="modern-kanban-card__meta-item">
-          <span className="modern-kanban-card__meta-key">Pipeline</span>
-          <span>{isActive ? 'Active' : 'Closed'}</span>
-        </span>
+          <span className="modern-kanban-card__meta-value">{location}</span>
+        </div>
+        <div className="modern-kanban-card__meta-item">
+          <span className="modern-kanban-card__meta-key">Last Updated</span>
+          <span className="modern-kanban-card__meta-value">{lastUpdated}</span>
+        </div>
       </div>
 
       <div className="modern-kanban-card__actions">
-        <a className="modern-btn modern-btn--ghost" href={row.candidateURL}>
-          View
+        <a className="modern-btn modern-btn--ghost modern-btn--mini" href={row.candidateURL}>
+          View Candidate
         </a>
-        <a className="modern-btn modern-btn--ghost" href={row.jobOrderURL}>
-          Details
+        <a className="modern-btn modern-btn--ghost modern-btn--mini" href={row.jobOrderURL}>
+          Job Details
         </a>
-        <a className="modern-btn modern-btn--ghost" href={withLegacyMode(row.candidateURL)}>
+        <a className="modern-btn modern-btn--ghost modern-btn--mini" href={withLegacyMode(row.candidateURL)}>
           Open Legacy
         </a>
       </div>

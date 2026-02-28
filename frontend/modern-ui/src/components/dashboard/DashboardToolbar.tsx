@@ -61,12 +61,14 @@ export function DashboardToolbar(props: Props) {
   } = props;
 
   const activeFilterCount = activeServerFilters.length + activeLocalFilters.length;
+  const hasServerFilters = activeServerFilters.length > 0;
+  const hasLocalFilters = activeLocalFilters.length > 0;
 
   return (
     <section className="modern-kanban-toolbar modern-kanban-toolbar--sticky" aria-label="Dashboard controls">
       <div className="modern-kanban-toolbar__top">
         <label className="modern-kanban-search">
-          <span className="modern-kanban-toolbar__label">Search</span>
+          <span className="modern-kanban-toolbar__label">Search candidates or jobs</span>
           <input
             type="search"
             value={searchTerm}
@@ -75,18 +77,10 @@ export function DashboardToolbar(props: Props) {
           />
         </label>
 
-        <label className="modern-kanban-toolbar__group">
-          <span className="modern-kanban-toolbar__label">Quick Status</span>
-          <select value={localStatusID} onChange={(event) => onLocalStatusChange(event.target.value)}>
-            {localStatusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
         <div className="modern-kanban-toolbar__actions">
+          <div className={`modern-kanban-toolbar__active-counter${activeFilterCount > 0 ? ' is-active' : ''}`}>
+            {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
+          </div>
           <div className="modern-segment" role="group" aria-label="View mode">
             <button
               type="button"
@@ -103,10 +97,20 @@ export function DashboardToolbar(props: Props) {
               List
             </button>
           </div>
-          <button type="button" className="modern-btn modern-btn--secondary" onClick={onClearLocalFilters}>
+          <button
+            type="button"
+            className="modern-btn modern-btn--secondary"
+            onClick={onClearLocalFilters}
+            disabled={!hasLocalFilters && searchTerm.trim() === ''}
+          >
             Clear Local
           </button>
-          <button type="button" className="modern-btn modern-btn--secondary modern-btn--emphasis" onClick={onResetServerFilters}>
+          <button
+            type="button"
+            className="modern-btn modern-btn--secondary modern-btn--emphasis"
+            onClick={onResetServerFilters}
+            disabled={!hasServerFilters && !showClosed}
+          >
             Reset Filters
           </button>
         </div>
@@ -114,13 +118,25 @@ export function DashboardToolbar(props: Props) {
 
       <div className="modern-kanban-toolbar__bottom">
         {canViewAllScopes ? (
-          <label className="modern-kanban-toolbar__group">
+          <div className="modern-kanban-toolbar__group modern-kanban-toolbar__group--scope">
             <span className="modern-kanban-toolbar__label">Scope</span>
-            <select value={scope} onChange={(event) => onScopeChange(event.target.value)}>
-              <option value="mine">My Assigned Jobs</option>
-              <option value="all">All Jobs</option>
-            </select>
-          </label>
+            <div className="modern-segment modern-segment--scope" role="group" aria-label="Scope mode">
+              <button
+                type="button"
+                className={`modern-segment__btn${scope === 'mine' ? ' is-active' : ''}`}
+                onClick={() => onScopeChange('mine')}
+              >
+                My Assigned Jobs
+              </button>
+              <button
+                type="button"
+                className={`modern-segment__btn${scope === 'all' ? ' is-active' : ''}`}
+                onClick={() => onScopeChange('all')}
+              >
+                All Jobs
+              </button>
+            </div>
+          </div>
         ) : null}
 
         <label className="modern-kanban-toolbar__group">
@@ -146,9 +162,22 @@ export function DashboardToolbar(props: Props) {
         </label>
 
         <label className="modern-kanban-toolbar__group">
-          <span className="modern-kanban-toolbar__label">Server Status</span>
+          <span className="modern-kanban-toolbar__label">Server Status Filter</span>
           <select value={statusID} onChange={(event) => onStatusChange(event.target.value)}>
             {statuses.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="modern-kanban-toolbar__meta">
+        <label className="modern-kanban-toolbar__group">
+          <span className="modern-kanban-toolbar__label">Board Status Focus</span>
+          <select value={localStatusID} onChange={(event) => onLocalStatusChange(event.target.value)}>
+            {localStatusOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -162,14 +191,9 @@ export function DashboardToolbar(props: Props) {
             checked={showClosed}
             onChange={(event) => onShowClosedChange(event.target.checked)}
           />
-          <span>Show Closed Job Orders</span>
+          <span>Include closed job orders</span>
         </label>
-      </div>
 
-      <div className="modern-kanban-toolbar__active">
-        <div className={`modern-kanban-toolbar__active-counter${activeFilterCount > 0 ? ' is-active' : ''}`}>
-          Active Filters: {activeFilterCount}
-        </div>
         {activeFilterCount > 0 ? (
           <div className="modern-kanban-toolbar__active-list">
             {activeServerFilters.map((filterLabel, index) => (
@@ -184,9 +208,7 @@ export function DashboardToolbar(props: Props) {
             ))}
           </div>
         ) : (
-          <div className="modern-kanban-toolbar__active-empty">
-            No active filters. Showing full pipeline slice.
-          </div>
+          <div className="modern-kanban-toolbar__active-empty">No active filters. Showing full pipeline slice.</div>
         )}
       </div>
     </section>
