@@ -685,7 +685,7 @@ class CandidatesUI extends UserInterface
                 'hasAttachment' => (isset($row['attachmentPresent']) ? ((int) $row['attachmentPresent'] === 1) : false),
                 'hasDuplicate' => (isset($row['duplicatePresent']) ? ((int) $row['duplicatePresent'] === 1) : false),
                 'isSubmitted' => (isset($row['submitted']) ? ((int) $row['submitted'] === 1) : false),
-                'candidateURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'candidateURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
                 'candidateEditURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addToListURL' => sprintf(
                     '%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy',
@@ -760,6 +760,410 @@ class CandidatesUI extends UserInterface
                 'topLog' => trim(strip_tags((string) $topLog))
             ),
             'rows' => $responseRows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
+    private function renderModernCandidateShowJSON(
+        $candidateID,
+        $isPopup,
+        $showClosedPipeline,
+        $data,
+        $extraFieldRS,
+        $EEOValues,
+        $attachmentsRS,
+        $transformAttachments,
+        $pipelinesRS,
+        $calendarRS,
+        $lists,
+        $candidateComments,
+        $questionnaires,
+        $gdprLatestRequest,
+        $gdprDeletionRequired,
+        $gdprSendEnabled,
+        $gdprSendDisabled,
+        $gdprSendDisabledReason,
+        $gdprLegacyConsent,
+        $gdprLegacyProof,
+        $gdprLegacyProofWarning,
+        $gdprFlashMessage,
+        $assignedTags,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $candidateID = (int) $candidateID;
+
+        $fullName = trim(
+            (isset($data['firstName']) ? $data['firstName'] : '') .
+            ' ' .
+            (isset($data['lastName']) ? $data['lastName'] : '')
+        );
+        if ($fullName === '')
+        {
+            $fullName = 'Candidate #' . $candidateID;
+        }
+
+        $notesHTML = (isset($data['notes']) ? (string) $data['notes'] : '');
+        $notesText = trim(
+            html_entity_decode(
+                strip_tags(str_replace(array('<br />', '<br/>', '<br>'), "\n", $notesHTML)),
+                ENT_QUOTES
+            )
+        );
+
+        $profileImageURL = '';
+        $attachmentsPayload = array();
+        foreach ($attachmentsRS as $attachmentData)
+        {
+            $isProfileImage = ((int) $attachmentData['isProfileImage'] === 1);
+            $retrievalURL = '';
+            if (!empty($attachmentData['retrievalURL']))
+            {
+                $retrievalURL = html_entity_decode((string) $attachmentData['retrievalURL'], ENT_QUOTES);
+            }
+            else if (!empty($attachmentData['retrievalURLLocal']))
+            {
+                $retrievalURL = (string) $attachmentData['retrievalURLLocal'];
+            }
+
+            if ($isProfileImage)
+            {
+                if ($profileImageURL === '')
+                {
+                    $profileImageURL = $retrievalURL;
+                }
+                continue;
+            }
+
+            $attachmentsPayload[] = array(
+                'attachmentID' => (int) $attachmentData['attachmentID'],
+                'fileName' => (isset($attachmentData['originalFilename']) ? $attachmentData['originalFilename'] : ''),
+                'dateCreated' => (isset($attachmentData['dateCreated']) ? $attachmentData['dateCreated'] : '--'),
+                'retrievalURL' => $retrievalURL,
+                'previewAvailable' => ((int) $attachmentData['hasText'] === 1),
+                'previewURL' => sprintf(
+                    '%s?m=candidates&a=viewResume&attachmentID=%d&ui=legacy',
+                    $baseURL,
+                    (int) $attachmentData['attachmentID']
+                )
+            );
+        }
+
+        $pipelinesPayload = array();
+        $activePipelineCount = 0;
+        $closedPipelineCount = 0;
+        foreach ($pipelinesRS as $pipelineData)
+        {
+            $isActivePipeline = ((int) $pipelineData['isActive'] === 1);
+            if ($isActivePipeline)
+            {
+                $activePipelineCount++;
+            }
+            else
+            {
+                $closedPipelineCount++;
+            }
+
+            $ownerName = trim(
+                (isset($pipelineData['ownerAbbrName']) ? $pipelineData['ownerAbbrName'] : '') .
+                ''
+            );
+            if ($ownerName === '')
+            {
+                $ownerName = trim(
+                    (isset($pipelineData['ownerFirstName']) ? $pipelineData['ownerFirstName'] : '') .
+                    ' ' .
+                    (isset($pipelineData['ownerLastName']) ? $pipelineData['ownerLastName'] : '')
+                );
+            }
+            if ($ownerName === '')
+            {
+                $ownerName = '--';
+            }
+
+            $addedByName = trim(
+                (isset($pipelineData['addedByAbbrName']) ? $pipelineData['addedByAbbrName'] : '') .
+                ''
+            );
+            if ($addedByName === '')
+            {
+                $addedByName = trim(
+                    (isset($pipelineData['addedByFirstName']) ? $pipelineData['addedByFirstName'] : '') .
+                    ' ' .
+                    (isset($pipelineData['addedByLastName']) ? $pipelineData['addedByLastName'] : '')
+                );
+            }
+            if ($addedByName === '')
+            {
+                $addedByName = '--';
+            }
+
+            $statusLabel = (isset($pipelineData['status']) ? trim($pipelineData['status']) : '--');
+            if ($statusLabel === '')
+            {
+                $statusLabel = '--';
+            }
+            $statusSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $statusLabel), '-'));
+            if ($statusSlug === '')
+            {
+                $statusSlug = 'unknown';
+            }
+
+            $jobOrderID = (int) $pipelineData['jobOrderID'];
+            $candidateJobOrderID = (int) $pipelineData['candidateJobOrderID'];
+
+            $pipelinesPayload[] = array(
+                'candidateJobOrderID' => $candidateJobOrderID,
+                'jobOrderID' => $jobOrderID,
+                'jobOrderTitle' => (isset($pipelineData['title']) ? $pipelineData['title'] : ''),
+                'jobOrderURL' => sprintf(
+                    '%s?m=joborders&a=show&jobOrderID=%d&ui=legacy',
+                    $baseURL,
+                    $jobOrderID
+                ),
+                'clientJobID' => (isset($pipelineData['clientJobID']) ? $pipelineData['clientJobID'] : ''),
+                'companyID' => (int) $pipelineData['companyID'],
+                'companyName' => (isset($pipelineData['companyName']) ? $pipelineData['companyName'] : ''),
+                'companyURL' => sprintf(
+                    '%s?m=companies&a=show&companyID=%d&ui=legacy',
+                    $baseURL,
+                    (int) $pipelineData['companyID']
+                ),
+                'ownerName' => $ownerName,
+                'addedByName' => $addedByName,
+                'statusID' => (int) $pipelineData['statusID'],
+                'statusLabel' => $statusLabel,
+                'statusSlug' => $statusSlug,
+                'isActive' => $isActivePipeline,
+                'dateCreated' => (isset($pipelineData['dateCreated']) ? $pipelineData['dateCreated'] : '--'),
+                'ratingValue' => (isset($pipelineData['ratingValue']) ? (int) $pipelineData['ratingValue'] : 0),
+                'actions' => array(
+                    'changeStatusURL' => sprintf(
+                        '%s?m=candidates&a=addActivityChangeStatus&candidateID=%d&jobOrderID=%d&ui=legacy',
+                        $baseURL,
+                        $candidateID,
+                        $jobOrderID
+                    ),
+                    'removeFromPipelineURL' => sprintf(
+                        '%s?m=candidates&a=removeFromPipeline&candidateID=%d&jobOrderID=%d&display=popup&ui=legacy',
+                        $baseURL,
+                        $candidateID,
+                        $jobOrderID
+                    ),
+                    'pipelineDetailsURL' => sprintf(
+                        '%s?m=joborders&a=pipelineStatusDetails&pipelineID=%d&ui=legacy',
+                        $baseURL,
+                        $candidateJobOrderID
+                    )
+                )
+            );
+        }
+
+        $calendarPayload = array();
+        foreach ($calendarRS as $calendarData)
+        {
+            $calendarPayload[] = array(
+                'eventID' => (int) $calendarData['eventID'],
+                'title' => (isset($calendarData['title']) ? $calendarData['title'] : ''),
+                'dateShow' => (isset($calendarData['dateShow']) ? $calendarData['dateShow'] : '--'),
+                'typeImage' => (isset($calendarData['typeImage']) ? $calendarData['typeImage'] : ''),
+                'eventURL' => sprintf(
+                    '%s?m=calendar&view=DAYVIEW&month=%s&year=20%s&day=%s&showEvent=%s&ui=legacy',
+                    $baseURL,
+                    (isset($calendarData['month']) ? $calendarData['month'] : ''),
+                    (isset($calendarData['year']) ? $calendarData['year'] : ''),
+                    (isset($calendarData['day']) ? $calendarData['day'] : ''),
+                    (isset($calendarData['eventID']) ? $calendarData['eventID'] : '')
+                )
+            );
+        }
+
+        $extraFieldsPayload = array();
+        foreach ($extraFieldRS as $extraFieldData)
+        {
+            $extraFieldsPayload[] = array(
+                'fieldName' => (isset($extraFieldData['fieldName']) ? $extraFieldData['fieldName'] : ''),
+                'display' => (isset($extraFieldData['display']) ? (string) $extraFieldData['display'] : '')
+            );
+        }
+
+        $eeoValuesPayload = array();
+        foreach ($EEOValues as $eeoValue)
+        {
+            $eeoValuesPayload[] = array(
+                'fieldName' => (isset($eeoValue['fieldName']) ? $eeoValue['fieldName'] : ''),
+                'fieldValue' => (isset($eeoValue['fieldValue']) ? $eeoValue['fieldValue'] : '')
+            );
+        }
+
+        $listsPayload = array();
+        foreach ($lists as $listData)
+        {
+            $listsPayload[] = array(
+                'listID' => (int) $listData['listID'],
+                'name' => (isset($listData['name']) ? $listData['name'] : ''),
+                'url' => sprintf(
+                    '%s?m=lists&a=showList&savedListID=%d&ui=legacy',
+                    $baseURL,
+                    (int) $listData['listID']
+                )
+            );
+        }
+
+        $commentsPayload = array();
+        foreach ($candidateComments as $commentData)
+        {
+            $commentHTML = (isset($commentData['commentHTML']) ? (string) $commentData['commentHTML'] : '');
+            $commentsPayload[] = array(
+                'activityID' => (int) $commentData['activityID'],
+                'dateCreated' => (isset($commentData['dateCreated']) ? $commentData['dateCreated'] : '--'),
+                'enteredBy' => (isset($commentData['enteredBy']) ? $commentData['enteredBy'] : '--'),
+                'category' => (isset($commentData['category']) ? $commentData['category'] : 'General'),
+                'commentHTML' => $commentHTML,
+                'commentText' => trim(
+                    html_entity_decode(
+                        strip_tags(str_replace(array('<br />', '<br/>', '<br>'), "\n", $commentHTML)),
+                        ENT_QUOTES
+                    )
+                )
+            );
+        }
+
+        $duplicatePayload = array();
+        if (isset($data['isDuplicate']) && is_array($data['isDuplicate']))
+        {
+            foreach ($data['isDuplicate'] as $duplicateData)
+            {
+                $duplicateID = (int) (isset($duplicateData['duplicateTo']) ? $duplicateData['duplicateTo'] : 0);
+                if ($duplicateID <= 0)
+                {
+                    continue;
+                }
+
+                $duplicatePayload[] = array(
+                    'candidateID' => $duplicateID,
+                    'showURL' => sprintf(
+                        '%s?m=candidates&a=show&candidateID=%d&ui=modern',
+                        $baseURL,
+                        $duplicateID
+                    )
+                );
+            }
+        }
+
+        $questionnairesPayload = array();
+        foreach ($questionnaires as $questionnaire)
+        {
+            $questionnairesPayload[] = $questionnaire;
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'candidates.show.v1',
+                'modernPage' => $modernPage,
+                'candidateID' => $candidateID,
+                'showClosedPipeline' => ((bool) $showClosedPipeline),
+                'isPopup' => ((bool) $isPopup),
+                'permissions' => array(
+                    'canEditCandidate' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteCandidate' => ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE),
+                    'canAddToJobOrder' => (
+                        $this->getUserAccessLevel('candidates.considerForJobSearch') >= ACCESS_LEVEL_EDIT ||
+                        $this->getUserAccessLevel('pipelines.addToPipeline') >= ACCESS_LEVEL_EDIT
+                    ),
+                    'canChangePipelineStatus' => ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT),
+                    'canRemoveFromPipeline' => ($this->getUserAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_DELETE),
+                    'canCreateAttachment' => ($this->getUserAccessLevel('candidates.createAttachment') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteAttachment' => ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE),
+                    'canManageTags' => ($this->getUserAccessLevel('candidates.addCandidateTags') >= ACCESS_LEVEL_EDIT),
+                    'canManageLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT),
+                    'canViewLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_READ),
+                    'canPostComment' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
+                    'canSendGDPR' => ((bool) $gdprSendEnabled && !(bool) $gdprSendDisabled),
+                    'candidateMessagingEnabled' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'editURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'deleteURL' => sprintf('%s?m=candidates&a=delete&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'addToJobOrderURL' => sprintf('%s?m=candidates&a=considerForJobSearch&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'createAttachmentURL' => sprintf('%s?m=candidates&a=createAttachment&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'addTagsURL' => sprintf('%s?m=candidates&a=addCandidateTags&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
+                'linkDuplicateURL' => sprintf('%s?m=candidates&a=linkDuplicate&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'viewHistoryURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID)
+            ),
+            'candidate' => array(
+                'candidateID' => $candidateID,
+                'firstName' => (isset($data['firstName']) ? $data['firstName'] : ''),
+                'lastName' => (isset($data['lastName']) ? $data['lastName'] : ''),
+                'fullName' => $fullName,
+                'titleClass' => (isset($data['titleClass']) ? $data['titleClass'] : 'jobTitleCold'),
+                'isActive' => ((int) $data['isActive'] === 1),
+                'isHot' => ((int) $data['isHot'] === 1),
+                'email1' => (isset($data['email1']) ? $data['email1'] : ''),
+                'phoneCell' => (isset($data['phoneCell']) ? $data['phoneCell'] : ''),
+                'bestTimeToCall' => (isset($data['bestTimeToCall']) ? $data['bestTimeToCall'] : ''),
+                'address' => (isset($data['address']) ? $data['address'] : ''),
+                'city' => (isset($data['city']) ? $data['city'] : ''),
+                'country' => (isset($data['country']) ? $data['country'] : ''),
+                'dateAvailable' => (isset($data['dateAvailable']) ? $data['dateAvailable'] : ''),
+                'currentEmployer' => (isset($data['currentEmployer']) ? $data['currentEmployer'] : ''),
+                'keySkills' => (isset($data['keySkills']) ? $data['keySkills'] : ''),
+                'canRelocate' => (isset($data['canRelocate']) ? $data['canRelocate'] : ''),
+                'currentPay' => (isset($data['currentPay']) ? $data['currentPay'] : ''),
+                'desiredPay' => (isset($data['desiredPay']) ? $data['desiredPay'] : ''),
+                'owner' => (isset($data['ownerFullName']) ? $data['ownerFullName'] : '--'),
+                'enteredBy' => (isset($data['enteredByFullName']) ? $data['enteredByFullName'] : '--'),
+                'source' => (isset($data['source']) ? $data['source'] : '--'),
+                'dateCreated' => (isset($data['dateCreated']) ? $data['dateCreated'] : '--'),
+                'dateModified' => (isset($data['dateModified']) ? $data['dateModified'] : '--'),
+                'pipelineCount' => (isset($data['pipeline']) ? (int) $data['pipeline'] : 0),
+                'submittedCount' => (isset($data['submitted']) ? (int) $data['submitted'] : 0),
+                'notesHTML' => $notesHTML,
+                'notesText' => $notesText,
+                'profileImageURL' => $profileImageURL,
+                'duplicates' => $duplicatePayload
+            ),
+            'extraFields' => $extraFieldsPayload,
+            'eeoValues' => $eeoValuesPayload,
+            'gdpr' => array(
+                'latestRequest' => $gdprLatestRequest,
+                'deletionRequired' => ((bool) $gdprDeletionRequired),
+                'sendEnabled' => ((bool) $gdprSendEnabled),
+                'sendDisabled' => ((bool) $gdprSendDisabled),
+                'sendDisabledReason' => (string) $gdprSendDisabledReason,
+                'legacyConsent' => ((bool) $gdprLegacyConsent),
+                'legacyProof' => $gdprLegacyProof,
+                'legacyProofWarning' => ((bool) $gdprLegacyProofWarning),
+                'flashMessage' => (string) $gdprFlashMessage
+            ),
+            'tags' => array_values((is_array($assignedTags) ? $assignedTags : array())),
+            'lists' => $listsPayload,
+            'comments' => array(
+                'count' => count($commentsPayload),
+                'items' => $commentsPayload
+            ),
+            'attachments' => array(
+                'items' => $attachmentsPayload,
+                'transformCandidates' => $transformAttachments
+            ),
+            'pipelines' => array(
+                'activeCount' => $activePipelineCount,
+                'closedCount' => $closedPipelineCount,
+                'items' => $pipelinesPayload
+            ),
+            'calendar' => $calendarPayload,
+            'questionnaires' => $questionnairesPayload
         );
 
         if (!headers_sent())
@@ -928,6 +1332,10 @@ class CandidatesUI extends UserInterface
      */
     private function show()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Is this a popup? */
         if (isset($_GET['display']) && $_GET['display'] == 'popup') {
             $isPopup = true;
@@ -1523,6 +1931,53 @@ class CandidatesUI extends UserInterface
 
                 $candidateMessageMentionHintNames[] = $mentionLabel;
             }
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'candidates-show')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernCandidateShowJSON(
+                $candidateID,
+                $isPopup,
+                $showClosed,
+                $data,
+                $extraFieldRS,
+                $EEOValues,
+                $attachmentsRS,
+                $transformAttachments,
+                $pipelinesRS,
+                $calendarRS,
+                $lists,
+                $candidateComments,
+                $questionnaires,
+                $gdprLatestRequest,
+                $gdprDeletionRequired,
+                $gdprSendEnabled,
+                $gdprSendDisabled,
+                $gdprSendDisabledReason,
+                $gdprLegacyConsent,
+                $gdprLegacyProof,
+                $gdprLegacyProofWarning,
+                $gdprFlashMessage,
+                $tags->getCandidateTagsTitle($candidateID),
+                'candidates-show'
+            );
+            return;
         }
 
         $this->_template->assign('active', $this);

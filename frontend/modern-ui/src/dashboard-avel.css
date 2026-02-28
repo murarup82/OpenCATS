@@ -1588,6 +1588,142 @@
   color: #1f7145;
 }
 
+.avel-candidate-show-page .avel-candidate-hero {
+  border: 1px solid var(--avel-border);
+  border-radius: 16px;
+  background: linear-gradient(170deg, #ffffff 0%, #f5fbff 100%);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+}
+
+.avel-candidate-show-page .avel-candidate-hero__identity {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-candidate-show-page .avel-candidate-hero__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--avel-900);
+  font: 700 clamp(1.2rem, 0.95rem + 0.95vw, 1.8rem) / 1.1 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-candidate-show-page .avel-candidate-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  color: #3f6577;
+  font-size: 0.8rem;
+}
+
+.avel-candidate-show-page .avel-candidate-hero__duplicates {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.avel-candidate-show-page .avel-candidate-hero__avatar {
+  border: 1px solid var(--avel-border);
+  border-radius: 12px;
+  overflow: hidden;
+  inline-size: 108px;
+  block-size: 108px;
+  background: #eff7fc;
+}
+
+.avel-candidate-show-page .avel-candidate-hero__avatar img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.avel-candidate-show-page .avel-candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.avel-candidate-show-page .avel-candidate-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+  color: #23495d;
+  font-size: 0.81rem;
+}
+
+.avel-candidate-show-page .avel-candidate-details > div strong {
+  color: #114560;
+}
+
+.avel-candidate-show-page .avel-candidate-details__full {
+  grid-column: 1 / -1;
+}
+
+.avel-candidate-show-page .avel-candidate-notes {
+  border: 1px dashed #bed6e5;
+  border-radius: 12px;
+  background: #f7fcff;
+  padding: 10px;
+}
+
+.avel-candidate-show-page .avel-candidate-notes pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #1f4253;
+  font: 500 0.8rem/1.45 'Manrope', 'Segoe UI', sans-serif;
+}
+
+.avel-candidate-show-page .avel-candidate-comments {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.avel-candidate-show-page .avel-candidate-comment {
+  border: 1px solid #d7e7f2;
+  border-radius: 11px;
+  background: #fcfeff;
+  padding: 9px 10px;
+}
+
+.avel-candidate-show-page .avel-candidate-comment__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #5e7c8c;
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.avel-candidate-show-page .avel-candidate-comment p {
+  margin: 0;
+  color: #234658;
+  font-size: 0.78rem;
+}
+
+.avel-candidate-show-page .avel-candidate-tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.avel-candidate-show-page .avel-candidate-lists {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: #2a5063;
+  font-size: 0.8rem;
+}
+
+.avel-candidate-show-page .avel-candidate-lists li {
+  margin: 0 0 5px;
+}
+
 .modern-kanban-skeleton {
   margin: 22px;
   border: 1px solid #c9dce9;
@@ -1718,6 +1854,15 @@
   .avel-dashboard-page .modern-kanban-column {
     width: 82vw;
     min-width: 82vw;
+  }
+
+  .avel-candidate-show-page .avel-candidate-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-candidate-show-page .avel-candidate-grid,
+  .avel-candidate-show-page .avel-candidate-details {
+    grid-template-columns: 1fr;
   }
 
   .modern-kanban-skeleton__board {

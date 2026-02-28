@@ -1,5 +1,6 @@
 import type {
   CandidatesListModernDataResponse,
+  CandidatesShowModernDataResponse,
   DashboardModernDataResponse,
   QuickActionAddToListModernDataResponse,
   UIModeBootstrap
@@ -7,6 +8,7 @@ import type {
 import { getJSON } from './httpClient';
 import {
   MODERN_CANDIDATES_PAGE,
+  MODERN_CANDIDATE_SHOW_PAGE,
   MODERN_CONTRACT_VERSION,
   MODERN_DASHBOARD_PAGE,
   buildModernJSONRequestQuery
@@ -61,6 +63,30 @@ export async function fetchCandidatesListModernData(
 
   if (data.meta.contractKey !== 'candidates.listByView.v1') {
     throw new Error('Unexpected candidates contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchCandidatesShowModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<CandidatesShowModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'candidates',
+    action: 'show',
+    modernPage: MODERN_CANDIDATE_SHOW_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<CandidatesShowModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading candidate profile.');
+  }
+
+  if (data.meta.contractKey !== 'candidates.show.v1') {
+    throw new Error('Unexpected candidate profile contract key.');
   }
 
   return data;
