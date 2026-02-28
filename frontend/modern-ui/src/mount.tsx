@@ -1,6 +1,8 @@
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import './ui-core/tokens.css';
+import './ui-core/primitives.css';
 import './styles.css';
 import type { UIModeBootstrap } from './types';
 

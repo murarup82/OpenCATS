@@ -1,0 +1,37 @@
+:root {
+  --ui-font-sans: "Manrope", "Segoe UI", Tahoma, sans-serif;
+  --ui-font-display: "Space Grotesk", "Segoe UI", sans-serif;
+
+  --ui-color-bg: #f4fafe;
+  --ui-color-surface: #ffffff;
+  --ui-color-surface-soft: #f8fcff;
+  --ui-color-border: #c7ddea;
+  --ui-color-border-strong: #9bc4d9;
+
+  --ui-color-text: #0d3344;
+  --ui-color-text-soft: #446677;
+  --ui-color-title: #00425b;
+
+  --ui-color-brand-500: #38b1cc;
+  --ui-color-brand-600: #0097bd;
+  --ui-color-brand-700: #006d90;
+  --ui-color-brand-900: #00425b;
+
+  --ui-color-success: #2f8d56;
+  --ui-color-warning: #d98b3e;
+  --ui-color-danger: #c46b72;
+
+  --ui-radius-sm: 10px;
+  --ui-radius-md: 12px;
+  --ui-radius-lg: 16px;
+  --ui-radius-xl: 20px;
+
+  --ui-shadow-sm: 0 8px 20px rgba(0, 66, 91, 0.09);
+  --ui-shadow-md: 0 18px 38px rgba(0, 66, 91, 0.13);
+  --ui-focus-ring: 0 0 0 3px rgba(0, 151, 189, 0.2);
+}
+
+.avel-dashboard-page {
+  font-family: var(--ui-font-sans);
+  color: var(--ui-color-text);
+}

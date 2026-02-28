@@ -1,10 +1,5 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
-
-type Option = {
-  value: string;
-  label: string;
-};
+import { SelectMenu } from '../../ui-core';
+import type { SelectMenuOption } from '../../ui-core';
 
 type Props = {
   canViewAllScopes: boolean;
@@ -12,11 +7,11 @@ type Props = {
   customerID: string;
   jobOrderID: string;
   showClosed: boolean;
-  customers: Option[];
-  jobOrders: Option[];
+  customers: SelectMenuOption[];
+  jobOrders: SelectMenuOption[];
   searchTerm: string;
   localStatusID: string;
-  localStatusOptions: Option[];
+  localStatusOptions: SelectMenuOption[];
   activeServerFilters: string[];
   activeLocalFilters: string[];
   viewMode: 'kanban' | 'list';
@@ -30,203 +25,6 @@ type Props = {
   onResetServerFilters: () => void;
   onClearLocalFilters: () => void;
 };
-
-type CommandSelectFieldProps = {
-  label: string;
-  value: string;
-  options: Option[];
-  onChange: (value: string) => void;
-};
-
-function toOptionSlug(value: string): string {
-  const slug = String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-  return slug || 'default';
-}
-
-function CommandSelectField(props: CommandSelectFieldProps) {
-  const { label, value, options, onChange } = props;
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const comboRef = useRef<HTMLDivElement | null>(null);
-  const listboxId = useId();
-
-  const selectedIndex = useMemo(() => {
-    const index = options.findIndex((option) => option.value === value);
-    return index >= 0 ? index : 0;
-  }, [options, value]);
-
-  const selectedOption = options[selectedIndex] || options[0] || { value: '', label: '' };
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    setActiveIndex(selectedIndex);
-  }, [isOpen, selectedIndex]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    const handleOutsidePointer = (event: MouseEvent | TouchEvent) => {
-      const combo = comboRef.current;
-      if (!combo) {
-        return;
-      }
-
-      const target = event.target as Node | null;
-      if (target && combo.contains(target)) {
-        return;
-      }
-
-      setIsOpen(false);
-    };
-
-    window.addEventListener('mousedown', handleOutsidePointer);
-    window.addEventListener('touchstart', handleOutsidePointer);
-
-    return () => {
-      window.removeEventListener('mousedown', handleOutsidePointer);
-      window.removeEventListener('touchstart', handleOutsidePointer);
-    };
-  }, [isOpen]);
-
-  const toggleOpen = () => {
-    setIsOpen((current) => !current);
-  };
-
-  const selectOptionAt = (index: number) => {
-    const option = options[index];
-    if (!option) {
-      return;
-    }
-    onChange(option.value);
-    setIsOpen(false);
-  };
-
-  const handleTriggerKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    if (options.length === 0) {
-      return;
-    }
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setIsOpen(true);
-      setActiveIndex((current) => Math.min(options.length - 1, current + 1));
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setIsOpen(true);
-      setActiveIndex((current) => Math.max(0, current - 1));
-      return;
-    }
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      if (!isOpen) {
-        setIsOpen(true);
-      } else {
-        selectOptionAt(activeIndex);
-      }
-      return;
-    }
-
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setIsOpen(false);
-    }
-  };
-
-  const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (options.length === 0) {
-      return;
-    }
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setActiveIndex((current) => Math.min(options.length - 1, current + 1));
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setActiveIndex((current) => Math.max(0, current - 1));
-      return;
-    }
-
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      selectOptionAt(activeIndex);
-      return;
-    }
-
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setIsOpen(false);
-    }
-  };
-
-  return (
-    <label className="modern-command-field">
-      <span className="modern-command-label">{label}</span>
-      <div className={`modern-command-field__combo${isOpen ? ' is-open' : ''}`} ref={comboRef}>
-        <button
-          type="button"
-          className="modern-command-field__trigger"
-          aria-haspopup="listbox"
-          aria-expanded={isOpen}
-          aria-controls={listboxId}
-          onClick={toggleOpen}
-          onKeyDown={handleTriggerKeyDown}
-        >
-          <span className="modern-command-field__trigger-value">{selectedOption.label}</span>
-          <span className="modern-command-field__trigger-caret" aria-hidden="true"></span>
-        </button>
-        {isOpen ? (
-          <div
-            id={listboxId}
-            role="listbox"
-            tabIndex={-1}
-            className="modern-command-field__menu"
-            onKeyDown={handleMenuKeyDown}
-          >
-            {options.map((option, index) => {
-              const isSelected = option.value === value;
-              const isActive = index === activeIndex;
-              const optionSlug = toOptionSlug(option.label);
-              return (
-                <button
-                  type="button"
-                  key={`${option.value}-${option.label}`}
-                  role="option"
-                  aria-selected={isSelected}
-                  className={
-                    `modern-command-field__option modern-command-field__option--${optionSlug}` +
-                    `${isSelected ? ' is-selected' : ''}` +
-                    `${isActive ? ' is-active' : ''}`
-                  }
-                  onMouseEnter={() => setActiveIndex(index)}
-                  onClick={() => selectOptionAt(index)}
-                >
-                  <span className="modern-command-field__option-dot" aria-hidden="true"></span>
-                  <span>{option.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-      </div>
-    </label>
-  );
-}
 
 export function DashboardToolbar(props: Props) {
   const {
@@ -351,21 +149,21 @@ export function DashboardToolbar(props: Props) {
       </div>
 
       <div className="modern-command-bar__row modern-command-bar__row--filters">
-        <CommandSelectField
+        <SelectMenu
           label="Customer"
           value={customerID}
           options={customers}
           onChange={onCustomerChange}
         />
 
-        <CommandSelectField
+        <SelectMenu
           label="Job Order"
           value={jobOrderID}
           options={jobOrders}
           onChange={onJobOrderChange}
         />
 
-        <CommandSelectField
+        <SelectMenu
           label="Board Focus"
           value={localStatusID}
           options={localStatusOptions}
