@@ -108,6 +108,8 @@ class DashboardUI extends UserInterface
             $dashboardView = ($dashboardScope === 'mine') ? 'kanban' : 'list';
         }
         $isKanbanView = ($dashboardView === 'kanban');
+        $canChangeStatus = $this->canChangeStatus();
+        $canAssignToJobOrder = $this->canAssignToJobOrder();
 
         $companyOptions = $this->getDashboardCompanies($showClosed, $dashboardScope === 'all');
         $selectedCompanyName = '';
@@ -392,7 +394,9 @@ class DashboardUI extends UserInterface
                 $totalPages,
                 $totalRows,
                 $entriesPerPage,
-                'dashboard-my'
+                'dashboard-my',
+                $canChangeStatus,
+                $canAssignToJobOrder
             );
             return;
         }
@@ -414,8 +418,8 @@ class DashboardUI extends UserInterface
         $this->_template->assign('totalRows', $totalRows);
         $this->_template->assign('entriesPerPage', $entriesPerPage);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
-        $this->_template->assign('canChangeStatus', $this->canChangeStatus());
-        $this->_template->assign('canAssignToJobOrder', $this->canAssignToJobOrder());
+        $this->_template->assign('canChangeStatus', $canChangeStatus);
+        $this->_template->assign('canAssignToJobOrder', $canAssignToJobOrder);
         $this->_template->assign('active', $this);
 
         if (!eval(Hooks::get('DASHBOARD_MY'))) return;
@@ -440,7 +444,9 @@ class DashboardUI extends UserInterface
         $totalPages,
         $totalRows,
         $entriesPerPage,
-        $modernPage
+        $modernPage,
+        $canChangeStatus,
+        $canAssignToJobOrder
     )
     {
         $baseURL = CATSUtility::getIndexName();
@@ -479,6 +485,7 @@ class DashboardUI extends UserInterface
                 ),
                 'companyID' => (int) $row['companyID'],
                 'companyName' => (isset($row['companyName']) ? $row['companyName'] : ''),
+                'candidateJobOrderID' => (int) $row['candidateJobOrderID'],
                 'statusID' => (int) $row['statusID'],
                 'statusLabel' => $statusLabel,
                 'statusSlug' => $this->toStatusSlug($statusLabel),
@@ -495,6 +502,11 @@ class DashboardUI extends UserInterface
                 'statusID' => (int) $statusOption['statusID'],
                 'status' => (isset($statusOption['status']) ? $statusOption['status'] : '')
             );
+        }
+        $orderedStatusIDs = array();
+        foreach ($statusOptionValues as $statusOptionValue)
+        {
+            $orderedStatusIDs[] = (int) $statusOptionValue['statusID'];
         }
 
         $companyOptionValues = array();
@@ -519,7 +531,7 @@ class DashboardUI extends UserInterface
         $payload = array(
             'meta' => array(
                 'contractVersion' => 1,
-                'contractKey' => 'dashboard.my.readonly.v1',
+                'contractKey' => 'dashboard.my.interactive.v1',
                 'modernPage' => $modernPage,
                 'scope' => $dashboardScope,
                 'view' => $dashboardView,
@@ -529,7 +541,15 @@ class DashboardUI extends UserInterface
                 'page' => (int) $page,
                 'totalPages' => (int) $totalPages,
                 'totalRows' => (int) $totalRows,
-                'entriesPerPage' => (int) $entriesPerPage
+                'entriesPerPage' => (int) $entriesPerPage,
+                'permissions' => array(
+                    'canChangeStatus' => ((bool) $canChangeStatus),
+                    'canAssignToJobOrder' => ((bool) $canAssignToJobOrder)
+                ),
+                'statusRules' => array(
+                    'rejectedStatusID' => (int) PIPELINE_STATUS_REJECTED,
+                    'orderedStatusIDs' => $orderedStatusIDs
+                )
             ),
             'filters' => array(
                 'companyID' => (int) $companyID,

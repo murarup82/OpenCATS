@@ -27,6 +27,14 @@ export type DashboardModernDataResponse = {
     totalPages: number;
     totalRows: number;
     entriesPerPage: number;
+    permissions?: {
+      canChangeStatus: boolean;
+      canAssignToJobOrder: boolean;
+    };
+    statusRules?: {
+      rejectedStatusID: number;
+      orderedStatusIDs: number[];
+    };
   };
   filters: {
     companyID: number;
@@ -47,6 +55,7 @@ export type DashboardModernDataResponse = {
     jobOrderURL: string;
     companyID: number;
     companyName: string;
+    candidateJobOrderID?: number;
     statusID: number;
     statusLabel: string;
     statusSlug: string;

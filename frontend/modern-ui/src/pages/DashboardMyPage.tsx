@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { fetchDashboardModernData } from '../lib/api';
 import type { DashboardModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -8,7 +8,7 @@ import { DataTable } from '../components/primitives/DataTable';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
-import type { DashboardStatusColumn } from '../components/dashboard/types';
+import type { DashboardRow, DashboardStatusColumn } from '../components/dashboard/types';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -27,6 +27,12 @@ type NavigationFilters = {
   jobOrderID?: string;
   showClosed?: boolean;
   page?: number;
+};
+
+type PopupCallback = ((returnValue?: unknown) => void) | null;
+
+type PopupWindow = Window & {
+  showPopWin?: (url: string, width: number, height: number, returnFunc?: PopupCallback) => void;
 };
 
 function toDisplayText(value: unknown, fallback = '--'): string {
@@ -66,7 +72,7 @@ function createStatusClassName(statusLabel: string): string {
   return `modern-status modern-status--${toStatusSlug(statusLabel)}`;
 }
 
-export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
+export function DashboardMyPage({ bootstrap }: Props) {
   const [data, setData] = useState<DashboardModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -77,6 +83,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [localStatusID, setLocalStatusID] = useState<string>('all');
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -106,7 +113,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [bootstrap, serverQueryString]);
+  }, [bootstrap, serverQueryString, reloadToken]);
 
   useEffect(() => {
     const nextURL = new URL(window.location.href);
@@ -161,6 +168,73 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
       setServerQueryString(nextQueryString);
     }
   };
+
+  const refreshDashboard = useCallback(() => {
+    setReloadToken((current) => current + 1);
+  }, []);
+
+  const openLegacyPopup = useCallback(
+    (url: string, width: number, height: number, refreshOnClose: boolean) => {
+      const popupWindow = window as PopupWindow;
+      if (typeof popupWindow.showPopWin === 'function') {
+        popupWindow.showPopWin(
+          url,
+          width,
+          height,
+          refreshOnClose
+            ? () => {
+                refreshDashboard();
+              }
+            : null
+        );
+        return;
+      }
+
+      window.location.href = url;
+    },
+    [refreshDashboard]
+  );
+
+  const openStatusModal = useCallback(
+    (row: DashboardRow, targetStatusID: number | null) => {
+      const enforceOwner = data?.meta.scope === 'mine' ? 1 : 0;
+      let url = `${bootstrap.indexName}?m=joborders&a=addActivityChangeStatus`;
+      url += `&jobOrderID=${encodeURIComponent(String(row.jobOrderID))}`;
+      url += `&candidateID=${encodeURIComponent(String(row.candidateID))}`;
+      url += `&enforceOwner=${encodeURIComponent(String(enforceOwner))}`;
+      url += '&refreshParent=1';
+      if (targetStatusID !== null && targetStatusID > 0) {
+        url += `&statusID=${encodeURIComponent(String(targetStatusID))}`;
+      }
+
+      openLegacyPopup(url, 700, 620, true);
+    },
+    [bootstrap.indexName, data?.meta.scope, openLegacyPopup]
+  );
+
+  const openPipelineDetails = useCallback(
+    (row: DashboardRow) => {
+      const pipelineID = Number(row.candidateJobOrderID || 0);
+      if (pipelineID <= 0) {
+        return;
+      }
+
+      const url = `${bootstrap.indexName}?m=joborders&a=pipelineStatusDetails&pipelineID=${encodeURIComponent(String(pipelineID))}`;
+      openLegacyPopup(url, 1200, 760, false);
+    },
+    [bootstrap.indexName, openLegacyPopup]
+  );
+
+  const openAssignWorkspace = useCallback(() => {
+    const jobOrderID = Number(data?.filters.jobOrderID || 0);
+    if (jobOrderID <= 0) {
+      window.alert('Please select a Job Order first, then click Assign Candidate.');
+      return;
+    }
+
+    const url = `${bootstrap.indexName}?m=joborders&a=considerCandidateSearch&jobOrderID=${encodeURIComponent(String(jobOrderID))}`;
+    openLegacyPopup(url, 1120, 760, true);
+  }, [bootstrap.indexName, data?.filters.jobOrderID, openLegacyPopup]);
 
   if (loading && !data) {
     return <DashboardKanbanSkeleton />;
@@ -224,6 +298,19 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     }
   });
   const statusCatalog: StatusCatalogEntry[] = Array.from(byStatusID.values());
+  const canChangeStatus = !!data.meta.permissions?.canChangeStatus;
+  const canAssignToJobOrder = !!data.meta.permissions?.canAssignToJobOrder;
+  const rejectedStatusID =
+    Number(data.meta.statusRules?.rejectedStatusID || 0) > 0
+      ? Number(data.meta.statusRules?.rejectedStatusID)
+      : Number(
+          statusCatalog.find((status) => status.statusSlug === 'rejected')?.statusID || 0
+        );
+  const orderedStatusIDs =
+    Array.isArray(data.meta.statusRules?.orderedStatusIDs) &&
+    data.meta.statusRules?.orderedStatusIDs.length > 0
+      ? data.meta.statusRules.orderedStatusIDs
+      : statusCatalog.map((status) => status.statusID);
 
   const visibleStatuses = localStatusID === 'all'
     ? statusCatalog
@@ -283,9 +370,16 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
         title="MyDashboard"
         subtitle="Avel recruiting control center"
         actions={
-          <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
-            Open Legacy UI
-          </a>
+          <>
+            {canAssignToJobOrder ? (
+              <button type="button" className="modern-btn modern-btn--secondary" onClick={openAssignWorkspace}>
+                Assign Candidate
+              </button>
+            ) : null}
+            <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
@@ -362,6 +456,11 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
                 columns={columns}
                 totalVisibleRows={filteredRows.length}
                 getStatusClassName={createStatusClassName}
+                canChangeStatus={canChangeStatus}
+                statusOrder={orderedStatusIDs}
+                rejectedStatusID={rejectedStatusID}
+                onRequestStatusChange={openStatusModal}
+                onOpenDetails={openPipelineDetails}
               />
             ) : (
               <div className="modern-table-animated avel-list-panel">
@@ -375,7 +474,8 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
                     { key: 'jobOrder', title: 'Job Order' },
                     { key: 'company', title: 'Company' },
                     { key: 'status', title: 'Status' },
-                    { key: 'lastUpdated', title: 'Last Updated' }
+                    { key: 'lastUpdated', title: 'Last Updated' },
+                    { key: 'actions', title: 'Actions' }
                   ]}
                   hasRows={filteredRows.length > 0}
                   emptyMessage="No rows for this selection."
@@ -399,6 +499,27 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
                         </span>
                       </td>
                       <td>{toDisplayText(row.lastStatusChangeDisplay)}</td>
+                      <td>
+                        <div className="modern-table-actions">
+                          {canChangeStatus ? (
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--secondary"
+                              onClick={() => openStatusModal(row, null)}
+                            >
+                              Change Status
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            onClick={() => openPipelineDetails(row)}
+                            disabled={Number(row.candidateJobOrderID || 0) <= 0}
+                          >
+                            Details
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </DataTable>

@@ -71,7 +71,16 @@ class TemplateUtility
     {
         self::$_isModalWindow = false;
         self::_printCommonHeader($pageTitle, $headIncludes);
-        $bodyClass = self::isUI2Enabled() ? ' class="ui2-body ui2-sidebar-enabled"' : ' class="ui2-body"';
+        $isEmbedded = self::isEmbeddedLegacyFrame();
+        $isUI2 = self::isUI2Enabled();
+        if ($isEmbedded)
+        {
+            $bodyClass = ' class="ui2-body ui2-embedded"';
+        }
+        else
+        {
+            $bodyClass = $isUI2 ? ' class="ui2-body ui2-sidebar-enabled"' : ' class="ui2-body"';
+        }
         echo '<body', $bodyClass, ' style="background: #fff">', "\n";
         self::_printQuickActionMenuHolder();
         self::printPopupContainer();
@@ -104,6 +113,11 @@ class TemplateUtility
      */
     public static function printHeaderBlock($showTopRight = true)
     {
+        if (self::isEmbeddedLegacyFrame())
+        {
+            return;
+        }
+
         if (self::isUI2Enabled())
         {
             return;
@@ -294,6 +308,22 @@ class TemplateUtility
     }
 
     /**
+     * Returns true when rendering legacy content in embedded compatibility mode.
+     *
+     * @return bool
+     */
+    private static function isEmbeddedLegacyFrame()
+    {
+        if (!isset($_GET['ui_embed']))
+        {
+            return false;
+        }
+
+        $rawValue = strtolower(trim((string) $_GET['ui_embed']));
+        return ($rawValue === '1' || $rawValue === 'true' || $rawValue === 'yes');
+    }
+
+    /**
      * Prints the time zone selection dropdown list.
      *
      * @param integer ID and name attributes of the time zone select input
@@ -347,6 +377,11 @@ class TemplateUtility
      */
     public static function printQuickSearch($wildCardString = '')
     {
+        if (self::isEmbeddedLegacyFrame())
+        {
+            return;
+        }
+
         $isUI2 = self::isUI2Enabled();
         $module = isset($_GET['m']) ? $_GET['m'] : '';
         $action = isset($_GET['a']) ? $_GET['a'] : '';
@@ -731,6 +766,11 @@ class TemplateUtility
      */
     public static function printTabs($active, $subActive = '', $forceHighlight = '')
     {
+        if (self::isEmbeddedLegacyFrame())
+        {
+            return;
+        }
+
         if (self::isUI2Enabled())
         {
             self::_printSidebarNavigation($active, $forceHighlight);
@@ -1524,6 +1564,13 @@ class TemplateUtility
      */
     public static function printFooter()
     {
+        if (self::isEmbeddedLegacyFrame())
+        {
+            echo '</body>', "\n";
+            echo '</html>', "\n";
+            return;
+        }
+
         $build    = $_SESSION['CATS']->getCachedBuild();
         $loadTime = $_SESSION['CATS']->getExecutionTime();
 

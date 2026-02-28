@@ -309,6 +309,13 @@ class UIModeSwitcher
 
     private static function getRouteMap()
     {
+        if (self::isPreviewAllRoutesEnabled())
+        {
+            return self::normalizeRouteMap(array(
+                '*' => array('*')
+            ));
+        }
+
         $map = array();
         if (isset($GLOBALS['UI_SWITCH_ROUTE_MAP']) && is_array($GLOBALS['UI_SWITCH_ROUTE_MAP']))
         {
@@ -432,6 +439,15 @@ class UIModeSwitcher
         }
 
         return $normalized;
+    }
+
+    private static function isPreviewAllRoutesEnabled()
+    {
+        return self::getBooleanValue(
+            'UI_SWITCH_PREVIEW_ALL_ROUTES',
+            'OPENCATS_UI_PREVIEW_ALL_ROUTES',
+            false
+        );
     }
 
     private static function isExcludedRoute($moduleName, $action)

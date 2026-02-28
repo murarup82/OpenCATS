@@ -30,7 +30,10 @@ export async function fetchDashboardModernData(
     throw new Error('Contract version mismatch while loading dashboard data.');
   }
 
-  if (data.meta.contractKey !== 'dashboard.my.readonly.v1') {
+  if (
+    data.meta.contractKey !== 'dashboard.my.readonly.v1' &&
+    data.meta.contractKey !== 'dashboard.my.interactive.v1'
+  ) {
     throw new Error('Unexpected dashboard contract key.');
   }
 

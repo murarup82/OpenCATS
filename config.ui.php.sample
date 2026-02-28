@@ -15,6 +15,9 @@ define('UI_SWITCH_DEFAULT_MODE', 'legacy');
 /* Safety guard: modern UI only for explicitly mapped routes by default. */
 define('UI_SWITCH_REQUIRE_ROUTE_MATCH', true);
 
+/* Temporary broad preview toggle: when true, route map is treated as * => * (except explicit excludes). */
+define('UI_SWITCH_PREVIEW_ALL_ROUTES', false);
+
 /* Keep non-idempotent requests in legacy unless explicitly enabled. */
 define('UI_SWITCH_ALLOW_POST', false);
 define('UI_SWITCH_ALLOW_AJAX', false);

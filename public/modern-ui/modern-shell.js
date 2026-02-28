@@ -241,6 +241,80 @@
         }
     }
 
+    function enforceModernNavigationLinks(sidebar, bootstrap) {
+        if (!bootstrap || String(bootstrap.mode || '').toLowerCase() !== 'modern') {
+            return;
+        }
+
+        var containers = [];
+        if (sidebar) {
+            containers.push(sidebar);
+        }
+
+        var shellLayout = document.querySelector('.modern-shell-layout');
+        if (shellLayout) {
+            containers.push(shellLayout);
+        }
+
+        for (var containerIndex = 0; containerIndex < containers.length; containerIndex++) {
+            var container = containers[containerIndex];
+            if (!container) {
+                continue;
+            }
+
+            var links = container.querySelectorAll('a[href]');
+            for (var linkIndex = 0; linkIndex < links.length; linkIndex++) {
+                var link = links[linkIndex];
+                if (!link || link.getAttribute('data-modern-shell-ui-link') === '1') {
+                    continue;
+                }
+
+                if (link.hasAttribute('download')) {
+                    continue;
+                }
+
+                var targetAttr = String(link.getAttribute('target') || '').toLowerCase();
+                if (targetAttr !== '' && targetAttr !== '_self') {
+                    continue;
+                }
+
+                var hrefValue = String(link.getAttribute('href') || '');
+                if (hrefValue === '' || hrefValue.charAt(0) === '#') {
+                    continue;
+                }
+
+                var parsed;
+                try {
+                    parsed = new URL(hrefValue, window.location.href);
+                } catch (error) {
+                    continue;
+                }
+
+                if (parsed.origin !== window.location.origin) {
+                    continue;
+                }
+
+                var moduleName = String(parsed.searchParams.get('m') || '').toLowerCase();
+                if (moduleName === '') {
+                    continue;
+                }
+
+                if (moduleName === 'logout' || moduleName === 'login') {
+                    continue;
+                }
+
+                var currentUiMode = String(parsed.searchParams.get('ui') || '').toLowerCase();
+                if (currentUiMode === 'legacy') {
+                    continue;
+                }
+
+                parsed.searchParams.set('ui', 'modern');
+                link.setAttribute('href', parsed.pathname + parsed.search + parsed.hash);
+                link.setAttribute('data-modern-shell-ui-link', '1');
+            }
+        }
+    }
+
     function installAppShellNavigation(root, bootstrap) {
         if (typeof document === 'undefined' || !document.body) {
             return;
@@ -294,6 +368,7 @@
 
         applySidebarState(isCollapsed());
         installSidebarGroupToggles(sidebar);
+        enforceModernNavigationLinks(sidebar, bootstrap);
 
         if (mount) {
             mount.innerHTML = '';
@@ -329,6 +404,8 @@
             appbar.appendChild(appbarRight);
             mount.appendChild(appbar);
         }
+
+        enforceModernNavigationLinks(sidebar, bootstrap);
 
         sidebar.setAttribute('data-modern-shell-enhanced', '1');
         telemetry(root, 'info', 'shell.sidebar.enhanced');

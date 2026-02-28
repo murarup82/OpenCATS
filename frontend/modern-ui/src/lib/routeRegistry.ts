@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import type { UIModeBootstrap } from '../types';
-import { DashboardMyReadOnlyPage } from '../pages/DashboardMyReadOnlyPage';
+import { DashboardMyPage } from '../pages/DashboardMyPage';
 
 export type ModernRouteComponentProps = {
   bootstrap: UIModeBootstrap;
@@ -9,8 +9,8 @@ export type ModernRouteComponentProps = {
 export type ModernRouteComponent = ComponentType<ModernRouteComponentProps>;
 
 const registry: Record<string, ModernRouteComponent> = {
-  'dashboard.my': DashboardMyReadOnlyPage,
-  'dashboard.(default)': DashboardMyReadOnlyPage
+  'dashboard.my': DashboardMyPage,
+  'dashboard.(default)': DashboardMyPage
 };
 
 export function resolveModernRouteComponent(moduleName: string, actionName: string): ModernRouteComponent | null {

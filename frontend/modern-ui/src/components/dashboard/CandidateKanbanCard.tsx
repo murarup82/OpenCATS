@@ -1,8 +1,16 @@
 import type { DashboardRow } from './types';
+import type { DragEvent as ReactDragEvent } from 'react';
 
 type Props = {
   row: DashboardRow;
   statusClassName: string;
+  canChangeStatus: boolean;
+  canDrag: boolean;
+  isDragging: boolean;
+  onDragStart: (event: ReactDragEvent<HTMLElement>, row: DashboardRow) => void;
+  onDragEnd: () => void;
+  onOpenDetails: (row: DashboardRow) => void;
+  onRequestStatusChange: (row: DashboardRow, targetStatusID: number | null) => void;
 };
 
 function toDisplayText(value: unknown, fallback = '--'): string {
@@ -92,7 +100,17 @@ function getAgingInfo(display: string): { days: number | null; tone: AgingTone; 
   return { days: diffDays, tone: 'green', label: `Aging ${diffDays}d` };
 }
 
-export function CandidateKanbanCard({ row, statusClassName }: Props) {
+export function CandidateKanbanCard({
+  row,
+  statusClassName,
+  canChangeStatus,
+  canDrag,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+  onOpenDetails,
+  onRequestStatusChange
+}: Props) {
   const statusSlug = toDisplayText(row.statusSlug, 'unknown');
   const candidateName = toDisplayText(row.candidateName);
   const jobOrderTitle = toDisplayText(row.jobOrderTitle);
@@ -100,9 +118,21 @@ export function CandidateKanbanCard({ row, statusClassName }: Props) {
   const statusLabel = toDisplayText(row.statusLabel);
   const aging = getAgingInfo(toDisplayText(row.lastStatusChangeDisplay, ''));
   const initials = getInitials(candidateName);
+  const isClosed = Number(row.isActive || 0) === 0;
+  const hasDetails = Number(row.candidateJobOrderID || 0) > 0;
 
   return (
-    <article className={`modern-kanban-card modern-kanban-card--${statusSlug}`}>
+    <article
+      className={
+        `modern-kanban-card modern-kanban-card--${statusSlug}` +
+        `${canDrag ? '' : ' is-locked'}` +
+        `${isDragging ? ' is-dragging' : ''}` +
+        `${isClosed ? ' is-closed' : ''}`
+      }
+      draggable={canDrag}
+      onDragStart={(event) => onDragStart(event, row)}
+      onDragEnd={() => onDragEnd()}
+    >
       <div className="modern-kanban-card__head">
         <div className="modern-kanban-card__identity">
           <div className="modern-kanban-card__avatar" aria-hidden="true">
@@ -121,6 +151,7 @@ export function CandidateKanbanCard({ row, statusClassName }: Props) {
           <span className={`modern-chip modern-chip--aging modern-chip--aging-${aging.tone}`}>
             {aging.label}
           </span>
+          {isClosed ? <span className="modern-chip modern-chip--closed">Closed</span> : null}
         </div>
       </div>
 
@@ -136,6 +167,28 @@ export function CandidateKanbanCard({ row, statusClassName }: Props) {
           <span className="modern-kanban-card__fact-key">Company</span>
           <span className="modern-kanban-card__fact-value">{companyName}</span>
         </div>
+      </div>
+
+      <div className="modern-kanban-card__actions">
+        {canChangeStatus ? (
+          <button
+            type="button"
+            className="modern-btn modern-btn--mini modern-btn--secondary"
+            onClick={() => onRequestStatusChange(row, null)}
+          >
+            Change Status
+          </button>
+        ) : (
+          <span className="modern-kanban-card__actions-note">No access</span>
+        )}
+        <button
+          type="button"
+          className="modern-btn modern-btn--mini modern-btn--secondary"
+          onClick={() => onOpenDetails(row)}
+          disabled={!hasDetails}
+        >
+          Details
+        </button>
       </div>
     </article>
   );

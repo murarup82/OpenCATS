@@ -7,6 +7,16 @@ type Props = {
 export function LegacyCompatPage({ bootstrap }: Props) {
   const moduleName = bootstrap.targetModule || '--';
   const actionName = bootstrap.targetAction || '(default)';
+  const embedLegacyURL = (() => {
+    try {
+      const url = new URL(bootstrap.legacyURL, window.location.href);
+      url.searchParams.set('ui_embed', '1');
+      return `${url.pathname}${url.search}${url.hash}`;
+    } catch (error) {
+      const hasQuery = bootstrap.legacyURL.includes('?');
+      return `${bootstrap.legacyURL}${hasQuery ? '&' : '?'}ui_embed=1`;
+    }
+  })();
 
   return (
     <section className="modern-compat-page">
@@ -35,7 +45,7 @@ export function LegacyCompatPage({ bootstrap }: Props) {
         <iframe
           title={`Legacy compatibility route ${moduleName}/${actionName}`}
           className="modern-compat-page__frame"
-          src={bootstrap.legacyURL}
+          src={embedLegacyURL}
         />
       </div>
     </section>
