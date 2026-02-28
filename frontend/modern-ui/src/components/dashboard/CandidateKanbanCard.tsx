@@ -72,7 +72,7 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
             <a className="modern-link modern-kanban-card__candidate" href={row.candidateURL}>
               {candidateName}
             </a>
-            <div className="modern-kanban-card__company">{companyName}</div>
+            <div className="modern-kanban-card__identity-hint">Candidate profile</div>
           </div>
         </div>
 
@@ -109,7 +109,7 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
 
       <div className="modern-kanban-card__actions">
         <a className="modern-btn modern-btn--ghost modern-btn--mini" href={row.candidateURL}>
-          View
+          Candidate
         </a>
         <a className="modern-btn modern-btn--ghost modern-btn--mini" href={row.jobOrderURL}>
           Job
