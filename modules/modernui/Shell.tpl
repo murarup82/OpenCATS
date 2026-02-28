@@ -1,4 +1,62 @@
-<?php TemplateUtility::printHeader('Modern UI Preview', array('public/modern-ui/modern-shell.css', 'public/modern-ui/modern-app.css', 'public/modern-ui/modern-shell.js')); ?>
+<?php
+$modernShellStylePath = 'public/modern-ui/modern-shell.css';
+$modernShellStyleVersioned = $modernShellStylePath;
+$modernShellStyleMtime = @filemtime('./' . $modernShellStylePath);
+if ($modernShellStyleMtime !== false && $modernShellStyleMtime > 0)
+{
+    $modernShellStyleVersioned .= '?v=' . (int) $modernShellStyleMtime;
+}
+
+$modernStylePath = 'public/modern-ui/build/style.css';
+$modernStyleVersioned = $modernStylePath;
+$modernStyleMtime = @filemtime('./' . $modernStylePath);
+if ($modernStyleMtime !== false && $modernStyleMtime > 0)
+{
+    $modernStyleVersioned .= '?v=' . (int) $modernStyleMtime;
+}
+
+$modernShellScriptPath = 'public/modern-ui/modern-shell.js';
+$modernShellScriptVersioned = $modernShellScriptPath;
+$modernShellScriptMtime = @filemtime('./' . $modernShellScriptPath);
+if ($modernShellScriptMtime !== false && $modernShellScriptMtime > 0)
+{
+    $modernShellScriptVersioned .= '?v=' . (int) $modernShellScriptMtime;
+}
+
+TemplateUtility::printHeader('Modern UI Preview', array($modernShellStyleVersioned, $modernStyleVersioned, $modernShellScriptVersioned));
+?>
+<style type="text/css">
+.avel-dashboard-page .modern-command-search__shell {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.avel-dashboard-page .modern-command-search__icon {
+    position: absolute !important;
+    left: 10px !important;
+    width: 14px !important;
+    height: 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: none !important;
+}
+
+.avel-dashboard-page .modern-command-search__icon svg {
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    max-width: 14px !important;
+    max-height: 14px !important;
+    display: block !important;
+}
+
+.avel-dashboard-page .modern-command-search input[type='search'] {
+    padding-left: 34px !important;
+}
+</style>
 <?php TemplateUtility::printHeaderBlock(); ?>
 <?php TemplateUtility::printTabs(null, '', $this->targetModule); ?>
 

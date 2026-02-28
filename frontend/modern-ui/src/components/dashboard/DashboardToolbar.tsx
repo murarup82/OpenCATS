@@ -97,7 +97,13 @@ export function DashboardToolbar(props: Props) {
           <span className="modern-command-label">Search</span>
           <span className="modern-command-search__shell">
             <span className="modern-command-search__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" role="presentation">
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                role="presentation"
+                style={{ width: 14, height: 14, minWidth: 14, minHeight: 14 }}
+              >
                 <path d="M11 4a7 7 0 1 1-4.95 11.95A7 7 0 0 1 11 4zm0-2a9 9 0 1 0 5.66 16l4.17 4.17 1.41-1.41-4.17-4.17A9 9 0 0 0 11 2z" />
               </svg>
             </span>
