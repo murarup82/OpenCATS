@@ -1,9 +1,8 @@
-import type { FreshnessInfo, DashboardRow } from './types';
+import type { DashboardRow } from './types';
 
 type Props = {
   row: DashboardRow;
   statusClassName: string;
-  freshness: FreshnessInfo;
 };
 
 function toDisplayText(value: unknown, fallback = '--'): string {
@@ -65,23 +64,41 @@ function parseDisplayDate(display: string): Date | null {
   return parsed;
 }
 
-function toUpdatedDay(display: string): string {
+type AgingTone = 'green' | 'yellow' | 'orange' | 'red' | 'unknown';
+
+function getAgingInfo(display: string): { days: number | null; tone: AgingTone; label: string } {
   const parsed = parseDisplayDate(display);
   if (!parsed) {
-    return '--';
+    return { days: null, tone: 'unknown', label: 'Aging N/A' };
   }
 
-  return parsed.toLocaleDateString(undefined, { weekday: 'short' });
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dateStart = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  const diffDays = Math.max(0, Math.floor((todayStart.getTime() - dateStart.getTime()) / (1000 * 60 * 60 * 24)));
+
+  if (diffDays > 21) {
+    return { days: diffDays, tone: 'red', label: `Aging ${diffDays}d` };
+  }
+
+  if (diffDays >= 14) {
+    return { days: diffDays, tone: 'orange', label: `Aging ${diffDays}d` };
+  }
+
+  if (diffDays >= 5) {
+    return { days: diffDays, tone: 'yellow', label: `Aging ${diffDays}d` };
+  }
+
+  return { days: diffDays, tone: 'green', label: `Aging ${diffDays}d` };
 }
 
-export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) {
+export function CandidateKanbanCard({ row, statusClassName }: Props) {
   const statusSlug = toDisplayText(row.statusSlug, 'unknown');
   const candidateName = toDisplayText(row.candidateName);
   const jobOrderTitle = toDisplayText(row.jobOrderTitle);
   const companyName = toDisplayText(row.companyName);
   const statusLabel = toDisplayText(row.statusLabel);
-  const updatedDay = toUpdatedDay(toDisplayText(row.lastStatusChangeDisplay, ''));
-  const isActive = Number(row.isActive) === 1;
+  const aging = getAgingInfo(toDisplayText(row.lastStatusChangeDisplay, ''));
   const initials = getInitials(candidateName);
 
   return (
@@ -92,10 +109,7 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
             {initials}
           </div>
           <div className="modern-kanban-card__identity-content">
-            <a
-              className={`modern-link modern-kanban-card__candidate modern-kanban-card__candidate--${freshness.tone}`}
-              href={row.candidateURL}
-            >
+            <a className="modern-link modern-kanban-card__candidate" href={row.candidateURL}>
               {candidateName}
             </a>
             <div className="modern-kanban-card__identity-hint">Candidate profile</div>
@@ -104,8 +118,8 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
 
         <div className="modern-kanban-card__chips">
           <span className={statusClassName}>{statusLabel}</span>
-          <span className={`modern-chip modern-chip--pipeline ${isActive ? 'is-active' : 'is-closed'}`}>
-            {isActive ? 'Open Pipeline' : 'Closed'}
+          <span className={`modern-chip modern-chip--aging modern-chip--aging-${aging.tone}`}>
+            {aging.label}
           </span>
         </div>
       </div>
@@ -121,10 +135,6 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
         <div className="modern-kanban-card__fact">
           <span className="modern-kanban-card__fact-key">Company</span>
           <span className="modern-kanban-card__fact-value">{companyName}</span>
-        </div>
-        <div className="modern-kanban-card__fact">
-          <span className="modern-kanban-card__fact-key">Day</span>
-          <span className="modern-kanban-card__fact-value">{updatedDay}</span>
         </div>
       </div>
     </article>

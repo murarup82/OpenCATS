@@ -95,12 +95,19 @@ export function DashboardToolbar(props: Props) {
 
         <label className="modern-command-search">
           <span className="modern-command-label">Search</span>
-          <input
-            type="search"
-            value={searchTerm}
-            onChange={(event) => onSearchTermChange(event.target.value)}
-            placeholder="Search candidate, role, company, location"
-          />
+          <span className="modern-command-search__shell">
+            <span className="modern-command-search__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="presentation">
+                <path d="M11 4a7 7 0 1 1-4.95 11.95A7 7 0 0 1 11 4zm0-2a9 9 0 1 0 5.66 16l4.17 4.17 1.41-1.41-4.17-4.17A9 9 0 0 0 11 2z" />
+              </svg>
+            </span>
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => onSearchTermChange(event.target.value)}
+              placeholder="Search candidate, role, company, location"
+            />
+          </span>
         </label>
 
         <div className="modern-command-group modern-command-group--view">
@@ -146,46 +153,54 @@ export function DashboardToolbar(props: Props) {
       <div className="modern-command-bar__row modern-command-bar__row--filters">
         <label className="modern-command-field">
           <span className="modern-command-label">Customer</span>
-          <select value={customerID} onChange={(event) => onCustomerChange(event.target.value)}>
-            {customers.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <span className="modern-command-field__shell">
+            <select value={customerID} onChange={(event) => onCustomerChange(event.target.value)}>
+              {customers.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
 
         <label className="modern-command-field">
           <span className="modern-command-label">Job Order</span>
-          <select value={jobOrderID} onChange={(event) => onJobOrderChange(event.target.value)}>
-            {jobOrders.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <span className="modern-command-field__shell">
+            <select value={jobOrderID} onChange={(event) => onJobOrderChange(event.target.value)}>
+              {jobOrders.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
 
         <label className="modern-command-field">
           <span className="modern-command-label">Server Status</span>
-          <select value={statusID} onChange={(event) => onStatusChange(event.target.value)}>
-            {statuses.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <span className="modern-command-field__shell">
+            <select value={statusID} onChange={(event) => onStatusChange(event.target.value)}>
+              {statuses.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
 
         <label className="modern-command-field">
           <span className="modern-command-label">Board Focus</span>
-          <select value={localStatusID} onChange={(event) => onLocalStatusChange(event.target.value)}>
-            {localStatusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <span className="modern-command-field__shell">
+            <select value={localStatusID} onChange={(event) => onLocalStatusChange(event.target.value)}>
+              {localStatusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
 
         <label className="modern-command-toggle">
@@ -194,6 +209,7 @@ export function DashboardToolbar(props: Props) {
             checked={showClosed}
             onChange={(event) => onShowClosedChange(event.target.checked)}
           />
+          <span className="modern-command-toggle__switch" aria-hidden="true"></span>
           <span>Include closed job orders</span>
         </label>
       </div>

@@ -1,14 +1,13 @@
 import { CandidateKanbanCard } from './CandidateKanbanCard';
-import type { DashboardStatusColumn, FreshnessInfo } from './types';
+import type { DashboardStatusColumn } from './types';
 
 type Props = {
   column: DashboardStatusColumn;
   totalVisibleRows: number;
   getStatusClassName: (statusLabel: string) => string;
-  getFreshness: (lastStatusChangeDisplay: string) => FreshnessInfo;
 };
 
-export function KanbanColumn({ column, totalVisibleRows, getStatusClassName, getFreshness }: Props) {
+export function KanbanColumn({ column, totalVisibleRows, getStatusClassName }: Props) {
   const columnShare = totalVisibleRows > 0
     ? Math.round((column.rows.length / totalVisibleRows) * 100)
     : 0;
@@ -51,7 +50,6 @@ export function KanbanColumn({ column, totalVisibleRows, getStatusClassName, get
                 key={`${row.candidateID}-${row.jobOrderID}-${row.statusID}`}
                 row={row}
                 statusClassName={getStatusClassName(row.statusLabel || '')}
-                freshness={getFreshness(row.lastStatusChangeDisplay || '')}
               />
             ))}
           </div>

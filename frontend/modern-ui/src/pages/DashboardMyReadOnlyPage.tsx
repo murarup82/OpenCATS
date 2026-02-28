@@ -8,7 +8,7 @@ import { DataTable } from '../components/primitives/DataTable';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
-import type { DashboardStatusColumn, FreshnessInfo } from '../components/dashboard/types';
+import type { DashboardStatusColumn } from '../components/dashboard/types';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -65,59 +65,6 @@ function toStatusSlug(value: string): string {
 
 function createStatusClassName(statusLabel: string): string {
   return `modern-status modern-status--${toStatusSlug(statusLabel)}`;
-}
-
-function parseDisplayDate(display: string): Date | null {
-  const match = String(display || '').match(/(\d{2})-(\d{2})-(\d{2})/);
-  if (!match) {
-    return null;
-  }
-
-  const first = Number(match[1]);
-  const second = Number(match[2]);
-  const year = 2000 + Number(match[3]);
-  if (Number.isNaN(first) || Number.isNaN(second) || Number.isNaN(year)) {
-    return null;
-  }
-
-  let month = first;
-  let day = second;
-  if (first > 12 && second <= 12) {
-    day = first;
-    month = second;
-  }
-
-  const parsed = new Date(year, month - 1, day);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-
-  return parsed;
-}
-
-function getFreshness(lastStatusChangeDisplay: string): FreshnessInfo {
-  const parsedDate = parseDisplayDate(lastStatusChangeDisplay);
-  if (!parsedDate) {
-    return { label: 'Untracked', tone: 'unknown' };
-  }
-
-  const now = new Date();
-  const diffMs = now.getTime() - parsedDate.getTime();
-  const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-
-  if (diffDays <= 3) {
-    return { label: 'Fresh', tone: 'fresh' };
-  }
-
-  if (diffDays <= 10) {
-    return { label: 'Active', tone: 'active' };
-  }
-
-  if (diffDays <= 30) {
-    return { label: 'Aging', tone: 'aging' };
-  }
-
-  return { label: 'Stale', tone: 'stale' };
 }
 
 export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
@@ -426,7 +373,6 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
                 columns={columns}
                 totalVisibleRows={filteredRows.length}
                 getStatusClassName={createStatusClassName}
-                getFreshness={getFreshness}
               />
             ) : (
               <div className="modern-table-animated avel-list-panel">

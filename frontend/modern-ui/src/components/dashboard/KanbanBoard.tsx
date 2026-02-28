@@ -1,16 +1,16 @@
 import { useRef } from 'react';
 import { KanbanColumn } from './KanbanColumn';
-import type { DashboardStatusColumn, FreshnessInfo } from './types';
+import type { DashboardStatusColumn } from './types';
 
 type Props = {
   columns: DashboardStatusColumn[];
   totalVisibleRows: number;
   getStatusClassName: (statusLabel: string) => string;
-  getFreshness: (lastStatusChangeDisplay: string) => FreshnessInfo;
 };
 
-export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName, getFreshness }: Props) {
+export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName }: Props) {
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const scrollStep = 320;
 
   const handleBoardWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
@@ -22,22 +22,46 @@ export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName, get
       return;
     }
 
+    if (board.scrollWidth <= board.clientWidth) {
+      return;
+    }
+
     board.scrollLeft += event.deltaY;
     event.preventDefault();
+  };
+
+  const scrollBoardBy = (offset: number) => {
+    const board = boardRef.current;
+    if (!board) {
+      return;
+    }
+
+    board.scrollBy({ left: offset, behavior: 'smooth' });
   };
 
   return (
     <div className="modern-kanban-board-wrap">
       <div className="modern-kanban-board__header">
         <span className="modern-kanban-board__title">Pipeline Lanes</span>
-        <span className="modern-kanban-board__hint">Horizontal scroll enabled for all workflow stages</span>
-      </div>
-      <div className="modern-kanban-board__legend" aria-label="Freshness color guide">
-        <span className="modern-kanban-board__legend-label">Name Color:</span>
-        <span className="modern-kanban-board__legend-item modern-kanban-board__legend-item--fresh">Fresh</span>
-        <span className="modern-kanban-board__legend-item modern-kanban-board__legend-item--active">Active</span>
-        <span className="modern-kanban-board__legend-item modern-kanban-board__legend-item--aging">Aging</span>
-        <span className="modern-kanban-board__legend-item modern-kanban-board__legend-item--stale">Stalling</span>
+        <div className="modern-kanban-board__header-actions">
+          <span className="modern-kanban-board__hint">Horizontal scroll enabled for all workflow stages</span>
+          <button
+            type="button"
+            className="modern-kanban-board__scroll-btn"
+            onClick={() => scrollBoardBy(-scrollStep)}
+            aria-label="Scroll lanes left"
+          >
+            <span aria-hidden="true">&lt;</span>
+          </button>
+          <button
+            type="button"
+            className="modern-kanban-board__scroll-btn"
+            onClick={() => scrollBoardBy(scrollStep)}
+            aria-label="Scroll lanes right"
+          >
+            <span aria-hidden="true">&gt;</span>
+          </button>
+        </div>
       </div>
       <div
         ref={boardRef}
@@ -51,7 +75,6 @@ export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName, get
             column={column}
             totalVisibleRows={totalVisibleRows}
             getStatusClassName={getStatusClassName}
-            getFreshness={getFreshness}
           />
         ))}
       </div>
