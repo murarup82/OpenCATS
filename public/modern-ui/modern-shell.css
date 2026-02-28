@@ -1,0 +1,136 @@
+.modern-shell-layout {
+    display: grid;
+    gap: 16px;
+}
+
+.modern-shell-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 18px;
+    border: 1px solid #b8d5e5;
+    border-radius: 14px;
+    background: linear-gradient(125deg, #edf8ff 0%, #f8fcff 45%, #fffdf6 100%);
+}
+
+.modern-shell-label {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #0a6888;
+}
+
+.modern-shell-hero h2 {
+    margin: 0 0 6px 0;
+    color: #0b3550;
+    font-size: 22px;
+    line-height: 1.2;
+}
+
+.modern-shell-route-sep {
+    opacity: 0.45;
+    margin: 0 5px;
+}
+
+.modern-shell-hero p {
+    margin: 0;
+    color: #35566b;
+}
+
+.modern-shell-hero-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.modern-shell-app-root {
+    min-height: 280px;
+    border: 1px solid #d6e7f1;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 6px rgba(11, 53, 80, 0.05);
+    padding: 16px;
+}
+
+.modern-shell-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #45697c;
+    font-weight: 600;
+}
+
+.modern-shell-loading-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #1592c6;
+    animation: modern-shell-pulse 1.2s ease-in-out infinite;
+}
+
+.modern-shell-fallback {
+    display: grid;
+    gap: 12px;
+}
+
+.modern-shell-fallback h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #15364a;
+}
+
+.modern-shell-fallback p {
+    margin: 0;
+    color: #506d7e;
+}
+
+.modern-shell-fallback-meta {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.modern-shell-fallback-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #294c5f;
+    background: #eef6fb;
+    border: 1px solid #d5e8f3;
+}
+
+.modern-shell-fallback-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@keyframes modern-shell-pulse {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.65;
+    }
+    50% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.85);
+        opacity: 0.65;
+    }
+}
+
+@media (max-width: 880px) {
+    .modern-shell-hero {
+        flex-direction: column;
+    }
+}
+

@@ -1,0 +1,51 @@
+<?php
+/**
+ * Optional modern UI switch configuration.
+ *
+ * Copy this file to ./config.ui.php and adjust values per environment.
+ * Keeping UI_SWITCH_ENABLED = false preserves full legacy behavior.
+ */
+
+/* Master kill switch. */
+define('UI_SWITCH_ENABLED', false);
+
+/* legacy | hybrid | modern */
+define('UI_SWITCH_DEFAULT_MODE', 'legacy');
+
+/* Safety guard: modern UI only for explicitly mapped routes by default. */
+define('UI_SWITCH_REQUIRE_ROUTE_MATCH', true);
+
+/* Keep non-idempotent requests in legacy unless explicitly enabled. */
+define('UI_SWITCH_ALLOW_POST', false);
+define('UI_SWITCH_ALLOW_AJAX', false);
+
+/* If true, ui=modern can bypass route mapping. Keep false for safety. */
+define('UI_SWITCH_OVERRIDE_BYPASS_ROUTE_MAP', false);
+
+/* Optional logging of routing decisions (written via error_log). */
+define('UI_SWITCH_LOGGING', true);
+
+/* Optional bundle location for compiled React/Vue/etc app (same origin). */
+define('UI_SWITCH_MODERN_BUNDLE_URL', '');
+
+/* Optional dev URL for local proxy/iframe integration in non-prod. */
+define('UI_SWITCH_MODERN_DEV_SERVER_URL', '');
+
+/* Route map:
+ * - key: module name
+ * - value: array of actions, or '*' for all module actions
+ */
+$GLOBALS['UI_SWITCH_ROUTE_MAP'] = array(
+    'dashboard'  => array('my'),
+    'candidates' => array('show')
+);
+
+/* Optional phased rollout by cohorts. Empty arrays = all users. */
+$GLOBALS['UI_SWITCH_TARGET_USER_IDS'] = array();
+$GLOBALS['UI_SWITCH_TARGET_ACCESS_LEVELS'] = array();
+
+/* Optional hard excludes. */
+$GLOBALS['UI_SWITCH_EXCLUDE_MODULES'] = array('login', 'settings', 'import', 'export', 'attachments');
+$GLOBALS['UI_SWITCH_EXCLUDE_ROUTES'] = array(
+    'dashboard.myPipeline'
+);

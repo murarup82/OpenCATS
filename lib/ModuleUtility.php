@@ -124,6 +124,19 @@ class ModuleUtility
             $_SESSION['CATS']->setRoleAccessCap($roleAccessCap);
         }
 
+        if ($moduleName !== 'modernui' &&
+            class_exists('UIModeSwitcher') &&
+            method_exists('UIModeSwitcher', 'shouldUseModernUI') &&
+            method_exists('UIModeSwitcher', 'renderModernShell'))
+        {
+            $action = isset($_REQUEST['a']) ? $_REQUEST['a'] : '';
+            if (UIModeSwitcher::shouldUseModernUI($moduleName, $action) &&
+                UIModeSwitcher::renderModernShell($moduleName, $action))
+            {
+                return;
+            }
+        }
+
         $moduleClass = $modules[$moduleName][0];
 
         include_once(LEGACY_ROOT . 

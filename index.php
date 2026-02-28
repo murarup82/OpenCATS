@@ -40,6 +40,10 @@
 /* Do we need to run the installer? */
 
 include_once('./config.php');
+if (file_exists('./config.ui.php'))
+{
+    include_once('./config.ui.php');
+}
 
 if (!file_exists('INSTALL_BLOCK') && !isset($_POST['performMaintenence']))
 {
@@ -69,6 +73,7 @@ include_once(LEGACY_ROOT . '/lib/UserInterface.php'); /* Depends: Template, Sess
 include_once(LEGACY_ROOT . '/lib/ModuleUtility.php'); /* Depends: UserInterface */
 include_once(LEGACY_ROOT . '/lib/TemplateUtility.php'); /* Depends: ModuleUtility, Hooks */
 include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
+include_once(LEGACY_ROOT . '/lib/UIModeSwitcher.php');
 
 
 /* Give the session a unique name to avoid conflicts and start the session. */
@@ -126,6 +131,11 @@ if (!function_exists('mysqli_connect') || !function_exists('session_start'))
 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
 {
     $_SESSION['CATS'] = new CATSSession();
+}
+
+if (class_exists('UIModeSwitcher'))
+{
+    UIModeSwitcher::captureRequestOverride();
 }
 
 /* Start timer for measuring server response time. Displayed in footer. */
