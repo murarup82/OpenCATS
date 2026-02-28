@@ -3,6 +3,7 @@ import type { UIModeBootstrap } from '../types';
 import { DashboardMyPage } from '../pages/DashboardMyPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
+import { CandidatesFormBridgePage } from '../pages/CandidatesFormBridgePage';
 
 export type ModernRouteComponentProps = {
   bootstrap: UIModeBootstrap;
@@ -15,6 +16,8 @@ const registry: Record<string, ModernRouteComponent> = {
   'dashboard.(default)': DashboardMyPage,
   'candidates.listbyview': CandidatesListPage,
   'candidates.show': CandidatesShowPage,
+  'candidates.add': CandidatesFormBridgePage,
+  'candidates.edit': CandidatesFormBridgePage,
   'candidates.(default)': CandidatesListPage
 };
 
