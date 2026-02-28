@@ -95,7 +95,7 @@ export function CandidateKanbanCard({ row, statusClassName, freshness }: Props) 
       <div className="modern-kanban-card__facts">
         <div className="modern-kanban-card__fact modern-kanban-card__fact--summary">
           <span className="modern-kanban-card__fact-value">{companyName}</span>
-          <span className="modern-kanban-card__fact-sep">•</span>
+          <span className="modern-kanban-card__fact-sep">|</span>
           <span className="modern-kanban-card__fact-value">{location}</span>
         </div>
         <div className="modern-kanban-card__fact">

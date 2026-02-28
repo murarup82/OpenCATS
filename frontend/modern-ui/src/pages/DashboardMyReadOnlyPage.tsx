@@ -9,6 +9,7 @@ import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
 import type { DashboardStatusColumn, FreshnessInfo } from '../components/dashboard/types';
+import '../dashboard-avel.css';
 
 type Props = {
   bootstrap: UIModeBootstrap;
@@ -297,6 +298,26 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     label: status.statusLabel
   }));
 
+  const freshnessCounts: Record<FreshnessInfo['tone'], number> = {
+    fresh: 0,
+    active: 0,
+    aging: 0,
+    stale: 0,
+    unknown: 0
+  };
+  filteredRows.forEach((row) => {
+    const tone = getFreshness(toDisplayText(row.lastStatusChangeDisplay, '')).tone;
+    freshnessCounts[tone] += 1;
+  });
+
+  const uniqueCompanies = new Set(filteredRows.map((row) => row.companyID)).size;
+  const uniqueJobOrders = new Set(filteredRows.map((row) => row.jobOrderID)).size;
+  const openPipelines = filteredRows.filter((row) => Number(row.isActive) === 1).length;
+  const activeStatusColumns = columns.filter((column) => column.rows.length > 0).length;
+  const topStatuses = [...columns]
+    .sort((left, right) => right.rows.length - left.rows.length)
+    .slice(0, 3);
+
 
   const activeServerFilters: string[] = [];
   if (data.meta.scope === 'all') {
@@ -326,18 +347,91 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     const localStatus = statusCatalog.find((status) => String(status.statusID) === localStatusID);
     activeLocalFilters.push(`Quick status: ${localStatus ? localStatus.statusLabel : localStatusID}`);
   }
+  const activeFilterCount = activeServerFilters.length + activeLocalFilters.length;
 
   return (
-    <PageContainer
-      title="My Dashboard"
-      subtitle="Recruiter workspace"
-      actions={
-        <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
-          Open Legacy UI
-        </a>
-      }
-    >
-      <div className="modern-dashboard">
+    <div className="avel-dashboard-page">
+      <PageContainer
+        title="MyDashboard"
+        subtitle="Avel recruiting control center"
+        actions={
+          <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
+            Open Legacy UI
+          </a>
+        }
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+        <section className="avel-hero" aria-label="Dashboard overview">
+          <div className="avel-hero__main">
+            <span className="avel-hero__eyebrow">Avel SaaS</span>
+            <h1 className="avel-hero__title">Pipeline Command Center</h1>
+            <p className="avel-hero__copy">
+              Track candidate flow, focus on aging stages, and clear blockers before they impact placements.
+            </p>
+            <div className="avel-hero__chips">
+              <span className="avel-hero-chip">{filteredRows.length} candidates in current slice</span>
+              <span className="avel-hero-chip">{activeStatusColumns} active stages</span>
+              <span className="avel-hero-chip">{activeFilterCount} filters applied</span>
+            </div>
+          </div>
+          <div className="avel-hero__stats">
+            <article className="avel-stat-card">
+              <span className="avel-stat-card__label">Open Pipeline</span>
+              <span className="avel-stat-card__value">{openPipelines}</span>
+              <span className="avel-stat-card__hint">Candidates on active job orders</span>
+            </article>
+            <article className="avel-stat-card">
+              <span className="avel-stat-card__label">Fresh + Active</span>
+              <span className="avel-stat-card__value">{freshnessCounts.fresh + freshnessCounts.active}</span>
+              <span className="avel-stat-card__hint">Updated in the last 10 days</span>
+            </article>
+            <article className="avel-stat-card avel-stat-card--alert">
+              <span className="avel-stat-card__label">Needs Attention</span>
+              <span className="avel-stat-card__value">{freshnessCounts.stale}</span>
+              <span className="avel-stat-card__hint">Candidates stale over 30 days</span>
+            </article>
+          </div>
+        </section>
+
+        <section className="avel-kpi-grid" aria-label="Pipeline metrics">
+          <article className="avel-kpi">
+            <span className="avel-kpi__label">Visible Candidates</span>
+            <strong className="avel-kpi__value">{filteredRows.length}</strong>
+            <span className="avel-kpi__hint">Across all active filters</span>
+          </article>
+          <article className="avel-kpi">
+            <span className="avel-kpi__label">Customers</span>
+            <strong className="avel-kpi__value">{uniqueCompanies}</strong>
+            <span className="avel-kpi__hint">Represented in this slice</span>
+          </article>
+          <article className="avel-kpi">
+            <span className="avel-kpi__label">Job Orders</span>
+            <strong className="avel-kpi__value">{uniqueJobOrders}</strong>
+            <span className="avel-kpi__hint">Hiring plans in progress</span>
+          </article>
+          <article className="avel-kpi">
+            <span className="avel-kpi__label">Aging + Stale</span>
+            <strong className="avel-kpi__value">{freshnessCounts.aging + freshnessCounts.stale}</strong>
+            <span className="avel-kpi__hint">Review next for movement</span>
+          </article>
+        </section>
+
+        <section className="avel-priority-band" aria-label="Priority stages">
+          <h2 className="avel-priority-band__title">Priority Stages</h2>
+          {topStatuses.length > 0 ? (
+            <div className="avel-priority-band__chips">
+              {topStatuses.map((status) => (
+                <span key={`priority-${status.statusID}`} className="avel-priority-band__chip">
+                  <strong>{status.statusLabel}</strong>
+                  <span>{status.rows.length} candidates</span>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="avel-priority-band__empty">No stages available for this filter selection.</p>
+          )}
+        </section>
+
         <DashboardToolbar
           canViewAllScopes={data.meta.canViewAllScopes}
           scope={data.meta.scope}
@@ -408,7 +502,11 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
                 getFreshness={getFreshness}
               />
             ) : (
-              <div className="modern-table-animated">
+              <div className="modern-table-animated avel-list-panel">
+                <div className="avel-list-panel__header">
+                  <h2 className="avel-list-panel__title">Candidate List View</h2>
+                  <p className="avel-list-panel__hint">Flat view for quick scanning and exporting.</p>
+                </div>
                 <DataTable
                   columns={[
                     { key: 'candidate', title: 'Candidate' },
@@ -446,7 +544,8 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
             )}
           </>
         )}
-      </div>
-    </PageContainer>
+        </div>
+      </PageContainer>
+    </div>
   );
 }
