@@ -75,6 +75,33 @@ body {
   background: linear-gradient(180deg, #fff8f8 0%, #fff5f5 100%);
 }
 
+.modern-error-diagnostics {
+  border: 1px solid #efcdcd;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.modern-error-diagnostics summary {
+  cursor: pointer;
+  color: #8b2b2b;
+  font-size: 12px;
+  font-weight: 700;
+  user-select: none;
+}
+
+.modern-error-diagnostics pre {
+  margin: 8px 0 0 0;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #6c2d2d;
+}
+
 .modern-state--empty {
   background: linear-gradient(180deg, #fbfeff 0%, #f7fcff 100%);
 }

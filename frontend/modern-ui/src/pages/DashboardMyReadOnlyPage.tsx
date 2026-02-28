@@ -253,51 +253,44 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     return searchable.includes(normalizedSearch);
   });
 
-  const statusCatalog = useMemo<StatusCatalogEntry[]>(() => {
-    const byStatusID = new Map<number, StatusCatalogEntry>();
-
-    data.options.statuses.forEach((statusOption) => {
-      const statusLabel = toDisplayText(statusOption.status);
-      byStatusID.set(statusOption.statusID, {
-        statusID: statusOption.statusID,
+  const byStatusID = new Map<number, StatusCatalogEntry>();
+  data.options.statuses.forEach((statusOption) => {
+    const statusLabel = toDisplayText(statusOption.status);
+    byStatusID.set(statusOption.statusID, {
+      statusID: statusOption.statusID,
+      statusLabel,
+      statusSlug: toStatusSlug(statusLabel)
+    });
+  });
+  data.rows.forEach((row) => {
+    if (!byStatusID.has(row.statusID)) {
+      const statusLabel = toDisplayText(row.statusLabel);
+      byStatusID.set(row.statusID, {
+        statusID: row.statusID,
         statusLabel,
         statusSlug: toStatusSlug(statusLabel)
       });
-    });
-
-    data.rows.forEach((row) => {
-      if (!byStatusID.has(row.statusID)) {
-        const statusLabel = toDisplayText(row.statusLabel);
-        byStatusID.set(row.statusID, {
-          statusID: row.statusID,
-          statusLabel,
-          statusSlug: toStatusSlug(statusLabel)
-        });
-      }
-    });
-
-    return Array.from(byStatusID.values());
-  }, [data.options.statuses, data.rows]);
+    }
+  });
+  const statusCatalog: StatusCatalogEntry[] = Array.from(byStatusID.values());
 
   const visibleStatuses = localStatusID === 'all'
     ? statusCatalog
     : statusCatalog.filter((status) => String(status.statusID) === localStatusID);
 
-  const columns = useMemo<DashboardStatusColumn[]>(() => {
-    const grouped = new Map<number, DashboardModernDataResponse['rows']>();
-    filteredRows.forEach((row) => {
-      const existing = grouped.get(row.statusID) || [];
-      existing.push(row);
-      grouped.set(row.statusID, existing);
-    });
+  const groupedByStatus = new Map<number, DashboardModernDataResponse['rows']>();
+  filteredRows.forEach((row) => {
+    const existing = groupedByStatus.get(row.statusID) || [];
+    existing.push(row);
+    groupedByStatus.set(row.statusID, existing);
+  });
 
-    return visibleStatuses.map((status) => ({
-      statusID: status.statusID,
-      statusLabel: status.statusLabel,
-      statusSlug: status.statusSlug,
-      rows: grouped.get(status.statusID) || []
-    }));
-  }, [filteredRows, visibleStatuses]);
+  const columns: DashboardStatusColumn[] = visibleStatuses.map((status) => ({
+    statusID: status.statusID,
+    statusLabel: status.statusLabel,
+    statusSlug: status.statusSlug,
+    rows: groupedByStatus.get(status.statusID) || []
+  }));
 
   const localStatusOptions = statusCatalog.map((status) => ({
     value: String(status.statusID),
