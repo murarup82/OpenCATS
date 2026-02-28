@@ -1,4 +1,77 @@
 (function () {
+    function getLogStore() {
+        if (typeof window === 'undefined') {
+            return [];
+        }
+
+        if (!window.__openCATSModernShellLogs || !Array.isArray(window.__openCATSModernShellLogs)) {
+            window.__openCATSModernShellLogs = [];
+        }
+
+        return window.__openCATSModernShellLogs;
+    }
+
+    function recordLog(payload) {
+        var logs = getLogStore();
+        logs.push(payload);
+        if (logs.length > 40) {
+            logs.splice(0, logs.length - 40);
+        }
+    }
+
+    function getRecentLogs(limit) {
+        var logs = getLogStore();
+        var count = limit || 8;
+        if (count <= 0) {
+            count = 8;
+        }
+        if (logs.length <= count) {
+            return logs.slice(0);
+        }
+        return logs.slice(logs.length - count);
+    }
+
+    function formatLogLine(entry) {
+        var ts = entry && entry.timestamp ? entry.timestamp : '';
+        var level = entry && entry.level ? entry.level.toUpperCase() : 'INFO';
+        var eventName = entry && entry.event ? entry.event : 'unknown';
+        var details = '';
+
+        if (entry && entry.details) {
+            try {
+                details = JSON.stringify(entry.details);
+            } catch (error) {
+                details = '[unserializable details]';
+            }
+        }
+
+        if (details !== '') {
+            return '[' + ts + '] ' + level + ' ' + eventName + ' ' + details;
+        }
+
+        return '[' + ts + '] ' + level + ' ' + eventName;
+    }
+
+    function ensureProcessShim() {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        if (typeof window.process === 'undefined') {
+            window.process = { env: { NODE_ENV: 'production' } };
+            return;
+        }
+
+        if (!window.process.env) {
+            window.process.env = { NODE_ENV: 'production' };
+            return;
+        }
+
+        if (typeof window.process.env.NODE_ENV === 'undefined') {
+            window.process.env.NODE_ENV = 'production';
+        }
+    }
+
     function resolveModernAppHost() {
         if (window.OpenCATSModernApp && typeof window.OpenCATSModernApp.mount === 'function') {
             return window.OpenCATSModernApp;
@@ -30,6 +103,7 @@
             details: details || {},
             timestamp: (new Date()).toISOString()
         };
+        recordLog(payload);
 
         if (loggingEnabled && window.console) {
             var message = '[modern-shell] ' + eventName;
@@ -76,6 +150,20 @@
         if (isNaN(autoFallbackSeconds) || autoFallbackSeconds < 0) {
             autoFallbackSeconds = 0;
         }
+        var recentLogs = getRecentLogs(8);
+        var debugLogHTML = '';
+        if (recentLogs.length > 0) {
+            var logLines = [];
+            for (var i = 0; i < recentLogs.length; i++) {
+                logLines.push(formatLogLine(recentLogs[i]));
+            }
+
+            debugLogHTML =
+                '<div class="modern-shell-fallback-log">' +
+                    '<div class="modern-shell-fallback-log-title">Diagnostics</div>' +
+                    '<pre class="modern-shell-fallback-log-pre">' + escapeHtml(logLines.join('\n')) + '</pre>' +
+                '</div>';
+        }
 
         telemetry(root, 'warn', 'fallback.rendered', {
             module: safeModule,
@@ -97,6 +185,7 @@
                     '<a class="button ui2-button ui2-button--secondary" href="' + escapeAttribute(legacyURL) + '">Open Legacy UI</a>' +
                     '<a class="button ui2-button ui2-button--primary" href="' + escapeAttribute(modernURL) + '">Stay on Modern UI</a>' +
                 '</div>' +
+                debugLogHTML +
             '</div>';
 
         if (autoFallbackSeconds > 0) {
@@ -131,6 +220,7 @@
     }
 
     function mountExternalBundle(root, bootstrap) {
+        ensureProcessShim();
         var modernAppHost = resolveModernAppHost();
         if (modernAppHost) {
             try {
@@ -215,6 +305,7 @@
             return;
         }
 
+        ensureProcessShim();
         var bootstrap = decodeBootstrap(root);
         telemetry(root, 'info', 'shell.boot', {
             module: bootstrap.targetModule || '',

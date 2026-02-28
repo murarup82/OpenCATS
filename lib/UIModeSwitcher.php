@@ -511,7 +511,7 @@ class UIModeSwitcher
         $configuredURL = self::getStringValue('UI_SWITCH_MODERN_BUNDLE_URL', 'OPENCATS_UI_BUNDLE_URL', '');
         if ($configuredURL !== '')
         {
-            return $configuredURL;
+            return self::appendBundleCacheBuster($configuredURL);
         }
 
         if (self::getBooleanValue('UI_SWITCH_USE_MANIFEST', 'OPENCATS_UI_USE_MANIFEST', true))
@@ -530,11 +530,11 @@ class UIModeSwitcher
             $resolvedFromManifest = self::resolveBundleURLFromManifest($manifestPath, $manifestEntry);
             if ($resolvedFromManifest !== '')
             {
-                return $resolvedFromManifest;
+                return self::appendBundleCacheBuster($resolvedFromManifest);
             }
         }
 
-        return 'public/modern-ui/build/app.bundle.js';
+        return self::appendBundleCacheBuster('public/modern-ui/build/app.bundle.js');
     }
 
     private static function resolveBundleURLFromManifest($manifestPath, $manifestEntry)
@@ -580,6 +580,47 @@ class UIModeSwitcher
         $compiledFile = ltrim($compiledFile, '/');
 
         return 'public/modern-ui/build/' . $compiledFile;
+    }
+
+    private static function appendBundleCacheBuster($bundleURL)
+    {
+        if (!self::getBooleanValue('UI_SWITCH_BUST_CACHE', 'OPENCATS_UI_BUST_CACHE', true))
+        {
+            return $bundleURL;
+        }
+
+        $bundleURL = trim((string) $bundleURL);
+        if ($bundleURL === '')
+        {
+            return $bundleURL;
+        }
+
+        if (strpos($bundleURL, '://') !== false)
+        {
+            return $bundleURL;
+        }
+
+        $relativePath = ltrim($bundleURL, '/');
+        $queryPos = strpos($relativePath, '?');
+        if ($queryPos !== false)
+        {
+            $relativePath = substr($relativePath, 0, $queryPos);
+        }
+
+        $localPath = './' . $relativePath;
+        if (!file_exists($localPath))
+        {
+            return $bundleURL;
+        }
+
+        $mtime = @filemtime($localPath);
+        if ($mtime === false || $mtime <= 0)
+        {
+            return $bundleURL;
+        }
+
+        $separator = (strpos($bundleURL, '?') !== false) ? '&' : '?';
+        return $bundleURL . $separator . 'v=' . (int) $mtime;
     }
 
     private static function buildCurrentURLWithMode($mode)
