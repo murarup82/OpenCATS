@@ -44,9 +44,10 @@
 }
 
 .avel-dashboard-page .modern-page {
-  margin: 0 auto;
-  max-width: 1520px;
-  padding: 24px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(18px, 1.6vw, 28px);
   gap: 16px;
 }
 
