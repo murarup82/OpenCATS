@@ -12,24 +12,6 @@ export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName }: P
   const boardRef = useRef<HTMLDivElement | null>(null);
   const scrollStep = 320;
 
-  const handleBoardWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
-      return;
-    }
-
-    const board = boardRef.current;
-    if (!board) {
-      return;
-    }
-
-    if (board.scrollWidth <= board.clientWidth) {
-      return;
-    }
-
-    board.scrollLeft += event.deltaY;
-    event.preventDefault();
-  };
-
   const scrollBoardBy = (offset: number) => {
     const board = boardRef.current;
     if (!board) {
@@ -67,7 +49,6 @@ export function KanbanBoard({ columns, totalVisibleRows, getStatusClassName }: P
         ref={boardRef}
         className="modern-kanban-board__viewport"
         aria-label="Candidate pipeline board"
-        onWheel={handleBoardWheel}
       >
         <div className="modern-kanban-board">
           {columns.map((column) => (

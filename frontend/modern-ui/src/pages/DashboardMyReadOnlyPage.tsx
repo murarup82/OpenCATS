@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchDashboardModernData } from '../lib/api';
 import type { DashboardModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -25,7 +25,6 @@ type NavigationFilters = {
   scope?: string;
   companyID?: string;
   jobOrderID?: string;
-  statusID?: string;
   showClosed?: boolean;
   page?: number;
 };
@@ -71,6 +70,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
   const [data, setData] = useState<DashboardModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>(() => {
     const query = new URLSearchParams(window.location.search);
     return query.get('mode') === 'list' ? 'list' : 'kanban';
@@ -78,13 +78,12 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [localStatusID, setLocalStatusID] = useState<string>('all');
 
-  const query = useMemo(() => new URLSearchParams(window.location.search), []);
-
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
     setError('');
 
+    const query = new URLSearchParams(serverQueryString);
     fetchDashboardModernData(bootstrap, query)
       .then((result) => {
         if (!isMounted) {
@@ -107,7 +106,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [bootstrap, query]);
+  }, [bootstrap, serverQueryString]);
 
   useEffect(() => {
     const nextURL = new URL(window.location.href);
@@ -120,7 +119,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
       return;
     }
 
-    const nextQuery = new URLSearchParams(window.location.search);
+    const nextQuery = new URLSearchParams(serverQueryString);
     nextQuery.set('m', 'dashboard');
     nextQuery.set('a', 'my');
     nextQuery.set('view', 'kanban');
@@ -139,7 +138,7 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
 
     setOptionalNumberValue('companyID', next.companyID ?? String(data.filters.companyID || ''));
     setOptionalNumberValue('jobOrderID', next.jobOrderID ?? String(data.filters.jobOrderID || ''));
-    setOptionalNumberValue('statusID', next.statusID ?? String(data.filters.statusID || ''));
+    nextQuery.delete('statusID');
 
     const showClosedValue = typeof next.showClosed === 'boolean' ? next.showClosed : data.meta.showClosed;
     if (showClosedValue) {
@@ -156,10 +155,14 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
       nextQuery.set('ui', 'modern');
     }
 
-    window.location.href = `${bootstrap.indexName}?${nextQuery.toString()}`;
+    const nextQueryString = nextQuery.toString();
+    window.history.replaceState({}, '', `${bootstrap.indexName}?${nextQueryString}`);
+    if (nextQueryString !== serverQueryString) {
+      setServerQueryString(nextQueryString);
+    }
   };
 
-  if (loading) {
+  if (loading && !data) {
     return <DashboardKanbanSkeleton />;
   }
 
@@ -262,10 +265,6 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
     const selectedJobOrder = data.options.jobOrders.find((jobOrder) => jobOrder.jobOrderID === data.filters.jobOrderID);
     activeServerFilters.push(`Job: ${selectedJobOrder ? toDisplayText(selectedJobOrder.title) : data.filters.jobOrderID}`);
   }
-  if (data.filters.statusID > 0) {
-    const selectedStatus = data.options.statuses.find((status) => status.statusID === data.filters.statusID);
-    activeServerFilters.push(`Server status: ${selectedStatus ? toDisplayText(selectedStatus.status) : data.filters.statusID}`);
-  }
   if (data.meta.showClosed) {
     activeServerFilters.push('Show Closed');
   }
@@ -311,7 +310,6 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
           scope={data.meta.scope}
           customerID={String(data.filters.companyID || '')}
           jobOrderID={String(data.filters.jobOrderID || '')}
-          statusID={String(data.filters.statusID || '')}
           showClosed={data.meta.showClosed}
           customers={[
             { value: '', label: 'All customers' },
@@ -327,13 +325,6 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
               label: `${toDisplayText(jobOrder.title)}${jobOrder.companyName ? ` (${toDisplayText(jobOrder.companyName)})` : ''}`
             }))
           ]}
-          statuses={[
-            { value: '', label: 'All statuses' },
-            ...data.options.statuses.map((status) => ({
-              value: String(status.statusID),
-              label: toDisplayText(status.status)
-            }))
-          ]}
           searchTerm={searchTerm}
           localStatusID={localStatusID}
           localStatusOptions={[{ value: 'all', label: 'All statuses' }, ...localStatusOptions]}
@@ -343,7 +334,6 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
           onScopeChange={(scope) => navigateWithFilters({ scope, page: 1 })}
           onCustomerChange={(companyID) => navigateWithFilters({ companyID, jobOrderID: '', page: 1 })}
           onJobOrderChange={(jobOrderID) => navigateWithFilters({ jobOrderID, page: 1 })}
-          onStatusChange={(statusID) => navigateWithFilters({ statusID, page: 1 })}
           onShowClosedChange={(showClosed) => navigateWithFilters({ showClosed, page: 1 })}
           onSearchTermChange={setSearchTerm}
           onLocalStatusChange={setLocalStatusID}
@@ -353,7 +343,6 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
               scope: data.meta.scope,
               companyID: '',
               jobOrderID: '',
-              statusID: '',
               showClosed: false,
               page: 1
             })

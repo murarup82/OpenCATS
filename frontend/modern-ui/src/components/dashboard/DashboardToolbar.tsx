@@ -11,11 +11,9 @@ type Props = {
   scope: 'mine' | 'all';
   customerID: string;
   jobOrderID: string;
-  statusID: string;
   showClosed: boolean;
   customers: Option[];
   jobOrders: Option[];
-  statuses: Option[];
   searchTerm: string;
   localStatusID: string;
   localStatusOptions: Option[];
@@ -25,7 +23,6 @@ type Props = {
   onScopeChange: (scope: string) => void;
   onCustomerChange: (customerID: string) => void;
   onJobOrderChange: (jobOrderID: string) => void;
-  onStatusChange: (statusID: string) => void;
   onShowClosedChange: (showClosed: boolean) => void;
   onSearchTermChange: (value: string) => void;
   onLocalStatusChange: (value: string) => void;
@@ -237,11 +234,9 @@ export function DashboardToolbar(props: Props) {
     scope,
     customerID,
     jobOrderID,
-    statusID,
     showClosed,
     customers,
     jobOrders,
-    statuses,
     searchTerm,
     localStatusID,
     localStatusOptions,
@@ -251,7 +246,6 @@ export function DashboardToolbar(props: Props) {
     onScopeChange,
     onCustomerChange,
     onJobOrderChange,
-    onStatusChange,
     onShowClosedChange,
     onSearchTermChange,
     onLocalStatusChange,
@@ -369,13 +363,6 @@ export function DashboardToolbar(props: Props) {
           value={jobOrderID}
           options={jobOrders}
           onChange={onJobOrderChange}
-        />
-
-        <CommandSelectField
-          label="Server Status"
-          value={statusID}
-          options={statuses}
-          onChange={onStatusChange}
         />
 
         <CommandSelectField

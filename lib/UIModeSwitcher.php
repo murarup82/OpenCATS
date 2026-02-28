@@ -517,6 +517,13 @@ class UIModeSwitcher
         $configuredURL = self::getStringValue('UI_SWITCH_MODERN_BUNDLE_URL', 'OPENCATS_UI_BUNDLE_URL', '');
         if ($configuredURL !== '')
         {
+            $normalizedConfiguredURL = self::normalizeBundlePathForComparison($configuredURL);
+            if ($normalizedConfiguredURL === 'public/modern-ui/app.bundle.js' &&
+                file_exists('./public/modern-ui/build/app.bundle.js'))
+            {
+                $configuredURL = 'public/modern-ui/build/app.bundle.js';
+            }
+
             return self::appendBundleCacheBuster($configuredURL);
         }
 
@@ -541,6 +548,28 @@ class UIModeSwitcher
         }
 
         return self::appendBundleCacheBuster('public/modern-ui/build/app.bundle.js');
+    }
+
+    private static function normalizeBundlePathForComparison($bundleURL)
+    {
+        $normalized = str_replace('\\', '/', trim((string) $bundleURL));
+        if ($normalized === '')
+        {
+            return '';
+        }
+
+        $queryPos = strpos($normalized, '?');
+        if ($queryPos !== false)
+        {
+            $normalized = substr($normalized, 0, $queryPos);
+        }
+
+        if (strpos($normalized, './') === 0)
+        {
+            $normalized = substr($normalized, 2);
+        }
+
+        return ltrim($normalized, '/');
     }
 
     private static function resolveBundleURLFromManifest($manifestPath, $manifestEntry)

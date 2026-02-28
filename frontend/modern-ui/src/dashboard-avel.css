@@ -407,7 +407,7 @@
 }
 
 .avel-dashboard-page .modern-command-bar__row--filters {
-  grid-template-columns: repeat(4, minmax(140px, 1fr)) auto;
+  grid-template-columns: repeat(3, minmax(140px, 1fr)) auto;
 }
 
 .avel-dashboard-page .modern-command-bar__row--meta {
@@ -469,11 +469,13 @@
 .avel-dashboard-page .modern-command-field select {
   width: 100%;
   min-height: 40px;
+  height: 40px;
   border: 1px solid #aac5d7;
   border-radius: 11px;
   background: #ffffff;
   color: var(--avel-text);
-  padding: 9px 11px;
+  padding: 0 11px;
+  line-height: 40px;
   font-size: 0.82rem;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.66) inset;
 }
@@ -531,15 +533,19 @@
 }
 
 .avel-dashboard-page .modern-command-field__trigger {
+  display: flex;
+  align-items: center;
   width: 100%;
   min-height: 40px;
+  height: 40px;
   border: 1px solid #aac5d7;
   border-radius: 11px;
   background: #ffffff;
   color: var(--avel-text);
-  padding: 9px 34px 9px 11px;
+  padding: 0 34px 0 11px;
   font-size: 0.82rem;
   text-align: left;
+  line-height: 40px;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.66) inset;
   cursor: pointer;
   transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
@@ -558,6 +564,7 @@
 
 .avel-dashboard-page .modern-command-field__trigger-value {
   display: block;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -613,7 +620,7 @@
 
 .avel-dashboard-page .modern-command-field__option {
   width: 100%;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   border: 1px solid transparent;
@@ -622,8 +629,17 @@
   color: #204a60;
   padding: 7px 8px;
   font-size: 0.82rem;
+  line-height: 1.2;
   text-align: left;
   cursor: pointer;
+}
+
+.avel-dashboard-page .modern-command-field__option > span:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .avel-dashboard-page .modern-command-field__option:hover,
