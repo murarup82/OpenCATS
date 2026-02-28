@@ -11,6 +11,38 @@ body {
   margin: 0;
 }
 
+.modern-page {
+  display: grid;
+  gap: 12px;
+}
+
+.modern-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modern-page__title {
+  margin: 0;
+  color: #0b3550;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.modern-page__subtitle {
+  margin: 4px 0 0 0;
+  color: #4c6775;
+  font-size: 13px;
+}
+
+.modern-page__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .modern-state {
   display: grid;
   gap: 10px;
@@ -97,4 +129,3 @@ body {
 .modern-table a:hover {
   text-decoration: underline;
 }
-

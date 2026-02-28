@@ -15,6 +15,9 @@ export type UIModeBootstrap = {
 
 export type DashboardModernDataResponse = {
   meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
     scope: 'mine' | 'all';
     view: 'list' | 'kanban';
     showClosed: boolean;
@@ -52,4 +55,3 @@ export type DashboardModernDataResponse = {
     isActive: number;
   }>;
 };
-

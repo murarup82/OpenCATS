@@ -1,25 +1,27 @@
-import { DashboardMyReadOnlyPage } from './pages/DashboardMyReadOnlyPage';
 import type { UIModeBootstrap } from './types';
+import { resolveModernRouteComponent } from './lib/routeRegistry';
+import { ErrorState } from './components/states/ErrorState';
 
 type AppProps = {
   bootstrap: UIModeBootstrap;
 };
 
 export function App({ bootstrap }: AppProps) {
-  const moduleName = bootstrap.targetModule || '';
-  const actionName = bootstrap.targetAction || '';
+  const pageComponent = resolveModernRouteComponent(
+    bootstrap.targetModule || '',
+    bootstrap.targetAction || ''
+  );
 
-  if (moduleName === 'dashboard' && (actionName === 'my' || actionName === '')) {
-    return <DashboardMyReadOnlyPage bootstrap={bootstrap} />;
+  if (pageComponent) {
+    const PageComponent = pageComponent;
+    return <PageComponent bootstrap={bootstrap} />;
   }
 
   return (
-    <div className="modern-state">
-      <p>Route not migrated yet.</p>
-      <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
-        Open Legacy UI
-      </a>
-    </div>
+    <ErrorState
+      message="Route not migrated yet."
+      actionLabel="Open Legacy UI"
+      actionURL={bootstrap.legacyURL}
+    />
   );
 }
-

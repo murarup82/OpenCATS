@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles.css';
@@ -14,11 +14,56 @@ declare global {
   }
 }
 
+type ErrorBoundaryProps = {
+  bootstrap: UIModeBootstrap;
+  children: React.ReactNode;
+};
+
+type ErrorBoundaryState = {
+  hasError: boolean;
+};
+
+class ModernErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error): void {
+    if (typeof window !== 'undefined' && window.console && typeof window.console.error === 'function') {
+      window.console.error('[modern-bundle] runtime error', {
+        message: error.message
+      });
+    }
+  }
+
+  render(): React.ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div className="modern-state modern-state--error">
+          <p>Modern UI encountered an unexpected error.</p>
+          <a className="modern-btn modern-btn--secondary" href={this.props.bootstrap.legacyURL}>
+            Open Legacy UI
+          </a>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export function mount(rootElement: HTMLElement, bootstrap: UIModeBootstrap): void {
   const root = createRoot(rootElement);
   root.render(
     <StrictMode>
-      <App bootstrap={bootstrap} />
+      <ModernErrorBoundary bootstrap={bootstrap}>
+        <App bootstrap={bootstrap} />
+      </ModernErrorBoundary>
     </StrictMode>
   );
 }
@@ -26,4 +71,3 @@ export function mount(rootElement: HTMLElement, bootstrap: UIModeBootstrap): voi
 window.OpenCATSModernApp = {
   mount
 };
-

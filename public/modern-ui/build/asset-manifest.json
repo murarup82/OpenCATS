@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "generatedAtUTC": "manual-bootstrap",
+  "entries": {
+    "src/mount.tsx": "app.bundle.js"
+  }
+}

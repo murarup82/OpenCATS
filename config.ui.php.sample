@@ -25,11 +25,20 @@ define('UI_SWITCH_OVERRIDE_BYPASS_ROUTE_MAP', false);
 /* Optional logging of routing decisions (written via error_log). */
 define('UI_SWITCH_LOGGING', true);
 
-/* Optional bundle location for compiled React/Vue/etc app (same origin). */
-define('UI_SWITCH_MODERN_BUNDLE_URL', 'public/modern-ui/app.bundle.js');
+/* Optional explicit bundle URL. Leave empty to use manifest resolution. */
+define('UI_SWITCH_MODERN_BUNDLE_URL', '');
+
+/* Manifest-based bundle resolution (recommended). */
+define('UI_SWITCH_USE_MANIFEST', true);
+define('UI_SWITCH_MANIFEST_PATH', './public/modern-ui/build/asset-manifest.json');
+define('UI_SWITCH_MANIFEST_ENTRY', 'src/mount.tsx');
 
 /* Optional dev URL for local proxy/iframe integration in non-prod. */
 define('UI_SWITCH_MODERN_DEV_SERVER_URL', '');
+
+/* Client-side shell observability controls. */
+define('UI_SWITCH_CLIENT_LOGGING', true);
+define('UI_SWITCH_CLIENT_AUTO_FALLBACK_SECONDS', 0);
 
 /* Route map:
  * - key: module name

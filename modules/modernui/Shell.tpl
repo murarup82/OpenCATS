@@ -36,6 +36,8 @@
                 data-bootstrap="<?php echo(htmlspecialchars($this->bootstrapPayload, ENT_QUOTES, 'UTF-8')); ?>"
                 data-bundle-url="<?php echo(htmlspecialchars($this->bundleURL, ENT_QUOTES, 'UTF-8')); ?>"
                 data-dev-server-url="<?php echo(htmlspecialchars($this->devServerURL, ENT_QUOTES, 'UTF-8')); ?>"
+                data-client-logging="<?php echo($this->clientLoggingEnabled ? '1' : '0'); ?>"
+                data-auto-legacy-fallback-seconds="<?php echo((int) $this->autoLegacyFallbackSeconds); ?>"
             >
                 <div class="modern-shell-loading">
                     <span class="modern-shell-loading-dot"></span>
@@ -47,4 +49,3 @@
 </div>
 
 <?php TemplateUtility::printFooter(); ?>
-

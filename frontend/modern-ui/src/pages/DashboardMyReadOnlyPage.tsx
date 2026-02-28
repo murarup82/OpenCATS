@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchDashboardModernData } from '../lib/api';
 import type { DashboardModernDataResponse, UIModeBootstrap } from '../types';
+import { PageContainer } from '../components/layout/PageContainer';
+import { LoadingState } from '../components/states/LoadingState';
+import { ErrorState } from '../components/states/ErrorState';
+import { EmptyState } from '../components/states/EmptyState';
+import { StatChip } from '../components/primitives/StatChip';
+import { DataTable } from '../components/primitives/DataTable';
 
 type Props = {
   bootstrap: UIModeBootstrap;
@@ -43,69 +49,68 @@ export function DashboardMyReadOnlyPage({ bootstrap }: Props) {
   }, [bootstrap, query]);
 
   if (loading) {
-    return <div className="modern-state">Loading dashboard data...</div>;
+    return <LoadingState message="Loading dashboard data..." />;
   }
 
   if (error) {
     return (
-      <div className="modern-state modern-state--error">
-        <p>{error}</p>
-        <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
-          Open Legacy UI
-        </a>
-      </div>
+      <ErrorState
+        message={error}
+        actionLabel="Open Legacy UI"
+        actionURL={bootstrap.legacyURL}
+      />
     );
   }
 
   if (!data) {
-    return <div className="modern-state">No data available.</div>;
+    return <EmptyState message="No data available." />;
   }
 
   return (
-    <div className="modern-dashboard">
-      <div className="modern-summary">
-        <span className="modern-chip">Rows: {data.meta.totalRows}</span>
-        <span className="modern-chip">
-          Page: {data.meta.page} / {data.meta.totalPages}
-        </span>
-        <span className="modern-chip">Read-only modern view</span>
-      </div>
+    <PageContainer
+      title="My Dashboard"
+      subtitle="Read-only modern migration slice"
+      actions={
+        <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
+          Open Legacy UI
+        </a>
+      }
+    >
+      <div className="modern-dashboard">
+        <div className="modern-summary">
+          <StatChip>Rows: {data.meta.totalRows}</StatChip>
+          <StatChip>
+            Page: {data.meta.page} / {data.meta.totalPages}
+          </StatChip>
+          <StatChip>Read-only modern view</StatChip>
+        </div>
 
-      <div className="modern-table-wrap">
-        <table className="modern-table">
-          <thead>
-            <tr>
-              <th>Candidate</th>
-              <th>Job Order</th>
-              <th>Company</th>
-              <th>Status</th>
-              <th>Last Updated</th>
+        <DataTable
+          columns={[
+            { key: 'candidate', title: 'Candidate' },
+            { key: 'jobOrder', title: 'Job Order' },
+            { key: 'company', title: 'Company' },
+            { key: 'status', title: 'Status' },
+            { key: 'lastUpdated', title: 'Last Updated' }
+          ]}
+          hasRows={data.rows.length > 0}
+          emptyMessage="No rows for this selection."
+        >
+          {data.rows.map((row) => (
+            <tr key={`${row.candidateID}-${row.jobOrderID}-${row.statusID}`}>
+              <td>
+                <a href={row.candidateURL}>{row.candidateName}</a>
+              </td>
+              <td>
+                <a href={row.jobOrderURL}>{row.jobOrderTitle}</a>
+              </td>
+              <td>{row.companyName || '--'}</td>
+              <td>{row.statusLabel || '--'}</td>
+              <td>{row.lastStatusChangeDisplay || '--'}</td>
             </tr>
-          </thead>
-          <tbody>
-            {data.rows.length === 0 ? (
-              <tr>
-                <td colSpan={5}>No rows for this selection.</td>
-              </tr>
-            ) : (
-              data.rows.map((row) => (
-                <tr key={`${row.candidateID}-${row.jobOrderID}-${row.statusID}`}>
-                  <td>
-                    <a href={row.candidateURL}>{row.candidateName}</a>
-                  </td>
-                  <td>
-                    <a href={row.jobOrderURL}>{row.jobOrderTitle}</a>
-                  </td>
-                  <td>{row.companyName || '--'}</td>
-                  <td>{row.statusLabel || '--'}</td>
-                  <td>{row.lastStatusChangeDisplay || '--'}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+          ))}
+        </DataTable>
       </div>
-    </div>
+    </PageContainer>
   );
 }
-

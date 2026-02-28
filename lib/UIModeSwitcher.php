@@ -105,8 +105,10 @@ class UIModeSwitcher
         $template->assign('targetAction', $action);
         $template->assign('legacyURL', self::buildCurrentURLWithMode('legacy'));
         $template->assign('modernURL', self::buildCurrentURLWithMode('modern'));
-        $template->assign('bundleURL', self::getStringValue('UI_SWITCH_MODERN_BUNDLE_URL', 'OPENCATS_UI_BUNDLE_URL', 'public/modern-ui/app.bundle.js'));
+        $template->assign('bundleURL', self::resolveBundleURL());
         $template->assign('devServerURL', self::getStringValue('UI_SWITCH_MODERN_DEV_SERVER_URL', 'OPENCATS_UI_DEV_SERVER_URL', ''));
+        $template->assign('clientLoggingEnabled', self::getBooleanValue('UI_SWITCH_CLIENT_LOGGING', 'OPENCATS_UI_CLIENT_LOGGING', true));
+        $template->assign('autoLegacyFallbackSeconds', self::getIntegerValue('UI_SWITCH_CLIENT_AUTO_FALLBACK_SECONDS', 'OPENCATS_UI_CLIENT_AUTO_FALLBACK_SECONDS', 0));
         $template->assign('bootstrapPayload', base64_encode(json_encode($bootstrap)));
         $template->display($templatePath);
 
@@ -493,12 +495,91 @@ class UIModeSwitcher
         }
 
         $format = strtolower(trim((string) $_GET['format']));
-        if ($format === 'json' || $format === 'modern-json' || $format === 'api')
+        if ($format === 'json' ||
+            $format === 'modern-json' ||
+            strpos($format, 'modern-json') === 0 ||
+            $format === 'api')
         {
             return true;
         }
 
         return false;
+    }
+
+    private static function resolveBundleURL()
+    {
+        $configuredURL = self::getStringValue('UI_SWITCH_MODERN_BUNDLE_URL', 'OPENCATS_UI_BUNDLE_URL', '');
+        if ($configuredURL !== '')
+        {
+            return $configuredURL;
+        }
+
+        if (self::getBooleanValue('UI_SWITCH_USE_MANIFEST', 'OPENCATS_UI_USE_MANIFEST', true))
+        {
+            $manifestPath = self::getStringValue(
+                'UI_SWITCH_MANIFEST_PATH',
+                'OPENCATS_UI_MANIFEST_PATH',
+                './public/modern-ui/build/asset-manifest.json'
+            );
+            $manifestEntry = self::getStringValue(
+                'UI_SWITCH_MANIFEST_ENTRY',
+                'OPENCATS_UI_MANIFEST_ENTRY',
+                'src/mount.tsx'
+            );
+
+            $resolvedFromManifest = self::resolveBundleURLFromManifest($manifestPath, $manifestEntry);
+            if ($resolvedFromManifest !== '')
+            {
+                return $resolvedFromManifest;
+            }
+        }
+
+        return 'public/modern-ui/build/app.bundle.js';
+    }
+
+    private static function resolveBundleURLFromManifest($manifestPath, $manifestEntry)
+    {
+        $manifestPath = trim((string) $manifestPath);
+        if ($manifestPath === '' || !file_exists($manifestPath))
+        {
+            return '';
+        }
+
+        $raw = @file_get_contents($manifestPath);
+        if ($raw === false || trim($raw) === '')
+        {
+            return '';
+        }
+
+        $manifest = json_decode($raw, true);
+        if (!is_array($manifest))
+        {
+            return '';
+        }
+
+        $compiledFile = '';
+        if (isset($manifest['entries']) &&
+            is_array($manifest['entries']) &&
+            isset($manifest['entries'][$manifestEntry]))
+        {
+            $compiledFile = trim((string) $manifest['entries'][$manifestEntry]);
+        }
+        else if (isset($manifest[$manifestEntry]) &&
+            is_array($manifest[$manifestEntry]) &&
+            isset($manifest[$manifestEntry]['file']))
+        {
+            $compiledFile = trim((string) $manifest[$manifestEntry]['file']);
+        }
+
+        if ($compiledFile === '')
+        {
+            return '';
+        }
+
+        $compiledFile = str_replace('\\', '/', $compiledFile);
+        $compiledFile = ltrim($compiledFile, '/');
+
+        return 'public/modern-ui/build/' . $compiledFile;
     }
 
     private static function buildCurrentURLWithMode($mode)
@@ -546,6 +627,22 @@ class UIModeSwitcher
         }
 
         return $defaultValue;
+    }
+
+    private static function getIntegerValue($configName, $envName, $defaultValue)
+    {
+        $envValue = getenv($envName);
+        if ($envValue !== false && trim((string) $envValue) !== '')
+        {
+            return (int) $envValue;
+        }
+
+        if (defined($configName))
+        {
+            return (int) constant($configName);
+        }
+
+        return (int) $defaultValue;
     }
 
     private static function getStringValue($configName, $envName, $defaultValue)

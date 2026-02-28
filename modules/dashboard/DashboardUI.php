@@ -48,6 +48,7 @@ class DashboardUI extends UserInterface
     private function myDashboard()
     {
         $responseFormat = strtolower(trim($this->getTrimmedInput('format', $_GET)));
+        $modernPage = strtolower(trim($this->getTrimmedInput('modernPage', $_GET)));
         $showClosed = $this->isChecked('showClosed', $_GET);
         $companyID = (int) $this->getTrimmedInput('companyID', $_GET);
         $jobOrderID = (int) $this->getTrimmedInput('jobOrderID', $_GET);
@@ -349,6 +350,19 @@ class DashboardUI extends UserInterface
 
         if ($responseFormat === 'modern-json')
         {
+            if ($modernPage !== '' && $modernPage !== 'dashboard-my')
+            {
+                header('HTTP/1.1 400 Bad Request');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
             $this->renderModernDashboardJSON(
                 $rows,
                 $companyOptions,
@@ -365,7 +379,8 @@ class DashboardUI extends UserInterface
                 $page,
                 $totalPages,
                 $totalRows,
-                $entriesPerPage
+                $entriesPerPage,
+                'dashboard-my'
             );
             return;
         }
@@ -420,7 +435,8 @@ class DashboardUI extends UserInterface
         $page,
         $totalPages,
         $totalRows,
-        $entriesPerPage
+        $entriesPerPage,
+        $modernPage
     )
     {
         $baseURL = CATSUtility::getIndexName();
@@ -498,6 +514,9 @@ class DashboardUI extends UserInterface
 
         $payload = array(
             'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'dashboard.my.readonly.v1',
+                'modernPage' => $modernPage,
                 'scope' => $dashboardScope,
                 'view' => $dashboardView,
                 'showClosed' => ((bool) $showClosed),
@@ -522,6 +541,7 @@ class DashboardUI extends UserInterface
         );
 
         header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         echo json_encode($payload);
     }
 
