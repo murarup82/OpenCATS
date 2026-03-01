@@ -19,6 +19,8 @@ type NavigationFilters = {
   companyID?: number;
   onlyMyJobOrders?: boolean;
   onlyHotJobOrders?: boolean;
+  sortBy?: string;
+  sortDirection?: 'ASC' | 'DESC';
   page?: number;
   maxResults?: number;
 };
@@ -57,6 +59,23 @@ function buildStatusTone(tone: string): string {
     .replace(/^-+|-+$/g, '');
   return normalized === '' ? 'status' : normalized;
 }
+
+const sortOptions: SelectMenuOption[] = [
+  { value: 'dateCreatedSort', label: 'Created Date' },
+  { value: 'title', label: 'Job Title' },
+  { value: 'companyName', label: 'Company' },
+  { value: 'status', label: 'Status' },
+  { value: 'daysOld', label: 'Age (Days)' },
+  { value: 'pipeline', label: 'Pipeline Size' },
+  { value: 'submitted', label: 'Proposed Count' },
+  { value: 'ownerSort', label: 'Owner' },
+  { value: 'recruiterSort', label: 'Recruiter' }
+];
+
+const sortDirectionOptions: SelectMenuOption[] = [
+  { value: 'DESC', label: 'Descending' },
+  { value: 'ASC', label: 'Ascending' }
+];
 
 export function JobOrdersListPage({ bootstrap }: Props) {
   const [data, setData] = useState<JobOrdersListModernDataResponse | null>(null);
@@ -152,6 +171,20 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     nextQuery.set('onlyMyJobOrders', toBooleanString(onlyMyJobOrders));
     nextQuery.set('onlyHotJobOrders', toBooleanString(onlyHotJobOrders));
 
+    const sortBy = String(next.sortBy ?? data.meta.sortBy ?? '').trim();
+    if (sortBy === '') {
+      nextQuery.delete('sortBy');
+    } else {
+      nextQuery.set('sortBy', sortBy);
+    }
+
+    const sortDirection = String(next.sortDirection ?? data.meta.sortDirection ?? '').trim().toUpperCase();
+    if (sortDirection === 'ASC' || sortDirection === 'DESC') {
+      nextQuery.set('sortDirection', sortDirection);
+    } else {
+      nextQuery.delete('sortDirection');
+    }
+
     const entriesPerPage =
       typeof next.maxResults === 'number' && next.maxResults > 0
         ? next.maxResults
@@ -201,6 +234,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     { value: '50', label: '50 rows' },
     { value: '100', label: '100 rows' }
   ];
+
+  const selectedSortBy = sortOptions.some((option) => option.value === data?.meta.sortBy) ? data?.meta.sortBy : 'dateCreatedSort';
+  const selectedSortDirection = data?.meta.sortDirection === 'ASC' ? 'ASC' : 'DESC';
 
   if (loading && !data) {
     return <div className="modern-state">Loading job orders...</div>;
@@ -290,7 +326,23 @@ export function JobOrdersListPage({ bootstrap }: Props) {
           </section>
 
           <section className="modern-command-bar modern-command-bar--sticky" aria-label="Job order controls">
-            <div className="modern-command-bar__row modern-command-bar__row--primary modern-command-bar__row--primary-noscope">
+            <div className="modern-command-bar__row modern-command-bar__row--primary modern-command-bar__row--primary-noscope avel-joborders-primary-row">
+              <SelectMenu
+                label="Sort By"
+                value={selectedSortBy}
+                options={sortOptions}
+                onChange={(value) => navigateWithFilters({ sortBy: value, page: 1 })}
+                className="modern-command-field modern-command-field--compact"
+              />
+
+              <SelectMenu
+                label="Direction"
+                value={selectedSortDirection}
+                options={sortDirectionOptions}
+                onChange={(value) => navigateWithFilters({ sortDirection: value as 'ASC' | 'DESC', page: 1 })}
+                className="modern-command-field modern-command-field--compact"
+              />
+
               <SelectMenu
                 label="Rows"
                 value={String(data.meta.entriesPerPage)}
@@ -309,6 +361,8 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                       companyID: 0,
                       onlyMyJobOrders: false,
                       onlyHotJobOrders: false,
+                      sortBy: 'dateCreatedSort',
+                      sortDirection: 'DESC',
                       page: 1
                     })
                   }
@@ -389,7 +443,8 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                 { key: 'proposed', title: 'Proposed' },
                 { key: 'age', title: 'Age' },
                 { key: 'owner', title: 'Owner' },
-                { key: 'recruiter', title: 'Recruiter' }
+                { key: 'recruiter', title: 'Recruiter' },
+                { key: 'monitor', title: 'Monitor' }
               ]}
               hasRows={hasRows}
               emptyMessage="No job orders match the current filters."
@@ -420,6 +475,30 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                   <td>{row.daysOld}d</td>
                   <td>{toDisplayText(row.ownerName)}</td>
                   <td>{toDisplayText(row.recruiterName)}</td>
+                  <td>
+                    {permissions.canToggleMonitored ? (
+                      <div className="modern-table-actions">
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--secondary modern-btn--mini"
+                          onClick={() => {
+                            const currentURLQuery = new URLSearchParams(serverQueryString);
+                            currentURLQuery.set('m', 'joborders');
+                            currentURLQuery.set('a', 'listByView');
+                            currentURLQuery.set('ui', 'modern');
+
+                            const nextValue = row.isMonitored ? '0' : '1';
+                            const targetURL = `${decodeLegacyURL(row.setMonitoredBaseURL)}&value=${encodeURIComponent(nextValue)}&currentURL=${encodeURIComponent(currentURLQuery.toString())}`;
+                            window.location.href = targetURL;
+                          }}
+                        >
+                          {row.isMonitored ? 'Disable' : 'Enable'}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="modern-chip modern-chip--info">{row.isMonitored ? 'On' : 'Off'}</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </DataTable>
@@ -451,4 +530,3 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     </div>
   );
 }
-

@@ -14,11 +14,12 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 8. Native `candidates.edit` phase 1: modern form UI + legacy-safe save endpoint.
 9. Native `candidates.add` phase 1: modern form UI + legacy-safe create endpoint.
 10. Native `joborders.listByView` phase 1: modern filters/table UI + modern-json backend contract.
+11. Native `joborders.listByView` phase 2: sort controls + monitored toggle action wiring.
 
 ## Next Queue
 
-1. Expand `joborders.listByView` phase 2 with sorting controls and monitored toggle actions.
-2. Build native `joborders.show` phase 1 (read-only profile + pipeline summary).
+1. Build native `joborders.show` phase 1 (read-only profile + pipeline summary).
+2. Expand `joborders.listByView` phase 3 with column-visibility and inline pagination presets parity.
 3. Expand `candidates.add/edit` with extra fields and attachment/photo actions.
 4. Add modern duplicate-check feedback flow (replace legacy fatal message UX).
 5. Build native status change modal for dashboard/card actions (replace legacy popup for common transitions).

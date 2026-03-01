@@ -194,6 +194,7 @@ export type JobOrdersListModernDataResponse = {
     recruiterName: string;
     showURL: string;
     showLegacyURL: string;
+    setMonitoredBaseURL: string;
     companyURL: string;
   }>;
 };

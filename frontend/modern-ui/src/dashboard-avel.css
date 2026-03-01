@@ -1552,6 +1552,10 @@
   min-width: 130px;
 }
 
+.avel-joborders-page .avel-joborders-primary-row {
+  grid-template-columns: repeat(3, minmax(125px, auto)) auto;
+}
+
 .avel-candidates-page .modern-command-search {
   margin: 0;
 }

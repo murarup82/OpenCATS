@@ -804,6 +804,11 @@ class JobOrdersUI extends UserInterface
                 'recruiterName' => $recruiterName,
                 'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
                 'showLegacyURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'setMonitoredBaseURL' => sprintf(
+                    '%s?m=joborders&a=setMonitoredJobOrder&jobOrderID=%d&ui=legacy',
+                    $baseURL,
+                    $jobOrderID
+                ),
                 'companyURL' => sprintf(
                     '%s?m=companies&a=show&companyID=%d&ui=modern',
                     $baseURL,
