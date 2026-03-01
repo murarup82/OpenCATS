@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  fetchPipelineDetailsHTML,
   fetchJobOrdersShowModernData,
   removePipelineEntryViaLegacyURL,
   setDashboardPipelineStatus
@@ -10,6 +11,7 @@ import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
@@ -65,6 +67,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
     jobOrderID: number;
     fallbackURL: string;
     fallbackTitle: string;
+  } | null>(null);
+  const [pipelineDetailsModal, setPipelineDetailsModal] = useState<{
+    title: string;
+    fullDetailsURL: string;
+    html: string;
+    loading: boolean;
+    error: string;
   } | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
@@ -136,6 +145,51 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
       }
     },
     [refreshPageData]
+  );
+
+  const openPipelineDetailsInline = useCallback(
+    async (item: JobOrdersShowModernDataResponse['pipeline']['items'][number]) => {
+      const pipelineID = Number(item.candidateJobOrderID || 0);
+      if (pipelineID <= 0) {
+        return;
+      }
+
+      const title = `Pipeline Details: ${toDisplayText(item.candidateName)}`;
+      const fullDetailsURL = decodeLegacyURL(item.actions.pipelineDetailsURL);
+      setPipelineDetailsModal({
+        title,
+        fullDetailsURL,
+        html: '',
+        loading: true,
+        error: ''
+      });
+
+      try {
+        const html = await fetchPipelineDetailsHTML(pipelineID);
+        setPipelineDetailsModal((current) =>
+          current
+            ? {
+                ...current,
+                html,
+                loading: false,
+                error: ''
+              }
+            : current
+        );
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unable to load pipeline details.';
+        setPipelineDetailsModal((current) =>
+          current
+            ? {
+                ...current,
+                loading: false,
+                error: message
+              }
+            : current
+        );
+      }
+    },
+    []
   );
 
   const getForwardStatusOptions = useCallback(
@@ -545,14 +599,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                       <button
                         type="button"
                         className="modern-btn modern-btn--secondary modern-btn--mini"
-                        onClick={() =>
-                          setPipelineModal({
-                            url: decodeLegacyURL(item.actions.pipelineDetailsURL),
-                            title: `Pipeline Details: ${toDisplayText(item.candidateName)}`,
-                            openInPopup: { width: 940, height: 700, refreshOnClose: false },
-                            showRefreshClose: false
-                          })
-                        }
+                        onClick={() => openPipelineDetailsInline(item)}
                       >
                         Details
                       </button>
@@ -854,6 +901,22 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                     openInPopup: { width: 970, height: 730, refreshOnClose: true },
                     showRefreshClose: true
                   });
+                }
+              : undefined
+          }
+        />
+
+        <PipelineDetailsInlineModal
+          isOpen={!!pipelineDetailsModal}
+          title={pipelineDetailsModal?.title || 'Pipeline Details'}
+          html={pipelineDetailsModal?.html || ''}
+          loading={pipelineDetailsModal?.loading || false}
+          error={pipelineDetailsModal?.error || ''}
+          onClose={() => setPipelineDetailsModal(null)}
+          onOpenFullDetails={
+            pipelineDetailsModal
+              ? () => {
+                  window.open(pipelineDetailsModal.fullDetailsURL, '_blank', 'noopener');
                 }
               : undefined
           }

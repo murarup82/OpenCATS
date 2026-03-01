@@ -2186,6 +2186,16 @@
   gap: 10px;
 }
 
+.modern-inline-modal__body--html {
+  padding: 8px;
+  max-height: min(72vh, 760px);
+  overflow: auto;
+}
+
+.modern-inline-modal__html-content {
+  color: #123d52;
+}
+
 @keyframes avel-rise {
   from {
     opacity: 0;

@@ -142,6 +142,24 @@ export async function removePipelineEntryViaLegacyURL(
   return payload;
 }
 
+export async function fetchPipelineDetailsHTML(candidateJobOrderID: number): Promise<string> {
+  const query = new URLSearchParams();
+  query.set('f', 'getPipelineDetails');
+  query.set('candidateJobOrderID', String(candidateJobOrderID || 0));
+  query.set('rhash', String(Math.floor(Math.random() * 100000000)));
+
+  const response = await fetch(`ajax.php?${query.toString()}`, {
+    method: 'GET',
+    credentials: 'same-origin'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Pipeline details request failed (${response.status}).`);
+  }
+
+  return response.text();
+}
+
 export async function fetchCandidatesListModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams

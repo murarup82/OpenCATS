@@ -29,10 +29,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 23. Removed `Open In Popup` affordance from shared embedded legacy modal component to reduce popup dependency across modern pages.
 24. Added modern-json pipeline removal mutation path (with CSRF tokens) and wired inline remove actions on `candidates.show` and `joborders.show` to use it with confirm + note prompts.
 25. Added native quick status modal on `candidates.show` and `joborders.show` for forward transitions (using secure mutation endpoint), with one-click fallback to full legacy status form for complex transitions.
+26. Replaced iframe pipeline details action with native inline details modal (AJAX timeline HTML) on `candidates.show` and `joborders.show`, including full-details fallback.
 
 ## Next Queue
 
-1. Replace iframe-backed pipeline details/status history editor with native React timeline + inline edits.
+1. Replace legacy timeline HTML source (`ajax/getPipelineDetails`) with a first-class React timeline data contract + native inline edit actions.
 
 ## Rules
 
