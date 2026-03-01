@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchDashboardModernData,
   fetchPipelineStatusDetailsModernData,
@@ -18,6 +18,8 @@ import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
+import { PipelineRejectionModal } from '../components/primitives/PipelineRejectionModal';
+import { MutationToast } from '../components/primitives/MutationToast';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
@@ -110,6 +112,13 @@ export function DashboardMyPage({ bootstrap }: Props) {
   } | null>(null);
   const [quickStatusPending, setQuickStatusPending] = useState<boolean>(false);
   const [quickStatusError, setQuickStatusError] = useState<string>('');
+  const [rejectionModal, setRejectionModal] = useState<{
+    row: DashboardRow;
+    title: string;
+    currentStatusLabel: string;
+  } | null>(null);
+  const [rejectionPending, setRejectionPending] = useState<boolean>(false);
+  const [rejectionError, setRejectionError] = useState<string>('');
   const [assignModal, setAssignModal] = useState<{
     url: string;
     jobOrderName: string;
@@ -127,29 +136,33 @@ export function DashboardMyPage({ bootstrap }: Props) {
     error: string;
   } | null>(null);
   const [interactionError, setInteractionError] = useState<string>('');
+  const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'error' | 'info' } | null>(null);
+  const loadRequestRef = useRef(0);
 
   useEffect(() => {
     let isMounted = true;
+    const requestID = loadRequestRef.current + 1;
+    loadRequestRef.current = requestID;
     setLoading(true);
     setError('');
 
     const query = new URLSearchParams(serverQueryString);
     fetchDashboardModernData(bootstrap, query)
       .then((result) => {
-        if (!isMounted) {
+        if (!isMounted || requestID !== loadRequestRef.current) {
           return;
         }
         setData(result);
         setInteractionError('');
       })
       .catch((err: Error) => {
-        if (!isMounted) {
+        if (!isMounted || requestID !== loadRequestRef.current) {
           return;
         }
         setError(err.message || 'Unable to load data');
       })
       .finally(() => {
-        if (isMounted) {
+        if (isMounted && requestID === loadRequestRef.current) {
           setLoading(false);
         }
       });
@@ -216,6 +229,13 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const refreshDashboard = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
+  const showToast = useCallback((message: string, tone: 'success' | 'error' | 'info' = 'success') => {
+    setToast({
+      id: Date.now(),
+      message,
+      tone
+    });
+  }, []);
   usePageRefreshEvents(refreshDashboard);
 
   const openStatusModal = useCallback(
@@ -250,6 +270,15 @@ export function DashboardMyPage({ bootstrap }: Props) {
     },
     [refreshDashboard]
   );
+
+  const openRejectionModal = useCallback((row: DashboardRow) => {
+    setRejectionError('');
+    setRejectionModal({
+      row,
+      title: `Reject Candidate: ${toDisplayText(row.candidateName)}`,
+      currentStatusLabel: toDisplayText(row.statusLabel)
+    });
+  }, []);
 
   const closeDetailsModal = useCallback(
     (refreshOnClose: boolean) => {
@@ -353,12 +382,13 @@ export function DashboardMyPage({ bootstrap }: Props) {
 
         await reloadPipelineDetailsModal(details.meta.pipelineID);
         refreshDashboard();
+        showToast('Pipeline history date updated.');
         return null;
       } catch (err: unknown) {
         return err instanceof Error ? err.message : 'Unable to update history date.';
       }
     },
-    [reloadPipelineDetailsModal, refreshDashboard]
+    [reloadPipelineDetailsModal, refreshDashboard, showToast]
   );
 
   const openAssignWorkspace = useCallback(() => {
@@ -458,6 +488,18 @@ export function DashboardMyPage({ bootstrap }: Props) {
     data.meta.statusRules?.orderedStatusIDs.length > 0
       ? data.meta.statusRules.orderedStatusIDs
       : statusCatalog.map((status) => status.statusID);
+  const rejectionReasons = Array.isArray(data.options.rejectionReasons)
+    ? data.options.rejectionReasons
+        .map((reason) => ({
+          reasonID: Number(reason.reasonID || 0),
+          label: toDisplayText(reason.label)
+        }))
+        .filter((reason) => reason.reasonID > 0)
+    : [];
+  const rejectionOtherReasonID =
+    Number(data.meta.statusRules?.rejectionOtherReasonID || 0) > 0
+      ? Number(data.meta.statusRules?.rejectionOtherReasonID)
+      : 0;
   const requestStatusChange = useCallback(
     async (row: DashboardRow, targetStatusID: number | null) => {
       if (targetStatusID === null || targetStatusID <= 0) {
@@ -465,6 +507,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
         return {
           success: false,
           openedLegacy: true,
+          openedInline: false,
           message: ''
         };
       }
@@ -473,15 +516,26 @@ export function DashboardMyPage({ bootstrap }: Props) {
         return {
           success: false,
           openedLegacy: false,
+          openedInline: false,
           message: 'Status changes are not allowed for this user.'
         };
       }
 
       if (targetStatusID === rejectedStatusID) {
-        openStatusModal(row, targetStatusID);
+        if (rejectionReasons.length === 0) {
+          openStatusModal(row, targetStatusID);
+          return {
+            success: false,
+            openedLegacy: true,
+            openedInline: false,
+            message: ''
+          };
+        }
+        openRejectionModal(row);
         return {
           success: false,
-          openedLegacy: true,
+          openedLegacy: false,
+          openedInline: true,
           message: ''
         };
       }
@@ -492,6 +546,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
         return {
           success: false,
           openedLegacy: true,
+          openedInline: false,
           message: ''
         };
       }
@@ -509,9 +564,15 @@ export function DashboardMyPage({ bootstrap }: Props) {
         if (mutationResult.success) {
           setInteractionError('');
           refreshDashboard();
+          const statusLabel =
+            typeof mutationResult.updatedStatusLabel === 'string' && mutationResult.updatedStatusLabel.trim() !== ''
+              ? mutationResult.updatedStatusLabel.trim()
+              : 'updated';
+          showToast(`Status changed to ${statusLabel}.`);
           return {
             success: true,
             openedLegacy: false,
+            openedInline: false,
             message: ''
           };
         }
@@ -521,6 +582,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
           return {
             success: false,
             openedLegacy: true,
+            openedInline: false,
             message: ''
           };
         }
@@ -530,6 +592,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
         return {
           success: false,
           openedLegacy: false,
+          openedInline: false,
           message: errorMessage
         };
       } catch (err: unknown) {
@@ -538,6 +601,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
         return {
           success: false,
           openedLegacy: false,
+          openedInline: false,
           message
         };
       }
@@ -548,9 +612,12 @@ export function DashboardMyPage({ bootstrap }: Props) {
       data.actions?.setPipelineStatusToken,
       data.actions?.setPipelineStatusURL,
       data.meta.scope,
+      openRejectionModal,
       openStatusModal,
+      rejectionReasons.length,
       refreshDashboard,
-      rejectedStatusID
+      rejectedStatusID,
+      showToast
     ]
   );
 
@@ -608,7 +675,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
       setQuickStatusPending(true);
       try {
         const result = await requestStatusChange(quickStatusModal.row, statusID);
-        if (result.success || result.openedLegacy) {
+        if (result.success || result.openedLegacy || result.openedInline) {
           setQuickStatusModal(null);
           return;
         }
@@ -620,6 +687,69 @@ export function DashboardMyPage({ bootstrap }: Props) {
       }
     },
     [quickStatusModal, quickStatusPending, requestStatusChange]
+  );
+
+  const submitRejectionStatus = useCallback(
+    async (payload: { rejectionReasonIDs: number[]; rejectionReasonOther: string; statusComment: string }) => {
+      if (!rejectionModal || rejectionPending) {
+        return;
+      }
+
+      const mutationToken = data.actions?.setPipelineStatusToken || '';
+      if (mutationToken === '') {
+        setRejectionModal(null);
+        openStatusModal(rejectionModal.row, rejectedStatusID);
+        return;
+      }
+
+      setRejectionError('');
+      setRejectionPending(true);
+      try {
+        const mutationResult = await setDashboardPipelineStatus(bootstrap, {
+          url: data.actions?.setPipelineStatusURL,
+          securityToken: mutationToken,
+          candidateID: Number(rejectionModal.row.candidateID || 0),
+          jobOrderID: Number(rejectionModal.row.jobOrderID || 0),
+          statusID: rejectedStatusID,
+          enforceOwner: data.meta.scope === 'mine',
+          statusComment: payload.statusComment,
+          rejectionReasonIDs: payload.rejectionReasonIDs,
+          rejectionReasonOther: payload.rejectionReasonOther
+        });
+
+        if (mutationResult.success) {
+          setRejectionModal(null);
+          setInteractionError('');
+          refreshDashboard();
+          showToast('Candidate moved to Rejected.');
+          return;
+        }
+
+        if (mutationResult.code === 'requiresModal') {
+          setRejectionModal(null);
+          openStatusModal(rejectionModal.row, rejectedStatusID);
+          return;
+        }
+
+        setRejectionError(mutationResult.message || 'Unable to change pipeline status.');
+      } catch (err: unknown) {
+        setRejectionError(err instanceof Error ? err.message : 'Unable to change pipeline status.');
+      } finally {
+        setRejectionPending(false);
+      }
+    },
+    [
+      bootstrap,
+      data.actions?.setPipelineStatusToken,
+      data.actions?.setPipelineStatusURL,
+      data.meta.scope,
+      openStatusModal,
+      refreshDashboard,
+      rejectedStatusID,
+      rejectionModal,
+      rejectionPending,
+      showToast
+    ]
   );
 
   const visibleStatuses = localStatusID === 'all'
@@ -872,6 +1002,37 @@ export function DashboardMyPage({ bootstrap }: Props) {
           }
         />
 
+        <PipelineRejectionModal
+          isOpen={!!rejectionModal}
+          title={rejectionModal?.title || 'Reject Candidate'}
+          currentStatusLabel={rejectionModal?.currentStatusLabel || '--'}
+          rejectionReasons={rejectionReasons}
+          otherReasonID={rejectionOtherReasonID}
+          submitPending={rejectionPending}
+          submitError={rejectionError}
+          onCancel={() => {
+            if (rejectionPending) {
+              return;
+            }
+            setRejectionError('');
+            setRejectionModal(null);
+          }}
+          onSubmit={submitRejectionStatus}
+          onOpenFullForm={
+            rejectionModal
+              ? () => {
+                  if (rejectionPending) {
+                    return;
+                  }
+                  setRejectionError('');
+                  const row = rejectionModal.row;
+                  setRejectionModal(null);
+                  openStatusModal(row, rejectedStatusID);
+                }
+              : undefined
+          }
+        />
+
         <LegacyFrameModal
           isOpen={!!statusModal}
           title={`Change Status${statusModal ? `: ${statusModal.candidateName}` : ''}`}
@@ -888,6 +1049,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
           onClose={() => setAssignModal(null)}
           onAssigned={() => {
             refreshDashboard();
+            showToast('Candidate assigned to job order.');
           }}
         />
 
@@ -918,6 +1080,8 @@ export function DashboardMyPage({ bootstrap }: Props) {
           onClose={closeDetailsModal}
           showRefreshClose={false}
         />
+
+        <MutationToast toast={toast} onDismiss={() => setToast(null)} />
       </PageContainer>
     </div>
   );

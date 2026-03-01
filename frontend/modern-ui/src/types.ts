@@ -33,6 +33,7 @@ export type DashboardModernDataResponse = {
     };
     statusRules?: {
       rejectedStatusID: number;
+      rejectionOtherReasonID?: number;
       orderedStatusIDs: number[];
     };
   };
@@ -45,6 +46,7 @@ export type DashboardModernDataResponse = {
     companies: Array<{ companyID: number; name: string }>;
     jobOrders: Array<{ jobOrderID: number; title: string; companyName: string }>;
     statuses: Array<{ statusID: number; status: string }>;
+    rejectionReasons?: Array<{ reasonID: number; label: string }>;
   };
   actions?: {
     setPipelineStatusURL?: string;
@@ -335,6 +337,11 @@ export type JobOrdersShowModernDataResponse = {
   };
   pipelineStatus: {
     rejectedStatusID: number;
+    rejectionOtherReasonID?: number;
+    rejectionReasons?: Array<{
+      reasonID: number;
+      label: string;
+    }>;
     orderedStatusIDs: number[];
     statuses: Array<{
       statusID: number;
@@ -517,6 +524,11 @@ export type CandidatesShowModernDataResponse = {
   };
   pipelineStatus: {
     rejectedStatusID: number;
+    rejectionOtherReasonID?: number;
+    rejectionReasons?: Array<{
+      reasonID: number;
+      label: string;
+    }>;
     orderedStatusIDs: number[];
     statuses: Array<{
       statusID: number;

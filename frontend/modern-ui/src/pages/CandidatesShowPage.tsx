@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   addCandidateProfileComment,
@@ -26,8 +26,10 @@ import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { CandidateAssignJobOrderModal } from '../components/primitives/CandidateAssignJobOrderModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
+import { PipelineRejectionModal } from '../components/primitives/PipelineRejectionModal';
 import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
+import { MutationToast } from '../components/primitives/MutationToast';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
@@ -112,6 +114,16 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [quickStatusPending, setQuickStatusPending] = useState<boolean>(false);
   const [quickStatusError, setQuickStatusError] = useState<string>('');
+  const [rejectionModal, setRejectionModal] = useState<{
+    title: string;
+    currentStatusLabel: string;
+    candidateID: number;
+    jobOrderID: number;
+    fallbackURL: string;
+    fallbackTitle: string;
+  } | null>(null);
+  const [rejectionPending, setRejectionPending] = useState<boolean>(false);
+  const [rejectionError, setRejectionError] = useState<string>('');
   const [removePipelineModal, setRemovePipelineModal] = useState<{
     title: string;
     description: string;
@@ -146,16 +158,20 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
+  const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'error' | 'info' } | null>(null);
+  const loadRequestRef = useRef(0);
 
   useEffect(() => {
     let isMounted = true;
+    const requestID = loadRequestRef.current + 1;
+    loadRequestRef.current = requestID;
     setLoading(true);
     setError('');
 
     const query = new URLSearchParams(serverQueryString);
     fetchCandidatesShowModernData(bootstrap, query)
       .then((result) => {
-        if (!isMounted) {
+        if (!isMounted || requestID !== loadRequestRef.current) {
           return;
         }
         setData(result);
@@ -175,13 +191,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         );
       })
       .catch((err: Error) => {
-        if (!isMounted) {
+        if (!isMounted || requestID !== loadRequestRef.current) {
           return;
         }
         setError(err.message || 'Unable to load candidate profile.');
       })
       .finally(() => {
-        if (isMounted) {
+        if (isMounted && requestID === loadRequestRef.current) {
           setLoading(false);
         }
       });
@@ -193,6 +209,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
+  }, []);
+  const showToast = useCallback((message: string, tone: 'success' | 'error' | 'info' = 'success') => {
+    setToast({
+      id: Date.now(),
+      message,
+      tone
+    });
   }, []);
   usePageRefreshEvents(refreshPageData);
 
@@ -275,13 +298,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
         setRemovePipelineModal(null);
         refreshPageData();
+        showToast('Candidate removed from pipeline.');
       } catch (err: unknown) {
         setRemovePipelineError(err instanceof Error ? err.message : 'Unable to remove candidate from pipeline.');
       } finally {
         setRemovePipelinePending(false);
       }
     },
-    [data, removePipelineModal, removePipelinePending, refreshPageData]
+    [data, removePipelineModal, removePipelinePending, refreshPageData, showToast]
   );
 
   const closePipelineModal = useCallback(
@@ -384,12 +408,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
         await reloadPipelineDetailsModal(details.meta.pipelineID);
         refreshPageData();
+        showToast('Pipeline history date updated.');
         return null;
       } catch (err: unknown) {
         return err instanceof Error ? err.message : 'Unable to update history date.';
       }
     },
-    [reloadPipelineDetailsModal, refreshPageData]
+    [reloadPipelineDetailsModal, refreshPageData, showToast]
   );
 
   const submitCandidateComment = useCallback(
@@ -416,13 +441,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         setCommentText('');
         setCommentsOpen(true);
         refreshPageData();
+        showToast('Comment saved.');
       } catch (err: unknown) {
         setCommentSubmitError(err instanceof Error ? err.message : 'Unable to save comment.');
       } finally {
         setCommentSubmitPending(false);
       }
     },
-    [commentCategory, commentSubmitPending, commentText, data, refreshPageData]
+    [commentCategory, commentSubmitPending, commentText, data, refreshPageData, showToast]
   );
 
   const submitCandidateMessage = useCallback(
@@ -448,13 +474,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         setMessageBody('');
         setMessagesOpen(true);
         refreshPageData();
+        showToast('Message sent.');
       } catch (err: unknown) {
         setMessageSubmitError(err instanceof Error ? err.message : 'Unable to send message.');
       } finally {
         setMessageSubmitPending(false);
       }
     },
-    [data, messageBody, messageSubmitPending, refreshPageData]
+    [data, messageBody, messageSubmitPending, refreshPageData, showToast]
   );
 
   const handleDeleteMessageThread = useCallback(async () => {
@@ -478,12 +505,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       setMessagesOpen(true);
       setMessageDeleteConfirmOpen(false);
       refreshPageData();
+      showToast('Message thread deleted.');
     } catch (err: unknown) {
       setMessageDeleteError(err instanceof Error ? err.message : 'Unable to delete message thread.');
     } finally {
       setMessageDeletePending(false);
     }
-  }, [data, messageDeletePending, refreshPageData]);
+  }, [data, messageDeletePending, refreshPageData, showToast]);
 
   const handleDeleteAttachment = useCallback(
     async (attachmentID: number) => {
@@ -512,13 +540,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         }
         setAttachmentDeleteModal(null);
         refreshPageData();
+        showToast('Attachment deleted.');
       } catch (err: unknown) {
         setAttachmentDeleteError(err instanceof Error ? err.message : 'Unable to delete attachment.');
       } finally {
         setAttachmentDeletePending(false);
       }
     },
-    [attachmentDeletePending, data, refreshPageData]
+    [attachmentDeletePending, data, refreshPageData, showToast]
   );
 
   const submitAttachmentUpload = useCallback(async () => {
@@ -552,12 +581,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       setAttachmentUploadIsResume(false);
       setAttachmentUploadOpen(false);
       refreshPageData();
+      showToast('Attachment uploaded.');
     } catch (err: unknown) {
       setAttachmentUploadError(err instanceof Error ? err.message : 'Unable to upload attachment.');
     } finally {
       setAttachmentUploadPending(false);
     }
-  }, [attachmentUploadFile, attachmentUploadIsResume, attachmentUploadPending, data, refreshPageData]);
+  }, [attachmentUploadFile, attachmentUploadIsResume, attachmentUploadPending, data, refreshPageData, showToast]);
 
   const openTagEditor = useCallback(() => {
     if (!data) {
@@ -624,12 +654,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
       setTagEditorOpen(false);
       refreshPageData();
+      showToast('Tags updated.');
     } catch (err: unknown) {
       setTagSaveError(err instanceof Error ? err.message : 'Unable to update tags.');
     } finally {
       setTagSavePending(false);
     }
-  }, [data, refreshPageData, selectedTagIDs, tagSavePending]);
+  }, [data, refreshPageData, selectedTagIDs, showToast, tagSavePending]);
 
   const getForwardStatusOptions = useCallback(
     (currentStatusID: number) => {
@@ -653,8 +684,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           if (status.statusID <= 0 || status.statusID === currentStatusID) {
             return false;
           }
-          if (status.statusID === statusData.rejectedStatusID) {
+
+          if (currentStatusID === statusData.rejectedStatusID) {
             return false;
+          }
+
+          if (status.statusID === statusData.rejectedStatusID) {
+            return true;
           }
 
           if (currentIndex < 0) {
@@ -714,6 +750,35 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         return;
       }
 
+      const rejectedStatusID = Number(data.pipelineStatus.rejectedStatusID || 0);
+      if (rejectedStatusID > 0 && targetStatusID === rejectedStatusID) {
+        const rejectionReasons = Array.isArray(data.pipelineStatus.rejectionReasons)
+          ? data.pipelineStatus.rejectionReasons.filter((reason) => Number(reason.reasonID || 0) > 0)
+          : [];
+
+        setQuickStatusError('');
+        setQuickStatusModal(null);
+        if (rejectionReasons.length === 0) {
+          setPipelineModal({
+            url: quickStatusModal.fallbackURL,
+            title: quickStatusModal.fallbackTitle,
+            showRefreshClose: true
+          });
+          return;
+        }
+
+        setRejectionError('');
+        setRejectionModal({
+          title: quickStatusModal.title.replace(/^Quick Status:/, 'Reject Candidate:'),
+          currentStatusLabel: quickStatusModal.currentStatusLabel,
+          candidateID: quickStatusModal.candidateID,
+          jobOrderID: quickStatusModal.jobOrderID,
+          fallbackURL: quickStatusModal.fallbackURL,
+          fallbackTitle: quickStatusModal.fallbackTitle
+        });
+        return;
+      }
+
       const token = data.actions.setPipelineStatusToken || '';
       if (token === '') {
         setQuickStatusError('');
@@ -759,13 +824,83 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         setQuickStatusError('');
         setQuickStatusModal(null);
         refreshPageData();
+        const statusLabel =
+          typeof result.updatedStatusLabel === 'string' && result.updatedStatusLabel.trim() !== ''
+            ? result.updatedStatusLabel.trim()
+            : 'updated';
+        showToast(`Status changed to ${statusLabel}.`);
       } catch (err: unknown) {
         setQuickStatusError(err instanceof Error ? err.message : 'Unable to update pipeline status.');
       } finally {
         setQuickStatusPending(false);
       }
     },
-    [bootstrap, data, quickStatusModal, quickStatusPending, refreshPageData]
+    [bootstrap, data, quickStatusModal, quickStatusPending, refreshPageData, showToast]
+  );
+
+  const submitRejectedStatus = useCallback(
+    async (payload: { rejectionReasonIDs: number[]; rejectionReasonOther: string; statusComment: string }) => {
+      if (!data || !rejectionModal || rejectionPending) {
+        return;
+      }
+
+      const token = data.actions.setPipelineStatusToken || '';
+      const rejectedStatusID = Number(data.pipelineStatus.rejectedStatusID || 0);
+      if (token === '' || rejectedStatusID <= 0) {
+        setRejectionError('');
+        setRejectionModal(null);
+        setPipelineModal({
+          url: rejectionModal.fallbackURL,
+          title: rejectionModal.fallbackTitle,
+          showRefreshClose: true
+        });
+        return;
+      }
+
+      setRejectionError('');
+      setRejectionPending(true);
+      try {
+        const result = await setDashboardPipelineStatus(bootstrap, {
+          url: data.actions.setPipelineStatusURL,
+          securityToken: token,
+          candidateID: rejectionModal.candidateID,
+          jobOrderID: rejectionModal.jobOrderID,
+          statusID: rejectedStatusID,
+          enforceOwner: false,
+          statusComment: payload.statusComment,
+          rejectionReasonIDs: payload.rejectionReasonIDs,
+          rejectionReasonOther: payload.rejectionReasonOther
+        });
+
+        if (!result.success) {
+          if (result.code === 'requiresModal') {
+            setRejectionPending(false);
+            setRejectionError('');
+            setRejectionModal(null);
+            setPipelineModal({
+              url: rejectionModal.fallbackURL,
+              title: rejectionModal.fallbackTitle,
+              showRefreshClose: true
+            });
+            return;
+          }
+
+          setRejectionError(result.message || 'Unable to update pipeline status.');
+          return;
+        }
+
+        setRejectionPending(false);
+        setRejectionError('');
+        setRejectionModal(null);
+        refreshPageData();
+        showToast('Candidate moved to Rejected.');
+      } catch (err: unknown) {
+        setRejectionError(err instanceof Error ? err.message : 'Unable to update pipeline status.');
+      } finally {
+        setRejectionPending(false);
+      }
+    },
+    [bootstrap, data, rejectionModal, rejectionPending, refreshPageData, showToast]
   );
 
   const openAddToListOverlay = useCallback(
@@ -831,6 +966,18 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const candidate = data.candidate;
   const gdpr = data.gdpr;
   const showClosed = data.meta.showClosedPipeline;
+  const rejectionReasons = Array.isArray(data.pipelineStatus.rejectionReasons)
+    ? data.pipelineStatus.rejectionReasons
+        .map((reason) => ({
+          reasonID: Number(reason.reasonID || 0),
+          label: toDisplayText(reason.label)
+        }))
+        .filter((reason) => reason.reasonID > 0)
+    : [];
+  const rejectionOtherReasonID =
+    Number(data.pipelineStatus.rejectionOtherReasonID || 0) > 0
+      ? Number(data.pipelineStatus.rejectionOtherReasonID)
+      : 0;
   const tagCatalog = [...(data.tagManagement?.catalog || [])].sort((left, right) =>
     toDisplayText(left.title, '').localeCompare(toDisplayText(right.title, ''))
   );
@@ -1639,6 +1786,42 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           }
         />
 
+        <PipelineRejectionModal
+          isOpen={!!rejectionModal}
+          title={rejectionModal?.title || 'Reject Candidate'}
+          currentStatusLabel={rejectionModal?.currentStatusLabel || '--'}
+          rejectionReasons={rejectionReasons}
+          otherReasonID={rejectionOtherReasonID}
+          submitPending={rejectionPending}
+          submitError={rejectionError}
+          onCancel={() => {
+            if (rejectionPending) {
+              return;
+            }
+            setRejectionError('');
+            setRejectionModal(null);
+          }}
+          onSubmit={submitRejectedStatus}
+          onOpenFullForm={
+            rejectionModal
+              ? () => {
+                  if (rejectionPending) {
+                    return;
+                  }
+                  setRejectionError('');
+                  const fallbackURL = rejectionModal.fallbackURL;
+                  const fallbackTitle = rejectionModal.fallbackTitle;
+                  setRejectionModal(null);
+                  setPipelineModal({
+                    url: fallbackURL,
+                    title: fallbackTitle,
+                    showRefreshClose: true
+                  });
+                }
+              : undefined
+          }
+        />
+
         <PipelineDetailsInlineModal
           isOpen={!!pipelineDetailsModal}
           title={pipelineDetailsModal?.title || 'Pipeline Details'}
@@ -1731,8 +1914,11 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           onClose={() => setAssignJobModal(null)}
           onAssigned={() => {
             refreshPageData();
+            showToast('Candidate assigned to job order.');
           }}
         />
+
+        <MutationToast toast={toast} onDismiss={() => setToast(null)} />
       </PageContainer>
     </div>
   );

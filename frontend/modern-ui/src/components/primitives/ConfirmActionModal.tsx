@@ -1,3 +1,5 @@
+import { MutationErrorSurface } from './MutationErrorSurface';
+
 type Props = {
   isOpen: boolean;
   title: string;
@@ -32,7 +34,7 @@ export function ConfirmActionModal({
         </div>
         {error ? (
           <div className="modern-inline-modal__body modern-inline-modal__body--form">
-            <div className="modern-state modern-state--error">{error}</div>
+            <MutationErrorSurface message={error} />
           </div>
         ) : null}
         <div className="modern-inline-modal__actions">

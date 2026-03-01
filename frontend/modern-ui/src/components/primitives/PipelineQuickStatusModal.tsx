@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MutationErrorSurface } from './MutationErrorSurface';
 
 type StatusOption = {
   statusID: number;
@@ -69,7 +70,7 @@ export function PipelineQuickStatusModal({
               ))}
             </select>
           </label>
-          {submitError ? <div className="modern-state modern-state--error">{submitError}</div> : null}
+          <MutationErrorSurface message={submitError} />
         </div>
         <div className="modern-inline-modal__actions">
           {onOpenFullForm ? (

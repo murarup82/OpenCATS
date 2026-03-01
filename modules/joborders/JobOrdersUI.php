@@ -2511,6 +2511,15 @@ class JobOrdersUI extends UserInterface
                 'status' => (isset($statusRow['status']) ? (string) $statusRow['status'] : '')
             );
         }
+        $rejectionReasons = $this->getRejectionReasons();
+        $rejectionReasonPayload = array();
+        foreach ($rejectionReasons as $rejectionReason)
+        {
+            $rejectionReasonPayload[] = array(
+                'reasonID' => (int) (isset($rejectionReason['reasonID']) ? $rejectionReason['reasonID'] : 0),
+                'label' => (isset($rejectionReason['label']) ? (string) $rejectionReason['label'] : '')
+            );
+        }
 
         $payload = array(
             'meta' => array(
@@ -2556,6 +2565,8 @@ class JobOrdersUI extends UserInterface
             ),
             'pipelineStatus' => array(
                 'rejectedStatusID' => (int) PIPELINE_STATUS_REJECTED,
+                'rejectionOtherReasonID' => (int) $this->getOtherRejectionReasonId($rejectionReasons),
+                'rejectionReasons' => $rejectionReasonPayload,
                 'orderedStatusIDs' => $orderedPipelineStatusIDs,
                 'statuses' => $pipelineStatusOptionsPayload
             ),

@@ -154,34 +154,48 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - `CandidatesFormBridgePage` and `JobOrdersFormBridgePage` now use shared frame loading/reload orchestration.
 84. Refactored `LegacyCompatPage` to shared embedding utilities:
     - now uses shared frame loading hook and includes explicit in-place workspace reload action.
+85. Added native rejection/reason flow for dashboard quick status transitions:
+    - `dashboard.setPipelineStatus` now accepts rejection reason IDs + optional "other reason" text in modern-json mutation mode
+    - dashboard modern contract now exposes rejection reason catalog + `rejectionOtherReasonID`
+    - dashboard quick status now opens an in-app rejection modal instead of forcing legacy modal fallback.
+86. Extended candidate and job order show contracts for rejection parity:
+    - `candidates.show.v1` and `joborders.show.v1` now expose rejection reason catalog + `rejectionOtherReasonID` under `pipelineStatus`
+    - quick-status flows can now branch into native rejection capture paths.
+87. Migrated remaining quick-status fallback actions on `candidates.show` and `joborders.show`:
+    - quick status now includes Rejected transition where valid
+    - native rejection modal submits via `dashboard.setPipelineStatus` modern-json mutation
+    - explicit full-form fallback remains available when contract/token data is missing.
+88. Added optimistic modern data refresh guards for high-frequency mutations:
+    - `dashboard.my`, `candidates.show`, and `joborders.show` now ignore stale fetch responses via request-id guards
+    - rapid mutations no longer risk older responses overriding newer state.
+89. Added non-blocking success toasts across modern mutation-heavy pages:
+    - new shared `MutationToast` component with auto-dismiss
+    - wired to status changes, rejection updates, assignment, uploads, deletes, comments/messages, and admin hide/show actions on dashboard/candidate/joborder pages.
+90. Added shared mutation error surface for modern modal flows:
+    - introduced reusable `MutationErrorSurface` component for consistent inline error rendering
+    - replaced repeated ad-hoc error blocks in `PipelineQuickStatusModal`, `PipelineRejectionModal`, `PipelineRemoveModal`, and `ConfirmActionModal`.
 
 ## Next Queue (30-Slice Execution)
 
-1. Add native rejection/reason flow for dashboard status changes to reduce remaining legacy fallback usage.
-2. Migrate remaining `candidates.show` utility fallback actions from `LegacyFrameModal` into native async/mutation flows where backend contracts already exist.
-3. Migrate remaining `joborders.show` utility fallback actions from `LegacyFrameModal` into native async/mutation flows where backend contracts already exist.
-4. Add inline optimistic refresh tokens for candidate/joborder show mutations to eliminate stale panel windows after rapid actions.
-5. Add async/non-blocking feedback toasts for successful mutations (status change, assign, upload, delete) across modern pages.
-6. Add unified mutation error surface component to replace repeated per-page error blocks.
-7. Add `companies.listByView` modern-json contract and native page shell (filters + table + legacy fallback actions).
-8. Add `companies.show` modern-json contract and native profile page shell (summary + notes/messages parity starter).
-9. Add `contacts.listByView` modern-json contract and native list page shell.
-10. Add `contacts.show` modern-json contract and native profile page shell.
-11. Add `activities.listByView` modern-json contract and native list page shell with date/status filtering.
-12. Add `calendar` modern-json contract and native list/day shell with in-app navigation.
-13. Add `lists.manage` modern-json contract and native static-list management page.
-14. Add reports entry modernization (`reports.*`) with native launcher panel and embedded report builder fallback.
-15. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
-16. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
-17. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
-18. Add centralized URL-state sync helper for filters/pagination shared by list pages.
-19. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
-20. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
-21. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-22. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-23. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
-24. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-25. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+1. Add `companies.listByView` modern-json contract and native page shell (filters + table + legacy fallback actions).
+2. Add `companies.show` modern-json contract and native profile page shell (summary + notes/messages parity starter).
+3. Add `contacts.listByView` modern-json contract and native list page shell.
+4. Add `contacts.show` modern-json contract and native profile page shell.
+5. Add `activities.listByView` modern-json contract and native list page shell with date/status filtering.
+6. Add `calendar` modern-json contract and native list/day shell with in-app navigation.
+7. Add `lists.manage` modern-json contract and native static-list management page.
+8. Add reports entry modernization (`reports.*`) with native launcher panel and embedded report builder fallback.
+9. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
+10. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
+11. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
+12. Add centralized URL-state sync helper for filters/pagination shared by list pages.
+13. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
+14. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
+15. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
+16. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+17. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
+18. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+19. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 
 ## Rules
 

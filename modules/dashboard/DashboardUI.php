@@ -507,6 +507,15 @@ class DashboardUI extends UserInterface
                 'status' => (isset($statusOption['status']) ? $statusOption['status'] : '')
             );
         }
+        $rejectionReasons = $this->getRejectionReasons();
+        $rejectionReasonValues = array();
+        foreach ($rejectionReasons as $rejectionReason)
+        {
+            $rejectionReasonValues[] = array(
+                'reasonID' => (int) $rejectionReason['reasonID'],
+                'label' => (isset($rejectionReason['label']) ? $rejectionReason['label'] : '')
+            );
+        }
         $orderedStatusIDs = array();
         foreach ($statusOptionValues as $statusOptionValue)
         {
@@ -552,6 +561,7 @@ class DashboardUI extends UserInterface
                 ),
                 'statusRules' => array(
                     'rejectedStatusID' => (int) PIPELINE_STATUS_REJECTED,
+                    'rejectionOtherReasonID' => (int) $this->getOtherRejectionReasonId($rejectionReasons),
                     'orderedStatusIDs' => $orderedStatusIDs
                 )
             ),
@@ -563,7 +573,8 @@ class DashboardUI extends UserInterface
             'options' => array(
                 'companies' => $companyOptionValues,
                 'jobOrders' => $jobOrderOptionValues,
-                'statuses' => $statusOptionValues
+                'statuses' => $statusOptionValues,
+                'rejectionReasons' => $rejectionReasonValues
             ),
             'actions' => array(
                 'setPipelineStatusURL' => $baseURL . '?m=dashboard&a=setPipelineStatus',
@@ -778,6 +789,9 @@ class DashboardUI extends UserInterface
         $jobOrderID = (int) $_POST['jobOrderID'];
         $targetStatusID = (int) $_POST['statusID'];
         $enforceOwner = ((int) $this->getTrimmedInput('enforceOwner', $_POST) === 1);
+        $statusComment = $this->getTrimmedInput('statusComment', $_POST);
+        $rejectionReasonIDs = array();
+        $rejectionReasonOther = null;
 
         $pipelines = new Pipelines($this->_siteID);
         $statusRS = $pipelines->getStatusesForPicking();
@@ -853,12 +867,67 @@ class DashboardUI extends UserInterface
 
         if ($targetStatusID === (int) PIPELINE_STATUS_REJECTED)
         {
-            $this->respondJSON(409, array(
-                'success' => false,
-                'code' => 'requiresModal',
-                'message' => 'Rejected status requires legacy transition form.'
+            $rawRejectionReasonIDs = array();
+            if (isset($_POST['rejectionReasonIDs']))
+            {
+                if (is_array($_POST['rejectionReasonIDs']))
+                {
+                    $rawRejectionReasonIDs = $_POST['rejectionReasonIDs'];
+                }
+                else
+                {
+                    $rawRejectionReasonIDs = explode(',', $_POST['rejectionReasonIDs']);
+                }
+            }
+            if (isset($_POST['rejectionReasonIDs']) && is_array($_POST['rejectionReasonIDs']))
+            {
+                $rawRejectionReasonIDs = $_POST['rejectionReasonIDs'];
+            }
+            else if (isset($_POST['rejectionReasonIDs[]']) && is_array($_POST['rejectionReasonIDs[]']))
+            {
+                $rawRejectionReasonIDs = $_POST['rejectionReasonIDs[]'];
+            }
+            $rejectionReasonIDs = array_map('intval', $rawRejectionReasonIDs);
+            $rejectionReasonIDs = array_values(array_filter($rejectionReasonIDs));
+
+            $rejectionReasons = $this->getRejectionReasons();
+            $validRejectionReasonIDs = array();
+            foreach ($rejectionReasons as $rejectionReason)
+            {
+                $validRejectionReasonIDs[(int) $rejectionReason['reasonID']] = true;
+            }
+            $rejectionReasonIDs = array_values(array_filter(
+                $rejectionReasonIDs,
+                function ($reasonID) use ($validRejectionReasonIDs)
+                {
+                    return isset($validRejectionReasonIDs[(int) $reasonID]);
+                }
             ));
-            return;
+
+            if (empty($rejectionReasonIDs))
+            {
+                $this->respondJSON(400, array(
+                    'success' => false,
+                    'code' => 'missingRejectionReason',
+                    'message' => 'Select at least one rejection reason.'
+                ));
+                return;
+            }
+
+            $otherReasonID = $this->getOtherRejectionReasonId($rejectionReasons);
+            if ($otherReasonID > 0 && in_array($otherReasonID, $rejectionReasonIDs, true))
+            {
+                $rejectionReasonOther = $this->getTrimmedInput('rejectionReasonOther', $_POST);
+                if ($rejectionReasonOther === '')
+                {
+                    $this->respondJSON(400, array(
+                        'success' => false,
+                        'code' => 'missingOtherReason',
+                        'message' => 'Other rejection reason is required.'
+                    ));
+                    return;
+                }
+            }
         }
 
         if (!$this->isForwardDashboardTransitionAllowed($currentStatusID, $targetStatusID, $statusOrder))
@@ -886,20 +955,23 @@ class DashboardUI extends UserInterface
             return;
         }
 
-        $currentIndex = array_search($currentStatusID, $statusOrder, true);
-        $targetIndex = array_search($targetStatusID, $statusOrder, true);
         $autoFillStatusIDs = array();
-        if (
-            $currentIndex !== false &&
-            $targetIndex !== false &&
-            $targetIndex > ($currentIndex + 1)
-        )
+        if ($targetStatusID !== (int) PIPELINE_STATUS_REJECTED)
         {
-            $autoFillStatusIDs = array_slice(
-                $statusOrder,
-                $currentIndex + 1,
-                $targetIndex - $currentIndex - 1
-            );
+            $currentIndex = array_search($currentStatusID, $statusOrder, true);
+            $targetIndex = array_search($targetStatusID, $statusOrder, true);
+            if (
+                $currentIndex !== false &&
+                $targetIndex !== false &&
+                $targetIndex > ($currentIndex + 1)
+            )
+            {
+                $autoFillStatusIDs = array_slice(
+                    $statusOrder,
+                    $currentIndex + 1,
+                    $targetIndex - $currentIndex - 1
+                );
+            }
         }
 
         foreach ($autoFillStatusIDs as $autoFillStatusID)
@@ -954,6 +1026,18 @@ class DashboardUI extends UserInterface
             }
         }
 
+        if ($statusComment === '')
+        {
+            if ($targetStatusID === (int) PIPELINE_STATUS_REJECTED)
+            {
+                $statusComment = '[MODERN] Candidate rejected from dashboard workflow.';
+            }
+            else
+            {
+                $statusComment = '[MODERN] Pipeline status changed from dashboard Kanban.';
+            }
+        }
+
         $historyID = $pipelines->setStatus(
             $candidateID,
             $jobOrderID,
@@ -961,7 +1045,8 @@ class DashboardUI extends UserInterface
             '',
             '',
             $this->_userID,
-            '[MODERN] Pipeline status changed from dashboard Kanban.'
+            $statusComment,
+            $rejectionReasonOther
         );
 
         if (empty($historyID) || (int) $historyID < 0)
@@ -976,6 +1061,11 @@ class DashboardUI extends UserInterface
                 'message' => 'Failed to update pipeline status.'
             ));
             return;
+        }
+
+        if ($targetStatusID === (int) PIPELINE_STATUS_REJECTED && (int) $historyID > 0 && !empty($rejectionReasonIDs))
+        {
+            $pipelines->addStatusHistoryRejectionReasons($historyID, $rejectionReasonIDs);
         }
 
         if ($transactionStarted)
@@ -1122,6 +1212,41 @@ class DashboardUI extends UserInterface
         }
 
         return ($targetIndex > $currentIndex);
+    }
+
+    private function getRejectionReasons()
+    {
+        $db = DatabaseConnection::getInstance();
+        $sql = sprintf(
+            "SELECT
+                rejection_reason_id AS reasonID,
+                label
+            FROM
+                rejection_reason
+            ORDER BY
+                rejection_reason_id ASC"
+        );
+
+        $rs = $db->getAllAssoc($sql);
+        if (!is_array($rs))
+        {
+            return array();
+        }
+
+        return $rs;
+    }
+
+    private function getOtherRejectionReasonId($rejectionReasons)
+    {
+        foreach ($rejectionReasons as $reason)
+        {
+            if (strcasecmp($reason['label'], 'OTHER REASONS / NOT MENTIONED') === 0)
+            {
+                return (int) $reason['reasonID'];
+            }
+        }
+
+        return 0;
     }
 }
 

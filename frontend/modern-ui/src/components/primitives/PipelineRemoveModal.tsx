@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MutationErrorSurface } from './MutationErrorSurface';
 
 type Props = {
   isOpen: boolean;
@@ -49,7 +50,7 @@ export function PipelineRemoveModal({
               onChange={(event) => setNote(event.target.value)}
             />
           </label>
-          {error ? <div className="modern-state modern-state--error">{error}</div> : null}
+          <MutationErrorSurface message={error} />
         </div>
         <div className="modern-inline-modal__actions">
           <button type="button" className="modern-btn modern-btn--secondary" onClick={onCancel} disabled={pending}>

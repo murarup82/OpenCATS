@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   addJobOrderProfileComment,
@@ -26,8 +26,10 @@ import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
+import { PipelineRejectionModal } from '../components/primitives/PipelineRejectionModal';
 import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
+import { MutationToast } from '../components/primitives/MutationToast';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
@@ -83,6 +85,16 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [quickStatusPending, setQuickStatusPending] = useState<boolean>(false);
   const [quickStatusError, setQuickStatusError] = useState<string>('');
+  const [rejectionModal, setRejectionModal] = useState<{
+    title: string;
+    currentStatusLabel: string;
+    candidateID: number;
+    jobOrderID: number;
+    fallbackURL: string;
+    fallbackTitle: string;
+  } | null>(null);
+  const [rejectionPending, setRejectionPending] = useState<boolean>(false);
+  const [rejectionError, setRejectionError] = useState<string>('');
   const [pipelineDetailsModal, setPipelineDetailsModal] = useState<{
     title: string;
     fullDetailsURL: string;
@@ -122,16 +134,20 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
+  const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'error' | 'info' } | null>(null);
+  const loadRequestRef = useRef(0);
 
   useEffect(() => {
     let isMounted = true;
+    const requestID = loadRequestRef.current + 1;
+    loadRequestRef.current = requestID;
     setLoading(true);
     setError('');
 
     const query = new URLSearchParams(serverQueryString);
     fetchJobOrdersShowModernData(bootstrap, query)
       .then((result) => {
-        if (!isMounted) {
+        if (!isMounted || requestID !== loadRequestRef.current) {
           return;
         }
         setData(result);
@@ -146,13 +162,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         }
       })
       .catch((err: Error) => {
-        if (!isMounted) {
+        if (!isMounted || requestID !== loadRequestRef.current) {
           return;
         }
         setError(err.message || 'Unable to load job order profile.');
       })
       .finally(() => {
-        if (isMounted) {
+        if (isMounted && requestID === loadRequestRef.current) {
           setLoading(false);
         }
       });
@@ -164,6 +180,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
 
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
+  }, []);
+  const showToast = useCallback((message: string, tone: 'success' | 'error' | 'info' = 'success') => {
+    setToast({
+      id: Date.now(),
+      message,
+      tone
+    });
   }, []);
   usePageRefreshEvents(refreshPageData);
 
@@ -267,12 +290,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
 
         await reloadPipelineDetailsModal(details.meta.pipelineID);
         refreshPageData();
+        showToast('Pipeline history date updated.');
         return null;
       } catch (err: unknown) {
         return err instanceof Error ? err.message : 'Unable to update history date.';
       }
     },
-    [reloadPipelineDetailsModal, refreshPageData]
+    [reloadPipelineDetailsModal, refreshPageData, showToast]
   );
 
   const submitJobOrderComment = useCallback(
@@ -299,13 +323,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         setCommentText('');
         setCommentsOpen(true);
         refreshPageData();
+        showToast('Comment saved.');
       } catch (err: unknown) {
         setCommentSubmitError(err instanceof Error ? err.message : 'Unable to save comment.');
       } finally {
         setCommentSubmitPending(false);
       }
     },
-    [commentCategory, commentSubmitPending, commentText, data, refreshPageData]
+    [commentCategory, commentSubmitPending, commentText, data, refreshPageData, showToast]
   );
 
   const submitJobOrderMessage = useCallback(
@@ -331,13 +356,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         setMessageBody('');
         setMessagesOpen(true);
         refreshPageData();
+        showToast('Message sent.');
       } catch (err: unknown) {
         setMessageSubmitError(err instanceof Error ? err.message : 'Unable to send message.');
       } finally {
         setMessageSubmitPending(false);
       }
     },
-    [data, messageBody, messageSubmitPending, refreshPageData]
+    [data, messageBody, messageSubmitPending, refreshPageData, showToast]
   );
 
   const handleDeleteMessageThread = useCallback(async () => {
@@ -361,12 +387,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
       setMessagesOpen(true);
       setMessageDeleteConfirmOpen(false);
       refreshPageData();
+      showToast('Message thread deleted.');
     } catch (err: unknown) {
       setMessageDeleteError(err instanceof Error ? err.message : 'Unable to delete message thread.');
     } finally {
       setMessageDeletePending(false);
     }
-  }, [data, messageDeletePending, refreshPageData]);
+  }, [data, messageDeletePending, refreshPageData, showToast]);
 
   const handleDeleteAttachment = useCallback(
     async (attachmentID: number) => {
@@ -395,13 +422,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         }
         setAttachmentDeleteModal(null);
         refreshPageData();
+        showToast('Attachment deleted.');
       } catch (err: unknown) {
         setAttachmentDeleteError(err instanceof Error ? err.message : 'Unable to delete attachment.');
       } finally {
         setAttachmentDeletePending(false);
       }
     },
-    [attachmentDeletePending, data, refreshPageData]
+    [attachmentDeletePending, data, refreshPageData, showToast]
   );
 
   const submitAttachmentUpload = useCallback(async () => {
@@ -433,12 +461,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
       setAttachmentUploadFile(null);
       setAttachmentUploadOpen(false);
       refreshPageData();
+      showToast('Attachment uploaded.');
     } catch (err: unknown) {
       setAttachmentUploadError(err instanceof Error ? err.message : 'Unable to upload attachment.');
     } finally {
       setAttachmentUploadPending(false);
     }
-  }, [attachmentUploadFile, attachmentUploadPending, data, refreshPageData]);
+  }, [attachmentUploadFile, attachmentUploadPending, data, refreshPageData, showToast]);
 
   const toggleAdministrativeHidden = useCallback(async () => {
     if (!data || adminHideTogglePending) {
@@ -461,12 +490,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         return;
       }
       refreshPageData();
+      showToast(nextState ? 'Job order hidden from recruiters.' : 'Job order is visible to recruiters.');
     } catch (err: unknown) {
       setAdminHideToggleError(err instanceof Error ? err.message : 'Unable to update administrative visibility.');
     } finally {
       setAdminHideTogglePending(false);
     }
-  }, [adminHideTogglePending, data, refreshPageData]);
+  }, [adminHideTogglePending, data, refreshPageData, showToast]);
 
   const getForwardStatusOptions = useCallback(
     (currentStatusID: number) => {
@@ -490,8 +520,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
           if (status.statusID <= 0 || status.statusID === currentStatusID) {
             return false;
           }
-          if (status.statusID === statusData.rejectedStatusID) {
+
+          if (currentStatusID === statusData.rejectedStatusID) {
             return false;
+          }
+
+          if (status.statusID === statusData.rejectedStatusID) {
+            return true;
           }
 
           if (currentIndex < 0) {
@@ -551,6 +586,35 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         return;
       }
 
+      const rejectedStatusID = Number(data.pipelineStatus.rejectedStatusID || 0);
+      if (rejectedStatusID > 0 && targetStatusID === rejectedStatusID) {
+        const rejectionReasons = Array.isArray(data.pipelineStatus.rejectionReasons)
+          ? data.pipelineStatus.rejectionReasons.filter((reason) => Number(reason.reasonID || 0) > 0)
+          : [];
+
+        setQuickStatusError('');
+        setQuickStatusModal(null);
+        if (rejectionReasons.length === 0) {
+          setPipelineModal({
+            url: quickStatusModal.fallbackURL,
+            title: quickStatusModal.fallbackTitle,
+            showRefreshClose: true
+          });
+          return;
+        }
+
+        setRejectionError('');
+        setRejectionModal({
+          title: quickStatusModal.title.replace(/^Quick Status:/, 'Reject Candidate:'),
+          currentStatusLabel: quickStatusModal.currentStatusLabel,
+          candidateID: quickStatusModal.candidateID,
+          jobOrderID: quickStatusModal.jobOrderID,
+          fallbackURL: quickStatusModal.fallbackURL,
+          fallbackTitle: quickStatusModal.fallbackTitle
+        });
+        return;
+      }
+
       const token = data.actions.setPipelineStatusToken || '';
       if (token === '') {
         setQuickStatusError('');
@@ -596,13 +660,83 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         setQuickStatusError('');
         setQuickStatusModal(null);
         refreshPageData();
+        const statusLabel =
+          typeof result.updatedStatusLabel === 'string' && result.updatedStatusLabel.trim() !== ''
+            ? result.updatedStatusLabel.trim()
+            : 'updated';
+        showToast(`Status changed to ${statusLabel}.`);
       } catch (err: unknown) {
         setQuickStatusError(err instanceof Error ? err.message : 'Unable to update pipeline status.');
       } finally {
         setQuickStatusPending(false);
       }
     },
-    [bootstrap, data, quickStatusModal, quickStatusPending, refreshPageData]
+    [bootstrap, data, quickStatusModal, quickStatusPending, refreshPageData, showToast]
+  );
+
+  const submitRejectedStatus = useCallback(
+    async (payload: { rejectionReasonIDs: number[]; rejectionReasonOther: string; statusComment: string }) => {
+      if (!data || !rejectionModal || rejectionPending) {
+        return;
+      }
+
+      const token = data.actions.setPipelineStatusToken || '';
+      const rejectedStatusID = Number(data.pipelineStatus.rejectedStatusID || 0);
+      if (token === '' || rejectedStatusID <= 0) {
+        setRejectionError('');
+        setRejectionModal(null);
+        setPipelineModal({
+          url: rejectionModal.fallbackURL,
+          title: rejectionModal.fallbackTitle,
+          showRefreshClose: true
+        });
+        return;
+      }
+
+      setRejectionError('');
+      setRejectionPending(true);
+      try {
+        const result = await setDashboardPipelineStatus(bootstrap, {
+          url: data.actions.setPipelineStatusURL,
+          securityToken: token,
+          candidateID: rejectionModal.candidateID,
+          jobOrderID: rejectionModal.jobOrderID,
+          statusID: rejectedStatusID,
+          enforceOwner: false,
+          statusComment: payload.statusComment,
+          rejectionReasonIDs: payload.rejectionReasonIDs,
+          rejectionReasonOther: payload.rejectionReasonOther
+        });
+
+        if (!result.success) {
+          if (result.code === 'requiresModal') {
+            setRejectionPending(false);
+            setRejectionError('');
+            setRejectionModal(null);
+            setPipelineModal({
+              url: rejectionModal.fallbackURL,
+              title: rejectionModal.fallbackTitle,
+              showRefreshClose: true
+            });
+            return;
+          }
+
+          setRejectionError(result.message || 'Unable to update pipeline status.');
+          return;
+        }
+
+        setRejectionPending(false);
+        setRejectionError('');
+        setRejectionModal(null);
+        refreshPageData();
+        showToast('Candidate moved to Rejected.');
+      } catch (err: unknown) {
+        setRejectionError(err instanceof Error ? err.message : 'Unable to update pipeline status.');
+      } finally {
+        setRejectionPending(false);
+      }
+    },
+    [bootstrap, data, rejectionModal, rejectionPending, refreshPageData, showToast]
   );
 
   const handleRemoveFromPipeline = useCallback(
@@ -659,13 +793,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
 
         setRemovePipelineModal(null);
         refreshPageData();
+        showToast('Candidate removed from pipeline.');
       } catch (err: unknown) {
         setRemovePipelineError(err instanceof Error ? err.message : 'Unable to remove candidate from pipeline.');
       } finally {
         setRemovePipelinePending(false);
       }
     },
-    [data, removePipelineModal, removePipelinePending, refreshPageData]
+    [data, removePipelineModal, removePipelinePending, refreshPageData, showToast]
   );
 
   const navigateWithShowClosed = (showClosed: boolean) => {
@@ -713,6 +848,18 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
 
   const permissions = data.meta.permissions;
   const jobOrder = data.jobOrder;
+  const rejectionReasons = Array.isArray(data.pipelineStatus.rejectionReasons)
+    ? data.pipelineStatus.rejectionReasons
+        .map((reason) => ({
+          reasonID: Number(reason.reasonID || 0),
+          label: toDisplayText(reason.label)
+        }))
+        .filter((reason) => reason.reasonID > 0)
+    : [];
+  const rejectionOtherReasonID =
+    Number(data.pipelineStatus.rejectionOtherReasonID || 0) > 0
+      ? Number(data.pipelineStatus.rejectionOtherReasonID)
+      : 0;
   const hasPipelineRows = data.pipeline.items.length > 0;
   const hasAttachments = data.attachments.items.length > 0;
   const hasExtraFields = data.extraFields.length > 0;
@@ -1355,6 +1502,42 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
           }
         />
 
+        <PipelineRejectionModal
+          isOpen={!!rejectionModal}
+          title={rejectionModal?.title || 'Reject Candidate'}
+          currentStatusLabel={rejectionModal?.currentStatusLabel || '--'}
+          rejectionReasons={rejectionReasons}
+          otherReasonID={rejectionOtherReasonID}
+          submitPending={rejectionPending}
+          submitError={rejectionError}
+          onCancel={() => {
+            if (rejectionPending) {
+              return;
+            }
+            setRejectionError('');
+            setRejectionModal(null);
+          }}
+          onSubmit={submitRejectedStatus}
+          onOpenFullForm={
+            rejectionModal
+              ? () => {
+                  if (rejectionPending) {
+                    return;
+                  }
+                  setRejectionError('');
+                  const fallbackURL = rejectionModal.fallbackURL;
+                  const fallbackTitle = rejectionModal.fallbackTitle;
+                  setRejectionModal(null);
+                  setPipelineModal({
+                    url: fallbackURL,
+                    title: fallbackTitle,
+                    showRefreshClose: true
+                  });
+                }
+              : undefined
+          }
+        />
+
         <PipelineDetailsInlineModal
           isOpen={!!pipelineDetailsModal}
           title={pipelineDetailsModal?.title || 'Pipeline Details'}
@@ -1448,8 +1631,11 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
           onClose={() => setAssignCandidateModal(null)}
           onAssigned={() => {
             refreshPageData();
+            showToast('Candidate assigned to job order.');
           }}
         />
+
+        <MutationToast toast={toast} onDismiss={() => setToast(null)} />
       </PageContainer>
     </div>
   );

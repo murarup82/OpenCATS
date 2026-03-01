@@ -70,6 +70,9 @@ export async function setDashboardPipelineStatus(
     jobOrderID: number;
     statusID: number;
     enforceOwner: boolean;
+    statusComment?: string;
+    rejectionReasonIDs?: number[];
+    rejectionReasonOther?: string;
   }
 ): Promise<DashboardSetPipelineStatusResponse> {
   const url =
@@ -83,6 +86,20 @@ export async function setDashboardPipelineStatus(
   body.set('jobOrderID', String(payload.jobOrderID || 0));
   body.set('statusID', String(payload.statusID || 0));
   body.set('enforceOwner', payload.enforceOwner ? '1' : '0');
+  if (typeof payload.statusComment === 'string' && payload.statusComment.trim() !== '') {
+    body.set('statusComment', payload.statusComment.trim());
+  }
+  if (Array.isArray(payload.rejectionReasonIDs)) {
+    payload.rejectionReasonIDs
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value) && value > 0)
+      .forEach((value) => {
+        body.append('rejectionReasonIDs[]', String(value));
+      });
+  }
+  if (typeof payload.rejectionReasonOther === 'string' && payload.rejectionReasonOther.trim() !== '') {
+    body.set('rejectionReasonOther', payload.rejectionReasonOther.trim());
+  }
 
   const response = await fetch(url, {
     method: 'POST',
