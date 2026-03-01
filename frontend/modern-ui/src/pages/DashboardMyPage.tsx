@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchDashboardModernData } from '../lib/api';
+import { fetchDashboardModernData, setDashboardPipelineStatus } from '../lib/api';
 import type { DashboardModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -356,6 +356,66 @@ export function DashboardMyPage({ bootstrap }: Props) {
     data.meta.statusRules?.orderedStatusIDs.length > 0
       ? data.meta.statusRules.orderedStatusIDs
       : statusCatalog.map((status) => status.statusID);
+  const requestStatusChange = useCallback(
+    async (row: DashboardRow, targetStatusID: number | null) => {
+      if (targetStatusID === null || targetStatusID <= 0) {
+        openStatusModal(row, null);
+        return;
+      }
+
+      if (!canChangeStatus) {
+        return;
+      }
+
+      if (targetStatusID === rejectedStatusID) {
+        openStatusModal(row, targetStatusID);
+        return;
+      }
+
+      const mutationToken = data.actions?.setPipelineStatusToken || '';
+      if (mutationToken === '') {
+        openStatusModal(row, targetStatusID);
+        return;
+      }
+
+      try {
+        const mutationResult = await setDashboardPipelineStatus(bootstrap, {
+          url: data.actions?.setPipelineStatusURL,
+          securityToken: mutationToken,
+          candidateID: Number(row.candidateID || 0),
+          jobOrderID: Number(row.jobOrderID || 0),
+          statusID: targetStatusID,
+          enforceOwner: data.meta.scope === 'mine'
+        });
+
+        if (mutationResult.success) {
+          refreshDashboard();
+          return;
+        }
+
+        if (mutationResult.code === 'requiresModal') {
+          openStatusModal(row, targetStatusID);
+          return;
+        }
+
+        window.alert(mutationResult.message || 'Unable to change pipeline status.');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unable to change pipeline status.';
+        window.alert(message);
+        openStatusModal(row, targetStatusID);
+      }
+    },
+    [
+      bootstrap,
+      canChangeStatus,
+      data.actions?.setPipelineStatusToken,
+      data.actions?.setPipelineStatusURL,
+      data.meta.scope,
+      openStatusModal,
+      refreshDashboard,
+      rejectedStatusID
+    ]
+  );
 
   const visibleStatuses = localStatusID === 'all'
     ? statusCatalog
@@ -504,7 +564,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
                 canChangeStatus={canChangeStatus}
                 statusOrder={orderedStatusIDs}
                 rejectedStatusID={rejectedStatusID}
-                onRequestStatusChange={openStatusModal}
+                onRequestStatusChange={requestStatusChange}
                 onOpenDetails={openPipelineDetails}
               />
             ) : (

@@ -46,6 +46,10 @@ export type DashboardModernDataResponse = {
     jobOrders: Array<{ jobOrderID: number; title: string; companyName: string }>;
     statuses: Array<{ statusID: number; status: string }>;
   };
+  actions?: {
+    setPipelineStatusURL?: string;
+    setPipelineStatusToken?: string;
+  };
   rows: Array<{
     candidateID: number;
     candidateName: string;
@@ -63,6 +67,16 @@ export type DashboardModernDataResponse = {
     location: string;
     isActive: number;
   }>;
+};
+
+export type DashboardSetPipelineStatusResponse = {
+  success: boolean;
+  code?: string;
+  message?: string;
+  updatedStatusID?: number;
+  updatedStatusLabel?: string;
+  historyID?: number;
+  autoFilledStatusIDs?: number[];
 };
 
 export type CandidatesListModernDataResponse = {

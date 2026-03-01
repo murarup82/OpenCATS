@@ -34,6 +34,10 @@ class DashboardUI extends UserInterface
         $action = $this->getAction();
         switch ($action)
         {
+            case 'setPipelineStatus':
+                $this->onSetPipelineStatus();
+                break;
+
             case 'my':
             default:
                 if ($this->getUserAccessLevel('joborders.show') < ACCESS_LEVEL_READ)
@@ -561,6 +565,10 @@ class DashboardUI extends UserInterface
                 'jobOrders' => $jobOrderOptionValues,
                 'statuses' => $statusOptionValues
             ),
+            'actions' => array(
+                'setPipelineStatusURL' => $baseURL . '?m=dashboard&a=setPipelineStatus',
+                'setPipelineStatusToken' => $this->getCSRFToken('dashboard.setPipelineStatus')
+            ),
             'rows' => $responseRows
         );
 
@@ -717,6 +725,403 @@ class DashboardUI extends UserInterface
     private function canAssignToJobOrder()
     {
         return ($_SESSION['CATS']->getAccessLevel('joborders.considerCandidateSearch') >= ACCESS_LEVEL_EDIT);
+    }
+
+    private function onSetPipelineStatus()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            $this->respondJSON(405, array(
+                'success' => false,
+                'code' => 'invalidMethod',
+                'message' => 'Invalid request method.'
+            ));
+            return;
+        }
+
+        if (!$this->canChangeStatus())
+        {
+            $this->respondJSON(403, array(
+                'success' => false,
+                'code' => 'forbidden',
+                'message' => 'You do not have permission to change pipeline status.'
+            ));
+            return;
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('dashboard.setPipelineStatus', $securityToken))
+        {
+            $this->respondJSON(403, array(
+                'success' => false,
+                'code' => 'invalidToken',
+                'message' => 'Invalid security token.'
+            ));
+            return;
+        }
+
+        if (
+            !$this->isRequiredIDValid('candidateID', $_POST) ||
+            !$this->isRequiredIDValid('jobOrderID', $_POST) ||
+            !$this->isRequiredIDValid('statusID', $_POST)
+        )
+        {
+            $this->respondJSON(400, array(
+                'success' => false,
+                'code' => 'invalidInput',
+                'message' => 'Missing or invalid status transition payload.'
+            ));
+            return;
+        }
+
+        $candidateID = (int) $_POST['candidateID'];
+        $jobOrderID = (int) $_POST['jobOrderID'];
+        $targetStatusID = (int) $_POST['statusID'];
+        $enforceOwner = ((int) $this->getTrimmedInput('enforceOwner', $_POST) === 1);
+
+        $pipelines = new Pipelines($this->_siteID);
+        $statusRS = $pipelines->getStatusesForPicking();
+        $statusOrder = array();
+        $statusLabelsByID = array();
+        foreach ($statusRS as $statusRow)
+        {
+            $statusID = (int) $statusRow['statusID'];
+            $statusOrder[] = $statusID;
+            $statusLabelsByID[$statusID] = (isset($statusRow['status']) ? $statusRow['status'] : '');
+        }
+
+        if (!isset($statusLabelsByID[$targetStatusID]))
+        {
+            $this->respondJSON(400, array(
+                'success' => false,
+                'code' => 'invalidStatus',
+                'message' => 'Invalid pipeline status.'
+            ));
+            return;
+        }
+
+        $pipelineData = $pipelines->get($candidateID, $jobOrderID);
+        if (empty($pipelineData))
+        {
+            $this->respondJSON(404, array(
+                'success' => false,
+                'code' => 'notFound',
+                'message' => 'Pipeline entry was not found.'
+            ));
+            return;
+        }
+
+        $currentStatusID = (int) $pipelineData['statusID'];
+        if ($currentStatusID === $targetStatusID)
+        {
+            $this->respondJSON(200, array(
+                'success' => true,
+                'message' => 'Candidate is already in that status.',
+                'updatedStatusID' => $currentStatusID,
+                'updatedStatusLabel' => (isset($statusLabelsByID[$currentStatusID]) ? $statusLabelsByID[$currentStatusID] : '')
+            ));
+            return;
+        }
+
+        if ($enforceOwner)
+        {
+            $jobOrders = new JobOrders($this->_siteID);
+            $jobOrderData = $jobOrders->get($jobOrderID);
+            if (!$this->canAccessJobOrderPipelineByJobOrderData($jobOrderData))
+            {
+                $this->respondJSON(403, array(
+                    'success' => false,
+                    'code' => 'forbidden',
+                    'message' => 'You do not have permission to update this job order pipeline.'
+                ));
+                return;
+            }
+        }
+
+        if (
+            $currentStatusID === (int) PIPELINE_STATUS_REJECTED &&
+            $targetStatusID !== (int) PIPELINE_STATUS_REJECTED
+        )
+        {
+            $this->respondJSON(409, array(
+                'success' => false,
+                'code' => 'rejectedLocked',
+                'message' => 'Cannot move from Rejected. Re-assign candidate to restart the pipeline.'
+            ));
+            return;
+        }
+
+        if ($targetStatusID === (int) PIPELINE_STATUS_REJECTED)
+        {
+            $this->respondJSON(409, array(
+                'success' => false,
+                'code' => 'requiresModal',
+                'message' => 'Rejected status requires legacy transition form.'
+            ));
+            return;
+        }
+
+        if (!$this->isForwardDashboardTransitionAllowed($currentStatusID, $targetStatusID, $statusOrder))
+        {
+            $this->respondJSON(409, array(
+                'success' => false,
+                'code' => 'invalidTransition',
+                'message' => 'Only forward stage transitions are allowed from Kanban.'
+            ));
+            return;
+        }
+
+        $jobOrders = new JobOrders($this->_siteID);
+        if (
+            $targetStatusID === (int) PIPELINE_STATUS_HIRED &&
+            $currentStatusID !== (int) PIPELINE_STATUS_HIRED &&
+            !$jobOrders->checkOpenings($jobOrderID)
+        )
+        {
+            $this->respondJSON(409, array(
+                'success' => false,
+                'code' => 'openingsFull',
+                'message' => 'This job order has been filled. Cannot assign Hired status.'
+            ));
+            return;
+        }
+
+        $currentIndex = array_search($currentStatusID, $statusOrder, true);
+        $targetIndex = array_search($targetStatusID, $statusOrder, true);
+        $autoFillStatusIDs = array();
+        if (
+            $currentIndex !== false &&
+            $targetIndex !== false &&
+            $targetIndex > ($currentIndex + 1)
+        )
+        {
+            $autoFillStatusIDs = array_slice(
+                $statusOrder,
+                $currentIndex + 1,
+                $targetIndex - $currentIndex - 1
+            );
+        }
+
+        foreach ($autoFillStatusIDs as $autoFillStatusID)
+        {
+            if (
+                (int) $autoFillStatusID === (int) PIPELINE_STATUS_HIRED ||
+                (int) $autoFillStatusID === (int) PIPELINE_STATUS_REJECTED
+            )
+            {
+                $this->respondJSON(409, array(
+                    'success' => false,
+                    'code' => 'invalidAutoFill',
+                    'message' => 'Auto-fill path includes terminal statuses. Use manual status change.'
+                ));
+                return;
+            }
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $transactionStarted = false;
+        if (!empty($autoFillStatusIDs))
+        {
+            $transactionStarted = $db->beginTransaction();
+        }
+
+        $autoFillComment = '[AUTO] Auto-filled pipeline steps from dashboard Kanban.';
+        foreach ($autoFillStatusIDs as $autoFillStatusID)
+        {
+            $autoHistoryID = $pipelines->setStatus(
+                $candidateID,
+                $jobOrderID,
+                (int) $autoFillStatusID,
+                '',
+                '',
+                $this->_userID,
+                $autoFillComment,
+                null,
+                1
+            );
+            if (empty($autoHistoryID) || (int) $autoHistoryID < 0)
+            {
+                if ($transactionStarted)
+                {
+                    $db->rollbackTransaction();
+                }
+                $this->respondJSON(500, array(
+                    'success' => false,
+                    'code' => 'autoFillFailed',
+                    'message' => 'Failed to auto-fill intermediate pipeline steps.'
+                ));
+                return;
+            }
+        }
+
+        $historyID = $pipelines->setStatus(
+            $candidateID,
+            $jobOrderID,
+            $targetStatusID,
+            '',
+            '',
+            $this->_userID,
+            '[MODERN] Pipeline status changed from dashboard Kanban.'
+        );
+
+        if (empty($historyID) || (int) $historyID < 0)
+        {
+            if ($transactionStarted)
+            {
+                $db->rollbackTransaction();
+            }
+            $this->respondJSON(500, array(
+                'success' => false,
+                'code' => 'statusUpdateFailed',
+                'message' => 'Failed to update pipeline status.'
+            ));
+            return;
+        }
+
+        if ($transactionStarted)
+        {
+            $db->commitTransaction();
+        }
+
+        if (
+            $targetStatusID === (int) PIPELINE_STATUS_HIRED &&
+            $currentStatusID !== (int) PIPELINE_STATUS_HIRED &&
+            is_numeric($pipelineData['openingsAvailable']) &&
+            (int) $pipelineData['openingsAvailable'] > 0
+        )
+        {
+            $jobOrders->updateOpeningsAvailable(
+                $jobOrderID,
+                ((int) $pipelineData['openingsAvailable']) - 1
+            );
+        }
+
+        if (
+            $targetStatusID !== (int) PIPELINE_STATUS_HIRED &&
+            $currentStatusID === (int) PIPELINE_STATUS_HIRED
+        )
+        {
+            $jobOrders->updateOpeningsAvailable(
+                $jobOrderID,
+                ((int) $pipelineData['openingsAvailable']) + 1
+            );
+        }
+
+        $this->respondJSON(200, array(
+            'success' => true,
+            'message' => 'Pipeline status updated.',
+            'updatedStatusID' => $targetStatusID,
+            'updatedStatusLabel' => (isset($statusLabelsByID[$targetStatusID]) ? $statusLabelsByID[$targetStatusID] : ''),
+            'historyID' => (int) $historyID,
+            'autoFilledStatusIDs' => array_values(array_map('intval', $autoFillStatusIDs))
+        ));
+    }
+
+    private function respondJSON($statusCode, $payload)
+    {
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            if (function_exists('http_response_code'))
+            {
+                http_response_code((int) $statusCode);
+            }
+            else
+            {
+                header('HTTP/1.1 ' . (int) $statusCode);
+            }
+        }
+
+        echo json_encode($payload);
+    }
+
+    private function canManagePipelineAdministration()
+    {
+        if (!isset($_SESSION['CATS']) || !is_object($_SESSION['CATS']))
+        {
+            return false;
+        }
+
+        $baseAccessLevel = 0;
+        if (method_exists($_SESSION['CATS'], 'getBaseAccessLevel'))
+        {
+            $baseAccessLevel = (int) $_SESSION['CATS']->getBaseAccessLevel();
+        }
+        else if (method_exists($_SESSION['CATS'], 'getRealAccessLevel'))
+        {
+            $baseAccessLevel = (int) $_SESSION['CATS']->getRealAccessLevel();
+        }
+
+        if ($baseAccessLevel >= ACCESS_LEVEL_SA)
+        {
+            return true;
+        }
+
+        $userRoles = new UserRoles($this->_siteID);
+        if ($userRoles->isSchemaAvailable())
+        {
+            $role = $userRoles->getForUser($this->_userID);
+            if (!empty($role) && isset($role['roleKey']) && $role['roleKey'] === 'hr_manager')
+            {
+                return true;
+            }
+        }
+
+        return ($baseAccessLevel >= ACCESS_LEVEL_DELETE);
+    }
+
+    private function canAccessJobOrderPipelineByJobOrderData($jobOrderData)
+    {
+        if (empty($jobOrderData))
+        {
+            return false;
+        }
+
+        if ($this->canManagePipelineAdministration())
+        {
+            return true;
+        }
+
+        $ownerUserID = (isset($jobOrderData['owner']) ? (int) $jobOrderData['owner'] : 0);
+        $recruiterUserID = (isset($jobOrderData['recruiter']) ? (int) $jobOrderData['recruiter'] : 0);
+        $currentUserID = (int) $this->_userID;
+
+        return ($ownerUserID === $currentUserID || $recruiterUserID === $currentUserID);
+    }
+
+    private function isForwardDashboardTransitionAllowed($currentStatusID, $targetStatusID, $statusOrder)
+    {
+        $currentStatusID = (int) $currentStatusID;
+        $targetStatusID = (int) $targetStatusID;
+        if ($currentStatusID <= 0 || $targetStatusID <= 0)
+        {
+            return false;
+        }
+
+        if ($currentStatusID === $targetStatusID)
+        {
+            return false;
+        }
+
+        if ($currentStatusID === (int) PIPELINE_STATUS_REJECTED)
+        {
+            return false;
+        }
+
+        if ($targetStatusID === (int) PIPELINE_STATUS_REJECTED)
+        {
+            return true;
+        }
+
+        $currentIndex = array_search($currentStatusID, $statusOrder, true);
+        $targetIndex = array_search($targetStatusID, $statusOrder, true);
+        if ($currentIndex === false || $targetIndex === false)
+        {
+            return true;
+        }
+
+        return ($targetIndex > $currentIndex);
     }
 }
 

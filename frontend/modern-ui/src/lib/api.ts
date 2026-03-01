@@ -5,6 +5,7 @@ import type {
   CandidatesListModernDataResponse,
   CandidatesShowModernDataResponse,
   DashboardModernDataResponse,
+  DashboardSetPipelineStatusResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
   QuickActionAddToListModernDataResponse,
@@ -51,6 +52,52 @@ export async function fetchDashboardModernData(
   }
 
   return data;
+}
+
+export async function setDashboardPipelineStatus(
+  bootstrap: UIModeBootstrap,
+  payload: {
+    url?: string;
+    securityToken: string;
+    candidateID: number;
+    jobOrderID: number;
+    statusID: number;
+    enforceOwner: boolean;
+  }
+): Promise<DashboardSetPipelineStatusResponse> {
+  const url =
+    typeof payload.url === 'string' && payload.url.trim() !== ''
+      ? payload.url
+      : `${bootstrap.indexName}?m=dashboard&a=setPipelineStatus`;
+
+  const body = new URLSearchParams();
+  body.set('securityToken', payload.securityToken || '');
+  body.set('candidateID', String(payload.candidateID || 0));
+  body.set('jobOrderID', String(payload.jobOrderID || 0));
+  body.set('statusID', String(payload.statusID || 0));
+  body.set('enforceOwner', payload.enforceOwner ? '1' : '0');
+
+  const response = await fetch(url, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: DashboardSetPipelineStatusResponse | null = null;
+  try {
+    result = (await response.json()) as DashboardSetPipelineStatusResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Pipeline status update failed (${response.status}).`);
+  }
+
+  return result;
 }
 
 export async function fetchCandidatesListModernData(
