@@ -26,10 +26,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 20. Candidate action parity: modern Add-To-List overlay + embedded Add-To-Job modal flows on list/show pages.
 21. Native dashboard drag/drop status mutation: no-popup transition endpoint with CSRF, owner-scope guardrails, forward-only enforcement, auto-fill for skipped stages, and hired openings checks.
 22. Dashboard assign workspace (`considerCandidateSearch`) moved from popup to embedded modal flow in modern UI shell.
+23. Removed `Open In Popup` affordance from shared embedded legacy modal component to reduce popup dependency across modern pages.
 
 ## Next Queue
 
-1. Replace remaining popup fallback affordances with fully native modal/drawer experiences for pipeline-related quick actions.
+1. Replace iframe-backed legacy modal flows with native React forms/interactions for pipeline quick actions (status change, remove, details edit).
 
 ## Rules
 

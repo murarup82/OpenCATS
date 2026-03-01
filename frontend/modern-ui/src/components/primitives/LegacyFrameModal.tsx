@@ -14,7 +14,7 @@ export function LegacyFrameModal({
   subtitle,
   url,
   onClose,
-  onOpenPopup,
+  onOpenPopup: _onOpenPopup,
   showRefreshClose = true
 }: Props) {
   if (!isOpen) {
@@ -29,11 +29,6 @@ export function LegacyFrameModal({
           {subtitle ? <p>{subtitle}</p> : null}
         </div>
         <div className="modern-inline-modal__actions">
-          {onOpenPopup ? (
-            <button type="button" className="modern-btn modern-btn--secondary" onClick={onOpenPopup}>
-              Open In Popup
-            </button>
-          ) : null}
           <button type="button" className="modern-btn modern-btn--secondary" onClick={() => onClose(false)}>
             Close
           </button>
