@@ -8,6 +8,7 @@ import type {
   CandidatesShowModernDataResponse,
   DashboardModernDataResponse,
   DashboardSetPipelineStatusResponse,
+  JobOrderAssignCandidateModernDataResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
   ModernMutationResponse,
@@ -984,6 +985,39 @@ export async function assignCandidateToJobOrder(
     throw new Error(`Candidate assign failed (${response.status}).`);
   }
   return result;
+}
+
+export async function fetchJobOrderAssignCandidateData(
+  bootstrap: UIModeBootstrap,
+  popupURL: string,
+  query = ''
+): Promise<JobOrderAssignCandidateModernDataResponse> {
+  const rawURL = String(popupURL || `${bootstrap.indexName}?m=joborders&a=considerCandidateSearch`).replace(/&amp;/g, '&');
+  const url = new URL(rawURL, window.location.href);
+  url.searchParams.set('format', 'modern-json');
+  url.searchParams.set('modernPage', 'joborder-consider-candidate');
+  if (!url.searchParams.get('m')) {
+    url.searchParams.set('m', 'joborders');
+  }
+  if (!url.searchParams.get('a')) {
+    url.searchParams.set('a', 'considerCandidateSearch');
+  }
+
+  const normalizedQuery = String(query || '').trim();
+  if (normalizedQuery === '') {
+    url.searchParams.delete('wildCardString');
+  } else {
+    url.searchParams.set('wildCardString', normalizedQuery);
+  }
+
+  const data = await getJSON<JobOrderAssignCandidateModernDataResponse>(url.toString());
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading candidate search data.');
+  }
+  if (data.meta.contractKey !== 'joborders.considerCandidateSearch.v1') {
+    throw new Error('Unexpected candidate search contract key.');
+  }
+  return data;
 }
 
 type LegacyAjaxResponse = {

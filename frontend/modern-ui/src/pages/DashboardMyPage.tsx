@@ -6,6 +6,7 @@ import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
@@ -222,16 +223,6 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const closeDetailsModal = useCallback(
     (refreshOnClose: boolean) => {
       setDetailsModal(null);
-      if (refreshOnClose) {
-        refreshDashboard();
-      }
-    },
-    [refreshDashboard]
-  );
-
-  const closeAssignModal = useCallback(
-    (refreshOnClose: boolean) => {
-      setAssignModal(null);
       if (refreshOnClose) {
         refreshDashboard();
       }
@@ -643,12 +634,15 @@ export function DashboardMyPage({ bootstrap }: Props) {
           onClose={closeStatusModal}
         />
 
-        <LegacyFrameModal
+        <JobOrderAssignCandidateModal
           isOpen={!!assignModal}
-          title="Assign Candidate to Job Order"
-          subtitle={assignModal ? assignModal.jobOrderName : undefined}
-          url={assignModal?.url || ''}
-          onClose={closeAssignModal}
+          bootstrap={bootstrap}
+          sourceURL={assignModal?.url || ''}
+          subtitle={assignModal?.jobOrderName}
+          onClose={() => setAssignModal(null)}
+          onAssigned={() => {
+            refreshDashboard();
+          }}
         />
 
         <LegacyFrameModal

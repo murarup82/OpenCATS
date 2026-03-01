@@ -23,6 +23,7 @@ import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
@@ -66,6 +67,10 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
     url: string;
     title: string;
     showRefreshClose: boolean;
+  } | null>(null);
+  const [assignCandidateModal, setAssignCandidateModal] = useState<{
+    url: string;
+    subtitle: string;
   } | null>(null);
   const [quickStatusModal, setQuickStatusModal] = useState<{
     title: string;
@@ -730,10 +735,9 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 type="button"
                 className="modern-btn modern-btn--secondary"
                 onClick={() =>
-                  setPipelineModal({
+                  setAssignCandidateModal({
                     url: decodeLegacyURL(data.actions.addCandidateURL),
-                    title: 'Add Candidate',
-                    showRefreshClose: true
+                    subtitle: toDisplayText(jobOrder.title, `Job Order #${jobOrder.jobOrderID}`)
                   })
                 }
               >
@@ -1419,6 +1423,17 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
           url={pipelineModal?.url || ''}
           onClose={closePipelineModal}
           showRefreshClose={pipelineModal?.showRefreshClose ?? true}
+        />
+
+        <JobOrderAssignCandidateModal
+          isOpen={!!assignCandidateModal}
+          bootstrap={bootstrap}
+          sourceURL={assignCandidateModal?.url || ''}
+          subtitle={assignCandidateModal?.subtitle}
+          onClose={() => setAssignCandidateModal(null)}
+          onAssigned={() => {
+            refreshPageData();
+          }}
         />
       </PageContainer>
     </div>

@@ -2762,13 +2762,32 @@ class JobOrdersUI extends UserInterface
      */
     private function considerCandidateSearch()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $requestInput = $isModernJSON ? $_REQUEST : $_GET;
+
         /* Bail out if we don't have a valid job order ID. */
-        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        if (!$this->isRequiredIDValid('jobOrderID', $requestInput))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrder',
+                    'message' => 'Invalid job order ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
-        $jobOrderID = $_GET['jobOrderID'];
+        $jobOrderID = (int) $requestInput['jobOrderID'];
         $jobOrders = new JobOrders($this->_siteID);
         $jobOrderData = $jobOrders->get($jobOrderID);
         $jobOrderTitle = (!empty($jobOrderData) && !empty($jobOrderData['title']))
@@ -2798,6 +2817,123 @@ class JobOrdersUI extends UserInterface
         }
 
         if (!eval(Hooks::get('JO_CONSIDER_CANDIDATE_SEARCH'))) return;
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'joborder-consider-candidate')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidPage',
+                    'message' => 'Unexpected modern page request.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $query = $this->getTrimmedInput('wildCardString', $_REQUEST);
+            $candidateRows = array();
+            if ($query !== '')
+            {
+                $search = new SearchCandidates($this->_siteID);
+                $searchRS = $search->byFullName($query, 'lastName', 'ASC');
+                if (!is_array($searchRS))
+                {
+                    $searchRS = array();
+                }
+
+                $pipelinesRS = $pipelines->getJobOrderPipeline($jobOrderID);
+                $pipelineCandidateIDMap = array();
+                foreach ($pipelinesRS as $pipelineRow)
+                {
+                    $pipelineCandidateIDMap[(int) $pipelineRow['candidateID']] = true;
+                }
+
+                foreach ($searchRS as $row)
+                {
+                    $candidateID = (int) (isset($row['candidateID']) ? $row['candidateID'] : 0);
+                    if ($candidateID <= 0)
+                    {
+                        continue;
+                    }
+
+                    $fullName = trim(
+                        (isset($row['firstName']) ? $row['firstName'] : '') . ' '
+                        . (isset($row['lastName']) ? $row['lastName'] : '')
+                    );
+                    if ($fullName === '')
+                    {
+                        $fullName = 'Candidate #' . $candidateID;
+                    }
+
+                    $candidateRows[] = array(
+                        'candidateID' => $candidateID,
+                        'fullName' => $fullName,
+                        'city' => (isset($row['city']) ? (string) $row['city'] : ''),
+                        'state' => (isset($row['state']) ? (string) $row['state'] : ''),
+                        'keySkills' => (isset($row['keySkills']) ? (string) $row['keySkills'] : ''),
+                        'ownerName' => trim(
+                            (isset($row['ownerFirstName']) ? $row['ownerFirstName'] : '') . ' '
+                            . (isset($row['ownerLastName']) ? $row['ownerLastName'] : '')
+                        ),
+                        'inPipeline' => isset($pipelineCandidateIDMap[$candidateID]),
+                        'candidateURL' => sprintf(
+                            '%s?m=candidates&a=show&candidateID=%d&ui=modern',
+                            CATSUtility::getIndexName(),
+                            $candidateID
+                        )
+                    );
+
+                    if (count($candidateRows) >= 300)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            $baseURL = CATSUtility::getIndexName();
+            $payload = array(
+                'meta' => array(
+                    'contractVersion' => 1,
+                    'contractKey' => 'joborders.considerCandidateSearch.v1',
+                    'modernPage' => $modernPage,
+                    'jobOrderID' => $jobOrderID,
+                    'jobOrderTitle' => (string) $jobOrderTitle,
+                    'canSetStatusOnAdd' => ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT),
+                    'defaultAssignmentStatusID' => (int) PIPELINE_STATUS_ALLOCATED
+                ),
+                'options' => array(
+                    'assignmentStatuses' => $assignmentStatusOptions
+                ),
+                'state' => array(
+                    'query' => (string) $query
+                ),
+                'rows' => $candidateRows,
+                'actions' => array(
+                    'addToPipelineURL' => sprintf('%s?m=joborders&a=addToPipeline', $baseURL),
+                    'securityToken' => $this->getCSRFToken('joborders.addToPipeline'),
+                    'legacyURL' => sprintf(
+                        '%s?m=joborders&a=considerCandidateSearch&jobOrderID=%d&ui=legacy',
+                        $baseURL,
+                        $jobOrderID
+                    )
+                )
+            );
+
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode($payload);
+            return;
+        }
 
         $this->_template->assign('isFinishedMode', false);
         $this->_template->assign('isResultsMode', false);
@@ -2983,6 +3119,27 @@ class JobOrdersUI extends UserInterface
         $jobOrderID  = $requestInput['jobOrderID'];
         $candidateID = $requestInput['candidateID'];
         $confirmReapplyRejected = ((int) $this->getTrimmedInput('confirmReapplyRejected', $requestInput) === 1);
+        $assignmentStatusID = (int) $this->getTrimmedInput('assignmentStatusID', $_REQUEST);
+
+        if ($isModernJSON)
+        {
+            $securityToken = $this->getTrimmedInput('securityToken', $_REQUEST);
+            if (!$this->isCSRFTokenValid('joborders.addToPipeline', $securityToken))
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid request token.'
+                ));
+                return;
+            }
+        }
 
         if (!eval(Hooks::get('JO_ON_ADD_PIPELINE'))) return;
 
@@ -3065,6 +3222,27 @@ class JobOrdersUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, $errorMessage);
         }
 
+        $statusApplied = false;
+        if (
+            $isModernJSON &&
+            $assignmentStatusID > 0 &&
+            $this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT
+        )
+        {
+            $pipelines->setStatus(
+                $candidateID,
+                $jobOrderID,
+                $assignmentStatusID,
+                '',
+                '',
+                $this->_userID,
+                'Status set during modern assign-candidate action.',
+                null,
+                1
+            );
+            $statusApplied = true;
+        }
+
         if ($isModernJSON)
         {
             if (!headers_sent())
@@ -3077,7 +3255,8 @@ class JobOrdersUI extends UserInterface
                 'code' => 'candidateAssigned',
                 'message' => 'Candidate added to job order.',
                 'candidateID' => (int) $candidateID,
-                'jobOrderID' => (int) $jobOrderID
+                'jobOrderID' => (int) $jobOrderID,
+                'statusApplied' => $statusApplied
             ));
             return;
         }

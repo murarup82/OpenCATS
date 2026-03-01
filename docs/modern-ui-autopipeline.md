@@ -79,6 +79,14 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 61. Added `modern-json` mutation handling for legacy reapply-confirm flows in pipeline assignment:
     - `candidates.addToPipeline` now supports JSON codes (`requiresConfirm`, `candidateAssigned`, `alreadyAssignedOrClosed`, `addFailed`) with CSRF validation for modern requests
     - `joborders.addToPipeline` now supports JSON `requiresConfirm` and success/error responses, removing legacy `window.confirm` dependency for modern callers.
+62. Added native assign-candidate search flow for job order surfaces:
+    - introduced `joborders.considerCandidateSearch.v1` modern-json contract (search query + candidate rows + status options + CSRF token)
+    - added `JobOrderAssignCandidateModal` with in-app search, candidate selection, status-on-add, and async submit handling
+    - switched `joborders.show` and `dashboard.my` assign actions to the native modal path (legacy assignment link preserved in-modal).
+63. Extended `joborders.addToPipeline` modern-json mutation for production parity:
+    - added CSRF token validation for modern requests
+    - added optional `assignmentStatusID` support with automatic status transition after add
+    - returned richer mutation payload (`statusApplied`) for modern UI feedback.
 
 ## Next Queue
 

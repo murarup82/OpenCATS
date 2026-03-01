@@ -884,6 +884,42 @@ export type CandidateAssignToJobOrderMutationResponse = ModernMutationResponse &
   statusApplied?: boolean;
 };
 
+export type JobOrderAssignCandidateModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    jobOrderID: number;
+    jobOrderTitle: string;
+    canSetStatusOnAdd: boolean;
+    defaultAssignmentStatusID: number;
+  };
+  options: {
+    assignmentStatuses: Array<{
+      statusID: number;
+      status: string;
+    }>;
+  };
+  state: {
+    query: string;
+  };
+  rows: Array<{
+    candidateID: number;
+    fullName: string;
+    city: string;
+    state: string;
+    keySkills: string;
+    ownerName: string;
+    inPipeline: boolean;
+    candidateURL: string;
+  }>;
+  actions: {
+    addToPipelineURL: string;
+    securityToken: string;
+    legacyURL: string;
+  };
+};
+
 export type QuickActionAddToListModernDataResponse = {
   meta: {
     contractVersion: number;
