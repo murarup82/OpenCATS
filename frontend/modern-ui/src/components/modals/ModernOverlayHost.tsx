@@ -49,7 +49,7 @@ type LegacyPopupOpenDetail = {
   html?: string;
   width?: number | string;
   height?: number | string;
-  returnFunc?: unknown;
+  returnFunc?: ((value?: unknown) => void) | null;
 };
 
 type LegacyPopupCloseDetail = {
@@ -233,12 +233,10 @@ export function ModernOverlayHost({ bootstrap }: Props) {
           window.dispatchEvent(modernRefreshEvent);
         }
 
-        if (!refreshEvent.defaultPrevented && bootstrap.mode !== 'modern') {
-          window.location.reload();
-        }
+        // Keep refresh orchestration event-driven; page surfaces decide the proper reload strategy.
       }
     },
-    [bootstrap.mode, getLegacyPopupReturnValue]
+    [getLegacyPopupReturnValue]
   );
 
   useEffect(() => {

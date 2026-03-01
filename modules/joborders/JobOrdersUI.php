@@ -2530,6 +2530,7 @@ class JobOrdersUI extends UserInterface
                     'canAddComment' => (!$isPopup && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
                     'canAdministrativeHideShow' => ($this->getUserAccessLevel('joborders.hidden') >= ACCESS_LEVEL_MULTI_SA),
                     'canCreateAttachment' => ($this->getUserAccessLevel('joborders.createAttachment') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteAttachment' => ($this->getUserAccessLevel('joborders.deleteAttachment') >= ACCESS_LEVEL_DELETE),
                     'canPostMessage' => (!$isPopup && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
                     'canDeleteMessageThread' => $canDeleteMessageThread
                 )

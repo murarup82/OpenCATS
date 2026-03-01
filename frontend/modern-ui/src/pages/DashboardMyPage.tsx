@@ -1,12 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchDashboardModernData, setDashboardPipelineStatus } from '../lib/api';
-import type { DashboardModernDataResponse, UIModeBootstrap } from '../types';
+import {
+  fetchDashboardModernData,
+  fetchPipelineStatusDetailsModernData,
+  setDashboardPipelineStatus,
+  updatePipelineStatusHistoryDate
+} from '../lib/api';
+import type {
+  DashboardModernDataResponse,
+  PipelineStatusDetailsModernDataResponse,
+  UIModeBootstrap
+} from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
+import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
@@ -70,6 +80,10 @@ function createStatusClassName(statusLabel: string): string {
   return `modern-status modern-status--${toStatusSlug(statusLabel)}`;
 }
 
+function decodeLegacyURL(url: string): string {
+  return String(url || '').replace(/&amp;/g, '&');
+}
+
 export function DashboardMyPage({ bootstrap }: Props) {
   const [data, setData] = useState<DashboardModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -93,7 +107,15 @@ export function DashboardMyPage({ bootstrap }: Props) {
   } | null>(null);
   const [detailsModal, setDetailsModal] = useState<{
     url: string;
-    candidateName: string;
+    title: string;
+  } | null>(null);
+  const [pipelineDetailsModal, setPipelineDetailsModal] = useState<{
+    title: string;
+    fullDetailsURL: string;
+    pipelineID: number;
+    details: PipelineStatusDetailsModernDataResponse | null;
+    loading: boolean;
+    error: string;
   } | null>(null);
   const [interactionError, setInteractionError] = useState<string>('');
 
@@ -231,19 +253,103 @@ export function DashboardMyPage({ bootstrap }: Props) {
   );
 
   const openPipelineDetails = useCallback(
-    (row: DashboardRow) => {
+    async (row: DashboardRow) => {
       const pipelineID = Number(row.candidateJobOrderID || 0);
       if (pipelineID <= 0) {
         return;
       }
 
-      const url = `${bootstrap.indexName}?m=joborders&a=pipelineStatusDetails&pipelineID=${encodeURIComponent(String(pipelineID))}&display=popup&ui=legacy`;
-      setDetailsModal({
-        url,
-        candidateName: toDisplayText(row.candidateName)
+      const title = `Pipeline Details: ${toDisplayText(row.candidateName)}`;
+      const fullDetailsURL = `${bootstrap.indexName}?m=joborders&a=pipelineStatusDetails&pipelineID=${encodeURIComponent(
+        String(pipelineID)
+      )}&display=popup&ui=legacy`;
+      setPipelineDetailsModal({
+        title,
+        fullDetailsURL,
+        pipelineID,
+        details: null,
+        loading: true,
+        error: ''
       });
+
+      try {
+        const details = await fetchPipelineStatusDetailsModernData(bootstrap, pipelineID);
+        setPipelineDetailsModal((current) =>
+          current
+            ? {
+                ...current,
+                details,
+                loading: false,
+                error: ''
+              }
+            : current
+        );
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unable to load pipeline details.';
+        setPipelineDetailsModal((current) =>
+          current
+            ? {
+                ...current,
+                loading: false,
+                error: message
+              }
+            : current
+        );
+      }
     },
-    [bootstrap.indexName]
+    [bootstrap]
+  );
+
+  const reloadPipelineDetailsModal = useCallback(
+    async (pipelineID: number) => {
+      const nextDetails = await fetchPipelineStatusDetailsModernData(bootstrap, pipelineID);
+      setPipelineDetailsModal((current) =>
+        current
+          ? {
+              ...current,
+              details: nextDetails,
+              loading: false,
+              error: ''
+            }
+          : current
+      );
+    },
+    [bootstrap]
+  );
+
+  const savePipelineHistoryDate = useCallback(
+    async (
+      details: PipelineStatusDetailsModernDataResponse,
+      payload: { historyID: number; newDate: string; originalDate: string; editNote: string }
+    ) => {
+      const editURL = decodeLegacyURL(details.actions.editDateURL);
+      if (editURL === '') {
+        return 'Missing edit endpoint.';
+      }
+      if (payload.newDate.trim() === '') {
+        return 'Please select a date.';
+      }
+
+      try {
+        const result = await updatePipelineStatusHistoryDate(editURL, {
+          pipelineID: details.meta.pipelineID,
+          historyID: payload.historyID,
+          newDate: payload.newDate.replace('T', ' '),
+          originalDate: payload.originalDate,
+          editNote: payload.editNote
+        });
+        if (!result.success) {
+          return result.message || 'Unable to update history date.';
+        }
+
+        await reloadPipelineDetailsModal(details.meta.pipelineID);
+        refreshDashboard();
+        return null;
+      } catch (err: unknown) {
+        return err instanceof Error ? err.message : 'Unable to update history date.';
+      }
+    },
+    [reloadPipelineDetailsModal, refreshDashboard]
   );
 
   const openAssignWorkspace = useCallback(() => {
@@ -645,9 +751,29 @@ export function DashboardMyPage({ bootstrap }: Props) {
           }}
         />
 
+        <PipelineDetailsInlineModal
+          isOpen={!!pipelineDetailsModal}
+          title={pipelineDetailsModal?.title || 'Pipeline Details'}
+          details={pipelineDetailsModal?.details || null}
+          loading={pipelineDetailsModal?.loading || false}
+          error={pipelineDetailsModal?.error || ''}
+          onClose={() => setPipelineDetailsModal(null)}
+          onSaveHistoryDate={savePipelineHistoryDate}
+          onOpenFullDetails={
+            pipelineDetailsModal
+              ? () => {
+                  setDetailsModal({
+                    url: decodeLegacyURL(pipelineDetailsModal.fullDetailsURL),
+                    title: pipelineDetailsModal.title
+                  });
+                }
+              : undefined
+          }
+        />
+
         <LegacyFrameModal
           isOpen={!!detailsModal}
-          title={`Pipeline Details${detailsModal ? `: ${detailsModal.candidateName}` : ''}`}
+          title={detailsModal?.title || 'Pipeline Details'}
           url={detailsModal?.url || ''}
           onClose={closeDetailsModal}
           showRefreshClose={false}

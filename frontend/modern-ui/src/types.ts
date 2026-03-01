@@ -309,6 +309,7 @@ export type JobOrdersShowModernDataResponse = {
       canAddComment: boolean;
       canAdministrativeHideShow: boolean;
       canCreateAttachment: boolean;
+      canDeleteAttachment: boolean;
       canPostMessage: boolean;
       canDeleteMessageThread: boolean;
     };

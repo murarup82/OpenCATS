@@ -396,7 +396,8 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     { value: '100', label: '100 rows' }
   ];
 
-  const selectedSortBy = sortOptions.some((option) => option.value === data?.meta.sortBy) ? data?.meta.sortBy : 'dateCreatedSort';
+  const selectedSortBy =
+    data && sortOptions.some((option) => option.value === data.meta.sortBy) ? data.meta.sortBy : 'dateCreatedSort';
   const selectedSortDirection = data?.meta.sortDirection === 'ASC' ? 'ASC' : 'DESC';
   const tableColumns = [
     { key: 'title', title: 'Job Order' },

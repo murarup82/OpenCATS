@@ -87,6 +87,13 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added CSRF token validation for modern requests
     - added optional `assignmentStatusID` support with automatic status transition after add
     - returned richer mutation payload (`statusApplied`) for modern UI feedback.
+64. Stabilized modern type/contract parity for job orders:
+    - fixed `joborders.show.v1` permission contract drift by adding `canDeleteAttachment` to both backend payload and frontend type definitions
+    - fixed strict sort-control typing on `joborders.listByView` (`selectedSortBy` now always resolves to a concrete string).
+65. Migrated dashboard pipeline details from legacy iframe to native inline timeline modal:
+    - `dashboard.my` now uses `pipeline.statusDetails.v1` via `fetchPipelineStatusDetailsModernData`
+    - added inline history-date edit/save flow using `updatePipelineStatusHistoryDate`
+    - kept an explicit in-modal legacy full-details fallback action for parity.
 
 ## Next Queue
 
