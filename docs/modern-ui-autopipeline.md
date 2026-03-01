@@ -210,6 +210,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - `LegacyCompatPage` now uses full modern page framing (`PageContainer` + Avel shell) instead of a bare embedded section
     - added consistent compatibility header/actions and quick-navigation chips (Dashboard/Candidates/Job Orders/Reports)
     - unified fallback route experience for non-migrated modules with the same visual/interaction language used by dedicated bridge pages.
+100. Added shared API contract assertion helper and applied it across modern data fetchers:
+    - introduced `assertModernContract` in `frontend/modern-ui/src/lib/contractGuards.ts`
+    - replaced repeated contract-version/contract-key checks in `frontend/modern-ui/src/lib/api.ts` with a centralized guard call
+    - improved diagnostics for contract drift with expected vs received metadata in one place.
 
 ## Next Queue (30-Slice Execution)
 
@@ -217,12 +221,12 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 2. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
 3. Add centralized URL-state sync helper for filters/pagination shared by list pages.
 4. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
-5. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
-6. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-7. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-8. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
-9. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-10. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+5. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
+6. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+7. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
+8. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+9. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+10. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
 
 ## Rules
 

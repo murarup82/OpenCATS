@@ -27,6 +27,7 @@ import type {
   UIModeBootstrap
 } from '../types';
 import { getJSON } from './httpClient';
+import { assertModernContract } from './contractGuards';
 import {
   MODERN_ACTIVITY_PAGE,
   MODERN_CALENDAR_PAGE,
@@ -38,7 +39,6 @@ import {
   MODERN_COMPANY_SHOW_PAGE,
   MODERN_CONTACTS_PAGE,
   MODERN_CONTACT_SHOW_PAGE,
-  MODERN_CONTRACT_VERSION,
   MODERN_DASHBOARD_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
@@ -63,16 +63,7 @@ export async function fetchDashboardModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<DashboardModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading dashboard data.');
-  }
-
-  if (
-    data.meta.contractKey !== 'dashboard.my.readonly.v1' &&
-    data.meta.contractKey !== 'dashboard.my.interactive.v1'
-  ) {
-    throw new Error('Unexpected dashboard contract key.');
-  }
+  assertModernContract(data.meta, ['dashboard.my.readonly.v1', 'dashboard.my.interactive.v1'], 'dashboard data');
 
   return data;
 }
@@ -194,13 +185,7 @@ export async function fetchPipelineStatusDetailsModernData(
 
   const url = `${bootstrap.indexName}?${query.toString()}`;
   const data = await getJSON<PipelineStatusDetailsModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading pipeline details.');
-  }
-
-  if (data.meta.contractKey !== 'pipeline.statusDetails.v1') {
-    throw new Error('Unexpected pipeline details contract key.');
-  }
+  assertModernContract(data.meta, 'pipeline.statusDetails.v1', 'pipeline details');
 
   return data;
 }
@@ -725,13 +710,7 @@ export async function fetchCandidatesListModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<CandidatesListModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading candidates data.');
-  }
-
-  if (data.meta.contractKey !== 'candidates.listByView.v1') {
-    throw new Error('Unexpected candidates contract key.');
-  }
+  assertModernContract(data.meta, 'candidates.listByView.v1', 'candidates data');
 
   return data;
 }
@@ -749,12 +728,7 @@ export async function fetchCompaniesListModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<CompaniesListModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading companies.');
-  }
-  if (data.meta.contractKey !== 'companies.listByView.v1') {
-    throw new Error('Unexpected companies contract key.');
-  }
+  assertModernContract(data.meta, 'companies.listByView.v1', 'companies');
 
   return data;
 }
@@ -772,12 +746,7 @@ export async function fetchCompaniesShowModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<CompaniesShowModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading company profile.');
-  }
-  if (data.meta.contractKey !== 'companies.show.v1') {
-    throw new Error('Unexpected company profile contract key.');
-  }
+  assertModernContract(data.meta, 'companies.show.v1', 'company profile');
 
   return data;
 }
@@ -795,12 +764,7 @@ export async function fetchContactsListModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ContactsListModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading contacts.');
-  }
-  if (data.meta.contractKey !== 'contacts.listByView.v1') {
-    throw new Error('Unexpected contacts contract key.');
-  }
+  assertModernContract(data.meta, 'contacts.listByView.v1', 'contacts');
 
   return data;
 }
@@ -818,12 +782,7 @@ export async function fetchContactsShowModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ContactsShowModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading contact profile.');
-  }
-  if (data.meta.contractKey !== 'contacts.show.v1') {
-    throw new Error('Unexpected contact profile contract key.');
-  }
+  assertModernContract(data.meta, 'contacts.show.v1', 'contact profile');
 
   return data;
 }
@@ -841,12 +800,7 @@ export async function fetchActivityListModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ActivityListModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading activities.');
-  }
-  if (data.meta.contractKey !== 'activity.listByView.v1') {
-    throw new Error('Unexpected activities contract key.');
-  }
+  assertModernContract(data.meta, 'activity.listByView.v1', 'activities');
 
   return data;
 }
@@ -864,12 +818,7 @@ export async function fetchCalendarModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<CalendarModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading calendar.');
-  }
-  if (data.meta.contractKey !== 'calendar.show.v1') {
-    throw new Error('Unexpected calendar contract key.');
-  }
+  assertModernContract(data.meta, 'calendar.show.v1', 'calendar');
 
   return data;
 }
@@ -887,12 +836,7 @@ export async function fetchListsManageModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ListsManageModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading lists.');
-  }
-  if (data.meta.contractKey !== 'lists.listByView.v1') {
-    throw new Error('Unexpected lists contract key.');
-  }
+  assertModernContract(data.meta, 'lists.listByView.v1', 'lists');
 
   return data;
 }
@@ -910,12 +854,7 @@ export async function fetchReportsLauncherModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ReportsLauncherModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading reports.');
-  }
-  if (data.meta.contractKey !== 'reports.launcher.v1') {
-    throw new Error('Unexpected reports contract key.');
-  }
+  assertModernContract(data.meta, 'reports.launcher.v1', 'reports');
 
   return data;
 }
@@ -933,13 +872,7 @@ export async function fetchCandidatesShowModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<CandidatesShowModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading candidate profile.');
-  }
-
-  if (data.meta.contractKey !== 'candidates.show.v1') {
-    throw new Error('Unexpected candidate profile contract key.');
-  }
+  assertModernContract(data.meta, 'candidates.show.v1', 'candidate profile');
 
   return data;
 }
@@ -957,13 +890,7 @@ export async function fetchCandidatesEditModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<CandidatesEditModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading candidate edit form.');
-  }
-
-  if (data.meta.contractKey !== 'candidates.edit.v1') {
-    throw new Error('Unexpected candidate edit contract key.');
-  }
+  assertModernContract(data.meta, 'candidates.edit.v1', 'candidate edit form');
 
   return data;
 }
@@ -981,13 +908,7 @@ export async function fetchCandidatesAddModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<CandidatesAddModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading candidate add form.');
-  }
-
-  if (data.meta.contractKey !== 'candidates.add.v1') {
-    throw new Error('Unexpected candidate add contract key.');
-  }
+  assertModernContract(data.meta, 'candidates.add.v1', 'candidate add form');
 
   return data;
 }
@@ -1050,13 +971,7 @@ export async function fetchJobOrdersListModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<JobOrdersListModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading job orders data.');
-  }
-
-  if (data.meta.contractKey !== 'joborders.listByView.v1') {
-    throw new Error('Unexpected job orders contract key.');
-  }
+  assertModernContract(data.meta, 'joborders.listByView.v1', 'job orders data');
 
   return data;
 }
@@ -1074,13 +989,7 @@ export async function fetchJobOrdersShowModernData(
 
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<JobOrdersShowModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading job order profile.');
-  }
-
-  if (data.meta.contractKey !== 'joborders.show.v1') {
-    throw new Error('Unexpected job order profile contract key.');
-  }
+  assertModernContract(data.meta, 'joborders.show.v1', 'job order profile');
 
   return data;
 }
@@ -1100,13 +1009,7 @@ export async function fetchQuickActionAddToListData(
   const url = `${bootstrap.indexName}?${query.toString()}`;
 
   const data = await getJSON<QuickActionAddToListModernDataResponse>(url);
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading list modal data.');
-  }
-
-  if (data.meta.contractKey !== 'lists.quickActionAddToList.v1') {
-    throw new Error('Unexpected list modal contract key.');
-  }
+  assertModernContract(data.meta, 'lists.quickActionAddToList.v1', 'list modal data');
 
   return data;
 }
@@ -1126,13 +1029,7 @@ export async function fetchAddToListDataFromPopupURL(
   }
 
   const data = await getJSON<QuickActionAddToListModernDataResponse>(url.toString());
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading list modal data.');
-  }
-
-  if (data.meta.contractKey !== 'lists.quickActionAddToList.v1') {
-    throw new Error('Unexpected list modal contract key.');
-  }
+  assertModernContract(data.meta, 'lists.quickActionAddToList.v1', 'list modal data');
 
   return data;
 }
@@ -1153,12 +1050,7 @@ export async function fetchCandidateAssignToJobOrderData(
   }
 
   const data = await getJSON<CandidateAssignToJobOrderModernDataResponse>(url.toString());
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading add-to-job modal data.');
-  }
-  if (data.meta.contractKey !== 'candidates.considerForJobSearch.v1') {
-    throw new Error('Unexpected add-to-job modal contract key.');
-  }
+  assertModernContract(data.meta, 'candidates.considerForJobSearch.v1', 'add-to-job modal data');
   return data;
 }
 
@@ -1228,12 +1120,7 @@ export async function fetchJobOrderAssignCandidateData(
   }
 
   const data = await getJSON<JobOrderAssignCandidateModernDataResponse>(url.toString());
-  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
-    throw new Error('Contract version mismatch while loading candidate search data.');
-  }
-  if (data.meta.contractKey !== 'joborders.considerCandidateSearch.v1') {
-    throw new Error('Unexpected candidate search contract key.');
-  }
+  assertModernContract(data.meta, 'joborders.considerCandidateSearch.v1', 'candidate search data');
   return data;
 }
 
