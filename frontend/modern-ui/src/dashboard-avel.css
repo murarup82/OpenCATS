@@ -1694,6 +1694,73 @@
   color: #4f6878;
 }
 
+.avel-joborder-show-page .avel-joborder-hero {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-joborder-show-page .avel-joborder-hero__chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.avel-joborder-show-page .avel-joborder-hero__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.avel-joborder-show-page .avel-joborder-hero__grid > div {
+  border: 1px dashed #c8dce8;
+  border-radius: 10px;
+  background: #f8fcff;
+  padding: 8px;
+  display: grid;
+  gap: 3px;
+}
+
+.avel-joborder-show-page .avel-joborder-hero__grid > div > span {
+  color: #6a8695;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.avel-joborder-show-page .avel-joborder-hero__grid > div > strong {
+  color: #1e4658;
+  font-size: 0.8rem;
+}
+
+.avel-joborder-show-page .avel-joborder-show-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.avel-joborder-show-page .avel-joborder-richtext {
+  display: grid;
+  gap: 8px;
+  color: #24495a;
+  font-size: 0.82rem;
+}
+
+.avel-joborder-show-page .avel-joborder-richtext h4 {
+  margin: 0;
+  color: #124b63;
+  font: 700 0.8rem / 1.1 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-joborder-show-page .avel-joborder-richtext p {
+  margin: 0;
+  border: 1px dashed #cde1ed;
+  border-radius: 10px;
+  background: #f9fdff;
+  padding: 8px;
+  white-space: pre-wrap;
+}
+
 .avel-candidate-show-page .avel-candidate-hero {
   border: 1px solid var(--avel-border);
   border-radius: 16px;
@@ -1976,6 +2043,10 @@
     justify-self: start;
   }
 
+  .avel-joborder-show-page .avel-joborder-hero__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .avel-dashboard-page .modern-kanban-board__header {
     align-items: flex-start;
   }
@@ -2021,6 +2092,11 @@
   }
 
   .avel-candidate-edit-page .avel-candidate-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-joborder-show-page .avel-joborder-show-split,
+  .avel-joborder-show-page .avel-joborder-hero__grid {
     grid-template-columns: 1fr;
   }
 

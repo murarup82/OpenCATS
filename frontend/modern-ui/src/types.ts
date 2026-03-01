@@ -199,6 +199,131 @@ export type JobOrdersListModernDataResponse = {
   }>;
 };
 
+export type JobOrdersShowModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    jobOrderID: number;
+    isPopup: boolean;
+    showClosedPipeline: boolean;
+    permissions: {
+      canEditJobOrder: boolean;
+      canDeleteJobOrder: boolean;
+      canViewHistory: boolean;
+      canAddCandidateToPipeline: boolean;
+      canChangePipelineStatus: boolean;
+      canRemoveFromPipeline: boolean;
+      canAddComment: boolean;
+      canAdministrativeHideShow: boolean;
+    };
+  };
+  actions: {
+    legacyURL: string;
+    editURL: string;
+    addCandidateURL: string;
+    reportURL: string;
+    historyURL: string;
+    deleteURL: string;
+    hiringPlanURL: string;
+  };
+  jobOrder: {
+    jobOrderID: number;
+    title: string;
+    titleClass: string;
+    companyID: number;
+    companyName: string;
+    companyURL: string;
+    contactID: number;
+    contactFullName: string;
+    recruiterFullName: string;
+    ownerFullName: string;
+    enteredByFullName: string;
+    status: string;
+    type: string;
+    typeDescription: string;
+    city: string;
+    state: string;
+    cityAndState: string;
+    startDate: string;
+    dateCreated: string;
+    dateModified: string;
+    daysOld: number;
+    duration: string;
+    maxRate: string;
+    salary: string;
+    isHot: boolean;
+    isAdminHidden: boolean;
+    public: boolean;
+    description: string;
+    notes: string;
+    openings: number;
+    openingsAvailable: number;
+    pipelineCount: number;
+    submittedCount: number;
+  };
+  attachments: {
+    count: number;
+    items: Array<{
+      attachmentID: number;
+      fileName: string;
+      dateCreated: string;
+      icon: string;
+      retrievalURL: string;
+    }>;
+  };
+  extraFields: Array<{
+    fieldName: string;
+    display: string;
+  }>;
+  hiringPlan: {
+    totalOpenings: number;
+    items: Array<{
+      hiringPlanID: number;
+      openings: number;
+      description: string;
+      startDate: string;
+      endDate: string;
+    }>;
+  };
+  comments: {
+    count: number;
+    flashMessage: string;
+    flashIsError: boolean;
+  };
+  messages: {
+    flashMessage: string;
+    flashIsError: boolean;
+  };
+  pipeline: {
+    activeCount: number;
+    closedCount: number;
+    items: Array<{
+      candidateJobOrderID: number;
+      candidateID: number;
+      candidateName: string;
+      candidateURL: string;
+      statusID: number;
+      statusLabel: string;
+      statusSlug: string;
+      isActive: boolean;
+      dateCreated: string;
+      country: string;
+      isHotCandidate: boolean;
+      isDuplicateCandidate: boolean;
+      submitted: boolean;
+      ratingValue: number;
+      ownerName: string;
+      addedByName: string;
+      actions: {
+        changeStatusURL: string;
+        removeFromPipelineURL: string;
+        pipelineDetailsURL: string;
+      };
+    }>;
+  };
+};
+
 export type CandidatesShowModernDataResponse = {
   meta: {
     contractVersion: number;

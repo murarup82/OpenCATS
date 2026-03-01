@@ -4,6 +4,7 @@ import type {
   CandidatesListModernDataResponse,
   CandidatesShowModernDataResponse,
   DashboardModernDataResponse,
+  JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
   QuickActionAddToListModernDataResponse,
   UIModeBootstrap
@@ -16,6 +17,7 @@ import {
   MODERN_CANDIDATE_SHOW_PAGE,
   MODERN_CONTRACT_VERSION,
   MODERN_DASHBOARD_PAGE,
+  MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
   buildModernJSONRequestQuery
 } from './modernContract';
@@ -165,6 +167,30 @@ export async function fetchJobOrdersListModernData(
 
   if (data.meta.contractKey !== 'joborders.listByView.v1') {
     throw new Error('Unexpected job orders contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchJobOrdersShowModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<JobOrdersShowModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'joborders',
+    action: 'show',
+    modernPage: MODERN_JOBORDER_SHOW_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<JobOrdersShowModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading job order profile.');
+  }
+
+  if (data.meta.contractKey !== 'joborders.show.v1') {
+    throw new Error('Unexpected job order profile contract key.');
   }
 
   return data;

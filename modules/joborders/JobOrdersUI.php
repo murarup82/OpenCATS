@@ -873,6 +873,10 @@ class JobOrdersUI extends UserInterface
      */
     private function show()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Is this a popup? */
         if (isset($_GET['display']) && $_GET['display'] == 'popup')
         {
@@ -1196,6 +1200,47 @@ class JobOrdersUI extends UserInterface
         if (intval($cpSettings['enabled']))
         {
             $careerPortalURL = CATSUtility::getAbsoluteURI() . 'careers/';
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'joborders-show')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $pipelines = new Pipelines($this->_siteID);
+            $pipelineRS = $pipelines->getJobOrderPipeline($jobOrderID, '', $showClosed);
+
+            $this->renderModernJobOrderShowJSON(
+                $jobOrderID,
+                $isPopup,
+                $showClosed,
+                $data,
+                $extraFieldRS,
+                $attachmentsRS,
+                $hiringPlanRS,
+                $hiringPlanTotal,
+                $jobOrderComments,
+                $jobOrderCommentFlashMessage,
+                $jobOrderCommentFlashIsError,
+                $jobOrderMessageFlashMessage,
+                $jobOrderMessageFlashIsError,
+                $pipelineRS,
+                'joborders-show'
+            );
+            return;
         }
 
         $this->_template->assign('active', $this);
@@ -2200,6 +2245,264 @@ class JobOrdersUI extends UserInterface
         if (!eval(Hooks::get('JO_ON_DELETE_POST'))) return;
 
         CATSUtility::transferRelativeURI('m=joborders&a=listByView');
+    }
+
+    private function renderModernJobOrderShowJSON(
+        $jobOrderID,
+        $isPopup,
+        $showClosed,
+        $data,
+        $extraFieldRS,
+        $attachmentsRS,
+        $hiringPlanRS,
+        $hiringPlanTotal,
+        $jobOrderComments,
+        $jobOrderCommentFlashMessage,
+        $jobOrderCommentFlashIsError,
+        $jobOrderMessageFlashMessage,
+        $jobOrderMessageFlashIsError,
+        $pipelineRS,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $jobOrderID = (int) $jobOrderID;
+
+        $attachmentsPayload = array();
+        foreach ($attachmentsRS as $attachmentRow)
+        {
+            $retrievalURL = '';
+            if (!empty($attachmentRow['retrievalURL']))
+            {
+                $retrievalURL = html_entity_decode((string) $attachmentRow['retrievalURL'], ENT_QUOTES);
+            }
+            else if (!empty($attachmentRow['retrievalURLLocal']))
+            {
+                $retrievalURL = (string) $attachmentRow['retrievalURLLocal'];
+            }
+
+            $attachmentsPayload[] = array(
+                'attachmentID' => (int) $attachmentRow['attachmentID'],
+                'fileName' => (isset($attachmentRow['originalFilename']) ? $attachmentRow['originalFilename'] : ''),
+                'dateCreated' => (isset($attachmentRow['dateCreated']) ? $attachmentRow['dateCreated'] : '--'),
+                'icon' => (isset($attachmentRow['attachmentIcon']) ? $attachmentRow['attachmentIcon'] : ''),
+                'retrievalURL' => $retrievalURL
+            );
+        }
+
+        $extraFieldsPayload = array();
+        foreach ($extraFieldRS as $extraFieldData)
+        {
+            $extraFieldsPayload[] = array(
+                'fieldName' => (isset($extraFieldData['fieldName']) ? $extraFieldData['fieldName'] : ''),
+                'display' => (isset($extraFieldData['display']) ? (string) $extraFieldData['display'] : '')
+            );
+        }
+
+        $hiringPlanPayload = array();
+        foreach ($hiringPlanRS as $planRow)
+        {
+            $hiringPlanPayload[] = array(
+                'hiringPlanID' => (isset($planRow['hiringPlanID']) ? (int) $planRow['hiringPlanID'] : 0),
+                'openings' => (isset($planRow['openings']) ? (int) $planRow['openings'] : 0),
+                'description' => (isset($planRow['description']) ? (string) $planRow['description'] : ''),
+                'startDate' => (isset($planRow['startDate']) ? (string) $planRow['startDate'] : ''),
+                'endDate' => (isset($planRow['endDate']) ? (string) $planRow['endDate'] : '')
+            );
+        }
+
+        $pipelinePayload = array();
+        $activePipelineCount = 0;
+        $closedPipelineCount = 0;
+        foreach ($pipelineRS as $pipelineData)
+        {
+            $candidateID = (isset($pipelineData['candidateID']) ? (int) $pipelineData['candidateID'] : 0);
+            $isActivePipeline = (isset($pipelineData['isActive']) ? ((int) $pipelineData['isActive'] === 1) : true);
+            if ($isActivePipeline)
+            {
+                $activePipelineCount++;
+            }
+            else
+            {
+                $closedPipelineCount++;
+            }
+
+            $statusLabel = (isset($pipelineData['status']) ? trim($pipelineData['status']) : '--');
+            if ($statusLabel === '')
+            {
+                $statusLabel = '--';
+            }
+            $statusSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $statusLabel), '-'));
+            if ($statusSlug === '')
+            {
+                $statusSlug = 'unknown';
+            }
+
+            $ownerName = trim(
+                (isset($pipelineData['ownerFirstName']) ? $pipelineData['ownerFirstName'] : '') .
+                ' ' .
+                (isset($pipelineData['ownerLastName']) ? $pipelineData['ownerLastName'] : '')
+            );
+            if ($ownerName === '')
+            {
+                $ownerName = '--';
+            }
+
+            $addedByName = trim(
+                (isset($pipelineData['addedByFirstName']) ? $pipelineData['addedByFirstName'] : '') .
+                ' ' .
+                (isset($pipelineData['addedByLastName']) ? $pipelineData['addedByLastName'] : '')
+            );
+            if ($addedByName === '')
+            {
+                $addedByName = '--';
+            }
+
+            $candidateName = trim(
+                (isset($pipelineData['firstName']) ? $pipelineData['firstName'] : '') .
+                ' ' .
+                (isset($pipelineData['lastName']) ? $pipelineData['lastName'] : '')
+            );
+            if ($candidateName === '')
+            {
+                $candidateName = 'Candidate #' . $candidateID;
+            }
+
+            $candidateJobOrderID = (isset($pipelineData['candidateJobOrderID']) ? (int) $pipelineData['candidateJobOrderID'] : 0);
+
+            $pipelinePayload[] = array(
+                'candidateJobOrderID' => $candidateJobOrderID,
+                'candidateID' => $candidateID,
+                'candidateName' => $candidateName,
+                'candidateURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
+                'statusID' => (isset($pipelineData['statusID']) ? (int) $pipelineData['statusID'] : 0),
+                'statusLabel' => $statusLabel,
+                'statusSlug' => $statusSlug,
+                'isActive' => $isActivePipeline,
+                'dateCreated' => (isset($pipelineData['dateCreated']) ? $pipelineData['dateCreated'] : '--'),
+                'country' => (isset($pipelineData['country']) ? $pipelineData['country'] : '--'),
+                'isHotCandidate' => (isset($pipelineData['isHotCandidate']) ? ((int) $pipelineData['isHotCandidate'] === 1) : false),
+                'isDuplicateCandidate' => (isset($pipelineData['isDuplicateCandidate']) ? ((int) $pipelineData['isDuplicateCandidate'] === 1) : false),
+                'submitted' => (isset($pipelineData['submitted']) ? ((int) $pipelineData['submitted'] === 1) : false),
+                'ratingValue' => (isset($pipelineData['ratingValue']) ? (int) $pipelineData['ratingValue'] : 0),
+                'ownerName' => $ownerName,
+                'addedByName' => $addedByName,
+                'actions' => array(
+                    'changeStatusURL' => sprintf(
+                        '%s?m=joborders&a=addActivityChangeStatus&candidateID=%d&jobOrderID=%d&ui=legacy',
+                        $baseURL,
+                        $candidateID,
+                        $jobOrderID
+                    ),
+                    'removeFromPipelineURL' => sprintf(
+                        '%s?m=joborders&a=removeFromPipeline&candidateID=%d&jobOrderID=%d&display=popup&ui=legacy',
+                        $baseURL,
+                        $candidateID,
+                        $jobOrderID
+                    ),
+                    'pipelineDetailsURL' => sprintf(
+                        '%s?m=joborders&a=pipelineStatusDetails&pipelineID=%d&ui=legacy',
+                        $baseURL,
+                        $candidateJobOrderID
+                    )
+                )
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.show.v1',
+                'modernPage' => $modernPage,
+                'jobOrderID' => $jobOrderID,
+                'isPopup' => ((bool) $isPopup),
+                'showClosedPipeline' => ((bool) $showClosed),
+                'permissions' => array(
+                    'canEditJobOrder' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteJobOrder' => ($this->getUserAccessLevel('joborders.delete') >= ACCESS_LEVEL_DELETE),
+                    'canViewHistory' => ($this->getUserAccessLevel('joborders.show') >= ACCESS_LEVEL_DEMO),
+                    'canAddCandidateToPipeline' => ($this->getUserAccessLevel('joborders.considerCandidateSearch') >= ACCESS_LEVEL_EDIT),
+                    'canChangePipelineStatus' => ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT),
+                    'canRemoveFromPipeline' => ($this->getUserAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_DELETE),
+                    'canAddComment' => (!$isPopup && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
+                    'canAdministrativeHideShow' => ($this->getUserAccessLevel('joborders.hidden') >= ACCESS_LEVEL_MULTI_SA)
+                )
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'editURL' => sprintf('%s?m=joborders&a=edit&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
+                'addCandidateURL' => sprintf('%s?m=joborders&a=considerCandidateSearch&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'reportURL' => sprintf('%s?m=reports&a=customizeJobOrderReport&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'historyURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=400&dataItemID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'deleteURL' => sprintf('%s?m=joborders&a=delete&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'hiringPlanURL' => sprintf('%s?m=joborders&a=editHiringPlan&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID)
+            ),
+            'jobOrder' => array(
+                'jobOrderID' => $jobOrderID,
+                'title' => (isset($data['title']) ? (string) $data['title'] : ''),
+                'titleClass' => (isset($data['titleClass']) ? (string) $data['titleClass'] : ''),
+                'companyID' => (isset($data['companyID']) ? (int) $data['companyID'] : 0),
+                'companyName' => (isset($data['companyName']) ? (string) $data['companyName'] : ''),
+                'companyURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, (isset($data['companyID']) ? (int) $data['companyID'] : 0)),
+                'contactID' => (isset($data['contactID']) ? (int) $data['contactID'] : 0),
+                'contactFullName' => (isset($data['contactFullName']) ? (string) $data['contactFullName'] : ''),
+                'recruiterFullName' => (isset($data['recruiterFullName']) ? (string) $data['recruiterFullName'] : ''),
+                'ownerFullName' => (isset($data['ownerFullName']) ? (string) $data['ownerFullName'] : ''),
+                'enteredByFullName' => (isset($data['enteredByFullName']) ? (string) $data['enteredByFullName'] : ''),
+                'status' => (isset($data['status']) ? (string) $data['status'] : ''),
+                'type' => (isset($data['type']) ? (string) $data['type'] : ''),
+                'typeDescription' => (isset($data['typeDescription']) ? (string) $data['typeDescription'] : ''),
+                'city' => (isset($data['city']) ? (string) $data['city'] : ''),
+                'state' => (isset($data['state']) ? (string) $data['state'] : ''),
+                'cityAndState' => (isset($data['cityAndState']) ? (string) $data['cityAndState'] : ''),
+                'startDate' => (isset($data['startDate']) ? (string) $data['startDate'] : ''),
+                'dateCreated' => (isset($data['dateCreated']) ? (string) $data['dateCreated'] : ''),
+                'dateModified' => (isset($data['dateModified']) ? (string) $data['dateModified'] : ''),
+                'daysOld' => (isset($data['daysOld']) ? (int) $data['daysOld'] : 0),
+                'duration' => (isset($data['duration']) ? (string) $data['duration'] : ''),
+                'maxRate' => (isset($data['maxRate']) ? (string) $data['maxRate'] : ''),
+                'salary' => (isset($data['salary']) ? (string) $data['salary'] : ''),
+                'isHot' => (isset($data['isHot']) ? ((int) $data['isHot'] === 1) : false),
+                'isAdminHidden' => (isset($data['isAdminHidden']) ? ((int) $data['isAdminHidden'] === 1) : false),
+                'public' => (isset($data['public']) && trim((string) $data['public']) !== ''),
+                'description' => (isset($data['description']) ? (string) $data['description'] : ''),
+                'notes' => (isset($data['notes']) ? (string) $data['notes'] : ''),
+                'openings' => (isset($data['openings']) ? (int) $data['openings'] : 0),
+                'openingsAvailable' => (isset($data['openingsAvailable']) ? (int) $data['openingsAvailable'] : 0),
+                'pipelineCount' => (isset($data['pipeline']) ? (int) $data['pipeline'] : 0),
+                'submittedCount' => (isset($data['submitted']) ? (int) $data['submitted'] : 0)
+            ),
+            'attachments' => array(
+                'count' => count($attachmentsPayload),
+                'items' => $attachmentsPayload
+            ),
+            'extraFields' => $extraFieldsPayload,
+            'hiringPlan' => array(
+                'totalOpenings' => (int) $hiringPlanTotal,
+                'items' => $hiringPlanPayload
+            ),
+            'comments' => array(
+                'count' => count($jobOrderComments),
+                'flashMessage' => (string) $jobOrderCommentFlashMessage,
+                'flashIsError' => ((bool) $jobOrderCommentFlashIsError)
+            ),
+            'messages' => array(
+                'flashMessage' => (string) $jobOrderMessageFlashMessage,
+                'flashIsError' => ((bool) $jobOrderMessageFlashIsError)
+            ),
+            'pipeline' => array(
+                'activeCount' => $activePipelineCount,
+                'closedCount' => $closedPipelineCount,
+                'items' => $pipelinePayload
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function onSetMonitoredJobOrder()

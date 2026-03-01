@@ -6,6 +6,7 @@ import { CandidatesShowPage } from '../pages/CandidatesShowPage';
 import { CandidatesAddPage } from '../pages/CandidatesAddPage';
 import { CandidatesEditPage } from '../pages/CandidatesEditPage';
 import { JobOrdersListPage } from '../pages/JobOrdersListPage';
+import { JobOrdersShowPage } from '../pages/JobOrdersShowPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 
 export type ModernRouteComponentProps = {
@@ -24,6 +25,7 @@ const registry: Record<string, ModernRouteComponent> = {
   'joborders.listbyview': JobOrdersListPage,
   'joborders.list': JobOrdersListPage,
   'joborders.(default)': JobOrdersListPage,
+  'joborders.show': JobOrdersShowPage,
   'candidates.*': ModuleBridgePage,
   'joborders.*': ModuleBridgePage,
   'companies.*': ModuleBridgePage,

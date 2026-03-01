@@ -5,6 +5,7 @@ export const MODERN_CANDIDATE_SHOW_PAGE = 'candidates-show';
 export const MODERN_CANDIDATE_EDIT_PAGE = 'candidates-edit';
 export const MODERN_CANDIDATE_ADD_PAGE = 'candidates-add';
 export const MODERN_JOBORDERS_PAGE = 'joborders-list';
+export const MODERN_JOBORDER_SHOW_PAGE = 'joborders-show';
 export const MODERN_CONTRACT_VERSION = 1;
 
 export type ModernRequestParams = {
