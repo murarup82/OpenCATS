@@ -86,7 +86,7 @@ export function PipelineDetailsInlineModal({
         <div className="modern-inline-modal__actions">
           {onOpenFullDetails ? (
             <button type="button" className="modern-btn modern-btn--secondary" onClick={onOpenFullDetails}>
-              Open Full Details
+              Open Legacy Details
             </button>
           ) : null}
           <button type="button" className="modern-btn modern-btn--secondary" onClick={onClose}>

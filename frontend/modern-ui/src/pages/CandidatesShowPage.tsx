@@ -1314,9 +1314,20 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <td>
                       <div className="modern-table-actions">
                         {attachment.previewAvailable ? (
-                          <a className="modern-btn modern-btn--mini modern-btn--secondary" href={decodeLegacyURL(attachment.previewURL)} target="_blank" rel="noreferrer">
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            onClick={() =>
+                              setPipelineModal({
+                                url: decodeLegacyURL(attachment.previewURL),
+                                title: `Preview: ${toDisplayText(attachment.fileName, 'Attachment')}`,
+                                openInPopup: { width: 980, height: 720, refreshOnClose: false },
+                                showRefreshClose: false
+                              })
+                            }
+                          >
                             Preview
-                          </a>
+                          </button>
                         ) : null}
                         {permissions.canDeleteAttachment ? (
                           <button
@@ -1556,7 +1567,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           onOpenFullDetails={
             pipelineDetailsModal
               ? () => {
-                  window.open(pipelineDetailsModal.fullDetailsURL, '_blank', 'noopener');
+                  setPipelineDetailsModal(null);
+                  setPipelineModal({
+                    url: decodeLegacyURL(pipelineDetailsModal.fullDetailsURL),
+                    title: pipelineDetailsModal.title,
+                    openInPopup: { width: 980, height: 720, refreshOnClose: false },
+                    showRefreshClose: false
+                  });
                 }
               : undefined
           }

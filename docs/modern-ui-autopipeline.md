@@ -47,10 +47,14 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 41. Added native async attachment upload workflows on `candidates.show` and `joborders.show` (with modern-json backend mutations), while keeping legacy upload modal fallback from the same panel.
 42. Embedded `joborders.show` Hiring Plan action into the in-app modal shell to avoid a full-page context switch while preserving legacy functionality.
 43. Embedded `Open Inbox` actions on `candidates.show` and `joborders.show` into the in-app modal shell to keep profile context during team inbox review.
+44. Replaced `window.open` pipeline full-details fallbacks on `candidates.show` and `joborders.show` with in-app embedded modal navigation, keeping users in modern shell context.
+45. Embedded candidate attachment `Preview` action into the in-app modal shell to avoid new-tab context switches while preserving legacy preview rendering.
 
 ## Next Queue
 
 1. Move remaining candidate/joborder profile actions (remaining legacy utility workflows and advanced forms) from popup/form-post flows to native mutation + optimistic refresh patterns.
+2. Introduce native modal shells for add-to-job-order workflows (candidate list/show) with modern filtering controls and async submit.
+3. Replace remaining confirmation `window.confirm/prompt` flows (pipeline removal notes/status side-forms) with native inline modal components for consistent UX/state handling.
 
 ## Rules
 

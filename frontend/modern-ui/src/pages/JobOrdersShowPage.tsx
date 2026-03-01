@@ -1292,7 +1292,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
           onOpenFullDetails={
             pipelineDetailsModal
               ? () => {
-                  window.open(pipelineDetailsModal.fullDetailsURL, '_blank', 'noopener');
+                  setPipelineDetailsModal(null);
+                  setPipelineModal({
+                    url: decodeLegacyURL(pipelineDetailsModal.fullDetailsURL),
+                    title: pipelineDetailsModal.title,
+                    openInPopup: { width: 980, height: 720, refreshOnClose: false },
+                    showRefreshClose: false
+                  });
                 }
               : undefined
           }
