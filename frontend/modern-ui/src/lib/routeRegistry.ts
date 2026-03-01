@@ -3,7 +3,7 @@ import type { UIModeBootstrap } from '../types';
 import { DashboardMyPage } from '../pages/DashboardMyPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
-import { CandidatesFormBridgePage } from '../pages/CandidatesFormBridgePage';
+import { CandidatesAddPage } from '../pages/CandidatesAddPage';
 import { CandidatesEditPage } from '../pages/CandidatesEditPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 
@@ -18,7 +18,7 @@ const registry: Record<string, ModernRouteComponent> = {
   'dashboard.(default)': DashboardMyPage,
   'candidates.listbyview': CandidatesListPage,
   'candidates.show': CandidatesShowPage,
-  'candidates.add': CandidatesFormBridgePage,
+  'candidates.add': CandidatesAddPage,
   'candidates.edit': CandidatesEditPage,
   'candidates.*': ModuleBridgePage,
   'joborders.*': ModuleBridgePage,

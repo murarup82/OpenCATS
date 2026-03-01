@@ -1,4 +1,5 @@
 import type {
+  CandidatesAddModernDataResponse,
   CandidatesEditModernDataResponse,
   CandidatesListModernDataResponse,
   CandidatesShowModernDataResponse,
@@ -9,6 +10,7 @@ import type {
 import { getJSON } from './httpClient';
 import {
   MODERN_CANDIDATES_PAGE,
+  MODERN_CANDIDATE_ADD_PAGE,
   MODERN_CANDIDATE_EDIT_PAGE,
   MODERN_CANDIDATE_SHOW_PAGE,
   MODERN_CONTRACT_VERSION,
@@ -113,6 +115,30 @@ export async function fetchCandidatesEditModernData(
 
   if (data.meta.contractKey !== 'candidates.edit.v1') {
     throw new Error('Unexpected candidate edit contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchCandidatesAddModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<CandidatesAddModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'candidates',
+    action: 'add',
+    modernPage: MODERN_CANDIDATE_ADD_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<CandidatesAddModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading candidate add form.');
+  }
+
+  if (data.meta.contractKey !== 'candidates.add.v1') {
+    throw new Error('Unexpected candidate add contract key.');
   }
 
   return data;

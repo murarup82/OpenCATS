@@ -2062,6 +2062,10 @@ class CandidatesUI extends UserInterface
      */
     private function add($contents = '', $fields = array())
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $perfEnabled = (isset($_GET['perf']) && $_GET['perf'] === '1');
         $perfStart = microtime(true);
         $perfLast = $perfStart;
@@ -2121,6 +2125,34 @@ class CandidatesUI extends UserInterface
             $preassignedFields['gdprExpirationDate'] === ''
         ) {
             $preassignedFields['gdprExpirationDate'] = $defaultGdprExpiration;
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'candidates-add')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernCandidateAddJSON(
+                $sourcesRS,
+                $sourcesString,
+                $preassignedFields,
+                $gdprSettingsRS,
+                'candidates-add'
+            );
+            return;
         }
 
         /* Get preattached resume, if any. */
@@ -2255,6 +2287,95 @@ class CandidatesUI extends UserInterface
             error_log(sprintf('AddCandidate perf: render %.3fms', (microtime(true) - $perfLast) * 1000));
             error_log(sprintf('AddCandidate perf: total %.3fms', (microtime(true) - $perfStart) * 1000));
         }
+    }
+
+    private function renderModernCandidateAddJSON(
+        $sourcesRS,
+        $sourcesString,
+        $preassignedFields,
+        $gdprSettingsRS,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $sourceOptions = array(
+            array(
+                'value' => '(none)',
+                'label' => '(None)'
+            )
+        );
+        foreach ($sourcesRS as $sourceData)
+        {
+            $sourceName = (isset($sourceData['name']) ? trim($sourceData['name']) : '');
+            if ($sourceName === '' || $sourceName === '(none)')
+            {
+                continue;
+            }
+
+            $sourceOptions[] = array(
+                'value' => $sourceName,
+                'label' => $sourceName
+            );
+        }
+
+        $defaultSource = '(none)';
+        if (isset($preassignedFields['source']) && trim((string) $preassignedFields['source']) !== '')
+        {
+            $defaultSource = (string) $preassignedFields['source'];
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'candidates.add.v1',
+                'modernPage' => $modernPage,
+                'permissions' => array(
+                    'canAddCandidate' => ($this->getUserAccessLevel('candidates.add') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=candidates&a=add&ui=modern', $baseURL),
+                'listURL' => sprintf('%s?m=candidates&a=listByView&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=candidates&a=add&ui=legacy', $baseURL)
+            ),
+            'defaults' => array(
+                'firstName' => (isset($preassignedFields['firstName']) ? (string) $preassignedFields['firstName'] : ''),
+                'lastName' => (isset($preassignedFields['lastName']) ? (string) $preassignedFields['lastName'] : ''),
+                'email1' => (isset($preassignedFields['email1']) ? (string) $preassignedFields['email1'] : ''),
+                'phoneCell' => (isset($preassignedFields['phoneCell']) ? (string) $preassignedFields['phoneCell'] : ''),
+                'address' => (isset($preassignedFields['address']) ? (string) $preassignedFields['address'] : ''),
+                'city' => (isset($preassignedFields['city']) ? (string) $preassignedFields['city'] : ''),
+                'country' => (isset($preassignedFields['country']) ? (string) $preassignedFields['country'] : ''),
+                'bestTimeToCall' => (isset($preassignedFields['bestTimeToCall']) ? (string) $preassignedFields['bestTimeToCall'] : ''),
+                'dateAvailable' => (isset($preassignedFields['dateAvailable']) ? (string) $preassignedFields['dateAvailable'] : ''),
+                'gdprSigned' => ((isset($preassignedFields['gdprSigned']) && (int) $preassignedFields['gdprSigned'] === 1) ? true : false),
+                'gdprExpirationDate' => (isset($preassignedFields['gdprExpirationDate']) ? (string) $preassignedFields['gdprExpirationDate'] : ''),
+                'source' => $defaultSource,
+                'keySkills' => (isset($preassignedFields['keySkills']) ? (string) $preassignedFields['keySkills'] : ''),
+                'currentEmployer' => (isset($preassignedFields['currentEmployer']) ? (string) $preassignedFields['currentEmployer'] : ''),
+                'currentPay' => (isset($preassignedFields['currentPay']) ? (string) $preassignedFields['currentPay'] : ''),
+                'desiredPay' => (isset($preassignedFields['desiredPay']) ? (string) $preassignedFields['desiredPay'] : ''),
+                'notes' => (isset($preassignedFields['notes']) ? (string) $preassignedFields['notes'] : ''),
+                'canRelocate' => ((isset($preassignedFields['canRelocate']) && (string) $preassignedFields['canRelocate'] !== '' && (string) $preassignedFields['canRelocate'] !== '0') ? true : false),
+                'gender' => (isset($preassignedFields['gender']) ? (string) $preassignedFields['gender'] : ''),
+                'race' => (isset($preassignedFields['race']) ? (string) $preassignedFields['race'] : ''),
+                'veteran' => (isset($preassignedFields['veteran']) ? (string) $preassignedFields['veteran'] : ''),
+                'disability' => (isset($preassignedFields['disability']) ? (string) $preassignedFields['disability'] : '')
+            ),
+            'options' => array(
+                'sources' => $sourceOptions,
+                'sourceCSV' => $sourcesString,
+                'gdprExpirationYears' => (isset($gdprSettingsRS['gdprExpirationYears']) ? (int) $gdprSettingsRS['gdprExpirationYears'] : 2)
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function formatGdprRequestDate($dateValue)

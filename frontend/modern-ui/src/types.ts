@@ -355,6 +355,54 @@ export type CandidatesEditModernDataResponse = {
   };
 };
 
+export type CandidatesAddModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    permissions: {
+      canAddCandidate: boolean;
+    };
+  };
+  actions: {
+    submitURL: string;
+    listURL: string;
+    legacyURL: string;
+  };
+  defaults: {
+    firstName: string;
+    lastName: string;
+    email1: string;
+    phoneCell: string;
+    address: string;
+    city: string;
+    country: string;
+    bestTimeToCall: string;
+    dateAvailable: string;
+    gdprSigned: boolean;
+    gdprExpirationDate: string;
+    source: string;
+    keySkills: string;
+    currentEmployer: string;
+    currentPay: string;
+    desiredPay: string;
+    notes: string;
+    canRelocate: boolean;
+    gender: string;
+    race: string;
+    veteran: string;
+    disability: string;
+  };
+  options: {
+    sources: Array<{
+      value: string;
+      label: string;
+    }>;
+    sourceCSV: string;
+    gdprExpirationYears: number;
+  };
+};
+
 export type QuickActionAddToListModernDataResponse = {
   meta: {
     contractVersion: number;
