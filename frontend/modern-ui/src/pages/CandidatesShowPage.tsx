@@ -1332,10 +1332,21 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                         <td>{toDisplayText(row['questionnaireDescription'])}</td>
                         <td>
                           <div className="modern-table-actions">
-                            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={viewURL}>
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--secondary"
+                              onClick={() =>
+                                setPipelineModal({
+                                  url: decodeLegacyURL(viewURL),
+                                  title: `Questionnaire: ${title}`,
+                                  openInPopup: { width: 980, height: 720, refreshOnClose: false },
+                                  showRefreshClose: false
+                                })
+                              }
+                            >
                               View
-                            </a>
-                            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={printURL}>
+                            </button>
+                            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={printURL} target="_blank" rel="noreferrer">
                               Print
                             </a>
                           </div>
