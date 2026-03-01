@@ -524,6 +524,7 @@ export function ModernOverlayHost({ bootstrap }: Props) {
       return;
     }
 
+    const selectedListsSnapshot = [...selectedListIDs];
     void runListMutation(async () => {
       const listsToAdd = `${selectedListIDs.join(',')},`;
       const itemsToAdd = data.dataItem.ids.join(',');
@@ -542,8 +543,16 @@ export function ModernOverlayHost({ bootstrap }: Props) {
 
       setAddModalInfo('Items added to selected lists.');
       window.setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent('opencats:add-to-list:completed', {
+            detail: {
+              dataItemType: data.dataItem.type,
+              dataItemIDs: data.dataItem.ids,
+              listIDs: selectedListsSnapshot
+            }
+          })
+        );
         closeAddModal();
-        window.location.reload();
       }, 900);
     });
   };

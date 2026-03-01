@@ -64,6 +64,7 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 56. Added async monitor-toggle parity on `joborders.listByView`:
     - backend `setMonitoredJobOrder` supports `format=modern-json`
     - frontend monitor toggle now updates in-place without full-page reload.
+57. Removed forced full-page reload after Add-To-List mutation in `ModernOverlayHost`; now dispatches an in-app completion event and refreshes `candidates.show` data contextually.
 
 ## Next Queue
 

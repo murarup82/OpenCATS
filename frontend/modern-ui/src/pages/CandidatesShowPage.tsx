@@ -34,6 +34,12 @@ type Props = {
   bootstrap: UIModeBootstrap;
 };
 
+type AddToListCompletedDetail = {
+  dataItemType?: number | string;
+  dataItemIDs?: Array<number | string>;
+  listIDs?: Array<number | string>;
+};
+
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
     const normalized = value.trim();
@@ -186,6 +192,30 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
+
+  useEffect(() => {
+    const handleAddToListCompleted = (rawEvent: Event) => {
+      const event = rawEvent as CustomEvent<AddToListCompletedDetail>;
+      const candidateID = Number(data?.meta.candidateID || 0);
+      if (candidateID <= 0) {
+        return;
+      }
+
+      const ids = Array.isArray(event.detail?.dataItemIDs)
+        ? event.detail.dataItemIDs.map((value) => Number(value || 0))
+        : [];
+      if (!ids.includes(candidateID)) {
+        return;
+      }
+
+      refreshPageData();
+    };
+
+    window.addEventListener('opencats:add-to-list:completed', handleAddToListCompleted as EventListener);
+    return () => {
+      window.removeEventListener('opencats:add-to-list:completed', handleAddToListCompleted as EventListener);
+    };
+  }, [data?.meta.candidateID, refreshPageData]);
 
   const handleRemoveFromPipeline = useCallback(
     async (pipeline: CandidatesShowModernDataResponse['pipelines']['items'][number]) => {
