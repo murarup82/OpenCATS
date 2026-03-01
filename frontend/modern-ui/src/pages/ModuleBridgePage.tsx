@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import type { UIModeBootstrap } from '../types';
 import '../dashboard-avel.css';
@@ -47,12 +48,28 @@ function getPageTitle(moduleName: string): string {
   return toDisplayText(moduleName, 'Workspace');
 }
 
+const QUICK_NAV_ROUTES: Array<{ label: string; url: (indexName: string) => string }> = [
+  {
+    label: 'Dashboard',
+    url: (indexName) => `${indexName}?m=dashboard&a=my&ui=modern`
+  },
+  {
+    label: 'Candidates',
+    url: (indexName) => `${indexName}?m=candidates&a=listByView&ui=modern`
+  },
+  {
+    label: 'Job Orders',
+    url: (indexName) => `${indexName}?m=joborders&a=listByView&ui=modern`
+  }
+];
+
 export function ModuleBridgePage({ bootstrap }: Props) {
   const moduleName = toDisplayText(bootstrap.targetModule, 'unknown');
   const actionName = toDisplayText(bootstrap.targetAction, '(default)');
   const title = getPageTitle(moduleName);
   const embeddedURL = buildEmbeddedLegacyURL(bootstrap.legacyURL);
   const dashboardURL = `${bootstrap.indexName}?m=dashboard&a=my&ui=modern`;
+  const [frameReloadToken, setFrameReloadToken] = useState(0);
 
   return (
     <div className="avel-dashboard-page">
@@ -71,16 +88,47 @@ export function ModuleBridgePage({ bootstrap }: Props) {
         )}
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-list-panel">
-            <div className="avel-list-panel__header">
-              <h2 className="avel-list-panel__title">Legacy Compatibility Workspace</h2>
-              <p className="avel-list-panel__hint">
-                Route: {moduleName} / {actionName}
-              </p>
+          <section className="modern-compat-page">
+            <header className="modern-compat-page__header">
+              <div>
+                <h2 className="modern-compat-page__title">Legacy Compatibility Workspace</h2>
+                <p className="modern-compat-page__subtitle">
+                  Route: {moduleName} / {actionName}
+                </p>
+              </div>
+              <div className="modern-compat-page__meta">
+                ui_embed=1
+              </div>
+            </header>
+
+            <div className="modern-compat-page__actions">
+              <button
+                type="button"
+                className="modern-btn modern-btn--secondary"
+                onClick={() => setFrameReloadToken((current) => current + 1)}
+              >
+                Reload Workspace
+              </button>
+              <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL} target="_blank" rel="noreferrer">
+                Open Current Route In New Tab
+              </a>
             </div>
+
+            <nav className="modern-compat-page__nav" aria-label="Quick navigation">
+              {QUICK_NAV_ROUTES.map((entry) => (
+                <a
+                  key={entry.label}
+                  className="modern-chip modern-chip--info"
+                  href={entry.url(bootstrap.indexName)}
+                >
+                  {entry.label}
+                </a>
+              ))}
+            </nav>
 
             <div className="modern-compat-page__frame-wrap">
               <iframe
+                key={frameReloadToken}
                 title={`Legacy compatibility route ${moduleName}/${actionName}`}
                 className="modern-compat-page__frame"
                 src={embeddedURL}

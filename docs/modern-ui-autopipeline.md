@@ -106,6 +106,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - replaced native selects on `candidates.add` and `candidates.edit` for Source/GDPR and EEO fields with shared `SelectMenu`
     - preserved legacy form-post compatibility by binding each control to hidden inputs (`name=value`) so backend handlers remain unchanged
     - kept dynamic custom-field dropdown rendering intact for compatibility while reducing generic/native dropdown footprint on primary forms.
+69. Upgraded `ModuleBridgePage` compatibility UX for non-modernized modules:
+    - added in-place `Reload Workspace` action (iframe key refresh) to avoid full-page refresh when legacy content gets stale
+    - added quick navigation chips to core native modern surfaces (Dashboard/Candidates/Job Orders)
+    - added explicit “open current route in new tab” capability while preserving embedded legacy route behavior (`ui_embed=1`).
 
 ## Next Queue
 

@@ -326,6 +326,13 @@
   flex-wrap: wrap;
 }
 
+.modern-compat-page__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .modern-compat-page__frame-wrap {
   border: 1px solid #b9cfdd;
   border-radius: 14px;
