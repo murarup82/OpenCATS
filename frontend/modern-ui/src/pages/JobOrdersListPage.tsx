@@ -10,6 +10,7 @@ import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
+import { isCapabilityEnabled } from '../lib/routeGuards';
 import { useServerQueryState } from '../lib/useServerQueryState';
 import '../dashboard-avel.css';
 
@@ -437,6 +438,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   }
 
   const permissions = data.meta.permissions;
+  const canAddJobOrder = isCapabilityEnabled(permissions.canAddJobOrder);
+  const canManageRecruiterAllocation = isCapabilityEnabled(permissions.canManageRecruiterAllocation);
+  const canToggleMonitored = isCapabilityEnabled(permissions.canToggleMonitored);
   const hasRows = data.rows.length > 0;
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
@@ -461,7 +465,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
         subtitle="Modern job order board with legacy-safe actions and full filter parity."
         actions={
           <>
-            {permissions.canAddJobOrder ? (
+            {canAddJobOrder ? (
               <button
                 type="button"
                 className="modern-btn modern-btn--secondary"
@@ -475,7 +479,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                 Add Job Order
               </button>
             ) : null}
-            {permissions.canManageRecruiterAllocation ? (
+            {canManageRecruiterAllocation ? (
               <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.recruiterAllocationURL)}>
                 Recruiter Allocation
               </a>
@@ -698,7 +702,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                   {visibleColumns.recruiter ? <td>{toDisplayText(row.recruiterName)}</td> : null}
                   {visibleColumns.monitor ? (
                     <td>
-                      {permissions.canToggleMonitored ? (
+                      {canToggleMonitored ? (
                         <div className="modern-table-actions">
                           <button
                             type="button"

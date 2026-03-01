@@ -10,7 +10,8 @@ type AppProps = {
 export function App({ bootstrap }: AppProps) {
   const pageComponent = resolveModernRouteComponent(
     bootstrap.targetModule || '',
-    bootstrap.targetAction || ''
+    bootstrap.targetAction || '',
+    bootstrap.requestURI || ''
   );
 
   const content = (() => {

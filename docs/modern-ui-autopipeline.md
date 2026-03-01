@@ -222,19 +222,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `useServerQueryState()` in `frontend/modern-ui/src/lib/useServerQueryState.ts` for URL replace-state + server-query synchronization
     - refactored all native list pages (`Candidates`, `Job Orders`, `Companies`, `Contacts`, `Activity`, `Lists`) to use the shared query-state helper
     - removed repeated query-state boilerplate from list-filter/pagination flows while preserving existing route semantics.
+103. Added shared route/capability guard helpers and applied them to core routing/actions:
+    - introduced `routeGuards` helpers (`parseRequestQueryParams`, `hasPositiveIntegerQueryParam`, `isCapabilityEnabled`) in `frontend/modern-ui/src/lib/routeGuards.ts`
+    - updated route resolution to enforce required entity IDs for guarded routes (`show`/`edit` surfaces) and fallback safely to module defaults/bridge when missing
+    - applied capability guard helper to primary action rendering in Dashboard/Candidates list/Job Orders list to standardize permission checks.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling pass for remaining custom controls beyond `SelectMenu` (toggles, chips, icon-only actions).
-2. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
-3. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-4. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-5. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
-6. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-7. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-8. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
-9. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
-10. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
+2. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
+3. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+4. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
+5. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+6. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+7. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
+8. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
+9. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
+10. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
 
 ## Rules
 

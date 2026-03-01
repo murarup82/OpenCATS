@@ -26,6 +26,7 @@ import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanban
 import type { DashboardRow, DashboardStatusColumn } from '../components/dashboard/types';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
+import { isCapabilityEnabled } from '../lib/routeGuards';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -475,8 +476,8 @@ export function DashboardMyPage({ bootstrap }: Props) {
     }
   });
   const statusCatalog: StatusCatalogEntry[] = Array.from(byStatusID.values());
-  const canChangeStatus = !!data.meta.permissions?.canChangeStatus;
-  const canAssignToJobOrder = !!data.meta.permissions?.canAssignToJobOrder;
+  const canChangeStatus = isCapabilityEnabled(data.meta.permissions?.canChangeStatus);
+  const canAssignToJobOrder = isCapabilityEnabled(data.meta.permissions?.canAssignToJobOrder);
   const rejectedStatusID =
     Number(data.meta.statusRules?.rejectedStatusID || 0) > 0
       ? Number(data.meta.statusRules?.rejectedStatusID)

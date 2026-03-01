@@ -17,6 +17,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
+import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
 
 export type ModernRouteComponentProps = {
   bootstrap: UIModeBootstrap;
@@ -68,7 +69,30 @@ const registry: Record<string, ModernRouteComponent> = {
   'candidates.(default)': CandidatesListPage
 };
 
-export function resolveModernRouteComponent(moduleName: string, actionName: string): ModernRouteComponent | null {
+const guardedRouteParams: Record<string, string[]> = {
+  'candidates.show': ['candidateID'],
+  'candidates.edit': ['candidateID'],
+  'joborders.show': ['jobOrderID'],
+  'joborders.edit': ['jobOrderID'],
+  'companies.show': ['companyID'],
+  'contacts.show': ['contactID']
+};
+
+function routeGuardPasses(routeKey: string, requestURI: string): boolean {
+  const requiredParams = guardedRouteParams[routeKey];
+  if (!requiredParams || requiredParams.length === 0) {
+    return true;
+  }
+
+  const query = parseRequestQueryParams(requestURI);
+  return requiredParams.every((paramName) => hasPositiveIntegerQueryParam(query, paramName));
+}
+
+export function resolveModernRouteComponent(
+  moduleName: string,
+  actionName: string,
+  requestURI = ''
+): ModernRouteComponent | null {
   const moduleKey = (moduleName || '').toLowerCase();
   const actionKey = (actionName || '').toLowerCase();
   const candidates = [
@@ -79,7 +103,7 @@ export function resolveModernRouteComponent(moduleName: string, actionName: stri
   ];
 
   for (const routeKey of candidates) {
-    if (registry[routeKey]) {
+    if (registry[routeKey] && routeGuardPasses(routeKey, requestURI)) {
       return registry[routeKey];
     }
   }

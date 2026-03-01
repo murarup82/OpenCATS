@@ -10,6 +10,7 @@ import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
+import { isCapabilityEnabled } from '../lib/routeGuards';
 import { useServerQueryState } from '../lib/useServerQueryState';
 import '../dashboard-avel.css';
 
@@ -246,6 +247,10 @@ export function CandidatesListPage({ bootstrap }: Props) {
 
   const filters = data.filters;
   const permissions = data.meta.permissions;
+  const canAddCandidate = isCapabilityEnabled(permissions.canAddCandidate);
+  const canEditCandidate = isCapabilityEnabled(permissions.canEditCandidate);
+  const canAddToList = isCapabilityEnabled(permissions.canAddToList);
+  const canAddToJobOrder = isCapabilityEnabled(permissions.canAddToJobOrder);
   const activeFilterLabels: string[] = [];
   if (filters.quickSearch.trim() !== '') {
     activeFilterLabels.push(`Search: "${filters.quickSearch.trim()}"`);
@@ -280,7 +285,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
         subtitle="Modern candidate workspace powered by Avel UI tokens."
         actions={
           <>
-            {permissions.canAddCandidate ? (
+            {canAddCandidate ? (
               <a className="modern-btn modern-btn--secondary" href={`${bootstrap.indexName}?m=candidates&a=add&ui=modern`}>
                 Add Candidate
               </a>
@@ -503,12 +508,12 @@ export function CandidatesListPage({ bootstrap }: Props) {
                         <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateURL)}>
                           View
                         </a>
-                        {permissions.canEditCandidate ? (
+                        {canEditCandidate ? (
                           <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateEditURL)}>
                             Edit
                           </a>
                         ) : null}
-                        {permissions.canAddToList ? (
+                        {canAddToList ? (
                           <button
                             type="button"
                             className="modern-btn modern-btn--mini modern-btn--secondary"
@@ -517,7 +522,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                             Add To List
                           </button>
                         ) : null}
-                        {permissions.canAddToJobOrder ? (
+                        {canAddToJobOrder ? (
                           <button
                             type="button"
                             className="modern-btn modern-btn--mini modern-btn--secondary"
