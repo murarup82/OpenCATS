@@ -216,7 +216,16 @@ export function ModernOverlayHost({ bootstrap }: Props) {
       }
 
       if (refresh) {
-        window.location.reload();
+        const refreshEvent = new CustomEvent('opencats:legacy-popup:refresh-request', {
+          cancelable: true,
+          detail: {
+            source: 'legacy-popup-close'
+          }
+        });
+        window.dispatchEvent(refreshEvent);
+        if (!refreshEvent.defaultPrevented) {
+          window.location.reload();
+        }
       }
     },
     [getLegacyPopupReturnValue]

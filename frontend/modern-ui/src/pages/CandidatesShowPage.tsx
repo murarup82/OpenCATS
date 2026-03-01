@@ -194,6 +194,18 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   }, []);
 
   useEffect(() => {
+    const handleLegacyRefreshRequest = (rawEvent: Event) => {
+      rawEvent.preventDefault();
+      refreshPageData();
+    };
+
+    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    return () => {
+      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    };
+  }, [refreshPageData]);
+
+  useEffect(() => {
     const handleAddToListCompleted = (rawEvent: Event) => {
       const event = rawEvent as CustomEvent<AddToListCompletedDetail>;
       const candidateID = Number(data?.meta.candidateID || 0);

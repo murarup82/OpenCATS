@@ -65,6 +65,7 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - backend `setMonitoredJobOrder` supports `format=modern-json`
     - frontend monitor toggle now updates in-place without full-page reload.
 57. Removed forced full-page reload after Add-To-List mutation in `ModernOverlayHost`; now dispatches an in-app completion event and refreshes `candidates.show` data contextually.
+58. Added legacy-popup refresh event interception across modern pages (`dashboard.my`, `candidates.list/show/edit`, `joborders.list/show`) so refresh requests now use in-place data reload and avoid full browser reload by default.
 
 ## Next Queue
 

@@ -161,6 +161,18 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
     setReloadToken((current) => current + 1);
   }, []);
 
+  useEffect(() => {
+    const handleLegacyRefreshRequest = (rawEvent: Event) => {
+      rawEvent.preventDefault();
+      refreshPageData();
+    };
+
+    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    return () => {
+      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    };
+  }, [refreshPageData]);
+
   const closePipelineModal = useCallback(
     (refreshOnClose: boolean) => {
       setPipelineModal(null);

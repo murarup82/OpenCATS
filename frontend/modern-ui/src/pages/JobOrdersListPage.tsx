@@ -261,6 +261,18 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     setReloadToken((current) => current + 1);
   }, []);
 
+  useEffect(() => {
+    const handleLegacyRefreshRequest = (rawEvent: Event) => {
+      rawEvent.preventDefault();
+      refreshPageData();
+    };
+
+    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    return () => {
+      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    };
+  }, [refreshPageData]);
+
   const closeAddJobOrderModal = useCallback(
     (refreshOnClose: boolean) => {
       setAddJobOrderModal(null);

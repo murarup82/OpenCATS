@@ -184,6 +184,18 @@ export function DashboardMyPage({ bootstrap }: Props) {
     setReloadToken((current) => current + 1);
   }, []);
 
+  useEffect(() => {
+    const handleLegacyRefreshRequest = (rawEvent: Event) => {
+      rawEvent.preventDefault();
+      refreshDashboard();
+    };
+
+    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    return () => {
+      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    };
+  }, [refreshDashboard]);
+
   const openStatusModal = useCallback(
     (row: DashboardRow, targetStatusID: number | null) => {
       const enforceOwner = data?.meta.scope === 'mine' ? 1 : 0;
