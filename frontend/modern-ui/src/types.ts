@@ -268,6 +268,106 @@ export type CompaniesListModernDataResponse = {
   }>;
 };
 
+export type CompaniesShowModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    companyID: number;
+    permissions: {
+      canEditCompany: boolean;
+      canDeleteCompany: boolean;
+      canAddJobOrder: boolean;
+      canAddContact: boolean;
+      canCreateAttachment: boolean;
+      canDeleteAttachment: boolean;
+      canViewHistory: boolean;
+    };
+  };
+  actions: {
+    legacyURL: string;
+    editURL: string;
+    deleteURL: string;
+    addJobOrderURL: string;
+    addContactURL: string;
+    historyURL: string;
+    createAttachmentURL: string;
+    deleteAttachmentURL: string;
+    deleteAttachmentToken: string;
+  };
+  company: {
+    companyID: number;
+    name: string;
+    isHot: boolean;
+    titleClass: string;
+    phone: string;
+    address: string;
+    city: string;
+    country: string;
+    cityAndState: string;
+    billingContactID: number;
+    billingContactFullName: string;
+    webSite: string;
+    keyTechnologies: string;
+    dateCreated: string;
+    enteredByFullName: string;
+    ownerFullName: string;
+    notesHTML: string;
+    notesText: string;
+  };
+  attachments: {
+    count: number;
+    items: Array<{
+      attachmentID: number;
+      fileName: string;
+      dateCreated: string;
+      retrievalURL: string;
+    }>;
+  };
+  jobOrders: {
+    count: number;
+    items: Array<{
+      jobOrderID: number;
+      title: string;
+      status: string;
+      type: string;
+      dateCreated: string;
+      dateModified: string;
+      daysOld: number;
+      submitted: number;
+      pipeline: number;
+      showURL: string;
+      editURL: string;
+    }>;
+  };
+  contacts: {
+    count: number;
+    activeCount: number;
+    items: Array<{
+      contactID: number;
+      firstName: string;
+      lastName: string;
+      title: string;
+      department: string;
+      email: string;
+      phone: string;
+      dateCreated: string;
+      ownerName: string;
+      leftCompany: boolean;
+      showURL: string;
+      editURL: string;
+    }>;
+  };
+  departments: Array<{
+    departmentID: number;
+    name: string;
+  }>;
+  extraFields: Array<{
+    fieldName: string;
+    display: string;
+  }>;
+};
+
 export type JobOrdersListModernDataResponse = {
   meta: {
     contractVersion: number;

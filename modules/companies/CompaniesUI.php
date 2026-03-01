@@ -509,6 +509,10 @@ class CompaniesUI extends UserInterface
      */
     private function show()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Bail out if we don't have a valid company ID. */
         if (!$this->isRequiredIDValid('companyID', $_GET))
         {
@@ -527,6 +531,7 @@ class CompaniesUI extends UserInterface
             $this->listByView('The specified company ID could not be found.');
             return;
         }
+        $notesText = (isset($data['notes']) ? (string) $data['notes'] : '');
 
         /* We want to handle formatting the city and state here instead
          * of in the template.
@@ -709,6 +714,40 @@ class CompaniesUI extends UserInterface
             $privledgedUser = true;
         }
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'companies-show')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernCompanyShowJSON(
+                'companies-show',
+                $companyID,
+                $data,
+                $notesText,
+                $attachmentsRS,
+                $jobOrdersRS,
+                $contactsRS,
+                $contactsRSWC,
+                $extraFieldRS,
+                $departmentsRS,
+                $privledgedUser
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('data', $data);
         $this->_template->assign('attachmentsRS', $attachmentsRS);
@@ -728,6 +767,182 @@ class CompaniesUI extends UserInterface
         if (!eval(Hooks::get('CLIENTS_SHOW'))) return;
 
         $this->_template->display('./modules/companies/Show.tpl');
+    }
+
+    private function renderModernCompanyShowJSON(
+        $modernPage,
+        $companyID,
+        $data,
+        $notesText,
+        $attachmentsRS,
+        $jobOrdersRS,
+        $contactsRS,
+        $contactsRSWC,
+        $extraFieldRS,
+        $departmentsRS,
+        $privledgedUser
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $companyName = (isset($data['name']) ? (string) $data['name'] : '');
+        $companyNameTrimmed = trim($companyName);
+        if ($companyNameTrimmed === '')
+        {
+            $companyNameTrimmed = 'Company #' . (int) $companyID;
+        }
+
+        $attachmentsPayload = array();
+        foreach ($attachmentsRS as $attachmentRow)
+        {
+            $attachmentsPayload[] = array(
+                'attachmentID' => (int) (isset($attachmentRow['attachmentID']) ? $attachmentRow['attachmentID'] : 0),
+                'fileName' => (isset($attachmentRow['originalFilename']) ? (string) $attachmentRow['originalFilename'] : ''),
+                'dateCreated' => (isset($attachmentRow['dateCreated']) ? (string) $attachmentRow['dateCreated'] : ''),
+                'retrievalURL' => (isset($attachmentRow['retrievalURL']) ? (string) $attachmentRow['retrievalURL'] : '')
+            );
+        }
+
+        $jobOrdersPayload = array();
+        foreach ($jobOrdersRS as $jobOrderRow)
+        {
+            $jobOrderID = (int) (isset($jobOrderRow['jobOrderID']) ? $jobOrderRow['jobOrderID'] : 0);
+            if ($jobOrderID <= 0)
+            {
+                continue;
+            }
+            $jobOrdersPayload[] = array(
+                'jobOrderID' => $jobOrderID,
+                'title' => (isset($jobOrderRow['title']) ? (string) $jobOrderRow['title'] : ''),
+                'status' => (isset($jobOrderRow['status']) ? (string) $jobOrderRow['status'] : ''),
+                'type' => (isset($jobOrderRow['type']) ? (string) $jobOrderRow['type'] : ''),
+                'dateCreated' => (isset($jobOrderRow['dateCreated']) ? (string) $jobOrderRow['dateCreated'] : ''),
+                'dateModified' => (isset($jobOrderRow['dateModified']) ? (string) $jobOrderRow['dateModified'] : ''),
+                'daysOld' => (int) (isset($jobOrderRow['daysOld']) ? $jobOrderRow['daysOld'] : 0),
+                'submitted' => (int) (isset($jobOrderRow['submitted']) ? $jobOrderRow['submitted'] : 0),
+                'pipeline' => (int) (isset($jobOrderRow['pipeline']) ? $jobOrderRow['pipeline'] : 0),
+                'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d', $baseURL, $jobOrderID),
+                'editURL' => sprintf('%s?m=joborders&a=edit&jobOrderID=%d', $baseURL, $jobOrderID)
+            );
+        }
+
+        $contactsPayload = array();
+        $contactsSeen = array();
+        if (!is_array($contactsRS))
+        {
+            $contactsRS = array();
+        }
+        foreach ($contactsRS as $contactRow)
+        {
+            $contactID = (int) (isset($contactRow['contactID']) ? $contactRow['contactID'] : 0);
+            if ($contactID <= 0 || isset($contactsSeen[$contactID]))
+            {
+                continue;
+            }
+            $contactsSeen[$contactID] = true;
+            $contactsPayload[] = array(
+                'contactID' => $contactID,
+                'firstName' => (isset($contactRow['firstName']) ? (string) $contactRow['firstName'] : ''),
+                'lastName' => (isset($contactRow['lastName']) ? (string) $contactRow['lastName'] : ''),
+                'title' => (isset($contactRow['title']) ? (string) $contactRow['title'] : ''),
+                'department' => (isset($contactRow['department']) ? (string) $contactRow['department'] : ''),
+                'email' => (isset($contactRow['email1']) ? (string) $contactRow['email1'] : ''),
+                'phone' => (isset($contactRow['phoneCell']) ? (string) $contactRow['phoneCell'] : ''),
+                'dateCreated' => (isset($contactRow['dateCreated']) ? (string) $contactRow['dateCreated'] : ''),
+                'ownerName' => (isset($contactRow['ownerAbbrName']) ? (string) $contactRow['ownerAbbrName'] : ''),
+                'leftCompany' => ((int) (isset($contactRow['leftCompany']) ? $contactRow['leftCompany'] : 0) === 1),
+                'showURL' => sprintf('%s?m=contacts&a=show&contactID=%d', $baseURL, $contactID),
+                'editURL' => sprintf('%s?m=contacts&a=edit&contactID=%d', $baseURL, $contactID)
+            );
+        }
+
+        $extraFieldsPayload = array();
+        foreach ($extraFieldRS as $extraFieldRow)
+        {
+            $extraFieldsPayload[] = array(
+                'fieldName' => (isset($extraFieldRow['fieldName']) ? (string) $extraFieldRow['fieldName'] : ''),
+                'display' => (isset($extraFieldRow['display']) ? (string) $extraFieldRow['display'] : '')
+            );
+        }
+
+        $departmentsPayload = array();
+        foreach ($departmentsRS as $departmentRow)
+        {
+            $departmentsPayload[] = array(
+                'departmentID' => (int) (isset($departmentRow['departmentID']) ? $departmentRow['departmentID'] : 0),
+                'name' => (isset($departmentRow['name']) ? (string) $departmentRow['name'] : '')
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'companies.show.v1',
+                'modernPage' => $modernPage,
+                'companyID' => (int) $companyID,
+                'permissions' => array(
+                    'canEditCompany' => ($this->getUserAccessLevel('companies.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteCompany' => ($this->getUserAccessLevel('companies.delete') >= ACCESS_LEVEL_DELETE),
+                    'canAddJobOrder' => ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT),
+                    'canAddContact' => ($this->getUserAccessLevel('contacts.add') >= ACCESS_LEVEL_EDIT),
+                    'canCreateAttachment' => ($this->getUserAccessLevel('companies.createAttachment') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteAttachment' => ($this->getUserAccessLevel('companies.deleteAttachment') >= ACCESS_LEVEL_DELETE),
+                    'canViewHistory' => ((bool) $privledgedUser)
+                )
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=legacy', $baseURL, (int) $companyID),
+                'editURL' => sprintf('%s?m=companies&a=edit&companyID=%d&ui=legacy', $baseURL, (int) $companyID),
+                'deleteURL' => sprintf('%s?m=companies&a=delete&companyID=%d&ui=legacy', $baseURL, (int) $companyID),
+                'addJobOrderURL' => sprintf('%s?m=joborders&a=add&selected_company_id=%d&ui=legacy', $baseURL, (int) $companyID),
+                'addContactURL' => sprintf('%s?m=contacts&a=add&selected_company_id=%d&ui=legacy', $baseURL, (int) $companyID),
+                'historyURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_COMPANY, (int) $companyID),
+                'createAttachmentURL' => sprintf('%s?m=companies&a=createAttachment&companyID=%d&ui=legacy', $baseURL, (int) $companyID),
+                'deleteAttachmentURL' => sprintf('%s?m=companies&a=deleteAttachment', $baseURL),
+                'deleteAttachmentToken' => $this->getCSRFToken('companies.deleteAttachment')
+            ),
+            'company' => array(
+                'companyID' => (int) $companyID,
+                'name' => $companyNameTrimmed,
+                'isHot' => ((int) (isset($data['isHot']) ? $data['isHot'] : 0) === 1),
+                'titleClass' => (isset($data['titleClass']) ? (string) $data['titleClass'] : ''),
+                'phone' => (isset($data['phone']) ? (string) $data['phone'] : ''),
+                'address' => (isset($data['address']) ? (string) $data['address'] : ''),
+                'city' => (isset($data['city']) ? (string) $data['city'] : ''),
+                'country' => (isset($data['country']) ? (string) $data['country'] : ''),
+                'cityAndState' => (isset($data['cityAndState']) ? (string) $data['cityAndState'] : ''),
+                'billingContactID' => (int) (isset($data['billingContact']) ? $data['billingContact'] : 0),
+                'billingContactFullName' => (isset($data['billingContactFullName']) ? (string) $data['billingContactFullName'] : ''),
+                'webSite' => (isset($data['url']) ? (string) $data['url'] : ''),
+                'keyTechnologies' => (isset($data['keyTechnologies']) ? (string) $data['keyTechnologies'] : ''),
+                'dateCreated' => (isset($data['dateCreated']) ? (string) $data['dateCreated'] : ''),
+                'enteredByFullName' => (isset($data['enteredByFullName']) ? (string) $data['enteredByFullName'] : ''),
+                'ownerFullName' => (isset($data['ownerFullName']) ? (string) $data['ownerFullName'] : ''),
+                'notesHTML' => (isset($data['notes']) ? (string) $data['notes'] : ''),
+                'notesText' => (string) $notesText
+            ),
+            'attachments' => array(
+                'count' => count($attachmentsPayload),
+                'items' => $attachmentsPayload
+            ),
+            'jobOrders' => array(
+                'count' => count($jobOrdersPayload),
+                'items' => $jobOrdersPayload
+            ),
+            'contacts' => array(
+                'count' => count($contactsPayload),
+                'activeCount' => count((is_array($contactsRSWC) ? $contactsRSWC : array())),
+                'items' => $contactsPayload
+            ),
+            'departments' => $departmentsPayload,
+            'extraFields' => $extraFieldsPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     /*
