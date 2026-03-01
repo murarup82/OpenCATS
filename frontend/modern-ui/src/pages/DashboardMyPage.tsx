@@ -659,11 +659,6 @@ export function DashboardMyPage({ bootstrap }: Props) {
           subtitle={statusModal ? `Current status: ${statusModal.currentStatusLabel}` : undefined}
           url={statusModal?.url || ''}
           onClose={closeStatusModal}
-          onOpenPopup={
-            statusModal
-              ? () => openLegacyPopup(statusModal.url, 700, 620, true)
-              : undefined
-          }
         />
 
         <LegacyFrameModal
@@ -672,11 +667,6 @@ export function DashboardMyPage({ bootstrap }: Props) {
           subtitle={assignModal ? assignModal.jobOrderName : undefined}
           url={assignModal?.url || ''}
           onClose={closeAssignModal}
-          onOpenPopup={
-            assignModal
-              ? () => openLegacyPopup(assignModal.url, 1120, 760, true)
-              : undefined
-          }
         />
 
         <LegacyFrameModal
@@ -684,11 +674,6 @@ export function DashboardMyPage({ bootstrap }: Props) {
           title={`Pipeline Details${detailsModal ? `: ${detailsModal.candidateName}` : ''}`}
           url={detailsModal?.url || ''}
           onClose={closeDetailsModal}
-          onOpenPopup={
-            detailsModal
-              ? () => openLegacyPopup(detailsModal.url, 1200, 760, false)
-              : undefined
-          }
           showRefreshClose={false}
         />
       </PageContainer>

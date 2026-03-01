@@ -4,7 +4,6 @@ type Props = {
   subtitle?: string;
   url: string;
   onClose: (refreshOnClose: boolean) => void;
-  onOpenPopup?: () => void;
   showRefreshClose?: boolean;
 };
 
@@ -14,7 +13,6 @@ export function LegacyFrameModal({
   subtitle,
   url,
   onClose,
-  onOpenPopup: _onOpenPopup,
   showRefreshClose = true
 }: Props) {
   if (!isOpen) {

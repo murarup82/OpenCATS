@@ -550,17 +550,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
           title={jobOrderModal?.title || 'Add Candidate To Job Order'}
           url={jobOrderModal?.url || ''}
           onClose={closeJobOrderModal}
-          onOpenPopup={
-            jobOrderModal
-              ? () =>
-                  openLegacyPopup(
-                    jobOrderModal.url,
-                    jobOrderModal.openInPopup.width,
-                    jobOrderModal.openInPopup.height,
-                    jobOrderModal.openInPopup.refreshOnClose
-                  )
-              : undefined
-          }
           showRefreshClose={false}
         />
       </PageContainer>

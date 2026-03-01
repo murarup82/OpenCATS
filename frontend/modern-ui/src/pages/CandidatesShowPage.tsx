@@ -923,17 +923,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           title={pipelineModal?.title || 'Pipeline Action'}
           url={pipelineModal?.url || ''}
           onClose={closePipelineModal}
-          onOpenPopup={
-            pipelineModal
-              ? () =>
-                  openLegacyPopup(
-                    pipelineModal.url,
-                    pipelineModal.openInPopup.width,
-                    pipelineModal.openInPopup.height,
-                    pipelineModal.openInPopup.refreshOnClose
-                  )
-              : undefined
-          }
           showRefreshClose={pipelineModal?.showRefreshClose ?? true}
         />
       </PageContainer>
