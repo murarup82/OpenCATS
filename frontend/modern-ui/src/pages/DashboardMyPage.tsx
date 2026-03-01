@@ -31,12 +31,6 @@ type NavigationFilters = {
   page?: number;
 };
 
-type PopupCallback = ((returnValue?: unknown) => void) | null;
-
-type PopupWindow = Window & {
-  showPopWin?: (url: string, width: number, height: number, returnFunc?: PopupCallback) => void;
-};
-
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
     const normalized = value.trim();
@@ -189,28 +183,6 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const refreshDashboard = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  const openLegacyPopup = useCallback(
-    (url: string, width: number, height: number, refreshOnClose: boolean) => {
-      const popupWindow = window as PopupWindow;
-      if (typeof popupWindow.showPopWin === 'function') {
-        popupWindow.showPopWin(
-          url,
-          width,
-          height,
-          refreshOnClose
-            ? () => {
-                refreshDashboard();
-              }
-            : null
-        );
-        return;
-      }
-
-      window.location.href = url;
-    },
-    [refreshDashboard]
-  );
 
   const openStatusModal = useCallback(
     (row: DashboardRow, targetStatusID: number | null) => {

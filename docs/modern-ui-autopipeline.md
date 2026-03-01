@@ -60,6 +60,7 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 54. Removed remaining popup-helper dependency from candidate surfaces by:
     - removing dead popup helper code from `candidates.listByView`
     - embedding `candidates.edit` Add Attachment action into the in-app modal shell with refresh-on-close.
+55. Removed dead popup-helper code from `dashboard.my` after migrating dashboard actions to embedded modal shell flows.
 
 ## Next Queue
 
