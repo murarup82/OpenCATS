@@ -550,6 +550,37 @@ export async function updateCandidateTags(
   return result;
 }
 
+export async function setJobOrderAdministrativeVisibility(
+  actionBaseURL: string,
+  payload: {
+    jobOrderID: number;
+    state: boolean;
+  }
+): Promise<ModernMutationResponse> {
+  const url = new URL(actionBaseURL, window.location.href);
+  url.searchParams.set('jobOrderID', String(payload.jobOrderID || 0));
+  url.searchParams.set('state', payload.state ? '1' : '0');
+  url.searchParams.set('format', 'modern-json');
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    credentials: 'same-origin'
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Administrative visibility update failed (${response.status}).`);
+  }
+
+  return result;
+}
+
 export async function fetchCandidatesListModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams

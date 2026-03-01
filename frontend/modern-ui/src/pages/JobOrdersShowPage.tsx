@@ -8,6 +8,7 @@ import {
   fetchJobOrdersShowModernData,
   postJobOrderMessage,
   removePipelineEntryViaLegacyURL,
+  setJobOrderAdministrativeVisibility,
   setDashboardPipelineStatus,
   updatePipelineStatusHistoryDate
 } from '../lib/api';
@@ -91,6 +92,8 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const [messageSubmitError, setMessageSubmitError] = useState<string>('');
   const [messageDeletePending, setMessageDeletePending] = useState<boolean>(false);
   const [messageDeleteError, setMessageDeleteError] = useState<string>('');
+  const [adminHideTogglePending, setAdminHideTogglePending] = useState<boolean>(false);
+  const [adminHideToggleError, setAdminHideToggleError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -373,6 +376,34 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
     },
     [data, refreshPageData]
   );
+
+  const toggleAdministrativeHidden = useCallback(async () => {
+    if (!data || adminHideTogglePending) {
+      return;
+    }
+
+    const nextState = !data.jobOrder.isAdminHidden;
+    setAdminHideToggleError('');
+    setAdminHideTogglePending(true);
+    try {
+      const result = await setJobOrderAdministrativeVisibility(
+        decodeLegacyURL(data.actions.administrativeHideShowBaseURL),
+        {
+          jobOrderID: Number(data.meta.jobOrderID || 0),
+          state: nextState
+        }
+      );
+      if (!result.success) {
+        setAdminHideToggleError(result.message || 'Unable to update administrative visibility.');
+        return;
+      }
+      refreshPageData();
+    } catch (err: unknown) {
+      setAdminHideToggleError(err instanceof Error ? err.message : 'Unable to update administrative visibility.');
+    } finally {
+      setAdminHideTogglePending(false);
+    }
+  }, [adminHideTogglePending, data, refreshPageData]);
 
   const getForwardStatusOptions = useCallback(
     (currentStatusID: number) => {
@@ -662,12 +693,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
               Hiring Plan
             </a>
             {permissions.canAdministrativeHideShow ? (
-              <a
+              <button
+                type="button"
                 className="modern-btn modern-btn--secondary"
-                href={`${decodeLegacyURL(data.actions.administrativeHideShowBaseURL)}&state=${jobOrder.isAdminHidden ? '0' : '1'}`}
+                onClick={toggleAdministrativeHidden}
+                disabled={adminHideTogglePending}
               >
-                {jobOrder.isAdminHidden ? 'Unhide' : 'Hide'}
-              </a>
+                {adminHideTogglePending ? 'Updating...' : jobOrder.isAdminHidden ? 'Unhide' : 'Hide'}
+              </button>
             ) : null}
             <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.legacyURL)}>
               Open Legacy UI
@@ -747,6 +780,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   {data.messages.flashMessage}
                 </span>
               ) : null}
+              {adminHideToggleError ? <span className="modern-chip modern-chip--critical">{adminHideToggleError}</span> : null}
             </div>
           </section>
 

@@ -5075,25 +5075,74 @@ class JobOrdersUI extends UserInterface
     // FIXME: Document me.
     private function administrativeHideShow()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $input = $_REQUEST;
         /* Bail out if we don't have a valid joborder ID. */
-        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        if (!$this->isRequiredIDValid('jobOrderID', $input))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrder',
+                    'message' => 'Invalid Job Order ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid Job Order ID.');
         }
 
         /* Bail out if we don't have a valid status ID. */
-        if (!$this->isRequiredIDValid('state', $_GET, true))
+        if (!$this->isRequiredIDValid('state', $input, true))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidState',
+                    'message' => 'Invalid state ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid state ID.');
         }
 
-        $jobOrderID = $_GET['jobOrderID'];
+        $jobOrderID = $input['jobOrderID'];
 
         // FIXME: Checkbox?
-        (boolean) $state = $_GET['state'];
+        (boolean) $state = $input['state'];
 
         $joborders = new JobOrders($this->_siteID);
         $joborders->administrativeHideShow($jobOrderID, $state);
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'administrativeHideShowUpdated',
+                'message' => 'Administrative visibility updated.',
+                'jobOrderID' => (int) $jobOrderID,
+                'isAdminHidden' => ((bool) $state)
+            ));
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=joborders&a=show&jobOrderID='.$jobOrderID);
     }
