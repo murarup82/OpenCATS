@@ -1694,6 +1694,26 @@
   color: #4f6878;
 }
 
+.avel-joborders-page .modern-chip--column-toggle {
+  appearance: none;
+  border-color: #b8d4e3;
+  background: #edf7fd;
+  color: #2b6079;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.avel-joborders-page .modern-chip--column-toggle:hover {
+  border-color: #9dc4d8;
+  background: #e3f1fa;
+}
+
+.avel-joborders-page .modern-chip--column-toggle.is-active {
+  border-color: #7eaec8;
+  background: #d8ebf7;
+  color: #124c67;
+}
+
 .avel-joborder-show-page .avel-joborder-hero {
   display: grid;
   gap: 10px;

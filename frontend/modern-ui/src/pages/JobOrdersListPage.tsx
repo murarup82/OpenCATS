@@ -25,6 +25,17 @@ type NavigationFilters = {
   maxResults?: number;
 };
 
+type ColumnVisibility = {
+  company: boolean;
+  status: boolean;
+  pipeline: boolean;
+  proposed: boolean;
+  age: boolean;
+  owner: boolean;
+  recruiter: boolean;
+  monitor: boolean;
+};
+
 type PopupCallback = ((returnValue?: unknown) => void) | null;
 
 type PopupWindow = Window & {
@@ -83,6 +94,16 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [loading, setLoading] = useState(true);
   const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
+  const [visibleColumns, setVisibleColumns] = useState<ColumnVisibility>({
+    company: true,
+    status: true,
+    pipeline: true,
+    proposed: true,
+    age: true,
+    owner: true,
+    recruiter: true,
+    monitor: true
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -237,6 +258,27 @@ export function JobOrdersListPage({ bootstrap }: Props) {
 
   const selectedSortBy = sortOptions.some((option) => option.value === data?.meta.sortBy) ? data?.meta.sortBy : 'dateCreatedSort';
   const selectedSortDirection = data?.meta.sortDirection === 'ASC' ? 'ASC' : 'DESC';
+  const tableColumns = [
+    { key: 'title', title: 'Job Order' },
+    ...(visibleColumns.company ? [{ key: 'company', title: 'Company' }] : []),
+    ...(visibleColumns.status ? [{ key: 'status', title: 'Status' }] : []),
+    ...(visibleColumns.pipeline ? [{ key: 'pipeline', title: 'Pipeline' }] : []),
+    ...(visibleColumns.proposed ? [{ key: 'proposed', title: 'Proposed' }] : []),
+    ...(visibleColumns.age ? [{ key: 'age', title: 'Age' }] : []),
+    ...(visibleColumns.owner ? [{ key: 'owner', title: 'Owner' }] : []),
+    ...(visibleColumns.recruiter ? [{ key: 'recruiter', title: 'Recruiter' }] : []),
+    ...(visibleColumns.monitor ? [{ key: 'monitor', title: 'Monitor' }] : [])
+  ];
+  const columnToggleItems: Array<{ key: keyof ColumnVisibility; label: string }> = [
+    { key: 'company', label: 'Company' },
+    { key: 'status', label: 'Status' },
+    { key: 'pipeline', label: 'Pipeline' },
+    { key: 'proposed', label: 'Proposed' },
+    { key: 'age', label: 'Age' },
+    { key: 'owner', label: 'Owner' },
+    { key: 'recruiter', label: 'Recruiter' },
+    { key: 'monitor', label: 'Monitor' }
+  ];
 
   if (loading && !data) {
     return <div className="modern-state">Loading job orders...</div>;
@@ -422,6 +464,23 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                   ))
                 )}
               </div>
+              <div className="modern-chip-strip">
+                {columnToggleItems.map((columnItem) => (
+                  <button
+                    key={columnItem.key}
+                    type="button"
+                    className={`modern-chip modern-chip--column-toggle ${visibleColumns[columnItem.key] ? 'is-active' : ''}`}
+                    onClick={() =>
+                      setVisibleColumns((current) => ({
+                        ...current,
+                        [columnItem.key]: !current[columnItem.key]
+                      }))
+                    }
+                  >
+                    {columnItem.label}
+                  </button>
+                ))}
+              </div>
               {data.state.errorMessage ? (
                 <span className="modern-chip modern-chip--critical">{data.state.errorMessage}</span>
               ) : null}
@@ -435,17 +494,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
             </div>
 
             <DataTable
-              columns={[
-                { key: 'title', title: 'Job Order' },
-                { key: 'company', title: 'Company' },
-                { key: 'status', title: 'Status' },
-                { key: 'pipeline', title: 'Pipeline' },
-                { key: 'proposed', title: 'Proposed' },
-                { key: 'age', title: 'Age' },
-                { key: 'owner', title: 'Owner' },
-                { key: 'recruiter', title: 'Recruiter' },
-                { key: 'monitor', title: 'Monitor' }
-              ]}
+              columns={tableColumns}
               hasRows={hasRows}
               emptyMessage="No job orders match the current filters."
             >
@@ -462,43 +511,49 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                       {row.commentCount > 0 ? <span className="modern-chip modern-chip--info">{row.commentCount} comments</span> : null}
                     </div>
                   </td>
-                  <td>
-                    <a className="modern-link" href={ensureModernUIURL(row.companyURL)}>
-                      {toDisplayText(row.companyName)}
-                    </a>
-                  </td>
-                  <td>
-                    <span className={`modern-chip modern-chip--status-${row.statusSlug}`}>{toDisplayText(row.status)}</span>
-                  </td>
-                  <td>{row.pipeline}</td>
-                  <td>{row.submitted}</td>
-                  <td>{row.daysOld}d</td>
-                  <td>{toDisplayText(row.ownerName)}</td>
-                  <td>{toDisplayText(row.recruiterName)}</td>
-                  <td>
-                    {permissions.canToggleMonitored ? (
-                      <div className="modern-table-actions">
-                        <button
-                          type="button"
-                          className="modern-btn modern-btn--secondary modern-btn--mini"
-                          onClick={() => {
-                            const currentURLQuery = new URLSearchParams(serverQueryString);
-                            currentURLQuery.set('m', 'joborders');
-                            currentURLQuery.set('a', 'listByView');
-                            currentURLQuery.set('ui', 'modern');
+                  {visibleColumns.company ? (
+                    <td>
+                      <a className="modern-link" href={ensureModernUIURL(row.companyURL)}>
+                        {toDisplayText(row.companyName)}
+                      </a>
+                    </td>
+                  ) : null}
+                  {visibleColumns.status ? (
+                    <td>
+                      <span className={`modern-chip modern-chip--status-${row.statusSlug}`}>{toDisplayText(row.status)}</span>
+                    </td>
+                  ) : null}
+                  {visibleColumns.pipeline ? <td>{row.pipeline}</td> : null}
+                  {visibleColumns.proposed ? <td>{row.submitted}</td> : null}
+                  {visibleColumns.age ? <td>{row.daysOld}d</td> : null}
+                  {visibleColumns.owner ? <td>{toDisplayText(row.ownerName)}</td> : null}
+                  {visibleColumns.recruiter ? <td>{toDisplayText(row.recruiterName)}</td> : null}
+                  {visibleColumns.monitor ? (
+                    <td>
+                      {permissions.canToggleMonitored ? (
+                        <div className="modern-table-actions">
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--secondary modern-btn--mini"
+                            onClick={() => {
+                              const currentURLQuery = new URLSearchParams(serverQueryString);
+                              currentURLQuery.set('m', 'joborders');
+                              currentURLQuery.set('a', 'listByView');
+                              currentURLQuery.set('ui', 'modern');
 
-                            const nextValue = row.isMonitored ? '0' : '1';
-                            const targetURL = `${decodeLegacyURL(row.setMonitoredBaseURL)}&value=${encodeURIComponent(nextValue)}&currentURL=${encodeURIComponent(currentURLQuery.toString())}`;
-                            window.location.href = targetURL;
-                          }}
-                        >
-                          {row.isMonitored ? 'Disable' : 'Enable'}
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="modern-chip modern-chip--info">{row.isMonitored ? 'On' : 'Off'}</span>
-                    )}
-                  </td>
+                              const nextValue = row.isMonitored ? '0' : '1';
+                              const targetURL = `${decodeLegacyURL(row.setMonitoredBaseURL)}&value=${encodeURIComponent(nextValue)}&currentURL=${encodeURIComponent(currentURLQuery.toString())}`;
+                              window.location.href = targetURL;
+                            }}
+                          >
+                            {row.isMonitored ? 'Disable' : 'Enable'}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="modern-chip modern-chip--info">{row.isMonitored ? 'On' : 'Off'}</span>
+                      )}
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </DataTable>
