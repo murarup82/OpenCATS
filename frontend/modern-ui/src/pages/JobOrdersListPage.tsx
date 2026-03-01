@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -116,12 +117,6 @@ function detectPreset(visibility: ColumnVisibility): ColumnPresetKey | 'custom' 
   return 'custom';
 }
 
-type PopupCallback = ((returnValue?: unknown) => void) | null;
-
-type PopupWindow = Window & {
-  showPopWin?: (url: string, width: number, height: number, returnFunc?: PopupCallback) => void;
-};
-
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
     const normalized = value.trim();
@@ -176,6 +171,11 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [reloadToken, setReloadToken] = useState(0);
   const [visibleColumns, setVisibleColumns] = useState<ColumnVisibility>(columnPresets.balanced);
   const [columnPreset, setColumnPreset] = useState<ColumnPresetKey | 'custom'>('balanced');
+  const [addJobOrderModal, setAddJobOrderModal] = useState<{
+    url: string;
+    title: string;
+    openInPopup: { width: number; height: number; refreshOnClose: boolean };
+  } | null>(null);
   const columnStorageKey = useMemo(
     () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:columns:v1`,
     [bootstrap.siteID, bootstrap.userID]
@@ -259,25 +259,12 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     setReloadToken((current) => current + 1);
   }, []);
 
-  const openLegacyPopup = useCallback(
-    (url: string, width: number, height: number, refreshOnClose: boolean) => {
-      const popupWindow = window as PopupWindow;
-      const popupURL = decodeLegacyURL(url);
-      if (typeof popupWindow.showPopWin === 'function') {
-        popupWindow.showPopWin(
-          popupURL,
-          width,
-          height,
-          refreshOnClose
-            ? () => {
-                refreshPageData();
-              }
-            : null
-        );
-        return;
+  const closeAddJobOrderModal = useCallback(
+    (refreshOnClose: boolean) => {
+      setAddJobOrderModal(null);
+      if (refreshOnClose) {
+        refreshPageData();
       }
-
-      window.location.href = popupURL;
     },
     [refreshPageData]
   );
@@ -447,7 +434,13 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               <button
                 type="button"
                 className="modern-btn modern-btn--secondary"
-                onClick={() => openLegacyPopup(data.actions.addJobOrderPopupURL, 400, 250, true)}
+                onClick={() =>
+                  setAddJobOrderModal({
+                    url: decodeLegacyURL(data.actions.addJobOrderPopupURL),
+                    title: 'Add Job Order',
+                    openInPopup: { width: 520, height: 360, refreshOnClose: true }
+                  })
+                }
               >
                 Add Job Order
               </button>
@@ -723,6 +716,14 @@ export function JobOrdersListPage({ bootstrap }: Props) {
             </div>
           </section>
         </div>
+
+        <LegacyFrameModal
+          isOpen={!!addJobOrderModal}
+          title={addJobOrderModal?.title || 'Add Job Order'}
+          url={addJobOrderModal?.url || ''}
+          onClose={closeAddJobOrderModal}
+          showRefreshClose
+        />
       </PageContainer>
     </div>
   );
