@@ -1,4 +1,6 @@
 import type {
+  CandidateAssignToJobOrderModernDataResponse,
+  CandidateAssignToJobOrderMutationResponse,
   CandidateDuplicateCheckResponse,
   CandidatesAddModernDataResponse,
   CandidatesEditModernDataResponse,
@@ -915,6 +917,73 @@ export async function fetchAddToListDataFromPopupURL(
   }
 
   return data;
+}
+
+export async function fetchCandidateAssignToJobOrderData(
+  bootstrap: UIModeBootstrap,
+  popupURL: string
+): Promise<CandidateAssignToJobOrderModernDataResponse> {
+  const rawURL = String(popupURL || `${bootstrap.indexName}?m=candidates&a=considerForJobSearch`).replace(/&amp;/g, '&');
+  const url = new URL(rawURL, window.location.href);
+  url.searchParams.set('format', 'modern-json');
+  url.searchParams.set('modernPage', 'candidate-assign-joborder');
+  if (!url.searchParams.get('m')) {
+    url.searchParams.set('m', 'candidates');
+  }
+  if (!url.searchParams.get('a')) {
+    url.searchParams.set('a', 'considerForJobSearch');
+  }
+
+  const data = await getJSON<CandidateAssignToJobOrderModernDataResponse>(url.toString());
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading add-to-job modal data.');
+  }
+  if (data.meta.contractKey !== 'candidates.considerForJobSearch.v1') {
+    throw new Error('Unexpected add-to-job modal contract key.');
+  }
+  return data;
+}
+
+export async function assignCandidateToJobOrder(
+  submitURL: string,
+  payload: {
+    candidateID: number;
+    jobOrderID: number;
+    securityToken: string;
+    confirmReapplyRejected?: boolean;
+    assignmentStatusID?: number;
+  }
+): Promise<CandidateAssignToJobOrderMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('candidateID', String(payload.candidateID || 0));
+  body.set('jobOrderID', String(payload.jobOrderID || 0));
+  body.set('securityToken', payload.securityToken || '');
+  body.set('confirmReapplyRejected', payload.confirmReapplyRejected ? '1' : '0');
+  if (Number(payload.assignmentStatusID || 0) > 0) {
+    body.set('assignmentStatusID', String(payload.assignmentStatusID || 0));
+  }
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: CandidateAssignToJobOrderMutationResponse | null = null;
+  try {
+    result = (await response.json()) as CandidateAssignToJobOrderMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Candidate assign failed (${response.status}).`);
+  }
+  return result;
 }
 
 type LegacyAjaxResponse = {

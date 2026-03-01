@@ -72,6 +72,13 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - `candidates.listByView` now refreshes in-place after Add-To-List completion when visible rows are affected
     - removed stale `openInPopup` metadata from list/edit modal state and re-enabled refresh-close parity for Add-To-Job embedded modal
     - improved command/search icon sizing guardrails and forced visible kanban horizontal scrollbar in Avel theme.
+60. Added native Add-To-Job-Order flow for candidate surfaces (`candidates.listByView` and `candidates.show`):
+    - introduced `candidates.considerForJobSearch.v1` modern-json contract (open job order options + assignment metadata + CSRF token)
+    - added `CandidateAssignJobOrderModal` with in-app search, status-on-add option, and async assignment submit
+    - switched candidate list/show Add-To-Job actions from iframe modal to native async modal (legacy link fallback still available).
+61. Added `modern-json` mutation handling for legacy reapply-confirm flows in pipeline assignment:
+    - `candidates.addToPipeline` now supports JSON codes (`requiresConfirm`, `candidateAssigned`, `alreadyAssignedOrClosed`, `addFailed`) with CSRF validation for modern requests
+    - `joborders.addToPipeline` now supports JSON `requiresConfirm` and success/error responses, removing legacy `window.confirm` dependency for modern callers.
 
 ## Next Queue
 

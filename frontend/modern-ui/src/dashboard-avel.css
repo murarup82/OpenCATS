@@ -1680,6 +1680,98 @@
   color: #1f7145;
 }
 
+.avel-dashboard-page .modern-state--warning {
+  border-color: #e7ca95;
+  background: #fff8ec;
+  color: #84501b;
+}
+
+.avel-dashboard-page .avel-assign-job-modal {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__hint {
+  margin: 0;
+  color: #4d6f82;
+  font-size: 0.78rem;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__search {
+  margin: 0;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__list {
+  border: 1px solid #bfd6e5;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fafdff 0%, #f2f8fc 100%);
+  max-height: 320px;
+  overflow: auto;
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__item {
+  width: 100%;
+  border: 1px solid #c6dbe8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #184a63;
+  text-align: left;
+  padding: 8px 10px;
+  display: grid;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__item:hover {
+  border-color: #9ec4d9;
+  background: #f5fbff;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__item.is-selected {
+  border-color: #5fa3c2;
+  box-shadow: 0 0 0 3px rgba(0, 151, 189, 0.14);
+  background: #eff8fd;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__item-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__item-meta {
+  font-size: 0.72rem;
+  color: #5b7b8f;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__badge {
+  justify-self: start;
+  border: 1px solid #e3c49a;
+  background: #fff3de;
+  color: #94561b;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.avel-dashboard-page .avel-assign-job-modal__empty {
+  border: 1px dashed #c8dceb;
+  border-radius: 10px;
+  background: #f9fdff;
+  color: #678595;
+  padding: 14px 12px;
+  font-size: 0.78rem;
+  text-align: center;
+}
+
 .avel-joborders-page .modern-chip[class*='modern-chip--status-'] {
   border-color: #b5d8e8;
   background: #eef8ff;

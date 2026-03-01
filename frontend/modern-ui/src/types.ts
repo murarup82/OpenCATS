@@ -775,28 +775,8 @@ export type CandidatesAddModernDataResponse = {
     modernPage: string;
     permissions: {
       canAddCandidate: boolean;
+    };
   };
-};
-
-export type CandidateDuplicateMatch = {
-  candidate_id: number;
-  name: string;
-  email: string;
-  phone: string;
-  city: string;
-  country: string;
-  status: string;
-  matchReasons: string[];
-  score: number;
-  dateCreated: string;
-};
-
-export type CandidateDuplicateCheckResponse = {
-  success: number;
-  message?: string;
-  hardMatches: CandidateDuplicateMatch[];
-  softMatches: CandidateDuplicateMatch[];
-};
   actions: {
     submitURL: string;
     listURL: string;
@@ -841,6 +821,67 @@ export type CandidateDuplicateCheckResponse = {
     value: string;
     options: string[];
   }>;
+};
+
+export type CandidateDuplicateMatch = {
+  candidate_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  country: string;
+  status: string;
+  matchReasons: string[];
+  score: number;
+  dateCreated: string;
+};
+
+export type CandidateDuplicateCheckResponse = {
+  success: number;
+  message?: string;
+  hardMatches: CandidateDuplicateMatch[];
+  softMatches: CandidateDuplicateMatch[];
+};
+
+export type CandidateAssignToJobOrderModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    isMultipleCandidates: boolean;
+    candidateIDs: number[];
+    singleCandidateID: number;
+    candidateDisplayName: string;
+    canSetStatusOnAdd: boolean;
+    defaultAssignmentStatusID: number;
+  };
+  options: {
+    assignmentStatuses: Array<{
+      statusID: number;
+      status: string;
+    }>;
+    jobOrders: Array<{
+      jobOrderID: number;
+      title: string;
+      companyName: string;
+      status: string;
+      openingsAvailable: number;
+      isInPipeline: boolean;
+    }>;
+  };
+  actions: {
+    addToPipelineURL: string;
+    securityToken: string;
+    legacyURL: string;
+  };
+};
+
+export type CandidateAssignToJobOrderMutationResponse = ModernMutationResponse & {
+  requiresConfirm?: boolean;
+  candidateID?: number;
+  jobOrderID?: number;
+  addedCandidateIDs?: number[];
+  statusApplied?: boolean;
 };
 
 export type QuickActionAddToListModernDataResponse = {

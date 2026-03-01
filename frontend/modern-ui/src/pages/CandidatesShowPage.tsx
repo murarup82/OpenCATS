@@ -23,6 +23,7 @@ import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { CandidateAssignJobOrderModal } from '../components/primitives/CandidateAssignJobOrderModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
@@ -91,6 +92,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     title: string;
     showRefreshClose: boolean;
   } | null>(null);
+  const [assignJobModal, setAssignJobModal] = useState<{ url: string } | null>(null);
   const [pipelineDetailsModal, setPipelineDetailsModal] = useState<{
     title: string;
     fullDetailsURL: string;
@@ -850,10 +852,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 type="button"
                 className="modern-btn modern-btn--secondary"
                 onClick={() =>
-                  setPipelineModal({
-                    url: decodeLegacyURL(data.actions.addToJobOrderURL),
-                    title: 'Add Candidate To Job Order',
-                    showRefreshClose: true
+                  setAssignJobModal({
+                    url: decodeLegacyURL(data.actions.addToJobOrderURL)
                   })
                 }
               >
@@ -1722,6 +1722,16 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           url={pipelineModal?.url || ''}
           onClose={closePipelineModal}
           showRefreshClose={pipelineModal?.showRefreshClose ?? true}
+        />
+
+        <CandidateAssignJobOrderModal
+          isOpen={!!assignJobModal}
+          bootstrap={bootstrap}
+          sourceURL={assignJobModal?.url || ''}
+          onClose={() => setAssignJobModal(null)}
+          onAssigned={() => {
+            refreshPageData();
+          }}
         />
       </PageContainer>
     </div>

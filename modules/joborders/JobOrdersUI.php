@@ -2935,21 +2935,54 @@ class JobOrdersUI extends UserInterface
      */
     private function onAddToPipeline()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $requestInput = $isModernJSON ? $_REQUEST : $_GET;
+
         /* Bail out if we don't have a valid job order ID. */
-        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        if (!$this->isRequiredIDValid('jobOrderID', $requestInput))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrder',
+                    'message' => 'Invalid job order ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
         /* Bail out if we don't have a valid candidate ID. */
-        if (!$this->isRequiredIDValid('candidateID', $_GET))
+        if (!$this->isRequiredIDValid('candidateID', $requestInput))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidate',
+                    'message' => 'Invalid candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
-        $jobOrderID  = $_GET['jobOrderID'];
-        $candidateID = $_GET['candidateID'];
-        $confirmReapplyRejected = ((int) $this->getTrimmedInput('confirmReapplyRejected', $_GET) === 1);
+        $jobOrderID  = $requestInput['jobOrderID'];
+        $candidateID = $requestInput['candidateID'];
+        $confirmReapplyRejected = ((int) $this->getTrimmedInput('confirmReapplyRejected', $requestInput) === 1);
 
         if (!eval(Hooks::get('JO_ON_ADD_PIPELINE'))) return;
 
@@ -2966,12 +2999,29 @@ class JobOrdersUI extends UserInterface
                 . '&candidateID=' . (int) $candidateID
                 . '&confirmReapplyRejected=1';
 
-            if (isset($_GET['getback']) && trim($_GET['getback']) !== '')
+            if (isset($requestInput['getback']) && trim($requestInput['getback']) !== '')
             {
-                $confirmURL .= '&getback=' . urlencode(trim($_GET['getback']));
+                $confirmURL .= '&getback=' . urlencode(trim($requestInput['getback']));
             }
 
             $message = 'This candidate was already rejected for this role. Please check closed transitions. Continue to re-assign and start a new flow?';
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'requiresConfirm',
+                    'requiresConfirm' => true,
+                    'message' => $message,
+                    'candidateID' => (int) $candidateID,
+                    'jobOrderID' => (int) $jobOrderID
+                ));
+                return;
+            }
             $messageJS = function_exists('json_encode')
                 ? json_encode($message)
                 : "'" . addslashes($message) . "'";
@@ -2997,7 +3047,39 @@ class JobOrdersUI extends UserInterface
             {
                 $errorMessage = 'Failed to add candidate to job order.';
             }
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'addFailed',
+                    'message' => $errorMessage
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, $errorMessage);
+        }
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'candidateAssigned',
+                'message' => 'Candidate added to job order.',
+                'candidateID' => (int) $candidateID,
+                'jobOrderID' => (int) $jobOrderID
+            ));
+            return;
         }
 
         $this->_template->assign('isFinishedMode', true);

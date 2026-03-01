@@ -5,7 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
-import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { CandidateAssignJobOrderModal } from '../components/primitives/CandidateAssignJobOrderModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -62,7 +62,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [searchDraft, setSearchDraft] = useState('');
   const [reloadToken, setReloadToken] = useState(0);
-  const [jobOrderModal, setJobOrderModal] = useState<{
+  const [assignJobModal, setAssignJobModal] = useState<{
     url: string;
     title: string;
   } | null>(null);
@@ -132,16 +132,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
       window.removeEventListener('opencats:add-to-list:completed', handleAddToListCompleted as EventListener);
     };
   }, [data?.rows, refreshPageData]);
-
-  const closeJobOrderModal = useCallback(
-    (refreshOnClose: boolean) => {
-      setJobOrderModal(null);
-      if (refreshOnClose) {
-        refreshPageData();
-      }
-    },
-    [refreshPageData]
-  );
 
   const openAddToListOverlay = useCallback((sourceURL: string) => {
     const normalizedURL = decodeLegacyURL(sourceURL);
@@ -535,7 +525,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                             type="button"
                             className="modern-btn modern-btn--mini modern-btn--secondary"
                             onClick={() =>
-                              setJobOrderModal({
+                              setAssignJobModal({
                                 url: decodeLegacyURL(row.addToJobOrderURL),
                                 title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
                               })
@@ -553,11 +543,14 @@ export function CandidatesListPage({ bootstrap }: Props) {
           </div>
         </div>
 
-        <LegacyFrameModal
-          isOpen={!!jobOrderModal}
-          title={jobOrderModal?.title || 'Add Candidate To Job Order'}
-          url={jobOrderModal?.url || ''}
-          onClose={closeJobOrderModal}
+        <CandidateAssignJobOrderModal
+          isOpen={!!assignJobModal}
+          bootstrap={bootstrap}
+          sourceURL={assignJobModal?.url || ''}
+          onClose={() => setAssignJobModal(null)}
+          onAssigned={() => {
+            refreshPageData();
+          }}
         />
       </PageContainer>
     </div>
