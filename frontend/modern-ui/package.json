@@ -9,7 +9,8 @@
     "build": "npm run clean:build && vite build --mode production",
     "build:dev": "npm run clean:build && vite build --mode development",
     "preview": "vite preview",
-    "verify:build": "node ./scripts/verify-build-output.mjs"
+    "verify:build": "node ./scripts/verify-build-output.mjs",
+    "coverage:matrix": "node ./scripts/generate-coverage-matrix.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
