@@ -1781,6 +1781,50 @@
   white-space: pre-wrap;
 }
 
+.avel-joborder-show-page .avel-joborder-thread-block {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-joborder-show-page .avel-joborder-thread-form {
+  border: 1px dashed #c7dceb;
+  border-radius: 12px;
+  background: #f6fbff;
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.avel-joborder-show-page .avel-joborder-comment-list {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-joborder-show-page .avel-joborder-comment-item {
+  border: 1px solid #d5e5f0;
+  border-radius: 11px;
+  background: #ffffff;
+  padding: 9px 10px;
+  display: grid;
+  gap: 5px;
+}
+
+.avel-joborder-show-page .avel-joborder-comment-item > header {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #5d7a8a;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.avel-joborder-show-page .avel-joborder-comment-item > p {
+  margin: 0;
+  color: #25495b;
+  white-space: pre-wrap;
+  font-size: 0.79rem;
+}
+
 .avel-candidate-show-page .avel-candidate-hero {
   border: 1px solid var(--avel-border);
   border-radius: 16px;

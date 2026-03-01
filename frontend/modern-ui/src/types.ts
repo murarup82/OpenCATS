@@ -216,16 +216,24 @@ export type JobOrdersShowModernDataResponse = {
       canRemoveFromPipeline: boolean;
       canAddComment: boolean;
       canAdministrativeHideShow: boolean;
+      canCreateAttachment: boolean;
+      canPostMessage: boolean;
+      canDeleteMessageThread: boolean;
     };
   };
   actions: {
     legacyURL: string;
     editURL: string;
     addCandidateURL: string;
+    createAttachmentURL: string;
     reportURL: string;
     historyURL: string;
     deleteURL: string;
     hiringPlanURL: string;
+    addCommentURL: string;
+    postMessageURL: string;
+    deleteMessageThreadURL: string;
+    administrativeHideShowBaseURL: string;
   };
   jobOrder: {
     jobOrderID: number;
@@ -288,12 +296,43 @@ export type JobOrdersShowModernDataResponse = {
   };
   comments: {
     count: number;
+    initiallyOpen: boolean;
+    canAddComment: boolean;
+    categories: string[];
+    maxLength: number;
+    securityToken: string;
     flashMessage: string;
     flashIsError: boolean;
+    items: Array<{
+      activityID: number;
+      dateCreated: string;
+      enteredBy: string;
+      category: string;
+      commentHTML: string;
+      commentText: string;
+    }>;
   };
   messages: {
+    enabled: boolean;
+    threadID: number;
+    threadVisibleToCurrentUser: boolean;
+    initiallyOpen: boolean;
+    maxLength: number;
+    securityToken: string;
+    deleteThreadSecurityToken: string;
+    openInboxURL: string;
+    mentionHintNames: string[];
+    mentionAutocompleteValues: string[];
     flashMessage: string;
     flashIsError: boolean;
+    items: Array<{
+      messageID: number;
+      dateCreated: string;
+      senderName: string;
+      mentionedUsers: string;
+      bodyHTML: string;
+      bodyText: string;
+    }>;
   };
   pipeline: {
     activeCount: number;

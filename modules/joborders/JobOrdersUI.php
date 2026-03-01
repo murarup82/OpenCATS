@@ -1233,10 +1233,24 @@ class JobOrdersUI extends UserInterface
                 $hiringPlanRS,
                 $hiringPlanTotal,
                 $jobOrderComments,
+                $jobOrderCommentCategories,
+                $canAddJobOrderComment,
+                $jobOrderCommentsInitiallyOpen,
                 $jobOrderCommentFlashMessage,
                 $jobOrderCommentFlashIsError,
+                $jobOrderMessagingEnabled,
+                $jobOrderMessageThread,
+                $jobOrderMessageThreadID,
+                $jobOrderThreadVisibleToCurrentUser,
+                $jobOrderThreadMessages,
+                $jobOrderMessageMentionHintNames,
+                array_values(array_unique($jobOrderMessageMentionAutocompleteValues)),
+                $jobOrderMessagesInitiallyOpen,
                 $jobOrderMessageFlashMessage,
                 $jobOrderMessageFlashIsError,
+                $this->getCSRFToken('joborders.addProfileComment'),
+                $this->getCSRFToken('joborders.postMessage'),
+                $this->getCSRFToken('joborders.deleteMessageThread'),
                 $pipelineRS,
                 'joborders-show'
             );
@@ -2257,10 +2271,24 @@ class JobOrdersUI extends UserInterface
         $hiringPlanRS,
         $hiringPlanTotal,
         $jobOrderComments,
+        $jobOrderCommentCategories,
+        $canAddJobOrderComment,
+        $jobOrderCommentsInitiallyOpen,
         $jobOrderCommentFlashMessage,
         $jobOrderCommentFlashIsError,
+        $jobOrderMessagingEnabled,
+        $jobOrderMessageThread,
+        $jobOrderMessageThreadID,
+        $jobOrderThreadVisibleToCurrentUser,
+        $jobOrderThreadMessages,
+        $jobOrderMessageMentionHintNames,
+        $jobOrderMessageMentionAutocompleteValues,
+        $jobOrderMessagesInitiallyOpen,
         $jobOrderMessageFlashMessage,
         $jobOrderMessageFlashIsError,
+        $addCommentToken,
+        $postJobOrderMessageToken,
+        $deleteJobOrderMessageThreadToken,
         $pipelineRS,
         $modernPage
     )
@@ -2409,6 +2437,62 @@ class JobOrdersUI extends UserInterface
             );
         }
 
+        $commentItemsPayload = array();
+        foreach ($jobOrderComments as $commentData)
+        {
+            $commentHTML = (isset($commentData['commentHTML']) ? (string) $commentData['commentHTML'] : '');
+            $commentItemsPayload[] = array(
+                'activityID' => (isset($commentData['activityID']) ? (int) $commentData['activityID'] : 0),
+                'dateCreated' => (isset($commentData['dateCreated']) ? (string) $commentData['dateCreated'] : '--'),
+                'enteredBy' => (isset($commentData['enteredBy']) ? (string) $commentData['enteredBy'] : '--'),
+                'category' => (isset($commentData['category']) ? (string) $commentData['category'] : 'General'),
+                'commentHTML' => $commentHTML,
+                'commentText' => trim(
+                    html_entity_decode(
+                        strip_tags(str_replace(array('<br />', '<br/>', '<br>'), "\n", $commentHTML)),
+                        ENT_QUOTES
+                    )
+                )
+            );
+        }
+
+        $messageItemsPayload = array();
+        foreach ($jobOrderThreadMessages as $messageData)
+        {
+            $bodyHTML = (isset($messageData['bodyHTML']) ? (string) $messageData['bodyHTML'] : '');
+            $messageItemsPayload[] = array(
+                'messageID' => (isset($messageData['messageID']) ? (int) $messageData['messageID'] : 0),
+                'dateCreated' => (isset($messageData['dateCreated']) ? (string) $messageData['dateCreated'] : '--'),
+                'senderName' => (isset($messageData['senderName']) ? (string) $messageData['senderName'] : '--'),
+                'mentionedUsers' => (isset($messageData['mentionedUsers']) ? (string) $messageData['mentionedUsers'] : ''),
+                'bodyHTML' => $bodyHTML,
+                'bodyText' => trim(
+                    html_entity_decode(
+                        strip_tags(str_replace(array('<br />', '<br/>', '<br>'), "\n", $bodyHTML)),
+                        ENT_QUOTES
+                    )
+                )
+            );
+        }
+
+        $openInboxURL = sprintf('%s?m=home&a=inbox&ui=modern', $baseURL);
+        if ((int) $jobOrderMessageThreadID > 0 && $jobOrderThreadVisibleToCurrentUser)
+        {
+            $openInboxURL = sprintf(
+                '%s?m=home&a=inbox&threadKey=%s&ui=modern',
+                $baseURL,
+                rawurlencode('joborder:' . (int) $jobOrderMessageThreadID)
+            );
+        }
+
+        $canDeleteMessageThread = (
+            !$isPopup &&
+            $jobOrderMessagingEnabled &&
+            ((int) $jobOrderMessageThreadID > 0) &&
+            $jobOrderThreadVisibleToCurrentUser &&
+            ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
+        );
+
         $payload = array(
             'meta' => array(
                 'contractVersion' => 1,
@@ -2425,17 +2509,25 @@ class JobOrdersUI extends UserInterface
                     'canChangePipelineStatus' => ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT),
                     'canRemoveFromPipeline' => ($this->getUserAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_DELETE),
                     'canAddComment' => (!$isPopup && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
-                    'canAdministrativeHideShow' => ($this->getUserAccessLevel('joborders.hidden') >= ACCESS_LEVEL_MULTI_SA)
+                    'canAdministrativeHideShow' => ($this->getUserAccessLevel('joborders.hidden') >= ACCESS_LEVEL_MULTI_SA),
+                    'canCreateAttachment' => ($this->getUserAccessLevel('joborders.createAttachment') >= ACCESS_LEVEL_EDIT),
+                    'canPostMessage' => (!$isPopup && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteMessageThread' => $canDeleteMessageThread
                 )
             ),
             'actions' => array(
                 'legacyURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
                 'editURL' => sprintf('%s?m=joborders&a=edit&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
                 'addCandidateURL' => sprintf('%s?m=joborders&a=considerCandidateSearch&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'createAttachmentURL' => sprintf('%s?m=joborders&a=createAttachment&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
                 'reportURL' => sprintf('%s?m=reports&a=customizeJobOrderReport&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
                 'historyURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=400&dataItemID=%d&ui=legacy', $baseURL, $jobOrderID),
                 'deleteURL' => sprintf('%s?m=joborders&a=delete&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
-                'hiringPlanURL' => sprintf('%s?m=joborders&a=editHiringPlan&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID)
+                'hiringPlanURL' => sprintf('%s?m=joborders&a=editHiringPlan&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
+                'addCommentURL' => sprintf('%s?m=joborders&a=addProfileComment', $baseURL),
+                'postMessageURL' => sprintf('%s?m=joborders&a=postMessage', $baseURL),
+                'deleteMessageThreadURL' => sprintf('%s?m=joborders&a=deleteMessageThread', $baseURL),
+                'administrativeHideShowBaseURL' => sprintf('%s?m=joborders&a=administrativeHideShow&jobOrderID=%d', $baseURL, $jobOrderID)
             ),
             'jobOrder' => array(
                 'jobOrderID' => $jobOrderID,
@@ -2483,12 +2575,29 @@ class JobOrdersUI extends UserInterface
             ),
             'comments' => array(
                 'count' => count($jobOrderComments),
+                'initiallyOpen' => ((bool) $jobOrderCommentsInitiallyOpen),
+                'canAddComment' => ((bool) $canAddJobOrderComment),
+                'categories' => array_values($jobOrderCommentCategories),
+                'maxLength' => self::PROFILE_COMMENT_MAXLEN,
+                'securityToken' => (string) $addCommentToken,
                 'flashMessage' => (string) $jobOrderCommentFlashMessage,
-                'flashIsError' => ((bool) $jobOrderCommentFlashIsError)
+                'flashIsError' => ((bool) $jobOrderCommentFlashIsError),
+                'items' => $commentItemsPayload
             ),
             'messages' => array(
+                'enabled' => ((bool) $jobOrderMessagingEnabled),
+                'threadID' => (int) $jobOrderMessageThreadID,
+                'threadVisibleToCurrentUser' => ((bool) $jobOrderThreadVisibleToCurrentUser),
+                'initiallyOpen' => ((bool) $jobOrderMessagesInitiallyOpen),
+                'maxLength' => JobOrderMessages::MESSAGE_MAXLEN,
+                'securityToken' => (string) $postJobOrderMessageToken,
+                'deleteThreadSecurityToken' => (string) $deleteJobOrderMessageThreadToken,
+                'openInboxURL' => $openInboxURL,
+                'mentionHintNames' => array_values($jobOrderMessageMentionHintNames),
+                'mentionAutocompleteValues' => array_values($jobOrderMessageMentionAutocompleteValues),
                 'flashMessage' => (string) $jobOrderMessageFlashMessage,
-                'flashIsError' => ((bool) $jobOrderMessageFlashIsError)
+                'flashIsError' => ((bool) $jobOrderMessageFlashIsError),
+                'items' => $messageItemsPayload
             ),
             'pipeline' => array(
                 'activeCount' => $activePipelineCount,

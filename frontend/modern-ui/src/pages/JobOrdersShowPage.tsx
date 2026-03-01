@@ -45,6 +45,8 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const [loading, setLoading] = useState(true);
   const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,6 +60,8 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
           return;
         }
         setData(result);
+        setCommentsOpen(!!result.comments.initiallyOpen);
+        setMessagesOpen(!!result.messages.initiallyOpen);
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -174,6 +178,25 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 Add Candidate
               </button>
             ) : null}
+            <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.reportURL)}>
+              Report
+            </a>
+            {permissions.canViewHistory ? (
+              <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.historyURL)}>
+                History
+              </a>
+            ) : null}
+            <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.hiringPlanURL)}>
+              Hiring Plan
+            </a>
+            {permissions.canAdministrativeHideShow ? (
+              <a
+                className="modern-btn modern-btn--secondary"
+                href={`${decodeLegacyURL(data.actions.administrativeHideShowBaseURL)}&state=${jobOrder.isAdminHidden ? '0' : '1'}`}
+              >
+                {jobOrder.isAdminHidden ? 'Unhide' : 'Hide'}
+              </a>
+            ) : null}
             <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.legacyURL)}>
               Open Legacy UI
             </a>
@@ -185,7 +208,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Overview</h2>
               <p className="avel-list-panel__hint">
-                {toDisplayText(jobOrder.companyName)} {jobOrder.cityAndState ? `• ${jobOrder.cityAndState}` : ''}
+                {toDisplayText(jobOrder.companyName)} {jobOrder.cityAndState ? `| ${jobOrder.cityAndState}` : ''}
               </p>
             </div>
             <div className="avel-joborder-hero">
@@ -259,7 +282,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Pipeline</h2>
               <p className="avel-list-panel__hint">
-                Active {data.pipeline.activeCount} • Closed {data.pipeline.closedCount}
+                Active {data.pipeline.activeCount} | Closed {data.pipeline.closedCount}
               </p>
             </div>
             <DataTable
@@ -343,7 +366,18 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
             <div className="avel-list-panel">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Attachments</h2>
-                <p className="avel-list-panel__hint">{data.attachments.count} files</p>
+                <div className="modern-table-actions">
+                  <p className="avel-list-panel__hint">{data.attachments.count} files</p>
+                  {permissions.canCreateAttachment ? (
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      onClick={() => openLegacyPopup(data.actions.createAttachmentURL, 480, 220, true)}
+                    >
+                      Add Attachment
+                    </button>
+                  ) : null}
+                </div>
               </div>
               <DataTable
                 columns={[
@@ -368,6 +402,175 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   </tr>
                 ))}
               </DataTable>
+            </div>
+          </section>
+
+          <section className="avel-joborder-show-split">
+            <div className="avel-list-panel">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Team Comments</h2>
+                <div className="modern-table-actions">
+                  <span className="modern-chip modern-chip--info">{data.comments.count} entries</span>
+                  <button
+                    type="button"
+                    className="modern-btn modern-btn--mini modern-btn--secondary"
+                    onClick={() => setCommentsOpen((current) => !current)}
+                  >
+                    {commentsOpen ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+              {commentsOpen ? (
+                <div className="avel-joborder-thread-block">
+                  {data.comments.canAddComment ? (
+                    <form method="post" action={decodeLegacyURL(data.actions.addCommentURL)} className="avel-joborder-thread-form">
+                      <input type="hidden" name="jobOrderID" value={String(data.meta.jobOrderID)} />
+                      <input type="hidden" name="securityToken" value={data.comments.securityToken} />
+                      <label className="modern-command-field">
+                        <span className="modern-command-label">Comment Type</span>
+                        <select className="avel-form-control" name="commentCategory" defaultValue="General">
+                          {data.comments.categories.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="modern-command-field avel-candidate-edit-field--full">
+                        <span className="modern-command-label">Comment</span>
+                        <textarea
+                          className="avel-form-control"
+                          name="commentText"
+                          rows={5}
+                          maxLength={data.comments.maxLength}
+                          required
+                          placeholder="Share an internal update for this job order."
+                        />
+                      </label>
+                      <div className="modern-table-actions">
+                        <button type="submit" className="modern-btn modern-btn--mini modern-btn--emphasis">
+                          Save Comment
+                        </button>
+                      </div>
+                    </form>
+                  ) : null}
+
+                  {data.comments.items.length > 0 ? (
+                    <div className="avel-joborder-comment-list">
+                      {data.comments.items.map((comment) => (
+                        <article key={comment.activityID} className="avel-joborder-comment-item">
+                          <header>
+                            <span>{toDisplayText(comment.category)}</span>
+                            <span>{toDisplayText(comment.enteredBy)}</span>
+                            <span>{toDisplayText(comment.dateCreated)}</span>
+                          </header>
+                          <p>{toDisplayText(comment.commentText, '')}</p>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="modern-state modern-state--empty">No comments yet.</div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="avel-list-panel">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Team Inbox</h2>
+                <div className="modern-table-actions">
+                  {data.messages.enabled ? (
+                    <>
+                      <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL))}>
+                        Open Inbox
+                      </a>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--secondary"
+                        onClick={() => setMessagesOpen((current) => !current)}
+                      >
+                        {messagesOpen ? 'Hide' : 'Show'}
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+
+              {!data.messages.enabled ? (
+                <div className="modern-state modern-state--empty">
+                  Messaging tables are missing. Run schema migrations to enable Team Inbox.
+                </div>
+              ) : messagesOpen ? (
+                <div className="avel-joborder-thread-block">
+                  {permissions.canPostMessage ? (
+                    <form method="post" action={decodeLegacyURL(data.actions.postMessageURL)} className="avel-joborder-thread-form">
+                      <input type="hidden" name="jobOrderID" value={String(data.meta.jobOrderID)} />
+                      <input type="hidden" name="securityToken" value={data.messages.securityToken} />
+                      <label className="modern-command-field avel-candidate-edit-field--full">
+                        <span className="modern-command-label">Message</span>
+                        <textarea
+                          className="avel-form-control"
+                          name="messageBody"
+                          rows={5}
+                          maxLength={data.messages.maxLength}
+                          required
+                          placeholder="Type a message and mention teammates with @First Last."
+                        />
+                      </label>
+                      {data.messages.mentionHintNames.length > 0 ? (
+                        <p className="avel-list-panel__hint">Mention help: {data.messages.mentionHintNames.map((name) => `@${name}`).join(', ')}</p>
+                      ) : null}
+                      <div className="modern-table-actions">
+                        <button type="submit" className="modern-btn modern-btn--mini modern-btn--emphasis">
+                          Send Message
+                        </button>
+                      </div>
+                    </form>
+                  ) : null}
+
+                  {permissions.canDeleteMessageThread && data.messages.threadID > 0 && data.messages.threadVisibleToCurrentUser ? (
+                    <form
+                      method="post"
+                      action={decodeLegacyURL(data.actions.deleteMessageThreadURL)}
+                      className="modern-table-actions"
+                      onSubmit={() => window.confirm('Delete this thread for all users? This cannot be undone.')}
+                    >
+                      <input type="hidden" name="jobOrderID" value={String(data.meta.jobOrderID)} />
+                      <input type="hidden" name="threadID" value={String(data.messages.threadID)} />
+                      <input type="hidden" name="securityToken" value={data.messages.deleteThreadSecurityToken} />
+                      <button type="submit" className="modern-btn modern-btn--mini modern-btn--danger">
+                        Delete Thread
+                      </button>
+                    </form>
+                  ) : null}
+
+                  {data.messages.threadID > 0 && !data.messages.threadVisibleToCurrentUser ? (
+                    <div className="modern-state modern-state--empty">
+                      You are not part of this thread yet. Send a message and mention teammates to start collaborating.
+                    </div>
+                  ) : null}
+
+                  <DataTable
+                    columns={[
+                      { key: 'date', title: 'Date' },
+                      { key: 'from', title: 'From' },
+                      { key: 'mentions', title: 'Mentions' },
+                      { key: 'message', title: 'Message' }
+                    ]}
+                    hasRows={data.messages.items.length > 0}
+                    emptyMessage="No messages yet."
+                  >
+                    {data.messages.items.map((message) => (
+                      <tr key={message.messageID}>
+                        <td>{toDisplayText(message.dateCreated)}</td>
+                        <td>{toDisplayText(message.senderName)}</td>
+                        <td>{toDisplayText(message.mentionedUsers)}</td>
+                        <td>{toDisplayText(message.bodyText, '')}</td>
+                      </tr>
+                    ))}
+                  </DataTable>
+                </div>
+              ) : null}
             </div>
           </section>
 
@@ -423,4 +626,3 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
     </div>
   );
 }
-
