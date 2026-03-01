@@ -10,6 +10,8 @@ type Props = {
   bootstrap: UIModeBootstrap;
 };
 
+type CandidateExtraField = CandidatesAddModernDataResponse['extraFields'][number];
+
 type CandidateAddFormState = {
   firstName: string;
   lastName: string;
@@ -33,9 +35,15 @@ type CandidateAddFormState = {
   race: string;
   veteran: string;
   disability: string;
+  extraFields: Record<string, string>;
 };
 
 function toFormState(data: CandidatesAddModernDataResponse): CandidateAddFormState {
+  const extraFields: Record<string, string> = {};
+  data.extraFields.forEach((field) => {
+    extraFields[field.postKey] = field.value || (field.inputType === 'checkbox' ? 'No' : '');
+  });
+
   return {
     firstName: data.defaults.firstName || '',
     lastName: data.defaults.lastName || '',
@@ -58,7 +66,8 @@ function toFormState(data: CandidatesAddModernDataResponse): CandidateAddFormSta
     gender: data.defaults.gender || '',
     race: data.defaults.race || '',
     veteran: data.defaults.veteran || '',
-    disability: data.defaults.disability || ''
+    disability: data.defaults.disability || '',
+    extraFields
   };
 }
 
@@ -99,6 +108,105 @@ export function CandidatesAddPage({ bootstrap }: Props) {
       isMounted = false;
     };
   }, [bootstrap, serverQueryString]);
+
+  const updateExtraFieldValue = (postKey: string, value: string) => {
+    setFormState((current) => {
+      if (!current) {
+        return current;
+      }
+
+      return {
+        ...current,
+        extraFields: {
+          ...current.extraFields,
+          [postKey]: value
+        }
+      };
+    });
+  };
+
+  const renderExtraFieldControl = (field: CandidateExtraField) => {
+    const value = formState?.extraFields[field.postKey] || '';
+
+    if (field.inputType === 'textarea') {
+      return (
+        <textarea
+          className="avel-form-control"
+          name={field.postKey}
+          value={value}
+          onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
+          rows={3}
+        />
+      );
+    }
+
+    if (field.inputType === 'dropdown') {
+      return (
+        <select
+          className="avel-form-control"
+          name={field.postKey}
+          value={value}
+          onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
+        >
+          <option value="">- Select from List -</option>
+          {field.options.map((option) => (
+            <option key={`${field.postKey}-${option}`} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (field.inputType === 'radio') {
+      return (
+        <span className="avel-candidate-extra-radio">
+          {field.options.map((option) => (
+            <label key={`${field.postKey}-${option}`} className="avel-candidate-extra-radio__item">
+              <input
+                type="radio"
+                name={field.postKey}
+                value={option}
+                checked={value === option}
+                onChange={() => updateExtraFieldValue(field.postKey, option)}
+              />
+              <span>{option}</span>
+            </label>
+          ))}
+        </span>
+      );
+    }
+
+    if (field.inputType === 'checkbox') {
+      const checked = value === 'Yes';
+      return (
+        <span className="avel-candidate-extra-checkbox">
+          <input type="hidden" name={field.postKey} value={checked ? 'Yes' : 'No'} />
+          <label className="modern-command-toggle">
+            <input
+              type="checkbox"
+              name={`${field.postKey}CB`}
+              checked={checked}
+              onChange={(event) => updateExtraFieldValue(field.postKey, event.target.checked ? 'Yes' : 'No')}
+            />
+            <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+            <span>{checked ? 'Yes' : 'No'}</span>
+          </label>
+        </span>
+      );
+    }
+
+    return (
+      <input
+        className="avel-form-control"
+        type="text"
+        name={field.postKey}
+        value={value}
+        onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
+        placeholder={field.inputType === 'date' ? 'MM-DD-YY' : ''}
+      />
+    );
+  };
 
   if (loading && !data) {
     return <div className="modern-state">Loading candidate form...</div>;
@@ -436,6 +544,26 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                   </select>
                 </label>
               </div>
+
+              {data.extraFields.length > 0 ? (
+                <div className="avel-candidate-edit-extra">
+                  <div className="avel-list-panel__header">
+                    <h3 className="avel-list-panel__title">Custom Fields</h3>
+                    <p className="avel-list-panel__hint">Configured per tenant in legacy settings.</p>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    {data.extraFields.map((field) => (
+                      <label
+                        key={field.postKey}
+                        className={`modern-command-field${field.inputType === 'textarea' || field.inputType === 'radio' ? ' avel-candidate-edit-field--full' : ''}`}
+                      >
+                        <span className="modern-command-label">{field.fieldName}</span>
+                        {renderExtraFieldControl(field)}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="modern-table-actions">
                 <button type="submit" className="modern-btn modern-btn--emphasis">

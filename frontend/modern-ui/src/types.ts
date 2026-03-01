@@ -503,12 +503,15 @@ export type CandidatesEditModernDataResponse = {
     candidateID: number;
     permissions: {
       canEditCandidate: boolean;
+      canCreateAttachment: boolean;
+      canDeleteAttachment: boolean;
     };
   };
   actions: {
     submitURL: string;
     showURL: string;
     legacyURL: string;
+    createAttachmentURL: string;
   };
   candidate: {
     candidateID: number;
@@ -549,6 +552,20 @@ export type CandidatesEditModernDataResponse = {
     }>;
     sourceCSV: string;
   };
+  extraFields: Array<{
+    postKey: string;
+    fieldName: string;
+    inputType: 'text' | 'textarea' | 'checkbox' | 'dropdown' | 'radio' | 'date';
+    value: string;
+    options: string[];
+  }>;
+  attachments: Array<{
+    attachmentID: number;
+    fileName: string;
+    dateCreated: string;
+    isProfileImage: boolean;
+    retrievalURL: string;
+  }>;
 };
 
 export type CandidatesAddModernDataResponse = {
@@ -597,6 +614,13 @@ export type CandidatesAddModernDataResponse = {
     sourceCSV: string;
     gdprExpirationYears: number;
   };
+  extraFields: Array<{
+    postKey: string;
+    fieldName: string;
+    inputType: 'text' | 'textarea' | 'checkbox' | 'dropdown' | 'radio' | 'date';
+    value: string;
+    options: string[];
+  }>;
 };
 
 export type QuickActionAddToListModernDataResponse = {

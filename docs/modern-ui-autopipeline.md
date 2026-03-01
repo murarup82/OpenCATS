@@ -17,14 +17,14 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 11. Native `joborders.listByView` phase 2: sort controls + monitored toggle action wiring.
 12. Native `joborders.show` phase 1: modern profile UI + modern-json backend contract (summary, pipeline, attachments, hiring plan).
 13. Native `joborders.listByView` phase 3: column visibility controls for dense recruiter workflows.
+14. Native `candidates.add/edit` phase 2: dynamic extra fields + modern attachment actions wired to legacy-safe endpoints.
 
 ## Next Queue
 
 1. Expand `joborders.show` phase 2 with native comment/message panels and richer section actions.
 2. Expand `joborders.listByView` phase 4 with saved column presets and per-user persistence.
-3. Expand `candidates.add/edit` with extra fields and attachment/photo actions.
-4. Add modern duplicate-check feedback flow (replace legacy fatal message UX).
-5. Build native status change modal for dashboard/card actions (replace legacy popup for common transitions).
+3. Add modern duplicate-check feedback flow (replace legacy fatal message UX).
+4. Build native status change modal for dashboard/card actions (replace legacy popup for common transitions).
 
 ## Rules
 

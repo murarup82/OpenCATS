@@ -2150,6 +2150,7 @@ class CandidatesUI extends UserInterface
                 $sourcesString,
                 $preassignedFields,
                 $gdprSettingsRS,
+                $extraFieldRS,
                 'candidates-add'
             );
             return;
@@ -2294,10 +2295,12 @@ class CandidatesUI extends UserInterface
         $sourcesString,
         $preassignedFields,
         $gdprSettingsRS,
+        $extraFieldRS,
         $modernPage
     )
     {
         $baseURL = CATSUtility::getIndexName();
+        $extraFieldsPayload = $this->buildModernExtraFieldPayload($extraFieldRS, false);
 
         $sourceOptions = array(
             array(
@@ -2367,7 +2370,8 @@ class CandidatesUI extends UserInterface
                 'sources' => $sourceOptions,
                 'sourceCSV' => $sourcesString,
                 'gdprExpirationYears' => (isset($gdprSettingsRS['gdprExpirationYears']) ? (int) $gdprSettingsRS['gdprExpirationYears'] : 2)
-            )
+            ),
+            'extraFields' => $extraFieldsPayload
         );
 
         if (!headers_sent())
@@ -2774,6 +2778,8 @@ class CandidatesUI extends UserInterface
                 $usersRS,
                 $sourcesRS,
                 $sourcesString,
+                $extraFieldRS,
+                $attachmentsRS,
                 'candidates-edit'
             );
             return;
@@ -2806,11 +2812,14 @@ class CandidatesUI extends UserInterface
         $usersRS,
         $sourcesRS,
         $sourcesString,
+        $extraFieldRS,
+        $attachmentsRS,
         $modernPage
     )
     {
         $baseURL = CATSUtility::getIndexName();
         $candidateID = (int) $candidateID;
+        $extraFieldsPayload = $this->buildModernExtraFieldPayload($extraFieldRS, true);
 
         $ownerOptions = array(
             array(
@@ -2846,6 +2855,28 @@ class CandidatesUI extends UserInterface
             );
         }
 
+        $attachmentsPayload = array();
+        foreach ($attachmentsRS as $attachmentData)
+        {
+            $retrievalURL = '';
+            if (!empty($attachmentData['retrievalURL']))
+            {
+                $retrievalURL = html_entity_decode((string) $attachmentData['retrievalURL'], ENT_QUOTES);
+            }
+            else if (!empty($attachmentData['retrievalURLLocal']))
+            {
+                $retrievalURL = (string) $attachmentData['retrievalURLLocal'];
+            }
+
+            $attachmentsPayload[] = array(
+                'attachmentID' => (int) $attachmentData['attachmentID'],
+                'fileName' => (isset($attachmentData['originalFilename']) ? (string) $attachmentData['originalFilename'] : ''),
+                'dateCreated' => (isset($attachmentData['dateCreated']) ? (string) $attachmentData['dateCreated'] : '--'),
+                'isProfileImage' => ((isset($attachmentData['isProfileImage']) && (int) $attachmentData['isProfileImage'] === 1) ? true : false),
+                'retrievalURL' => $retrievalURL
+            );
+        }
+
         $payload = array(
             'meta' => array(
                 'contractVersion' => 1,
@@ -2853,13 +2884,16 @@ class CandidatesUI extends UserInterface
                 'modernPage' => $modernPage,
                 'candidateID' => $candidateID,
                 'permissions' => array(
-                    'canEditCandidate' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT)
+                    'canEditCandidate' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
+                    'canCreateAttachment' => ($this->getUserAccessLevel('candidates.createAttachment') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteAttachment' => ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE)
                 )
             ),
             'actions' => array(
                 'submitURL' => sprintf('%s?m=candidates&a=edit&ui=modern', $baseURL),
                 'showURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
-                'legacyURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID)
+                'legacyURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'createAttachmentURL' => sprintf('%s?m=candidates&a=createAttachment&candidateID=%d&ui=legacy', $baseURL, $candidateID)
             ),
             'candidate' => array(
                 'candidateID' => $candidateID,
@@ -2893,7 +2927,9 @@ class CandidatesUI extends UserInterface
                 'owners' => $ownerOptions,
                 'sources' => $sourceOptions,
                 'sourceCSV' => $sourcesString
-            )
+            ),
+            'extraFields' => $extraFieldsPayload,
+            'attachments' => $attachmentsPayload
         );
 
         if (!headers_sent())
@@ -2902,6 +2938,87 @@ class CandidatesUI extends UserInterface
             header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         }
         echo json_encode($payload);
+    }
+
+    private function mapModernExtraFieldInputType($extraFieldType)
+    {
+        switch ((int) $extraFieldType)
+        {
+            case EXTRA_FIELD_TEXTAREA:
+                return 'textarea';
+
+            case EXTRA_FIELD_CHECKBOX:
+                return 'checkbox';
+
+            case EXTRA_FIELD_DROPDOWN:
+                return 'dropdown';
+
+            case EXTRA_FIELD_RADIO:
+                return 'radio';
+
+            case EXTRA_FIELD_DATE:
+                return 'date';
+
+            case EXTRA_FIELD_TEXT:
+            default:
+                return 'text';
+        }
+    }
+
+    private function buildModernExtraFieldPayload($extraFieldRS, $isEditMode)
+    {
+        $payload = array();
+        if (!is_array($extraFieldRS))
+        {
+            return $payload;
+        }
+
+        foreach ($extraFieldRS as $index => $fieldData)
+        {
+            $options = array();
+            if (isset($fieldData['extraFieldOptions']) && trim((string) $fieldData['extraFieldOptions']) !== '')
+            {
+                $rawOptions = explode(',', (string) $fieldData['extraFieldOptions']);
+                foreach ($rawOptions as $rawOption)
+                {
+                    $decoded = trim(urldecode((string) $rawOption));
+                    if ($decoded === '')
+                    {
+                        continue;
+                    }
+                    $options[] = $decoded;
+                }
+            }
+
+            $value = '';
+            if ($isEditMode && isset($fieldData['value']))
+            {
+                $value = (string) $fieldData['value'];
+            }
+            else if (!$isEditMode && isset($fieldData['value']))
+            {
+                $value = (string) $fieldData['value'];
+            }
+
+            if ($this->mapModernExtraFieldInputType(
+                (isset($fieldData['extraFieldType']) ? (int) $fieldData['extraFieldType'] : EXTRA_FIELD_TEXT)
+            ) === 'checkbox' && $value === '')
+            {
+                $value = 'No';
+            }
+
+            $payload[] = array(
+                'postKey' => 'extraField' . $index,
+                'fieldName' => (isset($fieldData['fieldName']) ? (string) $fieldData['fieldName'] : ('Extra Field ' . $index)),
+                'inputType' => $this->mapModernExtraFieldInputType(
+                    (isset($fieldData['extraFieldType']) ? (int) $fieldData['extraFieldType'] : EXTRA_FIELD_TEXT)
+                ),
+                'value' => $value,
+                'options' => $options
+            );
+        }
+
+        return $payload;
     }
 
     /*

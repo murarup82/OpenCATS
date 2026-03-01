@@ -1966,6 +1966,47 @@
   padding: 10px 0;
 }
 
+.avel-candidate-edit-page .avel-candidate-edit-extra {
+  border: 1px dashed #c7dceb;
+  border-radius: 12px;
+  background: #f5fbff;
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.avel-candidate-edit-page .avel-candidate-extra-radio {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #d3e5f0;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 8px 10px;
+}
+
+.avel-candidate-edit-page .avel-candidate-extra-radio__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #2a4e61;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.avel-candidate-edit-page .avel-candidate-extra-checkbox {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-attachments {
+  margin-top: 12px;
+  border-top: 1px solid #cde1ee;
+  padding-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
 .modern-kanban-skeleton {
   margin: 22px;
   border: 1px solid #c9dce9;

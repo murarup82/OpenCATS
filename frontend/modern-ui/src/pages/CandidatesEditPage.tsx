@@ -1,13 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { fetchCandidatesEditModernData } from '../lib/api';
 import type { CandidatesEditModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
+import { DataTable } from '../components/primitives/DataTable';
 import '../dashboard-avel.css';
 
 type Props = {
   bootstrap: UIModeBootstrap;
+};
+
+type CandidateExtraField = CandidatesEditModernDataResponse['extraFields'][number];
+
+type PopupCallback = ((returnValue?: unknown) => void) | null;
+
+type PopupWindow = Window & {
+  showPopWin?: (url: string, width: number, height: number, returnFunc?: PopupCallback) => void;
 };
 
 type CandidateEditFormState = {
@@ -36,9 +45,15 @@ type CandidateEditFormState = {
   race: string;
   veteran: string;
   disability: string;
+  extraFields: Record<string, string>;
 };
 
 function toFormState(data: CandidatesEditModernDataResponse): CandidateEditFormState {
+  const extraFields: Record<string, string> = {};
+  data.extraFields.forEach((field) => {
+    extraFields[field.postKey] = field.value || (field.inputType === 'checkbox' ? 'No' : '');
+  });
+
   return {
     isActive: !!data.candidate.isActive,
     firstName: data.candidate.firstName || '',
@@ -64,8 +79,18 @@ function toFormState(data: CandidatesEditModernDataResponse): CandidateEditFormS
     gender: data.candidate.gender || '',
     race: data.candidate.race || '',
     veteran: data.candidate.veteran || '',
-    disability: data.candidate.disability || ''
+    disability: data.candidate.disability || '',
+    extraFields
   };
+}
+
+function decodeLegacyURL(url: string): string {
+  return String(url || '').replace(/&amp;/g, '&');
+}
+
+function toDisplayText(value: unknown, fallback = '--'): string {
+  const text = String(value ?? '').trim();
+  return text === '' ? fallback : text;
 }
 
 export function CandidatesEditPage({ bootstrap }: Props) {
@@ -74,6 +99,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [serverQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -104,7 +130,133 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [bootstrap, serverQueryString]);
+  }, [bootstrap, serverQueryString, reloadToken]);
+
+  const refreshPageData = useCallback(() => {
+    setReloadToken((current) => current + 1);
+  }, []);
+
+  const openLegacyPopup = useCallback(
+    (url: string, width: number, height: number, refreshOnClose: boolean) => {
+      const popupWindow = window as PopupWindow;
+      const popupURL = decodeLegacyURL(url);
+      if (typeof popupWindow.showPopWin === 'function') {
+        popupWindow.showPopWin(
+          popupURL,
+          width,
+          height,
+          refreshOnClose
+            ? () => {
+                refreshPageData();
+              }
+            : null
+        );
+        return;
+      }
+
+      window.location.href = popupURL;
+    },
+    [refreshPageData]
+  );
+
+  const updateExtraFieldValue = (postKey: string, value: string) => {
+    setFormState((current) => {
+      if (!current) {
+        return current;
+      }
+
+      return {
+        ...current,
+        extraFields: {
+          ...current.extraFields,
+          [postKey]: value
+        }
+      };
+    });
+  };
+
+  const renderExtraFieldControl = (field: CandidateExtraField) => {
+    const value = formState?.extraFields[field.postKey] || '';
+
+    if (field.inputType === 'textarea') {
+      return (
+        <textarea
+          className="avel-form-control"
+          name={field.postKey}
+          value={value}
+          onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
+          rows={3}
+        />
+      );
+    }
+
+    if (field.inputType === 'dropdown') {
+      return (
+        <select
+          className="avel-form-control"
+          name={field.postKey}
+          value={value}
+          onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
+        >
+          <option value="">- Select from List -</option>
+          {field.options.map((option) => (
+            <option key={`${field.postKey}-${option}`} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (field.inputType === 'radio') {
+      return (
+        <span className="avel-candidate-extra-radio">
+          {field.options.map((option) => (
+            <label key={`${field.postKey}-${option}`} className="avel-candidate-extra-radio__item">
+              <input
+                type="radio"
+                name={field.postKey}
+                value={option}
+                checked={value === option}
+                onChange={() => updateExtraFieldValue(field.postKey, option)}
+              />
+              <span>{option}</span>
+            </label>
+          ))}
+        </span>
+      );
+    }
+
+    if (field.inputType === 'checkbox') {
+      const checked = value === 'Yes';
+      return (
+        <span className="avel-candidate-extra-checkbox">
+          <input type="hidden" name={field.postKey} value={checked ? 'Yes' : 'No'} />
+          <label className="modern-command-toggle">
+            <input
+              type="checkbox"
+              name={`${field.postKey}CB`}
+              checked={checked}
+              onChange={(event) => updateExtraFieldValue(field.postKey, event.target.checked ? 'Yes' : 'No')}
+            />
+            <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+            <span>{checked ? 'Yes' : 'No'}</span>
+          </label>
+        </span>
+      );
+    }
+
+    return (
+      <input
+        className="avel-form-control"
+        type="text"
+        name={field.postKey}
+        value={value}
+        onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
+        placeholder={field.inputType === 'date' ? 'MM-DD-YY' : ''}
+      />
+    );
+  };
 
   if (loading && !data) {
     return <div className="modern-state">Loading candidate form...</div>;
@@ -483,6 +635,26 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </label>
               </div>
 
+              {data.extraFields.length > 0 ? (
+                <div className="avel-candidate-edit-extra">
+                  <div className="avel-list-panel__header">
+                    <h3 className="avel-list-panel__title">Custom Fields</h3>
+                    <p className="avel-list-panel__hint">Values are saved to legacy extra fields.</p>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    {data.extraFields.map((field) => (
+                      <label
+                        key={field.postKey}
+                        className={`modern-command-field${field.inputType === 'textarea' || field.inputType === 'radio' ? ' avel-candidate-edit-field--full' : ''}`}
+                      >
+                        <span className="modern-command-label">{field.fieldName}</span>
+                        {renderExtraFieldControl(field)}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="modern-table-actions">
                 <button type="submit" className="modern-btn modern-btn--emphasis">
                   Save Candidate
@@ -492,6 +664,51 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </a>
               </div>
             </form>
+
+            <section className="avel-candidate-edit-attachments">
+              <div className="avel-list-panel__header">
+                <h3 className="avel-list-panel__title">Attachments</h3>
+                <div className="modern-table-actions">
+                  {data.meta.permissions.canCreateAttachment ? (
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      onClick={() => openLegacyPopup(data.actions.createAttachmentURL, 480, 220, true)}
+                    >
+                      Add Attachment
+                    </button>
+                  ) : null}
+                  <a className="modern-btn modern-btn--mini modern-btn--secondary" href={showURL}>
+                    Manage In Profile
+                  </a>
+                </div>
+              </div>
+              <DataTable
+                columns={[
+                  { key: 'file', title: 'File' },
+                  { key: 'created', title: 'Created' },
+                  { key: 'type', title: 'Type' }
+                ]}
+                hasRows={data.attachments.length > 0}
+                emptyMessage="No attachments."
+              >
+                {data.attachments.map((attachment) => (
+                  <tr key={attachment.attachmentID}>
+                    <td>
+                      {attachment.retrievalURL !== '' ? (
+                        <a className="modern-link" href={decodeLegacyURL(attachment.retrievalURL)} target="_blank" rel="noreferrer">
+                          {toDisplayText(attachment.fileName, 'Attachment')}
+                        </a>
+                      ) : (
+                        toDisplayText(attachment.fileName, 'Attachment')
+                      )}
+                    </td>
+                    <td>{toDisplayText(attachment.dateCreated)}</td>
+                    <td>{attachment.isProfileImage ? 'Profile image' : 'Document'}</td>
+                  </tr>
+                ))}
+              </DataTable>
+            </section>
           </section>
         </div>
       </PageContainer>
