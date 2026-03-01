@@ -2285,6 +2285,25 @@
   color: #4f6f81;
 }
 
+.modern-tag-editor {
+  border: 1px solid #c4d9e7;
+  border-radius: 10px;
+  background: #fbfeff;
+  padding: 8px;
+  max-height: min(48vh, 420px);
+  overflow: auto;
+  display: grid;
+  gap: 6px;
+}
+
+.modern-tag-editor__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #12445d;
+}
+
 @keyframes avel-rise {
   from {
     opacity: 0;

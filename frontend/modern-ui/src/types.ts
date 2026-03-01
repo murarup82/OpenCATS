@@ -503,6 +503,7 @@ export type CandidatesShowModernDataResponse = {
     deleteAttachmentURL?: string;
     deleteAttachmentToken?: string;
     addTagsURL: string;
+    addTagsToken?: string;
     addToListURL: string;
     linkDuplicateURL: string;
     viewHistoryURL: string;
@@ -590,6 +591,14 @@ export type CandidatesShowModernDataResponse = {
     flashMessage: string;
   };
   tags: string[];
+  tagManagement: {
+    assignedTagIDs: number[];
+    catalog: Array<{
+      tagID: number;
+      title: string;
+      parentTagID: number;
+    }>;
+  };
   lists: Array<{
     listID: number;
     name: string;

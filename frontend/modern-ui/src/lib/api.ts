@@ -511,6 +511,45 @@ export async function deleteJobOrderAttachment(
   return result;
 }
 
+export async function updateCandidateTags(
+  submitURL: string,
+  payload: {
+    candidateID: number;
+    tagIDs: number[];
+    securityToken: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('candidateID', String(payload.candidateID || 0));
+  body.set('securityToken', payload.securityToken || '');
+  for (const tagID of payload.tagIDs || []) {
+    body.append('candidate_tags[]', String(tagID || 0));
+  }
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Candidate tag update failed (${response.status}).`);
+  }
+
+  return result;
+}
+
 export async function fetchCandidatesListModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams

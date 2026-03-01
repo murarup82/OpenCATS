@@ -455,6 +455,9 @@ class CandidatesUI extends UserInterface
 
         //$newParameterArray = $this->_parameters;
         $tags = new Tags($this->_siteID);
+        $assignedTagsTitles = $tags->getCandidateTagsTitle($candidateID);
+        $assignedTagIDs = $tags->getCandidateTagsID($candidateID);
+        $tagsRS = $tags->getAll();
         $tagsRS = $tags->getAll();
         //foreach($tagsRS as $r) $r['link'] = DataGrid::_makeControlLink($newParameterArray);
 
@@ -808,6 +811,8 @@ class CandidatesUI extends UserInterface
         $gdprLegacyProofWarning,
         $gdprFlashMessage,
         $assignedTags,
+        $assignedTagIDs,
+        $tagCatalogRS,
         $pipelineStatusRS,
         $addCommentToken,
         $postCandidateMessageToken,
@@ -1119,6 +1124,24 @@ class CandidatesUI extends UserInterface
             $questionnairesPayload[] = $questionnaire;
         }
 
+        $tagCatalogPayload = array();
+        if (is_array($tagCatalogRS))
+        {
+            foreach ($tagCatalogRS as $tagRow)
+            {
+                $tagID = (int) (isset($tagRow['tag_id']) ? $tagRow['tag_id'] : 0);
+                if ($tagID <= 0)
+                {
+                    continue;
+                }
+                $tagCatalogPayload[] = array(
+                    'tagID' => $tagID,
+                    'title' => (isset($tagRow['tag_title']) ? (string) $tagRow['tag_title'] : ''),
+                    'parentTagID' => (int) (isset($tagRow['tag_parent_id']) ? $tagRow['tag_parent_id'] : 0)
+                );
+            }
+        }
+
         $pipelineStatusOptionsPayload = array();
         $orderedPipelineStatusIDs = array();
         foreach ($pipelineStatusRS as $statusRow)
@@ -1174,6 +1197,7 @@ class CandidatesUI extends UserInterface
                 'deleteAttachmentURL' => sprintf('%s?m=candidates&a=deleteAttachment', $baseURL),
                 'deleteAttachmentToken' => $this->getCSRFToken('candidates.deleteAttachment'),
                 'addTagsURL' => sprintf('%s?m=candidates&a=addCandidateTags&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'addTagsToken' => $this->getCSRFToken('candidates.addCandidateTags'),
                 'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
                 'linkDuplicateURL' => sprintf('%s?m=candidates&a=linkDuplicate&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'viewHistoryURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
@@ -1235,6 +1259,10 @@ class CandidatesUI extends UserInterface
                 'flashMessage' => (string) $gdprFlashMessage
             ),
             'tags' => array_values((is_array($assignedTags) ? $assignedTags : array())),
+            'tagManagement' => array(
+                'assignedTagIDs' => array_values((is_array($assignedTagIDs) ? $assignedTagIDs : array())),
+                'catalog' => $tagCatalogPayload
+            ),
             'lists' => $listsPayload,
             'comments' => array(
                 'count' => count($commentsPayload),
@@ -2097,7 +2125,9 @@ class CandidatesUI extends UserInterface
                 $gdprLegacyProof,
                 $gdprLegacyProofWarning,
                 $gdprFlashMessage,
-                $tags->getCandidateTagsTitle($candidateID),
+                $assignedTagsTitles,
+                $assignedTagIDs,
+                $tagsRS,
                 $pipelines->getStatusesForPicking(),
                 $this->getCSRFToken('candidates.addProfileComment'),
                 $this->getCSRFToken('candidates.postMessage'),
@@ -2125,8 +2155,8 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('ownershipEditEnabled', $ownershipEditEnabled);
         $this->_template->assign('ownershipUsersRS', $ownershipUsersRS);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
-        $this->_template->assign('tagsRS', $tags->getAll());
-        $this->_template->assign('assignedTags', $tags->getCandidateTagsTitle($candidateID));
+        $this->_template->assign('tagsRS', $tagsRS);
+        $this->_template->assign('assignedTags', $assignedTagsTitles);
         $this->_template->assign('lists', $lists);
         $this->_template->assign('candidateComments', $candidateComments);
         $this->_template->assign('candidateCommentCategories', $candidateCommentCategories);
@@ -3792,21 +3822,89 @@ class CandidatesUI extends UserInterface
 
     private function onAddCandidateTags()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         /* Bail out if we don't have a valid regardingjob order ID. */
         if (!$this->isOptionalIDValid('candidateID', $_POST)) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidate',
+                    'message' => 'Invalid Candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid Candidate ID.');
         }
 
         /* Bail out if we don't have a valid regardingjob order ID. */
         if (!isset($_POST['candidate_tags']) || !is_array($_POST['candidate_tags'])) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidTagSelection',
+                    'message' => 'Invalid Tag ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid Tag ID.');
         }
 
         $candidateID    = $_POST['candidateID'];
         $tagIDs            = $_POST['candidate_tags'];
 
+        if ($isModernJSON)
+        {
+            $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+            if (!$this->isCSRFTokenValid('candidates.addCandidateTags', $securityToken))
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid request token.'
+                ));
+                return;
+            }
+        }
+
         $tags = new Tags($this->_siteID);
         $tags->AddTagsToCandidate($candidateID, $tagIDs);
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'tagsUpdated',
+                'message' => 'Candidate tags updated.',
+                'candidateID' => (int) $candidateID,
+                'assignedTagIDs' => array_values($tagIDs)
+            ));
+            return;
+        }
 
         $this->_template->assign('candidateID', $candidateID);
         $this->_template->assign('isFinishedMode', true);

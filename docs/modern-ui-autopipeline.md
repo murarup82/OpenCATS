@@ -40,10 +40,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 34. Added `modern-json` mutation mode for `candidates.deleteMessageThread` and switched modern `candidates.show` thread deletion to async in-place action.
 35. Added `modern-json` mutation mode for candidate/joborder attachment deletion and wired modern `candidates.show` + `joborders.show` attachment tables to async delete actions with instant refresh.
 36. Embedded legacy history/report utilities into the modern in-app modal shell (`candidates.show` history and `joborders.show` history/report) to avoid full context-switch navigation.
+37. Added native candidate tag editor on `candidates.show` (modal checkbox workflow) backed by `modern-json` mutation support for `candidates.addCandidateTags`, with CSRF token enforcement and legacy modal fallback.
 
 ## Next Queue
 
-1. Move remaining candidate/joborder profile actions (tag mutations and remaining legacy utility workflows) from popup/form-post flows to native mutation + optimistic refresh patterns.
+1. Move remaining candidate/joborder profile actions (remaining legacy utility workflows and advanced forms) from popup/form-post flows to native mutation + optimistic refresh patterns.
 
 ## Rules
 

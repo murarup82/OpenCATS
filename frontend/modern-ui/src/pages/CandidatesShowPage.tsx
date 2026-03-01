@@ -9,6 +9,7 @@ import {
   postCandidateMessage,
   removePipelineEntryViaLegacyURL,
   setDashboardPipelineStatus,
+  updateCandidateTags,
   updatePipelineStatusHistoryDate
 } from '../lib/api';
 import type {
@@ -109,6 +110,10 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [messageSubmitError, setMessageSubmitError] = useState<string>('');
   const [messageDeletePending, setMessageDeletePending] = useState<boolean>(false);
   const [messageDeleteError, setMessageDeleteError] = useState<string>('');
+  const [tagEditorOpen, setTagEditorOpen] = useState<boolean>(false);
+  const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
+  const [tagSavePending, setTagSavePending] = useState<boolean>(false);
+  const [tagSaveError, setTagSaveError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -131,6 +136,11 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         } else {
           setCommentCategory('General');
         }
+        setSelectedTagIDs(
+          Array.isArray(result.tagManagement?.assignedTagIDs)
+            ? result.tagManagement.assignedTagIDs.map((value) => Number(value || 0)).filter((value) => value > 0)
+            : []
+        );
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -439,6 +449,79 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     [data, refreshPageData]
   );
 
+  const openTagEditor = useCallback(() => {
+    if (!data) {
+      return;
+    }
+
+    const tagCatalog = data.tagManagement?.catalog || [];
+    const token = data.actions.addTagsToken || '';
+    if (tagCatalog.length === 0 || token === '') {
+      setPipelineModal({
+        url: decodeLegacyURL(data.actions.addTagsURL),
+        title: 'Manage Tags',
+        openInPopup: { width: 500, height: 300, refreshOnClose: true },
+        showRefreshClose: true
+      });
+      return;
+    }
+
+    setSelectedTagIDs(
+      Array.isArray(data.tagManagement.assignedTagIDs)
+        ? data.tagManagement.assignedTagIDs.map((value) => Number(value || 0)).filter((value) => value > 0)
+        : []
+    );
+    setTagSaveError('');
+    setTagEditorOpen(true);
+  }, [data]);
+
+  const toggleTagSelection = useCallback((tagID: number) => {
+    setSelectedTagIDs((current) => {
+      if (current.includes(tagID)) {
+        return current.filter((value) => value !== tagID);
+      }
+      return [...current, tagID];
+    });
+  }, []);
+
+  const submitTagEditor = useCallback(async () => {
+    if (!data || tagSavePending) {
+      return;
+    }
+    if (selectedTagIDs.length === 0) {
+      setTagSaveError('Select at least one tag.');
+      return;
+    }
+
+    const submitURL = decodeLegacyURL(data.actions.addTagsURL || '');
+    const token = data.actions.addTagsToken || '';
+    if (submitURL === '' || token === '') {
+      setTagSaveError('Tag update endpoint is not available.');
+      return;
+    }
+
+    setTagSavePending(true);
+    setTagSaveError('');
+    try {
+      const result = await updateCandidateTags(submitURL, {
+        candidateID: Number(data.meta.candidateID || 0),
+        tagIDs: selectedTagIDs,
+        securityToken: token
+      });
+      if (!result.success) {
+        setTagSaveError(result.message || 'Unable to update tags.');
+        return;
+      }
+
+      setTagEditorOpen(false);
+      refreshPageData();
+    } catch (err: unknown) {
+      setTagSaveError(err instanceof Error ? err.message : 'Unable to update tags.');
+    } finally {
+      setTagSavePending(false);
+    }
+  }, [data, refreshPageData, selectedTagIDs, tagSavePending]);
+
   const getForwardStatusOptions = useCallback(
     (currentStatusID: number) => {
       if (!data) {
@@ -632,6 +715,9 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const candidate = data.candidate;
   const gdpr = data.gdpr;
   const showClosed = data.meta.showClosedPipeline;
+  const tagCatalog = [...(data.tagManagement?.catalog || [])].sort((left, right) =>
+    toDisplayText(left.title, '').localeCompare(toDisplayText(right.title, ''))
+  );
 
   return (
     <div className="avel-dashboard-page avel-candidate-show-page">
@@ -1159,14 +1245,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <button
                       type="button"
                       className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() =>
-                        setPipelineModal({
-                          url: decodeLegacyURL(data.actions.addTagsURL),
-                          title: 'Manage Tags',
-                          openInPopup: { width: 500, height: 300, refreshOnClose: true },
-                          showRefreshClose: true
-                        })
-                      }
+                      onClick={openTagEditor}
                     >
                       Manage Tags
                     </button>
@@ -1271,6 +1350,59 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             </section>
           </div>
         </div>
+
+        {tagEditorOpen ? (
+          <div className="modern-inline-modal" role="dialog" aria-modal="true" aria-label="Manage Tags">
+            <div className="modern-inline-modal__dialog modern-inline-modal__dialog--compact">
+              <div className="modern-inline-modal__header">
+                <h3>Manage Tags</h3>
+                <p>Select tags assigned to this candidate.</p>
+              </div>
+              <div className="modern-inline-modal__body modern-inline-modal__body--form">
+                <div className="modern-tag-editor">
+                  {tagCatalog.map((tag) => {
+                    const tagID = Number(tag.tagID || 0);
+                    if (tagID <= 0) {
+                      return null;
+                    }
+                    return (
+                      <label key={tagID} className="modern-tag-editor__option">
+                        <input
+                          type="checkbox"
+                          checked={selectedTagIDs.includes(tagID)}
+                          onChange={() => toggleTagSelection(tagID)}
+                        />
+                        <span>{toDisplayText(tag.title)}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {tagSaveError ? <div className="modern-state modern-state--error">{tagSaveError}</div> : null}
+              </div>
+              <div className="modern-inline-modal__actions">
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--emphasis"
+                  onClick={submitTagEditor}
+                  disabled={tagSavePending}
+                >
+                  {tagSavePending ? 'Saving...' : 'Save Tags'}
+                </button>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--secondary"
+                  onClick={() => {
+                    setTagEditorOpen(false);
+                    setTagSaveError('');
+                  }}
+                  disabled={tagSavePending}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <PipelineQuickStatusModal
           isOpen={!!quickStatusModal}
