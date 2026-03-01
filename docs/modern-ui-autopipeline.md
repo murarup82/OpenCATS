@@ -102,6 +102,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - extended `candidates.edit.v1` contract actions with `deleteAttachmentURL` and `deleteAttachmentToken`
     - wired inline delete actions to `deleteCandidateAttachment` with CSRF token validation
     - replaced destructive browser dialogs with `ConfirmActionModal` for consistent in-app feedback.
+68. Modernized core select/dropdown controls on candidate forms:
+    - replaced native selects on `candidates.add` and `candidates.edit` for Source/GDPR and EEO fields with shared `SelectMenu`
+    - preserved legacy form-post compatibility by binding each control to hidden inputs (`name=value`) so backend handlers remain unchanged
+    - kept dynamic custom-field dropdown rendering intact for compatibility while reducing generic/native dropdown footprint on primary forms.
 
 ## Next Queue
 

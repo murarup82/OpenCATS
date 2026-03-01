@@ -7,6 +7,8 @@ import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { SelectMenu } from '../ui-core';
+import type { SelectMenuOption } from '../ui-core';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
 
@@ -356,6 +358,43 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
   const submitURL = data.actions.submitURL || `${bootstrap.indexName}?m=candidates&a=edit&ui=modern`;
   const showURL = data.actions.showURL || `${bootstrap.indexName}?m=candidates&a=show&candidateID=${data.meta.candidateID}&ui=modern`;
+  const sourceOptions: SelectMenuOption[] = data.options.sources.map((option) => ({
+    value: option.value,
+    label: option.label
+  }));
+  const ownerOptions: SelectMenuOption[] = data.options.owners.map((option) => ({
+    value: option.value,
+    label: option.label
+  }));
+  const gdprOptions: SelectMenuOption[] = [
+    { value: '0', label: 'No' },
+    { value: '1', label: 'Yes' }
+  ];
+  const genderOptions: SelectMenuOption[] = [
+    { value: '', label: '----' },
+    { value: 'm', label: 'Male' },
+    { value: 'f', label: 'Female' }
+  ];
+  const ethnicityOptions: SelectMenuOption[] = [
+    { value: '', label: '----' },
+    { value: '1', label: 'American Indian' },
+    { value: '2', label: 'Asian or Pacific Islander' },
+    { value: '3', label: 'Hispanic or Latino' },
+    { value: '4', label: 'Non-Hispanic Black' },
+    { value: '5', label: 'Non-Hispanic White' }
+  ];
+  const veteranOptions: SelectMenuOption[] = [
+    { value: '', label: '----' },
+    { value: '1', label: 'No' },
+    { value: '2', label: 'Eligible Veteran' },
+    { value: '3', label: 'Disabled Veteran' },
+    { value: '4', label: 'Eligible and Disabled' }
+  ];
+  const disabilityOptions: SelectMenuOption[] = [
+    { value: '', label: '----' },
+    { value: 'No', label: 'No' },
+    { value: 'Yes', label: 'Yes' }
+  ];
 
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page">
@@ -495,51 +534,29 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   />
                 </label>
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Source</span>
-                  <select
-                    className="avel-form-control"
-                    name="source"
-                    value={formState.source}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, source: event.target.value } : current))}
-                  >
-                    {data.options.sources.map((option) => (
-                      <option key={`${option.value}-${option.label}`} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <input type="hidden" name="source" value={formState.source} />
+                <SelectMenu
+                  label="Source"
+                  value={formState.source}
+                  options={sourceOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, source: value } : current))}
+                />
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Owner *</span>
-                  <select
-                    className="avel-form-control"
-                    name="owner"
-                    value={formState.owner}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, owner: event.target.value } : current))}
-                    required
-                  >
-                    {data.options.owners.map((option) => (
-                      <option key={`${option.value}-${option.label}`} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <input type="hidden" name="owner" value={formState.owner} />
+                <SelectMenu
+                  label="Owner *"
+                  value={formState.owner}
+                  options={ownerOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, owner: value } : current))}
+                />
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">GDPR Signed</span>
-                  <select
-                    className="avel-form-control"
-                    name="gdprSigned"
-                    value={formState.gdprSigned}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, gdprSigned: event.target.value as '0' | '1' } : current))}
-                  >
-                    <option value="0">No</option>
-                    <option value="1">Yes</option>
-                  </select>
-                </label>
+                <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
+                <SelectMenu
+                  label="GDPR Signed"
+                  value={formState.gdprSigned}
+                  options={gdprOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
+                />
 
                 <label className="modern-command-field">
                   <span className="modern-command-label">GDPR Expiration (MM-DD-YY)</span>
@@ -655,66 +672,37 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               </div>
 
               <div className="avel-candidate-edit-grid">
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Gender</span>
-                  <select
-                    className="avel-form-control"
-                    name="gender"
-                    value={formState.gender}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, gender: event.target.value } : current))}
-                  >
-                    <option value="">----</option>
-                    <option value="m">Male</option>
-                    <option value="f">Female</option>
-                  </select>
-                </label>
+                <input type="hidden" name="gender" value={formState.gender} />
+                <SelectMenu
+                  label="Gender"
+                  value={formState.gender}
+                  options={genderOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, gender: value } : current))}
+                />
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Ethnicity</span>
-                  <select
-                    className="avel-form-control"
-                    name="race"
-                    value={formState.race}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, race: event.target.value } : current))}
-                  >
-                    <option value="">----</option>
-                    <option value="1">American Indian</option>
-                    <option value="2">Asian or Pacific Islander</option>
-                    <option value="3">Hispanic or Latino</option>
-                    <option value="4">Non-Hispanic Black</option>
-                    <option value="5">Non-Hispanic White</option>
-                  </select>
-                </label>
+                <input type="hidden" name="race" value={formState.race} />
+                <SelectMenu
+                  label="Ethnicity"
+                  value={formState.race}
+                  options={ethnicityOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, race: value } : current))}
+                />
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Veteran Status</span>
-                  <select
-                    className="avel-form-control"
-                    name="veteran"
-                    value={formState.veteran}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, veteran: event.target.value } : current))}
-                  >
-                    <option value="">----</option>
-                    <option value="1">No</option>
-                    <option value="2">Eligible Veteran</option>
-                    <option value="3">Disabled Veteran</option>
-                    <option value="4">Eligible and Disabled</option>
-                  </select>
-                </label>
+                <input type="hidden" name="veteran" value={formState.veteran} />
+                <SelectMenu
+                  label="Veteran Status"
+                  value={formState.veteran}
+                  options={veteranOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, veteran: value } : current))}
+                />
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Disability Status</span>
-                  <select
-                    className="avel-form-control"
-                    name="disability"
-                    value={formState.disability}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, disability: event.target.value } : current))}
-                  >
-                    <option value="">----</option>
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
-                  </select>
-                </label>
+                <input type="hidden" name="disability" value={formState.disability} />
+                <SelectMenu
+                  label="Disability Status"
+                  value={formState.disability}
+                  options={disabilityOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, disability: value } : current))}
+                />
               </div>
 
               {data.extraFields.length > 0 ? (
