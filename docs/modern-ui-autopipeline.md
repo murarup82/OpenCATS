@@ -23,10 +23,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 17. Native duplicate pre-check flow in `candidates.add` with modern inline review (hard/soft match UX).
 18. Native in-app status change modal on `dashboard.my` (popup replaced by embedded modal workflow).
 19. Expanded embedded modal coverage for pipeline actions (`dashboard.my` details, `candidates.show` pipeline actions, `joborders.show` pipeline actions).
+20. Candidate action parity: modern Add-To-List overlay + embedded Add-To-Job modal flows on list/show pages.
 
 ## Next Queue
 
-1. Add native add/remove list and add-to-job-order modal parity to remove remaining popup dependency in candidate surfaces.
+1. Build native drag-and-drop status change endpoint path to complete the no-popup workflow for common dashboard transitions.
 
 ## Rules
 

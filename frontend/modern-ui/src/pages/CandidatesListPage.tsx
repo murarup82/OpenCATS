@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -49,6 +50,10 @@ function toBooleanString(value: boolean): string {
   return value ? '1' : '0';
 }
 
+function decodeLegacyURL(url: string): string {
+  return String(url || '').replace(/&amp;/g, '&');
+}
+
 export function CandidatesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -56,6 +61,11 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [searchDraft, setSearchDraft] = useState('');
   const [reloadToken, setReloadToken] = useState(0);
+  const [jobOrderModal, setJobOrderModal] = useState<{
+    url: string;
+    title: string;
+    openInPopup: { width: number; height: number; refreshOnClose: boolean };
+  } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -113,6 +123,31 @@ export function CandidatesListPage({ bootstrap }: Props) {
     },
     [refreshPageData]
   );
+
+  const closeJobOrderModal = useCallback(
+    (refreshOnClose: boolean) => {
+      setJobOrderModal(null);
+      if (refreshOnClose) {
+        refreshPageData();
+      }
+    },
+    [refreshPageData]
+  );
+
+  const openAddToListOverlay = useCallback((sourceURL: string) => {
+    const normalizedURL = decodeLegacyURL(sourceURL);
+    if (normalizedURL === '') {
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent('opencats:add-to-list:open', {
+        detail: {
+          url: normalizedURL
+        }
+      })
+    );
+  }, []);
 
   const navigateWithFilters = (next: NavigationFilters) => {
     if (!data) {
@@ -481,7 +516,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                           <button
                             type="button"
                             className="modern-btn modern-btn--mini modern-btn--secondary"
-                            onClick={() => openLegacyPopup(row.addToListURL, 520, 420, false)}
+                            onClick={() => openAddToListOverlay(row.addToListURL)}
                           >
                             Add To List
                           </button>
@@ -490,7 +525,13 @@ export function CandidatesListPage({ bootstrap }: Props) {
                           <button
                             type="button"
                             className="modern-btn modern-btn--mini modern-btn--secondary"
-                            onClick={() => openLegacyPopup(row.addToJobOrderURL, 860, 560, false)}
+                            onClick={() =>
+                              setJobOrderModal({
+                                url: decodeLegacyURL(row.addToJobOrderURL),
+                                title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`,
+                                openInPopup: { width: 860, height: 560, refreshOnClose: false }
+                              })
+                            }
                           >
                             Add To Job
                           </button>
@@ -503,6 +544,25 @@ export function CandidatesListPage({ bootstrap }: Props) {
             )}
           </div>
         </div>
+
+        <LegacyFrameModal
+          isOpen={!!jobOrderModal}
+          title={jobOrderModal?.title || 'Add Candidate To Job Order'}
+          url={jobOrderModal?.url || ''}
+          onClose={closeJobOrderModal}
+          onOpenPopup={
+            jobOrderModal
+              ? () =>
+                  openLegacyPopup(
+                    jobOrderModal.url,
+                    jobOrderModal.openInPopup.width,
+                    jobOrderModal.openInPopup.height,
+                    jobOrderModal.openInPopup.refreshOnClose
+                  )
+              : undefined
+          }
+          showRefreshClose={false}
+        />
       </PageContainer>
     </div>
   );

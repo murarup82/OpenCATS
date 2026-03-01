@@ -138,6 +138,24 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     [refreshPageData]
   );
 
+  const openAddToListOverlay = useCallback(
+    (sourceURL: string) => {
+      const normalizedURL = decodeLegacyURL(sourceURL);
+      if (normalizedURL === '') {
+        return;
+      }
+
+      window.dispatchEvent(
+        new CustomEvent('opencats:add-to-list:open', {
+          detail: {
+            url: normalizedURL
+          }
+        })
+      );
+    },
+    []
+  );
+
   const navigateWithShowClosed = (showClosed: boolean) => {
     const nextQuery = new URLSearchParams(serverQueryString);
     nextQuery.set('m', 'candidates');
@@ -200,7 +218,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               <button
                 type="button"
                 className="modern-btn modern-btn--secondary"
-                onClick={() => openLegacyPopup(data.actions.addToJobOrderURL, 1120, 760, true)}
+                onClick={() =>
+                  setPipelineModal({
+                    url: decodeLegacyURL(data.actions.addToJobOrderURL),
+                    title: 'Add Candidate To Job Order',
+                    openInPopup: { width: 1120, height: 760, refreshOnClose: true },
+                    showRefreshClose: true
+                  })
+                }
               >
                 Add To Job Order
               </button>
@@ -534,7 +559,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <button
                       type="button"
                       className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() => openLegacyPopup(data.actions.addToListURL, 720, 520, true)}
+                      onClick={() => openAddToListOverlay(data.actions.addToListURL)}
                     >
                       Manage Lists
                     </button>
