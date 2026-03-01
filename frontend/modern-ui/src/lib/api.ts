@@ -324,6 +324,119 @@ export async function deleteJobOrderMessageThread(
   return result;
 }
 
+export async function addCandidateProfileComment(
+  submitURL: string,
+  payload: {
+    candidateID: number;
+    securityToken: string;
+    commentCategory: string;
+    commentText: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('candidateID', String(payload.candidateID || 0));
+  body.set('securityToken', payload.securityToken || '');
+  body.set('commentCategory', payload.commentCategory || 'General');
+  body.set('commentText', payload.commentText || '');
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Candidate comment submit failed (${response.status}).`);
+  }
+
+  return result;
+}
+
+export async function postCandidateMessage(
+  submitURL: string,
+  payload: {
+    candidateID: number;
+    securityToken: string;
+    messageBody: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('candidateID', String(payload.candidateID || 0));
+  body.set('securityToken', payload.securityToken || '');
+  body.set('messageBody', payload.messageBody || '');
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Candidate message post failed (${response.status}).`);
+  }
+
+  return result;
+}
+
+export async function deleteCandidateMessageThread(
+  submitURL: string,
+  payload: {
+    candidateID: number;
+    threadID: number;
+    securityToken: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('candidateID', String(payload.candidateID || 0));
+  body.set('threadID', String(payload.threadID || 0));
+  body.set('securityToken', payload.securityToken || '');
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Candidate thread delete failed (${response.status}).`);
+  }
+
+  return result;
+}
+
 export async function fetchCandidatesListModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams

@@ -488,6 +488,7 @@ export type CandidatesShowModernDataResponse = {
       canPostComment: boolean;
       canSendGDPR: boolean;
       candidateMessagingEnabled: boolean;
+      canDeleteMessageThread: boolean;
     };
   };
   actions: {
@@ -500,6 +501,9 @@ export type CandidatesShowModernDataResponse = {
     addToListURL: string;
     linkDuplicateURL: string;
     viewHistoryURL: string;
+    addCommentURL: string;
+    postMessageURL: string;
+    deleteMessageThreadURL: string;
     removeFromPipelineToken?: string;
     setPipelineStatusURL?: string;
     setPipelineStatusToken?: string;
@@ -588,6 +592,13 @@ export type CandidatesShowModernDataResponse = {
   }>;
   comments: {
     count: number;
+    initiallyOpen: boolean;
+    canAddComment: boolean;
+    categories: string[];
+    maxLength: number;
+    securityToken: string;
+    flashMessage: string;
+    flashIsError: boolean;
     items: Array<{
       activityID: number;
       dateCreated: string;
@@ -595,6 +606,28 @@ export type CandidatesShowModernDataResponse = {
       category: string;
       commentHTML: string;
       commentText: string;
+    }>;
+  };
+  messages: {
+    enabled: boolean;
+    threadID: number;
+    threadVisibleToCurrentUser: boolean;
+    initiallyOpen: boolean;
+    maxLength: number;
+    securityToken: string;
+    deleteThreadSecurityToken: string;
+    openInboxURL: string;
+    mentionHintNames: string[];
+    mentionAutocompleteValues: string[];
+    flashMessage: string;
+    flashIsError: boolean;
+    items: Array<{
+      messageID: number;
+      dateCreated: string;
+      senderName: string;
+      mentionedUsers: string;
+      bodyHTML: string;
+      bodyText: string;
     }>;
   };
   attachments: {

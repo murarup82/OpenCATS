@@ -783,6 +783,20 @@ class CandidatesUI extends UserInterface
         $calendarRS,
         $lists,
         $candidateComments,
+        $candidateCommentCategories,
+        $canAddCandidateComment,
+        $candidateCommentsInitiallyOpen,
+        $candidateCommentFlashMessage,
+        $candidateCommentFlashIsError,
+        $candidateMessagingEnabled,
+        $candidateMessageThreadID,
+        $candidateThreadVisibleToCurrentUser,
+        $candidateThreadMessages,
+        $candidateMessageMentionHintNames,
+        $candidateMessageMentionAutocompleteValues,
+        $candidateMessagesInitiallyOpen,
+        $candidateMessageFlashMessage,
+        $candidateMessageFlashIsError,
         $questionnaires,
         $gdprLatestRequest,
         $gdprDeletionRequired,
@@ -795,6 +809,9 @@ class CandidatesUI extends UserInterface
         $gdprFlashMessage,
         $assignedTags,
         $pipelineStatusRS,
+        $addCommentToken,
+        $postCandidateMessageToken,
+        $deleteCandidateMessageThreadToken,
         $modernPage
     )
     {
@@ -1037,6 +1054,43 @@ class CandidatesUI extends UserInterface
             );
         }
 
+        $messageItemsPayload = array();
+        foreach ($candidateThreadMessages as $messageData)
+        {
+            $bodyHTML = (isset($messageData['bodyHTML']) ? (string) $messageData['bodyHTML'] : '');
+            $messageItemsPayload[] = array(
+                'messageID' => (isset($messageData['messageID']) ? (int) $messageData['messageID'] : 0),
+                'dateCreated' => (isset($messageData['dateCreated']) ? (string) $messageData['dateCreated'] : '--'),
+                'senderName' => (isset($messageData['senderName']) ? (string) $messageData['senderName'] : '--'),
+                'mentionedUsers' => (isset($messageData['mentionedUsers']) ? (string) $messageData['mentionedUsers'] : ''),
+                'bodyHTML' => $bodyHTML,
+                'bodyText' => trim(
+                    html_entity_decode(
+                        strip_tags(str_replace(array('<br />', '<br/>', '<br>'), "\n", $bodyHTML)),
+                        ENT_QUOTES
+                    )
+                )
+            );
+        }
+
+        $openInboxURL = sprintf('%s?m=home&a=inbox&ui=modern', $baseURL);
+        if ((int) $candidateMessageThreadID > 0 && $candidateThreadVisibleToCurrentUser)
+        {
+            $openInboxURL = sprintf(
+                '%s?m=home&a=inbox&threadKey=%s&ui=modern',
+                $baseURL,
+                rawurlencode('candidate:' . (int) $candidateMessageThreadID)
+            );
+        }
+
+        $canDeleteMessageThread = (
+            !$isPopup &&
+            $candidateMessagingEnabled &&
+            ((int) $candidateMessageThreadID > 0) &&
+            $candidateThreadVisibleToCurrentUser &&
+            ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT)
+        );
+
         $duplicatePayload = array();
         if (isset($data['isDuplicate']) && is_array($data['isDuplicate']))
         {
@@ -1106,7 +1160,8 @@ class CandidatesUI extends UserInterface
                     'canViewLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_READ),
                     'canPostComment' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
                     'canSendGDPR' => ((bool) $gdprSendEnabled && !(bool) $gdprSendDisabled),
-                    'candidateMessagingEnabled' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT)
+                    'candidateMessagingEnabled' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteMessageThread' => $canDeleteMessageThread
                 )
             ),
             'actions' => array(
@@ -1119,6 +1174,9 @@ class CandidatesUI extends UserInterface
                 'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
                 'linkDuplicateURL' => sprintf('%s?m=candidates&a=linkDuplicate&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'viewHistoryURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
+                'addCommentURL' => sprintf('%s?m=candidates&a=addProfileComment', $baseURL),
+                'postMessageURL' => sprintf('%s?m=candidates&a=postMessage', $baseURL),
+                'deleteMessageThreadURL' => sprintf('%s?m=candidates&a=deleteMessageThread', $baseURL),
                 'removeFromPipelineToken' => $this->getCSRFToken('candidates.removeFromPipeline'),
                 'setPipelineStatusURL' => sprintf('%s?m=dashboard&a=setPipelineStatus', $baseURL),
                 'setPipelineStatusToken' => $this->getCSRFToken('dashboard.setPipelineStatus')
@@ -1177,7 +1235,29 @@ class CandidatesUI extends UserInterface
             'lists' => $listsPayload,
             'comments' => array(
                 'count' => count($commentsPayload),
+                'initiallyOpen' => ((bool) $candidateCommentsInitiallyOpen),
+                'canAddComment' => ((bool) $canAddCandidateComment),
+                'categories' => array_values($candidateCommentCategories),
+                'maxLength' => self::PROFILE_COMMENT_MAXLEN,
+                'securityToken' => (string) $addCommentToken,
+                'flashMessage' => (string) $candidateCommentFlashMessage,
+                'flashIsError' => ((bool) $candidateCommentFlashIsError),
                 'items' => $commentsPayload
+            ),
+            'messages' => array(
+                'enabled' => ((bool) $candidateMessagingEnabled),
+                'threadID' => (int) $candidateMessageThreadID,
+                'threadVisibleToCurrentUser' => ((bool) $candidateThreadVisibleToCurrentUser),
+                'initiallyOpen' => ((bool) $candidateMessagesInitiallyOpen),
+                'maxLength' => CandidateMessages::MESSAGE_MAXLEN,
+                'securityToken' => (string) $postCandidateMessageToken,
+                'deleteThreadSecurityToken' => (string) $deleteCandidateMessageThreadToken,
+                'openInboxURL' => $openInboxURL,
+                'mentionHintNames' => array_values($candidateMessageMentionHintNames),
+                'mentionAutocompleteValues' => array_values(array_unique($candidateMessageMentionAutocompleteValues)),
+                'flashMessage' => (string) $candidateMessageFlashMessage,
+                'flashIsError' => ((bool) $candidateMessageFlashIsError),
+                'items' => $messageItemsPayload
             ),
             'attachments' => array(
                 'items' => $attachmentsPayload,
@@ -1990,6 +2070,20 @@ class CandidatesUI extends UserInterface
                 $calendarRS,
                 $lists,
                 $candidateComments,
+                $candidateCommentCategories,
+                $canAddCandidateComment,
+                $candidateCommentsInitiallyOpen,
+                $candidateCommentFlashMessage,
+                $candidateCommentFlashIsError,
+                $candidateMessagingEnabled,
+                $candidateMessageThreadID,
+                $candidateThreadVisibleToCurrentUser,
+                $candidateThreadMessages,
+                $candidateMessageMentionHintNames,
+                $candidateMessageMentionAutocompleteValues,
+                $candidateMessagesInitiallyOpen,
+                $candidateMessageFlashMessage,
+                $candidateMessageFlashIsError,
                 $questionnaires,
                 $gdprLatestRequest,
                 $gdprDeletionRequired,
@@ -2002,6 +2096,9 @@ class CandidatesUI extends UserInterface
                 $gdprFlashMessage,
                 $tags->getCandidateTagsTitle($candidateID),
                 $pipelines->getStatusesForPicking(),
+                $this->getCSRFToken('candidates.addProfileComment'),
+                $this->getCSRFToken('candidates.postMessage'),
+                $this->getCSRFToken('candidates.deleteMessageThread'),
                 'candidates-show'
             );
             return;
@@ -4447,13 +4544,44 @@ class CandidatesUI extends UserInterface
 
     private function onAddProfileComment()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidMethod',
+                    'message' => 'Invalid request method.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         if (!$this->isRequiredIDValid('candidateID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidate',
+                    'message' => 'Invalid candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
@@ -4461,6 +4589,21 @@ class CandidatesUI extends UserInterface
         $candidates = new Candidates($this->_siteID);
         if (empty($candidates->get($candidateID)))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'candidateNotFound',
+                    'message' => 'The specified candidate ID could not be found.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified candidate ID could not be found.');
         }
 
@@ -4469,6 +4612,21 @@ class CandidatesUI extends UserInterface
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('candidates.addProfileComment', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid security token.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array_merge(
                 $redirectParams,
                 array('comment' => 'token')
@@ -4478,6 +4636,21 @@ class CandidatesUI extends UserInterface
         $candidateComment = $this->getTrimmedInput('commentText', $_POST);
         if ($candidateComment === '')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'emptyComment',
+                    'message' => 'Comment text is required.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array_merge(
                 $redirectParams,
                 array('comment' => 'empty')
@@ -4486,6 +4659,21 @@ class CandidatesUI extends UserInterface
 
         if (strlen($candidateComment) > self::PROFILE_COMMENT_MAXLEN)
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'commentTooLong',
+                    'message' => 'Comment is too long.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array_merge(
                 $redirectParams,
                 array('comment' => 'tooLong')
@@ -4517,10 +4705,40 @@ class CandidatesUI extends UserInterface
 
         if (empty($activityID))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 500 Internal Server Error');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'commentSaveFailed',
+                    'message' => 'Failed to save comment.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array_merge(
                 $redirectParams,
                 array('comment' => 'failed')
             ));
+        }
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'commentAdded',
+                'message' => 'Comment added.'
+            ));
+            return;
         }
 
         $this->redirectToCandidateShow($candidateID, array_merge(
@@ -4531,13 +4749,44 @@ class CandidatesUI extends UserInterface
 
     private function onPostCandidateMessage()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidMethod',
+                    'message' => 'Invalid request method.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         if (!$this->isRequiredIDValid('candidateID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidate',
+                    'message' => 'Invalid candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
@@ -4545,18 +4794,63 @@ class CandidatesUI extends UserInterface
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('candidates.postMessage', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid security token.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'token'));
         }
 
         $candidates = new Candidates($this->_siteID);
         if (empty($candidates->get($candidateID)))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'candidateNotFound',
+                    'message' => 'The specified candidate ID could not be found.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified candidate ID could not be found.');
         }
 
         $candidateMessages = new CandidateMessages($this->_siteID);
         if (!$candidateMessages->isSchemaAvailable())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 409 Conflict');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'schema',
+                    'message' => 'Messaging tables are missing.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'schema'));
         }
 
@@ -4570,10 +4864,40 @@ class CandidatesUI extends UserInterface
         if (empty($result['success']))
         {
             $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => $error,
+                    'message' => 'Unable to post message.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array(
                 'showMessages' => '1',
                 'msg' => $error
             ));
+        }
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'sent',
+                'message' => 'Message sent.'
+            ));
+            return;
         }
 
         $this->redirectToCandidateShow($candidateID, array(
@@ -4584,18 +4908,64 @@ class CandidatesUI extends UserInterface
 
     private function onDeleteCandidateMessageThread()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidMethod',
+                    'message' => 'Invalid request method.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         if (!$this->isRequiredIDValid('candidateID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidate',
+                    'message' => 'Invalid candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
         if (!$this->isRequiredIDValid('threadID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidThread',
+                    'message' => 'Invalid thread ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid thread ID.');
         }
 
@@ -4604,29 +4974,119 @@ class CandidatesUI extends UserInterface
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('candidates.deleteMessageThread', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid security token.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'token'));
         }
 
         $candidateMessages = new CandidateMessages($this->_siteID);
         if (!$candidateMessages->isSchemaAvailable())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 409 Conflict');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'schema',
+                    'message' => 'Messaging tables are missing.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'schema'));
         }
 
         $thread = $candidateMessages->getThread($threadID);
         if (empty($thread) || (int) $thread['candidateID'] !== $candidateID)
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalid',
+                    'message' => 'Message thread not found for this candidate.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'invalid'));
         }
 
         if (!$candidateMessages->isUserParticipant($threadID, $this->_userID))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'forbidden',
+                    'message' => 'You are not allowed to delete this thread.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'forbidden'));
         }
 
         if (!$candidateMessages->deleteThread($threadID))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 500 Internal Server Error');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'deletefailed',
+                    'message' => 'Failed to delete thread.'
+                ));
+                return;
+            }
             $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'deletefailed'));
+        }
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'deleted',
+                'message' => 'Thread deleted.'
+            ));
+            return;
         }
 
         $this->redirectToCandidateShow($candidateID, array('showMessages' => '1', 'msg' => 'deleted'));

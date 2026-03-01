@@ -35,10 +35,13 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 29. Migrated remaining show-page utility popups (joborder add-candidate, candidate/joborder add-attachment, candidate tag management) into embedded in-app modal flows using `LegacyFrameModal`.
 30. Added `modern-json` mutation mode for `joborders.addProfileComment` and `joborders.postMessage`, and switched modern `joborders.show` comment/message forms to async in-place submit with immediate data refresh.
 31. Added `modern-json` mutation mode for `joborders.deleteMessageThread` and switched modern `joborders.show` thread deletion to async in-place action.
+32. Extended `candidates.show.v1` with comment/message contract parity (categories, open-state hints, flash metadata, inbox/thread payload, and secure action URLs/tokens).
+33. Added `modern-json` mutation mode for `candidates.addProfileComment` and `candidates.postMessage`, and switched modern `candidates.show` comment/message forms to async in-place submit with immediate data refresh.
+34. Added `modern-json` mutation mode for `candidates.deleteMessageThread` and switched modern `candidates.show` thread deletion to async in-place action.
 
 ## Next Queue
 
-1. Move remaining candidate/joborder profile actions (attachments/tags/history/report) from popup/form-post flows to native mutation + optimistic refresh patterns.
+1. Move remaining candidate/joborder profile actions (attachments/tags/history/report and attachment delete) from popup/form-post flows to native mutation + optimistic refresh patterns.
 
 ## Rules
 

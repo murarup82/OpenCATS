@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import {
+  addCandidateProfileComment,
+  deleteCandidateMessageThread,
   fetchPipelineStatusDetailsModernData,
   fetchCandidatesShowModernData,
+  postCandidateMessage,
   removePipelineEntryViaLegacyURL,
   setDashboardPipelineStatus,
   updatePipelineStatusHistoryDate
@@ -93,6 +97,17 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     fallbackURL: string;
     fallbackTitle: string;
   } | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
+  const [commentCategory, setCommentCategory] = useState<string>('General');
+  const [commentText, setCommentText] = useState<string>('');
+  const [commentSubmitPending, setCommentSubmitPending] = useState<boolean>(false);
+  const [commentSubmitError, setCommentSubmitError] = useState<string>('');
+  const [messageBody, setMessageBody] = useState<string>('');
+  const [messageSubmitPending, setMessageSubmitPending] = useState<boolean>(false);
+  const [messageSubmitError, setMessageSubmitError] = useState<string>('');
+  const [messageDeletePending, setMessageDeletePending] = useState<boolean>(false);
+  const [messageDeleteError, setMessageDeleteError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -106,6 +121,15 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           return;
         }
         setData(result);
+        setCommentsOpen(!!result.comments.initiallyOpen);
+        setMessagesOpen(!!result.messages.initiallyOpen);
+        if (result.comments.categories.length > 0) {
+          setCommentCategory((current) =>
+            result.comments.categories.includes(current) ? current : result.comments.categories[0]
+          );
+        } else {
+          setCommentCategory('General');
+        }
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -282,6 +306,101 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     },
     [reloadPipelineDetailsModal, refreshPageData]
   );
+
+  const submitCandidateComment = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!data || commentSubmitPending) {
+        return;
+      }
+
+      setCommentSubmitError('');
+      setCommentSubmitPending(true);
+      try {
+        const result = await addCandidateProfileComment(decodeLegacyURL(data.actions.addCommentURL), {
+          candidateID: Number(data.meta.candidateID || 0),
+          securityToken: data.comments.securityToken || '',
+          commentCategory,
+          commentText
+        });
+        if (!result.success) {
+          setCommentSubmitError(result.message || 'Unable to save comment.');
+          return;
+        }
+
+        setCommentText('');
+        setCommentsOpen(true);
+        refreshPageData();
+      } catch (err: unknown) {
+        setCommentSubmitError(err instanceof Error ? err.message : 'Unable to save comment.');
+      } finally {
+        setCommentSubmitPending(false);
+      }
+    },
+    [commentCategory, commentSubmitPending, commentText, data, refreshPageData]
+  );
+
+  const submitCandidateMessage = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!data || messageSubmitPending) {
+        return;
+      }
+
+      setMessageSubmitError('');
+      setMessageSubmitPending(true);
+      try {
+        const result = await postCandidateMessage(decodeLegacyURL(data.actions.postMessageURL), {
+          candidateID: Number(data.meta.candidateID || 0),
+          securityToken: data.messages.securityToken || '',
+          messageBody
+        });
+        if (!result.success) {
+          setMessageSubmitError(result.message || 'Unable to send message.');
+          return;
+        }
+
+        setMessageBody('');
+        setMessagesOpen(true);
+        refreshPageData();
+      } catch (err: unknown) {
+        setMessageSubmitError(err instanceof Error ? err.message : 'Unable to send message.');
+      } finally {
+        setMessageSubmitPending(false);
+      }
+    },
+    [data, messageBody, messageSubmitPending, refreshPageData]
+  );
+
+  const handleDeleteMessageThread = useCallback(async () => {
+    if (!data || messageDeletePending) {
+      return;
+    }
+    if (!window.confirm('Delete this thread for all users? This cannot be undone.')) {
+      return;
+    }
+
+    setMessageDeleteError('');
+    setMessageDeletePending(true);
+    try {
+      const result = await deleteCandidateMessageThread(decodeLegacyURL(data.actions.deleteMessageThreadURL), {
+        candidateID: Number(data.meta.candidateID || 0),
+        threadID: Number(data.messages.threadID || 0),
+        securityToken: data.messages.deleteThreadSecurityToken || ''
+      });
+      if (!result.success) {
+        setMessageDeleteError(result.message || 'Unable to delete message thread.');
+        return;
+      }
+
+      setMessagesOpen(true);
+      refreshPageData();
+    } catch (err: unknown) {
+      setMessageDeleteError(err instanceof Error ? err.message : 'Unable to delete message thread.');
+    } finally {
+      setMessageDeletePending(false);
+    }
+  }, [data, messageDeletePending, refreshPageData]);
 
   const getForwardStatusOptions = useCallback(
     (currentStatusID: number) => {
@@ -650,23 +769,190 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           <section className="avel-list-panel">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Notes & Comments</h2>
-              <p className="avel-list-panel__hint">Profile notes plus latest team comments.</p>
+              <div className="modern-table-actions">
+                <span className="modern-chip modern-chip--info">{data.comments.count} entries</span>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--mini modern-btn--secondary"
+                  onClick={() => setCommentsOpen((current) => !current)}
+                >
+                  {commentsOpen ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
             <div className="avel-candidate-notes">
               <pre>{toDisplayText(candidate.notesText, '') || 'No notes provided.'}</pre>
             </div>
-            {data.comments.items.length > 0 ? (
-              <div className="avel-candidate-comments">
-                {data.comments.items.slice(0, 8).map((comment) => (
-                  <article key={comment.activityID} className="avel-candidate-comment">
-                    <div className="avel-candidate-comment__meta">
-                      <span>{toDisplayText(comment.category)}</span>
-                      <span>{toDisplayText(comment.enteredBy)}</span>
-                      <span>{toDisplayText(comment.dateCreated)}</span>
+            {data.comments.flashMessage ? (
+              <div className={`modern-state ${data.comments.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
+                {data.comments.flashMessage}
+              </div>
+            ) : null}
+            {commentsOpen ? (
+              <>
+                {data.comments.canAddComment ? (
+                  <form className="avel-joborder-thread-form" onSubmit={submitCandidateComment}>
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Comment Type</span>
+                      <select
+                        className="avel-form-control"
+                        name="commentCategory"
+                        value={commentCategory}
+                        onChange={(event) => setCommentCategory(event.target.value)}
+                      >
+                        {data.comments.categories.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="modern-command-field avel-candidate-edit-field--full">
+                      <span className="modern-command-label">Comment</span>
+                      <textarea
+                        className="avel-form-control"
+                        name="commentText"
+                        rows={4}
+                        maxLength={data.comments.maxLength}
+                        required
+                        placeholder="Share an internal update for this candidate."
+                        value={commentText}
+                        onChange={(event) => setCommentText(event.target.value)}
+                      />
+                    </label>
+                    {commentSubmitError ? <div className="modern-state modern-state--error">{commentSubmitError}</div> : null}
+                    <div className="modern-table-actions">
+                      <button
+                        type="submit"
+                        className="modern-btn modern-btn--mini modern-btn--emphasis"
+                        disabled={commentSubmitPending}
+                      >
+                        {commentSubmitPending ? 'Saving...' : 'Save Comment'}
+                      </button>
                     </div>
-                    <p>{toDisplayText(comment.commentText, '')}</p>
-                  </article>
-                ))}
+                  </form>
+                ) : null}
+                {data.comments.items.length > 0 ? (
+                  <div className="avel-candidate-comments">
+                    {data.comments.items.map((comment) => (
+                      <article key={comment.activityID} className="avel-candidate-comment">
+                        <div className="avel-candidate-comment__meta">
+                          <span>{toDisplayText(comment.category)}</span>
+                          <span>{toDisplayText(comment.enteredBy)}</span>
+                          <span>{toDisplayText(comment.dateCreated)}</span>
+                        </div>
+                        <p>{toDisplayText(comment.commentText, '')}</p>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="modern-state modern-state--empty">No comments yet.</div>
+                )}
+              </>
+            ) : null}
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Team Inbox</h2>
+              <div className="modern-table-actions">
+                {data.messages.enabled ? (
+                  <>
+                    <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL))}>
+                      Open Inbox
+                    </a>
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      onClick={() => setMessagesOpen((current) => !current)}
+                    >
+                      {messagesOpen ? 'Hide' : 'Show'}
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+            {data.messages.flashMessage ? (
+              <div className={`modern-state ${data.messages.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
+                {data.messages.flashMessage}
+              </div>
+            ) : null}
+            {!data.messages.enabled ? (
+              <div className="modern-state modern-state--empty">
+                Messaging tables are missing. Run schema migrations to enable Team Inbox.
+              </div>
+            ) : messagesOpen ? (
+              <div className="avel-joborder-thread-block">
+                {permissions.candidateMessagingEnabled ? (
+                  <form className="avel-joborder-thread-form" onSubmit={submitCandidateMessage}>
+                    <label className="modern-command-field avel-candidate-edit-field--full">
+                      <span className="modern-command-label">Message</span>
+                      <textarea
+                        className="avel-form-control"
+                        name="messageBody"
+                        rows={4}
+                        maxLength={data.messages.maxLength}
+                        required
+                        placeholder="Type a message and mention teammates with @First Last."
+                        value={messageBody}
+                        onChange={(event) => setMessageBody(event.target.value)}
+                      />
+                    </label>
+                    {data.messages.mentionHintNames.length > 0 ? (
+                      <p className="avel-list-panel__hint">Mention help: {data.messages.mentionHintNames.map((name) => `@${name}`).join(', ')}</p>
+                    ) : null}
+                    {messageSubmitError ? <div className="modern-state modern-state--error">{messageSubmitError}</div> : null}
+                    <div className="modern-table-actions">
+                      <button
+                        type="submit"
+                        className="modern-btn modern-btn--mini modern-btn--emphasis"
+                        disabled={messageSubmitPending}
+                      >
+                        {messageSubmitPending ? 'Sending...' : 'Send Message'}
+                      </button>
+                    </div>
+                  </form>
+                ) : null}
+
+                {permissions.canDeleteMessageThread && data.messages.threadID > 0 && data.messages.threadVisibleToCurrentUser ? (
+                  <div className="modern-table-actions">
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--danger"
+                      onClick={handleDeleteMessageThread}
+                      disabled={messageDeletePending}
+                    >
+                      {messageDeletePending ? 'Deleting...' : 'Delete Thread'}
+                    </button>
+                  </div>
+                ) : null}
+                {messageDeleteError ? <div className="modern-state modern-state--error">{messageDeleteError}</div> : null}
+
+                {data.messages.threadID > 0 && !data.messages.threadVisibleToCurrentUser ? (
+                  <div className="modern-state modern-state--empty">
+                    You are not part of this thread yet. Send a message and mention teammates to start collaborating.
+                  </div>
+                ) : null}
+
+                <DataTable
+                  columns={[
+                    { key: 'date', title: 'Date' },
+                    { key: 'from', title: 'From' },
+                    { key: 'mentions', title: 'Mentions' },
+                    { key: 'message', title: 'Message' }
+                  ]}
+                  hasRows={data.messages.items.length > 0}
+                  emptyMessage="No messages yet."
+                >
+                  {data.messages.items.map((message) => (
+                    <tr key={message.messageID}>
+                      <td>{toDisplayText(message.dateCreated)}</td>
+                      <td>{toDisplayText(message.senderName)}</td>
+                      <td>{toDisplayText(message.mentionedUsers)}</td>
+                      <td>{toDisplayText(message.bodyText, '')}</td>
+                    </tr>
+                  ))}
+                </DataTable>
               </div>
             ) : null}
           </section>
