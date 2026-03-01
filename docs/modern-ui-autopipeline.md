@@ -31,10 +31,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 25. Added native quick status modal on `candidates.show` and `joborders.show` for forward transitions (using secure mutation endpoint), with one-click fallback to full legacy status form for complex transitions.
 26. Replaced iframe pipeline details action with native inline details modal (AJAX timeline HTML) on `candidates.show` and `joborders.show`, including full-details fallback.
 27. Removed dead popup callback wiring from `LegacyFrameModal` call sites and simplified the modal API after popup affordance removal.
+28. Replaced pipeline details HTML dependency with `pipeline.statusDetails.v1` modern-json timeline contract on `candidates.show` and `joborders.show`, including native inline timeline rendering and inline history date edit actions.
 
 ## Next Queue
 
-1. Replace legacy timeline HTML source (`ajax/getPipelineDetails`) with a first-class React timeline data contract + native inline edit actions.
+1. Move remaining candidate/joborder profile actions (attachments/tags/history/report) from popup/form-post flows to native mutation + optimistic refresh patterns.
 
 ## Rules
 

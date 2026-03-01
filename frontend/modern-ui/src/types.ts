@@ -87,6 +87,70 @@ export type PipelineRemoveModernResponse = {
   jobOrderID?: number;
 };
 
+export type PipelineStatusDetailsModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    pipelineID: number;
+    candidateID: number;
+    jobOrderID: number;
+  };
+  permissions: {
+    canEditHistory: boolean;
+  };
+  actions: {
+    editDateURL: string;
+    legacyDetailsURL: string;
+  };
+  pipeline: {
+    pipelineID: number;
+    candidateID: number;
+    candidateName: string;
+    jobOrderID: number;
+    jobOrderTitle: string;
+    companyName: string;
+  };
+  summary: {
+    totalTransitions: number;
+    autoTransitions: number;
+    editedTransitions: number;
+    latestTransitionDisplay: string;
+  };
+  history: Array<{
+    historyID: number;
+    dateRaw: string;
+    dateDisplay: string;
+    dateEdit: string;
+    statusFromID: number;
+    statusFrom: string;
+    statusFromSlug: string;
+    statusToID: number;
+    statusTo: string;
+    statusToSlug: string;
+    enteredByID: number;
+    enteredByName: string;
+    commentText: string;
+    commentIsSystem: boolean;
+    isAutoTransition: boolean;
+    rejectionReasons: string;
+    rejectionReasonOther: string;
+    editedAt: string;
+    editedAtDisplay: string;
+    editedByName: string;
+    editNote: string;
+  }>;
+};
+
+export type PipelineStatusHistoryUpdateResponse = {
+  success: boolean;
+  code?: string;
+  message?: string;
+  pipelineID?: number;
+  updatedCount?: number;
+  updatedHistoryIDs?: number[];
+};
+
 export type CandidatesListModernDataResponse = {
   meta: {
     contractVersion: number;

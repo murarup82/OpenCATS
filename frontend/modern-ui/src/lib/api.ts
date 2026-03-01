@@ -8,6 +8,8 @@ import type {
   DashboardSetPipelineStatusResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
+  PipelineStatusDetailsModernDataResponse,
+  PipelineStatusHistoryUpdateResponse,
   PipelineRemoveModernResponse,
   QuickActionAddToListModernDataResponse,
   UIModeBootstrap
@@ -142,22 +144,70 @@ export async function removePipelineEntryViaLegacyURL(
   return payload;
 }
 
-export async function fetchPipelineDetailsHTML(candidateJobOrderID: number): Promise<string> {
+export async function fetchPipelineStatusDetailsModernData(
+  bootstrap: UIModeBootstrap,
+  pipelineID: number
+): Promise<PipelineStatusDetailsModernDataResponse> {
   const query = new URLSearchParams();
-  query.set('f', 'getPipelineDetails');
-  query.set('candidateJobOrderID', String(candidateJobOrderID || 0));
-  query.set('rhash', String(Math.floor(Math.random() * 100000000)));
+  query.set('m', 'joborders');
+  query.set('a', 'pipelineStatusDetails');
+  query.set('pipelineID', String(pipelineID || 0));
+  query.set('format', 'modern-json');
+  query.set('modernPage', 'pipeline.status.details');
 
-  const response = await fetch(`ajax.php?${query.toString()}`, {
-    method: 'GET',
-    credentials: 'same-origin'
-  });
-
-  if (!response.ok) {
-    throw new Error(`Pipeline details request failed (${response.status}).`);
+  const url = `${bootstrap.indexName}?${query.toString()}`;
+  const data = await getJSON<PipelineStatusDetailsModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading pipeline details.');
   }
 
-  return response.text();
+  if (data.meta.contractKey !== 'pipeline.statusDetails.v1') {
+    throw new Error('Unexpected pipeline details contract key.');
+  }
+
+  return data;
+}
+
+export async function updatePipelineStatusHistoryDate(
+  editURL: string,
+  payload: {
+    pipelineID: number;
+    historyID: number;
+    newDate: string;
+    originalDate: string;
+    editNote: string;
+  }
+): Promise<PipelineStatusHistoryUpdateResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('pipelineID', String(payload.pipelineID || 0));
+  body.set('historyID', String(payload.historyID || 0));
+  body.set(`newDate[${payload.historyID}]`, payload.newDate || '');
+  body.set(`originalDate[${payload.historyID}]`, payload.originalDate || '');
+  body.set(`editNote[${payload.historyID}]`, payload.editNote || '');
+
+  const response = await fetch(editURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: PipelineStatusHistoryUpdateResponse | null = null;
+  try {
+    result = (await response.json()) as PipelineStatusHistoryUpdateResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Pipeline history update failed (${response.status}).`);
+  }
+
+  return result;
 }
 
 export async function fetchCandidatesListModernData(

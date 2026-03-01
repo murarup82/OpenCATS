@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  fetchPipelineDetailsHTML,
+  fetchPipelineStatusDetailsModernData,
   fetchCandidatesShowModernData,
   removePipelineEntryViaLegacyURL,
-  setDashboardPipelineStatus
+  setDashboardPipelineStatus,
+  updatePipelineStatusHistoryDate
 } from '../lib/api';
-import type { CandidatesShowModernDataResponse, UIModeBootstrap } from '../types';
+import type {
+  CandidatesShowModernDataResponse,
+  PipelineStatusDetailsModernDataResponse,
+  UIModeBootstrap
+} from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
@@ -80,7 +85,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [pipelineDetailsModal, setPipelineDetailsModal] = useState<{
     title: string;
     fullDetailsURL: string;
-    html: string;
+    pipelineID: number;
+    details: PipelineStatusDetailsModernDataResponse | null;
     loading: boolean;
     error: string;
   } | null>(null);
@@ -220,18 +226,19 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       setPipelineDetailsModal({
         title,
         fullDetailsURL,
-        html: '',
+        pipelineID,
+        details: null,
         loading: true,
         error: ''
       });
 
       try {
-        const html = await fetchPipelineDetailsHTML(pipelineID);
+        const details = await fetchPipelineStatusDetailsModernData(bootstrap, pipelineID);
         setPipelineDetailsModal((current) =>
           current
             ? {
                 ...current,
-                html,
+                details,
                 loading: false,
                 error: ''
               }
@@ -250,7 +257,59 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         );
       }
     },
-    []
+    [bootstrap]
+  );
+
+  const reloadPipelineDetailsModal = useCallback(
+    async (pipelineID: number) => {
+      const nextDetails = await fetchPipelineStatusDetailsModernData(bootstrap, pipelineID);
+      setPipelineDetailsModal((current) =>
+        current
+          ? {
+              ...current,
+              details: nextDetails,
+              loading: false,
+              error: ''
+            }
+          : current
+      );
+    },
+    [bootstrap]
+  );
+
+  const savePipelineHistoryDate = useCallback(
+    async (
+      details: PipelineStatusDetailsModernDataResponse,
+      payload: { historyID: number; newDate: string; originalDate: string; editNote: string }
+    ) => {
+      const editURL = decodeLegacyURL(details.actions.editDateURL);
+      if (editURL === '') {
+        return 'Missing edit endpoint.';
+      }
+      if (payload.newDate.trim() === '') {
+        return 'Please select a date.';
+      }
+
+      try {
+        const result = await updatePipelineStatusHistoryDate(editURL, {
+          pipelineID: details.meta.pipelineID,
+          historyID: payload.historyID,
+          newDate: payload.newDate.replace('T', ' '),
+          originalDate: payload.originalDate,
+          editNote: payload.editNote
+        });
+        if (!result.success) {
+          return result.message || 'Unable to update history date.';
+        }
+
+        await reloadPipelineDetailsModal(details.meta.pipelineID);
+        refreshPageData();
+        return null;
+      } catch (err: unknown) {
+        return err instanceof Error ? err.message : 'Unable to update history date.';
+      }
+    },
+    [reloadPipelineDetailsModal, refreshPageData]
   );
 
   const getForwardStatusOptions = useCallback(
@@ -905,10 +964,11 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         <PipelineDetailsInlineModal
           isOpen={!!pipelineDetailsModal}
           title={pipelineDetailsModal?.title || 'Pipeline Details'}
-          html={pipelineDetailsModal?.html || ''}
+          details={pipelineDetailsModal?.details || null}
           loading={pipelineDetailsModal?.loading || false}
           error={pipelineDetailsModal?.error || ''}
           onClose={() => setPipelineDetailsModal(null)}
+          onSaveHistoryDate={savePipelineHistoryDate}
           onOpenFullDetails={
             pipelineDetailsModal
               ? () => {
