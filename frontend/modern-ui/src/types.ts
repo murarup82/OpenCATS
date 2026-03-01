@@ -299,6 +299,62 @@ export type CandidatesShowModernDataResponse = {
   questionnaires: Array<Record<string, unknown>>;
 };
 
+export type CandidatesEditModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    candidateID: number;
+    permissions: {
+      canEditCandidate: boolean;
+    };
+  };
+  actions: {
+    submitURL: string;
+    showURL: string;
+    legacyURL: string;
+  };
+  candidate: {
+    candidateID: number;
+    isActive: boolean;
+    firstName: string;
+    lastName: string;
+    email1: string;
+    phoneCell: string;
+    address: string;
+    city: string;
+    country: string;
+    bestTimeToCall: string;
+    dateAvailable: string;
+    gdprSigned: boolean;
+    gdprExpirationDate: string;
+    isHot: boolean;
+    source: string;
+    owner: string;
+    keySkills: string;
+    currentEmployer: string;
+    currentPay: string;
+    desiredPay: string;
+    notes: string;
+    canRelocate: boolean;
+    gender: string;
+    race: string;
+    veteran: string;
+    disability: string;
+  };
+  options: {
+    owners: Array<{
+      value: string;
+      label: string;
+    }>;
+    sources: Array<{
+      value: string;
+      label: string;
+    }>;
+    sourceCSV: string;
+  };
+};
+
 export type QuickActionAddToListModernDataResponse = {
   meta: {
     contractVersion: number;

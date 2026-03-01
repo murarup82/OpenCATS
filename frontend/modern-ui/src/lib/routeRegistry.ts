@@ -4,6 +4,7 @@ import { DashboardMyPage } from '../pages/DashboardMyPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
 import { CandidatesFormBridgePage } from '../pages/CandidatesFormBridgePage';
+import { CandidatesEditPage } from '../pages/CandidatesEditPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 
 export type ModernRouteComponentProps = {
@@ -18,7 +19,7 @@ const registry: Record<string, ModernRouteComponent> = {
   'candidates.listbyview': CandidatesListPage,
   'candidates.show': CandidatesShowPage,
   'candidates.add': CandidatesFormBridgePage,
-  'candidates.edit': CandidatesFormBridgePage,
+  'candidates.edit': CandidatesEditPage,
   'candidates.*': ModuleBridgePage,
   'joborders.*': ModuleBridgePage,
   'companies.*': ModuleBridgePage,

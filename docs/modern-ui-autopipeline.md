@@ -11,11 +11,12 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 5. Candidate navigation links forced to `ui=modern` across dashboard and candidates pages.
 6. Shared modern URL utility applied across dashboard/candidate links.
 7. Expanded sample route map to run major modules inside modern shell compatibility mode.
+8. Native `candidates.edit` phase 1: modern form UI + legacy-safe save endpoint.
 
 ## Next Queue
 
-1. Migrate `candidates.edit` from bridge iframe to native modern form (phase 1: read + save basic fields).
-2. Migrate `candidates.add` native modern form (same component mode as edit).
+1. Migrate `candidates.add` native modern form (same component mode as edit).
+2. Expand `candidates.edit` with extra fields and attachment/photo actions.
 3. Modernize candidate actions panel (delete/history/duplicate link) as native modal actions.
 4. Build native status change modal for dashboard/card actions (replace legacy popup for common transitions).
 5. Convert high-usage list pages module-by-module from compatibility shell to native (starting with `joborders.listByView`).

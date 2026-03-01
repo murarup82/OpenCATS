@@ -2536,6 +2536,10 @@ class CandidatesUI extends UserInterface
      */
     private function edit()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Bail out if we don't have a valid candidate ID. */
         if (!$this->isRequiredIDValid('candidateID', $_GET)) {
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
@@ -2625,6 +2629,35 @@ class CandidatesUI extends UserInterface
 
         if (!eval(Hooks::get('CANDIDATE_EDIT'))) return;
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'candidates-edit')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernCandidateEditJSON(
+                $candidateID,
+                $data,
+                $usersRS,
+                $sourcesRS,
+                $sourcesString,
+                'candidates-edit'
+            );
+            return;
+        }
+
         $EEOSettings = new EEOSettings($this->_siteID);
         $EEOSettingsRS = $EEOSettings->getAll();
 
@@ -2644,6 +2677,110 @@ class CandidatesUI extends UserInterface
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('currentUserID', $_SESSION['CATS']->getUserID());
         $this->_template->display('./modules/candidates/Edit.tpl');
+    }
+
+    private function renderModernCandidateEditJSON(
+        $candidateID,
+        $data,
+        $usersRS,
+        $sourcesRS,
+        $sourcesString,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $candidateID = (int) $candidateID;
+
+        $ownerOptions = array(
+            array(
+                'value' => '-1',
+                'label' => 'None'
+            )
+        );
+        foreach ($usersRS as $userData)
+        {
+            $ownerOptions[] = array(
+                'value' => (string) (int) $userData['userID'],
+                'label' => trim($userData['lastName'] . ', ' . $userData['firstName'])
+            );
+        }
+
+        $sourceOptions = array(
+            array(
+                'value' => '(none)',
+                'label' => '(None)'
+            )
+        );
+        foreach ($sourcesRS as $sourceData)
+        {
+            $sourceName = (isset($sourceData['name']) ? trim($sourceData['name']) : '');
+            if ($sourceName === '' || $sourceName === '(none)')
+            {
+                continue;
+            }
+
+            $sourceOptions[] = array(
+                'value' => $sourceName,
+                'label' => $sourceName
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'candidates.edit.v1',
+                'modernPage' => $modernPage,
+                'candidateID' => $candidateID,
+                'permissions' => array(
+                    'canEditCandidate' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=candidates&a=edit&ui=modern', $baseURL),
+                'showURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
+                'legacyURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID)
+            ),
+            'candidate' => array(
+                'candidateID' => $candidateID,
+                'isActive' => ((int) $data['isActive'] === 1),
+                'firstName' => (isset($data['firstName']) ? $data['firstName'] : ''),
+                'lastName' => (isset($data['lastName']) ? $data['lastName'] : ''),
+                'email1' => (isset($data['email1']) ? $data['email1'] : ''),
+                'phoneCell' => (isset($data['phoneCell']) ? $data['phoneCell'] : ''),
+                'address' => (isset($data['address']) ? $data['address'] : ''),
+                'city' => (isset($data['city']) ? $data['city'] : ''),
+                'country' => (isset($data['country']) ? $data['country'] : ''),
+                'bestTimeToCall' => (isset($data['bestTimeToCall']) ? $data['bestTimeToCall'] : ''),
+                'dateAvailable' => (isset($data['dateAvailableMDY']) ? $data['dateAvailableMDY'] : ''),
+                'gdprSigned' => ((int) $data['gdprSigned'] === 1),
+                'gdprExpirationDate' => (isset($data['gdprExpirationDateMDY']) ? $data['gdprExpirationDateMDY'] : ''),
+                'isHot' => ((int) $data['isHot'] === 1),
+                'source' => (isset($data['source']) && trim($data['source']) !== '' ? $data['source'] : '(none)'),
+                'owner' => (isset($data['owner']) ? (string) (int) $data['owner'] : '-1'),
+                'keySkills' => (isset($data['keySkills']) ? $data['keySkills'] : ''),
+                'currentEmployer' => (isset($data['currentEmployer']) ? $data['currentEmployer'] : ''),
+                'currentPay' => (isset($data['currentPay']) ? $data['currentPay'] : ''),
+                'desiredPay' => (isset($data['desiredPay']) ? $data['desiredPay'] : ''),
+                'notes' => (isset($data['notes']) ? $data['notes'] : ''),
+                'canRelocate' => ((int) $data['canRelocate'] === 1),
+                'gender' => (isset($data['eeoGender']) ? $data['eeoGender'] : ''),
+                'race' => (isset($data['eeoEthnicTypeID']) ? (string) $data['eeoEthnicTypeID'] : ''),
+                'veteran' => (isset($data['eeoVeteranTypeID']) ? (string) $data['eeoVeteranTypeID'] : ''),
+                'disability' => (isset($data['eeoDisabilityStatus']) ? $data['eeoDisabilityStatus'] : '')
+            ),
+            'options' => array(
+                'owners' => $ownerOptions,
+                'sources' => $sourceOptions,
+                'sourceCSV' => $sourcesString
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     /*
