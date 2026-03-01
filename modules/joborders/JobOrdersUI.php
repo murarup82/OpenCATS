@@ -3279,6 +3279,8 @@ class JobOrdersUI extends UserInterface
 
     private function pipelineStatusDetails()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
         $pipelineID = (int) $this->getTrimmedInput('pipelineID', $_GET);
         $candidateID = (int) $this->getTrimmedInput('candidateID', $_GET);
         $jobOrderID = (int) $this->getTrimmedInput('jobOrderID', $_GET);
@@ -3291,6 +3293,21 @@ class JobOrdersUI extends UserInterface
 
         if ($pipelineID <= 0)
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidPipeline',
+                    'message' => 'Invalid pipeline entry.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid pipeline entry.');
         }
 
@@ -3324,6 +3341,21 @@ class JobOrdersUI extends UserInterface
         $pipelineData = $db->getAssoc($sql);
         if (empty($pipelineData))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'pipelineNotFound',
+                    'message' => 'Pipeline entry not found.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Pipeline entry not found.');
         }
 
@@ -3332,6 +3364,21 @@ class JobOrdersUI extends UserInterface
             $pipelineData['jobOrderRecruiter']
         ))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'permissionDenied',
+                    'message' => 'You do not have permission to view this pipeline entry.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(
                 COMMONERROR_PERMISSION,
                 $this,
@@ -3341,6 +3388,152 @@ class JobOrdersUI extends UserInterface
 
         $statusHistoryRS = $pipelines->getStatusHistory($pipelineID);
         $canEditHistory = $this->canEditPipelineStatusHistory();
+
+        if ($isModernJSON)
+        {
+            $historyRows = is_array($statusHistoryRS) ? $statusHistoryRS : array();
+            $totalTransitions = count($historyRows);
+            $autoTransitions = 0;
+            $editedTransitions = 0;
+            $latestTransitionRaw = '';
+            $latestTransitionDisplay = '--';
+            $historyPayload = array();
+
+            foreach ($historyRows as $row)
+            {
+                $commentText = trim((string) (isset($row['commentText']) ? $row['commentText'] : ''));
+                $isAutoTransition = false;
+                if ($commentText !== '' && strpos($commentText, '[AUTO] ') === 0)
+                {
+                    $isAutoTransition = true;
+                }
+                if ((int) (isset($row['commentIsSystem']) ? $row['commentIsSystem'] : 0) === 1)
+                {
+                    $isAutoTransition = true;
+                }
+
+                if ($isAutoTransition)
+                {
+                    $autoTransitions++;
+                }
+                if (!empty($row['editedAt']))
+                {
+                    $editedTransitions++;
+                }
+                $dateRaw = (isset($row['dateRaw']) ? (string) $row['dateRaw'] : '');
+                if ($dateRaw !== '' && ($latestTransitionRaw === '' || strcmp($dateRaw, $latestTransitionRaw) > 0))
+                {
+                    $latestTransitionRaw = $dateRaw;
+                    $latestTransitionDisplay = (isset($row['dateDisplay']) ? (string) $row['dateDisplay'] : '--');
+                }
+
+                $statusFrom = (isset($row['statusFrom']) ? trim((string) $row['statusFrom']) : '--');
+                if ($statusFrom === '')
+                {
+                    $statusFrom = '--';
+                }
+                $statusTo = (isset($row['statusTo']) ? trim((string) $row['statusTo']) : '--');
+                if ($statusTo === '')
+                {
+                    $statusTo = '--';
+                }
+
+                $enteredByName = trim(
+                    (isset($row['enteredByFirstName']) ? $row['enteredByFirstName'] : '') .
+                    ' ' .
+                    (isset($row['enteredByLastName']) ? $row['enteredByLastName'] : '')
+                );
+                if ($enteredByName === '')
+                {
+                    $enteredByName = '--';
+                }
+
+                $editedByName = trim(
+                    (isset($row['editedByFirstName']) ? $row['editedByFirstName'] : '') .
+                    ' ' .
+                    (isset($row['editedByLastName']) ? $row['editedByLastName'] : '')
+                );
+                if ($editedByName === '')
+                {
+                    $editedByName = '--';
+                }
+
+                $historyPayload[] = array(
+                    'historyID' => (int) (isset($row['historyID']) ? $row['historyID'] : 0),
+                    'dateRaw' => $dateRaw,
+                    'dateDisplay' => (isset($row['dateDisplay']) ? (string) $row['dateDisplay'] : '--'),
+                    'dateEdit' => (isset($row['dateEdit']) ? (string) $row['dateEdit'] : ''),
+                    'statusFromID' => (int) (isset($row['statusFromID']) ? $row['statusFromID'] : 0),
+                    'statusFrom' => $statusFrom,
+                    'statusFromSlug' => strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $statusFrom), '-')),
+                    'statusToID' => (int) (isset($row['statusToID']) ? $row['statusToID'] : 0),
+                    'statusTo' => $statusTo,
+                    'statusToSlug' => strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $statusTo), '-')),
+                    'enteredByID' => (int) (isset($row['enteredByID']) ? $row['enteredByID'] : 0),
+                    'enteredByName' => $enteredByName,
+                    'commentText' => $commentText,
+                    'commentIsSystem' => ((int) (isset($row['commentIsSystem']) ? $row['commentIsSystem'] : 0) === 1),
+                    'isAutoTransition' => $isAutoTransition,
+                    'rejectionReasons' => (isset($row['rejectionReasons']) ? (string) $row['rejectionReasons'] : ''),
+                    'rejectionReasonOther' => (isset($row['rejectionReasonOther']) ? (string) $row['rejectionReasonOther'] : ''),
+                    'editedAt' => (isset($row['editedAt']) ? (string) $row['editedAt'] : ''),
+                    'editedAtDisplay' => (isset($row['editedAtDisplay']) ? (string) $row['editedAtDisplay'] : ''),
+                    'editedByName' => $editedByName,
+                    'editNote' => (isset($row['editNote']) ? (string) $row['editNote'] : '')
+                );
+            }
+
+            $candidateName = trim(
+                (isset($pipelineData['candidateFirstName']) ? $pipelineData['candidateFirstName'] : '') .
+                ' ' .
+                (isset($pipelineData['candidateLastName']) ? $pipelineData['candidateLastName'] : '')
+            );
+            if ($candidateName === '')
+            {
+                $candidateName = '--';
+            }
+
+            $payload = array(
+                'meta' => array(
+                    'contractVersion' => 1,
+                    'contractKey' => 'pipeline.statusDetails.v1',
+                    'modernPage' => $modernPage,
+                    'pipelineID' => (int) $pipelineID,
+                    'candidateID' => (int) (isset($pipelineData['candidateID']) ? $pipelineData['candidateID'] : 0),
+                    'jobOrderID' => (int) (isset($pipelineData['jobOrderID']) ? $pipelineData['jobOrderID'] : 0)
+                ),
+                'permissions' => array(
+                    'canEditHistory' => ((bool) $canEditHistory)
+                ),
+                'actions' => array(
+                    'editDateURL' => sprintf('%s?m=joborders&a=pipelineStatusEditDate', CATSUtility::getIndexName()),
+                    'legacyDetailsURL' => sprintf('%s?m=joborders&a=pipelineStatusDetails&pipelineID=%d&ui=legacy', CATSUtility::getIndexName(), (int) $pipelineID)
+                ),
+                'pipeline' => array(
+                    'pipelineID' => (int) $pipelineID,
+                    'candidateID' => (int) (isset($pipelineData['candidateID']) ? $pipelineData['candidateID'] : 0),
+                    'candidateName' => $candidateName,
+                    'jobOrderID' => (int) (isset($pipelineData['jobOrderID']) ? $pipelineData['jobOrderID'] : 0),
+                    'jobOrderTitle' => (isset($pipelineData['jobOrderTitle']) ? (string) $pipelineData['jobOrderTitle'] : ''),
+                    'companyName' => (isset($pipelineData['companyName']) ? (string) $pipelineData['companyName'] : '')
+                ),
+                'summary' => array(
+                    'totalTransitions' => (int) $totalTransitions,
+                    'autoTransitions' => (int) $autoTransitions,
+                    'editedTransitions' => (int) $editedTransitions,
+                    'latestTransitionDisplay' => $latestTransitionDisplay
+                ),
+                'history' => $historyPayload
+            );
+
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode($payload);
+            return;
+        }
 
         $this->_template->assign('pipelineID', $pipelineID);
         $this->_template->assign('pipelineData', $pipelineData);
@@ -3353,18 +3546,64 @@ class JobOrdersUI extends UserInterface
 
     private function pipelineStatusEditDate()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if (!$this->isPostBack())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidRequest',
+                    'message' => 'Invalid request.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADFIELDS, $this, 'Invalid request.');
         }
 
         if (!$this->canEditPipelineStatusHistory())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'permissionDenied',
+                    'message' => 'Invalid user level for action.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
         }
 
         if (!$this->isRequiredIDValid('pipelineID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidPipeline',
+                    'message' => 'Invalid pipeline entry.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid pipeline entry.');
         }
 
@@ -3390,11 +3629,28 @@ class JobOrdersUI extends UserInterface
 
         if (empty($newDates))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'noChanges',
+                    'message' => 'No changes submitted.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADFIELDS, $this, 'No changes submitted.');
         }
 
         $db = DatabaseConnection::getInstance();
         $isAdmin = $this->canEditPipelineStatusHistory();
+        $updatedCount = 0;
+        $updatedHistoryIDs = array();
 
         foreach ($newDates as $historyID => $newDateInput)
         {
@@ -3419,12 +3675,42 @@ class JobOrdersUI extends UserInterface
 
             if (!preg_match('/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?)?$/', $newDateInput))
             {
+                if ($isModernJSON)
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'success' => false,
+                        'code' => 'invalidDateFormat',
+                        'message' => 'Invalid date format.'
+                    ));
+                    return;
+                }
                 CommonErrors::fatalModal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid date format.');
             }
 
             $timestamp = strtotime($newDateInput);
             if ($timestamp === false)
             {
+                if ($isModernJSON)
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'success' => false,
+                        'code' => 'invalidDateValue',
+                        'message' => 'Invalid date value.'
+                    ));
+                    return;
+                }
                 CommonErrors::fatalModal(COMMONERROR_MISSINGFIELDS, $this, 'Invalid date value.');
             }
 
@@ -3460,11 +3746,41 @@ class JobOrdersUI extends UserInterface
 
             if (empty($row))
             {
+                if ($isModernJSON)
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 404 Not Found');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'success' => false,
+                        'code' => 'historyNotFound',
+                        'message' => 'Pipeline history entry not found.'
+                    ));
+                    return;
+                }
                 CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Pipeline history entry not found.');
             }
 
             if (!$isAdmin && (int) $row['jobOrderOwner'] !== (int) $this->_userID)
             {
+                if ($isModernJSON)
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 403 Forbidden');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'success' => false,
+                        'code' => 'permissionDenied',
+                        'message' => 'You do not have permission to edit this pipeline entry.'
+                    ));
+                    return;
+                }
                 CommonErrors::fatalModal(
                     COMMONERROR_PERMISSION,
                     $this,
@@ -3489,6 +3805,24 @@ class JobOrdersUI extends UserInterface
                 $db->makeQueryInteger($historyID),
                 $db->makeQueryInteger($this->_siteID)
             ));
+            $updatedCount++;
+            $updatedHistoryIDs[] = (int) $historyID;
+        }
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'pipelineID' => (int) $pipelineID,
+                'updatedCount' => (int) $updatedCount,
+                'updatedHistoryIDs' => array_values($updatedHistoryIDs)
+            ));
+            return;
         }
 
         $redirect = CATSUtility::getIndexName() . '?m=joborders&a=pipelineStatusDetails&pipelineID=' . (int) $pipelineID;
