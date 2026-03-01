@@ -4322,13 +4322,44 @@ class JobOrdersUI extends UserInterface
 
     private function onAddProfileComment()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidMethod',
+                    'message' => 'Invalid request method.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         if (!$this->isRequiredIDValid('jobOrderID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrder',
+                    'message' => 'Invalid job order ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
@@ -4336,6 +4367,21 @@ class JobOrdersUI extends UserInterface
         $jobOrders = new JobOrders($this->_siteID);
         if (empty($jobOrders->get($jobOrderID)))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'jobOrderNotFound',
+                    'message' => 'The specified job order ID could not be found.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified job order ID could not be found.');
         }
 
@@ -4344,6 +4390,21 @@ class JobOrdersUI extends UserInterface
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('joborders.addProfileComment', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid security token.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array_merge(
                 $redirectParams,
                 array('comment' => 'token')
@@ -4353,6 +4414,21 @@ class JobOrdersUI extends UserInterface
         $jobOrderComment = $this->getTrimmedInput('commentText', $_POST);
         if ($jobOrderComment === '')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'emptyComment',
+                    'message' => 'Comment text is required.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array_merge(
                 $redirectParams,
                 array('comment' => 'empty')
@@ -4361,6 +4437,21 @@ class JobOrdersUI extends UserInterface
 
         if (strlen($jobOrderComment) > self::PROFILE_COMMENT_MAXLEN)
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'commentTooLong',
+                    'message' => 'Comment is too long.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array_merge(
                 $redirectParams,
                 array('comment' => 'tooLong')
@@ -4392,10 +4483,40 @@ class JobOrdersUI extends UserInterface
 
         if (empty($activityID))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 500 Internal Server Error');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'commentSaveFailed',
+                    'message' => 'Failed to save comment.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array_merge(
                 $redirectParams,
                 array('comment' => 'failed')
             ));
+        }
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'commentAdded',
+                'message' => 'Comment added.'
+            ));
+            return;
         }
 
         $this->redirectToJobOrderShow($jobOrderID, array_merge(
@@ -4406,13 +4527,44 @@ class JobOrdersUI extends UserInterface
 
     private function onPostJobOrderMessage()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidMethod',
+                    'message' => 'Invalid request method.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         if (!$this->isRequiredIDValid('jobOrderID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrder',
+                    'message' => 'Invalid job order ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
@@ -4420,18 +4572,63 @@ class JobOrdersUI extends UserInterface
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('joborders.postMessage', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid security token.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'token'));
         }
 
         $jobOrders = new JobOrders($this->_siteID);
         if (empty($jobOrders->get($jobOrderID)))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'jobOrderNotFound',
+                    'message' => 'The specified job order ID could not be found.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified job order ID could not be found.');
         }
 
         $jobOrderMessages = new JobOrderMessages($this->_siteID);
         if (!$jobOrderMessages->isSchemaAvailable())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 409 Conflict');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'schema',
+                    'message' => 'Messaging tables are missing.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'schema'));
         }
 
@@ -4445,10 +4642,40 @@ class JobOrdersUI extends UserInterface
         if (empty($result['success']))
         {
             $error = isset($result['error']) ? $result['error'] : 'failed';
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => $error,
+                    'message' => 'Unable to post message.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array(
                 'showMessages' => '1',
                 'msg' => $error
             ));
+        }
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'sent',
+                'message' => 'Message sent.'
+            ));
+            return;
         }
 
         $this->redirectToJobOrderShow($jobOrderID, array(

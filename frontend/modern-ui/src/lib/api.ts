@@ -8,6 +8,7 @@ import type {
   DashboardSetPipelineStatusResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
+  ModernMutationResponse,
   PipelineStatusDetailsModernDataResponse,
   PipelineStatusHistoryUpdateResponse,
   PipelineRemoveModernResponse,
@@ -205,6 +206,82 @@ export async function updatePipelineStatusHistoryDate(
 
   if (!result) {
     throw new Error(`Pipeline history update failed (${response.status}).`);
+  }
+
+  return result;
+}
+
+export async function addJobOrderProfileComment(
+  submitURL: string,
+  payload: {
+    jobOrderID: number;
+    securityToken: string;
+    commentCategory: string;
+    commentText: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('jobOrderID', String(payload.jobOrderID || 0));
+  body.set('securityToken', payload.securityToken || '');
+  body.set('commentCategory', payload.commentCategory || 'General');
+  body.set('commentText', payload.commentText || '');
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Comment submit failed (${response.status}).`);
+  }
+
+  return result;
+}
+
+export async function postJobOrderMessage(
+  submitURL: string,
+  payload: {
+    jobOrderID: number;
+    securityToken: string;
+    messageBody: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('jobOrderID', String(payload.jobOrderID || 0));
+  body.set('securityToken', payload.securityToken || '');
+  body.set('messageBody', payload.messageBody || '');
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Message post failed (${response.status}).`);
   }
 
   return result;

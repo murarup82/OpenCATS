@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import {
+  addJobOrderProfileComment,
   fetchPipelineStatusDetailsModernData,
   fetchJobOrdersShowModernData,
+  postJobOrderMessage,
   removePipelineEntryViaLegacyURL,
   setDashboardPipelineStatus,
   updatePipelineStatusHistoryDate
@@ -77,6 +80,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
+  const [commentCategory, setCommentCategory] = useState<string>('General');
+  const [commentText, setCommentText] = useState<string>('');
+  const [commentSubmitPending, setCommentSubmitPending] = useState<boolean>(false);
+  const [commentSubmitError, setCommentSubmitError] = useState<string>('');
+  const [messageBody, setMessageBody] = useState<string>('');
+  const [messageSubmitPending, setMessageSubmitPending] = useState<boolean>(false);
+  const [messageSubmitError, setMessageSubmitError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -92,6 +102,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         setData(result);
         setCommentsOpen(!!result.comments.initiallyOpen);
         setMessagesOpen(!!result.messages.initiallyOpen);
+        if (result.comments.categories.length > 0) {
+          setCommentCategory((current) =>
+            result.comments.categories.includes(current) ? current : result.comments.categories[0]
+          );
+        } else {
+          setCommentCategory('General');
+        }
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -220,6 +237,71 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
       }
     },
     [reloadPipelineDetailsModal, refreshPageData]
+  );
+
+  const submitJobOrderComment = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!data || commentSubmitPending) {
+        return;
+      }
+
+      setCommentSubmitError('');
+      setCommentSubmitPending(true);
+      try {
+        const result = await addJobOrderProfileComment(decodeLegacyURL(data.actions.addCommentURL), {
+          jobOrderID: Number(data.meta.jobOrderID || 0),
+          securityToken: data.comments.securityToken || '',
+          commentCategory,
+          commentText
+        });
+        if (!result.success) {
+          setCommentSubmitError(result.message || 'Unable to save comment.');
+          return;
+        }
+
+        setCommentText('');
+        setCommentsOpen(true);
+        refreshPageData();
+      } catch (err: unknown) {
+        setCommentSubmitError(err instanceof Error ? err.message : 'Unable to save comment.');
+      } finally {
+        setCommentSubmitPending(false);
+      }
+    },
+    [commentCategory, commentSubmitPending, commentText, data, refreshPageData]
+  );
+
+  const submitJobOrderMessage = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!data || messageSubmitPending) {
+        return;
+      }
+
+      setMessageSubmitError('');
+      setMessageSubmitPending(true);
+      try {
+        const result = await postJobOrderMessage(decodeLegacyURL(data.actions.postMessageURL), {
+          jobOrderID: Number(data.meta.jobOrderID || 0),
+          securityToken: data.messages.securityToken || '',
+          messageBody
+        });
+        if (!result.success) {
+          setMessageSubmitError(result.message || 'Unable to send message.');
+          return;
+        }
+
+        setMessageBody('');
+        setMessagesOpen(true);
+        refreshPageData();
+      } catch (err: unknown) {
+        setMessageSubmitError(err instanceof Error ? err.message : 'Unable to send message.');
+      } finally {
+        setMessageSubmitPending(false);
+      }
+    },
+    [data, messageBody, messageSubmitPending, refreshPageData]
   );
 
   const getForwardStatusOptions = useCallback(
@@ -728,12 +810,15 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
               {commentsOpen ? (
                 <div className="avel-joborder-thread-block">
                   {data.comments.canAddComment ? (
-                    <form method="post" action={decodeLegacyURL(data.actions.addCommentURL)} className="avel-joborder-thread-form">
-                      <input type="hidden" name="jobOrderID" value={String(data.meta.jobOrderID)} />
-                      <input type="hidden" name="securityToken" value={data.comments.securityToken} />
+                    <form className="avel-joborder-thread-form" onSubmit={submitJobOrderComment}>
                       <label className="modern-command-field">
                         <span className="modern-command-label">Comment Type</span>
-                        <select className="avel-form-control" name="commentCategory" defaultValue="General">
+                        <select
+                          className="avel-form-control"
+                          name="commentCategory"
+                          value={commentCategory}
+                          onChange={(event) => setCommentCategory(event.target.value)}
+                        >
                           {data.comments.categories.map((category) => (
                             <option key={category} value={category}>
                               {category}
@@ -750,11 +835,18 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                           maxLength={data.comments.maxLength}
                           required
                           placeholder="Share an internal update for this job order."
+                          value={commentText}
+                          onChange={(event) => setCommentText(event.target.value)}
                         />
                       </label>
+                      {commentSubmitError ? <div className="modern-state modern-state--error">{commentSubmitError}</div> : null}
                       <div className="modern-table-actions">
-                        <button type="submit" className="modern-btn modern-btn--mini modern-btn--emphasis">
-                          Save Comment
+                        <button
+                          type="submit"
+                          className="modern-btn modern-btn--mini modern-btn--emphasis"
+                          disabled={commentSubmitPending}
+                        >
+                          {commentSubmitPending ? 'Saving...' : 'Save Comment'}
                         </button>
                       </div>
                     </form>
@@ -808,9 +900,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
               ) : messagesOpen ? (
                 <div className="avel-joborder-thread-block">
                   {permissions.canPostMessage ? (
-                    <form method="post" action={decodeLegacyURL(data.actions.postMessageURL)} className="avel-joborder-thread-form">
-                      <input type="hidden" name="jobOrderID" value={String(data.meta.jobOrderID)} />
-                      <input type="hidden" name="securityToken" value={data.messages.securityToken} />
+                    <form className="avel-joborder-thread-form" onSubmit={submitJobOrderMessage}>
                       <label className="modern-command-field avel-candidate-edit-field--full">
                         <span className="modern-command-label">Message</span>
                         <textarea
@@ -820,14 +910,21 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                           maxLength={data.messages.maxLength}
                           required
                           placeholder="Type a message and mention teammates with @First Last."
+                          value={messageBody}
+                          onChange={(event) => setMessageBody(event.target.value)}
                         />
                       </label>
                       {data.messages.mentionHintNames.length > 0 ? (
                         <p className="avel-list-panel__hint">Mention help: {data.messages.mentionHintNames.map((name) => `@${name}`).join(', ')}</p>
                       ) : null}
+                      {messageSubmitError ? <div className="modern-state modern-state--error">{messageSubmitError}</div> : null}
                       <div className="modern-table-actions">
-                        <button type="submit" className="modern-btn modern-btn--mini modern-btn--emphasis">
-                          Send Message
+                        <button
+                          type="submit"
+                          className="modern-btn modern-btn--mini modern-btn--emphasis"
+                          disabled={messageSubmitPending}
+                        >
+                          {messageSubmitPending ? 'Sending...' : 'Send Message'}
                         </button>
                       </div>
                     </form>

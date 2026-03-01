@@ -151,6 +151,12 @@ export type PipelineStatusHistoryUpdateResponse = {
   updatedHistoryIDs?: number[];
 };
 
+export type ModernMutationResponse = {
+  success: boolean;
+  code?: string;
+  message?: string;
+};
+
 export type CandidatesListModernDataResponse = {
   meta: {
     contractVersion: number;
