@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchCandidatesEditModernData, uploadCandidateAttachment } from '../lib/api';
+import { deleteCandidateAttachment, fetchCandidatesEditModernData, uploadCandidateAttachment } from '../lib/api';
 import type { CandidatesEditModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
@@ -106,6 +107,12 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [attachmentUploadIsResume, setAttachmentUploadIsResume] = useState<boolean>(false);
   const [attachmentUploadPending, setAttachmentUploadPending] = useState<boolean>(false);
   const [attachmentUploadError, setAttachmentUploadError] = useState<string>('');
+  const [attachmentDeleteModal, setAttachmentDeleteModal] = useState<{
+    attachmentID: number;
+    fileName: string;
+  } | null>(null);
+  const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
+  const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -194,6 +201,41 @@ export function CandidatesEditPage({ bootstrap }: Props) {
       setAttachmentUploadPending(false);
     }
   }, [attachmentUploadFile, attachmentUploadIsResume, attachmentUploadPending, data, refreshPageData]);
+
+  const handleDeleteAttachment = useCallback(
+    async (attachmentID: number) => {
+      if (!data || attachmentDeletePending) {
+        return;
+      }
+      const deleteURL = decodeLegacyURL(data.actions.deleteAttachmentURL || '');
+      const token = data.actions.deleteAttachmentToken || '';
+      if (deleteURL === '' || token === '') {
+        setAttachmentDeleteError('Attachment delete endpoint is unavailable.');
+        return;
+      }
+
+      setAttachmentDeleteError('');
+      setAttachmentDeletePending(true);
+      try {
+        const result = await deleteCandidateAttachment(deleteURL, {
+          candidateID: Number(data.meta.candidateID || 0),
+          attachmentID: Number(attachmentID || 0),
+          securityToken: token
+        });
+        if (!result.success) {
+          setAttachmentDeleteError(result.message || 'Unable to delete attachment.');
+          return;
+        }
+        setAttachmentDeleteModal(null);
+        refreshPageData();
+      } catch (err: unknown) {
+        setAttachmentDeleteError(err instanceof Error ? err.message : 'Unable to delete attachment.');
+      } finally {
+        setAttachmentDeletePending(false);
+      }
+    },
+    [attachmentDeletePending, data, refreshPageData]
+  );
 
   const updateExtraFieldValue = (postKey: string, value: string) => {
     setFormState((current) => {
@@ -774,7 +816,8 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 columns={[
                   { key: 'file', title: 'File' },
                   { key: 'created', title: 'Created' },
-                  { key: 'type', title: 'Type' }
+                  { key: 'type', title: 'Type' },
+                  { key: 'actions', title: 'Actions' }
                 ]}
                 hasRows={data.attachments.length > 0}
                 emptyMessage="No attachments."
@@ -792,6 +835,25 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     </td>
                     <td>{toDisplayText(attachment.dateCreated)}</td>
                     <td>{attachment.isProfileImage ? 'Profile image' : 'Document'}</td>
+                    <td>
+                      <div className="modern-table-actions">
+                        {data.meta.permissions.canDeleteAttachment ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--danger"
+                            onClick={() => {
+                              setAttachmentDeleteError('');
+                              setAttachmentDeleteModal({
+                                attachmentID: attachment.attachmentID,
+                                fileName: toDisplayText(attachment.fileName, 'Attachment')
+                              });
+                            }}
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </DataTable>
@@ -805,6 +867,28 @@ export function CandidatesEditPage({ bootstrap }: Props) {
           url={attachmentModal?.url || ''}
           onClose={closeAttachmentModal}
           showRefreshClose
+        />
+
+        <ConfirmActionModal
+          isOpen={!!attachmentDeleteModal}
+          title="Delete Attachment"
+          message={`Delete "${attachmentDeleteModal?.fileName || 'this attachment'}"?`}
+          confirmLabel="Delete Attachment"
+          pending={attachmentDeletePending}
+          error={attachmentDeleteError}
+          onCancel={() => {
+            if (attachmentDeletePending) {
+              return;
+            }
+            setAttachmentDeleteError('');
+            setAttachmentDeleteModal(null);
+          }}
+          onConfirm={() => {
+            if (!attachmentDeleteModal) {
+              return;
+            }
+            handleDeleteAttachment(attachmentDeleteModal.attachmentID);
+          }}
         />
       </PageContainer>
     </div>

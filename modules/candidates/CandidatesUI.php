@@ -3050,7 +3050,9 @@ class CandidatesUI extends UserInterface
                 'submitURL' => sprintf('%s?m=candidates&a=edit&ui=modern', $baseURL),
                 'showURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
                 'legacyURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID),
-                'createAttachmentURL' => sprintf('%s?m=candidates&a=createAttachment&candidateID=%d&ui=legacy', $baseURL, $candidateID)
+                'createAttachmentURL' => sprintf('%s?m=candidates&a=createAttachment&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'deleteAttachmentURL' => sprintf('%s?m=candidates&a=deleteAttachment', $baseURL),
+                'deleteAttachmentToken' => $this->getCSRFToken('candidates.deleteAttachment')
             ),
             'candidate' => array(
                 'candidateID' => $candidateID,

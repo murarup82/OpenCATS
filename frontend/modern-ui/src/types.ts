@@ -713,6 +713,8 @@ export type CandidatesEditModernDataResponse = {
     showURL: string;
     legacyURL: string;
     createAttachmentURL: string;
+    deleteAttachmentURL?: string;
+    deleteAttachmentToken?: string;
   };
   candidate: {
     candidateID: number;

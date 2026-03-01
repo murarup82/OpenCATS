@@ -98,6 +98,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - replaced default legacy attachment iframe path with in-page upload controls (`file` + `resume` toggle)
     - wired submit to `uploadCandidateAttachment` using existing `candidates.createAttachment` modern-json endpoint
     - kept legacy uploader as an explicit fallback button in the same panel.
+67. Added native attachment deletion on `candidates.edit`:
+    - extended `candidates.edit.v1` contract actions with `deleteAttachmentURL` and `deleteAttachmentToken`
+    - wired inline delete actions to `deleteCandidateAttachment` with CSRF token validation
+    - replaced destructive browser dialogs with `ConfirmActionModal` for consistent in-app feedback.
 
 ## Next Queue
 
