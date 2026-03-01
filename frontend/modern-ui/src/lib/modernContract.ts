@@ -12,6 +12,7 @@ export const MODERN_CONTACTS_PAGE = 'contacts-list';
 export const MODERN_CONTACT_SHOW_PAGE = 'contacts-show';
 export const MODERN_ACTIVITY_PAGE = 'activity-list';
 export const MODERN_CALENDAR_PAGE = 'calendar-workspace';
+export const MODERN_LISTS_PAGE = 'lists-manage';
 export const MODERN_CONTRACT_VERSION = 1;
 
 export type ModernRequestParams = {

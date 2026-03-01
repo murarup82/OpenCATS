@@ -198,22 +198,25 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - backend `calendar.showCalendar` now supports `format=modern-json` contract `calendar.show.v1` with day/week/month range resolution, event payloads, and upcoming list data
     - new `CalendarPage` added to modern shell with range navigation, anchor-date controls, and native event/upcoming tables
     - route registry now maps `calendar.showCalendar`/`calendar.(default)` to native page while preserving legacy fallback routes for remaining calendar actions.
+97. Added native `lists.listByView` modernization starter:
+    - backend `lists.listByView` now supports `format=modern-json` contract `lists.listByView.v1` with visibility-safe list retrieval, pagination, and filters (search/data-type/list-type)
+    - new `ListsManagePage` added to modern shell with native filtering, create-list workflow, and delete-list confirmation flow
+    - route registry now maps `lists.listByView`/`lists.(default)` to native page while preserving bridge fallback for unmodernized list actions (e.g., `showList` detail page).
 
 ## Next Queue (30-Slice Execution)
 
-1. Add `lists.manage` modern-json contract and native static-list management page.
-2. Add reports entry modernization (`reports.*`) with native launcher panel and embedded report builder fallback.
-3. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
-4. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
-5. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
-6. Add centralized URL-state sync helper for filters/pagination shared by list pages.
-7. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
-8. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
-9. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-10. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-11. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
-12. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-13. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+1. Add reports entry modernization (`reports.*`) with native launcher panel and embedded report builder fallback.
+2. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
+3. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
+4. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
+5. Add centralized URL-state sync helper for filters/pagination shared by list pages.
+6. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
+7. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
+8. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
+9. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+10. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
+11. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+12. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 
 ## Rules
 

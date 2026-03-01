@@ -694,6 +694,64 @@ export type CalendarModernDataResponse = {
   }>;
 };
 
+export type ListsManageModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    sortBy: string;
+    sortDirection: string;
+    permissions: {
+      canCreateList: boolean;
+      canDeleteList: boolean;
+      hasListAccessSchema: boolean;
+    };
+  };
+  filters: {
+    quickSearch: string;
+    dataItemType: number;
+    listType: 'all' | 'static' | 'dynamic';
+  };
+  options: {
+    dataItemTypes: Array<{
+      value: number;
+      label: string;
+    }>;
+    listTypes: Array<{
+      value: 'all' | 'static' | 'dynamic';
+      label: string;
+    }>;
+  };
+  actions: {
+    legacyURL: string;
+    ajaxEndpointURL: string;
+  };
+  sessionCookie: string;
+  rows: Array<{
+    savedListID: number;
+    description: string;
+    dataItemType: number;
+    dataItemTypeLabel: string;
+    isDynamic: boolean;
+    listTypeLabel: string;
+    numberEntries: number;
+    ownerName: string;
+    dateCreated: string;
+    dateModified: string;
+    canEdit: boolean;
+    canManageAccess: boolean;
+    listAccessRestricted: boolean;
+    canDelete: boolean;
+    showURL: string;
+    showLegacyURL: string;
+    deleteLegacyURL: string;
+  }>;
+};
+
 export type JobOrdersListModernDataResponse = {
   meta: {
     contractVersion: number;

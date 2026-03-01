@@ -17,6 +17,7 @@ import type {
   JobOrderAssignCandidateModernDataResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
+  ListsManageModernDataResponse,
   ModernMutationResponse,
   PipelineStatusDetailsModernDataResponse,
   PipelineStatusHistoryUpdateResponse,
@@ -40,6 +41,7 @@ import {
   MODERN_DASHBOARD_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
+  MODERN_LISTS_PAGE,
   buildModernJSONRequestQuery
 } from './modernContract';
 
@@ -865,6 +867,29 @@ export async function fetchCalendarModernData(
   }
   if (data.meta.contractKey !== 'calendar.show.v1') {
     throw new Error('Unexpected calendar contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchListsManageModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ListsManageModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'lists',
+    action: 'listByView',
+    modernPage: MODERN_LISTS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ListsManageModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading lists.');
+  }
+  if (data.meta.contractKey !== 'lists.listByView.v1') {
+    throw new Error('Unexpected lists contract key.');
   }
 
   return data;
