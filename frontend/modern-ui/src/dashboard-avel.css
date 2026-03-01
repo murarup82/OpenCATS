@@ -1548,8 +1548,16 @@
   min-width: 130px;
 }
 
+.avel-joborders-page .modern-command-field--compact {
+  min-width: 130px;
+}
+
 .avel-candidates-page .modern-command-search {
   margin: 0;
+}
+
+.avel-joborders-page .avel-joborders-filters-row {
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) auto auto;
 }
 
 .avel-candidates-page .modern-state {
@@ -1568,10 +1576,35 @@
   font-weight: 700;
 }
 
+.avel-joborders-page .avel-candidates-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avel-joborders-page .avel-candidates-pagination__label {
+  color: #355d72;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .avel-candidates-page .avel-candidate-flags {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.avel-joborders-page .avel-joborders-flags {
+  margin-top: 4px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.avel-joborders-page .modern-chip-strip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .avel-candidates-page .modern-chip {
@@ -1579,7 +1612,22 @@
   font-size: 0.67rem;
 }
 
+.avel-joborders-page .modern-chip {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 3px 9px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .avel-candidates-page .modern-chip--warning {
+  border-color: #f0c98d;
+  background: #fff5e4;
+  color: #92500d;
+}
+
+.avel-joborders-page .modern-chip--warning {
   border-color: #f0c98d;
   background: #fff5e4;
   color: #92500d;
@@ -1591,7 +1639,19 @@
   color: #9a2f2f;
 }
 
+.avel-joborders-page .modern-chip--critical {
+  border-color: #eab6b6;
+  background: #fff0f0;
+  color: #9a2f2f;
+}
+
 .avel-candidates-page .modern-chip--info {
+  border-color: #b5d8e8;
+  background: #eef8ff;
+  color: #1f5f7b;
+}
+
+.avel-joborders-page .modern-chip--info {
   border-color: #b5d8e8;
   background: #eef8ff;
   color: #1f5f7b;
@@ -1601,6 +1661,33 @@
   border-color: #b8dfc8;
   background: #edf9f1;
   color: #1f7145;
+}
+
+.avel-joborders-page .modern-chip--success {
+  border-color: #b8dfc8;
+  background: #edf9f1;
+  color: #1f7145;
+}
+
+.avel-joborders-page .modern-chip[class*='modern-chip--status-'] {
+  border-color: #b5d8e8;
+  background: #eef8ff;
+  color: #1f5f7b;
+}
+
+.avel-joborders-page .modern-chip--status-active {
+  border-color: #b8dfc8;
+  background: #edf9f1;
+  color: #1f7145;
+}
+
+.avel-joborders-page .modern-chip--status-on-hold,
+.avel-joborders-page .modern-chip--status-onhold,
+.avel-joborders-page .modern-chip--status-closed,
+.avel-joborders-page .modern-chip--status-full {
+  border-color: #d0dae3;
+  background: #f2f6f9;
+  color: #4f6878;
 }
 
 .avel-candidate-show-page .avel-candidate-hero {

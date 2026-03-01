@@ -128,6 +128,76 @@ export type CandidatesListModernDataResponse = {
   }>;
 };
 
+export type JobOrdersListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    totalJobOrders: number;
+    sortBy: string;
+    sortDirection: string;
+    permissions: {
+      canAddJobOrder: boolean;
+      canEditJobOrder: boolean;
+      canDeleteJobOrder: boolean;
+      canManageRecruiterAllocation: boolean;
+      canToggleMonitored: boolean;
+    };
+  };
+  filters: {
+    status: string;
+    companyID: number;
+    companyName: string;
+    onlyMyJobOrders: boolean;
+    onlyHotJobOrders: boolean;
+  };
+  options: {
+    statuses: Array<{
+      value: string;
+      label: string;
+      tone: string;
+    }>;
+    companies: Array<{
+      companyID: number;
+      name: string;
+    }>;
+  };
+  actions: {
+    addJobOrderURL: string;
+    addJobOrderPopupURL: string;
+    recruiterAllocationURL: string;
+    legacyURL: string;
+  };
+  state: {
+    errorMessage: string;
+  };
+  rows: Array<{
+    jobOrderID: number;
+    title: string;
+    companyName: string;
+    companyID: number;
+    status: string;
+    statusSlug: string;
+    isHot: boolean;
+    hasAttachment: boolean;
+    isMonitored: boolean;
+    commentCount: number;
+    daysOld: number;
+    dateCreated: string;
+    submitted: number;
+    pipeline: number;
+    ownerName: string;
+    recruiterName: string;
+    showURL: string;
+    showLegacyURL: string;
+    companyURL: string;
+  }>;
+};
+
 export type CandidatesShowModernDataResponse = {
   meta: {
     contractVersion: number;

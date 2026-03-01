@@ -411,18 +411,37 @@ class JobOrdersUI extends UserInterface
      */
     private function listByView($errMessage = '')
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $jobOrderFilters = JobOrderStatuses::getFilters();
 
-        $dataGridProperties = DataGrid::getRecentParamaters("joborders:JobOrdersListByViewDataGrid");
-
-        /* If this is the first time we visited the datagrid this session, the recent paramaters will
-         * be empty.  Fill in some default values. */
-        if ($dataGridProperties == array())
+        if ($isModernJSON)
         {
             $dataGridProperties = array('rangeStart'    => 0,
                                         'maxResults'    => 50,
                                         'filter'        => 'Status=='.$jobOrderFilters[0],
                                         'filterVisible' => false);
+            $this->applyModernListRequestToDataGridProperties(
+                $dataGridProperties,
+                $jobOrderFilters,
+                $jobOrderFilters[0]
+            );
+        }
+        else
+        {
+            $dataGridProperties = DataGrid::getRecentParamaters("joborders:JobOrdersListByViewDataGrid");
+
+            /* If this is the first time we visited the datagrid this session, the recent paramaters will
+             * be empty.  Fill in some default values. */
+            if ($dataGridProperties == array())
+            {
+                $dataGridProperties = array('rangeStart'    => 0,
+                                            'maxResults'    => 50,
+                                            'filter'        => 'Status=='.$jobOrderFilters[0],
+                                            'filterVisible' => false);
+            }
         }
 
         $dataGrid = DataGrid::get("joborders:JobOrdersListByViewDataGrid", $dataGridProperties);
@@ -448,6 +467,40 @@ class JobOrdersUI extends UserInterface
             }
         }
 
+        $jl = new JobOrders($this->_siteID);
+        $totalJobOrders = $jl->getCount();
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'joborders-list')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernJobOrdersListJSON(
+                $dataGrid,
+                $totalJobOrders,
+                $jobOrderFilters,
+                $companiesRS,
+                $selectedCompanyFilterID,
+                $selectedCompanyFilterName,
+                $errMessage,
+                'joborders-list'
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('dataGrid', $dataGrid);
         $this->_template->assign('userID', $_SESSION['CATS']->getUserID());
@@ -460,10 +513,354 @@ class JobOrdersUI extends UserInterface
 
         if (!eval(Hooks::get('JO_LIST_BY_VIEW'))) return;
 
-        $jl = new JobOrders($this->_siteID);
-        $this->_template->assign('totalJobOrders', $jl->getCount());
+        $this->_template->assign('totalJobOrders', $totalJobOrders);
 
         $this->_template->display('./modules/joborders/JobOrders.tpl');
+    }
+
+    private function applyModernListRequestToDataGridProperties(
+        &$dataGridProperties,
+        $jobOrderFilters,
+        $defaultStatus
+    )
+    {
+        $allowedRowsPerPage = array(25, 50, 100);
+        $allowedSortColumns = array(
+            'title',
+            'companyName',
+            'status',
+            'dateCreatedSort',
+            'daysOld',
+            'submitted',
+            'pipeline',
+            'ownerSort',
+            'recruiterSort',
+            'jobOrderID'
+        );
+
+        $maxResults = (int) $this->getTrimmedInput('maxResults', $_GET);
+        if (!in_array($maxResults, $allowedRowsPerPage, true))
+        {
+            $maxResults = 50;
+        }
+        $dataGridProperties['maxResults'] = $maxResults;
+
+        $page = (int) $this->getTrimmedInput('page', $_GET);
+        if ($page > 0)
+        {
+            $dataGridProperties['rangeStart'] = ($page - 1) * $maxResults;
+        }
+        else
+        {
+            $rangeStart = (int) $this->getTrimmedInput('rangeStart', $_GET);
+            if ($rangeStart < 0)
+            {
+                $rangeStart = 0;
+            }
+            $dataGridProperties['rangeStart'] = $rangeStart;
+        }
+
+        $sortBy = $this->getTrimmedInput('sortBy', $_GET);
+        if (in_array($sortBy, $allowedSortColumns, true))
+        {
+            $dataGridProperties['sortBy'] = $sortBy;
+        }
+
+        $sortDirection = strtoupper($this->getTrimmedInput('sortDirection', $_GET));
+        if ($sortDirection === 'ASC' || $sortDirection === 'DESC')
+        {
+            $dataGridProperties['sortDirection'] = $sortDirection;
+        }
+
+        $statusFilter = $this->getTrimmedInput('view', $_GET);
+        if ($statusFilter === '')
+        {
+            $statusFilter = $this->getTrimmedInput('status', $_GET);
+        }
+        if (strtolower($statusFilter) === 'all')
+        {
+            $statusFilter = '';
+        }
+        if ($statusFilter !== '' && !in_array($statusFilter, $jobOrderFilters, true))
+        {
+            $statusFilter = $defaultStatus;
+        }
+
+        $companyID = (int) $this->getTrimmedInput('companyID', $_GET);
+        if ($companyID <= 0)
+        {
+            $companyID = (int) $this->getTrimmedInput('companyFilter', $_GET);
+        }
+        if ($companyID < 0)
+        {
+            $companyID = 0;
+        }
+
+        $onlyMyJobOrders = $this->getRequestBooleanFlag('onlyMyJobOrders', false);
+        $onlyHotJobOrders = $this->getRequestBooleanFlag('onlyHotJobOrders', false);
+
+        $this->setDataGridFilter($dataGridProperties, 'Status', '==', $statusFilter, ($statusFilter !== ''));
+        $this->setDataGridFilter($dataGridProperties, 'OwnerID', '==', (string) $this->_userID, $onlyMyJobOrders);
+        $this->setDataGridFilter($dataGridProperties, 'IsHot', '==', '1', $onlyHotJobOrders);
+        $this->setDataGridFilter($dataGridProperties, 'CompanyID', '==', (string) $companyID, ($companyID > 0));
+    }
+
+    private function getRequestBooleanFlag($key, $defaultValue = false)
+    {
+        if (!isset($_GET[$key]))
+        {
+            return (bool) $defaultValue;
+        }
+
+        $rawValue = strtolower(trim((string) $_GET[$key]));
+        if ($rawValue === '' || $rawValue === '1' || $rawValue === 'true' || $rawValue === 'yes' || $rawValue === 'on')
+        {
+            return true;
+        }
+
+        if ($rawValue === '0' || $rawValue === 'false' || $rawValue === 'no' || $rawValue === 'off')
+        {
+            return false;
+        }
+
+        return (bool) $defaultValue;
+    }
+
+    private function setDataGridFilter(&$dataGridProperties, $columnName, $operator, $value, $enabled)
+    {
+        $existingFilter = '';
+        if (isset($dataGridProperties['filter']) && is_string($dataGridProperties['filter']))
+        {
+            $existingFilter = $this->removeFilterColumnFromDataGrid(
+                $dataGridProperties['filter'],
+                $columnName
+            );
+        }
+
+        if (!$enabled)
+        {
+            $dataGridProperties['filter'] = $existingFilter;
+            return;
+        }
+
+        $nextFilter = urlencode((string) $columnName) . $operator . urlencode((string) $value);
+        if ($existingFilter === '')
+        {
+            $dataGridProperties['filter'] = $nextFilter;
+            return;
+        }
+
+        $dataGridProperties['filter'] = $existingFilter . ',' . $nextFilter;
+    }
+
+    private function removeFilterColumnFromDataGrid($filterString, $columnName)
+    {
+        if (!is_string($filterString) || $filterString === '')
+        {
+            return '';
+        }
+
+        $updatedFilters = array();
+        $filterParts = explode(',', $filterString);
+        foreach ($filterParts as $filterPart)
+        {
+            $filterPart = trim($filterPart);
+            if ($filterPart === '' || strpos($filterPart, '=') === false)
+            {
+                continue;
+            }
+
+            $filterColumn = urldecode(substr($filterPart, 0, strpos($filterPart, '=')));
+            if ($filterColumn === $columnName)
+            {
+                continue;
+            }
+
+            $updatedFilters[] = $filterPart;
+        }
+
+        return implode(',', $updatedFilters);
+    }
+
+    private function renderModernJobOrdersListJSON(
+        $dataGrid,
+        $totalJobOrders,
+        $jobOrderFilters,
+        $companiesRS,
+        $selectedCompanyFilterID,
+        $selectedCompanyFilterName,
+        $errMessage,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $rows = $dataGrid->getRows();
+        $parameters = $dataGrid->getParameters();
+
+        $entriesPerPage = (isset($parameters['maxResults']) ? (int) $parameters['maxResults'] : 50);
+        if ($entriesPerPage <= 0)
+        {
+            $entriesPerPage = 50;
+        }
+
+        $totalRows = (int) $dataGrid->getNumberOfRows();
+        $totalPages = (int) ceil($totalRows / $entriesPerPage);
+        if ($totalPages <= 0)
+        {
+            $totalPages = 1;
+        }
+
+        $page = (int) $dataGrid->getCurrentPage();
+        if ($page <= 0)
+        {
+            $page = 1;
+        }
+
+        $statusOptions = array(
+            array(
+                'value' => '',
+                'label' => 'All statuses',
+                'tone' => 'all-statuses'
+            )
+        );
+        foreach ($jobOrderFilters as $statusLabel)
+        {
+            $statusSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string) $statusLabel), '-'));
+            if ($statusSlug === '')
+            {
+                $statusSlug = 'status';
+            }
+
+            $statusOptions[] = array(
+                'value' => (string) $statusLabel,
+                'label' => (string) $statusLabel,
+                'tone' => $statusSlug
+            );
+        }
+
+        $companyOptions = array(
+            array(
+                'companyID' => 0,
+                'name' => 'All companies'
+            )
+        );
+        foreach ($companiesRS as $companyData)
+        {
+            $companyOptions[] = array(
+                'companyID' => (int) $companyData['companyID'],
+                'name' => (isset($companyData['name']) && trim($companyData['name']) !== '' ? trim($companyData['name']) : '--')
+            );
+        }
+
+        $responseRows = array();
+        foreach ($rows as $row)
+        {
+            $jobOrderID = (isset($row['jobOrderID']) ? (int) $row['jobOrderID'] : 0);
+            $title = (isset($row['title']) && trim($row['title']) !== '' ? trim($row['title']) : '--');
+            $companyName = (isset($row['companyName']) && trim($row['companyName']) !== '' ? trim($row['companyName']) : '--');
+            $status = (isset($row['status']) && trim($row['status']) !== '' ? trim($row['status']) : '--');
+            $statusSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $status), '-'));
+            if ($statusSlug === '')
+            {
+                $statusSlug = 'status';
+            }
+
+            $ownerName = trim(
+                (isset($row['ownerFirstName']) ? $row['ownerFirstName'] : '') .
+                ' ' .
+                (isset($row['ownerLastName']) ? $row['ownerLastName'] : '')
+            );
+            if ($ownerName === '')
+            {
+                $ownerName = '--';
+            }
+
+            $recruiterName = trim(
+                (isset($row['recruiterFirstName']) ? $row['recruiterFirstName'] : '') .
+                ' ' .
+                (isset($row['recruiterLastName']) ? $row['recruiterLastName'] : '')
+            );
+            if ($recruiterName === '')
+            {
+                $recruiterName = '--';
+            }
+
+            $responseRows[] = array(
+                'jobOrderID' => $jobOrderID,
+                'title' => $title,
+                'companyName' => $companyName,
+                'companyID' => (isset($row['companyID']) ? (int) $row['companyID'] : 0),
+                'status' => $status,
+                'statusSlug' => $statusSlug,
+                'isHot' => (isset($row['isHot']) ? ((int) $row['isHot'] === 1) : false),
+                'hasAttachment' => (isset($row['attachmentPresent']) ? ((int) $row['attachmentPresent'] === 1) : false),
+                'isMonitored' => (isset($row['monitoredJOFlag']) ? ((int) $row['monitoredJOFlag'] === 1) : false),
+                'commentCount' => (isset($row['profileCommentCount']) ? (int) $row['profileCommentCount'] : 0),
+                'daysOld' => (isset($row['daysOld']) ? (int) $row['daysOld'] : 0),
+                'dateCreated' => (isset($row['dateCreated']) ? $row['dateCreated'] : '--'),
+                'submitted' => (isset($row['submitted']) ? (int) $row['submitted'] : 0),
+                'pipeline' => (isset($row['pipeline']) ? (int) $row['pipeline'] : 0),
+                'ownerName' => $ownerName,
+                'recruiterName' => $recruiterName,
+                'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
+                'showLegacyURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'companyURL' => sprintf(
+                    '%s?m=companies&a=show&companyID=%d&ui=modern',
+                    $baseURL,
+                    (isset($row['companyID']) ? (int) $row['companyID'] : 0)
+                )
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.listByView.v1',
+                'modernPage' => $modernPage,
+                'page' => $page,
+                'totalPages' => $totalPages,
+                'totalRows' => $totalRows,
+                'entriesPerPage' => $entriesPerPage,
+                'totalJobOrders' => (int) $totalJobOrders,
+                'sortBy' => (isset($parameters['sortBy']) ? (string) $parameters['sortBy'] : ''),
+                'sortDirection' => (isset($parameters['sortDirection']) ? (string) $parameters['sortDirection'] : ''),
+                'permissions' => array(
+                    'canAddJobOrder' => ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT),
+                    'canEditJobOrder' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteJobOrder' => ($this->getUserAccessLevel('joborders.delete') >= ACCESS_LEVEL_DELETE),
+                    'canManageRecruiterAllocation' => ((bool) $this->canManageRecruiterAllocation()),
+                    'canToggleMonitored' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'filters' => array(
+                'status' => (string) $dataGrid->getFilterValue('Status'),
+                'companyID' => (int) $selectedCompanyFilterID,
+                'companyName' => (string) $selectedCompanyFilterName,
+                'onlyMyJobOrders' => ((int) $dataGrid->getFilterValue('OwnerID') === (int) $this->_userID),
+                'onlyHotJobOrders' => ($dataGrid->getFilterValue('IsHot') === '1')
+            ),
+            'options' => array(
+                'statuses' => $statusOptions,
+                'companies' => $companyOptions
+            ),
+            'actions' => array(
+                'addJobOrderURL' => sprintf('%s?m=joborders&a=add&ui=modern', $baseURL),
+                'addJobOrderPopupURL' => sprintf('%s?m=joborders&a=addJobOrderPopup&ui=legacy', $baseURL),
+                'recruiterAllocationURL' => sprintf('%s?m=joborders&a=recruiterAllocation&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=joborders&a=listByView&ui=legacy', $baseURL)
+            ),
+            'state' => array(
+                'errorMessage' => (string) $errMessage
+            ),
+            'rows' => $responseRows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     /*
