@@ -26,6 +26,7 @@ import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
+import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
@@ -119,6 +120,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [messageSubmitError, setMessageSubmitError] = useState<string>('');
   const [messageDeletePending, setMessageDeletePending] = useState<boolean>(false);
   const [messageDeleteError, setMessageDeleteError] = useState<string>('');
+  const [messageDeleteConfirmOpen, setMessageDeleteConfirmOpen] = useState<boolean>(false);
   const [tagEditorOpen, setTagEditorOpen] = useState<boolean>(false);
   const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
   const [tagSavePending, setTagSavePending] = useState<boolean>(false);
@@ -128,6 +130,12 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [attachmentUploadIsResume, setAttachmentUploadIsResume] = useState<boolean>(false);
   const [attachmentUploadPending, setAttachmentUploadPending] = useState<boolean>(false);
   const [attachmentUploadError, setAttachmentUploadError] = useState<string>('');
+  const [attachmentDeleteModal, setAttachmentDeleteModal] = useState<{
+    attachmentID: number;
+    fileName: string;
+  } | null>(null);
+  const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
+  const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -419,9 +427,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     if (!data || messageDeletePending) {
       return;
     }
-    if (!window.confirm('Delete this thread for all users? This cannot be undone.')) {
-      return;
-    }
 
     setMessageDeleteError('');
     setMessageDeletePending(true);
@@ -437,6 +442,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       }
 
       setMessagesOpen(true);
+      setMessageDeleteConfirmOpen(false);
       refreshPageData();
     } catch (err: unknown) {
       setMessageDeleteError(err instanceof Error ? err.message : 'Unable to delete message thread.');
@@ -446,23 +452,20 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   }, [data, messageDeletePending, refreshPageData]);
 
   const handleDeleteAttachment = useCallback(
-    async (attachmentID: number, fileName: string) => {
-      if (!data) {
+    async (attachmentID: number) => {
+      if (!data || attachmentDeletePending) {
         return;
       }
 
       const deleteURL = decodeLegacyURL(data.actions.deleteAttachmentURL || '');
       const token = data.actions.deleteAttachmentToken || '';
       if (deleteURL === '' || token === '') {
-        window.alert('Attachment delete endpoint is not available in this mode.');
+        setAttachmentDeleteError('Attachment delete endpoint is not available in this mode.');
         return;
       }
 
-      const confirmed = window.confirm(`Delete attachment "${toDisplayText(fileName, 'this file')}"?`);
-      if (!confirmed) {
-        return;
-      }
-
+      setAttachmentDeleteError('');
+      setAttachmentDeletePending(true);
       try {
         const result = await deleteCandidateAttachment(deleteURL, {
           candidateID: Number(data.meta.candidateID || 0),
@@ -470,15 +473,18 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           securityToken: token
         });
         if (!result.success) {
-          window.alert(result.message || 'Unable to delete attachment.');
+          setAttachmentDeleteError(result.message || 'Unable to delete attachment.');
           return;
         }
+        setAttachmentDeleteModal(null);
         refreshPageData();
       } catch (err: unknown) {
-        window.alert(err instanceof Error ? err.message : 'Unable to delete attachment.');
+        setAttachmentDeleteError(err instanceof Error ? err.message : 'Unable to delete attachment.');
+      } finally {
+        setAttachmentDeletePending(false);
       }
     },
-    [data, refreshPageData]
+    [attachmentDeletePending, data, refreshPageData]
   );
 
   const submitAttachmentUpload = useCallback(async () => {
@@ -1139,7 +1145,10 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <button
                       type="button"
                       className="modern-btn modern-btn--mini modern-btn--danger"
-                      onClick={handleDeleteMessageThread}
+                      onClick={() => {
+                        setMessageDeleteError('');
+                        setMessageDeleteConfirmOpen(true);
+                      }}
                       disabled={messageDeletePending}
                     >
                       {messageDeletePending ? 'Deleting...' : 'Delete Thread'}
@@ -1359,7 +1368,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                           <button
                             type="button"
                             className="modern-btn modern-btn--mini modern-btn--danger"
-                            onClick={() => handleDeleteAttachment(attachment.attachmentID, attachment.fileName)}
+                            onClick={() => {
+                              setAttachmentDeleteError('');
+                              setAttachmentDeleteModal({
+                                attachmentID: attachment.attachmentID,
+                                fileName: toDisplayText(attachment.fileName, 'Attachment')
+                              });
+                            }}
                           >
                             Delete
                           </button>
@@ -1603,6 +1618,45 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 }
               : undefined
           }
+        />
+
+        <ConfirmActionModal
+          isOpen={messageDeleteConfirmOpen}
+          title="Delete Message Thread"
+          message="Delete this thread for all users? This action cannot be undone."
+          confirmLabel="Delete Thread"
+          pending={messageDeletePending}
+          error={messageDeleteError}
+          onCancel={() => {
+            if (messageDeletePending) {
+              return;
+            }
+            setMessageDeleteError('');
+            setMessageDeleteConfirmOpen(false);
+          }}
+          onConfirm={handleDeleteMessageThread}
+        />
+
+        <ConfirmActionModal
+          isOpen={!!attachmentDeleteModal}
+          title="Delete Attachment"
+          message={`Delete "${attachmentDeleteModal?.fileName || 'this attachment'}"?`}
+          confirmLabel="Delete Attachment"
+          pending={attachmentDeletePending}
+          error={attachmentDeleteError}
+          onCancel={() => {
+            if (attachmentDeletePending) {
+              return;
+            }
+            setAttachmentDeleteError('');
+            setAttachmentDeleteModal(null);
+          }}
+          onConfirm={() => {
+            if (!attachmentDeleteModal) {
+              return;
+            }
+            handleDeleteAttachment(attachmentDeleteModal.attachmentID);
+          }}
         />
 
         <PipelineRemoveModal
