@@ -10,6 +10,7 @@ import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
+import { useServerQueryState } from '../lib/useServerQueryState';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -59,7 +60,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
+  const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
   const [searchDraft, setSearchDraft] = useState('');
   const [reloadToken, setReloadToken] = useState(0);
   const [assignJobModal, setAssignJobModal] = useState<{
@@ -198,11 +199,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
       nextQuery.set('ui', 'modern');
     }
 
-    const nextQueryString = nextQuery.toString();
-    window.history.replaceState({}, '', `${bootstrap.indexName}?${nextQueryString}`);
-    if (nextQueryString !== serverQueryString) {
-      setServerQueryString(nextQueryString);
-    }
+    applyServerQuery(nextQuery);
   };
 
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {

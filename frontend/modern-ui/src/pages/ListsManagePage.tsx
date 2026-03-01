@@ -9,6 +9,7 @@ import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal'
 import { MutationToast, type MutationToastState } from '../components/primitives/MutationToast';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
+import { useServerQueryState } from '../lib/useServerQueryState';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import '../dashboard-avel.css';
@@ -46,7 +47,7 @@ export function ListsManagePage({ bootstrap }: Props) {
   const [data, setData] = useState<ListsManageModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
+  const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
   const [searchDraft, setSearchDraft] = useState('');
   const [newListName, setNewListName] = useState('');
   const [newListDataType, setNewListDataType] = useState<string>('0');
@@ -150,11 +151,7 @@ export function ListsManagePage({ bootstrap }: Props) {
       nextQuery.set('ui', 'modern');
     }
 
-    const nextQueryString = nextQuery.toString();
-    window.history.replaceState({}, '', `${bootstrap.indexName}?${nextQueryString}`);
-    if (nextQueryString !== serverQueryString) {
-      setServerQueryString(nextQueryString);
-    }
+    applyServerQuery(nextQuery);
   };
 
   const rowsPerPageOptions: SelectMenuOption[] = [

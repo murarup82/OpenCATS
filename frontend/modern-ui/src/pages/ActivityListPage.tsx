@@ -7,6 +7,7 @@ import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
+import { useServerQueryState } from '../lib/useServerQueryState';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import '../dashboard-avel.css';
@@ -51,7 +52,7 @@ export function ActivityListPage({ bootstrap }: Props) {
   const [data, setData] = useState<ActivityListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
+  const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
   const [searchDraft, setSearchDraft] = useState('');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -165,11 +166,7 @@ export function ActivityListPage({ bootstrap }: Props) {
       nextQuery.set('ui', 'modern');
     }
 
-    const nextQueryString = nextQuery.toString();
-    window.history.replaceState({}, '', `${bootstrap.indexName}?${nextQueryString}`);
-    if (nextQueryString !== serverQueryString) {
-      setServerQueryString(nextQueryString);
-    }
+    applyServerQuery(nextQuery);
   };
 
   const rowsPerPageOptions: SelectMenuOption[] = [

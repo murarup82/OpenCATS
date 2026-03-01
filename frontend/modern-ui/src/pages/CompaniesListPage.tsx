@@ -7,6 +7,7 @@ import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
+import { useServerQueryState } from '../lib/useServerQueryState';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import '../dashboard-avel.css';
@@ -48,7 +49,7 @@ export function CompaniesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CompaniesListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
+  const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
   const [searchDraft, setSearchDraft] = useState('');
   const [reloadToken, setReloadToken] = useState(0);
   const loadRequestRef = useRef(0);
@@ -141,11 +142,7 @@ export function CompaniesListPage({ bootstrap }: Props) {
       nextQuery.set('ui', 'modern');
     }
 
-    const nextQueryString = nextQuery.toString();
-    window.history.replaceState({}, '', `${bootstrap.indexName}?${nextQueryString}`);
-    if (nextQueryString !== serverQueryString) {
-      setServerQueryString(nextQueryString);
-    }
+    applyServerQuery(nextQuery);
   };
 
   const rowsPerPageOptions: SelectMenuOption[] = [
