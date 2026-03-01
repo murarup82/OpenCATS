@@ -6,6 +6,7 @@ import type {
   CandidatesEditModernDataResponse,
   CandidatesListModernDataResponse,
   CandidatesShowModernDataResponse,
+  CompaniesListModernDataResponse,
   DashboardModernDataResponse,
   DashboardSetPipelineStatusResponse,
   JobOrderAssignCandidateModernDataResponse,
@@ -24,6 +25,7 @@ import {
   MODERN_CANDIDATE_ADD_PAGE,
   MODERN_CANDIDATE_EDIT_PAGE,
   MODERN_CANDIDATE_SHOW_PAGE,
+  MODERN_COMPANIES_PAGE,
   MODERN_CONTRACT_VERSION,
   MODERN_DASHBOARD_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
@@ -715,6 +717,29 @@ export async function fetchCandidatesListModernData(
 
   if (data.meta.contractKey !== 'candidates.listByView.v1') {
     throw new Error('Unexpected candidates contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchCompaniesListModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<CompaniesListModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'companies',
+    action: 'listByView',
+    modernPage: MODERN_COMPANIES_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<CompaniesListModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading companies.');
+  }
+  if (data.meta.contractKey !== 'companies.listByView.v1') {
+    throw new Error('Unexpected companies contract key.');
   }
 
   return data;

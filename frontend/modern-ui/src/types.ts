@@ -222,6 +222,52 @@ export type CandidatesListModernDataResponse = {
   }>;
 };
 
+export type CompaniesListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    sortBy: string;
+    sortDirection: string;
+    permissions: {
+      canAddCompany: boolean;
+      canEditCompany: boolean;
+      canDeleteCompany: boolean;
+      canAddToList: boolean;
+    };
+  };
+  filters: {
+    quickSearch: string;
+    onlyMyCompanies: boolean;
+    onlyHotCompanies: boolean;
+  };
+  actions: {
+    addCompanyURL: string;
+    legacyURL: string;
+  };
+  rows: Array<{
+    companyID: number;
+    name: string;
+    isHot: boolean;
+    jobs: number;
+    city: string;
+    country: string;
+    phone: string;
+    webSite: string;
+    ownerName: string;
+    dateCreated: string;
+    dateModified: string;
+    hasAttachment: boolean;
+    showURL: string;
+    editURL: string;
+    addToListURL: string;
+  }>;
+};
+
 export type JobOrdersListModernDataResponse = {
   meta: {
     contractVersion: number;

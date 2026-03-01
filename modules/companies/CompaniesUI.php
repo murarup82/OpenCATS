@@ -192,13 +192,53 @@ class CompaniesUI extends UserInterface
      */
     private function listByView($errMessage = '')
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* First, if we are operating in HR mode we will never see the
            companies pager.  Immediantly forward to My Company. */
 
         if ($_SESSION['CATS']->isHrMode())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Companies list is unavailable in HR mode.'
+                ));
+                return;
+            }
             $this->internalPostings();
             die();
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'companies-list')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernCompaniesListJSON('companies-list');
+            return;
         }
 
         $dataGridProperties = DataGrid::getRecentParamaters("companies:CompaniesListByViewDataGrid");
@@ -222,6 +262,246 @@ class CompaniesUI extends UserInterface
         if (!eval(Hooks::get('CLIENTS_LIST_BY_VIEW'))) return;
 
         $this->_template->display('./modules/companies/Companies.tpl');
+    }
+
+    private function renderModernCompaniesListJSON($modernPage)
+    {
+        $db = DatabaseConnection::getInstance();
+        $baseURL = CATSUtility::getIndexName();
+        $siteID = (int) $this->_siteID;
+
+        $allowedRowsPerPage = array(15, 30, 50, 100);
+        $entriesPerPage = (int) $this->getTrimmedInput('maxResults', $_GET);
+        if (!in_array($entriesPerPage, $allowedRowsPerPage, true))
+        {
+            $entriesPerPage = 15;
+        }
+
+        $page = (int) $this->getTrimmedInput('page', $_GET);
+        if ($page <= 0)
+        {
+            $page = 1;
+        }
+        $offset = ($page - 1) * $entriesPerPage;
+
+        $quickSearch = trim($this->getTrimmedInput('wildCardString', $_GET));
+        $onlyMyCompanies = $this->getRequestBooleanFlag('onlyMyCompanies', false);
+        $onlyHotCompanies = $this->getRequestBooleanFlag('onlyHotCompanies', false);
+
+        $sortMap = array(
+            'name' => 'company.name',
+            'jobs' => 'jobs',
+            'city' => 'company.city',
+            'country' => 'company.country',
+            'phone' => 'company.phone',
+            'owner' => 'ownerSort',
+            'dateCreated' => 'company.date_created',
+            'dateModified' => 'company.date_modified'
+        );
+        $sortBy = $this->getTrimmedInput('sortBy', $_GET);
+        if (!isset($sortMap[$sortBy]))
+        {
+            $sortBy = 'dateModified';
+        }
+        $sortDirection = strtoupper(trim($this->getTrimmedInput('sortDirection', $_GET)));
+        if ($sortDirection !== 'ASC' && $sortDirection !== 'DESC')
+        {
+            $sortDirection = 'DESC';
+        }
+
+        $whereConditions = array(
+            'company.site_id = ' . $db->makeQueryInteger($siteID)
+        );
+
+        if ($onlyMyCompanies)
+        {
+            $whereConditions[] = 'company.owner = ' . $db->makeQueryInteger($this->_userID);
+        }
+        if ($onlyHotCompanies)
+        {
+            $whereConditions[] = 'company.is_hot = 1';
+        }
+        if ($quickSearch !== '')
+        {
+            $quickSearchEscaped = str_replace(
+                array('\\', '%', '_'),
+                array('\\\\', '\\%', '\\_'),
+                $quickSearch
+            );
+            $quickSearchLike = '%' . $quickSearchEscaped . '%';
+            $whereConditions[] = sprintf(
+                "(company.name LIKE %s ESCAPE '\\\\'
+                OR company.city LIKE %s ESCAPE '\\\\'
+                OR company.country LIKE %s ESCAPE '\\\\'
+                OR company.phone LIKE %s ESCAPE '\\\\'
+                OR company.key_technologies LIKE %s ESCAPE '\\\\'
+                OR company.notes LIKE %s ESCAPE '\\\\')",
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike)
+            );
+        }
+
+        $whereSQL = implode(' AND ', $whereConditions);
+        $orderSQL = sprintf(
+            '%s %s, company.date_modified DESC',
+            $sortMap[$sortBy],
+            $sortDirection
+        );
+
+        $sql = sprintf(
+            "SELECT SQL_CALC_FOUND_ROWS
+                company.company_id AS companyID,
+                company.name AS name,
+                company.is_hot AS isHot,
+                company.city AS city,
+                company.country AS country,
+                company.phone AS phone,
+                company.url AS webSite,
+                company.key_technologies AS keyTechnologies,
+                DATE_FORMAT(company.date_created, '%%m-%%d-%%y') AS dateCreated,
+                DATE_FORMAT(company.date_modified, '%%m-%%d-%%y') AS dateModified,
+                CONCAT(COALESCE(owner_user.first_name, ''), ' ', COALESCE(owner_user.last_name, '')) AS ownerFullName,
+                CONCAT(COALESCE(owner_user.last_name, ''), COALESCE(owner_user.first_name, '')) AS ownerSort,
+                (
+                    SELECT COUNT(*)
+                    FROM joborder
+                    WHERE
+                        joborder.company_id = company.company_id
+                    AND
+                        joborder.site_id = company.site_id
+                ) AS jobs,
+                IF(
+                    EXISTS(
+                        SELECT 1
+                        FROM attachment
+                        WHERE
+                            attachment.data_item_id = company.company_id
+                        AND
+                            attachment.site_id = company.site_id
+                        AND
+                            attachment.data_item_type = %s
+                        LIMIT 1
+                    ),
+                    1,
+                    0
+                ) AS attachmentPresent
+            FROM
+                company
+            LEFT JOIN user AS owner_user
+                ON company.owner = owner_user.user_id
+            WHERE
+                %s
+            ORDER BY
+                %s
+            LIMIT
+                %s, %s",
+            $db->makeQueryInteger(DATA_ITEM_COMPANY),
+            $whereSQL,
+            $orderSQL,
+            $db->makeQueryInteger($offset),
+            $db->makeQueryInteger($entriesPerPage)
+        );
+        $rows = $db->getAllAssoc($sql);
+        $totalRows = (int) $db->getColumn('SELECT FOUND_ROWS()', 0, 0);
+
+        $totalPages = 1;
+        if ($entriesPerPage > 0)
+        {
+            $totalPages = (int) ceil($totalRows / $entriesPerPage);
+            if ($totalPages <= 0)
+            {
+                $totalPages = 1;
+            }
+        }
+
+        $responseRows = array();
+        foreach ($rows as $row)
+        {
+            $companyID = (int) $row['companyID'];
+            $responseRows[] = array(
+                'companyID' => $companyID,
+                'name' => (isset($row['name']) ? (string) $row['name'] : ''),
+                'isHot' => ((int) (isset($row['isHot']) ? $row['isHot'] : 0) === 1),
+                'jobs' => (int) (isset($row['jobs']) ? $row['jobs'] : 0),
+                'city' => (isset($row['city']) ? (string) $row['city'] : ''),
+                'country' => (isset($row['country']) ? (string) $row['country'] : ''),
+                'phone' => (isset($row['phone']) ? (string) $row['phone'] : ''),
+                'webSite' => (isset($row['webSite']) ? (string) $row['webSite'] : ''),
+                'ownerName' => trim((isset($row['ownerFullName']) ? (string) $row['ownerFullName'] : '')),
+                'dateCreated' => (isset($row['dateCreated']) ? (string) $row['dateCreated'] : ''),
+                'dateModified' => (isset($row['dateModified']) ? (string) $row['dateModified'] : ''),
+                'hasAttachment' => ((int) (isset($row['attachmentPresent']) ? $row['attachmentPresent'] : 0) === 1),
+                'showURL' => sprintf('%s?m=companies&a=show&companyID=%d', $baseURL, $companyID),
+                'editURL' => sprintf('%s?m=companies&a=edit&companyID=%d', $baseURL, $companyID),
+                'addToListURL' => sprintf(
+                    '%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy',
+                    $baseURL,
+                    DATA_ITEM_COMPANY,
+                    $companyID
+                )
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'companies.listByView.v1',
+                'modernPage' => $modernPage,
+                'page' => (int) $page,
+                'totalPages' => (int) $totalPages,
+                'totalRows' => (int) $totalRows,
+                'entriesPerPage' => (int) $entriesPerPage,
+                'sortBy' => $sortBy,
+                'sortDirection' => $sortDirection,
+                'permissions' => array(
+                    'canAddCompany' => ($this->getUserAccessLevel('companies.add') >= ACCESS_LEVEL_EDIT),
+                    'canEditCompany' => ($this->getUserAccessLevel('companies.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteCompany' => ($this->getUserAccessLevel('companies.delete') >= ACCESS_LEVEL_DELETE),
+                    'canAddToList' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'filters' => array(
+                'quickSearch' => $quickSearch,
+                'onlyMyCompanies' => ((bool) $onlyMyCompanies),
+                'onlyHotCompanies' => ((bool) $onlyHotCompanies)
+            ),
+            'actions' => array(
+                'addCompanyURL' => sprintf('%s?m=companies&a=add&ui=legacy', $baseURL),
+                'legacyURL' => sprintf('%s?m=companies&a=listByView&ui=legacy', $baseURL)
+            ),
+            'rows' => $responseRows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
+    private function getRequestBooleanFlag($key, $defaultValue = false)
+    {
+        if (!isset($_GET[$key]))
+        {
+            return (bool) $defaultValue;
+        }
+
+        $rawValue = strtolower(trim((string) $_GET[$key]));
+        if ($rawValue === '' || $rawValue === '1' || $rawValue === 'true' || $rawValue === 'yes' || $rawValue === 'on')
+        {
+            return true;
+        }
+        if ($rawValue === '0' || $rawValue === 'false' || $rawValue === 'no' || $rawValue === 'off')
+        {
+            return false;
+        }
+
+        return (bool) $defaultValue;
     }
 
     /*
