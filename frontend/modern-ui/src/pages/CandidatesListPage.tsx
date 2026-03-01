@@ -529,7 +529,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                               setJobOrderModal({
                                 url: decodeLegacyURL(row.addToJobOrderURL),
                                 title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`,
-                                openInPopup: { width: 860, height: 560, refreshOnClose: false }
+                                openInPopup: { width: 1120, height: 760, refreshOnClose: true }
                               })
                             }
                           >
