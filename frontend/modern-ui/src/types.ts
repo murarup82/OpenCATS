@@ -79,6 +79,14 @@ export type DashboardSetPipelineStatusResponse = {
   autoFilledStatusIDs?: number[];
 };
 
+export type PipelineRemoveModernResponse = {
+  success: boolean;
+  code?: string;
+  message?: string;
+  candidateID?: number;
+  jobOrderID?: number;
+};
+
 export type CandidatesListModernDataResponse = {
   meta: {
     contractVersion: number;
@@ -248,6 +256,7 @@ export type JobOrdersShowModernDataResponse = {
     postMessageURL: string;
     deleteMessageThreadURL: string;
     administrativeHideShowBaseURL: string;
+    removeFromPipelineToken?: string;
   };
   jobOrder: {
     jobOrderID: number;
@@ -411,6 +420,7 @@ export type CandidatesShowModernDataResponse = {
     addToListURL: string;
     linkDuplicateURL: string;
     viewHistoryURL: string;
+    removeFromPipelineToken?: string;
   };
   candidate: {
     candidateID: number;

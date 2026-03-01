@@ -1100,7 +1100,8 @@ class CandidatesUI extends UserInterface
                 'addTagsURL' => sprintf('%s?m=candidates&a=addCandidateTags&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
                 'linkDuplicateURL' => sprintf('%s?m=candidates&a=linkDuplicate&candidateID=%d&ui=legacy', $baseURL, $candidateID),
-                'viewHistoryURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID)
+                'viewHistoryURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
+                'removeFromPipelineToken' => $this->getCSRFToken('candidates.removeFromPipeline')
             ),
             'candidate' => array(
                 'candidateID' => $candidateID,
@@ -3746,24 +3747,81 @@ class CandidatesUI extends UserInterface
         if (!$this->isRequiredIDValid('candidateID', $input)) {
             $input = $_GET;
         }
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
 
         /* Bail out if we don't have a valid candidate ID. */
         if (!$this->isRequiredIDValid('candidateID', $input)) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidate',
+                    'message' => 'Invalid candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
         /* Bail out if we don't have a valid job order ID. */
         if (!$this->isRequiredIDValid('jobOrderID', $input)) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrder',
+                    'message' => 'Invalid job order ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
         $candidateID = $input['candidateID'];
         $jobOrderID  = $input['jobOrderID'];
         $commentText = $this->getTrimmedInput('comment', $input);
+        if ($isModernJSON)
+        {
+            $securityToken = $this->getTrimmedInput('securityToken', $input);
+            if (!$this->isCSRFTokenValid('candidates.removeFromPipeline', $securityToken))
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid security token.'
+                ));
+                return;
+            }
+        }
         if (!isset($input['comment']))
         {
+            if ($isModernJSON)
+            {
+                $commentText = '';
+            }
+            else
+            {
             $this->renderRemoveFromPipelineForm($candidateID, $jobOrderID);
             return;
+            }
         }
 
         if (!eval(Hooks::get('CANDIDATE_REMOVE_FROM_PIPELINE_PRE'))) return;
@@ -3772,6 +3830,22 @@ class CandidatesUI extends UserInterface
         $pipelines->remove($candidateID, $jobOrderID, $this->_userID, $commentText);
 
         if (!eval(Hooks::get('CANDIDATE_REMOVE_FROM_PIPELINE_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'message' => 'Candidate removed from pipeline.',
+                'candidateID' => (int) $candidateID,
+                'jobOrderID' => (int) $jobOrderID
+            ));
+            return;
+        }
 
         if ($this->isPopupRequest())
         {

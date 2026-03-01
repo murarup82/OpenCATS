@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchJobOrdersShowModernData } from '../lib/api';
+import { fetchJobOrdersShowModernData, removePipelineEntryViaLegacyURL } from '../lib/api';
 import type { JobOrdersShowModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -122,6 +122,52 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
       }
     },
     [refreshPageData]
+  );
+
+  const handleRemoveFromPipeline = useCallback(
+    async (item: JobOrdersShowModernDataResponse['pipeline']['items'][number]) => {
+      if (!data) {
+        return;
+      }
+
+      const token = data.actions.removeFromPipelineToken || '';
+      if (token === '') {
+        setPipelineModal({
+          url: decodeLegacyURL(item.actions.removeFromPipelineURL),
+          title: `Remove From Pipeline: ${toDisplayText(item.candidateName)}`,
+          openInPopup: { width: 430, height: 200, refreshOnClose: true },
+          showRefreshClose: true
+        });
+        return;
+      }
+
+      const candidateName = toDisplayText(item.candidateName);
+      const confirmed = window.confirm(`Remove ${candidateName} from this pipeline?`);
+      if (!confirmed) {
+        return;
+      }
+
+      const note = window.prompt('Optional removal note (leave blank for none):', '');
+      if (note === null) {
+        return;
+      }
+
+      try {
+        const result = await removePipelineEntryViaLegacyURL(
+          decodeLegacyURL(item.actions.removeFromPipelineURL),
+          token,
+          note
+        );
+        if (!result.success) {
+          window.alert(result.message || 'Unable to remove candidate from pipeline.');
+          return;
+        }
+        refreshPageData();
+      } catch (err: unknown) {
+        window.alert(err instanceof Error ? err.message : 'Unable to remove candidate from pipeline.');
+      }
+    },
+    [data, refreshPageData]
   );
 
   const navigateWithShowClosed = (showClosed: boolean) => {
@@ -354,14 +400,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                         <button
                           type="button"
                           className="modern-btn modern-btn--secondary modern-btn--mini"
-                          onClick={() =>
-                            setPipelineModal({
-                              url: decodeLegacyURL(item.actions.removeFromPipelineURL),
-                              title: `Remove From Pipeline: ${toDisplayText(item.candidateName)}`,
-                              openInPopup: { width: 430, height: 200, refreshOnClose: true },
-                              showRefreshClose: true
-                            })
-                          }
+                          onClick={() => handleRemoveFromPipeline(item)}
                         >
                           Remove
                         </button>

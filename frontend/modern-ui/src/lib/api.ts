@@ -8,6 +8,7 @@ import type {
   DashboardSetPipelineStatusResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
+  PipelineRemoveModernResponse,
   QuickActionAddToListModernDataResponse,
   UIModeBootstrap
 } from '../types';
@@ -98,6 +99,47 @@ export async function setDashboardPipelineStatus(
   }
 
   return result;
+}
+
+export async function removePipelineEntryViaLegacyURL(
+  removeURL: string,
+  securityToken: string,
+  commentText: string
+): Promise<PipelineRemoveModernResponse> {
+  const parsedURL = new URL(String(removeURL || '').replace(/&amp;/g, '&'), window.location.href);
+  parsedURL.searchParams.set('format', 'modern-json');
+  parsedURL.searchParams.delete('display');
+
+  const candidateID = parsedURL.searchParams.get('candidateID') || '';
+  const jobOrderID = parsedURL.searchParams.get('jobOrderID') || '';
+
+  const body = new URLSearchParams();
+  body.set('candidateID', candidateID);
+  body.set('jobOrderID', jobOrderID);
+  body.set('comment', commentText || '');
+  body.set('securityToken', securityToken || '');
+
+  const response = await fetch(parsedURL.toString(), {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let payload: PipelineRemoveModernResponse | null = null;
+  try {
+    payload = (await response.json()) as PipelineRemoveModernResponse;
+  } catch (_error) {
+    payload = null;
+  }
+
+  if (!payload) {
+    throw new Error(`Remove from pipeline failed (${response.status}).`);
+  }
+
+  return payload;
 }
 
 export async function fetchCandidatesListModernData(
