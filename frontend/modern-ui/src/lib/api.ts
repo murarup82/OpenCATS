@@ -1,4 +1,5 @@
 import type {
+  ActivityListModernDataResponse,
   CandidateAssignToJobOrderModernDataResponse,
   CandidateAssignToJobOrderMutationResponse,
   CandidateDuplicateCheckResponse,
@@ -24,6 +25,7 @@ import type {
 } from '../types';
 import { getJSON } from './httpClient';
 import {
+  MODERN_ACTIVITY_PAGE,
   MODERN_CANDIDATES_PAGE,
   MODERN_CANDIDATE_ADD_PAGE,
   MODERN_CANDIDATE_EDIT_PAGE,
@@ -815,6 +817,29 @@ export async function fetchContactsShowModernData(
   }
   if (data.meta.contractKey !== 'contacts.show.v1') {
     throw new Error('Unexpected contact profile contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchActivityListModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ActivityListModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'activity',
+    action: 'listByViewDataGrid',
+    modernPage: MODERN_ACTIVITY_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ActivityListModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading activities.');
+  }
+  if (data.meta.contractKey !== 'activity.listByView.v1') {
+    throw new Error('Unexpected activities contract key.');
   }
 
   return data;

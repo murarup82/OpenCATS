@@ -551,6 +551,67 @@ export type ContactsShowModernDataResponse = {
   };
 };
 
+export type ActivityListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    sortBy: string;
+    sortDirection: string;
+  };
+  filters: {
+    quickSearch: string;
+    period: string;
+    startDate: string;
+    endDate: string;
+    dataItemType: string;
+    activityTypeID: number;
+  };
+  options: {
+    periods: Array<{
+      value: string;
+      label: string;
+    }>;
+    dataItemTypes: Array<{
+      value: string;
+      label: string;
+    }>;
+    activityTypes: Array<{
+      activityTypeID: number;
+      label: string;
+    }>;
+  };
+  actions: {
+    legacyURL: string;
+  };
+  rows: Array<{
+    activityID: number;
+    dataItemID: number;
+    dataItemType: number;
+    dataItemTypeKey: 'candidate' | 'contact';
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    isHot: boolean;
+    dateCreated: string;
+    typeDescription: string;
+    notes: string;
+    enteredByName: string;
+    regarding: string;
+    jobOrderID: number;
+    jobOrderTitle: string;
+    companyID: number;
+    companyName: string;
+    profileURL: string;
+    jobOrderURL: string;
+    companyURL: string;
+  }>;
+};
+
 export type JobOrdersListModernDataResponse = {
   meta: {
     contractVersion: number;
