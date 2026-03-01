@@ -36,6 +36,86 @@ type ColumnVisibility = {
   monitor: boolean;
 };
 
+type ColumnPresetKey = 'full' | 'balanced' | 'compact';
+
+const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
+  full: {
+    company: true,
+    status: true,
+    pipeline: true,
+    proposed: true,
+    age: true,
+    owner: true,
+    recruiter: true,
+    monitor: true
+  },
+  balanced: {
+    company: true,
+    status: true,
+    pipeline: true,
+    proposed: true,
+    age: true,
+    owner: true,
+    recruiter: false,
+    monitor: false
+  },
+  compact: {
+    company: false,
+    status: true,
+    pipeline: true,
+    proposed: true,
+    age: true,
+    owner: false,
+    recruiter: false,
+    monitor: false
+  }
+};
+
+const columnPresetOrder: Array<{ key: ColumnPresetKey; label: string }> = [
+  { key: 'compact', label: 'Compact' },
+  { key: 'balanced', label: 'Balanced' },
+  { key: 'full', label: 'Full' }
+];
+
+function isColumnVisibility(value: unknown): value is ColumnVisibility {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.company === 'boolean' &&
+    typeof candidate.status === 'boolean' &&
+    typeof candidate.pipeline === 'boolean' &&
+    typeof candidate.proposed === 'boolean' &&
+    typeof candidate.age === 'boolean' &&
+    typeof candidate.owner === 'boolean' &&
+    typeof candidate.recruiter === 'boolean' &&
+    typeof candidate.monitor === 'boolean'
+  );
+}
+
+function detectPreset(visibility: ColumnVisibility): ColumnPresetKey | 'custom' {
+  const presetKeys = Object.keys(columnPresets) as ColumnPresetKey[];
+  for (const presetKey of presetKeys) {
+    const preset = columnPresets[presetKey];
+    if (
+      preset.company === visibility.company &&
+      preset.status === visibility.status &&
+      preset.pipeline === visibility.pipeline &&
+      preset.proposed === visibility.proposed &&
+      preset.age === visibility.age &&
+      preset.owner === visibility.owner &&
+      preset.recruiter === visibility.recruiter &&
+      preset.monitor === visibility.monitor
+    ) {
+      return presetKey;
+    }
+  }
+
+  return 'custom';
+}
+
 type PopupCallback = ((returnValue?: unknown) => void) | null;
 
 type PopupWindow = Window & {
@@ -94,16 +174,56 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [loading, setLoading] = useState(true);
   const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
-  const [visibleColumns, setVisibleColumns] = useState<ColumnVisibility>({
-    company: true,
-    status: true,
-    pipeline: true,
-    proposed: true,
-    age: true,
-    owner: true,
-    recruiter: true,
-    monitor: true
-  });
+  const [visibleColumns, setVisibleColumns] = useState<ColumnVisibility>(columnPresets.balanced);
+  const [columnPreset, setColumnPreset] = useState<ColumnPresetKey | 'custom'>('balanced');
+  const columnStorageKey = useMemo(
+    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:columns:v1`,
+    [bootstrap.siteID, bootstrap.userID]
+  );
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(columnStorageKey);
+      if (!raw) {
+        setVisibleColumns(columnPresets.balanced);
+        setColumnPreset('balanced');
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as { visibleColumns?: unknown; preset?: unknown };
+      if (!isColumnVisibility(parsed.visibleColumns)) {
+        setVisibleColumns(columnPresets.balanced);
+        setColumnPreset('balanced');
+        return;
+      }
+
+      const restoredColumns = parsed.visibleColumns;
+      setVisibleColumns(restoredColumns);
+      if (parsed.preset === 'full' || parsed.preset === 'balanced' || parsed.preset === 'compact') {
+        setColumnPreset(parsed.preset);
+      } else {
+        setColumnPreset(detectPreset(restoredColumns));
+      }
+    } catch (_error) {
+      setVisibleColumns(columnPresets.balanced);
+      setColumnPreset('balanced');
+    }
+  }, [columnStorageKey]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        columnStorageKey,
+        JSON.stringify({
+          visibleColumns,
+          preset: columnPreset,
+          updatedAt: new Date().toISOString()
+        })
+      );
+    } catch (_error) {
+      // Ignore persistence issues (private mode / storage blocked).
+    }
+  }, [columnPreset, columnStorageKey, visibleColumns]);
 
   useEffect(() => {
     let isMounted = true;
@@ -465,21 +585,43 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                 )}
               </div>
               <div className="modern-chip-strip">
+                <span className="modern-chip modern-chip--info">Presets</span>
+                {columnPresetOrder.map((preset) => (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    className={`modern-chip modern-chip--column-toggle ${columnPreset === preset.key ? 'is-active' : ''}`}
+                    onClick={() => {
+                      setVisibleColumns(columnPresets[preset.key]);
+                      setColumnPreset(preset.key);
+                    }}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+                {columnPreset === 'custom' ? <span className="modern-chip modern-chip--warning">Custom</span> : null}
+              </div>
+              <div className="modern-chip-strip">
                 {columnToggleItems.map((columnItem) => (
                   <button
                     key={columnItem.key}
                     type="button"
                     className={`modern-chip modern-chip--column-toggle ${visibleColumns[columnItem.key] ? 'is-active' : ''}`}
-                    onClick={() =>
-                      setVisibleColumns((current) => ({
-                        ...current,
-                        [columnItem.key]: !current[columnItem.key]
-                      }))
-                    }
+                    onClick={() => {
+                      setVisibleColumns((current) => {
+                        const next = {
+                          ...current,
+                          [columnItem.key]: !current[columnItem.key]
+                        };
+                        setColumnPreset(detectPreset(next));
+                        return next;
+                      });
+                    }}
                   >
                     {columnItem.label}
                   </button>
                 ))}
+                <span className="modern-chip modern-chip--info">Saved per user</span>
               </div>
               {data.state.errorMessage ? (
                 <span className="modern-chip modern-chip--critical">{data.state.errorMessage}</span>
@@ -490,7 +632,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
           <section className="avel-list-panel">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Active Job Orders</h2>
-              <p className="avel-list-panel__hint">Phase 1 native list view. Open a job order to continue in compatibility mode where needed.</p>
+              <p className="avel-list-panel__hint">Phase 4 native list view with per-user column presets.</p>
             </div>
 
             <DataTable
