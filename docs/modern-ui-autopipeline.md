@@ -94,6 +94,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - `dashboard.my` now uses `pipeline.statusDetails.v1` via `fetchPipelineStatusDetailsModernData`
     - added inline history-date edit/save flow using `updatePipelineStatusHistoryDate`
     - kept an explicit in-modal legacy full-details fallback action for parity.
+66. Migrated `candidates.edit` attachment add flow to native async upload:
+    - replaced default legacy attachment iframe path with in-page upload controls (`file` + `resume` toggle)
+    - wired submit to `uploadCandidateAttachment` using existing `candidates.createAttachment` modern-json endpoint
+    - kept legacy uploader as an explicit fallback button in the same panel.
 
 ## Next Queue
 
