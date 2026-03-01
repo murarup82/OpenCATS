@@ -100,6 +100,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [loading, setLoading] = useState(true);
   const [serverQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
+  const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -131,6 +132,10 @@ export function CandidatesEditPage({ bootstrap }: Props) {
       isMounted = false;
     };
   }, [bootstrap, serverQueryString, reloadToken]);
+
+  useEffect(() => {
+    setValidationError('');
+  }, [formState?.firstName, formState?.lastName, formState?.gdprSigned, formState?.gdprExpirationDate]);
 
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
@@ -307,14 +312,15 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               method="post"
               action={submitURL}
               onSubmit={(event) => {
+                setValidationError('');
                 if (formState.firstName.trim() === '' || formState.lastName.trim() === '') {
                   event.preventDefault();
-                  window.alert('First Name and Last Name are required.');
+                  setValidationError('First Name and Last Name are required.');
                   return;
                 }
                 if (formState.gdprSigned === '1' && formState.gdprExpirationDate.trim() === '') {
                   event.preventDefault();
-                  window.alert('GDPR Expiration Date is required when GDPR Signed is Yes.');
+                  setValidationError('GDPR Expiration Date is required when GDPR Signed is Yes.');
                 }
               }}
             >
@@ -323,6 +329,9 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
 
               <div className="avel-candidate-edit-grid">
+                {validationError !== '' ? (
+                  <div className="modern-state modern-state--error avel-candidate-edit-field--full">{validationError}</div>
+                ) : null}
                 <label className="modern-command-field">
                   <span className="modern-command-label">First Name *</span>
                   <input

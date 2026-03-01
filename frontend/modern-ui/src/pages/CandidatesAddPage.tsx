@@ -86,6 +86,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [hardMatches, setHardMatches] = useState<CandidateDuplicateMatch[]>([]);
   const [softMatches, setSoftMatches] = useState<CandidateDuplicateMatch[]>([]);
   const [softOverrideAccepted, setSoftOverrideAccepted] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -223,6 +224,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     setHardMatches([]);
     setSoftMatches([]);
     setDuplicateError('');
+    setValidationError('');
   }, [formState?.firstName, formState?.lastName, formState?.email1, formState?.phoneCell, formState?.city, formState?.country]);
 
   if (loading && !data) {
@@ -276,14 +278,15 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               method="post"
               action={submitURL}
               onSubmit={async (event) => {
+                setValidationError('');
                 if (formState.firstName.trim() === '' || formState.lastName.trim() === '') {
                   event.preventDefault();
-                  window.alert('First Name and Last Name are required.');
+                  setValidationError('First Name and Last Name are required.');
                   return;
                 }
                 if (formState.gdprSigned === '1' && formState.gdprExpirationDate.trim() === '') {
                   event.preventDefault();
-                  window.alert('GDPR Expiration Date is required when GDPR Signed is Yes.');
+                  setValidationError('GDPR Expiration Date is required when GDPR Signed is Yes.');
                   return;
                 }
 
@@ -629,6 +632,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               ) : null}
 
               {duplicateChecking ? <div className="modern-state">Checking for potential duplicates...</div> : null}
+              {validationError !== '' ? <div className="modern-state modern-state--error">{validationError}</div> : null}
               {duplicateError !== '' ? <div className="modern-state modern-state--error">{duplicateError}</div> : null}
 
               {duplicateMode !== 'none' ? (
