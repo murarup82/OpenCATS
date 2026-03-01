@@ -1103,9 +1103,20 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 <div className="modern-table-actions">
                   {data.messages.enabled ? (
                     <>
-                      <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL))}>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--secondary"
+                        onClick={() =>
+                          setPipelineModal({
+                            url: ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL)),
+                            title: 'Team Inbox',
+                            openInPopup: { width: 1120, height: 760, refreshOnClose: false },
+                            showRefreshClose: false
+                          })
+                        }
+                      >
                         Open Inbox
-                      </a>
+                      </button>
                       <button
                         type="button"
                         className="modern-btn modern-btn--mini modern-btn--secondary"

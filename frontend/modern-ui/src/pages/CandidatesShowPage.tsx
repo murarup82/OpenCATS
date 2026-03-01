@@ -1038,15 +1038,26 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           <section className="avel-list-panel">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Team Inbox</h2>
-              <div className="modern-table-actions">
-                {data.messages.enabled ? (
-                  <>
-                    <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL))}>
-                      Open Inbox
-                    </a>
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                <div className="modern-table-actions">
+                  {data.messages.enabled ? (
+                    <>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--secondary"
+                        onClick={() =>
+                          setPipelineModal({
+                            url: ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL)),
+                            title: 'Team Inbox',
+                            openInPopup: { width: 1120, height: 760, refreshOnClose: false },
+                            showRefreshClose: false
+                          })
+                        }
+                      >
+                        Open Inbox
+                      </button>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--secondary"
                       onClick={() => setMessagesOpen((current) => !current)}
                     >
                       {messagesOpen ? 'Hide' : 'Show'}
