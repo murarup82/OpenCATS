@@ -730,9 +730,20 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 History
               </button>
             ) : null}
-            <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.hiringPlanURL)}>
+            <button
+              type="button"
+              className="modern-btn modern-btn--secondary"
+              onClick={() =>
+                setPipelineModal({
+                  url: decodeLegacyURL(data.actions.hiringPlanURL),
+                  title: 'Hiring Plan',
+                  openInPopup: { width: 1120, height: 760, refreshOnClose: true },
+                  showRefreshClose: true
+                })
+              }
+            >
               Hiring Plan
-            </a>
+            </button>
             {permissions.canAdministrativeHideShow ? (
               <button
                 type="button"
