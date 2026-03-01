@@ -628,13 +628,35 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 Add Candidate
               </button>
             ) : null}
-            <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.reportURL)}>
+            <button
+              type="button"
+              className="modern-btn modern-btn--secondary"
+              onClick={() =>
+                setPipelineModal({
+                  url: decodeLegacyURL(data.actions.reportURL),
+                  title: 'Job Order Report',
+                  openInPopup: { width: 1100, height: 760, refreshOnClose: false },
+                  showRefreshClose: false
+                })
+              }
+            >
               Report
-            </a>
+            </button>
             {permissions.canViewHistory ? (
-              <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.historyURL)}>
+              <button
+                type="button"
+                className="modern-btn modern-btn--secondary"
+                onClick={() =>
+                  setPipelineModal({
+                    url: decodeLegacyURL(data.actions.historyURL),
+                    title: 'Job Order History',
+                    openInPopup: { width: 980, height: 720, refreshOnClose: false },
+                    showRefreshClose: false
+                  })
+                }
+              >
                 History
-              </a>
+              </button>
             ) : null}
             <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.hiringPlanURL)}>
               Hiring Plan

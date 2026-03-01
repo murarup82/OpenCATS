@@ -1159,6 +1159,7 @@ class CandidatesUI extends UserInterface
                     'canManageLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT),
                     'canViewLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_READ),
                     'canPostComment' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
+                    'canViewHistory' => ($this->getUserAccessLevel('candidates.show') >= ACCESS_LEVEL_DEMO),
                     'canSendGDPR' => ((bool) $gdprSendEnabled && !(bool) $gdprSendDisabled),
                     'candidateMessagingEnabled' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
                     'canDeleteMessageThread' => $canDeleteMessageThread

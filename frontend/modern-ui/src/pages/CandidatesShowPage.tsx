@@ -661,6 +661,22 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 Add To Job Order
               </button>
             ) : null}
+            {permissions.canViewHistory ? (
+              <button
+                type="button"
+                className="modern-btn modern-btn--secondary"
+                onClick={() =>
+                  setPipelineModal({
+                    url: decodeLegacyURL(data.actions.viewHistoryURL),
+                    title: 'Candidate History',
+                    openInPopup: { width: 980, height: 720, refreshOnClose: false },
+                    showRefreshClose: false
+                  })
+                }
+              >
+                History
+              </button>
+            ) : null}
             <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.legacyURL)}>
               Open Legacy UI
             </a>

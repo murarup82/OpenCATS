@@ -488,6 +488,7 @@ export type CandidatesShowModernDataResponse = {
       canManageLists: boolean;
       canViewLists: boolean;
       canPostComment: boolean;
+      canViewHistory: boolean;
       canSendGDPR: boolean;
       candidateMessagingEnabled: boolean;
       canDeleteMessageThread: boolean;
