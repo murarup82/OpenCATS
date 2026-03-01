@@ -25,10 +25,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 19. Expanded embedded modal coverage for pipeline actions (`dashboard.my` details, `candidates.show` pipeline actions, `joborders.show` pipeline actions).
 20. Candidate action parity: modern Add-To-List overlay + embedded Add-To-Job modal flows on list/show pages.
 21. Native dashboard drag/drop status mutation: no-popup transition endpoint with CSRF, owner-scope guardrails, forward-only enforcement, auto-fill for skipped stages, and hired openings checks.
+22. Dashboard assign workspace (`considerCandidateSearch`) moved from popup to embedded modal flow in modern UI shell.
 
 ## Next Queue
 
-1. Move legacy quick actions (`considerCandidateSearch`, pipeline removal/details) to native in-app drawers/modals with zero popup dependency.
+1. Replace remaining popup fallback affordances with fully native modal/drawer experiences for pipeline-related quick actions.
 
 ## Rules
 

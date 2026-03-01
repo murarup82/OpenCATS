@@ -91,6 +91,10 @@ export function DashboardMyPage({ bootstrap }: Props) {
     candidateName: string;
     currentStatusLabel: string;
   } | null>(null);
+  const [assignModal, setAssignModal] = useState<{
+    url: string;
+    jobOrderName: string;
+  } | null>(null);
   const [detailsModal, setDetailsModal] = useState<{
     url: string;
     candidateName: string;
@@ -249,6 +253,16 @@ export function DashboardMyPage({ bootstrap }: Props) {
     [refreshDashboard]
   );
 
+  const closeAssignModal = useCallback(
+    (refreshOnClose: boolean) => {
+      setAssignModal(null);
+      if (refreshOnClose) {
+        refreshDashboard();
+      }
+    },
+    [refreshDashboard]
+  );
+
   const openPipelineDetails = useCallback(
     (row: DashboardRow) => {
       const pipelineID = Number(row.candidateJobOrderID || 0);
@@ -273,8 +287,13 @@ export function DashboardMyPage({ bootstrap }: Props) {
     }
 
     const url = `${bootstrap.indexName}?m=joborders&a=considerCandidateSearch&jobOrderID=${encodeURIComponent(String(jobOrderID))}`;
-    openLegacyPopup(url, 1120, 760, true);
-  }, [bootstrap.indexName, data?.filters.jobOrderID, openLegacyPopup]);
+    const jobOrderTitle =
+      data?.options.jobOrders.find((jobOrder) => Number(jobOrder.jobOrderID) === jobOrderID)?.title || '';
+    setAssignModal({
+      url,
+      jobOrderName: toDisplayText(jobOrderTitle, `Job Order #${jobOrderID}`)
+    });
+  }, [bootstrap.indexName, data?.filters.jobOrderID, data?.options.jobOrders]);
 
   if (loading && !data) {
     return <DashboardKanbanSkeleton />;
@@ -643,6 +662,19 @@ export function DashboardMyPage({ bootstrap }: Props) {
           onOpenPopup={
             statusModal
               ? () => openLegacyPopup(statusModal.url, 700, 620, true)
+              : undefined
+          }
+        />
+
+        <LegacyFrameModal
+          isOpen={!!assignModal}
+          title="Assign Candidate to Job Order"
+          subtitle={assignModal ? assignModal.jobOrderName : undefined}
+          url={assignModal?.url || ''}
+          onClose={closeAssignModal}
+          onOpenPopup={
+            assignModal
+              ? () => openLegacyPopup(assignModal.url, 1120, 760, true)
               : undefined
           }
         />
