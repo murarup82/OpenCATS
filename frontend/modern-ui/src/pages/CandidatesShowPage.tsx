@@ -102,6 +102,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     fallbackURL: string;
     fallbackTitle: string;
   } | null>(null);
+  const [quickStatusPending, setQuickStatusPending] = useState<boolean>(false);
+  const [quickStatusError, setQuickStatusError] = useState<string>('');
   const [removePipelineModal, setRemovePipelineModal] = useState<{
     title: string;
     description: string;
@@ -671,18 +673,20 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         fallbackURL,
         fallbackTitle
       });
+      setQuickStatusError('');
     },
     [data, getForwardStatusOptions]
   );
 
   const submitQuickStatus = useCallback(
     async (targetStatusID: number) => {
-      if (!data || !quickStatusModal) {
+      if (!data || !quickStatusModal || quickStatusPending) {
         return;
       }
 
       const token = data.actions.setPipelineStatusToken || '';
       if (token === '') {
+        setQuickStatusError('');
         setQuickStatusModal(null);
         setPipelineModal({
           url: quickStatusModal.fallbackURL,
@@ -693,6 +697,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         return;
       }
 
+      setQuickStatusError('');
+      setQuickStatusPending(true);
       try {
         const result = await setDashboardPipelineStatus(bootstrap, {
           url: data.actions.setPipelineStatusURL,
@@ -705,6 +711,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
         if (!result.success) {
           if (result.code === 'requiresModal') {
+            setQuickStatusPending(false);
+            setQuickStatusError('');
             setQuickStatusModal(null);
             setPipelineModal({
               url: quickStatusModal.fallbackURL,
@@ -715,17 +723,21 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             return;
           }
 
-          window.alert(result.message || 'Unable to update pipeline status.');
+          setQuickStatusError(result.message || 'Unable to update pipeline status.');
           return;
         }
 
+        setQuickStatusPending(false);
+        setQuickStatusError('');
         setQuickStatusModal(null);
         refreshPageData();
       } catch (err: unknown) {
-        window.alert(err instanceof Error ? err.message : 'Unable to update pipeline status.');
+        setQuickStatusError(err instanceof Error ? err.message : 'Unable to update pipeline status.');
+      } finally {
+        setQuickStatusPending(false);
       }
     },
-    [bootstrap, data, quickStatusModal, refreshPageData]
+    [bootstrap, data, quickStatusModal, quickStatusPending, refreshPageData]
   );
 
   const openAddToListOverlay = useCallback(
@@ -1580,11 +1592,23 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           title={quickStatusModal?.title || 'Quick Status Change'}
           currentStatusLabel={quickStatusModal?.currentStatusLabel || '--'}
           statusOptions={quickStatusModal?.statusOptions || []}
-          onCancel={() => setQuickStatusModal(null)}
+          submitPending={quickStatusPending}
+          submitError={quickStatusError}
+          onCancel={() => {
+            if (quickStatusPending) {
+              return;
+            }
+            setQuickStatusError('');
+            setQuickStatusModal(null);
+          }}
           onSubmit={submitQuickStatus}
           onOpenFullForm={
             quickStatusModal
               ? () => {
+                  if (quickStatusPending) {
+                    return;
+                  }
+                  setQuickStatusError('');
                   setQuickStatusModal(null);
                   setPipelineModal({
                     url: quickStatusModal.fallbackURL,

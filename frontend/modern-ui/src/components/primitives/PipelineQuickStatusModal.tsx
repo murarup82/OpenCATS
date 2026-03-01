@@ -10,6 +10,8 @@ type Props = {
   title: string;
   currentStatusLabel: string;
   statusOptions: StatusOption[];
+  submitPending?: boolean;
+  submitError?: string;
   onCancel: () => void;
   onSubmit: (statusID: number) => void;
   onOpenFullForm?: () => void;
@@ -20,6 +22,8 @@ export function PipelineQuickStatusModal({
   title,
   currentStatusLabel,
   statusOptions,
+  submitPending = false,
+  submitError = '',
   onCancel,
   onSubmit,
   onOpenFullForm
@@ -55,6 +59,7 @@ export function PipelineQuickStatusModal({
             <select
               className="avel-form-control"
               value={selectedStatusID > 0 ? String(selectedStatusID) : ''}
+              disabled={submitPending}
               onChange={(event) => setSelectedStatusID(Number(event.target.value || 0))}
             >
               {statusOptions.map((option) => (
@@ -64,27 +69,27 @@ export function PipelineQuickStatusModal({
               ))}
             </select>
           </label>
+          {submitError ? <div className="modern-state modern-state--error">{submitError}</div> : null}
         </div>
         <div className="modern-inline-modal__actions">
           {onOpenFullForm ? (
-            <button type="button" className="modern-btn modern-btn--secondary" onClick={onOpenFullForm}>
+            <button type="button" className="modern-btn modern-btn--secondary" onClick={onOpenFullForm} disabled={submitPending}>
               Open Full Form
             </button>
           ) : null}
-          <button type="button" className="modern-btn modern-btn--secondary" onClick={onCancel}>
+          <button type="button" className="modern-btn modern-btn--secondary" onClick={onCancel} disabled={submitPending}>
             Cancel
           </button>
           <button
             type="button"
             className="modern-btn modern-btn--emphasis"
-            disabled={selectedStatusID <= 0 || statusOptions.length === 0}
+            disabled={submitPending || selectedStatusID <= 0 || statusOptions.length === 0}
             onClick={() => onSubmit(selectedStatusID)}
           >
-            Apply Status
+            {submitPending ? 'Applying...' : 'Apply Status'}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
