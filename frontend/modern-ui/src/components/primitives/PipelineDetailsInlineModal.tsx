@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { PipelineStatusDetailsModernDataResponse } from '../../types';
+import { InlineModal } from '../../ui-core';
 
 type Props = {
   isOpen: boolean;
@@ -77,8 +78,12 @@ export function PipelineDetailsInlineModal({
   }
 
   return (
-    <div className="modern-inline-modal" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="modern-inline-modal__dialog modern-inline-modal__dialog--status">
+    <InlineModal
+      isOpen={isOpen}
+      ariaLabel={title}
+      dialogClassName="modern-inline-modal__dialog--status"
+      onClose={onClose}
+    >
         <div className="modern-inline-modal__header">
           <h3>{title}</h3>
           <p>Pipeline timeline and transition history</p>
@@ -270,7 +275,6 @@ export function PipelineDetailsInlineModal({
             </div>
           ) : null}
         </div>
-      </div>
-    </div>
+    </InlineModal>
   );
 }

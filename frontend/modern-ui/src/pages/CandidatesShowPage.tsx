@@ -32,6 +32,7 @@ import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal'
 import { MutationToast } from '../components/primitives/MutationToast';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
+import { InlineModal } from '../ui-core';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -1701,8 +1702,20 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         </div>
 
         {tagEditorOpen ? (
-          <div className="modern-inline-modal" role="dialog" aria-modal="true" aria-label="Manage Tags">
-            <div className="modern-inline-modal__dialog modern-inline-modal__dialog--compact">
+          <InlineModal
+            isOpen={tagEditorOpen}
+            ariaLabel="Manage Tags"
+            dialogClassName="modern-inline-modal__dialog--compact"
+            closeOnBackdrop={!tagSavePending}
+            closeOnEscape={!tagSavePending}
+            onClose={() => {
+              if (tagSavePending) {
+                return;
+              }
+              setTagEditorOpen(false);
+              setTagSaveError('');
+            }}
+          >
               <div className="modern-inline-modal__header">
                 <h3>Manage Tags</h3>
                 <p>Select tags assigned to this candidate.</p>
@@ -1749,8 +1762,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   Cancel
                 </button>
               </div>
-            </div>
-          </div>
+          </InlineModal>
         ) : null}
 
         <PipelineQuickStatusModal

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MutationErrorSurface } from './MutationErrorSurface';
+import { InlineModal } from '../../ui-core';
 
 type RejectionReason = {
   reasonID: number;
@@ -74,8 +75,14 @@ export function PipelineRejectionModal({
     (!isOtherSelected || otherReason.trim() !== '');
 
   return (
-    <div className="modern-inline-modal" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="modern-inline-modal__dialog modern-inline-modal__dialog--status">
+    <InlineModal
+      isOpen={isOpen}
+      ariaLabel={title}
+      dialogClassName="modern-inline-modal__dialog--status"
+      closeOnBackdrop={!submitPending}
+      closeOnEscape={!submitPending}
+      onClose={onCancel}
+    >
         <div className="modern-inline-modal__header">
           <h3>{title}</h3>
           <p>Current status: {currentStatusLabel}</p>
@@ -158,7 +165,6 @@ export function PipelineRejectionModal({
             {submitPending ? 'Applying...' : 'Apply Rejected Status'}
           </button>
         </div>
-      </div>
-    </div>
+    </InlineModal>
   );
 }

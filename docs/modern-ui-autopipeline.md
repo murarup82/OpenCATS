@@ -214,19 +214,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `assertModernContract` in `frontend/modern-ui/src/lib/contractGuards.ts`
     - replaced repeated contract-version/contract-key checks in `frontend/modern-ui/src/lib/api.ts` with a centralized guard call
     - improved diagnostics for contract drift with expected vs received metadata in one place.
+101. Added shared inline-modal accessibility controls and select keyboard/ARIA polish:
+    - introduced `InlineModal` in `frontend/modern-ui/src/ui-core/components/InlineModal.tsx` with focus trap, Escape handling, backdrop close control, and focus restoration
+    - migrated inline modal surfaces (`ConfirmActionModal`, `Pipeline*` modals, `LegacyFrameModal`, and candidate tag editor) to the shared accessibility wrapper
+    - improved `SelectMenu` with explicit label wiring (`aria-labelledby`), active-option semantics, and predictable focus restoration on close.
 
 ## Next Queue (30-Slice Execution)
 
-1. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
-2. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
-3. Add centralized URL-state sync helper for filters/pagination shared by list pages.
-4. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
-5. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-6. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-7. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
-8. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-9. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-10. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
+1. Complete ARIA/labeling pass for remaining custom controls beyond `SelectMenu` (toggles, chips, icon-only actions).
+2. Add centralized URL-state sync helper for filters/pagination shared by list pages.
+3. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
+4. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
+5. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+6. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
+7. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+8. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+9. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
+10. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
 
 ## Rules
 

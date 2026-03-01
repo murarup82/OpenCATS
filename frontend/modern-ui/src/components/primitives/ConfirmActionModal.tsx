@@ -1,4 +1,5 @@
 import { MutationErrorSurface } from './MutationErrorSurface';
+import { InlineModal } from '../../ui-core';
 
 type Props = {
   isOpen: boolean;
@@ -26,8 +27,14 @@ export function ConfirmActionModal({
   }
 
   return (
-    <div className="modern-inline-modal" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="modern-inline-modal__dialog modern-inline-modal__dialog--status modern-inline-modal__dialog--compact">
+    <InlineModal
+      isOpen={isOpen}
+      ariaLabel={title}
+      dialogClassName="modern-inline-modal__dialog--status modern-inline-modal__dialog--compact"
+      closeOnBackdrop={!pending}
+      closeOnEscape={!pending}
+      onClose={onCancel}
+    >
         <div className="modern-inline-modal__header">
           <h3>{title}</h3>
           <p>{message}</p>
@@ -45,7 +52,6 @@ export function ConfirmActionModal({
             {pending ? 'Processing...' : confirmLabel}
           </button>
         </div>
-      </div>
-    </div>
+    </InlineModal>
   );
 }

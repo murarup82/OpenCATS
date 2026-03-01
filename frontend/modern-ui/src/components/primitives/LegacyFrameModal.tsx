@@ -1,3 +1,5 @@
+import { InlineModal } from '../../ui-core';
+
 type Props = {
   isOpen: boolean;
   title: string;
@@ -20,8 +22,12 @@ export function LegacyFrameModal({
   }
 
   return (
-    <div className="modern-inline-modal" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="modern-inline-modal__dialog modern-inline-modal__dialog--status">
+    <InlineModal
+      isOpen={isOpen}
+      ariaLabel={title}
+      dialogClassName="modern-inline-modal__dialog--status"
+      onClose={() => onClose(false)}
+    >
         <div className="modern-inline-modal__header">
           <h3>{title}</h3>
           {subtitle ? <p>{subtitle}</p> : null}
@@ -39,7 +45,6 @@ export function LegacyFrameModal({
         <div className="modern-inline-modal__body">
           <iframe title={title} src={url} className="modern-inline-modal__frame" />
         </div>
-      </div>
-    </div>
+    </InlineModal>
   );
 }

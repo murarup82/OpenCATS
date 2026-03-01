@@ -53,7 +53,9 @@ export function SelectMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const comboRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const labelId = useId();
   const listboxId = useId();
 
   const selectedIndex = useMemo(() => {
@@ -106,7 +108,7 @@ export function SelectMenu({
       return;
     }
     onChange(option.value);
-    setIsOpen(false);
+    closeMenu(true);
   };
 
   const openMenu = () => {
@@ -116,8 +118,13 @@ export function SelectMenu({
     setIsOpen(true);
   };
 
-  const closeMenu = () => {
+  const closeMenu = (restoreFocus = false) => {
     setIsOpen(false);
+    if (restoreFocus) {
+      window.requestAnimationFrame(() => {
+        triggerRef.current?.focus();
+      });
+    }
   };
 
   const handleTriggerKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
@@ -192,20 +199,29 @@ export function SelectMenu({
 
     if (event.key === 'Escape') {
       event.preventDefault();
+      closeMenu(true);
+      return;
+    }
+
+    if (event.key === 'Tab') {
       closeMenu();
     }
   };
 
   return (
     <label className={className}>
-      <span className={labelClassName}>{label}</span>
+      <span className={labelClassName} id={labelId}>
+        {label}
+      </span>
       <div className={`${comboClassName}${isOpen ? ' is-open' : ''}`} ref={comboRef}>
         <button
           type="button"
           className={triggerClassName}
+          ref={triggerRef}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-controls={listboxId}
+          aria-label={label}
           onClick={() => {
             if (isOpen) {
               closeMenu();
@@ -225,6 +241,8 @@ export function SelectMenu({
             tabIndex={-1}
             className={menuClassName}
             ref={menuRef}
+            aria-labelledby={labelId}
+            aria-activedescendant={options[activeIndex] ? `${listboxId}-option-${activeIndex}` : undefined}
             onKeyDown={handleMenuKeyDown}
           >
             {options.map((option, index) => {
@@ -234,6 +252,7 @@ export function SelectMenu({
               return (
                 <button
                   type="button"
+                  id={`${listboxId}-option-${index}`}
                   key={`${option.value}-${option.label}`}
                   role="option"
                   aria-selected={isSelected}
