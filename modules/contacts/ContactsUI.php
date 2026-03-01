@@ -201,6 +201,32 @@ class ContactsUI extends UserInterface
     {
         if (!eval(Hooks::get('CONTACTS_LIST_BY_VIEW_TOP'))) return;
 
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'contacts-list')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernContactsListJSON('contacts-list', $errMessage);
+            return;
+        }
+
         $dataGridProperties = DataGrid::getRecentParamaters("contacts:ContactsListByViewDataGrid");
 
         /* If this is the first time we visited the datagrid this session, the recent paramaters will
@@ -232,9 +258,28 @@ class ContactsUI extends UserInterface
      */
     private function show()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Bail out if we don't have a valid contact ID. */
         if (!$this->isRequiredIDValid('contactID', $_GET))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Invalid contact ID.'
+                ));
+                return;
+            }
+
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid contact ID.');
         }
 
@@ -246,8 +291,25 @@ class ContactsUI extends UserInterface
         /* Bail out if we got an empty result set. */
         if (empty($data))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'The specified contact ID could not be found.'
+                ));
+                return;
+            }
+
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'The specified contact ID could not be found.');
         }
+
+        $notesText = (isset($data['notes']) ? (string) $data['notes'] : '');
 
         /* We want to handle formatting the city and state here instead
          * of in the template.
@@ -399,6 +461,40 @@ class ContactsUI extends UserInterface
             $privledgedUser = true;
         }
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'contacts-show')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernContactShowJSON(
+                'contacts-show',
+                $contactID,
+                $data,
+                $notesText,
+                $isShortNotes,
+                $jobOrdersRS,
+                $extraFieldRS,
+                $calendarRS,
+                $activityRS,
+                $lists,
+                $privledgedUser
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('data', $data);
         $this->_template->assign('isShortNotes', $isShortNotes);
@@ -414,6 +510,523 @@ class ContactsUI extends UserInterface
         if (!eval(Hooks::get('CONTACTS_SHOW'))) return;
 
         $this->_template->display('./modules/contacts/Show.tpl');
+    }
+
+    private function renderModernContactsListJSON($modernPage, $errMessage = '')
+    {
+        $db = DatabaseConnection::getInstance();
+        $baseURL = CATSUtility::getIndexName();
+        $siteID = (int) $this->_siteID;
+
+        $allowedRowsPerPage = array(15, 30, 50, 100);
+        $entriesPerPage = (int) $this->getTrimmedInput('maxResults', $_GET);
+        if (!in_array($entriesPerPage, $allowedRowsPerPage, true))
+        {
+            $entriesPerPage = 15;
+        }
+
+        $page = (int) $this->getTrimmedInput('page', $_GET);
+        if ($page <= 0)
+        {
+            $page = 1;
+        }
+        $offset = ($page - 1) * $entriesPerPage;
+
+        $quickSearch = trim($this->getTrimmedInput('wildCardString', $_GET));
+        $onlyMyContacts = $this->getRequestBooleanFlag('onlyMyContacts', false);
+        $onlyHotContacts = $this->getRequestBooleanFlag('onlyHotContacts', false);
+
+        $sortMap = array(
+            'name' => 'nameSort',
+            'company' => 'company.name',
+            'title' => 'contact.title',
+            'phone' => 'contact.phone_cell',
+            'email' => 'contact.email1',
+            'owner' => 'ownerSort',
+            'city' => 'contact.city',
+            'state' => 'contact.state',
+            'dateCreated' => 'contact.date_created',
+            'dateModified' => 'contact.date_modified'
+        );
+        $sortBy = $this->getTrimmedInput('sortBy', $_GET);
+        if (!isset($sortMap[$sortBy]))
+        {
+            $sortBy = 'dateModified';
+        }
+        $sortDirection = strtoupper(trim($this->getTrimmedInput('sortDirection', $_GET)));
+        if ($sortDirection !== 'ASC' && $sortDirection !== 'DESC')
+        {
+            $sortDirection = 'DESC';
+        }
+
+        $whereConditions = array(
+            'contact.site_id = ' . $db->makeQueryInteger($siteID),
+            '(company.site_id = ' . $db->makeQueryInteger($siteID) . ' OR company.company_id IS NULL)'
+        );
+
+        if ($onlyMyContacts)
+        {
+            $whereConditions[] = 'contact.owner = ' . $db->makeQueryInteger($this->_userID);
+        }
+        if ($onlyHotContacts)
+        {
+            $whereConditions[] = 'contact.is_hot = 1';
+        }
+        if ($quickSearch !== '')
+        {
+            $quickSearchEscaped = str_replace(
+                array('\\', '%', '_'),
+                array('\\\\', '\\%', '\\_'),
+                $quickSearch
+            );
+            $quickSearchLike = '%' . $quickSearchEscaped . '%';
+            $whereConditions[] = sprintf(
+                "(contact.first_name LIKE %s ESCAPE '\\\\'
+                OR contact.last_name LIKE %s ESCAPE '\\\\'
+                OR contact.title LIKE %s ESCAPE '\\\\'
+                OR company.name LIKE %s ESCAPE '\\\\'
+                OR contact.email1 LIKE %s ESCAPE '\\\\'
+                OR contact.phone_cell LIKE %s ESCAPE '\\\\'
+                OR contact.city LIKE %s ESCAPE '\\\\'
+                OR contact.state LIKE %s ESCAPE '\\\\')",
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike),
+                $db->makeQueryString($quickSearchLike)
+            );
+        }
+
+        $whereSQL = implode(' AND ', $whereConditions);
+        $orderSQL = sprintf(
+            '%s %s, contact.last_name ASC, contact.first_name ASC',
+            $sortMap[$sortBy],
+            $sortDirection
+        );
+
+        $sql = sprintf(
+            "SELECT SQL_CALC_FOUND_ROWS
+                contact.contact_id AS contactID,
+                contact.company_id AS companyID,
+                contact.first_name AS firstName,
+                contact.last_name AS lastName,
+                contact.title AS title,
+                contact.email1 AS email1,
+                contact.phone_cell AS phoneCell,
+                contact.city AS city,
+                contact.state AS state,
+                contact.is_hot AS isHot,
+                contact.left_company AS leftCompany,
+                DATE_FORMAT(contact.date_created, '%%m-%%d-%%y') AS dateCreated,
+                DATE_FORMAT(contact.date_modified, '%%m-%%d-%%y') AS dateModified,
+                company.name AS companyName,
+                CONCAT(COALESCE(owner_user.first_name, ''), ' ', COALESCE(owner_user.last_name, '')) AS ownerFullName,
+                CONCAT(COALESCE(owner_user.last_name, ''), COALESCE(owner_user.first_name, '')) AS ownerSort,
+                CONCAT(COALESCE(contact.last_name, ''), COALESCE(contact.first_name, '')) AS nameSort,
+                IF(
+                    EXISTS(
+                        SELECT 1
+                        FROM attachment
+                        WHERE
+                            attachment.data_item_id = contact.contact_id
+                        AND
+                            attachment.site_id = contact.site_id
+                        AND
+                            attachment.data_item_type = %s
+                        LIMIT 1
+                    ),
+                    1,
+                    0
+                ) AS attachmentPresent
+            FROM
+                contact
+            LEFT JOIN company
+                ON contact.company_id = company.company_id
+            LEFT JOIN user AS owner_user
+                ON contact.owner = owner_user.user_id
+            WHERE
+                %s
+            ORDER BY
+                %s
+            LIMIT
+                %s, %s",
+            $db->makeQueryInteger(DATA_ITEM_CONTACT),
+            $whereSQL,
+            $orderSQL,
+            $db->makeQueryInteger($offset),
+            $db->makeQueryInteger($entriesPerPage)
+        );
+        $rows = $db->getAllAssoc($sql);
+        $totalRows = (int) $db->getColumn('SELECT FOUND_ROWS()', 0, 0);
+
+        $totalPages = 1;
+        if ($entriesPerPage > 0)
+        {
+            $totalPages = (int) ceil($totalRows / $entriesPerPage);
+            if ($totalPages <= 0)
+            {
+                $totalPages = 1;
+            }
+        }
+
+        $contacts = new Contacts($this->_siteID);
+        $totalContacts = (int) $contacts->getCount();
+
+        $responseRows = array();
+        foreach ($rows as $row)
+        {
+            $contactID = (int) $row['contactID'];
+            $firstName = (isset($row['firstName']) ? (string) $row['firstName'] : '');
+            $lastName = (isset($row['lastName']) ? (string) $row['lastName'] : '');
+            $fullName = trim($firstName . ' ' . $lastName);
+            if ($fullName === '')
+            {
+                $fullName = 'Contact #' . $contactID;
+            }
+
+            $responseRows[] = array(
+                'contactID' => $contactID,
+                'companyID' => (int) (isset($row['companyID']) ? $row['companyID'] : 0),
+                'firstName' => $firstName,
+                'lastName' => $lastName,
+                'fullName' => $fullName,
+                'companyName' => (isset($row['companyName']) ? (string) $row['companyName'] : ''),
+                'title' => (isset($row['title']) ? (string) $row['title'] : ''),
+                'email' => (isset($row['email1']) ? (string) $row['email1'] : ''),
+                'phone' => (isset($row['phoneCell']) ? (string) $row['phoneCell'] : ''),
+                'city' => (isset($row['city']) ? (string) $row['city'] : ''),
+                'state' => (isset($row['state']) ? (string) $row['state'] : ''),
+                'ownerName' => trim((isset($row['ownerFullName']) ? (string) $row['ownerFullName'] : '')),
+                'dateCreated' => (isset($row['dateCreated']) ? (string) $row['dateCreated'] : ''),
+                'dateModified' => (isset($row['dateModified']) ? (string) $row['dateModified'] : ''),
+                'isHot' => ((int) (isset($row['isHot']) ? $row['isHot'] : 0) === 1),
+                'leftCompany' => ((int) (isset($row['leftCompany']) ? $row['leftCompany'] : 0) === 1),
+                'hasAttachment' => ((int) (isset($row['attachmentPresent']) ? $row['attachmentPresent'] : 0) === 1),
+                'showURL' => sprintf('%s?m=contacts&a=show&contactID=%d', $baseURL, $contactID),
+                'editURL' => sprintf('%s?m=contacts&a=edit&contactID=%d', $baseURL, $contactID),
+                'companyURL' => sprintf('%s?m=companies&a=show&companyID=%d', $baseURL, (int) (isset($row['companyID']) ? $row['companyID'] : 0)),
+                'addToListURL' => sprintf(
+                    '%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy',
+                    $baseURL,
+                    DATA_ITEM_CONTACT,
+                    $contactID
+                )
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'contacts.listByView.v1',
+                'modernPage' => $modernPage,
+                'page' => (int) $page,
+                'totalPages' => (int) $totalPages,
+                'totalRows' => (int) $totalRows,
+                'entriesPerPage' => (int) $entriesPerPage,
+                'totalContacts' => $totalContacts,
+                'sortBy' => $sortBy,
+                'sortDirection' => $sortDirection,
+                'permissions' => array(
+                    'canAddContact' => ($this->getUserAccessLevel('contacts.add') >= ACCESS_LEVEL_EDIT),
+                    'canEditContact' => ($this->getUserAccessLevel('contacts.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteContact' => ($this->getUserAccessLevel('contacts.delete') >= ACCESS_LEVEL_DELETE),
+                    'canAddToList' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT),
+                    'canShowColdCallList' => ($this->getUserAccessLevel('contacts.showColdCallList') >= ACCESS_LEVEL_READ)
+                )
+            ),
+            'filters' => array(
+                'quickSearch' => $quickSearch,
+                'onlyMyContacts' => ((bool) $onlyMyContacts),
+                'onlyHotContacts' => ((bool) $onlyHotContacts)
+            ),
+            'actions' => array(
+                'addContactURL' => sprintf('%s?m=contacts&a=add&ui=legacy', $baseURL),
+                'coldCallListURL' => sprintf('%s?m=contacts&a=showColdCallList&ui=legacy', $baseURL),
+                'legacyURL' => sprintf('%s?m=contacts&a=listByView&ui=legacy', $baseURL)
+            ),
+            'state' => array(
+                'errorMessage' => (string) $errMessage
+            ),
+            'rows' => $responseRows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
+    private function getRequestBooleanFlag($key, $defaultValue = false)
+    {
+        if (!isset($_GET[$key]))
+        {
+            return (bool) $defaultValue;
+        }
+
+        $rawValue = strtolower(trim((string) $_GET[$key]));
+        if ($rawValue === '' || $rawValue === '1' || $rawValue === 'true' || $rawValue === 'yes' || $rawValue === 'on')
+        {
+            return true;
+        }
+        if ($rawValue === '0' || $rawValue === 'false' || $rawValue === 'no' || $rawValue === 'off')
+        {
+            return false;
+        }
+
+        return (bool) $defaultValue;
+    }
+
+    private function renderModernContactShowJSON(
+        $modernPage,
+        $contactID,
+        $data,
+        $notesText,
+        $isShortNotes,
+        $jobOrdersRS,
+        $extraFieldRS,
+        $calendarRS,
+        $activityRS,
+        $lists,
+        $privledgedUser
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $contactFirstName = (isset($data['firstName']) ? (string) $data['firstName'] : '');
+        $contactLastName = (isset($data['lastName']) ? (string) $data['lastName'] : '');
+        $fullName = trim($contactFirstName . ' ' . $contactLastName);
+        if ($fullName === '')
+        {
+            $fullName = 'Contact #' . (int) $contactID;
+        }
+
+        if (!is_array($jobOrdersRS))
+        {
+            $jobOrdersRS = array();
+        }
+        if (!is_array($extraFieldRS))
+        {
+            $extraFieldRS = array();
+        }
+        if (!is_array($calendarRS))
+        {
+            $calendarRS = array();
+        }
+        if (!is_array($activityRS))
+        {
+            $activityRS = array();
+        }
+        if (!is_array($lists))
+        {
+            $lists = array();
+        }
+
+        $jobOrdersPayload = array();
+        foreach ($jobOrdersRS as $jobOrderRow)
+        {
+            $jobOrderID = (int) (isset($jobOrderRow['jobOrderID']) ? $jobOrderRow['jobOrderID'] : 0);
+            if ($jobOrderID <= 0)
+            {
+                continue;
+            }
+
+            $jobOrdersPayload[] = array(
+                'jobOrderID' => $jobOrderID,
+                'title' => (isset($jobOrderRow['title']) ? (string) $jobOrderRow['title'] : ''),
+                'type' => (isset($jobOrderRow['type']) ? (string) $jobOrderRow['type'] : ''),
+                'status' => (isset($jobOrderRow['status']) ? (string) $jobOrderRow['status'] : ''),
+                'dateCreated' => (isset($jobOrderRow['dateCreated']) ? (string) $jobOrderRow['dateCreated'] : ''),
+                'dateModified' => (isset($jobOrderRow['dateModified']) ? (string) $jobOrderRow['dateModified'] : ''),
+                'startDate' => (isset($jobOrderRow['startDate']) ? (string) $jobOrderRow['startDate'] : ''),
+                'daysOld' => (int) (isset($jobOrderRow['daysOld']) ? $jobOrderRow['daysOld'] : 0),
+                'submitted' => (int) (isset($jobOrderRow['submitted']) ? $jobOrderRow['submitted'] : 0),
+                'pipeline' => (int) (isset($jobOrderRow['pipeline']) ? $jobOrderRow['pipeline'] : 0),
+                'recruiterName' => (isset($jobOrderRow['recruiterAbbrName']) ? (string) $jobOrderRow['recruiterAbbrName'] : ''),
+                'ownerName' => (isset($jobOrderRow['ownerAbbrName']) ? (string) $jobOrderRow['ownerAbbrName'] : ''),
+                'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d', $baseURL, $jobOrderID),
+                'editURL' => sprintf('%s?m=joborders&a=edit&jobOrderID=%d', $baseURL, $jobOrderID)
+            );
+        }
+
+        $calendarPayload = array();
+        foreach ($calendarRS as $calendarRow)
+        {
+            $eventID = (int) (isset($calendarRow['eventID']) ? $calendarRow['eventID'] : 0);
+            $month = (int) (isset($calendarRow['month']) ? $calendarRow['month'] : 0);
+            $day = (int) (isset($calendarRow['day']) ? $calendarRow['day'] : 0);
+            $yearRaw = (isset($calendarRow['year']) ? (string) $calendarRow['year'] : '');
+            $yearFull = trim($yearRaw);
+            if ($yearFull !== '')
+            {
+                if (strlen($yearFull) === 2)
+                {
+                    $yearFull = '20' . $yearFull;
+                }
+                else if (strlen($yearFull) > 4)
+                {
+                    $yearFull = substr($yearFull, 0, 4);
+                }
+            }
+
+            $calendarPayload[] = array(
+                'eventID' => $eventID,
+                'title' => (isset($calendarRow['title']) ? (string) $calendarRow['title'] : ''),
+                'dateDisplay' => (isset($calendarRow['dateShow']) ? (string) $calendarRow['dateShow'] : ''),
+                'typeImage' => (isset($calendarRow['typeImage']) ? (string) $calendarRow['typeImage'] : ''),
+                'enteredByName' => (isset($calendarRow['enteredByAbbrName']) ? (string) $calendarRow['enteredByAbbrName'] : ''),
+                'day' => $day,
+                'month' => $month,
+                'year' => $yearFull,
+                'showURL' => sprintf(
+                    '%s?m=calendar&view=DAYVIEW&month=%d&year=%s&day=%d&showEvent=%d',
+                    $baseURL,
+                    $month,
+                    rawurlencode($yearFull),
+                    $day,
+                    $eventID
+                )
+            );
+        }
+
+        $activityPayload = array();
+        foreach ($activityRS as $activityRow)
+        {
+            $activityID = (int) (isset($activityRow['activityID']) ? $activityRow['activityID'] : 0);
+            if ($activityID <= 0)
+            {
+                continue;
+            }
+
+            $activityPayload[] = array(
+                'activityID' => $activityID,
+                'type' => (isset($activityRow['typeDescription']) ? (string) $activityRow['typeDescription'] : ''),
+                'dateCreated' => (isset($activityRow['dateCreated']) ? (string) $activityRow['dateCreated'] : ''),
+                'enteredByName' => (isset($activityRow['enteredByAbbrName']) ? (string) $activityRow['enteredByAbbrName'] : ''),
+                'regarding' => (isset($activityRow['regarding']) ? (string) $activityRow['regarding'] : ''),
+                'notes' => (isset($activityRow['notes']) ? (string) $activityRow['notes'] : ''),
+                'jobOrderID' => (int) (isset($activityRow['jobOrderID']) ? $activityRow['jobOrderID'] : 0)
+            );
+        }
+
+        $listsPayload = array();
+        foreach ($lists as $listRow)
+        {
+            $listID = (int) (isset($listRow['listID']) ? $listRow['listID'] : 0);
+            $listsPayload[] = array(
+                'listID' => $listID,
+                'name' => (isset($listRow['name']) ? (string) $listRow['name'] : ''),
+                'showURL' => sprintf('%s?m=lists&a=showList&savedListID=%d', $baseURL, $listID)
+            );
+        }
+
+        $extraFieldsPayload = array();
+        foreach ($extraFieldRS as $extraFieldRow)
+        {
+            $extraFieldsPayload[] = array(
+                'fieldName' => (isset($extraFieldRow['fieldName']) ? (string) $extraFieldRow['fieldName'] : ''),
+                'display' => (isset($extraFieldRow['display']) ? (string) $extraFieldRow['display'] : '')
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'contacts.show.v1',
+                'modernPage' => $modernPage,
+                'contactID' => (int) $contactID,
+                'permissions' => array(
+                    'canEditContact' => ($this->getUserAccessLevel('contacts.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteContact' => ($this->getUserAccessLevel('contacts.delete') >= ACCESS_LEVEL_DELETE),
+                    'canViewHistory' => ((bool) $privledgedUser),
+                    'canManageLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_EDIT),
+                    'canOpenLists' => ($this->getUserAccessLevel('lists.listByView') >= ACCESS_LEVEL_READ),
+                    'canLogActivityScheduleEvent' => ($this->getUserAccessLevel('contacts.logActivityScheduleEvent') >= ACCESS_LEVEL_EDIT),
+                    'canAddActivityScheduleEvent' => ($this->getUserAccessLevel('contacts.addActivityScheduleEvent') >= ACCESS_LEVEL_EDIT),
+                    'canEditActivity' => ($this->getUserAccessLevel('contacts.editActivity') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteActivity' => ($this->getUserAccessLevel('contacts.deleteActivity') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=contacts&a=show&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
+                'editURL' => sprintf('%s?m=contacts&a=edit&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
+                'deleteURL' => sprintf('%s?m=contacts&a=delete&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
+                'historyURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CONTACT, (int) $contactID),
+                'downloadVCardURL' => sprintf('%s?m=contacts&a=downloadVCard&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
+                'addActivityURL' => sprintf('%s?m=contacts&a=addActivityScheduleEvent&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
+                'scheduleEventURL' => sprintf('%s?m=contacts&a=addActivityScheduleEvent&contactID=%d&onlyScheduleEvent=true&ui=legacy', $baseURL, (int) $contactID),
+                'manageListsURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CONTACT, (int) $contactID),
+                'sessionCookie' => $_SESSION['CATS']->getCookie()
+            ),
+            'contact' => array(
+                'contactID' => (int) $contactID,
+                'firstName' => $contactFirstName,
+                'lastName' => $contactLastName,
+                'fullName' => $fullName,
+                'title' => (isset($data['title']) ? (string) $data['title'] : ''),
+                'department' => (isset($data['department']) ? (string) $data['department'] : ''),
+                'companyID' => (int) (isset($data['companyID']) ? $data['companyID'] : 0),
+                'companyName' => (isset($data['companyName']) ? (string) $data['companyName'] : ''),
+                'companyShowURL' => sprintf('%s?m=companies&a=show&companyID=%d', $baseURL, (int) (isset($data['companyID']) ? $data['companyID'] : 0)),
+                'phoneWork' => (isset($data['phoneWork']) ? (string) $data['phoneWork'] : ''),
+                'phoneCell' => (isset($data['phoneCell']) ? (string) $data['phoneCell'] : ''),
+                'phoneOther' => (isset($data['phoneOther']) ? (string) $data['phoneOther'] : ''),
+                'email1' => (isset($data['email1']) ? (string) $data['email1'] : ''),
+                'email2' => (isset($data['email2']) ? (string) $data['email2'] : ''),
+                'address' => (isset($data['address']) ? (string) $data['address'] : ''),
+                'city' => (isset($data['city']) ? (string) $data['city'] : ''),
+                'state' => (isset($data['state']) ? (string) $data['state'] : ''),
+                'zip' => (isset($data['zip']) ? (string) $data['zip'] : ''),
+                'cityAndState' => (isset($data['cityAndState']) ? (string) $data['cityAndState'] : ''),
+                'isHotContact' => ((int) (isset($data['isHotContact']) ? $data['isHotContact'] : 0) === 1),
+                'leftCompany' => ((int) (isset($data['leftCompany']) ? $data['leftCompany'] : 0) === 1),
+                'reportsToID' => (int) (isset($data['reportsTo']) ? $data['reportsTo'] : 0),
+                'reportsToName' => trim(
+                    (isset($data['reportsToFirstName']) ? (string) $data['reportsToFirstName'] : '') .
+                    ' ' .
+                    (isset($data['reportsToLastName']) ? (string) $data['reportsToLastName'] : '')
+                ),
+                'reportsToTitle' => (isset($data['reportsToTitle']) ? (string) $data['reportsToTitle'] : ''),
+                'reportsToURL' => sprintf('%s?m=contacts&a=show&contactID=%d', $baseURL, (int) (isset($data['reportsTo']) ? $data['reportsTo'] : 0)),
+                'dateCreated' => (isset($data['dateCreated']) ? (string) $data['dateCreated'] : ''),
+                'dateModified' => (isset($data['dateModified']) ? (string) $data['dateModified'] : ''),
+                'enteredByFullName' => (isset($data['enteredByFullName']) ? (string) $data['enteredByFullName'] : ''),
+                'ownerFullName' => (isset($data['ownerFullName']) ? (string) $data['ownerFullName'] : ''),
+                'titleClassContact' => (isset($data['titleClassContact']) ? (string) $data['titleClassContact'] : ''),
+                'titleClassCompany' => (isset($data['titleClassCompany']) ? (string) $data['titleClassCompany'] : ''),
+                'notesHTML' => (isset($data['notes']) ? (string) $data['notes'] : ''),
+                'notesText' => (string) $notesText,
+                'shortNotesHTML' => (isset($data['shortNotes']) ? (string) $data['shortNotes'] : ''),
+                'isShortNotes' => ((bool) $isShortNotes)
+            ),
+            'jobOrders' => array(
+                'count' => count($jobOrdersPayload),
+                'items' => $jobOrdersPayload
+            ),
+            'extraFields' => $extraFieldsPayload,
+            'upcomingEvents' => array(
+                'count' => count($calendarPayload),
+                'items' => $calendarPayload
+            ),
+            'activity' => array(
+                'count' => count($activityPayload),
+                'items' => $activityPayload
+            ),
+            'lists' => array(
+                'count' => count($listsPayload),
+                'items' => $listsPayload
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     /*

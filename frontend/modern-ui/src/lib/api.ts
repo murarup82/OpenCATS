@@ -8,6 +8,8 @@ import type {
   CandidatesShowModernDataResponse,
   CompaniesListModernDataResponse,
   CompaniesShowModernDataResponse,
+  ContactsListModernDataResponse,
+  ContactsShowModernDataResponse,
   DashboardModernDataResponse,
   DashboardSetPipelineStatusResponse,
   JobOrderAssignCandidateModernDataResponse,
@@ -28,6 +30,8 @@ import {
   MODERN_CANDIDATE_SHOW_PAGE,
   MODERN_COMPANIES_PAGE,
   MODERN_COMPANY_SHOW_PAGE,
+  MODERN_CONTACTS_PAGE,
+  MODERN_CONTACT_SHOW_PAGE,
   MODERN_CONTRACT_VERSION,
   MODERN_DASHBOARD_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
@@ -765,6 +769,52 @@ export async function fetchCompaniesShowModernData(
   }
   if (data.meta.contractKey !== 'companies.show.v1') {
     throw new Error('Unexpected company profile contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchContactsListModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ContactsListModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'contacts',
+    action: 'listByView',
+    modernPage: MODERN_CONTACTS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ContactsListModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading contacts.');
+  }
+  if (data.meta.contractKey !== 'contacts.listByView.v1') {
+    throw new Error('Unexpected contacts contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchContactsShowModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ContactsShowModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'contacts',
+    action: 'show',
+    modernPage: MODERN_CONTACT_SHOW_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ContactsShowModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading contact profile.');
+  }
+  if (data.meta.contractKey !== 'contacts.show.v1') {
+    throw new Error('Unexpected contact profile contract key.');
   }
 
   return data;

@@ -182,26 +182,32 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - backend `companies.show` now supports `format=modern-json` contract `companies.show.v1` with summary, attachments, job orders, contacts, departments, and extra fields payloads
     - new `CompaniesShowPage` added to modern shell with Avel card layout and legacy-safe modal fallbacks for history/attachment management
     - route registry now maps `companies.show` to native page while preserving wildcard legacy bridge for unresolved company actions.
+93. Added native `contacts.listByView` modernization starter:
+    - backend `contacts.listByView` now supports `format=modern-json` contract `contacts.listByView.v1` with pagination, search, sort, ownership/hot filters, and list-action URLs
+    - new `ContactsListPage` added to modern shell with Avel command bar, toggles, table pagination, and Add-To-List overlay parity
+    - route registry now maps `contacts.listByView`/`contacts.list`/`contacts.(default)` to native page while keeping wildcard bridge fallback for unresolved contact actions.
+94. Added native `contacts.show` modernization starter:
+    - backend `contacts.show` now supports `format=modern-json` contract `contacts.show.v1` with profile, notes, events, job orders, lists, activity, and extra fields payloads
+    - new `ContactsShowPage` added to modern shell with Avel profile layout and legacy-safe modal actions (history, schedule event, log activity)
+    - route registry now maps `contacts.show` to native page while preserving wildcard legacy bridge fallback for remaining contact actions.
 
 ## Next Queue (30-Slice Execution)
 
-1. Add `contacts.listByView` modern-json contract and native list page shell.
-2. Add `contacts.show` modern-json contract and native profile page shell.
-3. Add `activities.listByView` modern-json contract and native list page shell with date/status filtering.
-4. Add `calendar` modern-json contract and native list/day shell with in-app navigation.
-5. Add `lists.manage` modern-json contract and native static-list management page.
-6. Add reports entry modernization (`reports.*`) with native launcher panel and embedded report builder fallback.
-7. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
-8. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
-9. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
-10. Add centralized URL-state sync helper for filters/pagination shared by list pages.
-11. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
-12. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
-13. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-14. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-15. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
-16. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-17. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+1. Add `activities.listByView` modern-json contract and native list page shell with date/status filtering.
+2. Add `calendar` modern-json contract and native list/day shell with in-app navigation.
+3. Add `lists.manage` modern-json contract and native static-list management page.
+4. Add reports entry modernization (`reports.*`) with native launcher panel and embedded report builder fallback.
+5. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
+6. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
+7. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
+8. Add centralized URL-state sync helper for filters/pagination shared by list pages.
+9. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
+10. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
+11. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
+12. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+13. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
+14. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+15. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 
 ## Rules
 

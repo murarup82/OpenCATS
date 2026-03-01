@@ -368,6 +368,189 @@ export type CompaniesShowModernDataResponse = {
   }>;
 };
 
+export type ContactsListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    totalContacts: number;
+    sortBy: string;
+    sortDirection: string;
+    permissions: {
+      canAddContact: boolean;
+      canEditContact: boolean;
+      canDeleteContact: boolean;
+      canAddToList: boolean;
+      canShowColdCallList: boolean;
+    };
+  };
+  filters: {
+    quickSearch: string;
+    onlyMyContacts: boolean;
+    onlyHotContacts: boolean;
+  };
+  actions: {
+    addContactURL: string;
+    coldCallListURL: string;
+    legacyURL: string;
+  };
+  state: {
+    errorMessage: string;
+  };
+  rows: Array<{
+    contactID: number;
+    companyID: number;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    companyName: string;
+    title: string;
+    email: string;
+    phone: string;
+    city: string;
+    state: string;
+    ownerName: string;
+    dateCreated: string;
+    dateModified: string;
+    isHot: boolean;
+    leftCompany: boolean;
+    hasAttachment: boolean;
+    showURL: string;
+    editURL: string;
+    companyURL: string;
+    addToListURL: string;
+  }>;
+};
+
+export type ContactsShowModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    contactID: number;
+    permissions: {
+      canEditContact: boolean;
+      canDeleteContact: boolean;
+      canViewHistory: boolean;
+      canManageLists: boolean;
+      canOpenLists: boolean;
+      canLogActivityScheduleEvent: boolean;
+      canAddActivityScheduleEvent: boolean;
+      canEditActivity: boolean;
+      canDeleteActivity: boolean;
+    };
+  };
+  actions: {
+    legacyURL: string;
+    editURL: string;
+    deleteURL: string;
+    historyURL: string;
+    downloadVCardURL: string;
+    addActivityURL: string;
+    scheduleEventURL: string;
+    manageListsURL: string;
+    sessionCookie: string;
+  };
+  contact: {
+    contactID: number;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    title: string;
+    department: string;
+    companyID: number;
+    companyName: string;
+    companyShowURL: string;
+    phoneWork: string;
+    phoneCell: string;
+    phoneOther: string;
+    email1: string;
+    email2: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    cityAndState: string;
+    isHotContact: boolean;
+    leftCompany: boolean;
+    reportsToID: number;
+    reportsToName: string;
+    reportsToTitle: string;
+    reportsToURL: string;
+    dateCreated: string;
+    dateModified: string;
+    enteredByFullName: string;
+    ownerFullName: string;
+    titleClassContact: string;
+    titleClassCompany: string;
+    notesHTML: string;
+    notesText: string;
+    shortNotesHTML: string;
+    isShortNotes: boolean;
+  };
+  jobOrders: {
+    count: number;
+    items: Array<{
+      jobOrderID: number;
+      title: string;
+      type: string;
+      status: string;
+      dateCreated: string;
+      dateModified: string;
+      startDate: string;
+      daysOld: number;
+      submitted: number;
+      pipeline: number;
+      recruiterName: string;
+      ownerName: string;
+      showURL: string;
+      editURL: string;
+    }>;
+  };
+  extraFields: Array<{
+    fieldName: string;
+    display: string;
+  }>;
+  upcomingEvents: {
+    count: number;
+    items: Array<{
+      eventID: number;
+      title: string;
+      dateDisplay: string;
+      typeImage: string;
+      enteredByName: string;
+      day: number;
+      month: number;
+      year: string;
+      showURL: string;
+    }>;
+  };
+  activity: {
+    count: number;
+    items: Array<{
+      activityID: number;
+      type: string;
+      dateCreated: string;
+      enteredByName: string;
+      regarding: string;
+      notes: string;
+      jobOrderID: number;
+    }>;
+  };
+  lists: {
+    count: number;
+    items: Array<{
+      listID: number;
+      name: string;
+      showURL: string;
+    }>;
+  };
+};
+
 export type JobOrdersListModernDataResponse = {
   meta: {
     contractVersion: number;
