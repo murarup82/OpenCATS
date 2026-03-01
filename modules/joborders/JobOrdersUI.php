@@ -4686,18 +4686,64 @@ class JobOrdersUI extends UserInterface
 
     private function onDeleteJobOrderMessageThread()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidMethod',
+                    'message' => 'Invalid request method.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         if (!$this->isRequiredIDValid('jobOrderID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrder',
+                    'message' => 'Invalid job order ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
         if (!$this->isRequiredIDValid('threadID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidThread',
+                    'message' => 'Invalid thread ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid thread ID.');
         }
 
@@ -4706,29 +4752,119 @@ class JobOrdersUI extends UserInterface
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('joborders.deleteMessageThread', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid security token.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'token'));
         }
 
         $jobOrderMessages = new JobOrderMessages($this->_siteID);
         if (!$jobOrderMessages->isSchemaAvailable())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 409 Conflict');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'schema',
+                    'message' => 'Messaging tables are missing.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'schema'));
         }
 
         $thread = $jobOrderMessages->getThread($threadID);
         if (empty($thread) || (int) $thread['jobOrderID'] !== $jobOrderID)
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalid',
+                    'message' => 'Message thread not found for this job order.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'invalid'));
         }
 
         if (!$jobOrderMessages->isUserParticipant($threadID, $this->_userID))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'forbidden',
+                    'message' => 'You are not allowed to delete this thread.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'forbidden'));
         }
 
         if (!$jobOrderMessages->deleteThread($threadID))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 500 Internal Server Error');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'deletefailed',
+                    'message' => 'Failed to delete thread.'
+                ));
+                return;
+            }
             $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'deletefailed'));
+        }
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'deleted',
+                'message' => 'Thread deleted.'
+            ));
+            return;
         }
 
         $this->redirectToJobOrderShow($jobOrderID, array('showMessages' => '1', 'msg' => 'deleted'));

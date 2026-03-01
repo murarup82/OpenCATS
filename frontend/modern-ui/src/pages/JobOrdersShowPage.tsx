@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   addJobOrderProfileComment,
+  deleteJobOrderMessageThread,
   fetchPipelineStatusDetailsModernData,
   fetchJobOrdersShowModernData,
   postJobOrderMessage,
@@ -87,6 +88,8 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const [messageBody, setMessageBody] = useState<string>('');
   const [messageSubmitPending, setMessageSubmitPending] = useState<boolean>(false);
   const [messageSubmitError, setMessageSubmitError] = useState<string>('');
+  const [messageDeletePending, setMessageDeletePending] = useState<boolean>(false);
+  const [messageDeleteError, setMessageDeleteError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -303,6 +306,36 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
     },
     [data, messageBody, messageSubmitPending, refreshPageData]
   );
+
+  const handleDeleteMessageThread = useCallback(async () => {
+    if (!data || messageDeletePending) {
+      return;
+    }
+    if (!window.confirm('Delete this thread for all users? This cannot be undone.')) {
+      return;
+    }
+
+    setMessageDeleteError('');
+    setMessageDeletePending(true);
+    try {
+      const result = await deleteJobOrderMessageThread(decodeLegacyURL(data.actions.deleteMessageThreadURL), {
+        jobOrderID: Number(data.meta.jobOrderID || 0),
+        threadID: Number(data.messages.threadID || 0),
+        securityToken: data.messages.deleteThreadSecurityToken || ''
+      });
+      if (!result.success) {
+        setMessageDeleteError(result.message || 'Unable to delete message thread.');
+        return;
+      }
+
+      setMessagesOpen(true);
+      refreshPageData();
+    } catch (err: unknown) {
+      setMessageDeleteError(err instanceof Error ? err.message : 'Unable to delete message thread.');
+    } finally {
+      setMessageDeletePending(false);
+    }
+  }, [data, messageDeletePending, refreshPageData]);
 
   const getForwardStatusOptions = useCallback(
     (currentStatusID: number) => {
@@ -931,20 +964,18 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   ) : null}
 
                   {permissions.canDeleteMessageThread && data.messages.threadID > 0 && data.messages.threadVisibleToCurrentUser ? (
-                    <form
-                      method="post"
-                      action={decodeLegacyURL(data.actions.deleteMessageThreadURL)}
-                      className="modern-table-actions"
-                      onSubmit={() => window.confirm('Delete this thread for all users? This cannot be undone.')}
-                    >
-                      <input type="hidden" name="jobOrderID" value={String(data.meta.jobOrderID)} />
-                      <input type="hidden" name="threadID" value={String(data.messages.threadID)} />
-                      <input type="hidden" name="securityToken" value={data.messages.deleteThreadSecurityToken} />
-                      <button type="submit" className="modern-btn modern-btn--mini modern-btn--danger">
-                        Delete Thread
+                    <div className="modern-table-actions">
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--danger"
+                        onClick={handleDeleteMessageThread}
+                        disabled={messageDeletePending}
+                      >
+                        {messageDeletePending ? 'Deleting...' : 'Delete Thread'}
                       </button>
-                    </form>
+                    </div>
                   ) : null}
+                  {messageDeleteError ? <div className="modern-state modern-state--error">{messageDeleteError}</div> : null}
 
                   {data.messages.threadID > 0 && !data.messages.threadVisibleToCurrentUser ? (
                     <div className="modern-state modern-state--empty">

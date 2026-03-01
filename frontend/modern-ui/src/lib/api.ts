@@ -287,6 +287,43 @@ export async function postJobOrderMessage(
   return result;
 }
 
+export async function deleteJobOrderMessageThread(
+  submitURL: string,
+  payload: {
+    jobOrderID: number;
+    threadID: number;
+    securityToken: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('jobOrderID', String(payload.jobOrderID || 0));
+  body.set('threadID', String(payload.threadID || 0));
+  body.set('securityToken', payload.securityToken || '');
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Message thread delete failed (${response.status}).`);
+  }
+
+  return result;
+}
+
 export async function fetchCandidatesListModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams
