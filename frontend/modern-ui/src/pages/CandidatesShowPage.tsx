@@ -25,6 +25,7 @@ import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
+import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
 import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
@@ -100,6 +101,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     fallbackURL: string;
     fallbackTitle: string;
   } | null>(null);
+  const [removePipelineModal, setRemovePipelineModal] = useState<{
+    title: string;
+    description: string;
+    actionURL: string;
+  } | null>(null);
+  const [removePipelinePending, setRemovePipelinePending] = useState<boolean>(false);
+  const [removePipelineError, setRemovePipelineError] = useState<string>('');
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [commentCategory, setCommentCategory] = useState<string>('General');
@@ -188,32 +196,50 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
       const candidateName = toDisplayText(data.candidate.fullName);
       const jobOrderTitle = toDisplayText(pipeline.jobOrderTitle);
-      const confirmed = window.confirm(`Remove ${candidateName} from ${jobOrderTitle}?`);
-      if (!confirmed) {
+      setRemovePipelineError('');
+      setRemovePipelineModal({
+        title: `Remove From Pipeline: ${jobOrderTitle}`,
+        description: `Remove ${candidateName} from ${jobOrderTitle}?`,
+        actionURL: decodeLegacyURL(pipeline.actions.removeFromPipelineURL)
+      });
+    },
+    [data, refreshPageData]
+  );
+
+  const submitRemoveFromPipeline = useCallback(
+    async (note: string) => {
+      if (!data || !removePipelineModal || removePipelinePending) {
         return;
       }
 
-      const note = window.prompt('Optional removal note (leave blank for none):', '');
-      if (note === null) {
+      const token = data.actions.removeFromPipelineToken || '';
+      if (token === '') {
+        setRemovePipelineError('Removal security token is not available.');
         return;
       }
 
+      setRemovePipelineError('');
+      setRemovePipelinePending(true);
       try {
         const result = await removePipelineEntryViaLegacyURL(
-          decodeLegacyURL(pipeline.actions.removeFromPipelineURL),
+          removePipelineModal.actionURL,
           token,
           note
         );
         if (!result.success) {
-          window.alert(result.message || 'Unable to remove candidate from pipeline.');
+          setRemovePipelineError(result.message || 'Unable to remove candidate from pipeline.');
           return;
         }
+
+        setRemovePipelineModal(null);
         refreshPageData();
       } catch (err: unknown) {
-        window.alert(err instanceof Error ? err.message : 'Unable to remove candidate from pipeline.');
+        setRemovePipelineError(err instanceof Error ? err.message : 'Unable to remove candidate from pipeline.');
+      } finally {
+        setRemovePipelinePending(false);
       }
     },
-    [data, refreshPageData]
+    [data, removePipelineModal, removePipelinePending, refreshPageData]
   );
 
   const closePipelineModal = useCallback(
@@ -1577,6 +1603,22 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 }
               : undefined
           }
+        />
+
+        <PipelineRemoveModal
+          isOpen={!!removePipelineModal}
+          title={removePipelineModal?.title || 'Remove From Pipeline'}
+          description={removePipelineModal?.description || 'Confirm pipeline removal.'}
+          pending={removePipelinePending}
+          error={removePipelineError}
+          onCancel={() => {
+            if (removePipelinePending) {
+              return;
+            }
+            setRemovePipelineError('');
+            setRemovePipelineModal(null);
+          }}
+          onSubmit={submitRemoveFromPipeline}
         />
 
         <LegacyFrameModal
