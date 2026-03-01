@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { fetchCandidatesAddModernData } from '../lib/api';
-import type { CandidatesAddModernDataResponse, UIModeBootstrap } from '../types';
+import { useEffect, useRef, useState } from 'react';
+import { fetchCandidateDuplicateCheck, fetchCandidatesAddModernData } from '../lib/api';
+import type { CandidateDuplicateMatch, CandidatesAddModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
+import { DataTable } from '../components/primitives/DataTable';
+import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -77,6 +79,13 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [serverQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const [duplicateChecking, setDuplicateChecking] = useState(false);
+  const [duplicateError, setDuplicateError] = useState('');
+  const [duplicateMode, setDuplicateMode] = useState<'none' | 'hard' | 'soft'>('none');
+  const [hardMatches, setHardMatches] = useState<CandidateDuplicateMatch[]>([]);
+  const [softMatches, setSoftMatches] = useState<CandidateDuplicateMatch[]>([]);
+  const [softOverrideAccepted, setSoftOverrideAccepted] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -208,6 +217,14 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     );
   };
 
+  useEffect(() => {
+    setSoftOverrideAccepted(false);
+    setDuplicateMode('none');
+    setHardMatches([]);
+    setSoftMatches([]);
+    setDuplicateError('');
+  }, [formState?.firstName, formState?.lastName, formState?.email1, formState?.phoneCell, formState?.city, formState?.country]);
+
   if (loading && !data) {
     return <div className="modern-state">Loading candidate form...</div>;
   }
@@ -253,10 +270,12 @@ export function CandidatesAddPage({ bootstrap }: Props) {
             </div>
 
             <form
+              ref={formRef}
+              id="modernCandidateAddForm"
               className="avel-candidate-edit-form"
               method="post"
               action={submitURL}
-              onSubmit={(event) => {
+              onSubmit={async (event) => {
                 if (formState.firstName.trim() === '' || formState.lastName.trim() === '') {
                   event.preventDefault();
                   window.alert('First Name and Last Name are required.');
@@ -265,11 +284,55 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 if (formState.gdprSigned === '1' && formState.gdprExpirationDate.trim() === '') {
                   event.preventDefault();
                   window.alert('GDPR Expiration Date is required when GDPR Signed is Yes.');
+                  return;
+                }
+
+                if (softOverrideAccepted) {
+                  return;
+                }
+
+                event.preventDefault();
+                setDuplicateChecking(true);
+                setDuplicateError('');
+                try {
+                  const duplicateResult = await fetchCandidateDuplicateCheck({
+                    firstName: formState.firstName,
+                    lastName: formState.lastName,
+                    email: formState.email1,
+                    phone: formState.phoneCell,
+                    city: formState.city,
+                    country: formState.country
+                  });
+
+                  const hasHardMatches = duplicateResult.hardMatches.length > 0;
+                  const hasSoftMatches = duplicateResult.softMatches.length > 0;
+                  setHardMatches(duplicateResult.hardMatches);
+                  setSoftMatches(duplicateResult.softMatches);
+
+                  if (hasHardMatches) {
+                    setDuplicateMode('hard');
+                    return;
+                  }
+
+                  if (hasSoftMatches) {
+                    setDuplicateMode('soft');
+                    return;
+                  }
+
+                  setDuplicateMode('none');
+                  event.currentTarget.submit();
+                } catch (duplicateCheckError) {
+                  const message = duplicateCheckError instanceof Error ? duplicateCheckError.message : 'Duplicate check failed.';
+                  setDuplicateError(message);
+                  setDuplicateMode('none');
+                } finally {
+                  setDuplicateChecking(false);
                 }
               }}
             >
               <input type="hidden" name="postback" value="postback" />
               <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
+              <input type="hidden" name="dup_soft_override" value={softOverrideAccepted ? '1' : '0'} />
 
               <div className="avel-candidate-edit-grid">
                 <label className="modern-command-field">
@@ -565,10 +628,86 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </div>
               ) : null}
 
+              {duplicateChecking ? <div className="modern-state">Checking for potential duplicates...</div> : null}
+              {duplicateError !== '' ? <div className="modern-state modern-state--error">{duplicateError}</div> : null}
+
+              {duplicateMode !== 'none' ? (
+                <div className={`avel-candidate-duplicates avel-candidate-duplicates--${duplicateMode}`}>
+                  <div className="avel-list-panel__header">
+                    <h3 className="avel-list-panel__title">
+                      {duplicateMode === 'hard' ? 'Potential Existing Candidate Found' : 'Possible Duplicate Candidates'}
+                    </h3>
+                    <p className="avel-list-panel__hint">
+                      {duplicateMode === 'hard'
+                        ? 'A strong match exists by email or phone. Open the existing profile instead of creating a duplicate.'
+                        : 'Review similar profiles. You can continue if this is a genuinely new person.'}
+                    </p>
+                  </div>
+                  <DataTable
+                    columns={[
+                      { key: 'candidate', title: 'Candidate' },
+                      { key: 'contact', title: 'Contact' },
+                      { key: 'location', title: 'Location' },
+                      { key: 'status', title: 'Status' },
+                      { key: 'reasons', title: 'Match Reasons' }
+                    ]}
+                    hasRows={(duplicateMode === 'hard' ? hardMatches : softMatches).length > 0}
+                    emptyMessage="No duplicate suggestions."
+                  >
+                    {(duplicateMode === 'hard' ? hardMatches : softMatches).map((match) => (
+                      <tr key={`${duplicateMode}-${match.candidate_id}`}>
+                        <td>
+                          <a
+                            className="modern-link"
+                            href={ensureModernUIURL(`${bootstrap.indexName}?m=candidates&a=show&candidateID=${match.candidate_id}&ui=modern`)}
+                          >
+                            {match.name || `Candidate #${match.candidate_id}`}
+                          </a>
+                        </td>
+                        <td>
+                          {match.email || '--'}
+                          <br />
+                          {match.phone || '--'}
+                        </td>
+                        <td>{[match.city, match.country].filter((item) => String(item || '').trim() !== '').join(', ') || '--'}</td>
+                        <td>{match.status || '--'}</td>
+                        <td>{(match.matchReasons || []).join(', ') || '--'}</td>
+                      </tr>
+                    ))}
+                  </DataTable>
+                </div>
+              ) : null}
+
               <div className="modern-table-actions">
+                {duplicateMode === 'soft' ? (
+                  <button
+                    type="button"
+                    className="modern-btn modern-btn--emphasis"
+                    onClick={() => {
+                      setSoftOverrideAccepted(true);
+                      formRef.current?.submit();
+                    }}
+                  >
+                    Create Candidate Anyway
+                  </button>
+                ) : (
                 <button type="submit" className="modern-btn modern-btn--emphasis">
                   Create Candidate
                 </button>
+                )}
+                {duplicateMode === 'hard' ? (
+                  <button
+                    type="button"
+                    className="modern-btn modern-btn--secondary"
+                    onClick={() => {
+                      setDuplicateMode('none');
+                      setHardMatches([]);
+                      setSoftMatches([]);
+                    }}
+                  >
+                    Dismiss Warning
+                  </button>
+                ) : null}
                 <a className="modern-btn modern-btn--secondary" href={listURL}>
                   Cancel
                 </a>

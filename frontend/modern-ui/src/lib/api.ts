@@ -1,4 +1,5 @@
 import type {
+  CandidateDuplicateCheckResponse,
   CandidatesAddModernDataResponse,
   CandidatesEditModernDataResponse,
   CandidatesListModernDataResponse,
@@ -146,6 +147,51 @@ export async function fetchCandidatesAddModernData(
   }
 
   return data;
+}
+
+export async function fetchCandidateDuplicateCheck(
+  fields: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    city: string;
+    country: string;
+  }
+): Promise<CandidateDuplicateCheckResponse> {
+  const body = new URLSearchParams();
+  body.set('f', 'candidates:checkDuplicates');
+  body.set('firstName', fields.firstName || '');
+  body.set('lastName', fields.lastName || '');
+  body.set('email', fields.email || '');
+  body.set('phone', fields.phone || '');
+  body.set('city', fields.city || '');
+  body.set('country', fields.country || '');
+  body.set('rhash', String(Math.floor(Math.random() * 100000000)));
+
+  const response = await fetch('ajax.php', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error(`Duplicate check failed (${response.status}).`);
+  }
+
+  const payload = (await response.json()) as CandidateDuplicateCheckResponse;
+  if (!payload || Number(payload.success) !== 1) {
+    throw new Error(payload?.message || 'Duplicate check failed.');
+  }
+
+  return {
+    success: 1,
+    hardMatches: Array.isArray(payload.hardMatches) ? payload.hardMatches : [],
+    softMatches: Array.isArray(payload.softMatches) ? payload.softMatches : []
+  };
 }
 
 export async function fetchJobOrdersListModernData(

@@ -2051,6 +2051,20 @@
   gap: 10px;
 }
 
+.avel-candidate-edit-page .avel-candidate-duplicates {
+  border: 1px solid #e2c18c;
+  border-radius: 12px;
+  background: #fff9ee;
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.avel-candidate-edit-page .avel-candidate-duplicates--hard {
+  border-color: #e3a4a4;
+  background: #fff4f4;
+}
+
 .modern-kanban-skeleton {
   margin: 22px;
   border: 1px solid #c9dce9;

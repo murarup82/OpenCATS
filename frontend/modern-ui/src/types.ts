@@ -614,8 +614,28 @@ export type CandidatesAddModernDataResponse = {
     modernPage: string;
     permissions: {
       canAddCandidate: boolean;
-    };
   };
+};
+
+export type CandidateDuplicateMatch = {
+  candidate_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  country: string;
+  status: string;
+  matchReasons: string[];
+  score: number;
+  dateCreated: string;
+};
+
+export type CandidateDuplicateCheckResponse = {
+  success: number;
+  message?: string;
+  hardMatches: CandidateDuplicateMatch[];
+  softMatches: CandidateDuplicateMatch[];
+};
   actions: {
     submitURL: string;
     listURL: string;
