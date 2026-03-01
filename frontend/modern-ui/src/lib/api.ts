@@ -581,6 +581,72 @@ export async function setJobOrderAdministrativeVisibility(
   return result;
 }
 
+export async function uploadCandidateAttachment(
+  submitURL: string,
+  payload: {
+    candidateID: number;
+    file: File;
+    isResume: boolean;
+  }
+): Promise<ModernMutationResponse> {
+  const form = new FormData();
+  form.set('format', 'modern-json');
+  form.set('candidateID', String(payload.candidateID || 0));
+  form.set('resume', payload.isResume ? '1' : '0');
+  form.set('file', payload.file);
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: form
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Candidate attachment upload failed (${response.status}).`);
+  }
+
+  return result;
+}
+
+export async function uploadJobOrderAttachment(
+  submitURL: string,
+  payload: {
+    jobOrderID: number;
+    file: File;
+  }
+): Promise<ModernMutationResponse> {
+  const form = new FormData();
+  form.set('format', 'modern-json');
+  form.set('jobOrderID', String(payload.jobOrderID || 0));
+  form.set('file', payload.file);
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: form
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Job order attachment upload failed (${response.status}).`);
+  }
+
+  return result;
+}
+
 export async function fetchCandidatesListModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams

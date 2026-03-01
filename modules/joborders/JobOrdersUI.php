@@ -4241,9 +4241,25 @@ class JobOrdersUI extends UserInterface
      */
     private function onCreateAttachment()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         /* Bail out if we don't have a valid joborder ID. */
         if (!$this->isRequiredIDValid('jobOrderID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrder',
+                    'message' => 'Invalid joborder ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid joborder ID.');
         }
 
@@ -4258,10 +4274,62 @@ class JobOrdersUI extends UserInterface
 
         if ($attachmentCreator->isError())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'uploadError',
+                    'message' => $attachmentCreator->getError()
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_FILEERROR, $this, $attachmentCreator->getError());
         }
 
+        if ($attachmentCreator->duplicatesOccurred())
+        {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 409 Conflict');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'duplicateAttachment',
+                    'message' => 'This attachment has already been added to this job order.'
+                ));
+                return;
+            }
+            CommonErrors::fatalModal(COMMONERROR_RECORDERROR, $this, 'This attachment has already been added to this job order.');
+        }
+
         if (!eval(Hooks::get('JO_ON_CREATE_ATTACHMENT_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'attachmentCreated',
+                'message' => 'Attachment uploaded.',
+                'jobOrderID' => (int) $jobOrderID,
+                'attachmentID' => (int) $attachmentCreator->getAttachmentID()
+            ));
+            return;
+        }
 
         $this->_template->assign('isFinishedMode', true);
         $this->_template->assign('jobOrderID', $jobOrderID);

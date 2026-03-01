@@ -4536,8 +4536,24 @@ class CandidatesUI extends UserInterface
      */
     private function onCreateAttachment()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         /* Bail out if we don't have a valid candidate ID. */
         if (!$this->isRequiredIDValid('candidateID', $_POST)) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidate',
+                    'message' => 'Invalid candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
@@ -4546,6 +4562,21 @@ class CandidatesUI extends UserInterface
             !$this->isRequiredIDValid('resume', $_POST, true) ||
             $_POST['resume'] < 0 || $_POST['resume'] > 1
         ) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidResumeFlag',
+                    'message' => 'Invalid resume status.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_RECORDERROR, $this, 'Invalid resume status.');
         }
 
@@ -4569,12 +4600,42 @@ class CandidatesUI extends UserInterface
         );
 
         if ($attachmentCreator->isError()) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'uploadError',
+                    'message' => $attachmentCreator->getError()
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_FILEERROR, $this, $attachmentCreator->getError());
             return;
             //$this->fatalModal($attachmentCreator->getError());
         }
 
         if ($attachmentCreator->duplicatesOccurred()) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 409 Conflict');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'duplicateAttachment',
+                    'message' => 'This attachment has already been added to this candidate.'
+                ));
+                return;
+            }
             $this->fatalModal(
                 'This attachment has already been added to this candidate.'
             );
@@ -4585,6 +4646,26 @@ class CandidatesUI extends UserInterface
         $resumeText = $attachmentCreator->getExtractedText();
 
         if (!eval(Hooks::get('CANDIDATE_ON_CREATE_ATTACHMENT_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'attachmentCreated',
+                'message' => 'Attachment uploaded.',
+                'candidateID' => (int) $candidateID,
+                'attachmentID' => (int) $attachmentCreator->getAttachmentID(),
+                'isTextExtractionError' => ((bool) $isTextExtractionError),
+                'textExtractionErrorMessage' => (string) $textExtractionErrorMessage,
+                'resumeTextAvailable' => (trim((string) $resumeText) !== '')
+            ));
+            return;
+        }
 
         $this->_template->assign('resumeText', $resumeText);
         $this->_template->assign('isFinishedMode', true);

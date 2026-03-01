@@ -10,6 +10,7 @@ import {
   removePipelineEntryViaLegacyURL,
   setDashboardPipelineStatus,
   updateCandidateTags,
+  uploadCandidateAttachment,
   updatePipelineStatusHistoryDate
 } from '../lib/api';
 import type {
@@ -114,6 +115,11 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
   const [tagSavePending, setTagSavePending] = useState<boolean>(false);
   const [tagSaveError, setTagSaveError] = useState<string>('');
+  const [attachmentUploadOpen, setAttachmentUploadOpen] = useState<boolean>(false);
+  const [attachmentUploadFile, setAttachmentUploadFile] = useState<File | null>(null);
+  const [attachmentUploadIsResume, setAttachmentUploadIsResume] = useState<boolean>(false);
+  const [attachmentUploadPending, setAttachmentUploadPending] = useState<boolean>(false);
+  const [attachmentUploadError, setAttachmentUploadError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -448,6 +454,44 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     },
     [data, refreshPageData]
   );
+
+  const submitAttachmentUpload = useCallback(async () => {
+    if (!data || attachmentUploadPending) {
+      return;
+    }
+    const submitURL = decodeLegacyURL(data.actions.createAttachmentURL || '');
+    if (submitURL === '') {
+      setAttachmentUploadError('Attachment upload endpoint is not available.');
+      return;
+    }
+    if (!attachmentUploadFile) {
+      setAttachmentUploadError('Select a file to upload.');
+      return;
+    }
+
+    setAttachmentUploadError('');
+    setAttachmentUploadPending(true);
+    try {
+      const result = await uploadCandidateAttachment(submitURL, {
+        candidateID: Number(data.meta.candidateID || 0),
+        file: attachmentUploadFile,
+        isResume: attachmentUploadIsResume
+      });
+      if (!result.success) {
+        setAttachmentUploadError(result.message || 'Unable to upload attachment.');
+        return;
+      }
+
+      setAttachmentUploadFile(null);
+      setAttachmentUploadIsResume(false);
+      setAttachmentUploadOpen(false);
+      refreshPageData();
+    } catch (err: unknown) {
+      setAttachmentUploadError(err instanceof Error ? err.message : 'Unable to upload attachment.');
+    } finally {
+      setAttachmentUploadPending(false);
+    }
+  }, [attachmentUploadFile, attachmentUploadIsResume, attachmentUploadPending, data, refreshPageData]);
 
   const openTagEditor = useCallback(() => {
     if (!data) {
@@ -1184,19 +1228,61 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   <button
                     type="button"
                     className="modern-btn modern-btn--mini modern-btn--secondary"
-                    onClick={() =>
-                      setPipelineModal({
-                        url: decodeLegacyURL(data.actions.createAttachmentURL),
-                        title: 'Add Attachment',
-                        openInPopup: { width: 520, height: 280, refreshOnClose: true },
-                        showRefreshClose: true
-                      })
-                    }
+                    onClick={() => {
+                      setAttachmentUploadOpen((current) => !current);
+                      setAttachmentUploadError('');
+                    }}
                   >
-                    Add Attachment
+                    {attachmentUploadOpen ? 'Cancel Upload' : 'Add Attachment'}
                   </button>
                 ) : null}
               </div>
+              {permissions.canCreateAttachment && attachmentUploadOpen ? (
+                <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
+                  <label className="modern-command-field avel-candidate-edit-field--full">
+                    <span className="modern-command-label">Attachment File</span>
+                    <input
+                      className="avel-form-control"
+                      type="file"
+                      onChange={(event) => setAttachmentUploadFile(event.target.files?.[0] || null)}
+                    />
+                  </label>
+                  <label className="modern-command-toggle">
+                    <input
+                      type="checkbox"
+                      checked={attachmentUploadIsResume}
+                      onChange={(event) => setAttachmentUploadIsResume(event.target.checked)}
+                    />
+                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                    <span>Treat as resume (enable parsing/indexing)</span>
+                  </label>
+                  {attachmentUploadError ? <div className="modern-state modern-state--error">{attachmentUploadError}</div> : null}
+                  <div className="modern-table-actions">
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--emphasis"
+                      onClick={submitAttachmentUpload}
+                      disabled={attachmentUploadPending}
+                    >
+                      {attachmentUploadPending ? 'Uploading...' : 'Upload'}
+                    </button>
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      onClick={() =>
+                        setPipelineModal({
+                          url: decodeLegacyURL(data.actions.createAttachmentURL),
+                          title: 'Add Attachment (Legacy)',
+                          openInPopup: { width: 520, height: 280, refreshOnClose: true },
+                          showRefreshClose: true
+                        })
+                      }
+                    >
+                      Use Legacy Uploader
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               <DataTable
                 columns={[
                   { key: 'name', title: 'File' },
