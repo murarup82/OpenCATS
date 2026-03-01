@@ -224,11 +224,21 @@ export function ModernOverlayHost({ bootstrap }: Props) {
         });
         window.dispatchEvent(refreshEvent);
         if (!refreshEvent.defaultPrevented) {
+          const modernRefreshEvent = new CustomEvent('opencats:modern-page:refresh', {
+            cancelable: true,
+            detail: {
+              source: 'legacy-popup-close'
+            }
+          });
+          window.dispatchEvent(modernRefreshEvent);
+        }
+
+        if (!refreshEvent.defaultPrevented && bootstrap.mode !== 'modern') {
           window.location.reload();
         }
       }
     },
-    [getLegacyPopupReturnValue]
+    [bootstrap.mode, getLegacyPopupReturnValue]
   );
 
   useEffect(() => {

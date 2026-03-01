@@ -66,6 +66,12 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - frontend monitor toggle now updates in-place without full-page reload.
 57. Removed forced full-page reload after Add-To-List mutation in `ModernOverlayHost`; now dispatches an in-app completion event and refreshes `candidates.show` data contextually.
 58. Added legacy-popup refresh event interception across modern pages (`dashboard.my`, `candidates.list/show/edit`, `joborders.list/show`) so refresh requests now use in-place data reload and avoid full browser reload by default.
+59. Stabilized refresh + modal behavior for modern list/show pages:
+    - introduced shared `usePageRefreshEvents` hook and applied it across `dashboard.my`, `candidates.list/show/edit`, and `joborders.list/show`
+    - `ModernOverlayHost` now emits `opencats:modern-page:refresh` and avoids hard reload fallback in modern mode
+    - `candidates.listByView` now refreshes in-place after Add-To-List completion when visible rows are affected
+    - removed stale `openInPopup` metadata from list/edit modal state and re-enabled refresh-close parity for Add-To-Job embedded modal
+    - improved command/search icon sizing guardrails and forced visible kanban horizontal scrollbar in Avel theme.
 
 ## Next Queue
 

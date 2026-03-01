@@ -6,6 +6,7 @@ import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -99,7 +100,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [attachmentModal, setAttachmentModal] = useState<{
     url: string;
     title: string;
-    openInPopup: { width: number; height: number; refreshOnClose: boolean };
   } | null>(null);
 
   useEffect(() => {
@@ -140,18 +140,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  useEffect(() => {
-    const handleLegacyRefreshRequest = (rawEvent: Event) => {
-      rawEvent.preventDefault();
-      refreshPageData();
-    };
-
-    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    return () => {
-      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    };
-  }, [refreshPageData]);
+  usePageRefreshEvents(refreshPageData);
 
   const closeAttachmentModal = useCallback(
     (refreshOnClose: boolean) => {
@@ -684,8 +673,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                       onClick={() =>
                         setAttachmentModal({
                           url: decodeLegacyURL(data.actions.createAttachmentURL),
-                          title: 'Add Attachment',
-                          openInPopup: { width: 520, height: 320, refreshOnClose: true }
+                          title: 'Add Attachment'
                         })
                       }
                     >

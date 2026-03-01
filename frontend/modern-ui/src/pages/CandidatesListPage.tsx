@@ -9,6 +9,7 @@ import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
+import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -25,6 +26,12 @@ type NavigationFilters = {
   onlyActiveCandidates?: boolean;
   page?: number;
   maxResults?: number;
+};
+
+type AddToListCompletedDetail = {
+  dataItemType?: number | string;
+  dataItemIDs?: Array<number | string>;
+  listIDs?: Array<number | string>;
 };
 
 function toDisplayText(value: unknown, fallback = '--'): string {
@@ -58,7 +65,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const [jobOrderModal, setJobOrderModal] = useState<{
     url: string;
     title: string;
-    openInPopup: { width: number; height: number; refreshOnClose: boolean };
   } | null>(null);
 
   useEffect(() => {
@@ -95,18 +101,37 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
+  usePageRefreshEvents(refreshPageData);
 
   useEffect(() => {
-    const handleLegacyRefreshRequest = (rawEvent: Event) => {
-      rawEvent.preventDefault();
+    const handleAddToListCompleted = (rawEvent: Event) => {
+      const event = rawEvent as CustomEvent<AddToListCompletedDetail>;
+      const ids = Array.isArray(event.detail?.dataItemIDs)
+        ? event.detail.dataItemIDs.map((value) => Number(value || 0)).filter((value) => value > 0)
+        : [];
+      if (ids.length === 0) {
+        return;
+      }
+
+      const visibleCandidateIDs = new Set(
+        (data?.rows || []).map((row) => Number(row.candidateID || 0)).filter((value) => value > 0)
+      );
+      if (visibleCandidateIDs.size === 0) {
+        return;
+      }
+
+      if (!ids.some((id) => visibleCandidateIDs.has(id))) {
+        return;
+      }
+
       refreshPageData();
     };
 
-    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+    window.addEventListener('opencats:add-to-list:completed', handleAddToListCompleted as EventListener);
     return () => {
-      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
+      window.removeEventListener('opencats:add-to-list:completed', handleAddToListCompleted as EventListener);
     };
-  }, [refreshPageData]);
+  }, [data?.rows, refreshPageData]);
 
   const closeJobOrderModal = useCallback(
     (refreshOnClose: boolean) => {
@@ -512,8 +537,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                             onClick={() =>
                               setJobOrderModal({
                                 url: decodeLegacyURL(row.addToJobOrderURL),
-                                title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`,
-                                openInPopup: { width: 1120, height: 760, refreshOnClose: true }
+                                title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
                               })
                             }
                           >
@@ -534,7 +558,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
           title={jobOrderModal?.title || 'Add Candidate To Job Order'}
           url={jobOrderModal?.url || ''}
           onClose={closeJobOrderModal}
-          showRefreshClose={false}
         />
       </PageContainer>
     </div>

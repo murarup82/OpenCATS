@@ -11,6 +11,7 @@ import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
 import type { DashboardRow, DashboardStatusColumn } from '../components/dashboard/types';
 import { ensureModernUIURL } from '../lib/navigation';
+import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -183,18 +184,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const refreshDashboard = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  useEffect(() => {
-    const handleLegacyRefreshRequest = (rawEvent: Event) => {
-      rawEvent.preventDefault();
-      refreshDashboard();
-    };
-
-    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    return () => {
-      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    };
-  }, [refreshDashboard]);
+  usePageRefreshEvents(refreshDashboard);
 
   const openStatusModal = useCallback(
     (row: DashboardRow, targetStatusID: number | null) => {

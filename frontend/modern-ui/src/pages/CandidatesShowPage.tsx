@@ -28,6 +28,7 @@ import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuick
 import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { ensureModernUIURL } from '../lib/navigation';
+import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -88,7 +89,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [pipelineModal, setPipelineModal] = useState<{
     url: string;
     title: string;
-    openInPopup: { width: number; height: number; refreshOnClose: boolean };
     showRefreshClose: boolean;
   } | null>(null);
   const [pipelineDetailsModal, setPipelineDetailsModal] = useState<{
@@ -192,18 +192,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  useEffect(() => {
-    const handleLegacyRefreshRequest = (rawEvent: Event) => {
-      rawEvent.preventDefault();
-      refreshPageData();
-    };
-
-    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    return () => {
-      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    };
-  }, [refreshPageData]);
+  usePageRefreshEvents(refreshPageData);
 
   useEffect(() => {
     const handleAddToListCompleted = (rawEvent: Event) => {
@@ -240,7 +229,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         setPipelineModal({
           url: decodeLegacyURL(pipeline.actions.removeFromPipelineURL),
           title: `Remove From Pipeline: ${toDisplayText(pipeline.jobOrderTitle)}`,
-          openInPopup: { width: 500, height: 320, refreshOnClose: true },
           showRefreshClose: true
         });
         return;
@@ -580,7 +568,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       setPipelineModal({
         url: decodeLegacyURL(data.actions.addTagsURL),
         title: 'Manage Tags',
-        openInPopup: { width: 500, height: 300, refreshOnClose: true },
         showRefreshClose: true
       });
       return;
@@ -700,7 +687,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         setPipelineModal({
           url: fallbackURL,
           title: fallbackTitle,
-          openInPopup: { width: 700, height: 620, refreshOnClose: true },
           showRefreshClose: true
         });
         return;
@@ -733,7 +719,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         setPipelineModal({
           url: quickStatusModal.fallbackURL,
           title: quickStatusModal.fallbackTitle,
-          openInPopup: { width: 700, height: 620, refreshOnClose: true },
           showRefreshClose: true
         });
         return;
@@ -759,7 +744,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             setPipelineModal({
               url: quickStatusModal.fallbackURL,
               title: quickStatusModal.fallbackTitle,
-              openInPopup: { width: 700, height: 620, refreshOnClose: true },
               showRefreshClose: true
             });
             return;
@@ -869,7 +853,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   setPipelineModal({
                     url: decodeLegacyURL(data.actions.addToJobOrderURL),
                     title: 'Add Candidate To Job Order',
-                    openInPopup: { width: 1120, height: 760, refreshOnClose: true },
                     showRefreshClose: true
                   })
                 }
@@ -885,7 +868,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   setPipelineModal({
                     url: decodeLegacyURL(data.actions.viewHistoryURL),
                     title: 'Candidate History',
-                    openInPopup: { width: 980, height: 720, refreshOnClose: false },
                     showRefreshClose: false
                   })
                 }
@@ -1134,7 +1116,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                           setPipelineModal({
                             url: ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL)),
                             title: 'Team Inbox',
-                            openInPopup: { width: 1120, height: 760, refreshOnClose: false },
                             showRefreshClose: false
                           })
                         }
@@ -1373,7 +1354,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                         setPipelineModal({
                           url: decodeLegacyURL(data.actions.createAttachmentURL),
                           title: 'Add Attachment (Legacy)',
-                          openInPopup: { width: 520, height: 280, refreshOnClose: true },
                           showRefreshClose: true
                         })
                       }
@@ -1410,7 +1390,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                               setPipelineModal({
                                 url: decodeLegacyURL(attachment.previewURL),
                                 title: `Preview: ${toDisplayText(attachment.fileName, 'Attachment')}`,
-                                openInPopup: { width: 980, height: 720, refreshOnClose: false },
                                 showRefreshClose: false
                               })
                             }
@@ -1497,7 +1476,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                           setPipelineModal({
                             url: ensureModernUIURL(decodeLegacyURL(eventItem.eventURL)),
                             title: `Calendar Event: ${toDisplayText(eventItem.title)}`,
-                            openInPopup: { width: 1120, height: 760, refreshOnClose: false },
                             showRefreshClose: false
                           })
                         }
@@ -1553,7 +1531,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                                 setPipelineModal({
                                   url: decodeLegacyURL(viewURL),
                                   title: `Questionnaire: ${title}`,
-                                  openInPopup: { width: 980, height: 720, refreshOnClose: false },
                                   showRefreshClose: false
                                 })
                               }
@@ -1655,7 +1632,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   setPipelineModal({
                     url: quickStatusModal.fallbackURL,
                     title: quickStatusModal.fallbackTitle,
-                    openInPopup: { width: 700, height: 620, refreshOnClose: true },
                     showRefreshClose: true
                   });
                 }
@@ -1678,7 +1654,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   setPipelineModal({
                     url: decodeLegacyURL(pipelineDetailsModal.fullDetailsURL),
                     title: pipelineDetailsModal.title,
-                    openInPopup: { width: 980, height: 720, refreshOnClose: false },
                     showRefreshClose: false
                   });
                 }
@@ -1752,3 +1727,4 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     </div>
   );
 }
+

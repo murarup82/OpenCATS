@@ -9,6 +9,7 @@ import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
+import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -174,7 +175,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [addJobOrderModal, setAddJobOrderModal] = useState<{
     url: string;
     title: string;
-    openInPopup: { width: number; height: number; refreshOnClose: boolean };
   } | null>(null);
   const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
   const [monitorToggleError, setMonitorToggleError] = useState('');
@@ -260,18 +260,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  useEffect(() => {
-    const handleLegacyRefreshRequest = (rawEvent: Event) => {
-      rawEvent.preventDefault();
-      refreshPageData();
-    };
-
-    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    return () => {
-      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    };
-  }, [refreshPageData]);
+  usePageRefreshEvents(refreshPageData);
 
   const closeAddJobOrderModal = useCallback(
     (refreshOnClose: boolean) => {
@@ -481,8 +470,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                 onClick={() =>
                   setAddJobOrderModal({
                     url: decodeLegacyURL(data.actions.addJobOrderPopupURL),
-                    title: 'Add Job Order',
-                    openInPopup: { width: 520, height: 360, refreshOnClose: true }
+                    title: 'Add Job Order'
                   })
                 }
               >

@@ -28,6 +28,7 @@ import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuick
 import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { ensureModernUIURL } from '../lib/navigation';
+import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -64,7 +65,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const [pipelineModal, setPipelineModal] = useState<{
     url: string;
     title: string;
-    openInPopup: { width: number; height: number; refreshOnClose: boolean };
     showRefreshClose: boolean;
   } | null>(null);
   const [quickStatusModal, setQuickStatusModal] = useState<{
@@ -160,18 +160,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  useEffect(() => {
-    const handleLegacyRefreshRequest = (rawEvent: Event) => {
-      rawEvent.preventDefault();
-      refreshPageData();
-    };
-
-    window.addEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    return () => {
-      window.removeEventListener('opencats:legacy-popup:refresh-request', handleLegacyRefreshRequest as EventListener);
-    };
-  }, [refreshPageData]);
+  usePageRefreshEvents(refreshPageData);
 
   const closePipelineModal = useCallback(
     (refreshOnClose: boolean) => {
@@ -532,7 +521,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         setPipelineModal({
           url: fallbackURL,
           title: fallbackTitle,
-          openInPopup: { width: 970, height: 730, refreshOnClose: true },
           showRefreshClose: true
         });
         return;
@@ -565,7 +553,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         setPipelineModal({
           url: quickStatusModal.fallbackURL,
           title: quickStatusModal.fallbackTitle,
-          openInPopup: { width: 970, height: 730, refreshOnClose: true },
           showRefreshClose: true
         });
         return;
@@ -591,7 +578,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
             setPipelineModal({
               url: quickStatusModal.fallbackURL,
               title: quickStatusModal.fallbackTitle,
-              openInPopup: { width: 970, height: 730, refreshOnClose: true },
               showRefreshClose: true
             });
             return;
@@ -625,7 +611,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
         setPipelineModal({
           url: decodeLegacyURL(item.actions.removeFromPipelineURL),
           title: `Remove From Pipeline: ${toDisplayText(item.candidateName)}`,
-          openInPopup: { width: 430, height: 200, refreshOnClose: true },
           showRefreshClose: true
         });
         return;
@@ -748,7 +733,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   setPipelineModal({
                     url: decodeLegacyURL(data.actions.addCandidateURL),
                     title: 'Add Candidate',
-                    openInPopup: { width: 1120, height: 760, refreshOnClose: true },
                     showRefreshClose: true
                   })
                 }
@@ -763,7 +747,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 setPipelineModal({
                   url: decodeLegacyURL(data.actions.reportURL),
                   title: 'Job Order Report',
-                  openInPopup: { width: 1100, height: 760, refreshOnClose: false },
                   showRefreshClose: false
                 })
               }
@@ -778,7 +761,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   setPipelineModal({
                     url: decodeLegacyURL(data.actions.historyURL),
                     title: 'Job Order History',
-                    openInPopup: { width: 980, height: 720, refreshOnClose: false },
                     showRefreshClose: false
                   })
                 }
@@ -793,7 +775,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 setPipelineModal({
                   url: decodeLegacyURL(data.actions.hiringPlanURL),
                   title: 'Hiring Plan',
-                  openInPopup: { width: 1120, height: 760, refreshOnClose: true },
                   showRefreshClose: true
                 })
               }
@@ -1023,7 +1004,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                         setPipelineModal({
                           url: decodeLegacyURL(data.actions.createAttachmentURL),
                           title: 'Add Attachment (Legacy)',
-                          openInPopup: { width: 520, height: 280, refreshOnClose: true },
                           showRefreshClose: true
                         })
                       }
@@ -1172,7 +1152,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                           setPipelineModal({
                             url: ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL)),
                             title: 'Team Inbox',
-                            openInPopup: { width: 1120, height: 760, refreshOnClose: false },
                             showRefreshClose: false
                           })
                         }
@@ -1350,7 +1329,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   setPipelineModal({
                     url: quickStatusModal.fallbackURL,
                     title: quickStatusModal.fallbackTitle,
-                    openInPopup: { width: 970, height: 730, refreshOnClose: true },
                     showRefreshClose: true
                   });
                 }
@@ -1373,7 +1351,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   setPipelineModal({
                     url: decodeLegacyURL(pipelineDetailsModal.fullDetailsURL),
                     title: pipelineDetailsModal.title,
-                    openInPopup: { width: 980, height: 720, refreshOnClose: false },
                     showRefreshClose: false
                   });
                 }
@@ -1447,4 +1424,5 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
     </div>
   );
 }
+
 
