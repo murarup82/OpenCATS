@@ -21,10 +21,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 15. Native `joborders.show` phase 2: comments/messages native panels + richer quick actions + attachment action wiring.
 16. Native `joborders.listByView` phase 4: column presets with per-user persistence (local storage keyed by site/user).
 17. Native duplicate pre-check flow in `candidates.add` with modern inline review (hard/soft match UX).
+18. Native in-app status change modal on `dashboard.my` (popup replaced by embedded modal workflow).
 
 ## Next Queue
 
-1. Build native status change modal for dashboard/card actions (replace legacy popup for common transitions).
+1. Expand in-app modal coverage for pipeline details/remove actions (candidates + dashboard), reducing popup dependency further.
 
 ## Rules
 

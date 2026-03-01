@@ -2119,6 +2119,63 @@
   block-size: 104px;
 }
 
+.modern-inline-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 26, 39, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1200;
+  padding: 18px;
+}
+
+.modern-inline-modal__dialog {
+  width: min(1120px, 100%);
+  border: 1px solid #9cc0d5;
+  border-radius: 14px;
+  background: #f6fbff;
+  box-shadow: 0 20px 48px rgba(10, 44, 66, 0.32);
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.modern-inline-modal__dialog--status {
+  max-height: calc(100vh - 36px);
+}
+
+.modern-inline-modal__header h3 {
+  margin: 0;
+  color: #0f4560;
+  font: 700 1rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.modern-inline-modal__header p {
+  margin: 4px 0 0;
+  color: #46687b;
+  font-size: 0.78rem;
+}
+
+.modern-inline-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modern-inline-modal__body {
+  border: 1px solid #bbd3e2;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.modern-inline-modal__frame {
+  display: block;
+  width: 100%;
+  height: min(72vh, 760px);
+  border: 0;
+}
+
 @keyframes avel-rise {
   from {
     opacity: 0;

@@ -85,6 +85,11 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [localStatusID, setLocalStatusID] = useState<string>('all');
   const [reloadToken, setReloadToken] = useState(0);
+  const [statusModal, setStatusModal] = useState<{
+    url: string;
+    candidateName: string;
+    currentStatusLabel: string;
+  } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -204,13 +209,29 @@ export function DashboardMyPage({ bootstrap }: Props) {
       url += `&candidateID=${encodeURIComponent(String(row.candidateID))}`;
       url += `&enforceOwner=${encodeURIComponent(String(enforceOwner))}`;
       url += '&refreshParent=1';
+      url += '&display=popup';
+      url += '&ui=legacy';
       if (targetStatusID !== null && targetStatusID > 0) {
         url += `&statusID=${encodeURIComponent(String(targetStatusID))}`;
       }
 
-      openLegacyPopup(url, 700, 620, true);
+      setStatusModal({
+        url,
+        candidateName: toDisplayText(row.candidateName),
+        currentStatusLabel: toDisplayText(row.statusLabel)
+      });
     },
-    [bootstrap.indexName, data?.meta.scope, openLegacyPopup]
+    [bootstrap.indexName, data?.meta.scope]
+  );
+
+  const closeStatusModal = useCallback(
+    (refreshOnClose: boolean) => {
+      setStatusModal(null);
+      if (refreshOnClose) {
+        refreshDashboard();
+      }
+    },
+    [refreshDashboard]
   );
 
   const openPipelineDetails = useCallback(
@@ -534,6 +555,47 @@ export function DashboardMyPage({ bootstrap }: Props) {
           </>
         )}
         </div>
+
+        {statusModal ? (
+          <div className="modern-inline-modal" role="dialog" aria-modal="true" aria-label="Change pipeline status">
+            <div className="modern-inline-modal__dialog modern-inline-modal__dialog--status">
+              <div className="modern-inline-modal__header">
+                <h3>Change Status: {statusModal.candidateName}</h3>
+                <p>Current status: {statusModal.currentStatusLabel}</p>
+              </div>
+              <div className="modern-inline-modal__actions">
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--secondary"
+                  onClick={() => openLegacyPopup(statusModal.url, 700, 620, true)}
+                >
+                  Open In Popup
+                </button>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--secondary"
+                  onClick={() => closeStatusModal(false)}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--emphasis"
+                  onClick={() => closeStatusModal(true)}
+                >
+                  Close And Refresh
+                </button>
+              </div>
+              <div className="modern-inline-modal__body">
+                <iframe
+                  title="Pipeline status editor"
+                  src={statusModal.url}
+                  className="modern-inline-modal__frame"
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
       </PageContainer>
     </div>
   );
