@@ -13,6 +13,7 @@ import { CompaniesShowPage } from '../pages/CompaniesShowPage';
 import { ContactsListPage } from '../pages/ContactsListPage';
 import { ContactsShowPage } from '../pages/ContactsShowPage';
 import { ActivityListPage } from '../pages/ActivityListPage';
+import { CalendarPage } from '../pages/CalendarPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 
 export type ModernRouteComponentProps = {
@@ -45,6 +46,8 @@ const registry: Record<string, ModernRouteComponent> = {
   'activity.listbyviewdatagrid': ActivityListPage,
   'activity.viewbydate': ActivityListPage,
   'activity.(default)': ActivityListPage,
+  'calendar.showcalendar': CalendarPage,
+  'calendar.(default)': CalendarPage,
   'candidates.*': ModuleBridgePage,
   'joborders.*': ModuleBridgePage,
   'companies.*': ModuleBridgePage,

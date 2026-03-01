@@ -92,6 +92,32 @@ class CalendarUI extends UserInterface
      */
     private function showCalendar()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'calendar-workspace')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernCalendarJSON('calendar-workspace');
+            return;
+        }
+
         $currentHour     = DateUtility::getAdjustedDate('H');
         $currentDay      = DateUtility::getAdjustedDate('j');
         $currentMonth    = DateUtility::getAdjustedDate('n');
@@ -297,6 +323,456 @@ class CalendarUI extends UserInterface
         $this->_template->assign('eventsString', $eventsString);
         $this->_template->assign('allowEventReminders', $allowEventReminders);
         $this->_template->display('./modules/calendar/Calendar.tpl');
+    }
+
+    private function renderModernCalendarJSON($modernPage)
+    {
+        $db = DatabaseConnection::getInstance();
+        $baseURL = CATSUtility::getIndexName();
+        $siteID = (int) $this->_siteID;
+
+        $currentDay = (int) DateUtility::getAdjustedDate('j');
+        $currentMonth = (int) DateUtility::getAdjustedDate('n');
+        $currentYear = (int) DateUtility::getAdjustedDate('Y');
+
+        $month = (int) $this->getTrimmedInput('month', $_GET);
+        $year = (int) $this->getTrimmedInput('year', $_GET);
+        if ($month <= 0 || $year <= 0 || !checkdate($month, 1, $year))
+        {
+            $month = $currentMonth;
+            $year = $currentYear;
+        }
+
+        $daysInMonth = DateUtility::getDaysInMonth($month, $year);
+        $day = (int) $this->getTrimmedInput('day', $_GET);
+        if ($day <= 0)
+        {
+            $day = $currentDay;
+        }
+        if ($day > $daysInMonth)
+        {
+            $day = $daysInMonth;
+        }
+        if ($day <= 0)
+        {
+            $day = 1;
+        }
+
+        $calendarSettings = new CalendarSettings($this->_siteID);
+        $calendarSettingsRS = $calendarSettings->getAll();
+        $defaultView = strtoupper(trim((isset($calendarSettingsRS['calendarView']) ? $calendarSettingsRS['calendarView'] : 'MONTHVIEW')));
+        if ($defaultView !== 'DAYVIEW' && $defaultView !== 'WEEKVIEW' && $defaultView !== 'MONTHVIEW')
+        {
+            $defaultView = 'MONTHVIEW';
+        }
+
+        $requestedView = strtoupper(trim($this->getTrimmedInput('view', $_GET)));
+        if ($requestedView === '' || $requestedView === 'DEFAULT_VIEW')
+        {
+            $view = $defaultView;
+        }
+        else if ($requestedView === 'DAYVIEW' || $requestedView === 'WEEKVIEW' || $requestedView === 'MONTHVIEW')
+        {
+            $view = $requestedView;
+        }
+        else
+        {
+            $view = $defaultView;
+        }
+
+        $selectedDateTimestamp = mktime(0, 0, 0, $month, $day, $year);
+        $selectedDateISO = date('Y-m-d', $selectedDateTimestamp);
+        $firstDayMonday = ((int) (isset($calendarSettingsRS['firstDayMonday']) ? $calendarSettingsRS['firstDayMonday'] : 0) === 1);
+
+        if ($view === 'DAYVIEW')
+        {
+            $rangeStartTimestamp = $selectedDateTimestamp;
+            $rangeEndTimestamp = strtotime('+1 day', $rangeStartTimestamp);
+            $prevAnchorTimestamp = strtotime('-1 day', $selectedDateTimestamp);
+            $nextAnchorTimestamp = strtotime('+1 day', $selectedDateTimestamp);
+        }
+        else if ($view === 'WEEKVIEW')
+        {
+            $weekdayNumber = (int) date('w', $selectedDateTimestamp);
+            if ($firstDayMonday)
+            {
+                $offsetToWeekStart = ($weekdayNumber === 0 ? 6 : $weekdayNumber - 1);
+            }
+            else
+            {
+                $offsetToWeekStart = $weekdayNumber;
+            }
+
+            $rangeStartTimestamp = strtotime('-' . $offsetToWeekStart . ' day', $selectedDateTimestamp);
+            $rangeEndTimestamp = strtotime('+7 day', $rangeStartTimestamp);
+            $prevAnchorTimestamp = strtotime('-7 day', $selectedDateTimestamp);
+            $nextAnchorTimestamp = strtotime('+7 day', $selectedDateTimestamp);
+        }
+        else
+        {
+            $rangeStartTimestamp = mktime(0, 0, 0, $month, 1, $year);
+            $rangeEndTimestamp = mktime(0, 0, 0, $month + 1, 1, $year);
+            $prevAnchorTimestamp = mktime(0, 0, 0, $month - 1, 1, $year);
+            $nextAnchorTimestamp = mktime(0, 0, 0, $month + 1, 1, $year);
+        }
+
+        $rangeStartISO = date('Y-m-d', $rangeStartTimestamp);
+        $rangeEndISO = date('Y-m-d', $rangeEndTimestamp);
+
+        $userIsSuperUser = ($this->getUserAccessLevel('calendar.show') < ACCESS_LEVEL_SA ? 0 : 1);
+        $superUserActive = ($userIsSuperUser && isset($_GET['superuser']) && $_GET['superuser'] == 1);
+        $showEvent = (int) $this->getTrimmedInput('showEvent', $_GET);
+
+        $eventsSQL = sprintf(
+            "SELECT
+                calendar_event.calendar_event_id AS eventID,
+                calendar_event.data_item_id AS dataItemID,
+                calendar_event.data_item_type AS dataItemType,
+                calendar_event.joborder_id AS jobOrderID,
+                calendar_event.duration AS duration,
+                calendar_event.all_day AS allDay,
+                calendar_event.title AS title,
+                calendar_event.description AS description,
+                calendar_event.reminder_enabled AS reminderEnabled,
+                calendar_event.reminder_email AS reminderEmail,
+                calendar_event.reminder_time AS reminderTime,
+                calendar_event.public AS isPublic,
+                DATE_FORMAT(calendar_event.date, '%%Y-%%m-%%d') AS dateISO,
+                DATE_FORMAT(calendar_event.date, '%%m-%%d-%%y') AS dateDisplay,
+                DATE_FORMAT(calendar_event.date, '%%h:%%i %%p') AS timeDisplay,
+                calendar_event.date AS dateSort,
+                calendar_event_type.calendar_event_type_id AS eventTypeID,
+                calendar_event_type.short_description AS eventTypeDescription,
+                entered_by_user.user_id AS enteredByUserID,
+                CONCAT(COALESCE(entered_by_user.first_name, ''), ' ', COALESCE(entered_by_user.last_name, '')) AS enteredByFullName,
+                candidate.candidate_id AS candidateID,
+                candidate.first_name AS candidateFirstName,
+                candidate.last_name AS candidateLastName,
+                contact.contact_id AS contactID,
+                contact.first_name AS contactFirstName,
+                contact.last_name AS contactLastName,
+                company_data.company_id AS companyDataItemID,
+                company_data.name AS companyDataItemName,
+                joborder_data.joborder_id AS jobOrderDataItemID,
+                joborder_data.title AS jobOrderDataItemTitle,
+                joborder_associated.joborder_id AS regardingJobOrderID,
+                joborder_associated.title AS regardingJobOrderTitle,
+                company_associated.company_id AS regardingCompanyID,
+                company_associated.name AS regardingCompanyName
+            FROM
+                calendar_event
+            LEFT JOIN calendar_event_type
+                ON calendar_event.type = calendar_event_type.calendar_event_type_id
+            LEFT JOIN user AS entered_by_user
+                ON calendar_event.entered_by = entered_by_user.user_id
+            LEFT JOIN candidate
+                ON calendar_event.data_item_type = %s
+                AND calendar_event.data_item_id = candidate.candidate_id
+                AND candidate.site_id = calendar_event.site_id
+            LEFT JOIN contact
+                ON calendar_event.data_item_type = %s
+                AND calendar_event.data_item_id = contact.contact_id
+                AND contact.site_id = calendar_event.site_id
+            LEFT JOIN company AS company_data
+                ON calendar_event.data_item_type = %s
+                AND calendar_event.data_item_id = company_data.company_id
+                AND company_data.site_id = calendar_event.site_id
+            LEFT JOIN joborder AS joborder_data
+                ON calendar_event.data_item_type = %s
+                AND calendar_event.data_item_id = joborder_data.joborder_id
+                AND joborder_data.site_id = calendar_event.site_id
+            LEFT JOIN joborder AS joborder_associated
+                ON calendar_event.joborder_id = joborder_associated.joborder_id
+                AND joborder_associated.site_id = calendar_event.site_id
+            LEFT JOIN company AS company_associated
+                ON joborder_associated.company_id = company_associated.company_id
+                AND company_associated.site_id = calendar_event.site_id
+            WHERE
+                calendar_event.site_id = %s
+            AND
+                calendar_event.date >= %s
+            AND
+                calendar_event.date < %s
+            ORDER BY
+                calendar_event.date ASC",
+            $db->makeQueryInteger(DATA_ITEM_CANDIDATE),
+            $db->makeQueryInteger(DATA_ITEM_CONTACT),
+            $db->makeQueryInteger(DATA_ITEM_COMPANY),
+            $db->makeQueryInteger(DATA_ITEM_JOBORDER),
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryString($rangeStartISO . ' 00:00:00'),
+            $db->makeQueryString($rangeEndISO . ' 00:00:00')
+        );
+        $eventsRS = $db->getAllAssoc($eventsSQL);
+
+        $eventRows = array();
+        foreach ($eventsRS as $eventRow)
+        {
+            $eventID = (int) (isset($eventRow['eventID']) ? $eventRow['eventID'] : 0);
+            $dataItemType = (int) (isset($eventRow['dataItemType']) ? $eventRow['dataItemType'] : 0);
+            $dataItemID = (int) (isset($eventRow['dataItemID']) ? $eventRow['dataItemID'] : 0);
+            $dataItemLink = $this->buildModernCalendarDataItemLink(
+                $baseURL,
+                $dataItemType,
+                $dataItemID,
+                $eventRow
+            );
+
+            $eventDateISO = (isset($eventRow['dateISO']) ? (string) $eventRow['dateISO'] : $selectedDateISO);
+            $eventDateTimestamp = strtotime($eventDateISO . ' 00:00:00');
+            if ($eventDateTimestamp === false)
+            {
+                $eventDateTimestamp = $selectedDateTimestamp;
+            }
+
+            $regardingJobOrderID = (int) (isset($eventRow['regardingJobOrderID']) ? $eventRow['regardingJobOrderID'] : 0);
+            $regardingCompanyID = (int) (isset($eventRow['regardingCompanyID']) ? $eventRow['regardingCompanyID'] : 0);
+            $regardingJobOrderTitle = (isset($eventRow['regardingJobOrderTitle']) ? (string) $eventRow['regardingJobOrderTitle'] : '');
+            $regardingCompanyName = (isset($eventRow['regardingCompanyName']) ? (string) $eventRow['regardingCompanyName'] : '');
+
+            if ($regardingJobOrderID > 0)
+            {
+                $regardingLabel = $regardingJobOrderTitle;
+                if ($regardingCompanyName !== '')
+                {
+                    $regardingLabel .= ' (' . $regardingCompanyName . ')';
+                }
+            }
+            else
+            {
+                $regardingLabel = 'General';
+            }
+
+            $eventRows[] = array(
+                'eventID' => $eventID,
+                'title' => (isset($eventRow['title']) ? (string) $eventRow['title'] : ''),
+                'description' => (isset($eventRow['description']) ? (string) $eventRow['description'] : ''),
+                'allDay' => ((int) (isset($eventRow['allDay']) ? $eventRow['allDay'] : 0) === 1),
+                'dateISO' => $eventDateISO,
+                'dateDisplay' => (isset($eventRow['dateDisplay']) ? (string) $eventRow['dateDisplay'] : ''),
+                'timeDisplay' => (isset($eventRow['timeDisplay']) ? (string) $eventRow['timeDisplay'] : ''),
+                'duration' => (int) (isset($eventRow['duration']) ? $eventRow['duration'] : 0),
+                'isPublic' => ((int) (isset($eventRow['isPublic']) ? $eventRow['isPublic'] : 0) === 1),
+                'eventTypeID' => (int) (isset($eventRow['eventTypeID']) ? $eventRow['eventTypeID'] : 0),
+                'eventTypeDescription' => (isset($eventRow['eventTypeDescription']) ? (string) $eventRow['eventTypeDescription'] : ''),
+                'enteredByUserID' => (int) (isset($eventRow['enteredByUserID']) ? $eventRow['enteredByUserID'] : 0),
+                'enteredByName' => trim((isset($eventRow['enteredByFullName']) ? (string) $eventRow['enteredByFullName'] : '')),
+                'dataItemType' => $dataItemType,
+                'dataItemID' => $dataItemID,
+                'dataItemLabel' => $dataItemLink['label'],
+                'dataItemKind' => $dataItemLink['kind'],
+                'dataItemURL' => $dataItemLink['url'],
+                'regardingJobOrderID' => $regardingJobOrderID,
+                'regardingJobOrderTitle' => $regardingJobOrderTitle,
+                'regardingCompanyID' => $regardingCompanyID,
+                'regardingCompanyName' => $regardingCompanyName,
+                'regardingLabel' => $regardingLabel,
+                'regardingURL' => ($regardingJobOrderID > 0 ? sprintf('%s?m=joborders&a=show&jobOrderID=%d', $baseURL, $regardingJobOrderID) : ''),
+                'showURL' => sprintf(
+                    '%s?m=calendar&a=showCalendar&view=DAYVIEW&month=%d&year=%d&day=%d&showEvent=%d',
+                    $baseURL,
+                    (int) date('n', $eventDateTimestamp),
+                    (int) date('Y', $eventDateTimestamp),
+                    (int) date('j', $eventDateTimestamp),
+                    $eventID
+                )
+            );
+        }
+
+        $upcomingSQL = sprintf(
+            "SELECT
+                calendar_event.calendar_event_id AS eventID,
+                calendar_event.title AS title,
+                DATE_FORMAT(calendar_event.date, '%%m-%%d-%%y') AS dateDisplay,
+                DATE_FORMAT(calendar_event.date, '%%h:%%i %%p') AS timeDisplay,
+                DATE_FORMAT(calendar_event.date, '%%Y-%%m-%%d') AS dateISO,
+                calendar_event.all_day AS allDay
+            FROM
+                calendar_event
+            WHERE
+                calendar_event.site_id = %s
+            AND
+                calendar_event.date >= %s
+            ORDER BY
+                calendar_event.date ASC
+            LIMIT 0, 12",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryString(date('Y-m-d H:i:s'))
+        );
+        $upcomingRS = $db->getAllAssoc($upcomingSQL);
+
+        $upcomingRows = array();
+        foreach ($upcomingRS as $upcomingRow)
+        {
+            $upcomingDateISO = (isset($upcomingRow['dateISO']) ? (string) $upcomingRow['dateISO'] : $selectedDateISO);
+            $upcomingDateTimestamp = strtotime($upcomingDateISO . ' 00:00:00');
+            if ($upcomingDateTimestamp === false)
+            {
+                $upcomingDateTimestamp = $selectedDateTimestamp;
+            }
+
+            $upcomingRows[] = array(
+                'eventID' => (int) (isset($upcomingRow['eventID']) ? $upcomingRow['eventID'] : 0),
+                'title' => (isset($upcomingRow['title']) ? (string) $upcomingRow['title'] : ''),
+                'dateDisplay' => (isset($upcomingRow['dateDisplay']) ? (string) $upcomingRow['dateDisplay'] : ''),
+                'timeDisplay' => (isset($upcomingRow['timeDisplay']) ? (string) $upcomingRow['timeDisplay'] : ''),
+                'allDay' => ((int) (isset($upcomingRow['allDay']) ? $upcomingRow['allDay'] : 0) === 1),
+                'showURL' => sprintf(
+                    '%s?m=calendar&a=showCalendar&view=DAYVIEW&month=%d&year=%d&day=%d&showEvent=%d',
+                    $baseURL,
+                    (int) date('n', $upcomingDateTimestamp),
+                    (int) date('Y', $upcomingDateTimestamp),
+                    (int) date('j', $upcomingDateTimestamp),
+                    (int) (isset($upcomingRow['eventID']) ? $upcomingRow['eventID'] : 0)
+                )
+            );
+        }
+
+        $calendar = new Calendar($this->_siteID);
+        $eventTypes = $calendar->getAllEventTypes();
+        $eventTypeOptions = array();
+        foreach ($eventTypes as $eventTypeRow)
+        {
+            $eventTypeOptions[] = array(
+                'typeID' => (int) (isset($eventTypeRow['typeID']) ? $eventTypeRow['typeID'] : 0),
+                'description' => (isset($eventTypeRow['description']) ? (string) $eventTypeRow['description'] : '')
+            );
+        }
+
+        $todayURL = sprintf(
+            '%s?m=calendar&a=showCalendar&view=%s&month=%d&year=%d&day=%d',
+            $baseURL,
+            rawurlencode($view),
+            $currentMonth,
+            $currentYear,
+            $currentDay
+        );
+        $prevURL = sprintf(
+            '%s?m=calendar&a=showCalendar&view=%s&month=%d&year=%d&day=%d',
+            $baseURL,
+            rawurlencode($view),
+            (int) date('n', $prevAnchorTimestamp),
+            (int) date('Y', $prevAnchorTimestamp),
+            (int) date('j', $prevAnchorTimestamp)
+        );
+        $nextURL = sprintf(
+            '%s?m=calendar&a=showCalendar&view=%s&month=%d&year=%d&day=%d',
+            $baseURL,
+            rawurlencode($view),
+            (int) date('n', $nextAnchorTimestamp),
+            (int) date('Y', $nextAnchorTimestamp),
+            (int) date('j', $nextAnchorTimestamp)
+        );
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'calendar.show.v1',
+                'modernPage' => $modernPage,
+                'permissions' => array(
+                    'canAddEvent' => ($this->getUserAccessLevel('calendar.addEvent') >= ACCESS_LEVEL_EDIT),
+                    'canEditEvent' => ($this->getUserAccessLevel('calendar.editEvent') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteEvent' => ($this->getUserAccessLevel('calendar.deleteEvent') >= ACCESS_LEVEL_DELETE),
+                    'canUseSuperUser' => ((bool) $userIsSuperUser)
+                )
+            ),
+            'filters' => array(
+                'view' => $view,
+                'month' => $month,
+                'year' => $year,
+                'day' => $day,
+                'selectedDateISO' => $selectedDateISO,
+                'showEvent' => $showEvent,
+                'superUserActive' => ((bool) $superUserActive),
+                'rangeStartISO' => $rangeStartISO,
+                'rangeEndISO' => date('Y-m-d', strtotime('-1 day', $rangeEndTimestamp))
+            ),
+            'options' => array(
+                'views' => array(
+                    array('value' => 'DAYVIEW', 'label' => 'Day'),
+                    array('value' => 'WEEKVIEW', 'label' => 'Week'),
+                    array('value' => 'MONTHVIEW', 'label' => 'Month')
+                ),
+                'eventTypes' => $eventTypeOptions
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf(
+                    '%s?m=calendar&a=showCalendar&view=%s&month=%d&year=%d&day=%d&ui=legacy',
+                    $baseURL,
+                    rawurlencode($view),
+                    $month,
+                    $year,
+                    $day
+                ),
+                'todayURL' => $todayURL,
+                'prevURL' => $prevURL,
+                'nextURL' => $nextURL
+            ),
+            'summary' => array(
+                'eventsInRange' => count($eventRows),
+                'upcomingCount' => count($upcomingRows),
+                'dateLabel' => date('F j, Y', $selectedDateTimestamp),
+                'rangeLabel' => date('M j, Y', $rangeStartTimestamp) . ' - ' . date('M j, Y', strtotime('-1 day', $rangeEndTimestamp))
+            ),
+            'events' => $eventRows,
+            'upcoming' => $upcomingRows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
+    private function buildModernCalendarDataItemLink($baseURL, $dataItemType, $dataItemID, $eventRow)
+    {
+        $response = array(
+            'kind' => '',
+            'label' => '',
+            'url' => ''
+        );
+
+        if ($dataItemType == DATA_ITEM_CANDIDATE)
+        {
+            $response['kind'] = 'candidate';
+            $response['label'] = trim(
+                (isset($eventRow['candidateFirstName']) ? (string) $eventRow['candidateFirstName'] : '') .
+                ' ' .
+                (isset($eventRow['candidateLastName']) ? (string) $eventRow['candidateLastName'] : '')
+            );
+            $response['url'] = sprintf('%s?m=candidates&a=show&candidateID=%d', $baseURL, $dataItemID);
+        }
+        else if ($dataItemType == DATA_ITEM_CONTACT)
+        {
+            $response['kind'] = 'contact';
+            $response['label'] = trim(
+                (isset($eventRow['contactFirstName']) ? (string) $eventRow['contactFirstName'] : '') .
+                ' ' .
+                (isset($eventRow['contactLastName']) ? (string) $eventRow['contactLastName'] : '')
+            );
+            $response['url'] = sprintf('%s?m=contacts&a=show&contactID=%d', $baseURL, $dataItemID);
+        }
+        else if ($dataItemType == DATA_ITEM_COMPANY)
+        {
+            $response['kind'] = 'company';
+            $response['label'] = (isset($eventRow['companyDataItemName']) ? (string) $eventRow['companyDataItemName'] : '');
+            $response['url'] = sprintf('%s?m=companies&a=show&companyID=%d', $baseURL, $dataItemID);
+        }
+        else if ($dataItemType == DATA_ITEM_JOBORDER)
+        {
+            $response['kind'] = 'joborder';
+            $response['label'] = (isset($eventRow['jobOrderDataItemTitle']) ? (string) $eventRow['jobOrderDataItemTitle'] : '');
+            $response['url'] = sprintf('%s?m=joborders&a=show&jobOrderID=%d', $baseURL, $dataItemID);
+        }
+
+        if ($response['label'] === '')
+        {
+            $response['label'] = 'Linked Item';
+        }
+
+        return $response;
     }
 
     /*

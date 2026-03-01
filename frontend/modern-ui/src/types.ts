@@ -612,6 +612,88 @@ export type ActivityListModernDataResponse = {
   }>;
 };
 
+export type CalendarModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    permissions: {
+      canAddEvent: boolean;
+      canEditEvent: boolean;
+      canDeleteEvent: boolean;
+      canUseSuperUser: boolean;
+    };
+  };
+  filters: {
+    view: 'DAYVIEW' | 'WEEKVIEW' | 'MONTHVIEW';
+    month: number;
+    year: number;
+    day: number;
+    selectedDateISO: string;
+    showEvent: number;
+    superUserActive: boolean;
+    rangeStartISO: string;
+    rangeEndISO: string;
+  };
+  options: {
+    views: Array<{
+      value: 'DAYVIEW' | 'WEEKVIEW' | 'MONTHVIEW';
+      label: string;
+    }>;
+    eventTypes: Array<{
+      typeID: number;
+      description: string;
+    }>;
+  };
+  actions: {
+    legacyURL: string;
+    todayURL: string;
+    prevURL: string;
+    nextURL: string;
+  };
+  summary: {
+    eventsInRange: number;
+    upcomingCount: number;
+    dateLabel: string;
+    rangeLabel: string;
+  };
+  events: Array<{
+    eventID: number;
+    title: string;
+    description: string;
+    allDay: boolean;
+    dateISO: string;
+    dateDisplay: string;
+    timeDisplay: string;
+    duration: number;
+    isPublic: boolean;
+    eventTypeID: number;
+    eventTypeDescription: string;
+    enteredByUserID: number;
+    enteredByName: string;
+    dataItemType: number;
+    dataItemID: number;
+    dataItemLabel: string;
+    dataItemKind: string;
+    dataItemURL: string;
+    regardingJobOrderID: number;
+    regardingJobOrderTitle: string;
+    regardingCompanyID: number;
+    regardingCompanyName: string;
+    regardingLabel: string;
+    regardingURL: string;
+    showURL: string;
+  }>;
+  upcoming: Array<{
+    eventID: number;
+    title: string;
+    dateDisplay: string;
+    timeDisplay: string;
+    allDay: boolean;
+    showURL: string;
+  }>;
+};
+
 export type JobOrdersListModernDataResponse = {
   meta: {
     contractVersion: number;

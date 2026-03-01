@@ -1,5 +1,6 @@
 import type {
   ActivityListModernDataResponse,
+  CalendarModernDataResponse,
   CandidateAssignToJobOrderModernDataResponse,
   CandidateAssignToJobOrderMutationResponse,
   CandidateDuplicateCheckResponse,
@@ -26,6 +27,7 @@ import type {
 import { getJSON } from './httpClient';
 import {
   MODERN_ACTIVITY_PAGE,
+  MODERN_CALENDAR_PAGE,
   MODERN_CANDIDATES_PAGE,
   MODERN_CANDIDATE_ADD_PAGE,
   MODERN_CANDIDATE_EDIT_PAGE,
@@ -840,6 +842,29 @@ export async function fetchActivityListModernData(
   }
   if (data.meta.contractKey !== 'activity.listByView.v1') {
     throw new Error('Unexpected activities contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchCalendarModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<CalendarModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'calendar',
+    action: 'showCalendar',
+    modernPage: MODERN_CALENDAR_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<CalendarModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading calendar.');
+  }
+  if (data.meta.contractKey !== 'calendar.show.v1') {
+    throw new Error('Unexpected calendar contract key.');
   }
 
   return data;
