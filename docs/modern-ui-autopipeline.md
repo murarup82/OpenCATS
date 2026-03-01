@@ -130,39 +130,58 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `JobOrdersFormBridgePage` with compatibility workspace actions (reload form, open in new tab, quick navigation)
     - wired `joborders.add` and `joborders.edit` routes to the dedicated bridge instead of generic module fallback
     - preserved full legacy form behavior through `ui_embed=1` rendering.
+75. Hardened dashboard status mutation fallback behavior:
+    - removed implicit legacy status modal fallback on transient async mutation errors in `dashboard.my`
+    - legacy status form now opens only for explicit full-form usage, rejected transitions, missing token path, or backend `requiresModal` responses.
+76. Restricted dashboard quick-status choices to valid forward transitions:
+    - `dashboard.my` quick status options now respect ordered pipeline stages and keep rejected handling explicit
+    - blocked invalid backward options from the quick-status modal list.
+77. Extended `candidates.edit.v1` attachment payload with preview metadata:
+    - added `previewAvailable` and `previewURL` fields for edit-page attachment parity with candidate profile.
+78. Added native in-app attachment preview action on `candidates.edit`:
+    - attachment rows now expose `Preview` when available and open inside embedded legacy modal shell
+    - upload modal state now supports modal mode flags to avoid unnecessary refresh prompts for preview-only views.
+79. Added in-app attachment preview action on `joborders.show`:
+    - attachment rows now expose `Preview` using retrieval URL in the embedded modal shell to reduce context switching.
+80. Added shared legacy embedding URL utility:
+    - introduced `buildEmbeddedLegacyURL()` in `frontend/modern-ui/src/lib/embeddedLegacy.ts`
+    - removed duplicated URL embedding logic across compatibility surfaces.
+81. Added shared embedded-frame loading/reload hook:
+    - introduced `useEmbeddedLegacyFrame()` for standardized frame loading state, reload token, and load handlers.
+82. Refactored `ModuleBridgePage` to shared embedding utilities:
+    - now uses centralized embedded URL + frame loading/reload hook behavior.
+83. Refactored form bridge pages to shared embedding utilities:
+    - `CandidatesFormBridgePage` and `JobOrdersFormBridgePage` now use shared frame loading/reload orchestration.
+84. Refactored `LegacyCompatPage` to shared embedding utilities:
+    - now uses shared frame loading hook and includes explicit in-place workspace reload action.
 
 ## Next Queue (30-Slice Execution)
 
-1. Replace `dashboard.my` list-view "Change Status" legacy modal action with native quick-status modal parity.
-2. Add native rejection/reason flow for dashboard status changes to reduce remaining legacy fallback usage.
-3. Replace remaining `dashboard.my` legacy status fallback iframe with explicit native-first action routing + narrow legacy escape hatch.
-4. Migrate remaining `candidates.show` utility fallback actions from `LegacyFrameModal` into native async/mutation flows where backend contracts already exist.
-5. Migrate remaining `joborders.show` utility fallback actions from `LegacyFrameModal` into native async/mutation flows where backend contracts already exist.
-6. Convert dynamic custom-field dropdowns (`candidates.add/edit`) to `SelectMenu` while keeping form-post compatibility.
-7. Add native attachment preview modal for `candidates.edit` (same behavior as profile) to avoid context switching.
-8. Add inline optimistic refresh tokens for candidate/joborder show mutations to eliminate stale panel windows after rapid actions.
-9. Add async/non-blocking feedback toasts for successful mutations (status change, assign, upload, delete) across modern pages.
-10. Add unified mutation error surface component to replace repeated per-page error blocks.
-11. Add route-level loading skeletons for compatibility pages (`ModuleBridgePage` and form bridges) to reduce perceived flicker.
-12. Add `companies.listByView` modern-json contract and native page shell (filters + table + legacy fallback actions).
-13. Add `companies.show` modern-json contract and native profile page shell (summary + notes/messages parity starter).
-14. Add `contacts.listByView` modern-json contract and native list page shell.
-15. Add `contacts.show` modern-json contract and native profile page shell.
-16. Add `activities.listByView` modern-json contract and native list page shell with date/status filtering.
-17. Add `calendar` modern-json contract and native list/day shell with in-app navigation.
-18. Add `lists.manage` modern-json contract and native static-list management page.
-19. Add reports entry modernization (`reports.*`) with native launcher panel and embedded report builder fallback.
-20. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
-21. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
-22. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
-23. Add centralized URL-state sync helper for filters/pagination shared by list pages.
-24. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
-25. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
-26. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-27. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-28. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
-29. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-30. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+1. Add native rejection/reason flow for dashboard status changes to reduce remaining legacy fallback usage.
+2. Migrate remaining `candidates.show` utility fallback actions from `LegacyFrameModal` into native async/mutation flows where backend contracts already exist.
+3. Migrate remaining `joborders.show` utility fallback actions from `LegacyFrameModal` into native async/mutation flows where backend contracts already exist.
+4. Add inline optimistic refresh tokens for candidate/joborder show mutations to eliminate stale panel windows after rapid actions.
+5. Add async/non-blocking feedback toasts for successful mutations (status change, assign, upload, delete) across modern pages.
+6. Add unified mutation error surface component to replace repeated per-page error blocks.
+7. Add `companies.listByView` modern-json contract and native page shell (filters + table + legacy fallback actions).
+8. Add `companies.show` modern-json contract and native profile page shell (summary + notes/messages parity starter).
+9. Add `contacts.listByView` modern-json contract and native list page shell.
+10. Add `contacts.show` modern-json contract and native profile page shell.
+11. Add `activities.listByView` modern-json contract and native list page shell with date/status filtering.
+12. Add `calendar` modern-json contract and native list/day shell with in-app navigation.
+13. Add `lists.manage` modern-json contract and native static-list management page.
+14. Add reports entry modernization (`reports.*`) with native launcher panel and embedded report builder fallback.
+15. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
+16. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
+17. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
+18. Add centralized URL-state sync helper for filters/pagination shared by list pages.
+19. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
+20. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
+21. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
+22. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+23. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
+24. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+25. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 
 ## Rules
 

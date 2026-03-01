@@ -3030,7 +3030,13 @@ class CandidatesUI extends UserInterface
                 'fileName' => (isset($attachmentData['originalFilename']) ? (string) $attachmentData['originalFilename'] : ''),
                 'dateCreated' => (isset($attachmentData['dateCreated']) ? (string) $attachmentData['dateCreated'] : '--'),
                 'isProfileImage' => ((isset($attachmentData['isProfileImage']) && (int) $attachmentData['isProfileImage'] === 1) ? true : false),
-                'retrievalURL' => $retrievalURL
+                'retrievalURL' => $retrievalURL,
+                'previewAvailable' => ((isset($attachmentData['hasText']) && (int) $attachmentData['hasText'] === 1) ? true : false),
+                'previewURL' => sprintf(
+                    '%s?m=candidates&a=viewResume&attachmentID=%d&ui=legacy',
+                    $baseURL,
+                    (int) $attachmentData['attachmentID']
+                )
             );
         }
 

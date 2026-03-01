@@ -103,6 +103,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [attachmentModal, setAttachmentModal] = useState<{
     url: string;
     title: string;
+    showRefreshClose: boolean;
   } | null>(null);
   const [attachmentUploadOpen, setAttachmentUploadOpen] = useState<boolean>(false);
   const [attachmentUploadFile, setAttachmentUploadFile] = useState<File | null>(null);
@@ -817,7 +818,8 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                       onClick={() =>
                         setAttachmentModal({
                           url: decodeLegacyURL(data.actions.createAttachmentURL),
-                          title: 'Add Attachment (Legacy)'
+                          title: 'Add Attachment (Legacy)',
+                          showRefreshClose: true
                         })
                       }
                     >
@@ -851,6 +853,21 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     <td>{attachment.isProfileImage ? 'Profile image' : 'Document'}</td>
                     <td>
                       <div className="modern-table-actions">
+                        {attachment.previewAvailable && attachment.previewURL !== '' ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            onClick={() =>
+                              setAttachmentModal({
+                                url: decodeLegacyURL(attachment.previewURL),
+                                title: `Preview: ${toDisplayText(attachment.fileName, 'Attachment')}`,
+                                showRefreshClose: false
+                              })
+                            }
+                          >
+                            Preview
+                          </button>
+                        ) : null}
                         {data.meta.permissions.canDeleteAttachment ? (
                           <button
                             type="button"
@@ -880,7 +897,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
           title={attachmentModal?.title || 'Add Attachment'}
           url={attachmentModal?.url || ''}
           onClose={closeAttachmentModal}
-          showRefreshClose
+          showRefreshClose={attachmentModal?.showRefreshClose ?? true}
         />
 
         <ConfirmActionModal

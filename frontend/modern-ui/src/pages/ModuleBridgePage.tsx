@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import type { UIModeBootstrap } from '../types';
+import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
+import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -26,17 +27,6 @@ function toDisplayText(value: unknown, fallback = '--'): string {
     return normalized !== '' ? normalized : fallback;
   }
   return fallback;
-}
-
-function buildEmbeddedLegacyURL(legacyURL: string): string {
-  try {
-    const url = new URL(legacyURL, window.location.href);
-    url.searchParams.set('ui_embed', '1');
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch (error) {
-    const hasQuery = legacyURL.includes('?');
-    return `${legacyURL}${hasQuery ? '&' : '?'}ui_embed=1`;
-  }
 }
 
 function getPageTitle(moduleName: string): string {
@@ -69,8 +59,7 @@ export function ModuleBridgePage({ bootstrap }: Props) {
   const title = getPageTitle(moduleName);
   const embeddedURL = buildEmbeddedLegacyURL(bootstrap.legacyURL);
   const dashboardURL = `${bootstrap.indexName}?m=dashboard&a=my&ui=modern`;
-  const [frameReloadToken, setFrameReloadToken] = useState(0);
-  const [frameLoading, setFrameLoading] = useState(true);
+  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
 
   return (
     <div className="avel-dashboard-page">
@@ -106,10 +95,7 @@ export function ModuleBridgePage({ bootstrap }: Props) {
               <button
                 type="button"
                 className="modern-btn modern-btn--secondary"
-                onClick={() => {
-                  setFrameLoading(true);
-                  setFrameReloadToken((current) => current + 1);
-                }}
+                onClick={reloadFrame}
               >
                 Reload Workspace
               </button>
@@ -141,7 +127,7 @@ export function ModuleBridgePage({ bootstrap }: Props) {
                 title={`Legacy compatibility route ${moduleName}/${actionName}`}
                 className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
                 src={embeddedURL}
-                onLoad={() => setFrameLoading(false)}
+                onLoad={handleFrameLoad}
               />
             </div>
           </section>

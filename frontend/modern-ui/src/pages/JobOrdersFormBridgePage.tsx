@@ -1,22 +1,12 @@
-import { useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import type { UIModeBootstrap } from '../types';
+import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
+import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import '../dashboard-avel.css';
 
 type Props = {
   bootstrap: UIModeBootstrap;
 };
-
-function buildEmbeddedLegacyURL(legacyURL: string): string {
-  try {
-    const url = new URL(legacyURL, window.location.href);
-    url.searchParams.set('ui_embed', '1');
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch (error) {
-    const hasQuery = legacyURL.includes('?');
-    return `${legacyURL}${hasQuery ? '&' : '?'}ui_embed=1`;
-  }
-}
 
 function resolvePageCopy(actionName: string): { title: string; subtitle: string } {
   const normalizedAction = String(actionName || '').toLowerCase();
@@ -38,8 +28,7 @@ export function JobOrdersFormBridgePage({ bootstrap }: Props) {
   const embeddedURL = buildEmbeddedLegacyURL(bootstrap.legacyURL);
   const listURL = `${bootstrap.indexName}?m=joborders&a=listByView&ui=modern`;
   const dashboardURL = `${bootstrap.indexName}?m=dashboard&a=my&ui=modern`;
-  const [frameReloadToken, setFrameReloadToken] = useState(0);
-  const [frameLoading, setFrameLoading] = useState(true);
+  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
 
   return (
     <div className="avel-dashboard-page">
@@ -73,10 +62,7 @@ export function JobOrdersFormBridgePage({ bootstrap }: Props) {
               <button
                 type="button"
                 className="modern-btn modern-btn--secondary"
-                onClick={() => {
-                  setFrameLoading(true);
-                  setFrameReloadToken((current) => current + 1);
-                }}
+                onClick={reloadFrame}
               >
                 Reload Form
               </button>
@@ -105,7 +91,7 @@ export function JobOrdersFormBridgePage({ bootstrap }: Props) {
                 title={`Job order form ${bootstrap.targetAction || 'edit'}`}
                 className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
                 src={embeddedURL}
-                onLoad={() => setFrameLoading(false)}
+                onLoad={handleFrameLoad}
               />
             </div>
           </section>
@@ -114,4 +100,3 @@ export function JobOrdersFormBridgePage({ bootstrap }: Props) {
     </div>
   );
 }
-

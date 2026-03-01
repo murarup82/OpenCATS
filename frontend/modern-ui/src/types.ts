@@ -768,6 +768,8 @@ export type CandidatesEditModernDataResponse = {
     dateCreated: string;
     isProfileImage: boolean;
     retrievalURL: string;
+    previewAvailable: boolean;
+    previewURL: string;
   }>;
 };
 

@@ -1040,6 +1040,21 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                     <td>{toDisplayText(attachment.dateCreated)}</td>
                     <td>
                       <div className="modern-table-actions">
+                        {attachment.retrievalURL ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            onClick={() =>
+                              setPipelineModal({
+                                url: decodeLegacyURL(attachment.retrievalURL),
+                                title: `Preview: ${toDisplayText(attachment.fileName, 'Attachment')}`,
+                                showRefreshClose: false
+                              })
+                            }
+                          >
+                            Preview
+                          </button>
+                        ) : null}
                         {permissions.canDeleteAttachment ? (
                           <button
                             type="button"

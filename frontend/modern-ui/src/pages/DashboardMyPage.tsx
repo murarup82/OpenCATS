@@ -535,10 +535,9 @@ export function DashboardMyPage({ bootstrap }: Props) {
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unable to change pipeline status.';
         setInteractionError(message);
-        openStatusModal(row, targetStatusID);
         return {
           success: false,
-          openedLegacy: true,
+          openedLegacy: false,
           message
         };
       }
@@ -557,8 +556,27 @@ export function DashboardMyPage({ bootstrap }: Props) {
 
   const openQuickStatusModal = useCallback(
     (row: DashboardRow) => {
+      const currentStatusID = Number(row.statusID || 0);
       const statusOptions = statusCatalog
-        .filter((status) => Number(status.statusID || 0) > 0 && status.statusID !== Number(row.statusID || 0))
+        .filter((status) => {
+          const targetStatusID = Number(status.statusID || 0);
+          if (targetStatusID <= 0 || targetStatusID === currentStatusID) {
+            return false;
+          }
+          if (currentStatusID === rejectedStatusID) {
+            return false;
+          }
+          if (targetStatusID === rejectedStatusID) {
+            return true;
+          }
+
+          const currentIndex = orderedStatusIDs.indexOf(currentStatusID);
+          const targetIndex = orderedStatusIDs.indexOf(targetStatusID);
+          if (currentIndex < 0 || targetIndex < 0) {
+            return true;
+          }
+          return targetIndex > currentIndex;
+        })
         .map((status) => ({
           statusID: status.statusID,
           statusLabel: status.statusLabel
@@ -577,7 +595,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
         statusOptions
       });
     },
-    [statusCatalog]
+    [orderedStatusIDs, rejectedStatusID, statusCatalog]
   );
 
   const submitQuickStatus = useCallback(

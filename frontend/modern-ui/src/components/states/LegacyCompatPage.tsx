@@ -1,5 +1,6 @@
-import { useState } from 'react';
 import type { UIModeBootstrap } from '../../types';
+import { buildEmbeddedLegacyURL } from '../../lib/embeddedLegacy';
+import { useEmbeddedLegacyFrame } from '../../lib/useEmbeddedLegacyFrame';
 
 type Props = {
   bootstrap: UIModeBootstrap;
@@ -8,17 +9,8 @@ type Props = {
 export function LegacyCompatPage({ bootstrap }: Props) {
   const moduleName = bootstrap.targetModule || '--';
   const actionName = bootstrap.targetAction || '(default)';
-  const embedLegacyURL = (() => {
-    try {
-      const url = new URL(bootstrap.legacyURL, window.location.href);
-      url.searchParams.set('ui_embed', '1');
-      return `${url.pathname}${url.search}${url.hash}`;
-    } catch (error) {
-      const hasQuery = bootstrap.legacyURL.includes('?');
-      return `${bootstrap.legacyURL}${hasQuery ? '&' : '?'}ui_embed=1`;
-    }
-  })();
-  const [frameLoading, setFrameLoading] = useState(true);
+  const embedLegacyURL = buildEmbeddedLegacyURL(bootstrap.legacyURL);
+  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
 
   return (
     <section className="modern-compat-page">
@@ -38,10 +30,12 @@ export function LegacyCompatPage({ bootstrap }: Props) {
         <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
           Open Legacy UI
         </a>
+        <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>
+          Reload Workspace
+        </button>
         <a
           className="modern-btn modern-btn--secondary modern-btn--emphasis"
           href={bootstrap.modernURL}
-          onClick={() => setFrameLoading(true)}
         >
           Reload Modern Shell
         </a>
@@ -54,10 +48,11 @@ export function LegacyCompatPage({ bootstrap }: Props) {
           </div>
         ) : null}
         <iframe
+          key={frameReloadToken}
           title={`Legacy compatibility route ${moduleName}/${actionName}`}
           className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
           src={embedLegacyURL}
-          onLoad={() => setFrameLoading(false)}
+          onLoad={handleFrameLoad}
         />
       </div>
     </section>
