@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -12,12 +13,6 @@ type Props = {
 };
 
 type CandidateExtraField = CandidatesEditModernDataResponse['extraFields'][number];
-
-type PopupCallback = ((returnValue?: unknown) => void) | null;
-
-type PopupWindow = Window & {
-  showPopWin?: (url: string, width: number, height: number, returnFunc?: PopupCallback) => void;
-};
 
 type CandidateEditFormState = {
   isActive: boolean;
@@ -101,6 +96,11 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [serverQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
   const [validationError, setValidationError] = useState('');
+  const [attachmentModal, setAttachmentModal] = useState<{
+    url: string;
+    title: string;
+    openInPopup: { width: number; height: number; refreshOnClose: boolean };
+  } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -141,25 +141,12 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     setReloadToken((current) => current + 1);
   }, []);
 
-  const openLegacyPopup = useCallback(
-    (url: string, width: number, height: number, refreshOnClose: boolean) => {
-      const popupWindow = window as PopupWindow;
-      const popupURL = decodeLegacyURL(url);
-      if (typeof popupWindow.showPopWin === 'function') {
-        popupWindow.showPopWin(
-          popupURL,
-          width,
-          height,
-          refreshOnClose
-            ? () => {
-                refreshPageData();
-              }
-            : null
-        );
-        return;
+  const closeAttachmentModal = useCallback(
+    (refreshOnClose: boolean) => {
+      setAttachmentModal(null);
+      if (refreshOnClose) {
+        refreshPageData();
       }
-
-      window.location.href = popupURL;
     },
     [refreshPageData]
   );
@@ -682,7 +669,13 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     <button
                       type="button"
                       className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() => openLegacyPopup(data.actions.createAttachmentURL, 480, 220, true)}
+                      onClick={() =>
+                        setAttachmentModal({
+                          url: decodeLegacyURL(data.actions.createAttachmentURL),
+                          title: 'Add Attachment',
+                          openInPopup: { width: 520, height: 320, refreshOnClose: true }
+                        })
+                      }
                     >
                       Add Attachment
                     </button>
@@ -720,6 +713,14 @@ export function CandidatesEditPage({ bootstrap }: Props) {
             </section>
           </section>
         </div>
+
+        <LegacyFrameModal
+          isOpen={!!attachmentModal}
+          title={attachmentModal?.title || 'Add Attachment'}
+          url={attachmentModal?.url || ''}
+          onClose={closeAttachmentModal}
+          showRefreshClose
+        />
       </PageContainer>
     </div>
   );

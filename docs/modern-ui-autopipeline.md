@@ -57,6 +57,9 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 51. Replaced add/edit candidate form validation alerts with inline validation state messaging (`candidates.add` and `candidates.edit`) for required-name and GDPR-expiration rules.
 52. Replaced static-list delete `window.confirm` in `ModernOverlayHost` with a native confirmation modal, removing the last browser-confirm usage in modern pages/components.
 53. Embedded `joborders.listByView` Add Job Order action into the in-app modal shell (with refresh-on-close), removing legacy popup helper dependency for this flow.
+54. Removed remaining popup-helper dependency from candidate surfaces by:
+    - removing dead popup helper code from `candidates.listByView`
+    - embedding `candidates.edit` Add Attachment action into the in-app modal shell with refresh-on-close.
 
 ## Next Queue
 

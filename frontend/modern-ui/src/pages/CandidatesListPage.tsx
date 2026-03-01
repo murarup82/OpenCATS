@@ -27,12 +27,6 @@ type NavigationFilters = {
   maxResults?: number;
 };
 
-type PopupCallback = ((returnValue?: unknown) => void) | null;
-
-type PopupWindow = Window & {
-  showPopWin?: (url: string, width: number, height: number, returnFunc?: PopupCallback) => void;
-};
-
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
     const normalized = value.trim();
@@ -101,28 +95,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  const openLegacyPopup = useCallback(
-    (url: string, width: number, height: number, refreshOnClose: boolean) => {
-      const popupWindow = window as PopupWindow;
-      if (typeof popupWindow.showPopWin === 'function') {
-        popupWindow.showPopWin(
-          url,
-          width,
-          height,
-          refreshOnClose
-            ? () => {
-                refreshPageData();
-              }
-            : null
-        );
-        return;
-      }
-
-      window.location.href = url;
-    },
-    [refreshPageData]
-  );
 
   const closeJobOrderModal = useCallback(
     (refreshOnClose: boolean) => {
