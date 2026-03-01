@@ -114,6 +114,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - replaced list-row "Change Status" direct legacy form launch with `PipelineQuickStatusModal`
     - preserved full legacy form parity via explicit "open full form" fallback from the modal
     - kept drag/drop and backend status mutation behavior unchanged while reducing popup dependency in list interactions.
+71. Upgraded `CandidatesFormBridgePage` to the modern compatibility workspace pattern:
+    - added in-place iframe reload action (`Reload Form`) to avoid full page reloads during form troubleshooting
+    - added explicit new-tab open for the exact legacy form route while preserving `ui_embed=1` default behavior
+    - aligned bridge-page UX with ModuleBridge quick-navigation chips for consistent cross-module experience.
 
 ## Next Queue (30-Slice Execution)
 
