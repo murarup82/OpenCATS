@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchCandidatesShowModernData, removePipelineEntryViaLegacyURL } from '../lib/api';
+import {
+  fetchCandidatesShowModernData,
+  removePipelineEntryViaLegacyURL,
+  setDashboardPipelineStatus
+} from '../lib/api';
 import type { CandidatesShowModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
@@ -69,6 +74,15 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     title: string;
     openInPopup: { width: number; height: number; refreshOnClose: boolean };
     showRefreshClose: boolean;
+  } | null>(null);
+  const [quickStatusModal, setQuickStatusModal] = useState<{
+    title: string;
+    currentStatusLabel: string;
+    statusOptions: Array<{ statusID: number; statusLabel: string }>;
+    candidateID: number;
+    jobOrderID: number;
+    fallbackURL: string;
+    fallbackTitle: string;
   } | null>(null);
 
   useEffect(() => {
@@ -183,6 +197,136 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       }
     },
     [refreshPageData]
+  );
+
+  const getForwardStatusOptions = useCallback(
+    (currentStatusID: number) => {
+      if (!data) {
+        return [] as Array<{ statusID: number; statusLabel: string }>;
+      }
+
+      const statusData = data.pipelineStatus;
+      const statusOrder =
+        Array.isArray(statusData.orderedStatusIDs) && statusData.orderedStatusIDs.length > 0
+          ? statusData.orderedStatusIDs
+          : statusData.statuses.map((status) => status.statusID);
+
+      const currentIndex = statusOrder.indexOf(currentStatusID);
+      const sortedStatuses = [...statusData.statuses].sort(
+        (left, right) => statusOrder.indexOf(left.statusID) - statusOrder.indexOf(right.statusID)
+      );
+
+      return sortedStatuses
+        .filter((status) => {
+          if (status.statusID <= 0 || status.statusID === currentStatusID) {
+            return false;
+          }
+          if (status.statusID === statusData.rejectedStatusID) {
+            return false;
+          }
+
+          if (currentIndex < 0) {
+            return true;
+          }
+
+          const targetIndex = statusOrder.indexOf(status.statusID);
+          if (targetIndex < 0) {
+            return true;
+          }
+
+          return targetIndex > currentIndex;
+        })
+        .map((status) => ({
+          statusID: status.statusID,
+          statusLabel: toDisplayText(status.status)
+        }));
+    },
+    [data]
+  );
+
+  const openQuickStatus = useCallback(
+    (pipeline: CandidatesShowModernDataResponse['pipelines']['items'][number]) => {
+      if (!data) {
+        return;
+      }
+
+      const fallbackURL = decodeLegacyURL(pipeline.actions.changeStatusURL);
+      const fallbackTitle = `Change Status: ${toDisplayText(pipeline.jobOrderTitle)}`;
+      const statusOptions = getForwardStatusOptions(Number(pipeline.statusID || 0));
+      if (statusOptions.length === 0) {
+        setPipelineModal({
+          url: fallbackURL,
+          title: fallbackTitle,
+          openInPopup: { width: 700, height: 620, refreshOnClose: true },
+          showRefreshClose: true
+        });
+        return;
+      }
+
+      setQuickStatusModal({
+        title: `Quick Status: ${toDisplayText(pipeline.jobOrderTitle)}`,
+        currentStatusLabel: toDisplayText(pipeline.statusLabel),
+        statusOptions,
+        candidateID: Number(data.meta.candidateID || 0),
+        jobOrderID: Number(pipeline.jobOrderID || 0),
+        fallbackURL,
+        fallbackTitle
+      });
+    },
+    [data, getForwardStatusOptions]
+  );
+
+  const submitQuickStatus = useCallback(
+    async (targetStatusID: number) => {
+      if (!data || !quickStatusModal) {
+        return;
+      }
+
+      const token = data.actions.setPipelineStatusToken || '';
+      if (token === '') {
+        setQuickStatusModal(null);
+        setPipelineModal({
+          url: quickStatusModal.fallbackURL,
+          title: quickStatusModal.fallbackTitle,
+          openInPopup: { width: 700, height: 620, refreshOnClose: true },
+          showRefreshClose: true
+        });
+        return;
+      }
+
+      try {
+        const result = await setDashboardPipelineStatus(bootstrap, {
+          url: data.actions.setPipelineStatusURL,
+          securityToken: token,
+          candidateID: quickStatusModal.candidateID,
+          jobOrderID: quickStatusModal.jobOrderID,
+          statusID: targetStatusID,
+          enforceOwner: false
+        });
+
+        if (!result.success) {
+          if (result.code === 'requiresModal') {
+            setQuickStatusModal(null);
+            setPipelineModal({
+              url: quickStatusModal.fallbackURL,
+              title: quickStatusModal.fallbackTitle,
+              openInPopup: { width: 700, height: 620, refreshOnClose: true },
+              showRefreshClose: true
+            });
+            return;
+          }
+
+          window.alert(result.message || 'Unable to update pipeline status.');
+          return;
+        }
+
+        setQuickStatusModal(null);
+        refreshPageData();
+      } catch (err: unknown) {
+        window.alert(err instanceof Error ? err.message : 'Unable to update pipeline status.');
+      }
+    },
+    [bootstrap, data, quickStatusModal, refreshPageData]
   );
 
   const openAddToListOverlay = useCallback(
@@ -495,14 +639,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                         <button
                           type="button"
                           className="modern-btn modern-btn--mini modern-btn--secondary"
-                          onClick={() =>
-                            setPipelineModal({
-                              url: decodeLegacyURL(pipeline.actions.changeStatusURL),
-                              title: `Change Status: ${toDisplayText(pipeline.jobOrderTitle)}`,
-                              openInPopup: { width: 700, height: 620, refreshOnClose: true },
-                              showRefreshClose: true
-                            })
-                          }
+                          onClick={() => openQuickStatus(pipeline)}
                         >
                           Change Status
                         </button>
@@ -695,6 +832,28 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             </section>
           </div>
         </div>
+
+        <PipelineQuickStatusModal
+          isOpen={!!quickStatusModal}
+          title={quickStatusModal?.title || 'Quick Status Change'}
+          currentStatusLabel={quickStatusModal?.currentStatusLabel || '--'}
+          statusOptions={quickStatusModal?.statusOptions || []}
+          onCancel={() => setQuickStatusModal(null)}
+          onSubmit={submitQuickStatus}
+          onOpenFullForm={
+            quickStatusModal
+              ? () => {
+                  setQuickStatusModal(null);
+                  setPipelineModal({
+                    url: quickStatusModal.fallbackURL,
+                    title: quickStatusModal.fallbackTitle,
+                    openInPopup: { width: 700, height: 620, refreshOnClose: true },
+                    showRefreshClose: true
+                  });
+                }
+              : undefined
+          }
+        />
 
         <LegacyFrameModal
           isOpen={!!pipelineModal}

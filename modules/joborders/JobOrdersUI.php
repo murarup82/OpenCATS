@@ -1252,6 +1252,7 @@ class JobOrdersUI extends UserInterface
                 $this->getCSRFToken('joborders.postMessage'),
                 $this->getCSRFToken('joborders.deleteMessageThread'),
                 $pipelineRS,
+                $pipelines->getStatusesForPicking(),
                 'joborders-show'
             );
             return;
@@ -2290,6 +2291,7 @@ class JobOrdersUI extends UserInterface
         $postJobOrderMessageToken,
         $deleteJobOrderMessageThreadToken,
         $pipelineRS,
+        $pipelineStatusRS,
         $modernPage
     )
     {
@@ -2493,6 +2495,23 @@ class JobOrdersUI extends UserInterface
             ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
         );
 
+        $pipelineStatusOptionsPayload = array();
+        $orderedPipelineStatusIDs = array();
+        foreach ($pipelineStatusRS as $statusRow)
+        {
+            $statusID = (int) (isset($statusRow['statusID']) ? $statusRow['statusID'] : 0);
+            if ($statusID <= 0)
+            {
+                continue;
+            }
+
+            $orderedPipelineStatusIDs[] = $statusID;
+            $pipelineStatusOptionsPayload[] = array(
+                'statusID' => $statusID,
+                'status' => (isset($statusRow['status']) ? (string) $statusRow['status'] : '')
+            );
+        }
+
         $payload = array(
             'meta' => array(
                 'contractVersion' => 1,
@@ -2528,7 +2547,14 @@ class JobOrdersUI extends UserInterface
                 'postMessageURL' => sprintf('%s?m=joborders&a=postMessage', $baseURL),
                 'deleteMessageThreadURL' => sprintf('%s?m=joborders&a=deleteMessageThread', $baseURL),
                 'administrativeHideShowBaseURL' => sprintf('%s?m=joborders&a=administrativeHideShow&jobOrderID=%d', $baseURL, $jobOrderID),
-                'removeFromPipelineToken' => $this->getCSRFToken('joborders.removeFromPipeline')
+                'removeFromPipelineToken' => $this->getCSRFToken('joborders.removeFromPipeline'),
+                'setPipelineStatusURL' => sprintf('%s?m=dashboard&a=setPipelineStatus', $baseURL),
+                'setPipelineStatusToken' => $this->getCSRFToken('dashboard.setPipelineStatus')
+            ),
+            'pipelineStatus' => array(
+                'rejectedStatusID' => (int) PIPELINE_STATUS_REJECTED,
+                'orderedStatusIDs' => $orderedPipelineStatusIDs,
+                'statuses' => $pipelineStatusOptionsPayload
             ),
             'jobOrder' => array(
                 'jobOrderID' => $jobOrderID,

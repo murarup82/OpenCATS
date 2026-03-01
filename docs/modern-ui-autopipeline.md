@@ -28,10 +28,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 22. Dashboard assign workspace (`considerCandidateSearch`) moved from popup to embedded modal flow in modern UI shell.
 23. Removed `Open In Popup` affordance from shared embedded legacy modal component to reduce popup dependency across modern pages.
 24. Added modern-json pipeline removal mutation path (with CSRF tokens) and wired inline remove actions on `candidates.show` and `joborders.show` to use it with confirm + note prompts.
+25. Added native quick status modal on `candidates.show` and `joborders.show` for forward transitions (using secure mutation endpoint), with one-click fallback to full legacy status form for complex transitions.
 
 ## Next Queue
 
-1. Replace iframe-backed legacy modal flows with native React forms/interactions for pipeline status change/details editing (remove path is now native-json).
+1. Replace iframe-backed pipeline details/status history editor with native React timeline + inline edits.
 
 ## Rules
 

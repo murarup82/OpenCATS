@@ -794,6 +794,7 @@ class CandidatesUI extends UserInterface
         $gdprLegacyProofWarning,
         $gdprFlashMessage,
         $assignedTags,
+        $pipelineStatusRS,
         $modernPage
     )
     {
@@ -1064,6 +1065,23 @@ class CandidatesUI extends UserInterface
             $questionnairesPayload[] = $questionnaire;
         }
 
+        $pipelineStatusOptionsPayload = array();
+        $orderedPipelineStatusIDs = array();
+        foreach ($pipelineStatusRS as $statusRow)
+        {
+            $statusID = (int) (isset($statusRow['statusID']) ? $statusRow['statusID'] : 0);
+            if ($statusID <= 0)
+            {
+                continue;
+            }
+
+            $orderedPipelineStatusIDs[] = $statusID;
+            $pipelineStatusOptionsPayload[] = array(
+                'statusID' => $statusID,
+                'status' => (isset($statusRow['status']) ? (string) $statusRow['status'] : '')
+            );
+        }
+
         $payload = array(
             'meta' => array(
                 'contractVersion' => 1,
@@ -1101,7 +1119,14 @@ class CandidatesUI extends UserInterface
                 'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
                 'linkDuplicateURL' => sprintf('%s?m=candidates&a=linkDuplicate&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'viewHistoryURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
-                'removeFromPipelineToken' => $this->getCSRFToken('candidates.removeFromPipeline')
+                'removeFromPipelineToken' => $this->getCSRFToken('candidates.removeFromPipeline'),
+                'setPipelineStatusURL' => sprintf('%s?m=dashboard&a=setPipelineStatus', $baseURL),
+                'setPipelineStatusToken' => $this->getCSRFToken('dashboard.setPipelineStatus')
+            ),
+            'pipelineStatus' => array(
+                'rejectedStatusID' => (int) PIPELINE_STATUS_REJECTED,
+                'orderedStatusIDs' => $orderedPipelineStatusIDs,
+                'statuses' => $pipelineStatusOptionsPayload
             ),
             'candidate' => array(
                 'candidateID' => $candidateID,
@@ -1976,6 +2001,7 @@ class CandidatesUI extends UserInterface
                 $gdprLegacyProofWarning,
                 $gdprFlashMessage,
                 $tags->getCandidateTagsTitle($candidateID),
+                $pipelines->getStatusesForPicking(),
                 'candidates-show'
             );
             return;

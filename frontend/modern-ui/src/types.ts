@@ -257,6 +257,16 @@ export type JobOrdersShowModernDataResponse = {
     deleteMessageThreadURL: string;
     administrativeHideShowBaseURL: string;
     removeFromPipelineToken?: string;
+    setPipelineStatusURL?: string;
+    setPipelineStatusToken?: string;
+  };
+  pipelineStatus: {
+    rejectedStatusID: number;
+    orderedStatusIDs: number[];
+    statuses: Array<{
+      statusID: number;
+      status: string;
+    }>;
   };
   jobOrder: {
     jobOrderID: number;
@@ -421,6 +431,16 @@ export type CandidatesShowModernDataResponse = {
     linkDuplicateURL: string;
     viewHistoryURL: string;
     removeFromPipelineToken?: string;
+    setPipelineStatusURL?: string;
+    setPipelineStatusToken?: string;
+  };
+  pipelineStatus: {
+    rejectedStatusID: number;
+    orderedStatusIDs: number[];
+    statuses: Array<{
+      statusID: number;
+      status: string;
+    }>;
   };
   candidate: {
     candidateID: number;
