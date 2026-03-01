@@ -23,6 +23,7 @@ import type {
   PipelineStatusHistoryUpdateResponse,
   PipelineRemoveModernResponse,
   QuickActionAddToListModernDataResponse,
+  ReportsLauncherModernDataResponse,
   UIModeBootstrap
 } from '../types';
 import { getJSON } from './httpClient';
@@ -42,6 +43,7 @@ import {
   MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
   MODERN_LISTS_PAGE,
+  MODERN_REPORTS_PAGE,
   buildModernJSONRequestQuery
 } from './modernContract';
 
@@ -890,6 +892,29 @@ export async function fetchListsManageModernData(
   }
   if (data.meta.contractKey !== 'lists.listByView.v1') {
     throw new Error('Unexpected lists contract key.');
+  }
+
+  return data;
+}
+
+export async function fetchReportsLauncherModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ReportsLauncherModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'reports',
+    action: 'reports',
+    modernPage: MODERN_REPORTS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ReportsLauncherModernDataResponse>(url);
+  if (!data.meta || data.meta.contractVersion !== MODERN_CONTRACT_VERSION) {
+    throw new Error('Contract version mismatch while loading reports.');
+  }
+  if (data.meta.contractKey !== 'reports.launcher.v1') {
+    throw new Error('Unexpected reports contract key.');
   }
 
   return data;

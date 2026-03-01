@@ -111,6 +111,10 @@ class ReportsUI extends UserInterface
 
     private function reports()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Grab an instance of Statistics. */
         $statistics = new Statistics($this->_siteID);
 
@@ -180,11 +184,156 @@ class ReportsUI extends UserInterface
         $statisticsData['jobOrdersThisYear']  = $statistics->getJobOrderCount(TIME_PERIOD_THISYEAR);
         $statisticsData['jobOrdersLastYear']  = $statistics->getJobOrderCount(TIME_PERIOD_LASTYEAR);
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'reports-launcher')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernReportsLauncherJSON('reports-launcher', $statisticsData);
+            return;
+        }
+
         if (!eval(Hooks::get('REPORTS_SHOW'))) return;
 
         $this->_template->assign('active', $this);
         $this->_template->assign('statisticsData', $statisticsData);
         $this->_template->display('./modules/reports/Reports.tpl');
+    }
+
+    private function renderModernReportsLauncherJSON($modernPage, $statisticsData)
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'reports.launcher.v1',
+                'modernPage' => $modernPage
+            ),
+            'statistics' => array(
+                'companies' => array(
+                    'toDate' => (int) $statisticsData['totalCompanies'],
+                    'today' => (int) $statisticsData['companiesToday'],
+                    'yesterday' => (int) $statisticsData['companiesYesterday'],
+                    'thisWeek' => (int) $statisticsData['companiesThisWeek'],
+                    'lastWeek' => (int) $statisticsData['companiesLastWeek'],
+                    'thisMonth' => (int) $statisticsData['companiesThisMonth'],
+                    'lastMonth' => (int) $statisticsData['companiesLastMonth'],
+                    'thisYear' => (int) $statisticsData['companiesThisYear'],
+                    'lastYear' => (int) $statisticsData['companiesLastYear']
+                ),
+                'candidates' => array(
+                    'toDate' => (int) $statisticsData['totalCandidates'],
+                    'today' => (int) $statisticsData['candidatesToday'],
+                    'yesterday' => (int) $statisticsData['candidatesYesterday'],
+                    'thisWeek' => (int) $statisticsData['candidatesThisWeek'],
+                    'lastWeek' => (int) $statisticsData['candidatesLastWeek'],
+                    'thisMonth' => (int) $statisticsData['candidatesThisMonth'],
+                    'lastMonth' => (int) $statisticsData['candidatesLastMonth'],
+                    'thisYear' => (int) $statisticsData['candidatesThisYear'],
+                    'lastYear' => (int) $statisticsData['candidatesLastYear']
+                ),
+                'contacts' => array(
+                    'toDate' => (int) $statisticsData['totalContacts'],
+                    'today' => (int) $statisticsData['contactsToday'],
+                    'yesterday' => (int) $statisticsData['contactsYesterday'],
+                    'thisWeek' => (int) $statisticsData['contactsThisWeek'],
+                    'lastWeek' => (int) $statisticsData['contactsLastWeek'],
+                    'thisMonth' => (int) $statisticsData['contactsThisMonth'],
+                    'lastMonth' => (int) $statisticsData['contactsLastMonth'],
+                    'thisYear' => (int) $statisticsData['contactsThisYear'],
+                    'lastYear' => (int) $statisticsData['contactsLastYear']
+                ),
+                'jobOrders' => array(
+                    'toDate' => (int) $statisticsData['totalJobOrders'],
+                    'today' => (int) $statisticsData['jobOrdersToday'],
+                    'yesterday' => (int) $statisticsData['jobOrdersYesterday'],
+                    'thisWeek' => (int) $statisticsData['jobOrdersThisWeek'],
+                    'lastWeek' => (int) $statisticsData['jobOrdersLastWeek'],
+                    'thisMonth' => (int) $statisticsData['jobOrdersThisMonth'],
+                    'lastMonth' => (int) $statisticsData['jobOrdersLastMonth'],
+                    'thisYear' => (int) $statisticsData['jobOrdersThisYear'],
+                    'lastYear' => (int) $statisticsData['jobOrdersLastYear']
+                ),
+                'submissions' => array(
+                    'toDate' => (int) $statisticsData['totalSubmissions'],
+                    'today' => (int) $statisticsData['submissionsToday'],
+                    'yesterday' => (int) $statisticsData['submissionsYesterday'],
+                    'thisWeek' => (int) $statisticsData['submissionsThisWeek'],
+                    'lastWeek' => (int) $statisticsData['submissionsLastWeek'],
+                    'thisMonth' => (int) $statisticsData['submissionsThisMonth'],
+                    'lastMonth' => (int) $statisticsData['submissionsLastMonth'],
+                    'thisYear' => (int) $statisticsData['submissionsThisYear'],
+                    'lastYear' => (int) $statisticsData['submissionsLastYear']
+                ),
+                'hires' => array(
+                    'toDate' => (int) $statisticsData['totalHires'],
+                    'today' => (int) $statisticsData['hiresToday'],
+                    'yesterday' => (int) $statisticsData['hiresYesterday'],
+                    'thisWeek' => (int) $statisticsData['hiresThisWeek'],
+                    'lastWeek' => (int) $statisticsData['hiresLastWeek'],
+                    'thisMonth' => (int) $statisticsData['hiresThisMonth'],
+                    'lastMonth' => (int) $statisticsData['hiresLastMonth'],
+                    'thisYear' => (int) $statisticsData['hiresThisYear'],
+                    'lastYear' => (int) $statisticsData['hiresLastYear']
+                )
+            ),
+            'launchers' => array(
+                array(
+                    'id' => 'customer-dashboard',
+                    'title' => 'Customer Dashboard',
+                    'description' => 'Pipeline coverage, SLA risk, and movement insights by customer.',
+                    'url' => sprintf('%s?m=reports&a=customerDashboard', $baseURL)
+                ),
+                array(
+                    'id' => 'job-order-report',
+                    'title' => 'Job Order Report Builder',
+                    'description' => 'Generate a printable report for a selected job order.',
+                    'url' => sprintf('%s?m=reports&a=customizeJobOrderReport', $baseURL)
+                ),
+                array(
+                    'id' => 'eeo-report',
+                    'title' => 'EEO Report Builder',
+                    'description' => 'Preview and export EEO composition reports by period.',
+                    'url' => sprintf('%s?m=reports&a=customizeEEOReport', $baseURL)
+                ),
+                array(
+                    'id' => 'submission-report',
+                    'title' => 'Submission Report',
+                    'description' => 'Submission volume report for the current to-date window.',
+                    'url' => sprintf('%s?m=reports&a=showSubmissionReport&period=toDate', $baseURL)
+                ),
+                array(
+                    'id' => 'hire-report',
+                    'title' => 'Hire Report',
+                    'description' => 'Placement and hire activity report for the current to-date window.',
+                    'url' => sprintf('%s?m=reports&a=showHireReport&period=toDate', $baseURL)
+                )
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=reports&a=reports&ui=legacy', $baseURL)
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function customerDashboard()

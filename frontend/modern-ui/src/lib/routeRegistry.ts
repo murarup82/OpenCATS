@@ -15,6 +15,7 @@ import { ContactsShowPage } from '../pages/ContactsShowPage';
 import { ActivityListPage } from '../pages/ActivityListPage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
+import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 
 export type ModernRouteComponentProps = {
@@ -51,6 +52,8 @@ const registry: Record<string, ModernRouteComponent> = {
   'calendar.(default)': CalendarPage,
   'lists.listbyview': ListsManagePage,
   'lists.(default)': ListsManagePage,
+  'reports.reports': ReportsLauncherPage,
+  'reports.(default)': ReportsLauncherPage,
   'candidates.*': ModuleBridgePage,
   'joborders.*': ModuleBridgePage,
   'companies.*': ModuleBridgePage,

@@ -752,6 +752,43 @@ export type ListsManageModernDataResponse = {
   }>;
 };
 
+export type ReportsLauncherModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  statistics: {
+    companies: ReportMetricBlock;
+    candidates: ReportMetricBlock;
+    contacts: ReportMetricBlock;
+    jobOrders: ReportMetricBlock;
+    submissions: ReportMetricBlock;
+    hires: ReportMetricBlock;
+  };
+  launchers: Array<{
+    id: string;
+    title: string;
+    description: string;
+    url: string;
+  }>;
+  actions: {
+    legacyURL: string;
+  };
+};
+
+type ReportMetricBlock = {
+  toDate: number;
+  today: number;
+  yesterday: number;
+  thisWeek: number;
+  lastWeek: number;
+  thisMonth: number;
+  lastMonth: number;
+  thisYear: number;
+  lastYear: number;
+};
+
 export type JobOrdersListModernDataResponse = {
   meta: {
     contractVersion: number;
