@@ -6,6 +6,7 @@ import {
   fetchQuickActionAddToListData
 } from '../../lib/api';
 import { Modal } from '../../ui-core';
+import { ConfirmActionModal } from '../primitives/ConfirmActionModal';
 
 type Props = {
   bootstrap: UIModeBootstrap;
@@ -101,6 +102,10 @@ export function ModernOverlayHost({ bootstrap }: Props) {
   const [newListName, setNewListName] = useState('');
   const [editingListID, setEditingListID] = useState<number | null>(null);
   const [editingListName, setEditingListName] = useState('');
+  const [deleteListConfirm, setDeleteListConfirm] = useState<{
+    savedListID: number;
+    numberEntries: number;
+  } | null>(null);
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackConfig, setFeedbackConfig] = useState<FeedbackConfig | null>(null);
@@ -169,6 +174,7 @@ export function ModernOverlayHost({ bootstrap }: Props) {
     setNewListName('');
     setEditingListID(null);
     setEditingListName('');
+    setDeleteListConfirm(null);
   }, []);
 
   useEffect(() => {
@@ -461,13 +467,9 @@ export function ModernOverlayHost({ bootstrap }: Props) {
     });
   };
 
-  const handleDeleteList = (savedListID: number, numberEntries: number) => {
+  const performDeleteList = (savedListID: number) => {
     const data = addData;
     if (!data) {
-      return;
-    }
-
-    if (numberEntries > 0 && !window.confirm(`Delete this list with ${numberEntries} entries?`)) {
       return;
     }
 
@@ -495,7 +497,20 @@ export function ModernOverlayHost({ bootstrap }: Props) {
       });
       setSelectedListIDs((current) => current.filter((id) => id !== savedListID));
       setAddModalInfo('List deleted successfully.');
+      setDeleteListConfirm(null);
     });
+  };
+
+  const handleDeleteList = (savedListID: number, numberEntries: number) => {
+    if (numberEntries > 0) {
+      setDeleteListConfirm({
+        savedListID,
+        numberEntries
+      });
+      return;
+    }
+
+    performDeleteList(savedListID);
   };
 
   const handleAddToLists = () => {
@@ -669,6 +684,28 @@ export function ModernOverlayHost({ bootstrap }: Props) {
           ) : null}
         </div>
       </Modal>
+
+      <ConfirmActionModal
+        isOpen={!!deleteListConfirm}
+        title="Delete List"
+        message={`Delete this list with ${deleteListConfirm?.numberEntries || 0} entries?`}
+        confirmLabel="Delete List"
+        pending={addModalBusy}
+        error={addModalError}
+        onCancel={() => {
+          if (addModalBusy) {
+            return;
+          }
+          setDeleteListConfirm(null);
+          setAddModalError('');
+        }}
+        onConfirm={() => {
+          if (!deleteListConfirm || addModalBusy) {
+            return;
+          }
+          performDeleteList(deleteListConfirm.savedListID);
+        }}
+      />
 
       <Modal
         isOpen={feedbackOpen}
