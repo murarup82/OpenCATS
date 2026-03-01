@@ -25,12 +25,6 @@ type Props = {
   bootstrap: UIModeBootstrap;
 };
 
-type PopupCallback = ((returnValue?: unknown) => void) | null;
-
-type PopupWindow = Window & {
-  showPopWin?: (url: string, width: number, height: number, returnFunc?: PopupCallback) => void;
-};
-
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
     const normalized = value.trim();
@@ -119,29 +113,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  const openLegacyPopup = useCallback(
-    (url: string, width: number, height: number, refreshOnClose: boolean) => {
-      const popupWindow = window as PopupWindow;
-      const popupURL = decodeLegacyURL(url);
-      if (typeof popupWindow.showPopWin === 'function') {
-        popupWindow.showPopWin(
-          popupURL,
-          width,
-          height,
-          refreshOnClose
-            ? () => {
-                refreshPageData();
-              }
-            : null
-        );
-        return;
-      }
-
-      window.location.href = popupURL;
-    },
-    [refreshPageData]
-  );
 
   const closePipelineModal = useCallback(
     (refreshOnClose: boolean) => {
@@ -493,7 +464,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
               <button
                 type="button"
                 className="modern-btn modern-btn--secondary"
-                onClick={() => openLegacyPopup(data.actions.addCandidateURL, 1120, 760, true)}
+                onClick={() =>
+                  setPipelineModal({
+                    url: decodeLegacyURL(data.actions.addCandidateURL),
+                    title: 'Add Candidate',
+                    openInPopup: { width: 1120, height: 760, refreshOnClose: true },
+                    showRefreshClose: true
+                  })
+                }
               >
                 Add Candidate
               </button>
@@ -692,7 +670,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                     <button
                       type="button"
                       className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() => openLegacyPopup(data.actions.createAttachmentURL, 480, 220, true)}
+                      onClick={() =>
+                        setPipelineModal({
+                          url: decodeLegacyURL(data.actions.createAttachmentURL),
+                          title: 'Add Attachment',
+                          openInPopup: { width: 520, height: 280, refreshOnClose: true },
+                          showRefreshClose: true
+                        })
+                      }
                     >
                       Add Attachment
                     </button>
