@@ -15,6 +15,7 @@ type Props = {
   rejectedStatusID: number;
   onRequestStatusChange: (row: DashboardRow, targetStatusID: number | null) => void;
   onOpenDetails: (row: DashboardRow) => void;
+  onInteractionError?: (message: string) => void;
 };
 
 function getRowKey(row: DashboardRow): string {
@@ -33,7 +34,8 @@ export function KanbanBoard({
   statusOrder,
   rejectedStatusID,
   onRequestStatusChange,
-  onOpenDetails
+  onOpenDetails,
+  onInteractionError
 }: Props) {
   const boardRef = useRef<HTMLDivElement | null>(null);
   const scrollStep = 320;
@@ -157,9 +159,9 @@ export function KanbanBoard({
     const currentStatusID = Number(draggedRow.statusID || 0);
     if (!canMove(currentStatusID, targetStatusID)) {
       if (currentStatusID === rejectedStatusID) {
-        window.alert('Cannot move from Rejected. Re-assign the candidate to restart the pipeline.');
+        onInteractionError?.('Cannot move from Rejected. Re-assign the candidate to restart the pipeline.');
       } else {
-        window.alert('Only forward stage transitions (or move to Rejected) are allowed from Kanban.');
+        onInteractionError?.('Only forward stage transitions (or move to Rejected) are allowed from Kanban.');
       }
       setDraggedRow(null);
       setDropStatusID(null);

@@ -99,6 +99,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
     url: string;
     candidateName: string;
   } | null>(null);
+  const [interactionError, setInteractionError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -112,6 +113,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
           return;
         }
         setData(result);
+        setInteractionError('');
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -282,7 +284,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const openAssignWorkspace = useCallback(() => {
     const jobOrderID = Number(data?.filters.jobOrderID || 0);
     if (jobOrderID <= 0) {
-      window.alert('Please select a Job Order first, then click Assign Candidate.');
+      setInteractionError('Please select a Job Order first, then click Assign Candidate.');
       return;
     }
 
@@ -293,6 +295,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
       url,
       jobOrderName: toDisplayText(jobOrderTitle, `Job Order #${jobOrderID}`)
     });
+    setInteractionError('');
   }, [bootstrap.indexName, data?.filters.jobOrderID, data?.options.jobOrders]);
 
   if (loading && !data) {
@@ -408,6 +411,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
         });
 
         if (mutationResult.success) {
+          setInteractionError('');
           refreshDashboard();
           return;
         }
@@ -417,10 +421,10 @@ export function DashboardMyPage({ bootstrap }: Props) {
           return;
         }
 
-        window.alert(mutationResult.message || 'Unable to change pipeline status.');
+        setInteractionError(mutationResult.message || 'Unable to change pipeline status.');
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unable to change pipeline status.';
-        window.alert(message);
+        setInteractionError(message);
         openStatusModal(row, targetStatusID);
       }
     },
@@ -570,6 +574,9 @@ export function DashboardMyPage({ bootstrap }: Props) {
             setLocalStatusID('all');
           }}
         />
+        {interactionError ? (
+          <div className="modern-state modern-state--error">{interactionError}</div>
+        ) : null}
 
         {filteredRows.length === 0 ? (
           <EmptyState message="No candidates match current filters. Adjust search or reset filters." />
@@ -585,6 +592,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
                 rejectedStatusID={rejectedStatusID}
                 onRequestStatusChange={requestStatusChange}
                 onOpenDetails={openPipelineDetails}
+                onInteractionError={setInteractionError}
               />
             ) : (
               <div className="modern-table-animated avel-list-panel">
