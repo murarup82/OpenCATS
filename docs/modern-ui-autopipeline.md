@@ -22,10 +22,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 16. Native `joborders.listByView` phase 4: column presets with per-user persistence (local storage keyed by site/user).
 17. Native duplicate pre-check flow in `candidates.add` with modern inline review (hard/soft match UX).
 18. Native in-app status change modal on `dashboard.my` (popup replaced by embedded modal workflow).
+19. Expanded embedded modal coverage for pipeline actions (`dashboard.my` details, `candidates.show` pipeline actions, `joborders.show` pipeline actions).
 
 ## Next Queue
 
-1. Expand in-app modal coverage for pipeline details/remove actions (candidates + dashboard), reducing popup dependency further.
+1. Add native add/remove list and add-to-job-order modal parity to remove remaining popup dependency in candidate surfaces.
 
 ## Rules
 

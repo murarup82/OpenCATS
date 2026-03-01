@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
@@ -45,6 +46,12 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const [loading, setLoading] = useState(true);
   const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
+  const [pipelineModal, setPipelineModal] = useState<{
+    url: string;
+    title: string;
+    openInPopup: { width: number; height: number; refreshOnClose: boolean };
+    showRefreshClose: boolean;
+  } | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
 
@@ -103,6 +110,16 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
       }
 
       window.location.href = popupURL;
+    },
+    [refreshPageData]
+  );
+
+  const closePipelineModal = useCallback(
+    (refreshOnClose: boolean) => {
+      setPipelineModal(null);
+      if (refreshOnClose) {
+        refreshPageData();
+      }
     },
     [refreshPageData]
   );
@@ -321,7 +338,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                         <button
                           type="button"
                           className="modern-btn modern-btn--secondary modern-btn--mini"
-                          onClick={() => openLegacyPopup(item.actions.changeStatusURL, 970, 730, true)}
+                          onClick={() =>
+                            setPipelineModal({
+                              url: decodeLegacyURL(item.actions.changeStatusURL),
+                              title: `Change Status: ${toDisplayText(item.candidateName)}`,
+                              openInPopup: { width: 970, height: 730, refreshOnClose: true },
+                              showRefreshClose: true
+                            })
+                          }
                         >
                           Status
                         </button>
@@ -330,7 +354,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                         <button
                           type="button"
                           className="modern-btn modern-btn--secondary modern-btn--mini"
-                          onClick={() => openLegacyPopup(item.actions.removeFromPipelineURL, 430, 200, true)}
+                          onClick={() =>
+                            setPipelineModal({
+                              url: decodeLegacyURL(item.actions.removeFromPipelineURL),
+                              title: `Remove From Pipeline: ${toDisplayText(item.candidateName)}`,
+                              openInPopup: { width: 430, height: 200, refreshOnClose: true },
+                              showRefreshClose: true
+                            })
+                          }
                         >
                           Remove
                         </button>
@@ -338,7 +369,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                       <button
                         type="button"
                         className="modern-btn modern-btn--secondary modern-btn--mini"
-                        onClick={() => openLegacyPopup(item.actions.pipelineDetailsURL, 940, 700, false)}
+                        onClick={() =>
+                          setPipelineModal({
+                            url: decodeLegacyURL(item.actions.pipelineDetailsURL),
+                            title: `Pipeline Details: ${toDisplayText(item.candidateName)}`,
+                            openInPopup: { width: 940, height: 700, refreshOnClose: false },
+                            showRefreshClose: false
+                          })
+                        }
                       >
                         Details
                       </button>
@@ -622,6 +660,25 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
             </div>
           </section>
         </div>
+
+        <LegacyFrameModal
+          isOpen={!!pipelineModal}
+          title={pipelineModal?.title || 'Pipeline Action'}
+          url={pipelineModal?.url || ''}
+          onClose={closePipelineModal}
+          onOpenPopup={
+            pipelineModal
+              ? () =>
+                  openLegacyPopup(
+                    pipelineModal.url,
+                    pipelineModal.openInPopup.width,
+                    pipelineModal.openInPopup.height,
+                    pipelineModal.openInPopup.refreshOnClose
+                  )
+              : undefined
+          }
+          showRefreshClose={pipelineModal?.showRefreshClose ?? true}
+        />
       </PageContainer>
     </div>
   );

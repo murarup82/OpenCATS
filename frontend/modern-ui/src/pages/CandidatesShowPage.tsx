@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { ensureModernUIURL } from '../lib/navigation';
 import '../dashboard-avel.css';
 
@@ -63,6 +64,12 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [loading, setLoading] = useState(true);
   const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
+  const [pipelineModal, setPipelineModal] = useState<{
+    url: string;
+    title: string;
+    openInPopup: { width: number; height: number; refreshOnClose: boolean };
+    showRefreshClose: boolean;
+  } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -117,6 +124,16 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       }
 
       window.location.href = popupURL;
+    },
+    [refreshPageData]
+  );
+
+  const closePipelineModal = useCallback(
+    (refreshOnClose: boolean) => {
+      setPipelineModal(null);
+      if (refreshOnClose) {
+        refreshPageData();
+      }
     },
     [refreshPageData]
   );
@@ -406,7 +423,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                         <button
                           type="button"
                           className="modern-btn modern-btn--mini modern-btn--secondary"
-                          onClick={() => openLegacyPopup(pipeline.actions.changeStatusURL, 700, 620, true)}
+                          onClick={() =>
+                            setPipelineModal({
+                              url: decodeLegacyURL(pipeline.actions.changeStatusURL),
+                              title: `Change Status: ${toDisplayText(pipeline.jobOrderTitle)}`,
+                              openInPopup: { width: 700, height: 620, refreshOnClose: true },
+                              showRefreshClose: true
+                            })
+                          }
                         >
                           Change Status
                         </button>
@@ -414,7 +438,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                       <button
                         type="button"
                         className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() => openLegacyPopup(pipeline.actions.pipelineDetailsURL, 1200, 760, false)}
+                        onClick={() =>
+                          setPipelineModal({
+                            url: decodeLegacyURL(pipeline.actions.pipelineDetailsURL),
+                            title: `Pipeline Details: ${toDisplayText(pipeline.jobOrderTitle)}`,
+                            openInPopup: { width: 1200, height: 760, refreshOnClose: false },
+                            showRefreshClose: false
+                          })
+                        }
                       >
                         Details
                       </button>
@@ -422,7 +453,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                         <button
                           type="button"
                           className="modern-btn modern-btn--mini modern-btn--secondary"
-                          onClick={() => openLegacyPopup(pipeline.actions.removeFromPipelineURL, 500, 320, true)}
+                          onClick={() =>
+                            setPipelineModal({
+                              url: decodeLegacyURL(pipeline.actions.removeFromPipelineURL),
+                              title: `Remove From Pipeline: ${toDisplayText(pipeline.jobOrderTitle)}`,
+                              openInPopup: { width: 500, height: 320, refreshOnClose: true },
+                              showRefreshClose: true
+                            })
+                          }
                         >
                           Remove
                         </button>
@@ -592,6 +630,25 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             </section>
           </div>
         </div>
+
+        <LegacyFrameModal
+          isOpen={!!pipelineModal}
+          title={pipelineModal?.title || 'Pipeline Action'}
+          url={pipelineModal?.url || ''}
+          onClose={closePipelineModal}
+          onOpenPopup={
+            pipelineModal
+              ? () =>
+                  openLegacyPopup(
+                    pipelineModal.url,
+                    pipelineModal.openInPopup.width,
+                    pipelineModal.openInPopup.height,
+                    pipelineModal.openInPopup.refreshOnClose
+                  )
+              : undefined
+          }
+          showRefreshClose={pipelineModal?.showRefreshClose ?? true}
+        />
       </PageContainer>
     </div>
   );

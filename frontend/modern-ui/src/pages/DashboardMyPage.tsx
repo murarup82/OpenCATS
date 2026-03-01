@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
@@ -89,6 +90,10 @@ export function DashboardMyPage({ bootstrap }: Props) {
     url: string;
     candidateName: string;
     currentStatusLabel: string;
+  } | null>(null);
+  const [detailsModal, setDetailsModal] = useState<{
+    url: string;
+    candidateName: string;
   } | null>(null);
 
   useEffect(() => {
@@ -234,6 +239,16 @@ export function DashboardMyPage({ bootstrap }: Props) {
     [refreshDashboard]
   );
 
+  const closeDetailsModal = useCallback(
+    (refreshOnClose: boolean) => {
+      setDetailsModal(null);
+      if (refreshOnClose) {
+        refreshDashboard();
+      }
+    },
+    [refreshDashboard]
+  );
+
   const openPipelineDetails = useCallback(
     (row: DashboardRow) => {
       const pipelineID = Number(row.candidateJobOrderID || 0);
@@ -241,10 +256,13 @@ export function DashboardMyPage({ bootstrap }: Props) {
         return;
       }
 
-      const url = `${bootstrap.indexName}?m=joborders&a=pipelineStatusDetails&pipelineID=${encodeURIComponent(String(pipelineID))}`;
-      openLegacyPopup(url, 1200, 760, false);
+      const url = `${bootstrap.indexName}?m=joborders&a=pipelineStatusDetails&pipelineID=${encodeURIComponent(String(pipelineID))}&display=popup&ui=legacy`;
+      setDetailsModal({
+        url,
+        candidateName: toDisplayText(row.candidateName)
+      });
     },
-    [bootstrap.indexName, openLegacyPopup]
+    [bootstrap.indexName]
   );
 
   const openAssignWorkspace = useCallback(() => {
@@ -556,46 +574,31 @@ export function DashboardMyPage({ bootstrap }: Props) {
         )}
         </div>
 
-        {statusModal ? (
-          <div className="modern-inline-modal" role="dialog" aria-modal="true" aria-label="Change pipeline status">
-            <div className="modern-inline-modal__dialog modern-inline-modal__dialog--status">
-              <div className="modern-inline-modal__header">
-                <h3>Change Status: {statusModal.candidateName}</h3>
-                <p>Current status: {statusModal.currentStatusLabel}</p>
-              </div>
-              <div className="modern-inline-modal__actions">
-                <button
-                  type="button"
-                  className="modern-btn modern-btn--secondary"
-                  onClick={() => openLegacyPopup(statusModal.url, 700, 620, true)}
-                >
-                  Open In Popup
-                </button>
-                <button
-                  type="button"
-                  className="modern-btn modern-btn--secondary"
-                  onClick={() => closeStatusModal(false)}
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  className="modern-btn modern-btn--emphasis"
-                  onClick={() => closeStatusModal(true)}
-                >
-                  Close And Refresh
-                </button>
-              </div>
-              <div className="modern-inline-modal__body">
-                <iframe
-                  title="Pipeline status editor"
-                  src={statusModal.url}
-                  className="modern-inline-modal__frame"
-                />
-              </div>
-            </div>
-          </div>
-        ) : null}
+        <LegacyFrameModal
+          isOpen={!!statusModal}
+          title={`Change Status${statusModal ? `: ${statusModal.candidateName}` : ''}`}
+          subtitle={statusModal ? `Current status: ${statusModal.currentStatusLabel}` : undefined}
+          url={statusModal?.url || ''}
+          onClose={closeStatusModal}
+          onOpenPopup={
+            statusModal
+              ? () => openLegacyPopup(statusModal.url, 700, 620, true)
+              : undefined
+          }
+        />
+
+        <LegacyFrameModal
+          isOpen={!!detailsModal}
+          title={`Pipeline Details${detailsModal ? `: ${detailsModal.candidateName}` : ''}`}
+          url={detailsModal?.url || ''}
+          onClose={closeDetailsModal}
+          onOpenPopup={
+            detailsModal
+              ? () => openLegacyPopup(detailsModal.url, 1200, 760, false)
+              : undefined
+          }
+          showRefreshClose={false}
+        />
       </PageContainer>
     </div>
   );
