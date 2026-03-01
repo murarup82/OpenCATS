@@ -17,6 +17,7 @@ import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
+import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
@@ -101,6 +102,14 @@ export function DashboardMyPage({ bootstrap }: Props) {
     candidateName: string;
     currentStatusLabel: string;
   } | null>(null);
+  const [quickStatusModal, setQuickStatusModal] = useState<{
+    row: DashboardRow;
+    title: string;
+    currentStatusLabel: string;
+    statusOptions: Array<{ statusID: number; statusLabel: string }>;
+  } | null>(null);
+  const [quickStatusPending, setQuickStatusPending] = useState<boolean>(false);
+  const [quickStatusError, setQuickStatusError] = useState<string>('');
   const [assignModal, setAssignModal] = useState<{
     url: string;
     jobOrderName: string;
@@ -453,22 +462,38 @@ export function DashboardMyPage({ bootstrap }: Props) {
     async (row: DashboardRow, targetStatusID: number | null) => {
       if (targetStatusID === null || targetStatusID <= 0) {
         openStatusModal(row, null);
-        return;
+        return {
+          success: false,
+          openedLegacy: true,
+          message: ''
+        };
       }
 
       if (!canChangeStatus) {
-        return;
+        return {
+          success: false,
+          openedLegacy: false,
+          message: 'Status changes are not allowed for this user.'
+        };
       }
 
       if (targetStatusID === rejectedStatusID) {
         openStatusModal(row, targetStatusID);
-        return;
+        return {
+          success: false,
+          openedLegacy: true,
+          message: ''
+        };
       }
 
       const mutationToken = data.actions?.setPipelineStatusToken || '';
       if (mutationToken === '') {
         openStatusModal(row, targetStatusID);
-        return;
+        return {
+          success: false,
+          openedLegacy: true,
+          message: ''
+        };
       }
 
       try {
@@ -484,19 +509,38 @@ export function DashboardMyPage({ bootstrap }: Props) {
         if (mutationResult.success) {
           setInteractionError('');
           refreshDashboard();
-          return;
+          return {
+            success: true,
+            openedLegacy: false,
+            message: ''
+          };
         }
 
         if (mutationResult.code === 'requiresModal') {
           openStatusModal(row, targetStatusID);
-          return;
+          return {
+            success: false,
+            openedLegacy: true,
+            message: ''
+          };
         }
 
-        setInteractionError(mutationResult.message || 'Unable to change pipeline status.');
+        const errorMessage = mutationResult.message || 'Unable to change pipeline status.';
+        setInteractionError(errorMessage);
+        return {
+          success: false,
+          openedLegacy: false,
+          message: errorMessage
+        };
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unable to change pipeline status.';
         setInteractionError(message);
         openStatusModal(row, targetStatusID);
+        return {
+          success: false,
+          openedLegacy: true,
+          message
+        };
       }
     },
     [
@@ -509,6 +553,55 @@ export function DashboardMyPage({ bootstrap }: Props) {
       refreshDashboard,
       rejectedStatusID
     ]
+  );
+
+  const openQuickStatusModal = useCallback(
+    (row: DashboardRow) => {
+      const statusOptions = statusCatalog
+        .filter((status) => Number(status.statusID || 0) > 0 && status.statusID !== Number(row.statusID || 0))
+        .map((status) => ({
+          statusID: status.statusID,
+          statusLabel: status.statusLabel
+        }));
+
+      if (statusOptions.length === 0) {
+        setInteractionError('No status transitions are available for this candidate.');
+        return;
+      }
+
+      setQuickStatusError('');
+      setQuickStatusModal({
+        row,
+        title: `Change Status: ${toDisplayText(row.candidateName)}`,
+        currentStatusLabel: toDisplayText(row.statusLabel),
+        statusOptions
+      });
+    },
+    [statusCatalog]
+  );
+
+  const submitQuickStatus = useCallback(
+    async (statusID: number) => {
+      if (!quickStatusModal || quickStatusPending) {
+        return;
+      }
+
+      setQuickStatusError('');
+      setQuickStatusPending(true);
+      try {
+        const result = await requestStatusChange(quickStatusModal.row, statusID);
+        if (result.success || result.openedLegacy) {
+          setQuickStatusModal(null);
+          return;
+        }
+        setQuickStatusError(result.message || 'Unable to change status.');
+      } catch (err: unknown) {
+        setQuickStatusError(err instanceof Error ? err.message : 'Unable to change status.');
+      } finally {
+        setQuickStatusPending(false);
+      }
+    },
+    [quickStatusModal, quickStatusPending, requestStatusChange]
   );
 
   const visibleStatuses = localStatusID === 'all'
@@ -708,7 +801,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
                             <button
                               type="button"
                               className="modern-btn modern-btn--mini modern-btn--secondary"
-                              onClick={() => openStatusModal(row, null)}
+                              onClick={() => openQuickStatusModal(row)}
                             >
                               Change Status
                             </button>
@@ -731,6 +824,35 @@ export function DashboardMyPage({ bootstrap }: Props) {
           </>
         )}
         </div>
+
+        <PipelineQuickStatusModal
+          isOpen={!!quickStatusModal}
+          title={quickStatusModal?.title || 'Quick Status Change'}
+          currentStatusLabel={quickStatusModal?.currentStatusLabel || '--'}
+          statusOptions={quickStatusModal?.statusOptions || []}
+          submitPending={quickStatusPending}
+          submitError={quickStatusError}
+          onCancel={() => {
+            if (quickStatusPending) {
+              return;
+            }
+            setQuickStatusError('');
+            setQuickStatusModal(null);
+          }}
+          onSubmit={submitQuickStatus}
+          onOpenFullForm={
+            quickStatusModal
+              ? () => {
+                  if (quickStatusPending) {
+                    return;
+                  }
+                  setQuickStatusError('');
+                  setQuickStatusModal(null);
+                  openStatusModal(quickStatusModal.row, null);
+                }
+              : undefined
+          }
+        />
 
         <LegacyFrameModal
           isOpen={!!statusModal}
