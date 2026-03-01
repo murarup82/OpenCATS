@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchJobOrdersListModernData } from '../lib/api';
+import { fetchJobOrdersListModernData, setJobOrderMonitored } from '../lib/api';
 import type { JobOrdersListModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -176,6 +176,8 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     title: string;
     openInPopup: { width: number; height: number; refreshOnClose: boolean };
   } | null>(null);
+  const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
+  const [monitorToggleError, setMonitorToggleError] = useState('');
   const columnStorageKey = useMemo(
     () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:columns:v1`,
     [bootstrap.siteID, bootstrap.userID]
@@ -267,6 +269,36 @@ export function JobOrdersListPage({ bootstrap }: Props) {
       }
     },
     [refreshPageData]
+  );
+
+  const toggleMonitoredState = useCallback(
+    async (row: JobOrdersListModernDataResponse['rows'][number]) => {
+      const jobOrderID = Number(row.jobOrderID || 0);
+      if (jobOrderID <= 0) {
+        return;
+      }
+      if (monitorTogglePendingIDs.includes(jobOrderID)) {
+        return;
+      }
+
+      setMonitorToggleError('');
+      setMonitorTogglePendingIDs((current) => [...current, jobOrderID]);
+      try {
+        const result = await setJobOrderMonitored(decodeLegacyURL(row.setMonitoredBaseURL), {
+          state: !row.isMonitored
+        });
+        if (!result.success) {
+          setMonitorToggleError(result.message || 'Unable to update monitor setting.');
+          return;
+        }
+        refreshPageData();
+      } catch (err: unknown) {
+        setMonitorToggleError(err instanceof Error ? err.message : 'Unable to update monitor setting.');
+      } finally {
+        setMonitorTogglePendingIDs((current) => current.filter((id) => id !== jobOrderID));
+      }
+    },
+    [monitorTogglePendingIDs, refreshPageData]
   );
 
   const navigateWithFilters = (next: NavigationFilters) => {
@@ -619,6 +651,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               {data.state.errorMessage ? (
                 <span className="modern-chip modern-chip--critical">{data.state.errorMessage}</span>
               ) : null}
+              {monitorToggleError !== '' ? (
+                <span className="modern-chip modern-chip--critical">{monitorToggleError}</span>
+              ) : null}
             </div>
           </section>
 
@@ -670,18 +705,14 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                           <button
                             type="button"
                             className="modern-btn modern-btn--secondary modern-btn--mini"
-                            onClick={() => {
-                              const currentURLQuery = new URLSearchParams(serverQueryString);
-                              currentURLQuery.set('m', 'joborders');
-                              currentURLQuery.set('a', 'listByView');
-                              currentURLQuery.set('ui', 'modern');
-
-                              const nextValue = row.isMonitored ? '0' : '1';
-                              const targetURL = `${decodeLegacyURL(row.setMonitoredBaseURL)}&value=${encodeURIComponent(nextValue)}&currentURL=${encodeURIComponent(currentURLQuery.toString())}`;
-                              window.location.href = targetURL;
-                            }}
+                            onClick={() => void toggleMonitoredState(row)}
+                            disabled={monitorTogglePendingIDs.includes(Number(row.jobOrderID || 0))}
                           >
-                            {row.isMonitored ? 'Disable' : 'Enable'}
+                            {monitorTogglePendingIDs.includes(Number(row.jobOrderID || 0))
+                              ? 'Updating...'
+                              : row.isMonitored
+                                ? 'Disable'
+                                : 'Enable'}
                           </button>
                         </div>
                       ) : (

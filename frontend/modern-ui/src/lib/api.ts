@@ -581,6 +581,35 @@ export async function setJobOrderAdministrativeVisibility(
   return result;
 }
 
+export async function setJobOrderMonitored(
+  actionBaseURL: string,
+  payload: {
+    state: boolean;
+  }
+): Promise<ModernMutationResponse> {
+  const url = new URL(actionBaseURL, window.location.href);
+  url.searchParams.set('value', payload.state ? '1' : '0');
+  url.searchParams.set('format', 'modern-json');
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    credentials: 'same-origin'
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Job order monitor update failed (${response.status}).`);
+  }
+
+  return result;
+}
+
 export async function uploadCandidateAttachment(
   submitURL: string,
   payload: {
