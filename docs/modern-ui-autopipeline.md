@@ -206,20 +206,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - backend `reports.reports` now supports `format=modern-json` contract `reports.launcher.v1` with KPI snapshot payloads and launcher metadata
     - new `ReportsLauncherPage` added to modern shell as a native report-entry control center
     - route registry now maps `reports.reports`/`reports.(default)` to the native launcher while preserving bridge fallback for specialized report routes.
+99. Upgraded global compatibility-shell treatment for remaining bridge routes:
+    - `LegacyCompatPage` now uses full modern page framing (`PageContainer` + Avel shell) instead of a bare embedded section
+    - added consistent compatibility header/actions and quick-navigation chips (Dashboard/Candidates/Job Orders/Reports)
+    - unified fallback route experience for non-migrated modules with the same visual/interaction language used by dedicated bridge pages.
 
 ## Next Queue (30-Slice Execution)
 
-1. Add global modern shell menu/header treatment for bridge pages to keep UX consistent outside dashboard/candidate/joborder routes.
-2. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
-3. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
-4. Add centralized URL-state sync helper for filters/pagination shared by list pages.
-5. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
-6. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
-7. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-8. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-9. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
-10. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-11. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+1. Add consistent keyboard navigation and focus-trap behavior audit/fixes for all custom menus/modals.
+2. Add ARIA/labeling pass for all custom controls, especially select menus in form contexts.
+3. Add centralized URL-state sync helper for filters/pagination shared by list pages.
+4. Add route guard + capability guard helper to standardize permission-based button visibility/action blocking.
+5. Add API contract guard helpers to fail fast with actionable diagnostics on contract drift.
+6. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
+7. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+8. Add migration coverage matrix generator (route -> native/bridge/legacy) for release gating.
+9. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+10. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 
 ## Rules
 
