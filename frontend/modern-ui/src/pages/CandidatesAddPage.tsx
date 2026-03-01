@@ -611,15 +611,41 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                     <p className="avel-list-panel__hint">Configured per tenant in legacy settings.</p>
                   </div>
                   <div className="avel-candidate-edit-grid">
-                    {data.extraFields.map((field) => (
-                      <label
-                        key={field.postKey}
-                        className={`modern-command-field${field.inputType === 'textarea' || field.inputType === 'radio' ? ' avel-candidate-edit-field--full' : ''}`}
-                      >
-                        <span className="modern-command-label">{field.fieldName}</span>
-                        {renderExtraFieldControl(field)}
-                      </label>
-                    ))}
+                    {data.extraFields.map((field) => {
+                      const fieldClassName = `modern-command-field${
+                        field.inputType === 'textarea' || field.inputType === 'radio'
+                          ? ' avel-candidate-edit-field--full'
+                          : ''
+                      }`;
+                      if (field.inputType === 'dropdown') {
+                        const value = formState.extraFields[field.postKey] || '';
+                        const extraFieldOptions: SelectMenuOption[] = [
+                          { value: '', label: '- Select from List -' },
+                          ...field.options.map((option) => ({
+                            value: option,
+                            label: option
+                          }))
+                        ];
+                        return (
+                          <div key={field.postKey}>
+                            <input type="hidden" name={field.postKey} value={value} />
+                            <SelectMenu
+                              label={field.fieldName}
+                              value={value}
+                              options={extraFieldOptions}
+                              onChange={(nextValue) => updateExtraFieldValue(field.postKey, nextValue)}
+                            />
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <label key={field.postKey} className={fieldClassName}>
+                          <span className="modern-command-label">{field.fieldName}</span>
+                          {renderExtraFieldControl(field)}
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               ) : null}

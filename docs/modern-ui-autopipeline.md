@@ -118,6 +118,18 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added in-place iframe reload action (`Reload Form`) to avoid full page reloads during form troubleshooting
     - added explicit new-tab open for the exact legacy form route while preserving `ui_embed=1` default behavior
     - aligned bridge-page UX with ModuleBridge quick-navigation chips for consistent cross-module experience.
+72. Migrated dynamic custom-field dropdowns on `candidates.add` and `candidates.edit` to shared `SelectMenu`:
+    - replaced remaining primary-form dropdown controls for tenant-defined extra fields with modern select UX
+    - preserved legacy backend post contracts by writing selected values through hidden named inputs
+    - retained all existing custom-field data flow and validation behavior.
+73. Added compatibility iframe loading states across bridge surfaces:
+    - `LegacyCompatPage`, `ModuleBridgePage`, and `CandidatesFormBridgePage` now show explicit inline loading placeholders
+    - added in-place frame reload flow that resets loading state predictably
+    - reduced white-screen/flicker perception while legacy content initializes.
+74. Added dedicated modern route bridge for job order forms:
+    - introduced `JobOrdersFormBridgePage` with compatibility workspace actions (reload form, open in new tab, quick navigation)
+    - wired `joborders.add` and `joborders.edit` routes to the dedicated bridge instead of generic module fallback
+    - preserved full legacy form behavior through `ui_embed=1` rendering.
 
 ## Next Queue (30-Slice Execution)
 

@@ -70,6 +70,7 @@ export function ModuleBridgePage({ bootstrap }: Props) {
   const embeddedURL = buildEmbeddedLegacyURL(bootstrap.legacyURL);
   const dashboardURL = `${bootstrap.indexName}?m=dashboard&a=my&ui=modern`;
   const [frameReloadToken, setFrameReloadToken] = useState(0);
+  const [frameLoading, setFrameLoading] = useState(true);
 
   return (
     <div className="avel-dashboard-page">
@@ -105,7 +106,10 @@ export function ModuleBridgePage({ bootstrap }: Props) {
               <button
                 type="button"
                 className="modern-btn modern-btn--secondary"
-                onClick={() => setFrameReloadToken((current) => current + 1)}
+                onClick={() => {
+                  setFrameLoading(true);
+                  setFrameReloadToken((current) => current + 1);
+                }}
               >
                 Reload Workspace
               </button>
@@ -126,12 +130,18 @@ export function ModuleBridgePage({ bootstrap }: Props) {
               ))}
             </nav>
 
-            <div className="modern-compat-page__frame-wrap">
+            <div className={`modern-compat-page__frame-wrap${frameLoading ? ' is-loading' : ''}`}>
+              {frameLoading ? (
+                <div className="modern-compat-page__frame-loader" aria-live="polite">
+                  Loading legacy workspace...
+                </div>
+              ) : null}
               <iframe
                 key={frameReloadToken}
                 title={`Legacy compatibility route ${moduleName}/${actionName}`}
-                className="modern-compat-page__frame"
+                className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
                 src={embeddedURL}
+                onLoad={() => setFrameLoading(false)}
               />
             </div>
           </section>

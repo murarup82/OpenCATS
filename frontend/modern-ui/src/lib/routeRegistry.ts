@@ -5,6 +5,7 @@ import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
 import { CandidatesAddPage } from '../pages/CandidatesAddPage';
 import { CandidatesEditPage } from '../pages/CandidatesEditPage';
+import { JobOrdersFormBridgePage } from '../pages/JobOrdersFormBridgePage';
 import { JobOrdersListPage } from '../pages/JobOrdersListPage';
 import { JobOrdersShowPage } from '../pages/JobOrdersShowPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
@@ -26,6 +27,8 @@ const registry: Record<string, ModernRouteComponent> = {
   'joborders.list': JobOrdersListPage,
   'joborders.(default)': JobOrdersListPage,
   'joborders.show': JobOrdersShowPage,
+  'joborders.add': JobOrdersFormBridgePage,
+  'joborders.edit': JobOrdersFormBridgePage,
   'candidates.*': ModuleBridgePage,
   'joborders.*': ModuleBridgePage,
   'companies.*': ModuleBridgePage,

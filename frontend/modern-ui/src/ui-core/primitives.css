@@ -334,6 +334,7 @@
 }
 
 .modern-compat-page__frame-wrap {
+  position: relative;
   border: 1px solid #b9cfdd;
   border-radius: 14px;
   background: #ffffff;
@@ -341,10 +342,27 @@
   min-height: min(80vh, 920px);
 }
 
+.modern-compat-page__frame-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2d5a72;
+  font-weight: 700;
+  font-size: 13px;
+  background: linear-gradient(180deg, #f4fafe 0%, #e9f4fb 100%);
+  z-index: 1;
+}
+
 .modern-compat-page__frame {
   width: 100%;
   min-height: min(80vh, 920px);
   border: 0;
+}
+
+.modern-compat-page__frame.is-loading {
+  opacity: 0;
 }
 
 @media (max-width: 860px) {
