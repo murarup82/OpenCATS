@@ -318,6 +318,8 @@ export type JobOrdersShowModernDataResponse = {
     editURL: string;
     addCandidateURL: string;
     createAttachmentURL: string;
+    deleteAttachmentURL?: string;
+    deleteAttachmentToken?: string;
     reportURL: string;
     historyURL: string;
     deleteURL: string;
@@ -497,6 +499,8 @@ export type CandidatesShowModernDataResponse = {
     deleteURL: string;
     addToJobOrderURL: string;
     createAttachmentURL: string;
+    deleteAttachmentURL?: string;
+    deleteAttachmentToken?: string;
     addTagsURL: string;
     addToListURL: string;
     linkDuplicateURL: string;

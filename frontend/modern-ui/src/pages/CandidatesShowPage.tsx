@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   addCandidateProfileComment,
+  deleteCandidateAttachment,
   deleteCandidateMessageThread,
   fetchPipelineStatusDetailsModernData,
   fetchCandidatesShowModernData,
@@ -401,6 +402,42 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       setMessageDeletePending(false);
     }
   }, [data, messageDeletePending, refreshPageData]);
+
+  const handleDeleteAttachment = useCallback(
+    async (attachmentID: number, fileName: string) => {
+      if (!data) {
+        return;
+      }
+
+      const deleteURL = decodeLegacyURL(data.actions.deleteAttachmentURL || '');
+      const token = data.actions.deleteAttachmentToken || '';
+      if (deleteURL === '' || token === '') {
+        window.alert('Attachment delete endpoint is not available in this mode.');
+        return;
+      }
+
+      const confirmed = window.confirm(`Delete attachment "${toDisplayText(fileName, 'this file')}"?`);
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const result = await deleteCandidateAttachment(deleteURL, {
+          candidateID: Number(data.meta.candidateID || 0),
+          attachmentID: Number(attachmentID || 0),
+          securityToken: token
+        });
+        if (!result.success) {
+          window.alert(result.message || 'Unable to delete attachment.');
+          return;
+        }
+        refreshPageData();
+      } catch (err: unknown) {
+        window.alert(err instanceof Error ? err.message : 'Unable to delete attachment.');
+      }
+    },
+    [data, refreshPageData]
+  );
 
   const getForwardStatusOptions = useCallback(
     (currentStatusID: number) => {
@@ -1081,6 +1118,15 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                           <a className="modern-btn modern-btn--mini modern-btn--secondary" href={decodeLegacyURL(attachment.previewURL)} target="_blank" rel="noreferrer">
                             Preview
                           </a>
+                        ) : null}
+                        {permissions.canDeleteAttachment ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--danger"
+                            onClick={() => handleDeleteAttachment(attachment.attachmentID, attachment.fileName)}
+                          >
+                            Delete
+                          </button>
                         ) : null}
                       </div>
                     </td>

@@ -1170,6 +1170,8 @@ class CandidatesUI extends UserInterface
                 'deleteURL' => sprintf('%s?m=candidates&a=delete&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addToJobOrderURL' => sprintf('%s?m=candidates&a=considerForJobSearch&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'createAttachmentURL' => sprintf('%s?m=candidates&a=createAttachment&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'deleteAttachmentURL' => sprintf('%s?m=candidates&a=deleteAttachment', $baseURL),
+                'deleteAttachmentToken' => $this->getCSRFToken('candidates.deleteAttachment'),
                 'addTagsURL' => sprintf('%s?m=candidates&a=addCandidateTags&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
                 'linkDuplicateURL' => sprintf('%s?m=candidates&a=linkDuplicate&candidateID=%d&ui=legacy', $baseURL, $candidateID),
@@ -4498,18 +4500,64 @@ class CandidatesUI extends UserInterface
      */
     private function onDeleteAttachment()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidMethod',
+                    'message' => 'Invalid request method.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         /* Bail out if we don't have a valid attachment ID. */
         if (!$this->isRequiredIDValid('attachmentID', $_POST)) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidAttachment',
+                    'message' => 'Invalid attachment ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid attachment ID.');
         }
 
         /* Bail out if we don't have a valid candidate ID. */
         if (!$this->isRequiredIDValid('candidateID', $_POST)) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidate',
+                    'message' => 'Invalid candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
@@ -4519,6 +4567,21 @@ class CandidatesUI extends UserInterface
 
         if (!$this->isCSRFTokenValid('candidates.deleteAttachment', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid request token.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request token.');
         }
 
@@ -4530,12 +4593,44 @@ class CandidatesUI extends UserInterface
             (int) $attachmentRS['dataItemType'] !== DATA_ITEM_CANDIDATE ||
             (int) $attachmentRS['dataItemID'] !== (int) $candidateID)
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'attachmentOwnership',
+                    'message' => 'Attachment does not belong to this candidate.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Attachment does not belong to this candidate.');
         }
 
         $attachments->delete($attachmentID);
 
         if (!eval(Hooks::get('CANDIDATE_ON_DELETE_ATTACHMENT_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'attachmentDeleted',
+                'message' => 'Attachment deleted.',
+                'attachmentID' => (int) $attachmentID,
+                'candidateID' => (int) $candidateID
+            ));
+            return;
+        }
 
         CATSUtility::transferRelativeURI(
             'm=candidates&a=show&candidateID=' . $candidateID

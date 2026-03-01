@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   addJobOrderProfileComment,
+  deleteJobOrderAttachment,
   deleteJobOrderMessageThread,
   fetchPipelineStatusDetailsModernData,
   fetchJobOrdersShowModernData,
@@ -336,6 +337,42 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
       setMessageDeletePending(false);
     }
   }, [data, messageDeletePending, refreshPageData]);
+
+  const handleDeleteAttachment = useCallback(
+    async (attachmentID: number, fileName: string) => {
+      if (!data) {
+        return;
+      }
+
+      const deleteURL = decodeLegacyURL(data.actions.deleteAttachmentURL || '');
+      const token = data.actions.deleteAttachmentToken || '';
+      if (deleteURL === '' || token === '') {
+        window.alert('Attachment delete endpoint is not available in this mode.');
+        return;
+      }
+
+      const confirmed = window.confirm(`Delete attachment "${toDisplayText(fileName, 'this file')}"?`);
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const result = await deleteJobOrderAttachment(deleteURL, {
+          jobOrderID: Number(data.meta.jobOrderID || 0),
+          attachmentID: Number(attachmentID || 0),
+          securityToken: token
+        });
+        if (!result.success) {
+          window.alert(result.message || 'Unable to delete attachment.');
+          return;
+        }
+        refreshPageData();
+      } catch (err: unknown) {
+        window.alert(err instanceof Error ? err.message : 'Unable to delete attachment.');
+      }
+    },
+    [data, refreshPageData]
+  );
 
   const getForwardStatusOptions = useCallback(
     (currentStatusID: number) => {
@@ -802,7 +839,8 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
               <DataTable
                 columns={[
                   { key: 'fileName', title: 'File' },
-                  { key: 'dateCreated', title: 'Date' }
+                  { key: 'dateCreated', title: 'Date' },
+                  { key: 'actions', title: 'Actions' }
                 ]}
                 hasRows={hasAttachments}
                 emptyMessage="No attachments."
@@ -819,6 +857,19 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                       )}
                     </td>
                     <td>{toDisplayText(attachment.dateCreated)}</td>
+                    <td>
+                      <div className="modern-table-actions">
+                        {permissions.canDeleteAttachment ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--danger"
+                            onClick={() => handleDeleteAttachment(attachment.attachmentID, attachment.fileName)}
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </DataTable>

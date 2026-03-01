@@ -437,6 +437,80 @@ export async function deleteCandidateMessageThread(
   return result;
 }
 
+export async function deleteCandidateAttachment(
+  submitURL: string,
+  payload: {
+    candidateID: number;
+    attachmentID: number;
+    securityToken: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('candidateID', String(payload.candidateID || 0));
+  body.set('attachmentID', String(payload.attachmentID || 0));
+  body.set('securityToken', payload.securityToken || '');
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Candidate attachment delete failed (${response.status}).`);
+  }
+
+  return result;
+}
+
+export async function deleteJobOrderAttachment(
+  submitURL: string,
+  payload: {
+    jobOrderID: number;
+    attachmentID: number;
+    securityToken: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('jobOrderID', String(payload.jobOrderID || 0));
+  body.set('attachmentID', String(payload.attachmentID || 0));
+  body.set('securityToken', payload.securityToken || '');
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Job order attachment delete failed (${response.status}).`);
+  }
+
+  return result;
+}
+
 export async function fetchCandidatesListModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams
