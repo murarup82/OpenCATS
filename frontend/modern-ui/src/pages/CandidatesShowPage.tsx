@@ -1287,9 +1287,20 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 <ul className="avel-candidate-lists">
                   {data.calendar.slice(0, 10).map((eventItem) => (
                     <li key={eventItem.eventID}>
-                      <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(eventItem.eventURL))}>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--secondary"
+                        onClick={() =>
+                          setPipelineModal({
+                            url: ensureModernUIURL(decodeLegacyURL(eventItem.eventURL)),
+                            title: `Calendar Event: ${toDisplayText(eventItem.title)}`,
+                            openInPopup: { width: 1120, height: 760, refreshOnClose: false },
+                            showRefreshClose: false
+                          })
+                        }
+                      >
                         {toDisplayText(eventItem.dateShow)}: {toDisplayText(eventItem.title)}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
