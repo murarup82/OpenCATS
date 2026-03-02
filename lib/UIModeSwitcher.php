@@ -94,7 +94,8 @@ class UIModeSwitcher
                 'targetAccessLevels' => self::getIntegerListValue('UI_SWITCH_TARGET_ACCESS_LEVELS', 'OPENCATS_UI_TARGET_ACCESS_LEVELS')
             ),
             'switches' => self::collectSwitchValueDiagnostics(),
-            'envOverrides' => self::collectUIOverrideEnvironment()
+            'envOverrides' => self::collectUIOverrideEnvironment(),
+            'runtimeFiles' => self::collectRuntimeFileDiagnostics()
         );
 
         return $snapshot;
@@ -1081,6 +1082,49 @@ class UIModeSwitcher
         }
 
         return substr($text, 0, $maxLength) . '...';
+    }
+
+    private static function collectRuntimeFileDiagnostics()
+    {
+        $configUIPath = './config.ui.php';
+        $exists = file_exists($configUIPath);
+        $readable = is_readable($configUIPath);
+        $realPath = '';
+        $mtimeUTC = '';
+        $sha1 = '';
+
+        if ($exists)
+        {
+            $real = realpath($configUIPath);
+            if ($real !== false)
+            {
+                $realPath = $real;
+            }
+
+            $mtime = @filemtime($configUIPath);
+            if ($mtime !== false && $mtime > 0)
+            {
+                $mtimeUTC = gmdate('c', (int) $mtime);
+            }
+
+            if ($readable)
+            {
+                $contents = @file_get_contents($configUIPath);
+                if ($contents !== false)
+                {
+                    $sha1 = substr(sha1($contents), 0, 12);
+                }
+            }
+        }
+
+        return array(
+            'configUIPath' => $configUIPath,
+            'configUIRealPath' => $realPath,
+            'configUIExists' => $exists,
+            'configUIReadable' => $readable,
+            'configUIMTimeUTC' => $mtimeUTC,
+            'configUISHA1_12' => $sha1
+        );
     }
 
     private static function logDecision($mode, $moduleName, $action, $reason)

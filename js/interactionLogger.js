@@ -34,7 +34,7 @@
     }
 
     function isSensitiveKey(key) {
-        return /(token|password|passwd|secret|authorization|session|cookie|csrf|security)/i.test(String(key || ''));
+        return /(token|password|passwd|secret|authorization|sessionid|cookie|csrf|security)/i.test(String(key || ''));
     }
 
     function parseURL(rawURL) {
@@ -195,8 +195,13 @@
                     continue;
                 }
 
-                if (/url/i.test(key)) {
-                    objectResult[key] = redactURL(String(value[key] == null ? '' : value[key]));
+                if (/url/i.test(key) || /uri/i.test(key)) {
+                    var urlCandidate = value[key];
+                    if (typeof urlCandidate === 'string' || typeof urlCandidate === 'number') {
+                        objectResult[key] = redactURL(String(urlCandidate == null ? '' : urlCandidate));
+                    } else {
+                        objectResult[key] = sanitizeValue(urlCandidate, depth + 1);
+                    }
                     continue;
                 }
 
