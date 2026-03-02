@@ -52,6 +52,9 @@ define('UI_SWITCH_SHOW_SHELL_CHROME', false);
  */
 $GLOBALS['UI_SWITCH_ROUTE_MAP'] = array(
     'dashboard'  => array('*'),
+    'home'       => array('*'),
+    'kpis'       => array('*'),
+    'logs'       => array('*'),
     'candidates' => array('*'),
     'joborders'  => array('*'),
     'companies'  => array('*'),
@@ -59,7 +62,15 @@ $GLOBALS['UI_SWITCH_ROUTE_MAP'] = array(
     'activity'   => array('*'),
     'calendar'   => array('*'),
     'lists'      => array('*'),
-    'reports'    => array('*')
+    'reports'    => array('*'),
+    'sourcing'   => array('*'),
+    'queue'      => array('*'),
+    'graphs'     => array('*'),
+    'rss'        => array('*'),
+    'careers'    => array('*'),
+    'wizard'     => array('*'),
+    'tests'      => array('*'),
+    'xml'        => array('*')
 );
 
 /* Optional phased rollout by cohorts. Empty arrays = all users. */

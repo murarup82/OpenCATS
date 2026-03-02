@@ -18,6 +18,7 @@ import { ActivityListPage } from '../pages/ActivityListPage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
+import { LogsPage } from '../pages/LogsPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
@@ -165,6 +166,14 @@ const registry: Record<string, ModernRouteComponent> = {
   'lists.(default)': ListsManagePage,
   'reports.reports': ReportsLauncherPage,
   'reports.(default)': ReportsLauncherPage,
+  'home.home': ModuleBridgePage,
+  'home.inbox': ModuleBridgePage,
+  'home.mynotes': ModuleBridgePage,
+  'home.(default)': ModuleBridgePage,
+  'kpis.details': ModuleBridgePage,
+  'kpis.(default)': ModuleBridgePage,
+  'logs.view': LogsPage,
+  'logs.(default)': LogsPage,
   ...explicitNativeActionRoutes,
   ...explicitActionCompatRoutes,
   'candidates.*': ModuleBridgePage,
@@ -177,6 +186,16 @@ const registry: Record<string, ModernRouteComponent> = {
   'lists.*': ModuleBridgePage,
   'reports.*': ModuleBridgePage,
   'home.*': ModuleBridgePage,
+  'kpis.*': ModuleBridgePage,
+  'logs.*': LogsPage,
+  'sourcing.*': ModuleBridgePage,
+  'queue.*': ModuleBridgePage,
+  'graphs.*': ModuleBridgePage,
+  'rss.*': ModuleBridgePage,
+  'careers.*': ModuleBridgePage,
+  'wizard.*': ModuleBridgePage,
+  'tests.*': ModuleBridgePage,
+  'xml.*': ModuleBridgePage,
   '*.*': ModuleBridgePage,
   'candidates.(default)': CandidatesListPage
 };

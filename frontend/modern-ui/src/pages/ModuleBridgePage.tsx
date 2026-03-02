@@ -18,7 +18,16 @@ const MODULE_LABELS: Record<string, string> = {
   calendar: 'Calendar',
   lists: 'Lists',
   reports: 'Reports',
-  home: 'Home'
+  home: 'Home',
+  kpis: 'KPIs',
+  logs: 'Logs',
+  sourcing: 'Sourcing',
+  queue: 'Queue',
+  graphs: 'Graphs',
+  rss: 'RSS',
+  careers: 'Careers',
+  wizard: 'Wizard',
+  xml: 'XML'
 };
 
 function toDisplayText(value: unknown, fallback = '--'): string {
@@ -50,6 +59,14 @@ const QUICK_NAV_ROUTES: Array<{ label: string; url: (indexName: string) => strin
   {
     label: 'Job Orders',
     url: (indexName) => `${indexName}?m=joborders&a=listByView&ui=modern`
+  },
+  {
+    label: 'KPIs',
+    url: (indexName) => `${indexName}?m=kpis&ui=modern`
+  },
+  {
+    label: 'Logs',
+    url: (indexName) => `${indexName}?m=logs&ui=modern`
   }
 ];
 
