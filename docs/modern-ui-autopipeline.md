@@ -230,19 +230,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `frontend/modern-ui/scripts/generate-coverage-matrix.mjs` and npm script `coverage:matrix`
     - generator parses route registry + guarded-param map and outputs module/route-level coverage to `docs/modern-ui-route-coverage.md`
     - route coverage can now be regenerated quickly as part of modernization stabilization and rollout decisions.
+105. Added minimal frontend smoke script for modern route contracts:
+    - introduced `frontend/modern-ui/scripts/smoke-modern-routes.mjs` and npm script `smoke:routes`
+    - smoke runner validates modern-json contract keys/versions for core native routes via HTTP and performs a safe dashboard mutation endpoint probe
+    - script is environment-driven (`OPENCATS_BASE_URL`, optional `OPENCATS_COOKIE`) and skips cleanly when not configured.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling pass for remaining custom controls beyond `SelectMenu` (toggles, chips, icon-only actions).
-2. Add minimal frontend smoke test script covering modern routes and key actions (load + primary mutation success).
-3. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
-4. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
-5. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-6. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
-7. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
-8. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
-9. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
-10. Add fast sanity report command that bundles build + matrix + endpoint checks for one-shot release readiness.
+2. Add backend endpoint smoke checks for all `format=modern-json` actions introduced in migration.
+3. Add performance/stability pass: avoid unnecessary iframe reloads and reduce repeated fetches on modal close events.
+4. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+5. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
+6. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
+7. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
+8. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
+9. Add fast sanity report command that bundles build + matrix + endpoint checks for one-shot release readiness.
+10. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
 
 ## Rules
 

@@ -10,7 +10,8 @@
     "build:dev": "npm run clean:build && vite build --mode development",
     "preview": "vite preview",
     "verify:build": "node ./scripts/verify-build-output.mjs",
-    "coverage:matrix": "node ./scripts/generate-coverage-matrix.mjs"
+    "coverage:matrix": "node ./scripts/generate-coverage-matrix.mjs",
+    "smoke:routes": "node ./scripts/smoke-modern-routes.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
