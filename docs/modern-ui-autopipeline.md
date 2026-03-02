@@ -246,19 +246,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - dashboard scope/view segmented buttons now expose `aria-pressed` state and active filter count uses polite live-region updates
     - job order column preset and column visibility chips now expose pressed-state + explicit action labels
     - improved keyboard/screen-reader clarity for non-native toggle-chip controls during list customization.
+109. Added module-by-module modernization parity checklist:
+    - introduced `docs/modern-ui-parity-checklist.md` with global/module/release-gate validation grids
+    - checklist now tracks parity status across Dashboard, Candidates, Job Orders, Companies, Contacts, Activity, Calendar, Lists, and Reports
+    - provides explicit go/no-go criteria before switching default mode from hybrid to modern.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-3. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
-4. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
-5. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
-6. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
-7. Add fast sanity report command that bundles build + matrix + endpoint checks for one-shot release readiness.
-8. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
-9. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
-10. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
+3. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
+4. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
+5. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
+6. Add fast sanity report command that bundles build + matrix + endpoint checks for one-shot release readiness.
+7. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
+8. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
+9. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
+10. Add release runbook for temporary rollback/feature-flag response during production cutover.
 
 ## Rules
 
