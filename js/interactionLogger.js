@@ -11,6 +11,7 @@
     var MAX_ENTRIES = 2000;
     var listeners = [];
     var entries = loadEntries();
+    var serverContextLogged = false;
 
     function nowISO() {
         return (new Date()).toISOString();
@@ -118,6 +119,23 @@
             return null;
         }
         return sanitizeValue(window.OpenCATSPageContext, 0);
+    }
+
+    function logServerContextOnce(contextValue) {
+        if (serverContextLogged) {
+            return;
+        }
+
+        var context = contextValue || getServerPageContext();
+        if (!context) {
+            return;
+        }
+
+        serverContextLogged = true;
+        logEvent('ui.server.context', context);
+        if (context.uiSwitch && context.uiSwitch.switches) {
+            logEvent('ui.server.switches', context.uiSwitch.switches);
+        }
     }
 
     function sanitizeValue(value, depth) {
@@ -683,10 +701,20 @@
     installXHRLogger();
     installInteractionListeners();
 
-    var serverContext = getServerPageContext();
-    if (serverContext) {
-        logEvent('ui.server.context', serverContext);
-    }
+    logServerContextOnce();
+    window.setTimeout(function () {
+        logServerContextOnce();
+    }, 0);
+    window.setTimeout(function () {
+        logServerContextOnce();
+    }, 200);
+    window.addEventListener('opencats:page-context', function (event) {
+        if (event && event.detail) {
+            logServerContextOnce(event.detail);
+            return;
+        }
+        logServerContextOnce();
+    });
 
     logEvent('ui.page.load', {
         title: truncateString(document.title || '', 180),

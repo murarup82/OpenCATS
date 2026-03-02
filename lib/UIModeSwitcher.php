@@ -93,6 +93,7 @@ class UIModeSwitcher
                 'targetUserIDs' => self::getIntegerListValue('UI_SWITCH_TARGET_USER_IDS', 'OPENCATS_UI_TARGET_USER_IDS'),
                 'targetAccessLevels' => self::getIntegerListValue('UI_SWITCH_TARGET_ACCESS_LEVELS', 'OPENCATS_UI_TARGET_ACCESS_LEVELS')
             ),
+            'switches' => self::collectSwitchValueDiagnostics(),
             'envOverrides' => self::collectUIOverrideEnvironment()
         );
 
@@ -927,6 +928,159 @@ class UIModeSwitcher
         }
 
         return $overrides;
+    }
+
+    private static function collectSwitchValueDiagnostics()
+    {
+        $switches = array();
+
+        $definitions = array(
+            array('name' => 'UI_SWITCH_ENABLED', 'env' => 'OPENCATS_UI_SWITCH_ENABLED', 'type' => 'bool', 'default' => false),
+            array('name' => 'UI_SWITCH_DEFAULT_MODE', 'env' => 'OPENCATS_UI_MODE', 'type' => 'string', 'default' => 'legacy'),
+            array('name' => 'UI_SWITCH_REQUIRE_ROUTE_MATCH', 'env' => 'OPENCATS_UI_REQUIRE_ROUTE_MATCH', 'type' => 'bool', 'default' => true),
+            array('name' => 'UI_SWITCH_PREVIEW_ALL_ROUTES', 'env' => 'OPENCATS_UI_PREVIEW_ALL_ROUTES', 'type' => 'bool', 'default' => false),
+            array('name' => 'UI_SWITCH_ALLOW_POST', 'env' => 'OPENCATS_UI_ALLOW_POST', 'type' => 'bool', 'default' => false),
+            array('name' => 'UI_SWITCH_ALLOW_AJAX', 'env' => 'OPENCATS_UI_ALLOW_AJAX', 'type' => 'bool', 'default' => false),
+            array('name' => 'UI_SWITCH_OVERRIDE_BYPASS_ROUTE_MAP', 'env' => 'OPENCATS_UI_OVERRIDE_BYPASS_ROUTE_MAP', 'type' => 'bool', 'default' => false),
+            array('name' => 'UI_SWITCH_LOGGING', 'env' => 'OPENCATS_UI_SWITCH_LOGGING', 'type' => 'bool', 'default' => true),
+            array('name' => 'UI_SWITCH_MODERN_BUNDLE_URL', 'env' => 'OPENCATS_UI_BUNDLE_URL', 'type' => 'string', 'default' => ''),
+            array('name' => 'UI_SWITCH_USE_MANIFEST', 'env' => 'OPENCATS_UI_USE_MANIFEST', 'type' => 'bool', 'default' => true),
+            array('name' => 'UI_SWITCH_MANIFEST_PATH', 'env' => 'OPENCATS_UI_MANIFEST_PATH', 'type' => 'string', 'default' => './public/modern-ui/build/asset-manifest.json'),
+            array('name' => 'UI_SWITCH_MANIFEST_ENTRY', 'env' => 'OPENCATS_UI_MANIFEST_ENTRY', 'type' => 'string', 'default' => 'src/mount.tsx'),
+            array('name' => 'UI_SWITCH_MODERN_DEV_SERVER_URL', 'env' => 'OPENCATS_UI_DEV_SERVER_URL', 'type' => 'string', 'default' => ''),
+            array('name' => 'UI_SWITCH_CLIENT_LOGGING', 'env' => 'OPENCATS_UI_CLIENT_LOGGING', 'type' => 'bool', 'default' => true),
+            array('name' => 'UI_SWITCH_CLIENT_AUTO_FALLBACK_SECONDS', 'env' => 'OPENCATS_UI_CLIENT_AUTO_FALLBACK_SECONDS', 'type' => 'int', 'default' => 0),
+            array('name' => 'UI_SWITCH_SHOW_SHELL_CHROME', 'env' => 'OPENCATS_UI_SHOW_SHELL_CHROME', 'type' => 'bool', 'default' => false),
+            array('name' => 'UI_SWITCH_BUST_CACHE', 'env' => 'OPENCATS_UI_BUST_CACHE', 'type' => 'bool', 'default' => true)
+        );
+
+        foreach ($definitions as $definition)
+        {
+            $switchName = $definition['name'];
+            $envName = $definition['env'];
+            $switchType = $definition['type'];
+            $defaultValue = $definition['default'];
+
+            if ($switchType === 'bool')
+            {
+                $resolvedValue = self::getBooleanValue($switchName, $envName, $defaultValue);
+            }
+            else if ($switchType === 'int')
+            {
+                $resolvedValue = self::getIntegerValue($switchName, $envName, $defaultValue);
+            }
+            else
+            {
+                $resolvedValue = self::getStringValue($switchName, $envName, $defaultValue);
+            }
+
+            $rawEnvValue = getenv($envName);
+            $envDefined = ($rawEnvValue !== false && trim((string) $rawEnvValue) !== '');
+            $configDefined = defined($switchName);
+
+            if ($envDefined)
+            {
+                $source = 'env';
+            }
+            else if ($configDefined)
+            {
+                $source = 'config';
+            }
+            else
+            {
+                $source = 'default';
+            }
+
+            $rawConfigValue = null;
+            if ($configDefined)
+            {
+                $rawConfigValue = constant($switchName);
+            }
+
+            if ($switchName === 'UI_SWITCH_MODERN_BUNDLE_URL' ||
+                $switchName === 'UI_SWITCH_MODERN_DEV_SERVER_URL')
+            {
+                $rawEnvValue = self::truncateValueForDebug($rawEnvValue, 220);
+                $rawConfigValue = self::truncateValueForDebug($rawConfigValue, 220);
+                $resolvedValue = self::truncateValueForDebug($resolvedValue, 220);
+            }
+
+            $switches[$switchName] = array(
+                'resolved' => $resolvedValue,
+                'source' => $source,
+                'envName' => $envName,
+                'envValue' => ($envDefined ? self::truncateValueForDebug($rawEnvValue, 220) : ''),
+                'configValue' => $rawConfigValue
+            );
+        }
+
+        $switches['UI_SWITCH_ROUTE_MAP'] = array(
+            'resolved' => self::getRouteMap(),
+            'source' => (getenv('OPENCATS_UI_ROUTE_MAP') !== false && trim((string) getenv('OPENCATS_UI_ROUTE_MAP')) !== '') ? 'env' : 'config',
+            'envName' => 'OPENCATS_UI_ROUTE_MAP',
+            'envValue' => self::truncateValueForDebug(getenv('OPENCATS_UI_ROUTE_MAP'), 220),
+            'configValue' => (isset($GLOBALS['UI_SWITCH_ROUTE_MAP']) ? $GLOBALS['UI_SWITCH_ROUTE_MAP'] : array())
+        );
+
+        $switches['UI_SWITCH_TARGET_USER_IDS'] = array(
+            'resolved' => self::getIntegerListValue('UI_SWITCH_TARGET_USER_IDS', 'OPENCATS_UI_TARGET_USER_IDS'),
+            'source' => (getenv('OPENCATS_UI_TARGET_USER_IDS') !== false && trim((string) getenv('OPENCATS_UI_TARGET_USER_IDS')) !== '') ? 'env' : 'config',
+            'envName' => 'OPENCATS_UI_TARGET_USER_IDS',
+            'envValue' => self::truncateValueForDebug(getenv('OPENCATS_UI_TARGET_USER_IDS'), 220),
+            'configValue' => (isset($GLOBALS['UI_SWITCH_TARGET_USER_IDS']) ? $GLOBALS['UI_SWITCH_TARGET_USER_IDS'] : array())
+        );
+
+        $switches['UI_SWITCH_TARGET_ACCESS_LEVELS'] = array(
+            'resolved' => self::getIntegerListValue('UI_SWITCH_TARGET_ACCESS_LEVELS', 'OPENCATS_UI_TARGET_ACCESS_LEVELS'),
+            'source' => (getenv('OPENCATS_UI_TARGET_ACCESS_LEVELS') !== false && trim((string) getenv('OPENCATS_UI_TARGET_ACCESS_LEVELS')) !== '') ? 'env' : 'config',
+            'envName' => 'OPENCATS_UI_TARGET_ACCESS_LEVELS',
+            'envValue' => self::truncateValueForDebug(getenv('OPENCATS_UI_TARGET_ACCESS_LEVELS'), 220),
+            'configValue' => (isset($GLOBALS['UI_SWITCH_TARGET_ACCESS_LEVELS']) ? $GLOBALS['UI_SWITCH_TARGET_ACCESS_LEVELS'] : array())
+        );
+
+        $switches['UI_SWITCH_EXCLUDE_MODULES'] = array(
+            'resolved' => (isset($GLOBALS['UI_SWITCH_EXCLUDE_MODULES']) ? $GLOBALS['UI_SWITCH_EXCLUDE_MODULES'] : array()),
+            'source' => 'config',
+            'envName' => '',
+            'envValue' => '',
+            'configValue' => (isset($GLOBALS['UI_SWITCH_EXCLUDE_MODULES']) ? $GLOBALS['UI_SWITCH_EXCLUDE_MODULES'] : array())
+        );
+
+        $switches['UI_SWITCH_EXCLUDE_ROUTES'] = array(
+            'resolved' => (isset($GLOBALS['UI_SWITCH_EXCLUDE_ROUTES']) ? $GLOBALS['UI_SWITCH_EXCLUDE_ROUTES'] : array()),
+            'source' => 'config',
+            'envName' => '',
+            'envValue' => '',
+            'configValue' => (isset($GLOBALS['UI_SWITCH_EXCLUDE_ROUTES']) ? $GLOBALS['UI_SWITCH_EXCLUDE_ROUTES'] : array())
+        );
+
+        return $switches;
+    }
+
+    private static function truncateValueForDebug($value, $maxLength)
+    {
+        if ($value === null || $value === false)
+        {
+            return '';
+        }
+
+        if (is_array($value) || is_object($value))
+        {
+            return $value;
+        }
+
+        $text = trim((string) $value);
+        if ($text === '')
+        {
+            return '';
+        }
+
+        if (strlen($text) <= $maxLength)
+        {
+            return $text;
+        }
+
+        return substr($text, 0, $maxLength) . '...';
     }
 
     private static function logDecision($mode, $moduleName, $action, $reason)

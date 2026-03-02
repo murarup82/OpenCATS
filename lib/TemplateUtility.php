@@ -1997,7 +1997,8 @@ class TemplateUtility
         }
         $pageContextJSON = str_replace('</', '<\/', $pageContextJSON);
         echo '<script type="text/javascript">window.OpenCATSPageContext = ', $pageContextJSON, '; CATSIndexName = "',
-             CATSUtility::getIndexName(), '";</script>', "\n";
+             CATSUtility::getIndexName(),
+             '"; try { if (typeof window.CustomEvent === "function") { window.dispatchEvent(new CustomEvent("opencats:page-context", { detail: window.OpenCATSPageContext })); } } catch (e) {}</script>', "\n";
 
        $headIncludes[] = 'main.css';
        $headIncludes[] = 'public/css/ui2.css';
