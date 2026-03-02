@@ -306,6 +306,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `frontend/modern-ui/scripts/lint-smoke-fixtures.mjs` and npm script `fixtures:lint`
     - validates replay fixture schema integrity (required fields, token pair coherence, unique IDs)
     - prevents malformed mutation replay definitions from breaking endpoint smoke workflows.
+124. Added consolidated quality gate runner:
+    - introduced `frontend/modern-ui/scripts/quality-gate.mjs` and npm script `quality:gate`
+    - quality gate executes sanity report, scorecard prefill, fixture lint, and evidence file presence checks
+    - writes consolidated report to `docs/modern-ui-quality-gate.md` with pass/fail output for release readiness.
 
 ## Next Queue (30-Slice Execution)
 
@@ -317,8 +321,8 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 6. Add periodic post-cutover review checklist (day 1 / day 7 / day 30).
 7. Add deprecation checklist automation hook to validate required evidence links.
 8. Add telemetry retention guidance (session vs persisted metrics) for production observability.
-9. Add quality gate script that combines scorecard prefill + evidence link validation.
-10. Add smoke fixture coverage report (which modules/actions have replay probes vs gaps).
+9. Add smoke fixture coverage report (which modules/actions have replay probes vs gaps).
+10. Add release readiness changelog template linking quality gate snapshots over time.
 
 ## Rules
 

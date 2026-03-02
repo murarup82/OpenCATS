@@ -15,7 +15,8 @@
     "smoke:endpoints": "node ./scripts/smoke-modern-endpoints.mjs",
     "sanity:modern": "node ./scripts/modern-sanity-report.mjs",
     "scorecard:prefill": "node ./scripts/prefill-rollout-scorecard.mjs",
-    "fixtures:lint": "node ./scripts/lint-smoke-fixtures.mjs"
+    "fixtures:lint": "node ./scripts/lint-smoke-fixtures.mjs",
+    "quality:gate": "node ./scripts/quality-gate.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
