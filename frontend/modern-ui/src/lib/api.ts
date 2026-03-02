@@ -1058,6 +1058,185 @@ export async function fetchCandidatesAddModernData(
   return data;
 }
 
+export async function submitCandidatesAddResumeAction(
+  bootstrap: UIModeBootstrap,
+  formData: FormData
+): Promise<CandidatesAddModernDataResponse> {
+  const query = new URLSearchParams();
+  query.set('m', 'candidates');
+  query.set('a', 'add');
+  query.set('ui', 'modern');
+  query.set('format', 'modern-json');
+  query.set('modernPage', MODERN_CANDIDATE_ADD_PAGE);
+
+  const response = await fetch(`${bootstrap.indexName}?${query.toString()}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: formData
+  });
+
+  if (!response.ok) {
+    throw new Error(`Resume import failed (${response.status}).`);
+  }
+
+  const data = (await response.json()) as CandidatesAddModernDataResponse;
+  assertModernContract(data.meta, 'candidates.add.v1', 'candidate add form');
+  return data;
+}
+
+type TalentFitFlowCandidateParseAJAXResponse = {
+  jobID: string;
+  status: string;
+  candidate: Record<string, unknown> | null;
+  warnings: unknown[];
+  errorCode: string;
+  errorMessage: string;
+};
+
+function getXMLTagValue(doc: Document, tagName: string): string {
+  const node = doc.getElementsByTagName(tagName).item(0);
+  return node && node.textContent ? String(node.textContent) : '';
+}
+
+function parseTalentFitFlowCandidateParseXML(xmlText: string): TalentFitFlowCandidateParseAJAXResponse {
+  const xml = new DOMParser().parseFromString(xmlText, 'application/xml');
+  if (xml.getElementsByTagName('parsererror').length > 0) {
+    throw new Error('Invalid XML response from AI parse endpoint.');
+  }
+
+  const errorCode = getXMLTagValue(xml, 'errorcode');
+  const errorMessage = getXMLTagValue(xml, 'errormessage');
+  const jobID = getXMLTagValue(xml, 'jobid');
+  const status = getXMLTagValue(xml, 'status');
+  const candidateRaw = getXMLTagValue(xml, 'candidate_json');
+  const warningsRaw = getXMLTagValue(xml, 'warnings_json');
+
+  let candidate: Record<string, unknown> | null = null;
+  if (candidateRaw.trim() !== '') {
+    try {
+      candidate = JSON.parse(candidateRaw) as Record<string, unknown>;
+    } catch (_error) {
+      candidate = null;
+    }
+  }
+
+  let warnings: unknown[] = [];
+  if (warningsRaw.trim() !== '') {
+    try {
+      const parsed = JSON.parse(warningsRaw) as unknown;
+      warnings = Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      warnings = [];
+    }
+  }
+
+  return {
+    jobID,
+    status,
+    candidate,
+    warnings,
+    errorCode,
+    errorMessage
+  };
+}
+
+function buildDefaultTalentFitFlowConsent(actor: string): string {
+  return JSON.stringify({
+    consent_given: true,
+    timestamp: new Date().toISOString(),
+    actor
+  });
+}
+
+export async function createTalentFitFlowCandidateParseJob(payload: {
+  documentTempFile?: string;
+  attachmentID?: number;
+  candidateID?: number;
+  requestedFields?: string;
+  idempotencyKey?: string;
+  actor?: string;
+}): Promise<TalentFitFlowCandidateParseAJAXResponse> {
+  const body = new URLSearchParams();
+  body.set('f', 'talentFitFlowCandidateParse');
+  body.set('action', 'create');
+
+  const documentTempFile = String(payload.documentTempFile || '').trim();
+  if (documentTempFile !== '') {
+    body.set('documentTempFile', documentTempFile);
+  }
+
+  const attachmentID = Number(payload.attachmentID || 0);
+  if (attachmentID > 0) {
+    body.set('attachmentID', String(attachmentID));
+  }
+
+  const candidateID = Number(payload.candidateID || 0);
+  if (candidateID > 0) {
+    body.set('candidateID', String(candidateID));
+  }
+
+  const requestedFields =
+    String(payload.requestedFields || '').trim() ||
+    '["first_name","last_name","email","phone","location","country_name","skills","summary","experience_years","seniority_band","current_employer","employment_recent"]';
+  body.set('requested_fields', requestedFields);
+  body.set('consent', buildDefaultTalentFitFlowConsent(String(payload.actor || 'modern-ui')));
+
+  const idempotencyKey = String(payload.idempotencyKey || '').trim();
+  if (idempotencyKey !== '') {
+    body.set('idempotency_key', idempotencyKey);
+  }
+
+  const response = await fetch('ajax.php', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error(`AI parse request failed (${response.status}).`);
+  }
+
+  const parsed = parseTalentFitFlowCandidateParseXML(await response.text());
+  if (parsed.errorCode !== '0') {
+    throw new Error(parsed.errorMessage || 'AI parse request failed.');
+  }
+  if (parsed.jobID.trim() === '') {
+    throw new Error('AI parse request did not return a job ID.');
+  }
+  return parsed;
+}
+
+export async function fetchTalentFitFlowCandidateParseStatus(
+  jobID: string
+): Promise<TalentFitFlowCandidateParseAJAXResponse> {
+  const body = new URLSearchParams();
+  body.set('f', 'talentFitFlowCandidateParse');
+  body.set('action', 'status');
+  body.set('jobId', String(jobID || '').trim());
+
+  const response = await fetch('ajax.php', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error(`AI parse status check failed (${response.status}).`);
+  }
+
+  const parsed = parseTalentFitFlowCandidateParseXML(await response.text());
+  if (parsed.errorCode !== '0') {
+    throw new Error(parsed.errorMessage || 'AI parse status check failed.');
+  }
+  return parsed;
+}
+
 export async function fetchCandidateDuplicateCheck(
   fields: {
     firstName: string;

@@ -1411,6 +1411,12 @@ export type CandidatesAddModernDataResponse = {
     sourceCSV: string;
     gdprExpirationYears: number;
   };
+  resumeImport: {
+    isParsingEnabled: boolean;
+    parsingStatus: Record<string, unknown>;
+    documentText: string;
+    documentTempFile: string;
+  };
   extraFields: Array<{
     postKey: string;
     fieldName: string;

@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { deleteCandidateAttachment, fetchCandidatesEditModernData, uploadCandidateAttachment } from '../lib/api';
+import {
+  createTalentFitFlowCandidateParseJob,
+  deleteCandidateAttachment,
+  fetchCandidatesEditModernData,
+  fetchTalentFitFlowCandidateParseStatus,
+  uploadCandidateAttachment
+} from '../lib/api';
 import type { CandidatesEditModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -92,6 +98,157 @@ function toDisplayText(value: unknown, fallback = '--'): string {
   return text === '' ? fallback : text;
 }
 
+function normalizeAIText(value: unknown): string {
+  return String(value ?? '').trim();
+}
+
+function parseAILocation(value: string): { city: string; country: string } {
+  const raw = normalizeAIText(value);
+  if (raw === '') {
+    return { city: '', country: '' };
+  }
+
+  const segments = raw
+    .split(',')
+    .map((segment) => segment.trim())
+    .filter((segment) => segment !== '');
+  if (segments.length === 0) {
+    return { city: '', country: '' };
+  }
+  if (segments.length === 1) {
+    return { city: segments[0], country: '' };
+  }
+
+  return {
+    city: segments[segments.length - 2],
+    country: segments[segments.length - 1]
+  };
+}
+
+function readAIValue(value: unknown): { value: string; confidence: number } {
+  if (value && typeof value === 'object') {
+    const objectValue = value as Record<string, unknown>;
+    if (typeof objectValue.value !== 'undefined') {
+      const confidenceValue = Number(objectValue.confidence ?? 0);
+      return {
+        value: normalizeAIText(objectValue.value),
+        confidence: Number.isFinite(confidenceValue) ? confidenceValue : 0
+      };
+    }
+  }
+
+  return {
+    value: normalizeAIText(value),
+    confidence: 0
+  };
+}
+
+function mergeAIPrefillIntoEditState(
+  current: CandidateEditFormState,
+  candidate: Record<string, unknown> | null
+): CandidateEditFormState {
+  if (!candidate) {
+    return current;
+  }
+
+  const next = { ...current };
+  const confidenceThreshold = 0.6;
+
+  const firstName = readAIValue(candidate.first_name);
+  if (firstName.value !== '' && firstName.confidence >= confidenceThreshold) {
+    next.firstName = firstName.value;
+  }
+
+  const lastName = readAIValue(candidate.last_name);
+  if (lastName.value !== '' && lastName.confidence >= confidenceThreshold) {
+    next.lastName = lastName.value;
+  }
+
+  const email = readAIValue(candidate.email);
+  if (email.value !== '' && email.confidence >= confidenceThreshold) {
+    next.email1 = email.value;
+  }
+
+  const phone = readAIValue(candidate.phone);
+  if (phone.value !== '' && phone.confidence >= confidenceThreshold) {
+    next.phoneCell = phone.value;
+  }
+
+  const location = candidate.location as unknown;
+  if (typeof location === 'string') {
+    const rawLocation = normalizeAIText(location);
+    if (rawLocation !== '') {
+      next.address = rawLocation;
+      const parsed = parseAILocation(rawLocation);
+      if (parsed.city !== '') {
+        next.city = parsed.city;
+      }
+      if (parsed.country !== '') {
+        next.country = parsed.country;
+      }
+    }
+  } else if (location && typeof location === 'object') {
+    const locationObject = location as Record<string, unknown>;
+    const address = normalizeAIText(locationObject.address || locationObject.raw);
+    if (address !== '') {
+      next.address = address;
+    }
+
+    const city = normalizeAIText(locationObject.city);
+    if (city !== '') {
+      next.city = city;
+    }
+
+    const country = normalizeAIText(locationObject.country_name || locationObject.country);
+    if (country !== '') {
+      next.country = country;
+    }
+  }
+
+  const skills = candidate.skills;
+  if (Array.isArray(skills)) {
+    const pickedSkills = skills
+      .map((item) => {
+        if (!item || typeof item !== 'object') {
+          return '';
+        }
+        const skillObject = item as Record<string, unknown>;
+        const skillName = normalizeAIText(skillObject.name);
+        const skillConfidence = Number(skillObject.confidence ?? 0);
+        if (skillName === '') {
+          return '';
+        }
+        if (Number.isFinite(skillConfidence) && skillConfidence < confidenceThreshold) {
+          return '';
+        }
+        return skillName;
+      })
+      .filter((item) => item !== '');
+
+    if (pickedSkills.length > 0) {
+      next.keySkills = pickedSkills.join(', ');
+    }
+  }
+
+  const summary = readAIValue(candidate.summary);
+  if (summary.value !== '' && summary.confidence >= confidenceThreshold && normalizeAIText(next.notes) === '') {
+    next.notes = summary.value;
+  }
+
+  const currentEmployer = readAIValue(candidate.current_employer);
+  if (currentEmployer.value !== '' && currentEmployer.confidence >= confidenceThreshold) {
+    next.currentEmployer = currentEmployer.value;
+  }
+
+  return next;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 export function CandidatesEditPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesEditModernDataResponse | null>(null);
   const [formState, setFormState] = useState<CandidateEditFormState | null>(null);
@@ -116,6 +273,11 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   } | null>(null);
   const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
+  const [aiAttachmentID, setAiAttachmentID] = useState<number>(0);
+  const [aiPrefillPending, setAiPrefillPending] = useState<boolean>(false);
+  const [aiPrefillStatus, setAiPrefillStatus] = useState<string>('');
+  const [aiPrefillError, setAiPrefillError] = useState<string>('');
+  const [aiUndoSnapshot, setAiUndoSnapshot] = useState<CandidateEditFormState | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -130,6 +292,8 @@ export function CandidatesEditPage({ bootstrap }: Props) {
         }
         setData(result);
         setFormState(toFormState(result));
+        const defaultAIAttachment = result.attachments.find((item) => !item.isProfileImage);
+        setAiAttachmentID(defaultAIAttachment ? Number(defaultAIAttachment.attachmentID || 0) : 0);
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -239,6 +403,59 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     },
     [attachmentDeletePending, data, refreshPageData]
   );
+
+  const runAIPrefillFromAttachment = useCallback(async () => {
+    if (!data || !formState || aiPrefillPending) {
+      return;
+    }
+
+    const attachmentID = Number(aiAttachmentID || 0);
+    if (attachmentID <= 0) {
+      setAiPrefillError('Select an attachment first.');
+      return;
+    }
+
+    setAiPrefillPending(true);
+    setAiPrefillError('');
+    setAiPrefillStatus('Submitting AI prefill request...');
+    setAiUndoSnapshot({ ...formState, extraFields: { ...formState.extraFields } });
+
+    try {
+      const createResult = await createTalentFitFlowCandidateParseJob({
+        attachmentID,
+        candidateID: Number(data.meta.candidateID || 0),
+        idempotencyKey: `candidate-${data.meta.candidateID}-attachment-${attachmentID}`,
+        actor: String(bootstrap.userID || '')
+      });
+
+      let statusResult = createResult;
+      let status = String(createResult.status || '').toUpperCase();
+      setAiPrefillStatus(`Status: ${status || 'PENDING'}`);
+
+      while (status === 'PENDING' || status === 'RUNNING') {
+        await sleep(1800);
+        statusResult = await fetchTalentFitFlowCandidateParseStatus(createResult.jobID);
+        status = String(statusResult.status || '').toUpperCase();
+        setAiPrefillStatus(`Status: ${status}`);
+      }
+
+      if (status !== 'COMPLETED' && status !== 'PARTIAL') {
+        throw new Error(statusResult.errorMessage || `AI prefill failed with status "${status || 'UNKNOWN'}".`);
+      }
+
+      setFormState((current) => {
+        if (!current) {
+          return current;
+        }
+        return mergeAIPrefillIntoEditState(current, statusResult.candidate);
+      });
+      setAiPrefillStatus('AI prefill applied. Review values before saving.');
+    } catch (prefillError) {
+      setAiPrefillError(prefillError instanceof Error ? prefillError.message : 'AI prefill failed.');
+    } finally {
+      setAiPrefillPending(false);
+    }
+  }, [aiAttachmentID, aiPrefillPending, bootstrap.userID, data, formState]);
 
   const updateExtraFieldValue = (postKey: string, value: string) => {
     setFormState((current) => {
@@ -809,6 +1026,59 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   </a>
                 </div>
               </div>
+              {data.attachments.length > 0 ? (
+                <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
+                  <label className="modern-command-field avel-candidate-edit-field--full">
+                    <span className="modern-command-label">AI Prefill Source</span>
+                    <select
+                      className="avel-form-control"
+                      value={String(aiAttachmentID || '')}
+                      onChange={(event) => setAiAttachmentID(Number(event.target.value || 0))}
+                    >
+                      <option value="">Select attachment...</option>
+                      {data.attachments
+                        .filter((attachment) => !attachment.isProfileImage)
+                        .map((attachment) => (
+                          <option key={`ai-attachment-${attachment.attachmentID}`} value={String(attachment.attachmentID)}>
+                            {toDisplayText(attachment.fileName, `Attachment #${attachment.attachmentID}`)}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <div className="modern-table-actions">
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      onClick={runAIPrefillFromAttachment}
+                      disabled={aiPrefillPending}
+                    >
+                      {aiPrefillPending ? 'AI Prefill Running...' : 'AI Prefill From Attachment'}
+                    </button>
+                    {aiUndoSnapshot ? (
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--secondary"
+                        onClick={() => {
+                          if (!aiUndoSnapshot) {
+                            return;
+                          }
+                          setFormState({
+                            ...aiUndoSnapshot,
+                            extraFields: { ...aiUndoSnapshot.extraFields }
+                          });
+                          setAiUndoSnapshot(null);
+                          setAiPrefillStatus('AI prefill undone.');
+                          setAiPrefillError('');
+                        }}
+                      >
+                        Undo AI Prefill
+                      </button>
+                    ) : null}
+                  </div>
+                  {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
+                  {aiPrefillError !== '' ? <div className="modern-state modern-state--error">{aiPrefillError}</div> : null}
+                </div>
+              ) : null}
               {data.meta.permissions.canCreateAttachment && attachmentUploadOpen ? (
                 <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
                   <label className="modern-command-field avel-candidate-edit-field--full">

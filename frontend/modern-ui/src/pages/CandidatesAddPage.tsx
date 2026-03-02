@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchCandidateDuplicateCheck, fetchCandidatesAddModernData } from '../lib/api';
+import {
+  createTalentFitFlowCandidateParseJob,
+  fetchCandidateDuplicateCheck,
+  fetchCandidatesAddModernData,
+  fetchTalentFitFlowCandidateParseStatus,
+  submitCandidatesAddResumeAction
+} from '../lib/api';
 import type { CandidateDuplicateMatch, CandidatesAddModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -75,6 +81,157 @@ function toFormState(data: CandidatesAddModernDataResponse): CandidateAddFormSta
   };
 }
 
+function normalizeAIText(value: unknown): string {
+  return String(value ?? '').trim();
+}
+
+function parseAILocation(value: string): { city: string; country: string } {
+  const raw = normalizeAIText(value);
+  if (raw === '') {
+    return { city: '', country: '' };
+  }
+
+  const segments = raw
+    .split(',')
+    .map((segment) => segment.trim())
+    .filter((segment) => segment !== '');
+  if (segments.length === 0) {
+    return { city: '', country: '' };
+  }
+  if (segments.length === 1) {
+    return { city: segments[0], country: '' };
+  }
+
+  return {
+    city: segments[segments.length - 2],
+    country: segments[segments.length - 1]
+  };
+}
+
+function readAIValue(value: unknown): { value: string; confidence: number } {
+  if (value && typeof value === 'object') {
+    const objectValue = value as Record<string, unknown>;
+    if (typeof objectValue.value !== 'undefined') {
+      const confidenceValue = Number(objectValue.confidence ?? 0);
+      return {
+        value: normalizeAIText(objectValue.value),
+        confidence: Number.isFinite(confidenceValue) ? confidenceValue : 0
+      };
+    }
+  }
+
+  return {
+    value: normalizeAIText(value),
+    confidence: 0
+  };
+}
+
+function mergeAIPrefillIntoFormState(
+  current: CandidateAddFormState,
+  candidate: Record<string, unknown> | null
+): CandidateAddFormState {
+  if (!candidate) {
+    return current;
+  }
+
+  const next = { ...current };
+  const confidenceThreshold = 0.6;
+
+  const firstName = readAIValue(candidate.first_name);
+  if (firstName.value !== '' && firstName.confidence >= confidenceThreshold) {
+    next.firstName = firstName.value;
+  }
+
+  const lastName = readAIValue(candidate.last_name);
+  if (lastName.value !== '' && lastName.confidence >= confidenceThreshold) {
+    next.lastName = lastName.value;
+  }
+
+  const email = readAIValue(candidate.email);
+  if (email.value !== '' && email.confidence >= confidenceThreshold) {
+    next.email1 = email.value;
+  }
+
+  const phone = readAIValue(candidate.phone);
+  if (phone.value !== '' && phone.confidence >= confidenceThreshold) {
+    next.phoneCell = phone.value;
+  }
+
+  const location = candidate.location as unknown;
+  if (typeof location === 'string') {
+    const rawLocation = normalizeAIText(location);
+    if (rawLocation !== '') {
+      next.address = rawLocation;
+      const parsed = parseAILocation(rawLocation);
+      if (parsed.city !== '') {
+        next.city = parsed.city;
+      }
+      if (parsed.country !== '') {
+        next.country = parsed.country;
+      }
+    }
+  } else if (location && typeof location === 'object') {
+    const locationObject = location as Record<string, unknown>;
+    const address = normalizeAIText(locationObject.address || locationObject.raw);
+    if (address !== '') {
+      next.address = address;
+    }
+
+    const city = normalizeAIText(locationObject.city);
+    if (city !== '') {
+      next.city = city;
+    }
+
+    const country = normalizeAIText(locationObject.country_name || locationObject.country);
+    if (country !== '') {
+      next.country = country;
+    }
+  }
+
+  const skills = candidate.skills;
+  if (Array.isArray(skills)) {
+    const pickedSkills = skills
+      .map((item) => {
+        if (!item || typeof item !== 'object') {
+          return '';
+        }
+        const skillObject = item as Record<string, unknown>;
+        const skillName = normalizeAIText(skillObject.name);
+        const skillConfidence = Number(skillObject.confidence ?? 0);
+        if (skillName === '') {
+          return '';
+        }
+        if (Number.isFinite(skillConfidence) && skillConfidence < confidenceThreshold) {
+          return '';
+        }
+        return skillName;
+      })
+      .filter((item) => item !== '');
+
+    if (pickedSkills.length > 0) {
+      next.keySkills = pickedSkills.join(', ');
+    }
+  }
+
+  const summary = readAIValue(candidate.summary);
+  if (summary.value !== '' && summary.confidence >= confidenceThreshold && normalizeAIText(next.notes) === '') {
+    next.notes = summary.value;
+  }
+
+  const currentEmployer = readAIValue(candidate.current_employer);
+  if (currentEmployer.value !== '' && currentEmployer.confidence >= confidenceThreshold) {
+    next.currentEmployer = currentEmployer.value;
+  }
+
+  return next;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 export function CandidatesAddPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesAddModernDataResponse | null>(null);
   const [formState, setFormState] = useState<CandidateAddFormState | null>(null);
@@ -82,6 +239,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [loading, setLoading] = useState(true);
   const [serverQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const formRef = useRef<HTMLFormElement | null>(null);
+  const resumeFileInputRef = useRef<HTMLInputElement | null>(null);
   const [duplicateChecking, setDuplicateChecking] = useState(false);
   const [duplicateError, setDuplicateError] = useState('');
   const [duplicateMode, setDuplicateMode] = useState<'none' | 'hard' | 'soft'>('none');
@@ -89,6 +247,15 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [softMatches, setSoftMatches] = useState<CandidateDuplicateMatch[]>([]);
   const [softOverrideAccepted, setSoftOverrideAccepted] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [resumeText, setResumeText] = useState('');
+  const [resumeTempFile, setResumeTempFile] = useState('');
+  const [resumeUploadFile, setResumeUploadFile] = useState<File | null>(null);
+  const [resumeActionPending, setResumeActionPending] = useState<'none' | 'upload' | 'parse'>('none');
+  const [resumeActionError, setResumeActionError] = useState('');
+  const [aiPrefillPending, setAiPrefillPending] = useState(false);
+  const [aiPrefillStatus, setAiPrefillStatus] = useState('');
+  const [aiPrefillError, setAiPrefillError] = useState('');
+  const [aiUndoSnapshot, setAiUndoSnapshot] = useState<CandidateAddFormState | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -103,6 +270,8 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         }
         setData(result);
         setFormState(toFormState(result));
+        setResumeText(result.resumeImport.documentText || '');
+        setResumeTempFile(result.resumeImport.documentTempFile || '');
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -229,6 +398,148 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     setValidationError('');
   }, [formState?.firstName, formState?.lastName, formState?.email1, formState?.phoneCell, formState?.city, formState?.country]);
 
+  const runResumeAction = async (mode: 'upload' | 'parse') => {
+    if (!data || !formState || resumeActionPending !== 'none') {
+      return;
+    }
+
+    if (mode === 'upload' && !resumeUploadFile) {
+      setResumeActionError('Select a CV file first.');
+      return;
+    }
+
+    if (mode === 'parse' && !resumeUploadFile && resumeText.trim() === '' && resumeTempFile.trim() === '') {
+      setResumeActionError('Provide resume text or upload a CV file first.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set('postback', 'postback');
+    formData.set('sourceCSV', data.options.sourceCSV || '');
+    formData.set('firstName', formState.firstName);
+    formData.set('lastName', formState.lastName);
+    formData.set('email1', formState.email1);
+    formData.set('phoneCell', formState.phoneCell);
+    formData.set('address', formState.address);
+    formData.set('city', formState.city);
+    formData.set('country', formState.country);
+    formData.set('bestTimeToCall', formState.bestTimeToCall);
+    formData.set('dateAvailable', formState.dateAvailable);
+    formData.set('gdprSigned', formState.gdprSigned);
+    formData.set('gdprExpirationDate', formState.gdprExpirationDate);
+    formData.set('source', formState.source);
+    formData.set('keySkills', formState.keySkills);
+    formData.set('currentEmployer', formState.currentEmployer);
+    formData.set('currentPay', formState.currentPay);
+    formData.set('desiredPay', formState.desiredPay);
+    formData.set('notes', formState.notes);
+    formData.set('canRelocate', formState.canRelocate ? '1' : '0');
+    formData.set('gender', formState.gender);
+    formData.set('race', formState.race);
+    formData.set('veteran', formState.veteran);
+    formData.set('disability', formState.disability);
+    formData.set('documentText', resumeText);
+    formData.set('documentTempFile', resumeTempFile);
+
+    Object.entries(formState.extraFields).forEach(([postKey, value]) => {
+      formData.set(postKey, value);
+    });
+
+    if (mode === 'upload' || resumeUploadFile) {
+      formData.set('loadDocument', 'true');
+      if (resumeUploadFile) {
+        formData.set('documentFile', resumeUploadFile);
+      }
+    }
+    if (mode === 'parse') {
+      formData.set('parseDocument', 'true');
+    }
+
+    setResumeActionPending(mode);
+    setResumeActionError('');
+    setAiPrefillStatus('');
+    setAiPrefillError('');
+    try {
+      const response = await submitCandidatesAddResumeAction(bootstrap, formData);
+      setData(response);
+      setFormState((current) => {
+        const next = toFormState(response);
+        if (!current) {
+          return next;
+        }
+        return {
+          ...next,
+          extraFields: {
+            ...current.extraFields,
+            ...next.extraFields
+          }
+        };
+      });
+      setResumeText(response.resumeImport.documentText || '');
+      setResumeTempFile(response.resumeImport.documentTempFile || '');
+      setResumeUploadFile(null);
+      if (resumeFileInputRef.current) {
+        resumeFileInputRef.current.value = '';
+      }
+      setAiUndoSnapshot(null);
+    } catch (resumeError) {
+      const message = resumeError instanceof Error ? resumeError.message : 'Resume import failed.';
+      setResumeActionError(message);
+    } finally {
+      setResumeActionPending('none');
+    }
+  };
+
+  const runAIPrefill = async () => {
+    if (!formState || aiPrefillPending) {
+      return;
+    }
+    if (resumeTempFile.trim() === '') {
+      setAiPrefillError('Upload CV content first so AI can parse it.');
+      return;
+    }
+
+    setAiPrefillPending(true);
+    setAiPrefillError('');
+    setAiPrefillStatus('Submitting AI prefill request...');
+    setAiUndoSnapshot({ ...formState, extraFields: { ...formState.extraFields } });
+
+    try {
+      const createResult = await createTalentFitFlowCandidateParseJob({
+        documentTempFile: resumeTempFile,
+        idempotencyKey: resumeTempFile,
+        actor: String(bootstrap.userID || '')
+      });
+
+      let statusResult = createResult;
+      let status = String(createResult.status || '').toUpperCase();
+      setAiPrefillStatus(`Status: ${status || 'PENDING'}`);
+
+      while (status === 'PENDING' || status === 'RUNNING') {
+        await sleep(1800);
+        statusResult = await fetchTalentFitFlowCandidateParseStatus(createResult.jobID);
+        status = String(statusResult.status || '').toUpperCase();
+        setAiPrefillStatus(`Status: ${status}`);
+      }
+
+      if (status !== 'COMPLETED' && status !== 'PARTIAL') {
+        throw new Error(statusResult.errorMessage || `AI prefill failed with status "${status || 'UNKNOWN'}".`);
+      }
+
+      setFormState((current) => {
+        if (!current) {
+          return current;
+        }
+        return mergeAIPrefillIntoFormState(current, statusResult.candidate);
+      });
+      setAiPrefillStatus('AI prefill applied. Review values before saving.');
+    } catch (prefillError) {
+      setAiPrefillError(prefillError instanceof Error ? prefillError.message : 'AI prefill failed.');
+    } finally {
+      setAiPrefillPending(false);
+    }
+  };
+
   if (loading && !data) {
     return <div className="modern-state">Loading candidate form...</div>;
   }
@@ -311,6 +622,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               id="modernCandidateAddForm"
               className="avel-candidate-edit-form"
               method="post"
+              encType="multipart/form-data"
               action={submitURL}
               onSubmit={async (event) => {
                 setValidationError('');
@@ -371,12 +683,121 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               <input type="hidden" name="postback" value="postback" />
               <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
               <input type="hidden" name="dup_soft_override" value={softOverrideAccepted ? '1' : '0'} />
+              <input type="hidden" name="documentTempFile" id="documentTempFile" value={resumeTempFile} />
 
               <div className="avel-candidate-form-strip">
                 <span className="modern-chip modern-chip--info">Required: First Name, Last Name</span>
                 <span className="modern-chip modern-chip--warning">Duplicate Protection: Enabled</span>
                 <span className="modern-chip">Flow: Add + Validate + Save</span>
               </div>
+
+              {data.resumeImport.isParsingEnabled ? (
+                <div className="avel-candidate-edit-extra">
+                  <div className="avel-list-panel__header">
+                    <h3 className="avel-list-panel__title">Resume Import & AI Prefill</h3>
+                    <p className="avel-list-panel__hint">Upload CV content, parse core fields, then run AI prefill (TalentFitFlow).</p>
+                  </div>
+
+                  <div className="avel-candidate-edit-grid">
+                    <label className="modern-command-field avel-candidate-edit-field--full">
+                      <span className="modern-command-label">CV File</span>
+                      <input
+                        className="avel-form-control"
+                        type="file"
+                        name="documentFile"
+                        id="documentFile"
+                        ref={resumeFileInputRef}
+                        onChange={(event) => setResumeUploadFile(event.target.files?.[0] || null)}
+                      />
+                    </label>
+
+                    <label className="modern-command-field avel-candidate-edit-field--full">
+                      <span className="modern-command-label">Resume Text</span>
+                      <textarea
+                        className="avel-form-control"
+                        name="documentText"
+                        id="documentText"
+                        value={resumeText}
+                        onChange={(event) => setResumeText(event.target.value)}
+                        rows={8}
+                        placeholder="Paste resume text or upload a CV file."
+                      />
+                    </label>
+                  </div>
+
+                  <div className="modern-table-actions">
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--secondary"
+                      onClick={() => runResumeAction('upload')}
+                      disabled={resumeActionPending !== 'none' || aiPrefillPending}
+                    >
+                      {resumeActionPending === 'upload' ? 'Uploading...' : 'Upload CV'}
+                    </button>
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--secondary"
+                      onClick={() => runResumeAction('parse')}
+                      disabled={resumeActionPending !== 'none' || aiPrefillPending}
+                    >
+                      {resumeActionPending === 'parse' ? 'Parsing...' : 'Parse Resume'}
+                    </button>
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--secondary"
+                      onClick={runAIPrefill}
+                      disabled={aiPrefillPending || resumeActionPending !== 'none'}
+                    >
+                      {aiPrefillPending ? 'AI Prefill Running...' : 'AI Prefill'}
+                    </button>
+                    {aiUndoSnapshot ? (
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--secondary"
+                        onClick={() => {
+                          if (!aiUndoSnapshot) {
+                            return;
+                          }
+                          setFormState({
+                            ...aiUndoSnapshot,
+                            extraFields: { ...aiUndoSnapshot.extraFields }
+                          });
+                          setAiUndoSnapshot(null);
+                          setAiPrefillStatus('AI prefill undone.');
+                          setAiPrefillError('');
+                        }}
+                      >
+                        Undo AI Prefill
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--secondary"
+                      onClick={() => {
+                        setResumeUploadFile(null);
+                        setResumeTempFile('');
+                        setResumeText('');
+                        if (resumeFileInputRef.current) {
+                          resumeFileInputRef.current.value = '';
+                        }
+                        setAiPrefillStatus('');
+                        setAiPrefillError('');
+                      }}
+                    >
+                      Clear Resume
+                    </button>
+                  </div>
+
+                  {resumeTempFile.trim() !== '' ? (
+                    <div className="modern-state">
+                      Uploaded temp file: <strong>{resumeTempFile}</strong>
+                    </div>
+                  ) : null}
+                  {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
+                  {resumeActionError !== '' ? <div className="modern-state modern-state--error">{resumeActionError}</div> : null}
+                  {aiPrefillError !== '' ? <div className="modern-state modern-state--error">{aiPrefillError}</div> : null}
+                </div>
+              ) : null}
 
               <div className="avel-candidate-edit-grid">
                 <div className="avel-candidate-form-divider avel-candidate-edit-field--full">

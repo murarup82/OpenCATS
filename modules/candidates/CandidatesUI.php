@@ -2295,6 +2295,30 @@ class CandidatesUI extends UserInterface
             $preassignedFields['gdprExpirationDate'] = $defaultGdprExpiration;
         }
 
+        /* If parsing is not enabled server-wide, say so. */
+        if (!LicenseUtility::isParsingEnabled()) {
+            $isParsingEnabled = false;
+        }
+        /* For CATS Toolbar, if e-mail has been sent and it wasn't set by
+         * parser, it's toolbar and it needs the old format.
+         */ else if (!isset($preassignedFields['email'])) {
+            $isParsingEnabled = true;
+        } else if (empty($preassignedFields['email'])) {
+            $isParsingEnabled = true;
+        } else if (isset($preassignedFields['isFromParser']) && $preassignedFields['isFromParser']) {
+            $isParsingEnabled = true;
+        } else {
+            $isParsingEnabled = false;
+        }
+
+        $parsingStatus = array();
+        if (
+            is_array($parsingStatus = LicenseUtility::getParsingStatus()) &&
+            isset($parsingStatus['parseLimit'])
+        ) {
+            $parsingStatus['parseLimit'] = $parsingStatus['parseLimit'] - 1;
+        }
+
         if ($isModernJSON)
         {
             if ($modernPage !== '' && $modernPage !== 'candidates-add')
@@ -2319,6 +2343,9 @@ class CandidatesUI extends UserInterface
                 $preassignedFields,
                 $gdprSettingsRS,
                 $extraFieldRS,
+                $contents,
+                $isParsingEnabled,
+                $parsingStatus,
                 'candidates-add'
             );
             return;
@@ -2396,28 +2423,6 @@ class CandidatesUI extends UserInterface
 
         if (!eval(Hooks::get('CANDIDATE_ADD'))) return;
 
-        /* If parsing is not enabled server-wide, say so. */
-        if (!LicenseUtility::isParsingEnabled()) {
-            $isParsingEnabled = false;
-        }
-        /* For CATS Toolbar, if e-mail has been sent and it wasn't set by
-         * parser, it's toolbar and it needs the old format.
-         */ else if (!isset($preassignedFields['email'])) {
-            $isParsingEnabled = true;
-        } else if (empty($preassignedFields['email'])) {
-            $isParsingEnabled = true;
-        } else if (isset($preassignedFields['isFromParser']) && $preassignedFields['isFromParser']) {
-            $isParsingEnabled = true;
-        } else {
-            $isParsingEnabled = false;
-        }
-
-        if (
-            is_array($parsingStatus = LicenseUtility::getParsingStatus()) &&
-            isset($parsingStatus['parseLimit'])
-        ) {
-            $parsingStatus['parseLimit'] = $parsingStatus['parseLimit'] - 1;
-        }
         if ($perfEnabled)
         {
             error_log(sprintf('AddCandidate perf: parsingStatus %.3fms', (microtime(true) - $perfLast) * 1000));
@@ -2464,6 +2469,9 @@ class CandidatesUI extends UserInterface
         $preassignedFields,
         $gdprSettingsRS,
         $extraFieldRS,
+        $contents,
+        $isParsingEnabled,
+        $parsingStatus,
         $modernPage
     )
     {
@@ -2538,6 +2546,12 @@ class CandidatesUI extends UserInterface
                 'sources' => $sourceOptions,
                 'sourceCSV' => $sourcesString,
                 'gdprExpirationYears' => (isset($gdprSettingsRS['gdprExpirationYears']) ? (int) $gdprSettingsRS['gdprExpirationYears'] : 2)
+            ),
+            'resumeImport' => array(
+                'isParsingEnabled' => ($isParsingEnabled ? true : false),
+                'parsingStatus' => (is_array($parsingStatus) ? $parsingStatus : array()),
+                'documentText' => (string) $contents,
+                'documentTempFile' => (isset($preassignedFields['documentTempFile']) ? (string) $preassignedFields['documentTempFile'] : '')
             ),
             'extraFields' => $extraFieldsPayload
         );
