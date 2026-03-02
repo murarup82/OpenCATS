@@ -14,7 +14,8 @@
     "smoke:routes": "node ./scripts/smoke-modern-routes.mjs",
     "smoke:endpoints": "node ./scripts/smoke-modern-endpoints.mjs",
     "sanity:modern": "node ./scripts/modern-sanity-report.mjs",
-    "scorecard:prefill": "node ./scripts/prefill-rollout-scorecard.mjs"
+    "scorecard:prefill": "node ./scripts/prefill-rollout-scorecard.mjs",
+    "fixtures:lint": "node ./scripts/lint-smoke-fixtures.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
