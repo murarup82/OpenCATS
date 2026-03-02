@@ -10,6 +10,96 @@ class UIModeSwitcher
     const SESSION_OVERRIDE_KEY = 'CATS_UI_MODE_OVERRIDE';
 
     /**
+     * Returns a diagnostics snapshot for current UI switch decisioning.
+     * Intended for client-side troubleshooting logs.
+     */
+    public static function getDebugSnapshot($moduleName, $action)
+    {
+        $moduleName = strtolower(trim((string) $moduleName));
+        $action = strtolower(trim((string) $action));
+
+        $rawUIParam = '';
+        if (isset($_GET['ui']))
+        {
+            $rawUIParam = strtolower(trim((string) $_GET['ui']));
+        }
+
+        $rawFormat = '';
+        if (isset($_GET['format']))
+        {
+            $rawFormat = strtolower(trim((string) $_GET['format']));
+        }
+
+        $requestMethod = '';
+        if (isset($_SERVER['REQUEST_METHOD']))
+        {
+            $requestMethod = strtoupper((string) $_SERVER['REQUEST_METHOD']);
+        }
+
+        $isAjaxHeader = false;
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strtolower((string) $_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+        {
+            $isAjaxHeader = true;
+        }
+
+        $routeMap = self::getRouteMap();
+        $moduleRouteRules = array();
+        if (isset($routeMap[$moduleName]) && is_array($routeMap[$moduleName]))
+        {
+            $moduleRouteRules = $routeMap[$moduleName];
+        }
+        else if (isset($routeMap['*']) && is_array($routeMap['*']))
+        {
+            $moduleRouteRules = $routeMap['*'];
+        }
+
+        $snapshot = array(
+            'module' => $moduleName,
+            'action' => $action,
+            'request' => array(
+                'method' => $requestMethod,
+                'uiParam' => $rawUIParam,
+                'format' => $rawFormat,
+                'isAjaxHeader' => $isAjaxHeader,
+                'requestURI' => (isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '')
+            ),
+            'session' => array(
+                'overrideMode' => self::getSessionOverrideMode()
+            ),
+            'effective' => array(
+                'isEnabled' => self::isEnabled(),
+                'defaultMode' => self::getDefaultMode(),
+                'requiresRouteMatch' => self::requiresRouteMatch(),
+                'isDataContractRequest' => self::isDataContractRequest(),
+                'isExcludedRoute' => self::isExcludedRoute($moduleName, $action),
+                'isMethodAllowed' => self::isMethodAllowed(),
+                'isAjaxAllowed' => self::isAjaxAllowed(),
+                'isUserInTargetCohort' => self::isUserInTargetCohort(),
+                'isRouteMapped' => self::isRouteMapped($moduleName, $action),
+                'resolvedMode' => self::resolveMode($moduleName, $action),
+                'shouldUseModernUI' => self::shouldUseModernUI($moduleName, $action),
+                'resolveReason' => self::resolveReason($moduleName, $action)
+            ),
+            'routeRules' => array(
+                'moduleRules' => $moduleRouteRules,
+                'previewAllRoutes' => self::isPreviewAllRoutesEnabled()
+            ),
+            'config' => array(
+                'allowPost' => self::getBooleanValue('UI_SWITCH_ALLOW_POST', 'OPENCATS_UI_ALLOW_POST', false),
+                'allowAjax' => self::getBooleanValue('UI_SWITCH_ALLOW_AJAX', 'OPENCATS_UI_ALLOW_AJAX', false),
+                'overrideBypassRouteMap' => self::getBooleanValue('UI_SWITCH_OVERRIDE_BYPASS_ROUTE_MAP', 'OPENCATS_UI_OVERRIDE_BYPASS_ROUTE_MAP', false),
+                'logging' => self::getBooleanValue('UI_SWITCH_LOGGING', 'OPENCATS_UI_SWITCH_LOGGING', true),
+                'targetUserIDs' => self::getIntegerListValue('UI_SWITCH_TARGET_USER_IDS', 'OPENCATS_UI_TARGET_USER_IDS'),
+                'targetAccessLevels' => self::getIntegerListValue('UI_SWITCH_TARGET_ACCESS_LEVELS', 'OPENCATS_UI_TARGET_ACCESS_LEVELS')
+            ),
+            'envOverrides' => self::collectUIOverrideEnvironment()
+        );
+
+        return $snapshot;
+    }
+
+    /**
      * Captures explicit request override (ui=legacy|modern|auto) and stores
      * it in session for fast rollback/testing.
      */
@@ -800,6 +890,43 @@ class UIModeSwitcher
         }
 
         return $defaultValue;
+    }
+
+    private static function collectUIOverrideEnvironment()
+    {
+        $envKeys = array(
+            'OPENCATS_UI_SWITCH_ENABLED',
+            'OPENCATS_UI_MODE',
+            'OPENCATS_UI_REQUIRE_ROUTE_MATCH',
+            'OPENCATS_UI_PREVIEW_ALL_ROUTES',
+            'OPENCATS_UI_ALLOW_POST',
+            'OPENCATS_UI_ALLOW_AJAX',
+            'OPENCATS_UI_OVERRIDE_BYPASS_ROUTE_MAP',
+            'OPENCATS_UI_SWITCH_LOGGING',
+            'OPENCATS_UI_ROUTE_MAP',
+            'OPENCATS_UI_TARGET_USER_IDS',
+            'OPENCATS_UI_TARGET_ACCESS_LEVELS'
+        );
+
+        $overrides = array();
+        foreach ($envKeys as $envKey)
+        {
+            $rawValue = getenv($envKey);
+            if ($rawValue === false || trim((string) $rawValue) === '')
+            {
+                continue;
+            }
+
+            $normalized = trim((string) $rawValue);
+            if ($envKey === 'OPENCATS_UI_ROUTE_MAP' && strlen($normalized) > 240)
+            {
+                $normalized = substr($normalized, 0, 240) . '...';
+            }
+
+            $overrides[$envKey] = $normalized;
+        }
+
+        return $overrides;
     }
 
     private static function logDecision($mode, $moduleName, $action, $reason)

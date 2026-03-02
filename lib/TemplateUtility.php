@@ -1966,7 +1966,38 @@ class TemplateUtility
         echo '<script type="text/javascript" src="js/submodal/subModal.js'.$javascriptAntiCache.'"></script>', "\n";
         echo '<script type="text/javascript" src="js/jquery-1.3.2.min.js'.$javascriptAntiCache.'"></script>', "\n";
         echo '<script type="text/javascript" src="js/interactionLogger.js'.$javascriptAntiCache.'"></script>', "\n";
-        echo '<script type="text/javascript">CATSIndexName = "'.CATSUtility::getIndexName().'";</script>', "\n";
+
+        $currentModule = '';
+        $currentAction = '';
+        if (isset($_REQUEST['m']))
+        {
+            $currentModule = strtolower(trim((string) $_REQUEST['m']));
+        }
+        if (isset($_REQUEST['a']))
+        {
+            $currentAction = strtolower(trim((string) $_REQUEST['a']));
+        }
+
+        $pageContext = array(
+            'module' => $currentModule,
+            'action' => $currentAction,
+            'requestURI' => (isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : ''),
+            'queryUI' => (isset($_GET['ui']) ? strtolower(trim((string) $_GET['ui'])) : '')
+        );
+        if (class_exists('UIModeSwitcher') &&
+            method_exists('UIModeSwitcher', 'getDebugSnapshot'))
+        {
+            $pageContext['uiSwitch'] = UIModeSwitcher::getDebugSnapshot($currentModule, $currentAction);
+        }
+
+        $pageContextJSON = json_encode($pageContext);
+        if ($pageContextJSON === false)
+        {
+            $pageContextJSON = '{}';
+        }
+        $pageContextJSON = str_replace('</', '<\/', $pageContextJSON);
+        echo '<script type="text/javascript">window.OpenCATSPageContext = ', $pageContextJSON, '; CATSIndexName = "',
+             CATSUtility::getIndexName(), '";</script>', "\n";
 
        $headIncludes[] = 'main.css';
        $headIncludes[] = 'public/css/ui2.css';

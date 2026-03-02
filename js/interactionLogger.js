@@ -100,7 +100,24 @@
             route.format = normalizeWhitespace(parsed.searchParams.get('format') || '').toLowerCase();
         } catch (error) {}
 
+        if (route.module === '' && window.OpenCATSPageContext && typeof window.OpenCATSPageContext === 'object') {
+            route.module = normalizeWhitespace(window.OpenCATSPageContext.module || '').toLowerCase();
+        }
+        if (route.action === '' && window.OpenCATSPageContext && typeof window.OpenCATSPageContext === 'object') {
+            route.action = normalizeWhitespace(window.OpenCATSPageContext.action || '').toLowerCase();
+        }
+        if (route.ui === '' && window.OpenCATSPageContext && typeof window.OpenCATSPageContext === 'object') {
+            route.ui = normalizeWhitespace(window.OpenCATSPageContext.queryUI || '').toLowerCase();
+        }
+
         return route;
+    }
+
+    function getServerPageContext() {
+        if (!window.OpenCATSPageContext || typeof window.OpenCATSPageContext !== 'object') {
+            return null;
+        }
+        return sanitizeValue(window.OpenCATSPageContext, 0);
     }
 
     function sanitizeValue(value, depth) {
@@ -665,6 +682,11 @@
     installFetchLogger();
     installXHRLogger();
     installInteractionListeners();
+
+    var serverContext = getServerPageContext();
+    if (serverContext) {
+        logEvent('ui.server.context', serverContext);
+    }
 
     logEvent('ui.page.load', {
         title: truncateString(document.title || '', 180),
