@@ -270,19 +270,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `frontend/modern-ui/scripts/fixtures/mutation-safe-replays.json` for safe, repeatable mutation probes
     - updated `smoke-modern-endpoints.mjs` to replay fixture-driven probes from loaded modern payloads using extracted action URLs/tokens
     - fixtures validate JSON mutation contract shape (`success` boolean) without targeting valid entity IDs.
+115. Added rollout scorecard for modern-default go/no-go decisions:
+    - introduced `docs/modern-ui-rollout-scorecard.md` with weighted pass/partial/fail criteria and release thresholds
+    - scorecard maps build/smoke/parity/telemetry/accessibility/rollback/UAT checks into a single decision artifact
+    - provides explicit `Go / Hold / No-Go` rules for default-mode switch governance.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-3. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
-4. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
-5. Add release runbook for temporary rollback/feature-flag response during production cutover.
-6. Add hybrid-to-modern cutover checklist with owner/date tracking fields.
-7. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-8. Add deprecation sign-off template linking telemetry + parity + rollback readiness.
-9. Add route-resolution telemetry dashboard snippet for admin troubleshooting.
-10. Add smoke-fixture maintenance guide (when/how to extend probes safely).
+3. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
+4. Add release runbook for temporary rollback/feature-flag response during production cutover.
+5. Add hybrid-to-modern cutover checklist with owner/date tracking fields.
+6. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
+7. Add deprecation sign-off template linking telemetry + parity + rollback readiness.
+8. Add route-resolution telemetry dashboard snippet for admin troubleshooting.
+9. Add smoke-fixture maintenance guide (when/how to extend probes safely).
+10. Add automated scorecard prefill helper from sanity/coverage outputs.
 
 ## Rules
 
