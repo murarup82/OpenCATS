@@ -4,7 +4,6 @@ import type { CandidatesListModernDataResponse, UIModeBootstrap } from '../types
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
-import { DataTable } from '../components/primitives/DataTable';
 import { CandidateAssignJobOrderModal } from '../components/primitives/CandidateAssignJobOrderModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
@@ -55,6 +54,19 @@ function toBooleanString(value: boolean): string {
 
 function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
+}
+
+function toInitials(name: string): string {
+  const parts = String(name || '')
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part !== '');
+  if (parts.length === 0) {
+    return 'NA';
+  }
+  const first = parts[0]?.charAt(0) || '';
+  const second = parts.length > 1 ? parts[parts.length - 1]?.charAt(0) || '' : '';
+  return `${first}${second}`.toUpperCase();
 }
 
 export function CandidatesListPage({ bootstrap }: Props) {
@@ -277,16 +289,20 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const hasRows = data.rows.length > 0;
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
+  const hasActiveFilters = activeFilterLabels.length > 0;
+  const visibleHotCount = data.rows.filter((row) => row.isHot).length;
+  const visibleDuplicateCount = data.rows.filter((row) => row.hasDuplicate).length;
+  const visibleSubmittedCount = data.rows.filter((row) => row.isSubmitted).length;
 
   return (
     <div className="avel-dashboard-page avel-candidates-page">
       <PageContainer
         title="Candidates"
-        subtitle="Modern candidate workspace powered by Avel UI tokens."
+        subtitle="Candidate intelligence workspace for sourcing, triage, and placement prep."
         actions={
           <>
             {canAddCandidate ? (
-              <a className="modern-btn modern-btn--secondary" href={`${bootstrap.indexName}?m=candidates&a=add&ui=modern`}>
+              <a className="modern-btn modern-btn--emphasis" href={`${bootstrap.indexName}?m=candidates&a=add&ui=modern`}>
                 Add Candidate
               </a>
             ) : null}
@@ -297,16 +313,44 @@ export function CandidatesListPage({ bootstrap }: Props) {
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="modern-command-bar modern-command-bar--sticky" aria-label="Candidates controls">
-            <div className="modern-command-bar__row modern-command-bar__row--primary modern-command-bar__row--primary-noscope">
+          <section className="avel-candidate-hero" aria-label="Candidates overview">
+            <div className="avel-candidate-hero__intro">
+              <p className="avel-candidate-hero__eyebrow">Candidate Intelligence</p>
+              <h2 className="avel-candidate-hero__title">Move from search to action without friction</h2>
+              <p className="avel-candidate-hero__subtitle">
+                Filter quickly, inspect meaningful candidate signals, and trigger next-step actions directly from each profile card.
+              </p>
+            </div>
+            <div className="avel-candidate-hero__stats">
+              <article className="avel-candidate-stat">
+                <span className="avel-candidate-stat__label">Visible Candidates</span>
+                <strong className="avel-candidate-stat__value">{data.meta.totalRows}</strong>
+              </article>
+              <article className="avel-candidate-stat">
+                <span className="avel-candidate-stat__label">Hot Profiles</span>
+                <strong className="avel-candidate-stat__value">{visibleHotCount}</strong>
+              </article>
+              <article className="avel-candidate-stat">
+                <span className="avel-candidate-stat__label">Submitted</span>
+                <strong className="avel-candidate-stat__value">{visibleSubmittedCount}</strong>
+              </article>
+              <article className="avel-candidate-stat">
+                <span className="avel-candidate-stat__label">Possible Duplicates</span>
+                <strong className="avel-candidate-stat__value">{visibleDuplicateCount}</strong>
+              </article>
+            </div>
+          </section>
+
+          <section className="avel-candidate-toolbar modern-command-bar modern-command-bar--sticky" aria-label="Candidates filters and controls">
+            <div className="avel-candidate-toolbar__primary">
               <form
-                className="modern-command-search"
+                className="modern-command-search avel-candidate-toolbar__search"
                 onSubmit={(event) => {
                   event.preventDefault();
                   navigateWithFilters({ quickSearch: searchDraft, page: 1 });
                 }}
               >
-                <span className="modern-command-label">Search</span>
+                <span className="modern-command-label">Search Talent</span>
                 <span className="modern-command-search__shell">
                   <span className="modern-command-search__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="14" height="14" role="presentation" style={{ width: 14, height: 14 }}>
@@ -317,7 +361,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                     type="search"
                     value={searchDraft}
                     onChange={(event) => setSearchDraft(event.target.value)}
-                    placeholder="Search by name, skills, resume"
+                    placeholder="Search by name, skills, location, resume"
                   />
                 </span>
               </form>
@@ -330,30 +374,28 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 className="modern-command-field modern-command-field--compact"
               />
 
-              <div className="modern-command-actions modern-command-actions--primary">
-                <button
-                  type="button"
-                  className="modern-btn modern-btn--secondary"
-                  onClick={() => {
-                    setSearchDraft('');
-                    navigateWithFilters({
-                      quickSearch: '',
-                      sourceFilter: '',
-                      onlyMyCandidates: false,
-                      onlyHotCandidates: false,
-                      onlyGdprUnsigned: false,
-                      onlyInternalCandidates: false,
-                      onlyActiveCandidates: true,
-                      page: 1
-                    });
-                  }}
-                >
-                  Reset Filters
-                </button>
-              </div>
+              <button
+                type="button"
+                className="modern-btn modern-btn--secondary"
+                onClick={() => {
+                  setSearchDraft('');
+                  navigateWithFilters({
+                    quickSearch: '',
+                    sourceFilter: '',
+                    onlyMyCandidates: false,
+                    onlyHotCandidates: false,
+                    onlyGdprUnsigned: false,
+                    onlyInternalCandidates: false,
+                    onlyActiveCandidates: true,
+                    page: 1
+                  });
+                }}
+              >
+                Reset Filters
+              </button>
             </div>
 
-            <div className="modern-command-bar__row modern-command-bar__row--filters">
+            <div className="avel-candidate-toolbar__filters">
               <SelectMenu
                 label="Source"
                 value={filters.sourceFilter}
@@ -412,23 +454,21 @@ export function CandidatesListPage({ bootstrap }: Props) {
               </label>
             </div>
 
-            <div className="modern-command-bar__row modern-command-bar__row--meta">
-              <div className="modern-command-active">
-                <div className={`modern-command-active__count${activeFilterLabels.length > 0 ? ' is-active' : ''}`}>
-                  {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
-                </div>
-                {activeFilterLabels.length > 0 ? (
-                  <div className="modern-command-active__list">
-                    {activeFilterLabels.map((label) => (
-                      <span className="modern-active-filter modern-active-filter--server" key={label}>
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="modern-command-active__empty">No active filters. Showing full candidates list.</div>
-                )}
+            <div className="avel-candidate-toolbar__active">
+              <div className={`modern-command-active__count${hasActiveFilters ? ' is-active' : ''}`}>
+                {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
               </div>
+              {hasActiveFilters ? (
+                <div className="modern-command-active__list">
+                  {activeFilterLabels.map((label) => (
+                    <span className="modern-active-filter modern-active-filter--server" key={label}>
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="modern-command-active__empty">No active filters. Showing the full candidate pipeline.</div>
+              )}
             </div>
           </section>
 
@@ -436,7 +476,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
             <div className="modern-state">{toDisplayText(data.state.topLog, '')}</div>
           ) : null}
 
-          <div className="modern-table-animated avel-list-panel">
+          <section className="avel-list-panel avel-candidate-results">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">
                 Candidates {data.meta.totalRows > 0 ? `(${data.meta.totalRows})` : ''}
@@ -467,82 +507,96 @@ export function CandidatesListPage({ bootstrap }: Props) {
             {!hasRows ? (
               <EmptyState message="No candidates match current filters." />
             ) : (
-              <DataTable
-                columns={[
-                  { key: 'candidate', title: 'Candidate' },
-                  { key: 'location', title: 'Location' },
-                  { key: 'skills', title: 'Key Skills' },
-                  { key: 'owner', title: 'Owner' },
-                  { key: 'source', title: 'Source' },
-                  { key: 'flags', title: 'Flags' },
-                  { key: 'modified', title: 'Modified' },
-                  { key: 'actions', title: 'Actions' }
-                ]}
-                hasRows={hasRows}
-              >
-                {data.rows.map((row) => (
-                  <tr key={row.candidateID}>
-                    <td>
-                      <a className="modern-link" href={ensureModernUIURL(row.candidateURL)}>
-                        {toDisplayText(row.fullName)}
-                      </a>
-                    </td>
-                    <td>{`${toDisplayText(row.city)}, ${toDisplayText(row.country)}`}</td>
-                    <td>{toDisplayText(row.keySkills)}</td>
-                    <td>{toDisplayText(row.ownerName)}</td>
-                    <td>{toDisplayText(row.source)}</td>
-                    <td>
-                      <div className="avel-candidate-flags">
-                        {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                        {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
-                        {row.isSubmitted ? <span className="modern-chip modern-chip--info">Submitted</span> : null}
-                        {row.hasAttachment ? <span className="modern-chip">Resume</span> : null}
-                        {row.commentCount > 0 ? (
-                          <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td>{toDisplayText(row.modifiedDate)}</td>
-                    <td>
-                      <div className="modern-table-actions">
-                        <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateURL)}>
-                          View
-                        </a>
-                        {canEditCandidate ? (
-                          <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateEditURL)}>
-                            Edit
+              <div className="avel-candidate-card-list" role="list" aria-label="Candidate results">
+                {data.rows.map((row) => {
+                  const locationParts = [row.city, row.country]
+                    .map((value) => String(value || '').trim())
+                    .filter((value) => value !== '');
+                  const locationText = locationParts.length > 0 ? locationParts.join(', ') : '--';
+
+                  return (
+                    <article className="avel-candidate-card" key={row.candidateID} role="listitem">
+                      <header className="avel-candidate-card__header">
+                        <div className="avel-candidate-card__identity">
+                          <span className="avel-candidate-card__avatar" aria-hidden="true">
+                            {toInitials(row.fullName)}
+                          </span>
+                          <div className="avel-candidate-card__identity-text">
+                            <a className="modern-link avel-candidate-card__name" href={ensureModernUIURL(row.candidateURL)}>
+                              {toDisplayText(row.fullName)}
+                            </a>
+                            <div className="avel-candidate-card__meta">
+                              <span>{locationText}</span>
+                              <span aria-hidden="true">•</span>
+                              <span>{toDisplayText(row.source)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="avel-candidate-card__signals">
+                          <span className="avel-candidate-card__modified">Updated {toDisplayText(row.modifiedDate)}</span>
+                          <div className="avel-candidate-flags">
+                            {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
+                            {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
+                            {row.isSubmitted ? <span className="modern-chip modern-chip--info">Submitted</span> : null}
+                            {row.hasAttachment ? <span className="modern-chip">Resume</span> : null}
+                            {row.commentCount > 0 ? (
+                              <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </header>
+
+                      <p className="avel-candidate-card__skills">{toDisplayText(row.keySkills)}</p>
+
+                      <footer className="avel-candidate-card__footer">
+                        <div className="avel-candidate-card__ownership">
+                          <span className="avel-candidate-card__ownership-item">
+                            Owner <strong>{toDisplayText(row.ownerName)}</strong>
+                          </span>
+                          <span className="avel-candidate-card__ownership-item">
+                            Added <strong>{toDisplayText(row.createdDate)}</strong>
+                          </span>
+                        </div>
+                        <div className="modern-table-actions">
+                          <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateURL)}>
+                            View
                           </a>
-                        ) : null}
-                        {canAddToList ? (
-                          <button
-                            type="button"
-                            className="modern-btn modern-btn--mini modern-btn--secondary"
-                            onClick={() => openAddToListOverlay(row.addToListURL)}
-                          >
-                            Add To List
-                          </button>
-                        ) : null}
-                        {canAddToJobOrder ? (
-                          <button
-                            type="button"
-                            className="modern-btn modern-btn--mini modern-btn--secondary"
-                            onClick={() =>
-                              setAssignJobModal({
-                                url: decodeLegacyURL(row.addToJobOrderURL),
-                                title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
-                              })
-                            }
-                          >
-                            Add To Job
-                          </button>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </DataTable>
+                          {canEditCandidate ? (
+                            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateEditURL)}>
+                              Edit
+                            </a>
+                          ) : null}
+                          {canAddToList ? (
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--secondary"
+                              onClick={() => openAddToListOverlay(row.addToListURL)}
+                            >
+                              Add To List
+                            </button>
+                          ) : null}
+                          {canAddToJobOrder ? (
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--secondary"
+                              onClick={() =>
+                                setAssignJobModal({
+                                  url: decodeLegacyURL(row.addToJobOrderURL),
+                                  title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
+                                })
+                              }
+                            >
+                              Add To Job
+                            </button>
+                          ) : null}
+                        </div>
+                      </footer>
+                    </article>
+                  );
+                })}
+              </div>
             )}
-          </div>
+          </section>
         </div>
 
         <CandidateAssignJobOrderModal
