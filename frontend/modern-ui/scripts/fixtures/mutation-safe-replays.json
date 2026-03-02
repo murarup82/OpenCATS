@@ -1,0 +1,76 @@
+[
+  {
+    "id": "dashboard.setPipelineStatus.safeInvalid",
+    "sourceCheckID": "dashboard.my",
+    "method": "POST",
+    "endpointPath": "actions.setPipelineStatusURL",
+    "tokenPath": "actions.setPipelineStatusToken",
+    "tokenField": "securityToken",
+    "body": {
+      "format": "modern-json",
+      "candidateID": "0",
+      "jobOrderID": "0",
+      "statusID": "0",
+      "enforceOwner": "1"
+    },
+    "expectsBooleanField": "success"
+  },
+  {
+    "id": "candidates.addComment.safeInvalid",
+    "sourceCheckID": "candidates.show",
+    "method": "POST",
+    "endpointPath": "actions.addCommentURL",
+    "tokenPath": "comments.securityToken",
+    "tokenField": "securityToken",
+    "body": {
+      "format": "modern-json",
+      "candidateID": "0",
+      "commentCategory": "General",
+      "commentText": "smoke replay probe"
+    },
+    "expectsBooleanField": "success"
+  },
+  {
+    "id": "candidates.postMessage.safeInvalid",
+    "sourceCheckID": "candidates.show",
+    "method": "POST",
+    "endpointPath": "actions.postMessageURL",
+    "tokenPath": "messages.securityToken",
+    "tokenField": "securityToken",
+    "body": {
+      "format": "modern-json",
+      "candidateID": "0",
+      "messageBody": "smoke replay probe"
+    },
+    "expectsBooleanField": "success"
+  },
+  {
+    "id": "joborders.addComment.safeInvalid",
+    "sourceCheckID": "joborders.show",
+    "method": "POST",
+    "endpointPath": "actions.addCommentURL",
+    "tokenPath": "comments.securityToken",
+    "tokenField": "securityToken",
+    "body": {
+      "format": "modern-json",
+      "jobOrderID": "0",
+      "commentCategory": "General",
+      "commentText": "smoke replay probe"
+    },
+    "expectsBooleanField": "success"
+  },
+  {
+    "id": "joborders.postMessage.safeInvalid",
+    "sourceCheckID": "joborders.show",
+    "method": "POST",
+    "endpointPath": "actions.postMessageURL",
+    "tokenPath": "messages.securityToken",
+    "tokenField": "securityToken",
+    "body": {
+      "format": "modern-json",
+      "jobOrderID": "0",
+      "messageBody": "smoke replay probe"
+    },
+    "expectsBooleanField": "success"
+  }
+]

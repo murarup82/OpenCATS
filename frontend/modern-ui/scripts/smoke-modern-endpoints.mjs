@@ -1,3 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const fixturePath = resolve(scriptDir, 'fixtures', 'mutation-safe-replays.json');
+
 const baseURL = String(process.env.OPENCATS_BASE_URL || '').trim();
 const indexPath = String(process.env.OPENCATS_INDEX_PATH || '/index.php').trim() || '/index.php';
 const sessionCookie = String(process.env.OPENCATS_COOKIE || '').trim();
@@ -108,6 +115,19 @@ const endpointChecks = [
   }
 ];
 
+function loadFixtures() {
+  try {
+    const raw = readFileSync(fixturePath, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed;
+  } catch (_error) {
+    return [];
+  }
+}
+
 function joinURL(base, path) {
   const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -145,6 +165,18 @@ function normalizeError(error) {
   return String(error || 'Unknown error');
 }
 
+function getValueByPath(source, path) {
+  const segments = String(path || '').split('.').filter((segment) => segment !== '');
+  let cursor = source;
+  for (const segment of segments) {
+    if (!cursor || typeof cursor !== 'object' || !(segment in cursor)) {
+      return undefined;
+    }
+    cursor = cursor[segment];
+  }
+  return cursor;
+}
+
 function buildCheckURL(check) {
   const query = new URLSearchParams();
   const merged = {
@@ -180,60 +212,70 @@ async function runEndpointCheck(check) {
   if (!check.expectedKeys.includes(key)) {
     throw new Error(`contractKey=${key || 'missing'} (expected ${check.expectedKeys.join(' or ')})`);
   }
+  return payload;
 }
 
-async function runMutationProbe() {
-  const dashboardCheck = endpointChecks.find((entry) => entry.id === 'dashboard.my');
-  if (!dashboardCheck) {
-    return { skipped: true, message: 'dashboard.my check not configured.' };
+async function runMutationFixture(fixture, payloadByCheckID) {
+  const sourcePayload = payloadByCheckID.get(fixture.sourceCheckID);
+  if (!sourcePayload) {
+    return {
+      skipped: true,
+      message: `source payload ${fixture.sourceCheckID} unavailable`
+    };
   }
 
-  const response = await fetchWithTimeout(buildCheckURL(dashboardCheck), {
-    method: 'GET',
-    headers: createHeaders(),
-    redirect: 'follow'
+  const endpointValue = getValueByPath(sourcePayload, fixture.endpointPath);
+  const endpointURLRaw = String(endpointValue || '').trim();
+  if (endpointURLRaw === '') {
+    return {
+      skipped: true,
+      message: `endpoint path ${fixture.endpointPath} missing`
+    };
+  }
+
+  const endpointURL = new URL(endpointURLRaw.replace(/&amp;/g, '&'), joinURL(baseURL, indexPath)).toString();
+
+  const bodyData = new URLSearchParams();
+  const templateBody = fixture.body || {};
+  Object.keys(templateBody).forEach((key) => {
+    bodyData.set(key, String(templateBody[key]));
   });
-  if (!response.ok) {
-    return { skipped: true, message: `dashboard fetch failed (${response.status})` };
+
+  if (fixture.tokenField && fixture.tokenPath) {
+    const token = String(getValueByPath(sourcePayload, fixture.tokenPath) || '').trim();
+    if (token === '') {
+      return {
+        skipped: true,
+        message: `token path ${fixture.tokenPath} missing`
+      };
+    }
+    bodyData.set(String(fixture.tokenField), token);
   }
-  const payload = await response.json();
 
-  const url = String(payload?.actions?.setPipelineStatusURL || '').trim();
-  const token = String(payload?.actions?.setPipelineStatusToken || '').trim();
-  if (url === '' || token === '') {
-    return { skipped: true, message: 'No setPipelineStatus endpoint/token exposed.' };
-  }
-
-  const body = new URLSearchParams();
-  body.set('format', 'modern-json');
-  body.set('securityToken', token);
-  body.set('candidateID', '0');
-  body.set('jobOrderID', '0');
-  body.set('statusID', '0');
-  body.set('enforceOwner', '1');
-
-  const mutationResponse = await fetchWithTimeout(url, {
-    method: 'POST',
+  const method = String(fixture.method || 'POST').toUpperCase();
+  const response = await fetchWithTimeout(endpointURL, {
+    method,
     headers: createHeaders('application/x-www-form-urlencoded'),
-    body: body.toString(),
+    body: bodyData.toString(),
     redirect: 'follow'
   });
 
-  let mutationPayload = null;
+  let payload = null;
   try {
-    mutationPayload = await mutationResponse.json();
+    payload = await response.json();
   } catch (_error) {
-    throw new Error(`dashboard mutation probe returned non-json response (${mutationResponse.status})`);
+    throw new Error(`non-json response (${response.status})`);
   }
 
-  if (!mutationPayload || typeof mutationPayload.success !== 'boolean') {
-    throw new Error('dashboard mutation probe missing boolean success field');
+  const expectedField = String(fixture.expectsBooleanField || 'success');
+  if (!payload || typeof payload[expectedField] !== 'boolean') {
+    throw new Error(`missing boolean field "${expectedField}"`);
   }
 
   return {
     skipped: false,
-    status: mutationPayload.success ? 'success' : 'error',
-    code: String(mutationPayload.code || '')
+    value: payload[expectedField] ? 'success' : 'error',
+    code: String(payload.code || '')
   };
 }
 
@@ -245,6 +287,7 @@ async function main() {
 
   const failures = [];
   const rows = [];
+  const payloadByCheckID = new Map();
 
   for (const check of endpointChecks) {
     if (check.requiredEnv) {
@@ -256,7 +299,8 @@ async function main() {
     }
 
     try {
-      await runEndpointCheck(check);
+      const payload = await runEndpointCheck(check);
+      payloadByCheckID.set(check.id, payload);
       rows.push({ id: check.id, status: 'OK', message: '' });
     } catch (error) {
       const message = normalizeError(error);
@@ -265,21 +309,24 @@ async function main() {
     }
   }
 
-  try {
-    const probe = await runMutationProbe();
-    if (probe.skipped) {
-      rows.push({ id: 'dashboard.setPipelineStatus.probe', status: 'SKIP', message: probe.message });
-    } else {
-      rows.push({
-        id: 'dashboard.setPipelineStatus.probe',
-        status: 'OK',
-        message: `${probe.status} ${probe.code ? `(code=${probe.code})` : ''}`.trim()
-      });
+  const fixtures = loadFixtures();
+  for (const fixture of fixtures) {
+    try {
+      const result = await runMutationFixture(fixture, payloadByCheckID);
+      if (result.skipped) {
+        rows.push({ id: fixture.id, status: 'SKIP', message: result.message });
+      } else {
+        rows.push({
+          id: fixture.id,
+          status: 'OK',
+          message: `${result.value}${result.code ? ` (code=${result.code})` : ''}`
+        });
+      }
+    } catch (error) {
+      const message = normalizeError(error);
+      rows.push({ id: fixture.id, status: 'FAIL', message });
+      failures.push(`${fixture.id}: ${message}`);
     }
-  } catch (error) {
-    const message = normalizeError(error);
-    rows.push({ id: 'dashboard.setPipelineStatus.probe', status: 'FAIL', message });
-    failures.push(`dashboard.setPipelineStatus.probe: ${message}`);
   }
 
   console.log('[modern-ui endpoints] Results:');
