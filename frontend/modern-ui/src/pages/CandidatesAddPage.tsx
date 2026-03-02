@@ -48,6 +48,33 @@ type CandidateAddFormState = {
   extraFields: Record<string, string>;
 };
 
+type CandidateTrackedFieldKey =
+  | 'firstName'
+  | 'lastName'
+  | 'email1'
+  | 'phoneCell'
+  | 'address'
+  | 'city'
+  | 'country'
+  | 'keySkills'
+  | 'currentEmployer'
+  | 'notes';
+
+type CandidateFieldSource = 'resume-parse' | 'ai-prefill';
+
+const TRACKED_FIELD_KEYS: CandidateTrackedFieldKey[] = [
+  'firstName',
+  'lastName',
+  'email1',
+  'phoneCell',
+  'address',
+  'city',
+  'country',
+  'keySkills',
+  'currentEmployer',
+  'notes'
+];
+
 function toFormState(data: CandidatesAddModernDataResponse): CandidateAddFormState {
   const extraFields: Record<string, string> = {};
   data.extraFields.forEach((field) => {
@@ -232,6 +259,13 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
+function getChangedTrackedFields(
+  before: CandidateAddFormState,
+  after: CandidateAddFormState
+): CandidateTrackedFieldKey[] {
+  return TRACKED_FIELD_KEYS.filter((fieldKey) => before[fieldKey] !== after[fieldKey]);
+}
+
 export function CandidatesAddPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesAddModernDataResponse | null>(null);
   const [formState, setFormState] = useState<CandidateAddFormState | null>(null);
@@ -256,6 +290,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [aiPrefillStatus, setAiPrefillStatus] = useState('');
   const [aiPrefillError, setAiPrefillError] = useState('');
   const [aiUndoSnapshot, setAiUndoSnapshot] = useState<CandidateAddFormState | null>(null);
+  const [fieldSources, setFieldSources] = useState<Partial<Record<CandidateTrackedFieldKey, CandidateFieldSource>>>({});
 
   useEffect(() => {
     let isMounted = true;
@@ -270,6 +305,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         }
         setData(result);
         setFormState(toFormState(result));
+        setFieldSources({});
         setResumeText(result.resumeImport.documentText || '');
         setResumeTempFile(result.resumeImport.documentTempFile || '');
       })
@@ -289,6 +325,45 @@ export function CandidatesAddPage({ bootstrap }: Props) {
       isMounted = false;
     };
   }, [bootstrap, serverQueryString]);
+
+  const getFieldSource = (fieldKey: CandidateTrackedFieldKey): CandidateFieldSource | null =>
+    fieldSources[fieldKey] || null;
+
+  const getFieldClassName = (fieldKey: CandidateTrackedFieldKey): string => {
+    const source = getFieldSource(fieldKey);
+    if (source === 'ai-prefill') {
+      return 'avel-form-control avel-form-control--source-ai';
+    }
+    if (source === 'resume-parse') {
+      return 'avel-form-control avel-form-control--source-parse';
+    }
+    return 'avel-form-control';
+  };
+
+  const renderFieldLabel = (label: string, fieldKey?: CandidateTrackedFieldKey) => {
+    const source = fieldKey ? getFieldSource(fieldKey) : null;
+    return (
+      <span className="modern-command-label">
+        {label}
+        {source ? (
+          <span className={`avel-field-source-badge avel-field-source-badge--${source}`}>
+            {source === 'ai-prefill' ? 'AI' : 'Parsed'}
+          </span>
+        ) : null}
+      </span>
+    );
+  };
+
+  const clearFieldSource = (fieldKey: CandidateTrackedFieldKey) => {
+    setFieldSources((current) => {
+      if (!current[fieldKey]) {
+        return current;
+      }
+      const next = { ...current };
+      delete next[fieldKey];
+      return next;
+    });
+  };
 
   const updateExtraFieldValue = (postKey: string, value: string) => {
     setFormState((current) => {
@@ -462,19 +537,33 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     try {
       const response = await submitCandidatesAddResumeAction(bootstrap, formData);
       setData(response);
+      let changedByParse: CandidateTrackedFieldKey[] = [];
+      const parsedFormState = toFormState(response);
       setFormState((current) => {
-        const next = toFormState(response);
         if (!current) {
-          return next;
+          return parsedFormState;
         }
-        return {
-          ...next,
+        const merged = {
+          ...parsedFormState,
           extraFields: {
             ...current.extraFields,
-            ...next.extraFields
+            ...parsedFormState.extraFields
           }
         };
+        if (mode === 'parse') {
+          changedByParse = getChangedTrackedFields(current, merged);
+        }
+        return merged;
       });
+      if (mode === 'parse' && changedByParse.length > 0) {
+        setFieldSources((current) => {
+          const next = { ...current };
+          changedByParse.forEach((fieldKey) => {
+            next[fieldKey] = 'resume-parse';
+          });
+          return next;
+        });
+      }
       setResumeText(response.resumeImport.documentText || '');
       setResumeTempFile(response.resumeImport.documentTempFile || '');
       setResumeUploadFile(null);
@@ -526,12 +615,24 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         throw new Error(statusResult.errorMessage || `AI prefill failed with status "${status || 'UNKNOWN'}".`);
       }
 
+      let changedByAI: CandidateTrackedFieldKey[] = [];
       setFormState((current) => {
         if (!current) {
           return current;
         }
-        return mergeAIPrefillIntoFormState(current, statusResult.candidate);
+        const merged = mergeAIPrefillIntoFormState(current, statusResult.candidate);
+        changedByAI = getChangedTrackedFields(current, merged);
+        return merged;
       });
+      if (changedByAI.length > 0) {
+        setFieldSources((current) => {
+          const next = { ...current };
+          changedByAI.forEach((fieldKey) => {
+            next[fieldKey] = 'ai-prefill';
+          });
+          return next;
+        });
+      }
       setAiPrefillStatus('AI prefill applied. Review values before saving.');
     } catch (prefillError) {
       setAiPrefillError(prefillError instanceof Error ? prefillError.message : 'AI prefill failed.');
@@ -593,6 +694,8 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     { value: 'No', label: 'No' },
     { value: 'Yes', label: 'Yes' }
   ];
+  const aiFieldCount = Object.values(fieldSources).filter((source) => source === 'ai-prefill').length;
+  const parsedFieldCount = Object.values(fieldSources).filter((source) => source === 'resume-parse').length;
 
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page">
@@ -611,7 +714,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         )}
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--add">
+          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--add avel-candidate-edit-panel--compact">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Candidate Details</h2>
               <p className="avel-list-panel__hint">Required fields: First Name, Last Name.</p>
@@ -620,7 +723,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
             <form
               ref={formRef}
               id="modernCandidateAddForm"
-              className="avel-candidate-edit-form"
+              className="avel-candidate-edit-form avel-candidate-edit-form--compact"
               method="post"
               encType="multipart/form-data"
               action={submitURL}
@@ -698,8 +801,17 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                     <p className="avel-list-panel__hint">Upload CV content, parse core fields, then run AI prefill (TalentFitFlow).</p>
                   </div>
 
-                  <div className="avel-candidate-edit-grid">
-                    <label className="modern-command-field avel-candidate-edit-field--full">
+                  <div className="avel-candidate-provenance">
+                    <span className="modern-chip modern-chip--info">Parsed fields: {parsedFieldCount}</span>
+                    <span className="modern-chip modern-chip--success">AI-prefilled fields: {aiFieldCount}</span>
+                    <span className="avel-field-source-badge avel-field-source-badge--resume-parse">Parsed</span>
+                    <span className="avel-field-source-help">Values extracted by legacy resume parser.</span>
+                    <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span>
+                    <span className="avel-field-source-help">Values generated by TalentFitFlow prefill.</span>
+                  </div>
+
+                  <div className="avel-candidate-import-row">
+                    <label className="modern-command-field avel-candidate-import-row__file">
                       <span className="modern-command-label">CV File</span>
                       <input
                         className="avel-form-control"
@@ -710,82 +822,92 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                         onChange={(event) => setResumeUploadFile(event.target.files?.[0] || null)}
                       />
                     </label>
-
-                    <label className="modern-command-field avel-candidate-edit-field--full">
-                      <span className="modern-command-label">Resume Text</span>
-                      <textarea
-                        className="avel-form-control"
-                        name="documentText"
-                        id="documentText"
-                        value={resumeText}
-                        onChange={(event) => setResumeText(event.target.value)}
-                        rows={8}
-                        placeholder="Paste resume text or upload a CV file."
-                      />
-                    </label>
-                  </div>
-
-                  <div className="modern-table-actions">
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--secondary"
-                      onClick={() => runResumeAction('upload')}
-                      disabled={resumeActionPending !== 'none' || aiPrefillPending}
-                    >
-                      {resumeActionPending === 'upload' ? 'Uploading...' : 'Upload CV'}
-                    </button>
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--secondary"
-                      onClick={() => runResumeAction('parse')}
-                      disabled={resumeActionPending !== 'none' || aiPrefillPending}
-                    >
-                      {resumeActionPending === 'parse' ? 'Parsing...' : 'Parse Resume'}
-                    </button>
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--secondary"
-                      onClick={runAIPrefill}
-                      disabled={aiPrefillPending || resumeActionPending !== 'none'}
-                    >
-                      {aiPrefillPending ? 'AI Prefill Running...' : 'AI Prefill'}
-                    </button>
-                    {aiUndoSnapshot ? (
+                    <div className="modern-table-actions avel-candidate-import-row__actions">
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--secondary"
+                        onClick={() => runResumeAction('upload')}
+                        disabled={resumeActionPending !== 'none' || aiPrefillPending}
+                      >
+                        {resumeActionPending === 'upload' ? 'Uploading...' : 'Upload CV'}
+                      </button>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--secondary"
+                        onClick={() => runResumeAction('parse')}
+                        disabled={resumeActionPending !== 'none' || aiPrefillPending}
+                      >
+                        {resumeActionPending === 'parse' ? 'Parsing...' : 'Parse Resume'}
+                      </button>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--secondary"
+                        onClick={runAIPrefill}
+                        disabled={aiPrefillPending || resumeActionPending !== 'none'}
+                      >
+                        {aiPrefillPending ? 'AI Prefill Running...' : 'AI Prefill'}
+                      </button>
+                      {aiUndoSnapshot ? (
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--secondary"
+                          onClick={() => {
+                            if (!aiUndoSnapshot) {
+                              return;
+                            }
+                            setFormState({
+                              ...aiUndoSnapshot,
+                              extraFields: { ...aiUndoSnapshot.extraFields }
+                            });
+                            setFieldSources((current) => {
+                              const next = { ...current };
+                              TRACKED_FIELD_KEYS.forEach((fieldKey) => {
+                                if (next[fieldKey] === 'ai-prefill') {
+                                  delete next[fieldKey];
+                                }
+                              });
+                              return next;
+                            });
+                            setAiUndoSnapshot(null);
+                            setAiPrefillStatus('AI prefill undone.');
+                            setAiPrefillError('');
+                          }}
+                        >
+                          Undo AI Prefill
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         className="modern-btn modern-btn--secondary"
                         onClick={() => {
-                          if (!aiUndoSnapshot) {
-                            return;
+                          setResumeUploadFile(null);
+                          setResumeTempFile('');
+                          setResumeText('');
+                          if (resumeFileInputRef.current) {
+                            resumeFileInputRef.current.value = '';
                           }
-                          setFormState({
-                            ...aiUndoSnapshot,
-                            extraFields: { ...aiUndoSnapshot.extraFields }
-                          });
-                          setAiUndoSnapshot(null);
-                          setAiPrefillStatus('AI prefill undone.');
+                          setAiPrefillStatus('');
                           setAiPrefillError('');
                         }}
                       >
-                        Undo AI Prefill
+                        Clear Resume
                       </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--secondary"
-                      onClick={() => {
-                        setResumeUploadFile(null);
-                        setResumeTempFile('');
-                        setResumeText('');
-                        if (resumeFileInputRef.current) {
-                          resumeFileInputRef.current.value = '';
-                        }
-                        setAiPrefillStatus('');
-                        setAiPrefillError('');
-                      }}
-                    >
-                      Clear Resume
-                    </button>
+                    </div>
+                  </div>
+
+                  <div className="avel-candidate-edit-grid">
+                    <label className="modern-command-field avel-candidate-edit-field--full">
+                      <span className="modern-command-label">Resume Text</span>
+                      <textarea
+                        className="avel-form-control avel-form-control--compact-text"
+                        name="documentText"
+                        id="documentText"
+                        value={resumeText}
+                        onChange={(event) => setResumeText(event.target.value)}
+                        rows={5}
+                        placeholder="Paste resume text or upload a CV file."
+                      />
+                    </label>
                   </div>
 
                   {resumeTempFile.trim() !== '' ? (
@@ -805,70 +927,88 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                   <span>Core profile identity and communication data.</span>
                 </div>
                 <label className="modern-command-field">
-                  <span className="modern-command-label">First Name *</span>
+                  {renderFieldLabel('First Name *', 'firstName')}
                   <input
-                    className="avel-form-control"
+                    className={getFieldClassName('firstName')}
                     type="text"
                     name="firstName"
                     value={formState.firstName}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, firstName: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('firstName');
+                      setFormState((current) => (current ? { ...current, firstName: event.target.value } : current));
+                    }}
                     required
                   />
                 </label>
 
                 <label className="modern-command-field">
-                  <span className="modern-command-label">Last Name *</span>
+                  {renderFieldLabel('Last Name *', 'lastName')}
                   <input
-                    className="avel-form-control"
+                    className={getFieldClassName('lastName')}
                     type="text"
                     name="lastName"
                     value={formState.lastName}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, lastName: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('lastName');
+                      setFormState((current) => (current ? { ...current, lastName: event.target.value } : current));
+                    }}
                     required
                   />
                 </label>
 
                 <label className="modern-command-field">
-                  <span className="modern-command-label">Email</span>
+                  {renderFieldLabel('Email', 'email1')}
                   <input
-                    className="avel-form-control"
+                    className={getFieldClassName('email1')}
                     type="email"
                     name="email1"
                     value={formState.email1}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, email1: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('email1');
+                      setFormState((current) => (current ? { ...current, email1: event.target.value } : current));
+                    }}
                   />
                 </label>
 
                 <label className="modern-command-field">
-                  <span className="modern-command-label">Cell Phone</span>
+                  {renderFieldLabel('Cell Phone', 'phoneCell')}
                   <input
-                    className="avel-form-control"
+                    className={getFieldClassName('phoneCell')}
                     type="text"
                     name="phoneCell"
                     value={formState.phoneCell}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, phoneCell: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('phoneCell');
+                      setFormState((current) => (current ? { ...current, phoneCell: event.target.value } : current));
+                    }}
                   />
                 </label>
 
                 <label className="modern-command-field">
-                  <span className="modern-command-label">City</span>
+                  {renderFieldLabel('City', 'city')}
                   <input
-                    className="avel-form-control"
+                    className={getFieldClassName('city')}
                     type="text"
                     name="city"
                     value={formState.city}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, city: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('city');
+                      setFormState((current) => (current ? { ...current, city: event.target.value } : current));
+                    }}
                   />
                 </label>
 
                 <label className="modern-command-field">
-                  <span className="modern-command-label">Country</span>
+                  {renderFieldLabel('Country', 'country')}
                   <input
-                    className="avel-form-control"
+                    className={getFieldClassName('country')}
                     type="text"
                     name="country"
                     value={formState.country}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, country: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('country');
+                      setFormState((current) => (current ? { ...current, country: event.target.value } : current));
+                    }}
                   />
                 </label>
 
@@ -926,13 +1066,16 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </label>
 
                 <label className="modern-command-field">
-                  <span className="modern-command-label">Current Employer</span>
+                  {renderFieldLabel('Current Employer', 'currentEmployer')}
                   <input
-                    className="avel-form-control"
+                    className={getFieldClassName('currentEmployer')}
                     type="text"
                     name="currentEmployer"
                     value={formState.currentEmployer}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, currentEmployer: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('currentEmployer');
+                      setFormState((current) => (current ? { ...current, currentEmployer: event.target.value } : current));
+                    }}
                   />
                 </label>
 
@@ -963,34 +1106,43 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </label>
 
                 <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Address</span>
+                  {renderFieldLabel('Address', 'address')}
                   <textarea
-                    className="avel-form-control"
+                    className={getFieldClassName('address')}
                     name="address"
                     value={formState.address}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, address: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('address');
+                      setFormState((current) => (current ? { ...current, address: event.target.value } : current));
+                    }}
                     rows={2}
                   />
                 </label>
 
                 <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Key Skills</span>
+                  {renderFieldLabel('Key Skills', 'keySkills')}
                   <textarea
-                    className="avel-form-control"
+                    className={getFieldClassName('keySkills')}
                     name="keySkills"
                     value={formState.keySkills}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('keySkills');
+                      setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current));
+                    }}
                     rows={2}
                   />
                 </label>
 
                 <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Notes</span>
+                  {renderFieldLabel('Notes', 'notes')}
                   <textarea
-                    className="avel-form-control"
+                    className={getFieldClassName('notes')}
                     name="notes"
                     value={formState.notes}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, notes: event.target.value } : current))}
+                    onChange={(event) => {
+                      clearFieldSource('notes');
+                      setFormState((current) => (current ? { ...current, notes: event.target.value } : current));
+                    }}
                     rows={4}
                   />
                 </label>

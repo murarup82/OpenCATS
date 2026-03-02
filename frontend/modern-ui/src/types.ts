@@ -1347,6 +1347,10 @@ export type CandidatesEditModernDataResponse = {
     }>;
     sourceCSV: string;
   };
+  resumeImport: {
+    isParsingEnabled: boolean;
+    parsingStatus: Record<string, unknown>;
+  };
   extraFields: Array<{
     postKey: string;
     fieldName: string;

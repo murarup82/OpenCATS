@@ -3002,6 +3002,14 @@ class CandidatesUI extends UserInterface
         $baseURL = CATSUtility::getIndexName();
         $candidateID = (int) $candidateID;
         $extraFieldsPayload = $this->buildModernExtraFieldPayload($extraFieldRS, true);
+        $isParsingEnabled = LicenseUtility::isParsingEnabled();
+        $parsingStatus = array();
+        if (
+            is_array($parsingStatus = LicenseUtility::getParsingStatus()) &&
+            isset($parsingStatus['parseLimit'])
+        ) {
+            $parsingStatus['parseLimit'] = $parsingStatus['parseLimit'] - 1;
+        }
 
         $ownerOptions = array(
             array(
@@ -3117,6 +3125,10 @@ class CandidatesUI extends UserInterface
                 'owners' => $ownerOptions,
                 'sources' => $sourceOptions,
                 'sourceCSV' => $sourcesString
+            ),
+            'resumeImport' => array(
+                'isParsingEnabled' => ($isParsingEnabled ? true : false),
+                'parsingStatus' => (is_array($parsingStatus) ? $parsingStatus : array())
             ),
             'extraFields' => $extraFieldsPayload,
             'attachments' => $attachmentsPayload

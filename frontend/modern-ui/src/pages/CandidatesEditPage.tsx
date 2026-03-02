@@ -98,6 +98,42 @@ function toDisplayText(value: unknown, fallback = '--'): string {
   return text === '' ? fallback : text;
 }
 
+function isLikelyCVFileName(fileName: string): boolean {
+  const normalized = String(fileName || '').trim().toLowerCase();
+  if (normalized === '') {
+    return false;
+  }
+
+  if (
+    normalized.endsWith('.pdf') ||
+    normalized.endsWith('.doc') ||
+    normalized.endsWith('.docx') ||
+    normalized.endsWith('.rtf') ||
+    normalized.endsWith('.txt') ||
+    normalized.endsWith('.odt')
+  ) {
+    return true;
+  }
+
+  return normalized.includes('cv') || normalized.includes('resume');
+}
+
+function pickDefaultAIAttachmentID(
+  attachments: Array<{ attachmentID: number; fileName: string; isProfileImage: boolean }>
+): number {
+  const candidates = attachments.filter((item) => !item.isProfileImage);
+  if (candidates.length === 0) {
+    return 0;
+  }
+
+  const preferred = candidates.find((item) => isLikelyCVFileName(item.fileName));
+  if (preferred) {
+    return Number(preferred.attachmentID || 0);
+  }
+
+  return Number(candidates[0].attachmentID || 0);
+}
+
 function normalizeAIText(value: unknown): string {
   return String(value ?? '').trim();
 }
@@ -292,8 +328,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
         }
         setData(result);
         setFormState(toFormState(result));
-        const defaultAIAttachment = result.attachments.find((item) => !item.isProfileImage);
-        setAiAttachmentID(defaultAIAttachment ? Number(defaultAIAttachment.attachmentID || 0) : 0);
+        setAiAttachmentID(pickDefaultAIAttachmentID(result.attachments));
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -406,6 +441,11 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
   const runAIPrefillFromAttachment = useCallback(async () => {
     if (!data || !formState || aiPrefillPending) {
+      return;
+    }
+
+    if (!(data.resumeImport?.isParsingEnabled ?? false)) {
+      setAiPrefillError('AI parsing is disabled by server configuration.');
       return;
     }
 
@@ -613,6 +653,22 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     { value: 'No', label: 'No' },
     { value: 'Yes', label: 'Yes' }
   ];
+  const aiCandidateAttachments = data.attachments.filter((attachment) => !attachment.isProfileImage);
+  const aiPreferredAttachments = aiCandidateAttachments.filter((attachment) => isLikelyCVFileName(attachment.fileName));
+  const aiSourceAttachments = aiPreferredAttachments.length > 0 ? aiPreferredAttachments : aiCandidateAttachments;
+  const aiParsingEnabled = data.resumeImport?.isParsingEnabled ?? false;
+  const parseLimitRaw = data.resumeImport?.parsingStatus?.['parseLimit'];
+  const parseLimitText =
+    typeof parseLimitRaw === 'number' && Number.isFinite(parseLimitRaw) ? `Remaining parses: ${parseLimitRaw}` : '';
+  const aiCanRunPrefill =
+    aiParsingEnabled && aiSourceAttachments.length > 0 && Number(aiAttachmentID || 0) > 0 && !aiPrefillPending;
+  const aiRefillDisabledReason = !aiParsingEnabled
+    ? 'AI parsing is disabled in server configuration.'
+    : aiSourceAttachments.length === 0
+      ? 'No CV-like attachment found. Upload a CV first.'
+      : Number(aiAttachmentID || 0) <= 0
+        ? 'Select a source attachment.'
+        : '';
 
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page">
@@ -1026,59 +1082,60 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   </a>
                 </div>
               </div>
-              {data.attachments.length > 0 ? (
-                <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
-                  <label className="modern-command-field avel-candidate-edit-field--full">
-                    <span className="modern-command-label">AI Prefill Source</span>
-                    <select
-                      className="avel-form-control"
-                      value={String(aiAttachmentID || '')}
-                      onChange={(event) => setAiAttachmentID(Number(event.target.value || 0))}
-                    >
-                      <option value="">Select attachment...</option>
-                      {data.attachments
-                        .filter((attachment) => !attachment.isProfileImage)
-                        .map((attachment) => (
-                          <option key={`ai-attachment-${attachment.attachmentID}`} value={String(attachment.attachmentID)}>
-                            {toDisplayText(attachment.fileName, `Attachment #${attachment.attachmentID}`)}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                  <div className="modern-table-actions">
+              <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
+                <div className="modern-state" style={{ marginBottom: '8px' }}>
+                  Load CV details with AI and apply high-confidence values into this form.
+                  {parseLimitText !== '' ? ` ${parseLimitText}` : ''}
+                </div>
+                <label className="modern-command-field avel-candidate-edit-field--full">
+                  <span className="modern-command-label">AI Source Attachment</span>
+                  <select
+                    className="avel-form-control"
+                    value={String(aiAttachmentID || '')}
+                    onChange={(event) => setAiAttachmentID(Number(event.target.value || 0))}
+                  >
+                    <option value="">Select CV attachment...</option>
+                    {aiSourceAttachments.map((attachment) => (
+                      <option key={`ai-attachment-${attachment.attachmentID}`} value={String(attachment.attachmentID)}>
+                        {toDisplayText(attachment.fileName, `Attachment #${attachment.attachmentID}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {aiRefillDisabledReason !== '' ? <div className="modern-state">{aiRefillDisabledReason}</div> : null}
+                <div className="modern-table-actions">
+                  <button
+                    type="button"
+                    className="modern-btn modern-btn--mini modern-btn--secondary"
+                    onClick={runAIPrefillFromAttachment}
+                    disabled={!aiCanRunPrefill}
+                  >
+                    {aiPrefillPending ? 'AI Refill Running...' : 'Load CV Details With AI'}
+                  </button>
+                  {aiUndoSnapshot ? (
                     <button
                       type="button"
                       className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={runAIPrefillFromAttachment}
-                      disabled={aiPrefillPending}
+                      onClick={() => {
+                        if (!aiUndoSnapshot) {
+                          return;
+                        }
+                        setFormState({
+                          ...aiUndoSnapshot,
+                          extraFields: { ...aiUndoSnapshot.extraFields }
+                        });
+                        setAiUndoSnapshot(null);
+                        setAiPrefillStatus('AI refill undone.');
+                        setAiPrefillError('');
+                      }}
                     >
-                      {aiPrefillPending ? 'AI Prefill Running...' : 'AI Prefill From Attachment'}
+                      Undo AI Refill
                     </button>
-                    {aiUndoSnapshot ? (
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() => {
-                          if (!aiUndoSnapshot) {
-                            return;
-                          }
-                          setFormState({
-                            ...aiUndoSnapshot,
-                            extraFields: { ...aiUndoSnapshot.extraFields }
-                          });
-                          setAiUndoSnapshot(null);
-                          setAiPrefillStatus('AI prefill undone.');
-                          setAiPrefillError('');
-                        }}
-                      >
-                        Undo AI Prefill
-                      </button>
-                    ) : null}
-                  </div>
-                  {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
-                  {aiPrefillError !== '' ? <div className="modern-state modern-state--error">{aiPrefillError}</div> : null}
+                  ) : null}
                 </div>
-              ) : null}
+                {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
+                {aiPrefillError !== '' ? <div className="modern-state modern-state--error">{aiPrefillError}</div> : null}
+              </div>
               {data.meta.permissions.canCreateAttachment && attachmentUploadOpen ? (
                 <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
                   <label className="modern-command-field avel-candidate-edit-field--full">
