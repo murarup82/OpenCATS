@@ -618,6 +618,8 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                     key={preset.key}
                     type="button"
                     className={`modern-chip modern-chip--column-toggle ${columnPreset === preset.key ? 'is-active' : ''}`}
+                    aria-pressed={columnPreset === preset.key}
+                    aria-label={`Apply ${preset.label} columns preset`}
                     onClick={() => {
                       setVisibleColumns(columnPresets[preset.key]);
                       setColumnPreset(preset.key);
@@ -634,6 +636,8 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                     key={columnItem.key}
                     type="button"
                     className={`modern-chip modern-chip--column-toggle ${visibleColumns[columnItem.key] ? 'is-active' : ''}`}
+                    aria-pressed={visibleColumns[columnItem.key]}
+                    aria-label={`${visibleColumns[columnItem.key] ? 'Hide' : 'Show'} ${columnItem.label} column`}
                     onClick={() => {
                       setVisibleColumns((current) => {
                         const next = {

@@ -70,6 +70,7 @@ export function DashboardToolbar(props: Props) {
               <button
                 type="button"
                 className={`modern-segment__btn${scope === 'mine' ? ' is-active' : ''}`}
+                aria-pressed={scope === 'mine'}
                 onClick={() => onScopeChange('mine')}
               >
                 My Assigned Jobs
@@ -77,6 +78,7 @@ export function DashboardToolbar(props: Props) {
               <button
                 type="button"
                 className={`modern-segment__btn${scope === 'all' ? ' is-active' : ''}`}
+                aria-pressed={scope === 'all'}
                 onClick={() => onScopeChange('all')}
               >
                 All Jobs
@@ -114,6 +116,7 @@ export function DashboardToolbar(props: Props) {
             <button
               type="button"
               className={`modern-segment__btn${viewMode === 'kanban' ? ' is-active' : ''}`}
+              aria-pressed={viewMode === 'kanban'}
               onClick={() => onViewModeChange('kanban')}
             >
               Kanban
@@ -121,6 +124,7 @@ export function DashboardToolbar(props: Props) {
             <button
               type="button"
               className={`modern-segment__btn${viewMode === 'list' ? ' is-active' : ''}`}
+              aria-pressed={viewMode === 'list'}
               onClick={() => onViewModeChange('list')}
             >
               List
@@ -183,7 +187,7 @@ export function DashboardToolbar(props: Props) {
 
       <div className="modern-command-bar__row modern-command-bar__row--meta">
         <div className="modern-command-active">
-          <div className={`modern-command-active__count${activeFilterCount > 0 ? ' is-active' : ''}`}>
+          <div className={`modern-command-active__count${activeFilterCount > 0 ? ' is-active' : ''}`} aria-live="polite">
             {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
           </div>
           {activeFilterCount > 0 ? (

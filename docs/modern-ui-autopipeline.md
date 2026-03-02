@@ -242,10 +242,14 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - updated `usePageRefreshEvents` to debounce burst refresh events from embedded legacy/modal flows
     - coalesces back-to-back `opencats:legacy-popup:refresh-request` + `opencats:modern-page:refresh` into a single data reload
     - reduces repeated fetches/flicker on modal close while preserving in-place refresh behavior.
+108. Expanded ARIA semantics for high-frequency custom controls:
+    - dashboard scope/view segmented buttons now expose `aria-pressed` state and active filter count uses polite live-region updates
+    - job order column preset and column visibility chips now expose pressed-state + explicit action labels
+    - improved keyboard/screen-reader clarity for non-native toggle-chip controls during list customization.
 
 ## Next Queue (30-Slice Execution)
 
-1. Complete ARIA/labeling pass for remaining custom controls beyond `SelectMenu` (toggles, chips, icon-only actions).
+1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 3. Add module-by-module parity checklist to gate default-route switch from hybrid to modern.
 4. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
