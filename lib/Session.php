@@ -257,6 +257,12 @@ class CATSSession
     {
         $this->_isLoggedIn = false;
         self::$_requestAccessCap = null;
+
+        /* Clear sticky UI mode override on logout so next login starts from configured default mode. */
+        if (isset($_SESSION['CATS_UI_MODE_OVERRIDE']))
+        {
+            unset($_SESSION['CATS_UI_MODE_OVERRIDE']);
+        }
     }
 
     /**

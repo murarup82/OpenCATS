@@ -417,6 +417,14 @@ class LoginUI extends UserInterface
         /* These hooks are for important things, like disabling the site based on criteria. */
         if (!eval(Hooks::get('LOGGED_IN'))) return;
 
+        /* Reset sticky UI override so post-login default mode comes from config.
+         * Explicit ui=... inside reloginVars still works on the redirected request.
+         */
+        if (isset($_SESSION['CATS_UI_MODE_OVERRIDE']))
+        {
+            unset($_SESSION['CATS_UI_MODE_OVERRIDE']);
+        }
+
         if (isset($_GET['reloginVars']))
         {
             CATSUtility::transferRelativeURI($_GET['reloginVars']);
