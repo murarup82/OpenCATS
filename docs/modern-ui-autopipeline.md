@@ -298,19 +298,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `docs/modern-ui-smoke-fixture-maintenance.md` with schema, safety rules, and extension workflow
     - documented how to add mutation-safe replay probes without mutating real entities
     - linked validation steps for updating fixture-driven endpoint smoke coverage.
+122. Added rollout scorecard prefill helper:
+    - introduced `frontend/modern-ui/scripts/prefill-rollout-scorecard.mjs` and npm script `scorecard:prefill`
+    - helper parses latest sanity report and auto-populates machine-derivable scorecard criteria
+    - writes generated baseline to `docs/modern-ui-rollout-scorecard-prefill.md` for final manual sign-off completion.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 3. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-4. Add automated scorecard prefill helper from sanity/coverage outputs.
-5. Add no-JS fallback acceptance criteria section into rollout scorecard.
-6. Add operations ownership matrix for release-day monitoring responsibilities.
-7. Add periodic post-cutover review checklist (day 1 / day 7 / day 30).
-8. Add deprecation checklist automation hook to validate required evidence links.
-9. Add telemetry retention guidance (session vs persisted metrics) for production observability.
-10. Add smoke fixture lint/check script to detect malformed replay definitions.
+4. Add no-JS fallback acceptance criteria section into rollout scorecard.
+5. Add operations ownership matrix for release-day monitoring responsibilities.
+6. Add periodic post-cutover review checklist (day 1 / day 7 / day 30).
+7. Add deprecation checklist automation hook to validate required evidence links.
+8. Add telemetry retention guidance (session vs persisted metrics) for production observability.
+9. Add smoke fixture lint/check script to detect malformed replay definitions.
+10. Add quality gate script that combines scorecard prefill + evidence link validation.
 
 ## Rules
 
