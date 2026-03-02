@@ -262,19 +262,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `docs/modern-ui-compat-deprecation-tracker.md` with route-pattern status tracking (`Keep/Candidate/Deprecate/Retired`)
     - documented per-module fallback preconditions and a retirement workflow for bridge-route removal
     - added rollback rule to safely restore compatibility mappings if deprecation causes blockers.
+113. Added route-resolution telemetry counters for rollout visibility:
+    - extended route resolution to emit structured outcomes (`native`, `bridge`, `legacy`) with matched route key metadata
+    - introduced `recordRouteResolutionTelemetry()` with session-based counters and `opencats:modern-route:resolution` events
+    - app shell now records resolution telemetry per route signature to support fallback confidence monitoring during cutover.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-3. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
-4. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
-5. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
-6. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
-7. Add release runbook for temporary rollback/feature-flag response during production cutover.
-8. Add hybrid-to-modern cutover checklist with owner/date tracking fields.
-9. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-10. Add deprecation sign-off template linking telemetry + parity + rollback readiness.
+3. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
+4. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
+5. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
+6. Add release runbook for temporary rollback/feature-flag response during production cutover.
+7. Add hybrid-to-modern cutover checklist with owner/date tracking fields.
+8. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
+9. Add deprecation sign-off template linking telemetry + parity + rollback readiness.
+10. Add route-resolution telemetry dashboard snippet for admin troubleshooting.
 
 ## Rules
 

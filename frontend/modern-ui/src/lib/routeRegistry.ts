@@ -24,6 +24,12 @@ export type ModernRouteComponentProps = {
 };
 
 export type ModernRouteComponent = ComponentType<ModernRouteComponentProps>;
+export type ModernRouteResolutionType = 'native' | 'bridge' | 'legacy';
+export type ModernRouteResolution = {
+  component: ModernRouteComponent | null;
+  matchedRouteKey: string;
+  resolutionType: ModernRouteResolutionType;
+};
 
 const registry: Record<string, ModernRouteComponent> = {
   'dashboard.my': DashboardMyPage,
@@ -88,11 +94,11 @@ function routeGuardPasses(routeKey: string, requestURI: string): boolean {
   return requiredParams.every((paramName) => hasPositiveIntegerQueryParam(query, paramName));
 }
 
-export function resolveModernRouteComponent(
+export function resolveModernRoute(
   moduleName: string,
   actionName: string,
   requestURI = ''
-): ModernRouteComponent | null {
+): ModernRouteResolution {
   const moduleKey = (moduleName || '').toLowerCase();
   const actionKey = (actionName || '').toLowerCase();
   const candidates = [
@@ -103,10 +109,27 @@ export function resolveModernRouteComponent(
   ];
 
   for (const routeKey of candidates) {
-    if (registry[routeKey] && routeGuardPasses(routeKey, requestURI)) {
-      return registry[routeKey];
+    const component = registry[routeKey];
+    if (component && routeGuardPasses(routeKey, requestURI)) {
+      return {
+        component,
+        matchedRouteKey: routeKey,
+        resolutionType: component === ModuleBridgePage ? 'bridge' : 'native'
+      };
     }
   }
 
-  return null;
+  return {
+    component: null,
+    matchedRouteKey: '(unresolved)',
+    resolutionType: 'legacy'
+  };
+}
+
+export function resolveModernRouteComponent(
+  moduleName: string,
+  actionName: string,
+  requestURI = ''
+): ModernRouteComponent | null {
+  return resolveModernRoute(moduleName, actionName, requestURI).component;
 }

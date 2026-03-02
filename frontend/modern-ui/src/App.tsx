@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react';
 import type { UIModeBootstrap } from './types';
-import { resolveModernRouteComponent } from './lib/routeRegistry';
+import { resolveModernRoute } from './lib/routeRegistry';
+import { recordRouteResolutionTelemetry } from './lib/routeResolutionTelemetry';
 import { useModernKeyboardShortcuts } from './lib/useModernKeyboardShortcuts';
 import { ModernOverlayHost } from './components/modals/ModernOverlayHost';
 import { LegacyCompatPage } from './components/states/LegacyCompatPage';
@@ -11,11 +13,30 @@ type AppProps = {
 export function App({ bootstrap }: AppProps) {
   useModernKeyboardShortcuts();
 
-  const pageComponent = resolveModernRouteComponent(
+  const routeResolution = resolveModernRoute(
     bootstrap.targetModule || '',
     bootstrap.targetAction || '',
     bootstrap.requestURI || ''
   );
+  const pageComponent = routeResolution.component;
+  const resolutionSignatureRef = useRef('');
+
+  useEffect(() => {
+    const signature = [
+      routeResolution.resolutionType,
+      routeResolution.matchedRouteKey,
+      bootstrap.requestURI || ''
+    ].join('|');
+    if (signature === resolutionSignatureRef.current) {
+      return;
+    }
+    resolutionSignatureRef.current = signature;
+    recordRouteResolutionTelemetry(
+      bootstrap,
+      routeResolution.resolutionType,
+      routeResolution.matchedRouteKey
+    );
+  }, [bootstrap, routeResolution.matchedRouteKey, routeResolution.resolutionType]);
 
   const content = (() => {
     if (pageComponent) {
