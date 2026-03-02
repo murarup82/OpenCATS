@@ -9,8 +9,12 @@ import type {
   CandidatesEditModernDataResponse,
   CandidatesListModernDataResponse,
   CandidatesShowModernDataResponse,
+  CompaniesAddModernDataResponse,
+  CompaniesEditModernDataResponse,
   CompaniesListModernDataResponse,
   CompaniesShowModernDataResponse,
+  ContactsAddModernDataResponse,
+  ContactsEditModernDataResponse,
   ContactsListModernDataResponse,
   ContactsShowModernDataResponse,
   DashboardModernDataResponse,
@@ -41,8 +45,12 @@ import {
   MODERN_CANDIDATE_ADD_PAGE,
   MODERN_CANDIDATE_EDIT_PAGE,
   MODERN_CANDIDATE_SHOW_PAGE,
+  MODERN_COMPANY_ADD_PAGE,
+  MODERN_COMPANY_EDIT_PAGE,
   MODERN_COMPANIES_PAGE,
   MODERN_COMPANY_SHOW_PAGE,
+  MODERN_CONTACT_ADD_PAGE,
+  MODERN_CONTACT_EDIT_PAGE,
   MODERN_CONTACTS_PAGE,
   MODERN_CONTACT_SHOW_PAGE,
   MODERN_DASHBOARD_PAGE,
@@ -857,6 +865,42 @@ export async function fetchCompaniesShowModernData(
   return data;
 }
 
+export async function fetchCompaniesAddModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<CompaniesAddModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'companies',
+    action: 'add',
+    modernPage: MODERN_COMPANY_ADD_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<CompaniesAddModernDataResponse>(url);
+  assertModernContract(data.meta, 'companies.add.v1', 'company add form');
+
+  return data;
+}
+
+export async function fetchCompaniesEditModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<CompaniesEditModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'companies',
+    action: 'edit',
+    modernPage: MODERN_COMPANY_EDIT_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<CompaniesEditModernDataResponse>(url);
+  assertModernContract(data.meta, 'companies.edit.v1', 'company edit form');
+
+  return data;
+}
+
 export async function fetchContactsListModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams
@@ -889,6 +933,42 @@ export async function fetchContactsShowModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ContactsShowModernDataResponse>(url);
   assertModernContract(data.meta, 'contacts.show.v1', 'contact profile');
+
+  return data;
+}
+
+export async function fetchContactsAddModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ContactsAddModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'contacts',
+    action: 'add',
+    modernPage: MODERN_CONTACT_ADD_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ContactsAddModernDataResponse>(url);
+  assertModernContract(data.meta, 'contacts.add.v1', 'contact add form');
+
+  return data;
+}
+
+export async function fetchContactsEditModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ContactsEditModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'contacts',
+    action: 'edit',
+    modernPage: MODERN_CONTACT_EDIT_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ContactsEditModernDataResponse>(url);
+  assertModernContract(data.meta, 'contacts.edit.v1', 'contact edit form');
 
   return data;
 }

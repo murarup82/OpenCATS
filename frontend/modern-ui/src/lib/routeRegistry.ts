@@ -15,10 +15,12 @@ import { JobOrdersListPage } from '../pages/JobOrdersListPage';
 import { JobOrdersShowPage } from '../pages/JobOrdersShowPage';
 import { CompaniesListPage } from '../pages/CompaniesListPage';
 import { CompaniesShowPage } from '../pages/CompaniesShowPage';
-import { CompaniesFormBridgePage } from '../pages/CompaniesFormBridgePage';
+import { CompaniesAddPage } from '../pages/CompaniesAddPage';
+import { CompaniesEditPage } from '../pages/CompaniesEditPage';
 import { ContactsListPage } from '../pages/ContactsListPage';
 import { ContactsShowPage } from '../pages/ContactsShowPage';
-import { ContactsFormBridgePage } from '../pages/ContactsFormBridgePage';
+import { ContactsAddPage } from '../pages/ContactsAddPage';
+import { ContactsEditPage } from '../pages/ContactsEditPage';
 import { ActivityListPage } from '../pages/ActivityListPage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
@@ -152,14 +154,14 @@ const registry: Record<string, ModernRouteComponent> = {
   'joborders.edit': JobOrdersFormBridgePage,
   'companies.listbyview': CompaniesListPage,
   'companies.list': CompaniesListPage,
-  'companies.add': CompaniesFormBridgePage,
-  'companies.edit': CompaniesFormBridgePage,
+  'companies.add': CompaniesAddPage,
+  'companies.edit': CompaniesEditPage,
   'companies.show': CompaniesShowPage,
   'companies.(default)': CompaniesListPage,
   'contacts.listbyview': ContactsListPage,
   'contacts.list': ContactsListPage,
-  'contacts.add': ContactsFormBridgePage,
-  'contacts.edit': ContactsFormBridgePage,
+  'contacts.add': ContactsAddPage,
+  'contacts.edit': ContactsEditPage,
   'contacts.show': ContactsShowPage,
   'contacts.(default)': ContactsListPage,
   'activity.listbyviewdatagrid': ActivityListPage,

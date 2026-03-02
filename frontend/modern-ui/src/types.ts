@@ -368,6 +368,93 @@ export type CompaniesShowModernDataResponse = {
   }>;
 };
 
+type CompanyModernExtraField = {
+  postKey: string;
+  fieldName: string;
+  inputType: 'text' | 'textarea' | 'dropdown' | 'radio' | 'checkbox' | 'date';
+  value: string;
+  options: string[];
+};
+
+export type CompaniesAddModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    permissions: {
+      canAddCompany: boolean;
+    };
+  };
+  actions: {
+    submitURL: string;
+    listURL: string;
+    legacyURL: string;
+  };
+  defaults: {
+    name: string;
+    phone: string;
+    address: string;
+    city: string;
+    country: string;
+    url: string;
+    keyTechnologies: string;
+    notes: string;
+    isHot: boolean;
+    departmentsCSV: string;
+  };
+  extraFields: CompanyModernExtraField[];
+};
+
+export type CompaniesEditModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    companyID: number;
+    permissions: {
+      canEditCompany: boolean;
+    };
+  };
+  actions: {
+    submitURL: string;
+    showURL: string;
+    listURL: string;
+    legacyURL: string;
+  };
+  company: {
+    companyID: number;
+    name: string;
+    defaultCompany: boolean;
+    isHot: boolean;
+    phone: string;
+    address: string;
+    city: string;
+    country: string;
+    url: string;
+    keyTechnologies: string;
+    notes: string;
+    owner: string;
+    billingContact: string;
+    departmentsCSV: string;
+  };
+  options: {
+    owners: Array<{
+      value: string;
+      label: string;
+    }>;
+    billingContacts: Array<{
+      value: string;
+      label: string;
+    }>;
+    canSendOwnershipEmail: boolean;
+  };
+  departments: Array<{
+    departmentID: number;
+    name: string;
+  }>;
+  extraFields: CompanyModernExtraField[];
+};
+
 export type ContactsListModernDataResponse = {
   meta: {
     contractVersion: number;
@@ -549,6 +636,128 @@ export type ContactsShowModernDataResponse = {
       showURL: string;
     }>;
   };
+};
+
+type ContactModernExtraField = {
+  postKey: string;
+  fieldName: string;
+  inputType: 'text' | 'textarea' | 'dropdown' | 'radio' | 'checkbox' | 'date';
+  value: string;
+  options: string[];
+};
+
+export type ContactsAddModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    permissions: {
+      canAddContact: boolean;
+    };
+  };
+  actions: {
+    submitURL: string;
+    listURL: string;
+    legacyURL: string;
+  };
+  defaults: {
+    firstName: string;
+    lastName: string;
+    companyID: string;
+    title: string;
+    department: string;
+    departmentsCSV: string;
+    reportsTo: string;
+    isHot: boolean;
+    email1: string;
+    email2: string;
+    phoneWork: string;
+    phoneCell: string;
+    phoneOther: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    notes: string;
+  };
+  options: {
+    companies: Array<{
+      value: string;
+      label: string;
+    }>;
+    reportsTo: Array<{
+      value: string;
+      label: string;
+    }>;
+    defaultCompanyID: number;
+    departments: Array<{
+      departmentID: number;
+      name: string;
+    }>;
+  };
+  extraFields: ContactModernExtraField[];
+};
+
+export type ContactsEditModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    contactID: number;
+    permissions: {
+      canEditContact: boolean;
+    };
+  };
+  actions: {
+    submitURL: string;
+    showURL: string;
+    listURL: string;
+    legacyURL: string;
+  };
+  contact: {
+    contactID: number;
+    firstName: string;
+    lastName: string;
+    companyID: string;
+    title: string;
+    department: string;
+    departmentsCSV: string;
+    reportsTo: string;
+    isHot: boolean;
+    leftCompany: boolean;
+    owner: string;
+    email1: string;
+    email2: string;
+    phoneWork: string;
+    phoneCell: string;
+    phoneOther: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    notes: string;
+  };
+  options: {
+    companies: Array<{
+      value: string;
+      label: string;
+    }>;
+    owners: Array<{
+      value: string;
+      label: string;
+    }>;
+    reportsTo: Array<{
+      value: string;
+      label: string;
+    }>;
+    defaultCompanyID: number;
+    canSendOwnershipEmail: boolean;
+    departments: Array<{
+      departmentID: number;
+      name: string;
+    }>;
+  };
+  extraFields: ContactModernExtraField[];
 };
 
 export type ActivityListModernDataResponse = {

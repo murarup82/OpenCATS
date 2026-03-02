@@ -1034,6 +1034,10 @@ class ContactsUI extends UserInterface
      */
     private function add()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $companies = new Companies($this->_siteID);
         $contacts = new Contacts($this->_siteID);
 
@@ -1073,6 +1077,35 @@ class ContactsUI extends UserInterface
         }
 
         if (!eval(Hooks::get('CONTACTS_ADD'))) return;
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'contacts-add')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernContactAddJSON(
+                $selectedCompanyID,
+                $defaultCompanyID,
+                $companiesRS,
+                $reportsToRS,
+                $extraFieldRS,
+                'contacts-add'
+            );
+            return;
+        }
 
         $this->_template->assign('defaultCompanyID', $defaultCompanyID);
         $this->_template->assign('defaultCompanyRS', $defaultCompanyRS);
@@ -1207,6 +1240,10 @@ class ContactsUI extends UserInterface
      */
     private function edit()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Bail out if we don't have a valid contact ID. */
         if (!$this->isRequiredIDValid('contactID', $_GET))
         {
@@ -1280,6 +1317,41 @@ class ContactsUI extends UserInterface
 
         if (!eval(Hooks::get('CONTACTS_EDIT'))) return;
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'contacts-edit')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernContactEditJSON(
+                $contactID,
+                $data,
+                $companiesRS,
+                $usersRS,
+                $reportsToRS,
+                $extraFieldRS,
+                $departmentsRS,
+                $departmentsString,
+                $canEmail,
+                $emailTemplateDisabled,
+                $defaultCompanyID,
+                'contacts-edit'
+            );
+            return;
+        }
+
         $this->_template->assign('defaultCompanyID', $defaultCompanyID);
         $this->_template->assign('defaultCompanyRS', $defaultCompanyRS);
         $this->_template->assign('canEmail', $canEmail);
@@ -1295,6 +1367,382 @@ class ContactsUI extends UserInterface
         $this->_template->assign('contactID', $contactID);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->display('./modules/contacts/Edit.tpl');
+    }
+
+    private function mapModernExtraFieldInputType($extraFieldType)
+    {
+        switch ((int) $extraFieldType)
+        {
+            case EXTRA_FIELD_TEXTAREA:
+                return 'textarea';
+
+            case EXTRA_FIELD_CHECKBOX:
+                return 'checkbox';
+
+            case EXTRA_FIELD_DROPDOWN:
+                return 'dropdown';
+
+            case EXTRA_FIELD_RADIO:
+                return 'radio';
+
+            case EXTRA_FIELD_DATE:
+                return 'date';
+
+            case EXTRA_FIELD_TEXT:
+            default:
+                return 'text';
+        }
+    }
+
+    private function buildModernExtraFieldPayload($extraFieldRS, $isEditMode)
+    {
+        $payload = array();
+        if (!is_array($extraFieldRS))
+        {
+            return $payload;
+        }
+
+        foreach ($extraFieldRS as $index => $fieldData)
+        {
+            $options = array();
+            if (isset($fieldData['extraFieldOptions']) && trim((string) $fieldData['extraFieldOptions']) !== '')
+            {
+                $rawOptions = explode(',', (string) $fieldData['extraFieldOptions']);
+                foreach ($rawOptions as $rawOption)
+                {
+                    $decoded = trim(urldecode((string) $rawOption));
+                    if ($decoded === '')
+                    {
+                        continue;
+                    }
+                    $options[] = $decoded;
+                }
+            }
+
+            $value = '';
+            if ($isEditMode && isset($fieldData['value']))
+            {
+                $value = (string) $fieldData['value'];
+            }
+            else if (!$isEditMode && isset($fieldData['value']))
+            {
+                $value = (string) $fieldData['value'];
+            }
+
+            if ($this->mapModernExtraFieldInputType(
+                (isset($fieldData['extraFieldType']) ? (int) $fieldData['extraFieldType'] : EXTRA_FIELD_TEXT)
+            ) === 'checkbox' && $value === '')
+            {
+                $value = 'No';
+            }
+
+            $payload[] = array(
+                'postKey' => 'extraField' . $index,
+                'fieldName' => (isset($fieldData['fieldName']) ? (string) $fieldData['fieldName'] : ('Extra Field ' . $index)),
+                'inputType' => $this->mapModernExtraFieldInputType(
+                    (isset($fieldData['extraFieldType']) ? (int) $fieldData['extraFieldType'] : EXTRA_FIELD_TEXT)
+                ),
+                'value' => $value,
+                'options' => $options
+            );
+        }
+
+        return $payload;
+    }
+
+    private function renderModernContactAddJSON(
+        $selectedCompanyID,
+        $defaultCompanyID,
+        $companiesRS,
+        $reportsToRS,
+        $extraFieldRS,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $extraFieldsPayload = $this->buildModernExtraFieldPayload($extraFieldRS, false);
+
+        $companyOptions = array(
+            array(
+                'value' => '-1',
+                'label' => '(Select a Company)'
+            )
+        );
+        if (is_array($companiesRS))
+        {
+            foreach ($companiesRS as $companyData)
+            {
+                $companyID = (int) (isset($companyData['companyID']) ? $companyData['companyID'] : 0);
+                if ($companyID <= 0)
+                {
+                    continue;
+                }
+                $companyOptions[] = array(
+                    'value' => (string) $companyID,
+                    'label' => (isset($companyData['name']) ? (string) $companyData['name'] : ('Company #' . $companyID))
+                );
+            }
+        }
+
+        $reportsToOptions = array(
+            array(
+                'value' => '(none)',
+                'label' => '(None)'
+            )
+        );
+        if (is_array($reportsToRS))
+        {
+            foreach ($reportsToRS as $contactData)
+            {
+                $contactID = (int) (isset($contactData['contactID']) ? $contactData['contactID'] : 0);
+                if ($contactID <= 0)
+                {
+                    continue;
+                }
+
+                $firstName = (isset($contactData['firstName']) ? trim((string) $contactData['firstName']) : '');
+                $lastName = (isset($contactData['lastName']) ? trim((string) $contactData['lastName']) : '');
+                $displayName = trim($firstName . ' ' . $lastName);
+                if ($displayName === '')
+                {
+                    $displayName = 'Contact #' . $contactID;
+                }
+
+                $reportsToOptions[] = array(
+                    'value' => (string) $contactID,
+                    'label' => $displayName
+                );
+            }
+        }
+
+        $effectiveSelectedCompanyID = -1;
+        if ($selectedCompanyID !== false)
+        {
+            $effectiveSelectedCompanyID = (int) $selectedCompanyID;
+        }
+
+        $selectedCompanyIDParam = '-1';
+        if ($selectedCompanyID !== false && (int) $selectedCompanyID > 0)
+        {
+            $selectedCompanyIDParam = (string) ((int) $selectedCompanyID);
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'contacts.add.v1',
+                'modernPage' => $modernPage,
+                'permissions' => array(
+                    'canAddContact' => ($this->getUserAccessLevel('contacts.add') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=contacts&a=add&v=%s&ui=modern', $baseURL, urlencode($selectedCompanyIDParam)),
+                'listURL' => sprintf('%s?m=contacts&a=listByView&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=contacts&a=add&ui=legacy', $baseURL)
+            ),
+            'defaults' => array(
+                'firstName' => '',
+                'lastName' => '',
+                'companyID' => (string) $effectiveSelectedCompanyID,
+                'title' => '',
+                'department' => '(none)',
+                'departmentsCSV' => '',
+                'reportsTo' => '(none)',
+                'isHot' => false,
+                'email1' => '',
+                'email2' => '',
+                'phoneWork' => '',
+                'phoneCell' => '',
+                'phoneOther' => '',
+                'address' => '',
+                'city' => '',
+                'state' => '',
+                'zip' => '',
+                'notes' => ''
+            ),
+            'options' => array(
+                'companies' => $companyOptions,
+                'reportsTo' => $reportsToOptions,
+                'defaultCompanyID' => (($defaultCompanyID !== false) ? (int) $defaultCompanyID : 0),
+                'departments' => array()
+            ),
+            'extraFields' => $extraFieldsPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
+    private function renderModernContactEditJSON(
+        $contactID,
+        $data,
+        $companiesRS,
+        $usersRS,
+        $reportsToRS,
+        $extraFieldRS,
+        $departmentsRS,
+        $departmentsString,
+        $canEmail,
+        $emailTemplateDisabled,
+        $defaultCompanyID,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $contactID = (int) $contactID;
+        $extraFieldsPayload = $this->buildModernExtraFieldPayload($extraFieldRS, true);
+
+        $companyOptions = array(
+            array(
+                'value' => '-1',
+                'label' => '(Select a Company)'
+            )
+        );
+        if (is_array($companiesRS))
+        {
+            foreach ($companiesRS as $companyData)
+            {
+                $companyID = (int) (isset($companyData['companyID']) ? $companyData['companyID'] : 0);
+                if ($companyID <= 0)
+                {
+                    continue;
+                }
+                $companyOptions[] = array(
+                    'value' => (string) $companyID,
+                    'label' => (isset($companyData['name']) ? (string) $companyData['name'] : ('Company #' . $companyID))
+                );
+            }
+        }
+
+        $ownerOptions = array(
+            array(
+                'value' => '-1',
+                'label' => 'None'
+            )
+        );
+        if (is_array($usersRS))
+        {
+            foreach ($usersRS as $userData)
+            {
+                $lastName = (isset($userData['lastName']) ? trim((string) $userData['lastName']) : '');
+                $firstName = (isset($userData['firstName']) ? trim((string) $userData['firstName']) : '');
+                $ownerLabel = trim($lastName . ', ' . $firstName, " \t\n\r\0\x0B,");
+                if ($ownerLabel === '')
+                {
+                    $ownerLabel = 'User #' . (int) $userData['userID'];
+                }
+
+                $ownerOptions[] = array(
+                    'value' => (string) (int) $userData['userID'],
+                    'label' => $ownerLabel
+                );
+            }
+        }
+
+        $reportsToOptions = array(
+            array(
+                'value' => '(none)',
+                'label' => '(None)'
+            )
+        );
+        if (is_array($reportsToRS))
+        {
+            foreach ($reportsToRS as $contactData)
+            {
+                $reportsToID = (int) (isset($contactData['contactID']) ? $contactData['contactID'] : 0);
+                if ($reportsToID <= 0 || $reportsToID === $contactID)
+                {
+                    continue;
+                }
+
+                $firstName = (isset($contactData['firstName']) ? trim((string) $contactData['firstName']) : '');
+                $lastName = (isset($contactData['lastName']) ? trim((string) $contactData['lastName']) : '');
+                $displayName = trim($firstName . ' ' . $lastName);
+                if ($displayName === '')
+                {
+                    $displayName = 'Contact #' . $reportsToID;
+                }
+
+                $reportsToOptions[] = array(
+                    'value' => (string) $reportsToID,
+                    'label' => $displayName
+                );
+            }
+        }
+
+        $departmentsPayload = array();
+        if (is_array($departmentsRS))
+        {
+            foreach ($departmentsRS as $departmentRow)
+            {
+                $departmentsPayload[] = array(
+                    'departmentID' => (int) (isset($departmentRow['departmentID']) ? $departmentRow['departmentID'] : 0),
+                    'name' => (isset($departmentRow['name']) ? (string) $departmentRow['name'] : '')
+                );
+            }
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'contacts.edit.v1',
+                'modernPage' => $modernPage,
+                'contactID' => $contactID,
+                'permissions' => array(
+                    'canEditContact' => ($this->getUserAccessLevel('contacts.edit') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=contacts&a=edit&ui=modern', $baseURL),
+                'showURL' => sprintf('%s?m=contacts&a=show&contactID=%d&ui=modern', $baseURL, $contactID),
+                'listURL' => sprintf('%s?m=contacts&a=listByView&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=contacts&a=edit&contactID=%d&ui=legacy', $baseURL, $contactID)
+            ),
+            'contact' => array(
+                'contactID' => $contactID,
+                'firstName' => (isset($data['firstName']) ? (string) $data['firstName'] : ''),
+                'lastName' => (isset($data['lastName']) ? (string) $data['lastName'] : ''),
+                'companyID' => (isset($data['companyID']) ? (string) (int) $data['companyID'] : '-1'),
+                'title' => (isset($data['title']) ? (string) $data['title'] : ''),
+                'department' => ((isset($data['department']) && trim((string) $data['department']) !== '') ? (string) $data['department'] : '(none)'),
+                'departmentsCSV' => (string) $departmentsString,
+                'reportsTo' => (isset($data['reportsTo']) && (int) $data['reportsTo'] > 0 ? (string) (int) $data['reportsTo'] : '(none)'),
+                'isHot' => ((isset($data['isHotContact']) && (int) $data['isHotContact'] === 1) ? true : false),
+                'leftCompany' => ((isset($data['leftCompany']) && (int) $data['leftCompany'] === 1) ? true : false),
+                'owner' => (isset($data['owner']) ? (string) (int) $data['owner'] : '-1'),
+                'email1' => (isset($data['email1']) ? (string) $data['email1'] : ''),
+                'email2' => (isset($data['email2']) ? (string) $data['email2'] : ''),
+                'phoneWork' => (isset($data['phoneWork']) ? (string) $data['phoneWork'] : ''),
+                'phoneCell' => (isset($data['phoneCell']) ? (string) $data['phoneCell'] : ''),
+                'phoneOther' => (isset($data['phoneOther']) ? (string) $data['phoneOther'] : ''),
+                'address' => (isset($data['address']) ? (string) $data['address'] : ''),
+                'city' => (isset($data['city']) ? (string) $data['city'] : ''),
+                'state' => (isset($data['state']) ? (string) $data['state'] : ''),
+                'zip' => (isset($data['zip']) ? (string) $data['zip'] : ''),
+                'notes' => (isset($data['notes']) ? (string) $data['notes'] : '')
+            ),
+            'options' => array(
+                'companies' => $companyOptions,
+                'owners' => $ownerOptions,
+                'reportsTo' => $reportsToOptions,
+                'defaultCompanyID' => (($defaultCompanyID !== false) ? (int) $defaultCompanyID : 0),
+                'canSendOwnershipEmail' => ($canEmail && !$emailTemplateDisabled),
+                'departments' => $departmentsPayload
+            ),
+            'extraFields' => $extraFieldsPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     /*

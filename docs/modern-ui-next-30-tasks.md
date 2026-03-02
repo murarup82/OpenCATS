@@ -12,10 +12,10 @@ Status legend: `done`, `in_progress`, `pending`
 8. `done` Build native `home/myNotes` modern contract and React workspace.
 9. `done` Build native `kpis/(default)` modern contract and React KPI grid.
 10. `done` Build native `kpis/details` modern contract and detail drill-down page.
-11. `pending` Build native `companies/add` form (replace bridge).
-12. `pending` Build native `companies/edit` form (replace bridge).
-13. `pending` Build native `contacts/add` form (replace bridge).
-14. `pending` Build native `contacts/edit` form (replace bridge).
+11. `done` Build native `companies/add` form (replace bridge).
+12. `done` Build native `companies/edit` form (replace bridge).
+13. `done` Build native `contacts/add` form (replace bridge).
+14. `done` Build native `contacts/edit` form (replace bridge).
 15. `pending` Build native `joborders/add` form (replace bridge).
 16. `pending` Build native `joborders/edit` form (replace bridge).
 17. `pending` Build native `joborders/addCandidateModal` flow (replace compat action).
