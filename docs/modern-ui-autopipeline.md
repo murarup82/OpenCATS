@@ -294,19 +294,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `docs/modern-ui-telemetry-dashboard-snippet.md` with console snippets for inspecting session counters and live events
     - includes quick reset helper for per-session telemetry during troubleshooting
     - enables lightweight admin-side monitoring without additional backend dashboards.
+121. Added smoke fixture maintenance guide:
+    - introduced `docs/modern-ui-smoke-fixture-maintenance.md` with schema, safety rules, and extension workflow
+    - documented how to add mutation-safe replay probes without mutating real entities
+    - linked validation steps for updating fixture-driven endpoint smoke coverage.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 3. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-4. Add smoke-fixture maintenance guide (when/how to extend probes safely).
-5. Add automated scorecard prefill helper from sanity/coverage outputs.
-6. Add no-JS fallback acceptance criteria section into rollout scorecard.
-7. Add operations ownership matrix for release-day monitoring responsibilities.
-8. Add periodic post-cutover review checklist (day 1 / day 7 / day 30).
-9. Add deprecation checklist automation hook to validate required evidence links.
-10. Add telemetry retention guidance (session vs persisted metrics) for production observability.
+4. Add automated scorecard prefill helper from sanity/coverage outputs.
+5. Add no-JS fallback acceptance criteria section into rollout scorecard.
+6. Add operations ownership matrix for release-day monitoring responsibilities.
+7. Add periodic post-cutover review checklist (day 1 / day 7 / day 30).
+8. Add deprecation checklist automation hook to validate required evidence links.
+9. Add telemetry retention guidance (session vs persisted metrics) for production observability.
+10. Add smoke fixture lint/check script to detect malformed replay definitions.
 
 ## Rules
 
