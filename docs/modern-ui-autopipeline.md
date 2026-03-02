@@ -286,19 +286,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `docs/modern-ui-cutover-checklist.md` with actionable release-day steps and accountable owner/date/status fields
     - checklist links core evidence artifacts (sanity report, coverage matrix, parity checklist, scorecard, runbook)
     - provides a structured execution log for hybrid-to-modern mode switching.
+119. Added compatibility deprecation sign-off template:
+    - introduced `docs/modern-ui-deprecation-signoff-template.md` with required evidence, risk/rollback sections, and approvals
+    - template links telemetry/parity/smoke/rollback checks into a single route-retirement decision artifact
+    - enforces explicit go/no-go conditions before retiring compatibility route patterns.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 3. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-4. Add deprecation sign-off template linking telemetry + parity + rollback readiness.
-5. Add route-resolution telemetry dashboard snippet for admin troubleshooting.
-6. Add smoke-fixture maintenance guide (when/how to extend probes safely).
-7. Add automated scorecard prefill helper from sanity/coverage outputs.
-8. Add no-JS fallback acceptance criteria section into rollout scorecard.
-9. Add operations ownership matrix for release-day monitoring responsibilities.
-10. Add periodic post-cutover review checklist (day 1 / day 7 / day 30).
+4. Add route-resolution telemetry dashboard snippet for admin troubleshooting.
+5. Add smoke-fixture maintenance guide (when/how to extend probes safely).
+6. Add automated scorecard prefill helper from sanity/coverage outputs.
+7. Add no-JS fallback acceptance criteria section into rollout scorecard.
+8. Add operations ownership matrix for release-day monitoring responsibilities.
+9. Add periodic post-cutover review checklist (day 1 / day 7 / day 30).
+10. Add deprecation checklist automation hook to validate required evidence links.
 
 ## Rules
 
