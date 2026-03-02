@@ -1204,6 +1204,10 @@ class KpisUI extends UserInterface
 
     private function details()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $db = DatabaseConnection::getInstance();
         $siteID = $this->_siteID;
 
@@ -1449,19 +1453,52 @@ class KpisUI extends UserInterface
                     $baseURL = $this->buildKpiDetailLink('status', $range, array('status' => $statusRaw), $officialReports, true);
                     $pager->setSortByParameters($baseURL, '', '');
 
-                    $this->_template->assign('active', $this);
-                    $this->_template->assign('detailRows', $detailRows);
-                    $this->_template->assign('detailTitle', $detailTitle);
-                    $this->_template->assign('detailRangeLabel', $rangeLabel);
-                    $this->_template->assign('detailMode', $detailMode);
-                    $this->_template->assign('pager', $pager);
                     $backURLParams = array(
                         'm' => 'kpis',
                         'officialReports' => ($officialReports ? 1 : 0),
                         'candidateSourceScope' => $candidateSourceScope,
                         'jobOrderScope' => $jobOrderScope
                     );
-                    $this->_template->assign('backURL', CATSUtility::getIndexName() . '?' . http_build_query($backURLParams));
+                    $backURL = CATSUtility::getIndexName() . '?' . http_build_query($backURLParams);
+                    if ($isModernJSON)
+                    {
+                        if ($modernPage !== '' && $modernPage !== 'kpis-details')
+                        {
+                            if (!headers_sent())
+                            {
+                                header('HTTP/1.1 400 Bad Request');
+                                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                            }
+                            echo json_encode(array(
+                                'error' => true,
+                                'message' => 'Unsupported modern page contract.',
+                                'requestedPage' => $modernPage
+                            ));
+                            return;
+                        }
+
+                        $this->renderModernKpiDetailsJSON(
+                            'kpis-details',
+                            $detailTitle,
+                            $rangeLabel,
+                            $detailMode,
+                            $detailRows,
+                            $pager->getCurrentPage(),
+                            $pager->getTotalPages(),
+                            $pager->getTotalRows(),
+                            $backURL
+                        );
+                        return;
+                    }
+
+                    $this->_template->assign('active', $this);
+                    $this->_template->assign('detailRows', $detailRows);
+                    $this->_template->assign('detailTitle', $detailTitle);
+                    $this->_template->assign('detailRangeLabel', $rangeLabel);
+                    $this->_template->assign('detailMode', $detailMode);
+                    $this->_template->assign('pager', $pager);
+                    $this->_template->assign('backURL', $backURL);
                     $this->_template->display('./modules/kpis/KpisDetails.tpl');
                     return;
                 }
@@ -1565,20 +1602,96 @@ class KpisUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid detail type.');
         }
 
-        $this->_template->assign('active', $this);
-        $this->_template->assign('detailRows', $detailRows);
-        $this->_template->assign('detailTitle', $detailTitle);
-        $this->_template->assign('detailRangeLabel', $rangeLabel);
-        $this->_template->assign('detailMode', $detailMode);
-        $this->_template->assign('pager', $pager);
         $backURLParams = array(
             'm' => 'kpis',
             'officialReports' => ($officialReports ? 1 : 0),
             'candidateSourceScope' => $candidateSourceScope,
             'jobOrderScope' => $jobOrderScope
         );
-        $this->_template->assign('backURL', CATSUtility::getIndexName() . '?' . http_build_query($backURLParams));
+        $backURL = CATSUtility::getIndexName() . '?' . http_build_query($backURLParams);
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'kpis-details')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernKpiDetailsJSON(
+                'kpis-details',
+                $detailTitle,
+                $rangeLabel,
+                $detailMode,
+                $detailRows,
+                $pager->getCurrentPage(),
+                $pager->getTotalPages(),
+                $pager->getTotalRows(),
+                $backURL
+            );
+            return;
+        }
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('detailRows', $detailRows);
+        $this->_template->assign('detailTitle', $detailTitle);
+        $this->_template->assign('detailRangeLabel', $rangeLabel);
+        $this->_template->assign('detailMode', $detailMode);
+        $this->_template->assign('pager', $pager);
+        $this->_template->assign('backURL', $backURL);
         $this->_template->display('./modules/kpis/KpisDetails.tpl');
+    }
+
+    private function renderModernKpiDetailsJSON(
+        $modernPage,
+        $detailTitle,
+        $rangeLabel,
+        $detailMode,
+        $detailRows,
+        $page,
+        $totalPages,
+        $totalRows,
+        $backURL
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'kpis.details.v1',
+                'modernPage' => $modernPage,
+                'page' => (int) $page,
+                'totalPages' => (int) $totalPages,
+                'totalRows' => (int) $totalRows
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=kpis&a=details&ui=legacy', $baseURL),
+                'backURL' => $backURL
+            ),
+            'state' => array(
+                'detailTitle' => (string) $detailTitle,
+                'detailRangeLabel' => (string) $rangeLabel,
+                'detailMode' => (string) $detailMode
+            ),
+            'rows' => $detailRows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function parseExpectedConversion($rawValue)

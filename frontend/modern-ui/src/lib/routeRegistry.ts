@@ -2,7 +2,10 @@ import type { ComponentType } from 'react';
 import type { UIModeBootstrap } from '../types';
 import { DashboardMyPage } from '../pages/DashboardMyPage';
 import { HomePage } from '../pages/HomePage';
+import { HomeInboxPage } from '../pages/HomeInboxPage';
+import { HomeMyNotesPage } from '../pages/HomeMyNotesPage';
 import { KpisPage } from '../pages/KpisPage';
+import { KpisDetailsPage } from '../pages/KpisDetailsPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
 import { CandidatesAddPage } from '../pages/CandidatesAddPage';
@@ -169,10 +172,10 @@ const registry: Record<string, ModernRouteComponent> = {
   'reports.reports': ReportsLauncherPage,
   'reports.(default)': ReportsLauncherPage,
   'home.home': HomePage,
-  'home.inbox': ModuleBridgePage,
-  'home.mynotes': ModuleBridgePage,
+  'home.inbox': HomeInboxPage,
+  'home.mynotes': HomeMyNotesPage,
   'home.(default)': HomePage,
-  'kpis.details': ModuleBridgePage,
+  'kpis.details': KpisDetailsPage,
   'kpis.(default)': KpisPage,
   'logs.view': LogsPage,
   'logs.(default)': LogsPage,

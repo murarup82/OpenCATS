@@ -391,6 +391,10 @@ class HomeUI extends UserInterface
 
     private function inbox()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $candidateMessages = new CandidateMessages($this->_siteID);
         $jobOrderMessages = new JobOrderMessages($this->_siteID);
         $candidateSchemaAvailable = $candidateMessages->isSchemaAvailable();
@@ -686,6 +690,71 @@ class HomeUI extends UserInterface
             }
         }
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'home-inbox')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernHomeInboxJSON(
+                'home-inbox',
+                $schemaAvailable,
+                $flashMessage,
+                $flashIsError,
+                $threads,
+                $selectedThread,
+                $selectedThreadKey,
+                $messages
+            );
+            return;
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'home-mynotes')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernHomeMyNotesJSON(
+                'home-mynotes',
+                $view,
+                $schemaAvailable,
+                $flashMessage,
+                $flashIsError,
+                $summary,
+                $noteItems,
+                $todoItemsByStatus,
+                $todoStatuses,
+                $noteMode,
+                $noteSearch
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'My Inbox');
         $this->_template->assign('schemaAvailable', $schemaAvailable);
@@ -722,6 +791,89 @@ class HomeUI extends UserInterface
         );
 
         $this->_template->display('./modules/home/MyInbox.tpl');
+    }
+
+    private function renderModernHomeInboxJSON(
+        $modernPage,
+        $schemaAvailable,
+        $flashMessage,
+        $flashIsError,
+        $threads,
+        $selectedThread,
+        $selectedThreadKey,
+        $messages
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $threadRows = array();
+        foreach ($threads as $thread)
+        {
+            $threadKey = (isset($thread['threadKey']) ? (string) $thread['threadKey'] : '');
+            $threadRows[] = array(
+                'threadKey' => $threadKey,
+                'threadType' => (isset($thread['threadType']) ? (string) $thread['threadType'] : 'candidate'),
+                'entityType' => (isset($thread['entityType']) ? (string) $thread['entityType'] : ''),
+                'entityName' => (isset($thread['entityName']) ? (string) $thread['entityName'] : ''),
+                'entitySubName' => (isset($thread['entitySubName']) ? (string) $thread['entitySubName'] : ''),
+                'lastMessageAt' => (isset($thread['lastMessageAt']) ? (string) $thread['lastMessageAt'] : ''),
+                'snippet' => (isset($thread['snippet']) ? (string) $thread['snippet'] : ''),
+                'unreadCount' => (isset($thread['unreadCount']) ? (int) $thread['unreadCount'] : 0),
+                'threadURL' => sprintf('%s?m=home&a=inbox&threadKey=%s&ui=modern', $baseURL, rawurlencode($threadKey))
+            );
+        }
+
+        $messageRows = array();
+        foreach ($messages as $message)
+        {
+            $messageRows[] = array(
+                'senderName' => (isset($message['senderName']) ? (string) $message['senderName'] : ''),
+                'dateCreated' => (isset($message['dateCreated']) ? (string) $message['dateCreated'] : ''),
+                'mentionedUsers' => (isset($message['mentionedUsers']) ? (string) $message['mentionedUsers'] : ''),
+                'bodyHTML' => (isset($message['bodyHTML']) ? (string) $message['bodyHTML'] : '')
+            );
+        }
+
+        $selected = array(
+            'threadKey' => (string) $selectedThreadKey,
+            'entityType' => (isset($selectedThread['entityType']) ? (string) $selectedThread['entityType'] : ''),
+            'entityName' => (isset($selectedThread['entityName']) ? (string) $selectedThread['entityName'] : ''),
+            'entitySubName' => (isset($selectedThread['entitySubName']) ? (string) $selectedThread['entitySubName'] : ''),
+            'openURL' => (isset($selectedThread['openURL']) ? (string) $selectedThread['openURL'] : ''),
+            'openLabel' => (isset($selectedThread['openLabel']) ? (string) $selectedThread['openLabel'] : '')
+        );
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'home.inbox.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'homeURL' => sprintf('%s?m=home&a=home&ui=modern', $baseURL),
+                'myNotesURL' => sprintf('%s?m=home&a=myNotes&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=home&a=inbox&ui=legacy', $baseURL)
+            ),
+            'state' => array(
+                'schemaAvailable' => ($schemaAvailable ? true : false),
+                'flashMessage' => (string) $flashMessage,
+                'flashIsError' => ($flashIsError ? true : false),
+                'selectedThreadKey' => (string) $selectedThreadKey
+            ),
+            'summary' => array(
+                'threadCount' => count($threadRows),
+                'messageCount' => count($messageRows)
+            ),
+            'threads' => $threadRows,
+            'selectedThread' => $selected,
+            'messages' => $messageRows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function onPostInboxMessage()
@@ -1069,6 +1221,10 @@ class HomeUI extends UserInterface
 
     private function myNotes()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $personalDashboard = new PersonalDashboard($this->_siteID);
         $schemaAvailable = $personalDashboard->isSchemaAvailable();
 
@@ -1399,6 +1555,95 @@ class HomeUI extends UserInterface
         );
 
         $this->_template->display('./modules/home/MyNotes.tpl');
+    }
+
+    private function renderModernHomeMyNotesJSON(
+        $modernPage,
+        $view,
+        $schemaAvailable,
+        $flashMessage,
+        $flashIsError,
+        $summary,
+        $noteItems,
+        $todoItemsByStatus,
+        $todoStatuses,
+        $noteMode,
+        $noteSearch
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $notesPayload = array();
+        foreach ($noteItems as $note)
+        {
+            $notesPayload[] = array(
+                'itemID' => (isset($note['itemID']) ? (int) $note['itemID'] : 0),
+                'title' => (isset($note['title']) ? (string) $note['title'] : ''),
+                'bodyHTML' => (isset($note['bodyHTML']) ? (string) $note['bodyHTML'] : ''),
+                'isArchived' => (!empty($note['isArchived'])),
+                'dateCreated' => (isset($note['dateCreated']) ? (string) $note['dateCreated'] : ''),
+                'dateModified' => (isset($note['dateModified']) ? (string) $note['dateModified'] : '')
+            );
+        }
+
+        $todosPayload = array(
+            'open' => array(),
+            'in_progress' => array(),
+            'blocked' => array(),
+            'done' => array()
+        );
+        foreach ($todosPayload as $statusKey => $void)
+        {
+            if (!isset($todoItemsByStatus[$statusKey]) || !is_array($todoItemsByStatus[$statusKey]))
+            {
+                continue;
+            }
+
+            foreach ($todoItemsByStatus[$statusKey] as $todo)
+            {
+                $todosPayload[$statusKey][] = array(
+                    'itemID' => (isset($todo['itemID']) ? (int) $todo['itemID'] : 0),
+                    'title' => (isset($todo['title']) ? (string) $todo['title'] : ''),
+                    'bodyHTML' => (isset($todo['bodyHTML']) ? (string) $todo['bodyHTML'] : ''),
+                    'priorityLabel' => (isset($todo['priorityLabel']) ? (string) $todo['priorityLabel'] : ''),
+                    'dueDate' => (isset($todo['dueDate']) ? (string) $todo['dueDate'] : ''),
+                    'isOverdue' => (!empty($todo['isOverdue'])),
+                    'isReminderDue' => (!empty($todo['isReminderDue']))
+                );
+            }
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'home.mynotes.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'homeURL' => sprintf('%s?m=home&a=home&ui=modern', $baseURL),
+                'inboxURL' => sprintf('%s?m=home&a=inbox&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=home&a=myNotes&ui=legacy', $baseURL)
+            ),
+            'state' => array(
+                'view' => (string) $view,
+                'schemaAvailable' => ($schemaAvailable ? true : false),
+                'flashMessage' => (string) $flashMessage,
+                'flashIsError' => ($flashIsError ? true : false),
+                'noteMode' => (string) $noteMode,
+                'noteSearch' => (string) $noteSearch
+            ),
+            'summary' => $summary,
+            'todoStatuses' => $todoStatuses,
+            'notes' => $notesPayload,
+            'todosByStatus' => $todosPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function onAddPersonalItem()

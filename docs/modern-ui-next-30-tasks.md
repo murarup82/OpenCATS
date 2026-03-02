@@ -8,10 +8,10 @@ Status legend: `done`, `in_progress`, `pending`
 4. `done` Add modern route coverage for `kpis/*` through compatibility workspace.
 5. `done` Expand route-map configuration for remaining modules to run in modern shell compatibility mode.
 6. `done` Build native `home/home` modern contract (`home.overview.v1`) and React page.
-7. `pending` Build native `home/inbox` modern contract and React workspace.
-8. `pending` Build native `home/myNotes` modern contract and React workspace.
+7. `done` Build native `home/inbox` modern contract and React workspace.
+8. `done` Build native `home/myNotes` modern contract and React workspace.
 9. `done` Build native `kpis/(default)` modern contract and React KPI grid.
-10. `pending` Build native `kpis/details` modern contract and detail drill-down page.
+10. `done` Build native `kpis/details` modern contract and detail drill-down page.
 11. `pending` Build native `companies/add` form (replace bridge).
 12. `pending` Build native `companies/edit` form (replace bridge).
 13. `pending` Build native `contacts/add` form (replace bridge).

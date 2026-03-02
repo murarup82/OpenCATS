@@ -929,6 +929,165 @@ export type KpisListModernDataResponse = {
   };
 };
 
+export type KpisDetailsModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+  };
+  actions: {
+    legacyURL: string;
+    backURL: string;
+  };
+  state: {
+    detailTitle: string;
+    detailRangeLabel: string;
+    detailMode: 'candidate' | 'status' | string;
+  };
+  rows: Array<{
+    candidateID: number;
+    candidateName: string;
+    created?: string;
+    source?: string;
+    jobOrderID?: number;
+    jobOrderTitle?: string;
+    statusDate?: string;
+  }>;
+};
+
+export type HomeInboxModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    homeURL: string;
+    myNotesURL: string;
+    legacyURL: string;
+  };
+  state: {
+    schemaAvailable: boolean;
+    flashMessage: string;
+    flashIsError: boolean;
+    selectedThreadKey: string;
+  };
+  summary: {
+    threadCount: number;
+    messageCount: number;
+  };
+  threads: Array<{
+    threadKey: string;
+    threadType: string;
+    entityType: string;
+    entityName: string;
+    entitySubName: string;
+    lastMessageAt: string;
+    snippet: string;
+    unreadCount: number;
+    threadURL: string;
+  }>;
+  selectedThread: {
+    threadKey: string;
+    entityType: string;
+    entityName: string;
+    entitySubName: string;
+    openURL: string;
+    openLabel: string;
+  };
+  messages: Array<{
+    senderName: string;
+    dateCreated: string;
+    mentionedUsers: string;
+    bodyHTML: string;
+  }>;
+};
+
+export type HomeMyNotesModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    homeURL: string;
+    inboxURL: string;
+    legacyURL: string;
+  };
+  state: {
+    view: string;
+    schemaAvailable: boolean;
+    flashMessage: string;
+    flashIsError: boolean;
+    noteMode: string;
+    noteSearch: string;
+  };
+  summary: {
+    notesCount: number;
+    archivedNotesCount: number;
+    todoOpenCount: number;
+    todoDoneCount: number;
+    reminderDueCount: number;
+    todoStatusOpenCount: number;
+    todoStatusInProgressCount: number;
+    todoStatusBlockedCount: number;
+    todoStatusDoneCount: number;
+  };
+  todoStatuses: Array<{
+    value: string;
+    label: string;
+  }>;
+  notes: Array<{
+    itemID: number;
+    title: string;
+    bodyHTML: string;
+    isArchived: boolean;
+    dateCreated: string;
+    dateModified: string;
+  }>;
+  todosByStatus: {
+    open: Array<{
+      itemID: number;
+      title: string;
+      bodyHTML: string;
+      priorityLabel: string;
+      dueDate: string;
+      isOverdue: boolean;
+      isReminderDue: boolean;
+    }>;
+    in_progress: Array<{
+      itemID: number;
+      title: string;
+      bodyHTML: string;
+      priorityLabel: string;
+      dueDate: string;
+      isOverdue: boolean;
+      isReminderDue: boolean;
+    }>;
+    blocked: Array<{
+      itemID: number;
+      title: string;
+      bodyHTML: string;
+      priorityLabel: string;
+      dueDate: string;
+      isOverdue: boolean;
+      isReminderDue: boolean;
+    }>;
+    done: Array<{
+      itemID: number;
+      title: string;
+      bodyHTML: string;
+      priorityLabel: string;
+      dueDate: string;
+      isOverdue: boolean;
+      isReminderDue: boolean;
+    }>;
+  };
+};
+
 type ReportMetricBlock = {
   toDate: number;
   today: number;

@@ -15,10 +15,13 @@ import type {
   ContactsShowModernDataResponse,
   DashboardModernDataResponse,
   DashboardSetPipelineStatusResponse,
+  HomeInboxModernDataResponse,
+  HomeMyNotesModernDataResponse,
   HomeOverviewModernDataResponse,
   JobOrderAssignCandidateModernDataResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
+  KpisDetailsModernDataResponse,
   KpisListModernDataResponse,
   ListsManageModernDataResponse,
   ModernMutationResponse,
@@ -48,7 +51,10 @@ import {
   MODERN_KPIS_PAGE,
   MODERN_LISTS_PAGE,
   MODERN_HOME_OVERVIEW_PAGE,
+  MODERN_HOME_INBOX_PAGE,
+  MODERN_HOME_MYNOTES_PAGE,
   MODERN_REPORTS_PAGE,
+  MODERN_KPIS_DETAILS_PAGE,
   buildModernJSONRequestQuery
 } from './modernContract';
 
@@ -106,6 +112,60 @@ export async function fetchKpisListModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<KpisListModernDataResponse>(url);
   assertModernContract(data.meta, 'kpis.list.v1', 'kpis list data');
+
+  return data;
+}
+
+export async function fetchKpisDetailsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<KpisDetailsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'kpis',
+    action: 'details',
+    modernPage: MODERN_KPIS_DETAILS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<KpisDetailsModernDataResponse>(url);
+  assertModernContract(data.meta, 'kpis.details.v1', 'kpis details data');
+
+  return data;
+}
+
+export async function fetchHomeInboxModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<HomeInboxModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'home',
+    action: 'inbox',
+    modernPage: MODERN_HOME_INBOX_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<HomeInboxModernDataResponse>(url);
+  assertModernContract(data.meta, 'home.inbox.v1', 'home inbox data');
+
+  return data;
+}
+
+export async function fetchHomeMyNotesModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<HomeMyNotesModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'home',
+    action: 'myNotes',
+    modernPage: MODERN_HOME_MYNOTES_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<HomeMyNotesModernDataResponse>(url);
+  assertModernContract(data.meta, 'home.mynotes.v1', 'home my-notes data');
 
   return data;
 }
