@@ -1587,6 +1587,58 @@
   font-weight: 700;
 }
 
+.avel-candidates-page .avel-candidate-inline-sort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.avel-candidates-page .avel-candidate-inline-sort__label {
+  color: #4b6d7f;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.avel-candidates-page .avel-candidate-inline-sort__chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.avel-candidates-page .avel-candidate-inline-sort__chip,
+.avel-candidates-page .avel-candidate-inline-sort__direction {
+  border: 1px solid #a8c7d8;
+  border-radius: 999px;
+  background: #eff8fd;
+  color: #2f5d72;
+  min-height: 29px;
+  padding: 0 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.avel-candidates-page .avel-candidate-inline-sort__chip:hover,
+.avel-candidates-page .avel-candidate-inline-sort__direction:hover {
+  border-color: #86b3c7;
+  background: #e4f1fa;
+  color: #154b65;
+}
+
+.avel-candidates-page .avel-candidate-inline-sort__chip.is-active {
+  border-color: #5d9abb;
+  background: linear-gradient(180deg, #d7ecf8 0%, #c8e3f2 100%);
+  color: #0f4863;
+}
+
 .avel-joborders-page .avel-candidates-pagination {
   display: inline-flex;
   align-items: center;
@@ -1734,6 +1786,26 @@
   gap: 4px;
 }
 
+.avel-candidates-page .avel-candidate-stat:nth-child(1) {
+  border-color: #99bdd2;
+  background: linear-gradient(180deg, #edf7ff 0%, #e3f0fb 100%);
+}
+
+.avel-candidates-page .avel-candidate-stat:nth-child(2) {
+  border-color: #f0c98d;
+  background: linear-gradient(180deg, #fff7ea 0%, #feefd8 100%);
+}
+
+.avel-candidates-page .avel-candidate-stat:nth-child(3) {
+  border-color: #b8dfc8;
+  background: linear-gradient(180deg, #effaf3 0%, #e1f4e9 100%);
+}
+
+.avel-candidates-page .avel-candidate-stat:nth-child(4) {
+  border-color: #d8b4df;
+  background: linear-gradient(180deg, #fbf0fd 0%, #f4e4f8 100%);
+}
+
 .avel-candidates-page .avel-candidate-stat__label {
   color: #45697d;
   font-size: 0.65rem;
@@ -1775,6 +1847,49 @@
   padding: 9px;
   display: grid;
   gap: 8px;
+}
+
+.avel-candidates-page .avel-candidate-toolbar__focus {
+  border: 1px solid #b4cddd;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #dbeaf5 0%, #d2e4f2 100%);
+  padding: 9px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.avel-candidates-page .avel-candidate-focus-chip {
+  border: 1px solid #9ebfce;
+  border-radius: 999px;
+  background: #edf6fc;
+  color: #2e566a;
+  min-height: 31px;
+  padding: 0 10px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+}
+
+.avel-candidates-page .avel-candidate-focus-chip:hover {
+  border-color: #87b3c7;
+  background: #e4f1fa;
+}
+
+.avel-candidates-page .avel-candidate-focus-chip strong {
+  color: #0f4a64;
+  font: 800 0.72rem / 1 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-candidates-page .avel-candidate-focus-chip.is-active {
+  border-color: #6ea8c4;
+  background: linear-gradient(180deg, #d7ebf8 0%, #c4e0f1 100%);
+  transform: translateY(-1px);
 }
 
 .avel-candidates-page .avel-candidate-results {
@@ -1914,6 +2029,50 @@
 .avel-candidates-page .avel-candidate-card__ownership-item strong {
   color: #0f4a64;
   font-weight: 800;
+}
+
+.avel-candidates-page .modern-chip[class*='modern-chip--source-'] {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 8px;
+}
+
+.avel-candidates-page .modern-chip--source-linkedin {
+  border-color: #98c8eb;
+  background: #e9f5ff;
+  color: #0f567f;
+}
+
+.avel-candidates-page .modern-chip--source-partner {
+  border-color: #dac0ea;
+  background: #f6ecfc;
+  color: #6f3f8e;
+}
+
+.avel-candidates-page .modern-chip--source-direct {
+  border-color: #9fd7cb;
+  background: #eafaf6;
+  color: #18684e;
+}
+
+.avel-candidates-page .modern-chip--source-internal {
+  border-color: #f0c98d;
+  background: #fff6e8;
+  color: #8b4f13;
+}
+
+.avel-candidates-page .modern-chip--source-network {
+  border-color: #b7d8e9;
+  background: #eff8fe;
+  color: #2e607d;
+}
+
+.avel-candidates-page .modern-chip--source-other {
+  border-color: #c7dbe8;
+  background: #f4faff;
+  color: #3b6075;
 }
 
 .avel-joborders-page .modern-chip--success {
@@ -2869,6 +3028,22 @@
   min-width: 220px;
 }
 
+.modern-pipeline-details__date-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
+}
+
+.modern-pipeline-details__date-field {
+  display: grid;
+  gap: 4px;
+}
+
+.modern-pipeline-details__date-input {
+  min-height: 36px;
+  padding: 7px 9px;
+}
+
 .modern-pipeline-details__editing-hint {
   font-size: 0.78rem;
   color: #4f6f81;
@@ -2979,6 +3154,10 @@
     grid-template-columns: 1fr;
   }
 
+  .modern-pipeline-details__date-grid {
+    grid-template-columns: 1fr;
+  }
+
   .avel-dashboard-page .modern-command-bar__row--primary,
   .avel-dashboard-page .modern-command-bar__row--primary-noscope,
   .avel-dashboard-page .modern-command-bar__row--filters,
@@ -2989,6 +3168,10 @@
   .avel-candidates-page .avel-candidate-toolbar__primary,
   .avel-candidates-page .avel-candidate-toolbar__filters {
     grid-template-columns: 1fr;
+  }
+
+  .avel-candidates-page .avel-candidate-toolbar__focus {
+    gap: 6px;
   }
 
   .avel-candidates-page .avel-candidate-card__header,
@@ -3032,6 +3215,24 @@
 @media (max-width: 720px) {
   .avel-kpi-grid {
     grid-template-columns: 1fr;
+  }
+
+  .avel-candidates-page .avel-candidate-inline-sort {
+    align-items: stretch;
+  }
+
+  .avel-candidates-page .avel-candidate-inline-sort__chips {
+    width: 100%;
+  }
+
+  .avel-candidates-page .avel-candidate-inline-sort__chip,
+  .avel-candidates-page .avel-candidate-inline-sort__direction {
+    flex: 1 1 auto;
+  }
+
+  .avel-candidates-page .avel-candidate-focus-chip {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .avel-candidates-page .avel-candidate-hero__stats {

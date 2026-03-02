@@ -790,8 +790,19 @@ class DashboardUI extends UserInterface
         $targetStatusID = (int) $_POST['statusID'];
         $enforceOwner = ((int) $this->getTrimmedInput('enforceOwner', $_POST) === 1);
         $statusComment = $this->getTrimmedInput('statusComment', $_POST);
+        $requireStatusComment = ((int) $this->getTrimmedInput('requireStatusComment', $_POST) === 1);
         $rejectionReasonIDs = array();
         $rejectionReasonOther = null;
+
+        if ($requireStatusComment && $statusComment === '')
+        {
+            $this->respondJSON(400, array(
+                'success' => false,
+                'code' => 'missingStatusComment',
+                'message' => 'A transition comment is required for this status change.'
+            ));
+            return;
+        }
 
         $pipelines = new Pipelines($this->_siteID);
         $statusRS = $pipelines->getStatusesForPicking();

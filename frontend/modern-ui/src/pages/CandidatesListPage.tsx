@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchCandidatesListModernData } from '../lib/api';
 import type { CandidatesListModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -25,6 +25,8 @@ type NavigationFilters = {
   onlyGdprUnsigned?: boolean;
   onlyInternalCandidates?: boolean;
   onlyActiveCandidates?: boolean;
+  sortBy?: string;
+  sortDirection?: 'ASC' | 'DESC';
   page?: number;
   maxResults?: number;
 };
@@ -34,6 +36,18 @@ type AddToListCompletedDetail = {
   dataItemIDs?: Array<number | string>;
   listIDs?: Array<number | string>;
 };
+
+type LocalFocusFilter = 'all' | 'hot' | 'submitted' | 'duplicates' | 'resume';
+
+const SEARCH_APPLY_DEBOUNCE_MS = 420;
+
+const sortOptions: Array<{ value: string; label: string }> = [
+  { value: 'dateModifiedSort', label: 'Updated' },
+  { value: 'dateCreatedSort', label: 'Added' },
+  { value: 'lastName', label: 'Name' },
+  { value: 'ownerSort', label: 'Owner' },
+  { value: 'source', label: 'Source' }
+];
 
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
@@ -69,6 +83,26 @@ function toInitials(name: string): string {
   return `${first}${second}`.toUpperCase();
 }
 
+function getSourceChipClass(source: string): string {
+  const normalized = String(source || '').toLowerCase();
+  if (normalized.includes('linkedin')) {
+    return 'modern-chip--source-linkedin';
+  }
+  if (normalized.includes('partner')) {
+    return 'modern-chip--source-partner';
+  }
+  if (normalized.includes('direct')) {
+    return 'modern-chip--source-direct';
+  }
+  if (normalized.includes('internal')) {
+    return 'modern-chip--source-internal';
+  }
+  if (normalized.includes('network')) {
+    return 'modern-chip--source-network';
+  }
+  return 'modern-chip--source-other';
+}
+
 export function CandidatesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -80,6 +114,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
     url: string;
     title: string;
   } | null>(null);
+  const [localFocus, setLocalFocus] = useState<LocalFocusFilter>('all');
+  const skipNextAutoSearchRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -162,58 +198,100 @@ export function CandidatesListPage({ bootstrap }: Props) {
     );
   }, []);
 
-  const navigateWithFilters = (next: NavigationFilters) => {
+  const navigateWithFilters = useCallback(
+    (next: NavigationFilters) => {
+      if (!data) {
+        return;
+      }
+
+      const nextQuery = new URLSearchParams(serverQueryString);
+      nextQuery.set('m', 'candidates');
+      nextQuery.set('a', 'listByView');
+      nextQuery.set('view', 'list');
+
+      const quickSearchValue = String(next.quickSearch ?? data.filters.quickSearch ?? '').trim();
+      if (quickSearchValue === '') {
+        nextQuery.delete('wildCardString');
+      } else {
+        nextQuery.set('wildCardString', quickSearchValue);
+      }
+
+      const sourceFilterValue = String(next.sourceFilter ?? data.filters.sourceFilter ?? '').trim();
+      if (sourceFilterValue === '') {
+        nextQuery.delete('sourceFilter');
+      } else {
+        nextQuery.set('sourceFilter', sourceFilterValue);
+      }
+
+      const onlyMyCandidates = typeof next.onlyMyCandidates === 'boolean' ? next.onlyMyCandidates : data.filters.onlyMyCandidates;
+      const onlyHotCandidates = typeof next.onlyHotCandidates === 'boolean' ? next.onlyHotCandidates : data.filters.onlyHotCandidates;
+      const onlyGdprUnsigned = typeof next.onlyGdprUnsigned === 'boolean' ? next.onlyGdprUnsigned : data.filters.onlyGdprUnsigned;
+      const onlyInternalCandidates = typeof next.onlyInternalCandidates === 'boolean' ? next.onlyInternalCandidates : data.filters.onlyInternalCandidates;
+      const onlyActiveCandidates = typeof next.onlyActiveCandidates === 'boolean' ? next.onlyActiveCandidates : data.filters.onlyActiveCandidates;
+
+      nextQuery.set('onlyMyCandidates', toBooleanString(onlyMyCandidates));
+      nextQuery.set('onlyHotCandidates', toBooleanString(onlyHotCandidates));
+      nextQuery.set('onlyGdprUnsigned', toBooleanString(onlyGdprUnsigned));
+      nextQuery.set('onlyInternalCandidates', toBooleanString(onlyInternalCandidates));
+      nextQuery.set('onlyActiveCandidates', toBooleanString(onlyActiveCandidates));
+
+      const sortBy = String(next.sortBy ?? data.meta.sortBy ?? '').trim();
+      if (sortBy === '') {
+        nextQuery.delete('sortBy');
+      } else {
+        nextQuery.set('sortBy', sortBy);
+      }
+
+      const sortDirection = String(next.sortDirection ?? data.meta.sortDirection ?? '').trim().toUpperCase();
+      if (sortDirection === 'ASC' || sortDirection === 'DESC') {
+        nextQuery.set('sortDirection', sortDirection);
+      } else {
+        nextQuery.delete('sortDirection');
+      }
+
+      const entriesPerPage =
+        typeof next.maxResults === 'number' && next.maxResults > 0
+          ? next.maxResults
+          : data.meta.entriesPerPage;
+      nextQuery.set('maxResults', String(entriesPerPage));
+
+      const page = typeof next.page === 'number' && next.page > 0 ? next.page : 1;
+      nextQuery.set('page', String(page));
+      nextQuery.delete('rangeStart');
+
+      if (!nextQuery.get('ui')) {
+        nextQuery.set('ui', 'modern');
+      }
+
+      applyServerQuery(nextQuery);
+    },
+    [applyServerQuery, data, serverQueryString]
+  );
+
+  useEffect(() => {
     if (!data) {
       return;
     }
 
-    const nextQuery = new URLSearchParams(serverQueryString);
-    nextQuery.set('m', 'candidates');
-    nextQuery.set('a', 'listByView');
-    nextQuery.set('view', 'list');
-
-    const quickSearchValue = String(next.quickSearch ?? data.filters.quickSearch ?? '').trim();
-    if (quickSearchValue === '') {
-      nextQuery.delete('wildCardString');
-    } else {
-      nextQuery.set('wildCardString', quickSearchValue);
+    if (skipNextAutoSearchRef.current) {
+      skipNextAutoSearchRef.current = false;
+      return;
     }
 
-    const sourceFilterValue = String(next.sourceFilter ?? data.filters.sourceFilter ?? '').trim();
-    if (sourceFilterValue === '') {
-      nextQuery.delete('sourceFilter');
-    } else {
-      nextQuery.set('sourceFilter', sourceFilterValue);
+    const nextSearch = searchDraft.trim();
+    const currentSearch = String(data.filters.quickSearch || '').trim();
+    if (nextSearch === currentSearch) {
+      return;
     }
 
-    const onlyMyCandidates = typeof next.onlyMyCandidates === 'boolean' ? next.onlyMyCandidates : data.filters.onlyMyCandidates;
-    const onlyHotCandidates = typeof next.onlyHotCandidates === 'boolean' ? next.onlyHotCandidates : data.filters.onlyHotCandidates;
-    const onlyGdprUnsigned = typeof next.onlyGdprUnsigned === 'boolean' ? next.onlyGdprUnsigned : data.filters.onlyGdprUnsigned;
-    const onlyInternalCandidates = typeof next.onlyInternalCandidates === 'boolean' ? next.onlyInternalCandidates : data.filters.onlyInternalCandidates;
-    const onlyActiveCandidates = typeof next.onlyActiveCandidates === 'boolean' ? next.onlyActiveCandidates : data.filters.onlyActiveCandidates;
+    const debounceID = window.setTimeout(() => {
+      navigateWithFilters({ quickSearch: nextSearch, page: 1 });
+    }, SEARCH_APPLY_DEBOUNCE_MS);
 
-    nextQuery.set('onlyMyCandidates', toBooleanString(onlyMyCandidates));
-    nextQuery.set('onlyHotCandidates', toBooleanString(onlyHotCandidates));
-    nextQuery.set('onlyGdprUnsigned', toBooleanString(onlyGdprUnsigned));
-    nextQuery.set('onlyInternalCandidates', toBooleanString(onlyInternalCandidates));
-    nextQuery.set('onlyActiveCandidates', toBooleanString(onlyActiveCandidates));
-
-    const entriesPerPage =
-      typeof next.maxResults === 'number' && next.maxResults > 0
-        ? next.maxResults
-        : data.meta.entriesPerPage;
-    nextQuery.set('maxResults', String(entriesPerPage));
-
-    const page = typeof next.page === 'number' && next.page > 0 ? next.page : 1;
-    nextQuery.set('page', String(page));
-    nextQuery.delete('rangeStart');
-
-    if (!nextQuery.get('ui')) {
-      nextQuery.set('ui', 'modern');
-    }
-
-    applyServerQuery(nextQuery);
-  };
+    return () => {
+      window.clearTimeout(debounceID);
+    };
+  }, [data, navigateWithFilters, searchDraft]);
 
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {
     if (!data) {
@@ -257,6 +335,10 @@ export function CandidatesListPage({ bootstrap }: Props) {
     return <EmptyState message="No candidates available." />;
   }
 
+  const selectedSortBy = sortOptions.some((option) => option.value === data.meta.sortBy) ? data.meta.sortBy : 'dateModifiedSort';
+  const selectedSortDirection = data.meta.sortDirection === 'ASC' ? 'ASC' : 'DESC';
+  const selectedSortLabel = sortOptions.find((option) => option.value === selectedSortBy)?.label || 'Updated';
+
   const filters = data.filters;
   const permissions = data.meta.permissions;
   const canAddCandidate = isCapabilityEnabled(permissions.canAddCandidate);
@@ -293,6 +375,23 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const visibleHotCount = data.rows.filter((row) => row.isHot).length;
   const visibleDuplicateCount = data.rows.filter((row) => row.hasDuplicate).length;
   const visibleSubmittedCount = data.rows.filter((row) => row.isSubmitted).length;
+  const visibleResumeCount = data.rows.filter((row) => row.hasAttachment).length;
+  const visibleRows = data.rows.filter((row) => {
+    switch (localFocus) {
+      case 'hot':
+        return row.isHot;
+      case 'submitted':
+        return row.isSubmitted;
+      case 'duplicates':
+        return row.hasDuplicate;
+      case 'resume':
+        return row.hasAttachment;
+      case 'all':
+      default:
+        return true;
+    }
+  });
+  const hasVisibleRows = visibleRows.length > 0;
 
   return (
     <div className="avel-dashboard-page avel-candidates-page">
@@ -347,6 +446,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 className="modern-command-search avel-candidate-toolbar__search"
                 onSubmit={(event) => {
                   event.preventDefault();
+                  skipNextAutoSearchRef.current = true;
                   navigateWithFilters({ quickSearch: searchDraft, page: 1 });
                 }}
               >
@@ -378,6 +478,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 type="button"
                 className="modern-btn modern-btn--secondary"
                 onClick={() => {
+                  skipNextAutoSearchRef.current = true;
                   setSearchDraft('');
                   navigateWithFilters({
                     quickSearch: '',
@@ -387,6 +488,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
                     onlyGdprUnsigned: false,
                     onlyInternalCandidates: false,
                     onlyActiveCandidates: true,
+                    sortBy: 'dateModifiedSort',
+                    sortDirection: 'DESC',
                     page: 1
                   });
                 }}
@@ -470,6 +573,44 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 <div className="modern-command-active__empty">No active filters. Showing the full candidate pipeline.</div>
               )}
             </div>
+
+            <div className="avel-candidate-toolbar__focus" aria-label="Quick focus filters">
+              <button
+                type="button"
+                className={`avel-candidate-focus-chip${localFocus === 'all' ? ' is-active' : ''}`}
+                onClick={() => setLocalFocus('all')}
+              >
+                All <strong>{data.rows.length}</strong>
+              </button>
+              <button
+                type="button"
+                className={`avel-candidate-focus-chip${localFocus === 'hot' ? ' is-active' : ''}`}
+                onClick={() => setLocalFocus('hot')}
+              >
+                Hot <strong>{visibleHotCount}</strong>
+              </button>
+              <button
+                type="button"
+                className={`avel-candidate-focus-chip${localFocus === 'submitted' ? ' is-active' : ''}`}
+                onClick={() => setLocalFocus('submitted')}
+              >
+                Submitted <strong>{visibleSubmittedCount}</strong>
+              </button>
+              <button
+                type="button"
+                className={`avel-candidate-focus-chip${localFocus === 'duplicates' ? ' is-active' : ''}`}
+                onClick={() => setLocalFocus('duplicates')}
+              >
+                Duplicates <strong>{visibleDuplicateCount}</strong>
+              </button>
+              <button
+                type="button"
+                className={`avel-candidate-focus-chip${localFocus === 'resume' ? ' is-active' : ''}`}
+                onClick={() => setLocalFocus('resume')}
+              >
+                Resume <strong>{visibleResumeCount}</strong>
+              </button>
+            </div>
           </section>
 
           {toDisplayText(data.state.topLog, '') !== '' ? (
@@ -481,6 +622,42 @@ export function CandidatesListPage({ bootstrap }: Props) {
               <h2 className="avel-list-panel__title">
                 Candidates {data.meta.totalRows > 0 ? `(${data.meta.totalRows})` : ''}
               </h2>
+              <p className="avel-list-panel__hint">
+                Showing {visibleRows.length} of {data.rows.length} on this page
+                {' | '}
+                Sorted by {selectedSortLabel} ({selectedSortDirection === 'ASC' ? 'ascending' : 'descending'})
+                {localFocus !== 'all' ? ` | focus: ${localFocus}` : ''}
+              </p>
+              <div className="avel-candidate-inline-sort" aria-label="Inline sort controls">
+                <span className="avel-candidate-inline-sort__label">Sort</span>
+                <div className="avel-candidate-inline-sort__chips" role="group" aria-label="Sort field">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`avel-candidate-inline-sort__chip${selectedSortBy === option.value ? ' is-active' : ''}`}
+                      onClick={() => navigateWithFilters({ sortBy: option.value, page: 1 })}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="avel-candidate-inline-sort__direction"
+                  onClick={() =>
+                    navigateWithFilters({
+                      sortDirection: selectedSortDirection === 'DESC' ? 'ASC' : 'DESC',
+                      page: 1
+                    })
+                  }
+                  aria-label={`Switch sort direction. Current: ${
+                    selectedSortDirection === 'DESC' ? 'descending' : 'ascending'
+                  }`}
+                >
+                  {selectedSortDirection === 'DESC' ? 'DESC' : 'ASC'}
+                </button>
+              </div>
               <div className="avel-candidates-pagination">
                 <button
                   type="button"
@@ -504,11 +681,17 @@ export function CandidatesListPage({ bootstrap }: Props) {
               </div>
             </div>
 
-            {!hasRows ? (
-              <EmptyState message="No candidates match current filters." />
+            {!hasVisibleRows ? (
+              <EmptyState
+                message={
+                  localFocus === 'all'
+                    ? 'No candidates match current filters.'
+                    : `No candidates match the "${localFocus}" focus on this page.`
+                }
+              />
             ) : (
               <div className="avel-candidate-card-list" role="list" aria-label="Candidate results">
-                {data.rows.map((row) => {
+                {visibleRows.map((row) => {
                   const locationParts = [row.city, row.country]
                     .map((value) => String(value || '').trim())
                     .filter((value) => value !== '');
@@ -527,8 +710,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
                             </a>
                             <div className="avel-candidate-card__meta">
                               <span>{locationText}</span>
-                              <span aria-hidden="true">•</span>
-                              <span>{toDisplayText(row.source)}</span>
+                              <span aria-hidden="true">|</span>
+                              <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
                             </div>
                           </div>
                         </div>
@@ -612,3 +795,4 @@ export function CandidatesListPage({ bootstrap }: Props) {
     </div>
   );
 }
+

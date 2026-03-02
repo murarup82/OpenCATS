@@ -79,6 +79,7 @@ export async function setDashboardPipelineStatus(
     statusID: number;
     enforceOwner: boolean;
     statusComment?: string;
+    requireStatusComment?: boolean;
     rejectionReasonIDs?: number[];
     rejectionReasonOther?: string;
   }
@@ -94,6 +95,9 @@ export async function setDashboardPipelineStatus(
   body.set('jobOrderID', String(payload.jobOrderID || 0));
   body.set('statusID', String(payload.statusID || 0));
   body.set('enforceOwner', payload.enforceOwner ? '1' : '0');
+  if (payload.requireStatusComment === true) {
+    body.set('requireStatusComment', '1');
+  }
   if (typeof payload.statusComment === 'string' && payload.statusComment.trim() !== '') {
     body.set('statusComment', payload.statusComment.trim());
   }

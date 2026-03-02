@@ -38,6 +38,29 @@ function toLocalDateTimeInput(rawValue: string): string {
   return normalized.replace(' ', 'T').slice(0, 19);
 }
 
+function toDateTimeParts(rawValue: string): { date: string; time: string } {
+  const normalized = toLocalDateTimeInput(rawValue);
+  if (normalized === '' || !normalized.includes('T')) {
+    return { date: '', time: '' };
+  }
+
+  const [datePart, timePartRaw] = normalized.split('T');
+  const timePart = String(timePartRaw || '').slice(0, 5);
+  return {
+    date: datePart || '',
+    time: timePart
+  };
+}
+
+function combineDateTimeParts(datePart: string, timePart: string): string {
+  const normalizedDate = String(datePart || '').trim();
+  const normalizedTime = String(timePart || '').trim();
+  if (normalizedDate === '' || normalizedTime === '') {
+    return '';
+  }
+  return `${normalizedDate}T${normalizedTime}:00`;
+}
+
 export function PipelineDetailsInlineModal({
   isOpen,
   title,
@@ -49,7 +72,8 @@ export function PipelineDetailsInlineModal({
   onSaveHistoryDate
 }: Props) {
   const [editingHistoryID, setEditingHistoryID] = useState<number>(0);
-  const [draftDate, setDraftDate] = useState<string>('');
+  const [draftDatePart, setDraftDatePart] = useState<string>('');
+  const [draftTimePart, setDraftTimePart] = useState<string>('');
   const [originalDate, setOriginalDate] = useState<string>('');
   const [editNote, setEditNote] = useState<string>('');
   const [saveError, setSaveError] = useState<string>('');
@@ -58,7 +82,8 @@ export function PipelineDetailsInlineModal({
   useEffect(() => {
     if (!isOpen) {
       setEditingHistoryID(0);
-      setDraftDate('');
+      setDraftDatePart('');
+      setDraftTimePart('');
       setOriginalDate('');
       setEditNote('');
       setSaveError('');
@@ -149,7 +174,7 @@ export function PipelineDetailsInlineModal({
                               <span className={`modern-status modern-status--${entry.statusFromSlug || 'unknown'}`}>
                                 {toDisplayText(entry.statusFrom)}
                               </span>
-                              <span className="modern-pipeline-details__status-arrow">→</span>
+                              <span className="modern-pipeline-details__status-arrow">-&gt;</span>
                               <span className={`modern-status modern-status--${entry.statusToSlug || 'unknown'}`}>
                                 {toDisplayText(entry.statusTo)}
                               </span>
@@ -187,9 +212,11 @@ export function PipelineDetailsInlineModal({
                                   type="button"
                                   className="modern-btn modern-btn--mini modern-btn--secondary"
                                   onClick={() => {
+                                    const dateParts = toDateTimeParts(entry.dateEdit || entry.dateRaw);
                                     setEditingHistoryID(entry.historyID);
-                                    setDraftDate(toLocalDateTimeInput(entry.dateEdit || entry.dateRaw));
-                                    setOriginalDate(entry.dateEdit || '');
+                                    setDraftDatePart(dateParts.date);
+                                    setDraftTimePart(dateParts.time);
+                                    setOriginalDate(entry.dateEdit || entry.dateRaw || '');
                                     setEditNote(entry.editNote || '');
                                     setSaveError('');
                                   }}
@@ -198,12 +225,27 @@ export function PipelineDetailsInlineModal({
                                 </button>
                               ) : (
                                 <div className="modern-pipeline-details__edit">
-                                  <input
-                                    type="datetime-local"
-                                    className="avel-form-control"
-                                    value={draftDate}
-                                    onChange={(event) => setDraftDate(event.target.value)}
-                                  />
+                                  <div className="modern-pipeline-details__date-grid">
+                                    <label className="modern-pipeline-details__date-field">
+                                      <span className="modern-command-label">Date</span>
+                                      <input
+                                        type="date"
+                                        className="avel-form-control modern-pipeline-details__date-input"
+                                        value={draftDatePart}
+                                        onChange={(event) => setDraftDatePart(event.target.value)}
+                                      />
+                                    </label>
+                                    <label className="modern-pipeline-details__date-field">
+                                      <span className="modern-command-label">Time</span>
+                                      <input
+                                        type="time"
+                                        step={60}
+                                        className="avel-form-control modern-pipeline-details__date-input"
+                                        value={draftTimePart}
+                                        onChange={(event) => setDraftTimePart(event.target.value)}
+                                      />
+                                    </label>
+                                  </div>
                                   <input
                                     type="text"
                                     className="avel-form-control"
@@ -215,7 +257,7 @@ export function PipelineDetailsInlineModal({
                                     <button
                                       type="button"
                                       className="modern-btn modern-btn--mini modern-btn--emphasis"
-                                      disabled={saving || !onSaveHistoryDate}
+                                      disabled={saving || !onSaveHistoryDate || draftDatePart === '' || draftTimePart === ''}
                                       onClick={async () => {
                                         if (!onSaveHistoryDate || !details) {
                                           return;
@@ -224,7 +266,7 @@ export function PipelineDetailsInlineModal({
                                         setSaveError('');
                                         const result = await onSaveHistoryDate(details, {
                                           historyID: entry.historyID,
-                                          newDate: draftDate,
+                                          newDate: combineDateTimeParts(draftDatePart, draftTimePart),
                                           originalDate,
                                           editNote
                                         });
@@ -234,7 +276,8 @@ export function PipelineDetailsInlineModal({
                                           return;
                                         }
                                         setEditingHistoryID(0);
-                                        setDraftDate('');
+                                        setDraftDatePart('');
+                                        setDraftTimePart('');
                                         setOriginalDate('');
                                         setEditNote('');
                                       }}
@@ -247,7 +290,8 @@ export function PipelineDetailsInlineModal({
                                       disabled={saving}
                                       onClick={() => {
                                         setEditingHistoryID(0);
-                                        setDraftDate('');
+                                        setDraftDatePart('');
+                                        setDraftTimePart('');
                                         setOriginalDate('');
                                         setEditNote('');
                                         setSaveError('');
@@ -269,7 +313,7 @@ export function PipelineDetailsInlineModal({
               </table>
               {editingEntry ? (
                 <div className="modern-pipeline-details__editing-hint">
-                  Editing transition: {toDisplayText(editingEntry.statusFrom)} → {toDisplayText(editingEntry.statusTo)}
+                  Editing transition: {toDisplayText(editingEntry.statusFrom)} -&gt; {toDisplayText(editingEntry.statusTo)}
                 </div>
               ) : null}
             </div>

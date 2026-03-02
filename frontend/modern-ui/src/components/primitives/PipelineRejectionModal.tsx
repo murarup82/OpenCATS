@@ -72,7 +72,8 @@ export function PipelineRejectionModal({
   const canSubmit =
     rejectionReasons.length > 0 &&
     selectedReasonIDs.length > 0 &&
-    (!isOtherSelected || otherReason.trim() !== '');
+    (!isOtherSelected || otherReason.trim() !== '') &&
+    statusComment.trim() !== '';
 
   return (
     <InlineModal
@@ -127,14 +128,14 @@ export function PipelineRejectionModal({
           ) : null}
 
           <label className="modern-command-field modern-rejection-modal__section">
-            <span className="modern-command-label">Comment (Optional)</span>
+            <span className="modern-command-label">Comment (Required)</span>
             <textarea
               className="avel-form-control"
               value={statusComment}
               disabled={submitPending}
               onChange={(event) => setStatusComment(event.target.value)}
               rows={3}
-              placeholder="Add context for the team"
+              placeholder="Required: explain why this transition is needed"
             />
           </label>
 

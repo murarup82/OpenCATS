@@ -19,6 +19,7 @@ import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderA
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { PipelineRejectionModal } from '../components/primitives/PipelineRejectionModal';
+import { PipelineStatusCommentModal } from '../components/primitives/PipelineStatusCommentModal';
 import { MutationToast } from '../components/primitives/MutationToast';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
@@ -120,6 +121,15 @@ export function DashboardMyPage({ bootstrap }: Props) {
   } | null>(null);
   const [rejectionPending, setRejectionPending] = useState<boolean>(false);
   const [rejectionError, setRejectionError] = useState<string>('');
+  const [kanbanCommentModal, setKanbanCommentModal] = useState<{
+    row: DashboardRow;
+    targetStatusID: number;
+    title: string;
+    currentStatusLabel: string;
+    targetStatusLabel: string;
+  } | null>(null);
+  const [kanbanCommentPending, setKanbanCommentPending] = useState<boolean>(false);
+  const [kanbanCommentError, setKanbanCommentError] = useState<string>('');
   const [assignModal, setAssignModal] = useState<{
     url: string;
     jobOrderName: string;
@@ -455,7 +465,11 @@ export function DashboardMyPage({ bootstrap }: Props) {
       ? Number(data?.meta.statusRules?.rejectionOtherReasonID)
       : 0;
   const requestStatusChange = useCallback(
-    async (row: DashboardRow, targetStatusID: number | null) => {
+    async (
+      row: DashboardRow,
+      targetStatusID: number | null,
+      options?: { statusComment?: string; requireStatusComment?: boolean }
+    ) => {
       if (!data) {
         return {
           success: false,
@@ -521,7 +535,9 @@ export function DashboardMyPage({ bootstrap }: Props) {
           candidateID: Number(row.candidateID || 0),
           jobOrderID: Number(row.jobOrderID || 0),
           statusID: targetStatusID,
-          enforceOwner: data.meta.scope === 'mine'
+          enforceOwner: data.meta.scope === 'mine',
+          statusComment: options?.statusComment || '',
+          requireStatusComment: options?.requireStatusComment === true
         });
 
         if (mutationResult.success) {
@@ -582,6 +598,60 @@ export function DashboardMyPage({ bootstrap }: Props) {
       rejectedStatusID,
       showToast
     ]
+  );
+
+  const openKanbanCommentModal = useCallback(
+    (row: DashboardRow, targetStatusID: number | null) => {
+      if (targetStatusID === null || targetStatusID <= 0) {
+        void requestStatusChange(row, targetStatusID);
+        return;
+      }
+
+      if (targetStatusID === rejectedStatusID) {
+        void requestStatusChange(row, targetStatusID);
+        return;
+      }
+
+      const targetStatusLabel =
+        statusCatalog.find((status) => Number(status.statusID || 0) === targetStatusID)?.statusLabel || `Status ${targetStatusID}`;
+
+      setKanbanCommentError('');
+      setKanbanCommentModal({
+        row,
+        targetStatusID,
+        title: `Move Candidate: ${toDisplayText(row.candidateName)}`,
+        currentStatusLabel: toDisplayText(row.statusLabel),
+        targetStatusLabel: toDisplayText(targetStatusLabel)
+      });
+    },
+    [rejectedStatusID, requestStatusChange, statusCatalog]
+  );
+
+  const submitKanbanComment = useCallback(
+    async (comment: string) => {
+      if (!kanbanCommentModal || kanbanCommentPending) {
+        return;
+      }
+
+      setKanbanCommentError('');
+      setKanbanCommentPending(true);
+      try {
+        const result = await requestStatusChange(kanbanCommentModal.row, kanbanCommentModal.targetStatusID, {
+          statusComment: comment,
+          requireStatusComment: true
+        });
+        if (result.success || result.openedLegacy || result.openedInline) {
+          setKanbanCommentModal(null);
+          return;
+        }
+        setKanbanCommentError(result.message || 'Unable to change status.');
+      } catch (err: unknown) {
+        setKanbanCommentError(err instanceof Error ? err.message : 'Unable to change status.');
+      } finally {
+        setKanbanCommentPending(false);
+      }
+    },
+    [kanbanCommentModal, kanbanCommentPending, requestStatusChange]
   );
 
   const openQuickStatusModal = useCallback(
@@ -676,6 +746,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
           statusID: rejectedStatusID,
           enforceOwner: data.meta.scope === 'mine',
           statusComment: payload.statusComment,
+          requireStatusComment: true,
           rejectionReasonIDs: payload.rejectionReasonIDs,
           rejectionReasonOther: payload.rejectionReasonOther
         });
@@ -912,7 +983,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
                 canChangeStatus={canChangeStatus}
                 statusOrder={orderedStatusIDs}
                 rejectedStatusID={rejectedStatusID}
-                onRequestStatusChange={requestStatusChange}
+                onRequestStatusChange={openKanbanCommentModal}
                 onOpenDetails={openPipelineDetails}
                 onInteractionError={setInteractionError}
               />
@@ -982,6 +1053,23 @@ export function DashboardMyPage({ bootstrap }: Props) {
           </>
         )}
         </div>
+
+        <PipelineStatusCommentModal
+          isOpen={!!kanbanCommentModal}
+          title={kanbanCommentModal?.title || 'Status Comment'}
+          currentStatusLabel={kanbanCommentModal?.currentStatusLabel || '--'}
+          targetStatusLabel={kanbanCommentModal?.targetStatusLabel || '--'}
+          submitPending={kanbanCommentPending}
+          submitError={kanbanCommentError}
+          onCancel={() => {
+            if (kanbanCommentPending) {
+              return;
+            }
+            setKanbanCommentError('');
+            setKanbanCommentModal(null);
+          }}
+          onSubmit={submitKanbanComment}
+        />
 
         <PipelineQuickStatusModal
           isOpen={!!quickStatusModal}
