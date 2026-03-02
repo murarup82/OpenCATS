@@ -282,19 +282,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `docs/modern-ui-release-runbook.md` with pre-release, cutover, rollback, and post-release validation steps
     - documented safe `config.ui.php` switch sequencing and rollback toggles (`modern -> hybrid -> disabled`)
     - added incident triage priorities focused on mutation and navigation-critical recruiter workflows.
+118. Added owner/date cutover checklist template:
+    - introduced `docs/modern-ui-cutover-checklist.md` with actionable release-day steps and accountable owner/date/status fields
+    - checklist links core evidence artifacts (sanity report, coverage matrix, parity checklist, scorecard, runbook)
+    - provides a structured execution log for hybrid-to-modern mode switching.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-3. Add hybrid-to-modern cutover checklist with owner/date tracking fields.
-4. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-5. Add deprecation sign-off template linking telemetry + parity + rollback readiness.
-6. Add route-resolution telemetry dashboard snippet for admin troubleshooting.
-7. Add smoke-fixture maintenance guide (when/how to extend probes safely).
-8. Add automated scorecard prefill helper from sanity/coverage outputs.
-9. Add no-JS fallback acceptance criteria section into rollout scorecard.
-10. Add operations ownership matrix for release-day monitoring responsibilities.
+3. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
+4. Add deprecation sign-off template linking telemetry + parity + rollback readiness.
+5. Add route-resolution telemetry dashboard snippet for admin troubleshooting.
+6. Add smoke-fixture maintenance guide (when/how to extend probes safely).
+7. Add automated scorecard prefill helper from sanity/coverage outputs.
+8. Add no-JS fallback acceptance criteria section into rollout scorecard.
+9. Add operations ownership matrix for release-day monitoring responsibilities.
+10. Add periodic post-cutover review checklist (day 1 / day 7 / day 30).
 
 ## Rules
 
