@@ -278,6 +278,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `docs/modern-ui-nojs-fallback-audit.md` with workflow-level JS dependency and fallback risk mapping
     - documented current mitigation paths (legacy routes, embedded fallbacks, explicit escape-hatch actions)
     - identified remaining no-JS gaps and recommended mitigation steps before strict fallback requirements.
+117. Added native async calendar event mutations on `calendar.showCalendar`:
+    - backend `calendar.addEvent`, `calendar.editEvent`, and `calendar.deleteEvent` now support `format=modern-json` with CSRF validation and structured success/error payloads
+    - `calendar.show.v1` now includes mutation action URLs/tokens and event edit-time metadata (`timeHHMM`)
+    - modern `CalendarPage` now supports native Add/Edit/Delete flows via in-app modal and confirmation UX with inline error/toast feedback (legacy calendar route remains available).
 117. Added release runbook for modern default cutover:
     - introduced `docs/modern-ui-release-runbook.md` with pre-release, cutover, rollback, and post-release validation steps
     - documented safe `config.ui.php` switch sequencing and rollback toggles (`modern -> hybrid -> disabled`)

@@ -1772,6 +1772,82 @@
   text-align: center;
 }
 
+.avel-dashboard-page .avel-calendar-event-actions {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.avel-dashboard-page .avel-calendar-event-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.avel-dashboard-page .avel-calendar-event-form__field {
+  display: grid;
+  gap: 6px;
+}
+
+.avel-dashboard-page .avel-calendar-event-form__field--wide {
+  grid-column: 1 / -1;
+}
+
+.avel-dashboard-page .avel-calendar-event-form__field--placeholder {
+  visibility: hidden;
+}
+
+.avel-dashboard-page .avel-calendar-event-form__field > span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #315a70;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.avel-dashboard-page .avel-calendar-event-form__field input,
+.avel-dashboard-page .avel-calendar-event-form__field select,
+.avel-dashboard-page .avel-calendar-event-form__field textarea {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #aac8d9;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #13394d;
+  padding: 9px 11px;
+  font-size: 0.86rem;
+  font-family: inherit;
+}
+
+.avel-dashboard-page .avel-calendar-event-form__field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.avel-dashboard-page .avel-calendar-event-form__field input:focus,
+.avel-dashboard-page .avel-calendar-event-form__field select:focus,
+.avel-dashboard-page .avel-calendar-event-form__field textarea:focus {
+  outline: none;
+  border-color: #4f93b5;
+  box-shadow: 0 0 0 3px rgba(45, 130, 173, 0.18);
+}
+
+.avel-dashboard-page .avel-calendar-event-form__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 4px;
+  color: #264a5f;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.avel-dashboard-page .avel-calendar-event-form__check input {
+  width: 16px;
+  height: 16px;
+}
+
 .avel-dashboard-page .avel-assign-candidate-modal {
   display: grid;
   gap: 10px;

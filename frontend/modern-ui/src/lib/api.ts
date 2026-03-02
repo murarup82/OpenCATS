@@ -1,5 +1,6 @@
 import type {
   ActivityListModernDataResponse,
+  CalendarEventMutationResponse,
   CalendarModernDataResponse,
   CandidateAssignToJobOrderModernDataResponse,
   CandidateAssignToJobOrderMutationResponse,
@@ -821,6 +822,146 @@ export async function fetchCalendarModernData(
   assertModernContract(data.meta, 'calendar.show.v1', 'calendar');
 
   return data;
+}
+
+type CalendarEventMutationPayload = {
+  eventID?: number;
+  eventTypeID: number;
+  title: string;
+  description: string;
+  allDay: boolean;
+  dateISO: string;
+  timeHHMM: string;
+  duration: number;
+  isPublic: boolean;
+  dataItemID?: number;
+  dataItemType?: number;
+  jobOrderID?: number;
+};
+
+function buildCalendarEventMutationBody(
+  securityToken: string,
+  payload: CalendarEventMutationPayload
+): URLSearchParams {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('securityToken', securityToken || '');
+  body.set('eventTypeID', String(payload.eventTypeID || 0));
+  body.set('title', payload.title || '');
+  body.set('description', payload.description || '');
+  body.set('allDay', payload.allDay ? '1' : '0');
+  body.set('dateISO', payload.dateISO || '');
+  body.set('timeHHMM', payload.timeHHMM || '');
+  body.set('duration', String(payload.duration || 30));
+  body.set('isPublic', payload.isPublic ? '1' : '0');
+
+  if (typeof payload.eventID === 'number' && payload.eventID > 0) {
+    body.set('eventID', String(payload.eventID));
+  }
+  if (typeof payload.dataItemID === 'number') {
+    body.set('dataItemID', String(payload.dataItemID));
+  }
+  if (typeof payload.dataItemType === 'number') {
+    body.set('dataItemType', String(payload.dataItemType));
+  }
+  if (typeof payload.jobOrderID === 'number') {
+    body.set('jobOrderID', String(payload.jobOrderID));
+  }
+
+  return body;
+}
+
+export async function createCalendarEvent(
+  submitURL: string,
+  securityToken: string,
+  payload: CalendarEventMutationPayload
+): Promise<CalendarEventMutationResponse> {
+  const body = buildCalendarEventMutationBody(securityToken, payload);
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: CalendarEventMutationResponse | null = null;
+  try {
+    result = (await response.json()) as CalendarEventMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Calendar event create failed (${response.status}).`);
+  }
+
+  return result;
+}
+
+export async function updateCalendarEvent(
+  submitURL: string,
+  securityToken: string,
+  payload: CalendarEventMutationPayload
+): Promise<CalendarEventMutationResponse> {
+  const body = buildCalendarEventMutationBody(securityToken, payload);
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: CalendarEventMutationResponse | null = null;
+  try {
+    result = (await response.json()) as CalendarEventMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Calendar event update failed (${response.status}).`);
+  }
+
+  return result;
+}
+
+export async function deleteCalendarEvent(
+  submitURL: string,
+  securityToken: string,
+  eventID: number
+): Promise<CalendarEventMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('securityToken', securityToken || '');
+  body.set('eventID', String(eventID || 0));
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: CalendarEventMutationResponse | null = null;
+  try {
+    result = (await response.json()) as CalendarEventMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Calendar event delete failed (${response.status}).`);
+  }
+
+  return result;
 }
 
 export async function fetchListsManageModernData(

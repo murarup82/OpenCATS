@@ -650,6 +650,12 @@ export type CalendarModernDataResponse = {
     todayURL: string;
     prevURL: string;
     nextURL: string;
+    addEventURL: string;
+    addEventToken: string;
+    editEventURL: string;
+    editEventToken: string;
+    deleteEventURL: string;
+    deleteEventToken: string;
   };
   summary: {
     eventsInRange: number;
@@ -664,6 +670,7 @@ export type CalendarModernDataResponse = {
     allDay: boolean;
     dateISO: string;
     dateDisplay: string;
+    timeHHMM: string;
     timeDisplay: string;
     duration: number;
     isPublic: boolean;
@@ -692,6 +699,12 @@ export type CalendarModernDataResponse = {
     allDay: boolean;
     showURL: string;
   }>;
+};
+
+export type CalendarEventMutationResponse = ModernMutationResponse & {
+  eventID?: number;
+  dateISO?: string;
+  showURL?: string;
 };
 
 export type ListsManageModernDataResponse = {

@@ -59,14 +59,22 @@ class CalendarUI extends UserInterface
         switch ($action)
         {
             case 'addEvent':
-                if ($this->isPostBack())
+                if ($this->isModernJSONRequest())
+                {
+                    $this->onAddEventModernJSON();
+                }
+                else if ($this->isPostBack())
                 {
                     $this->onAddEvent();
                 }
                 break;
 
             case 'editEvent':
-                if ($this->isPostBack())
+                if ($this->isModernJSONRequest())
+                {
+                    $this->onEditEventModernJSON();
+                }
+                else if ($this->isPostBack())
                 {
                     $this->onEditEvent();
                 }
@@ -77,7 +85,14 @@ class CalendarUI extends UserInterface
                 break;
 
             case 'deleteEvent':
-                $this->onDeleteEvent();
+                if ($this->isModernJSONRequest())
+                {
+                    $this->onDeleteEventModernJSON();
+                }
+                else
+                {
+                    $this->onDeleteEvent();
+                }
                 break;
 
             case 'showCalendar':
@@ -85,6 +100,497 @@ class CalendarUI extends UserInterface
                 $this->showCalendar();
                 break;
         }
+    }
+
+    private function isModernJSONRequest()
+    {
+        return (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+    }
+
+    private function respondModernJSON($statusCode, $payload)
+    {
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            if (function_exists('http_response_code'))
+            {
+                http_response_code((int) $statusCode);
+            }
+            else
+            {
+                header(sprintf('HTTP/1.1 %d', (int) $statusCode));
+            }
+        }
+
+        echo json_encode($payload);
+    }
+
+    private function parseModernBoolean($name, $source, $default = false)
+    {
+        if (!isset($source[$name]))
+        {
+            return ((bool) $default);
+        }
+
+        $value = strtolower(trim((string) $source[$name]));
+        if ($value === '1' || $value === 'true' || $value === 'yes' || $value === 'on')
+        {
+            return true;
+        }
+        if ($value === '0' || $value === 'false' || $value === 'no' || $value === 'off' || $value === '')
+        {
+            return false;
+        }
+
+        return ((bool) $default);
+    }
+
+    private function parseModernOptionalInteger($name, $source, $defaultValue)
+    {
+        if (!isset($source[$name]))
+        {
+            return (int) $defaultValue;
+        }
+
+        $raw = trim((string) $source[$name]);
+        if ($raw === '' || !preg_match('/^-?\d+$/', $raw))
+        {
+            return (int) $defaultValue;
+        }
+
+        return (int) $raw;
+    }
+
+    private function parseModernCalendarDate($rawDate)
+    {
+        $rawDate = trim((string) $rawDate);
+        if ($rawDate === '')
+        {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawDate))
+        {
+            $parts = explode('-', $rawDate);
+            $year = (int) $parts[0];
+            $month = (int) $parts[1];
+            $day = (int) $parts[2];
+            if (!checkdate($month, $day, $year))
+            {
+                return null;
+            }
+
+            return sprintf('%04d-%02d-%02d', $year, $month, $day);
+        }
+
+        if (!DateUtility::validate('-', $rawDate, DATE_FORMAT_MMDDYY))
+        {
+            return null;
+        }
+
+        return DateUtility::convert('-', $rawDate, DATE_FORMAT_MMDDYY, DATE_FORMAT_YYYYMMDD);
+    }
+
+    private function parseModernCalendarTime($source)
+    {
+        $timeHHMM = trim((string) $this->getTrimmedInput('timeHHMM', $source));
+        if ($timeHHMM !== '' && preg_match('/^([01]\d|2[0-3]):([0-5]\d)$/', $timeHHMM, $matches))
+        {
+            return sprintf('%02d:%02d:00', (int) $matches[1], (int) $matches[2]);
+        }
+
+        $hour = trim((string) $this->getTrimmedInput('hour', $source));
+        $minute = trim((string) $this->getTrimmedInput('minute', $source));
+        $meridiem = strtoupper(trim((string) $this->getTrimmedInput('meridiem', $source)));
+        if (
+            $hour !== '' &&
+            $minute !== '' &&
+            ($meridiem === 'AM' || $meridiem === 'PM') &&
+            preg_match('/^\d{1,2}$/', $hour) &&
+            preg_match('/^\d{1,2}$/', $minute)
+        )
+        {
+            $time = strtotime(sprintf('%d:%02d %s', (int) $hour, (int) $minute, $meridiem));
+            if ($time !== false)
+            {
+                return date('H:i:00', $time);
+            }
+        }
+
+        return null;
+    }
+
+    private function getModernEventMutationPayload($source, $isEdit)
+    {
+        $eventID = 0;
+        if ($isEdit)
+        {
+            $eventID = $this->parseModernOptionalInteger('eventID', $source, 0);
+            if ($eventID <= 0)
+            {
+                return array(
+                    'success' => false,
+                    'statusCode' => 400,
+                    'code' => 'invalidEventID',
+                    'message' => 'Invalid event ID.'
+                );
+            }
+        }
+
+        $type = $this->parseModernOptionalInteger(
+            'eventTypeID',
+            $source,
+            $this->parseModernOptionalInteger('type', $source, 0)
+        );
+        if ($type <= 0)
+        {
+            return array(
+                'success' => false,
+                'statusCode' => 400,
+                'code' => 'invalidEventType',
+                'message' => 'Invalid event type.'
+            );
+        }
+
+        $title = $this->getTrimmedInput('title', $source);
+        if ($title === '')
+        {
+            return array(
+                'success' => false,
+                'statusCode' => 400,
+                'code' => 'missingTitle',
+                'message' => 'Event title is required.'
+            );
+        }
+
+        $rawDate = $this->getTrimmedInput('dateISO', $source);
+        if ($rawDate === '')
+        {
+            $rawDate = $this->getTrimmedInput(($isEdit ? 'dateEdit' : 'dateAdd'), $source);
+        }
+        $dateISO = $this->parseModernCalendarDate($rawDate);
+        if ($dateISO === null)
+        {
+            return array(
+                'success' => false,
+                'statusCode' => 400,
+                'code' => 'invalidDate',
+                'message' => 'Invalid event date.'
+            );
+        }
+
+        $allDay = $this->parseModernBoolean('allDay', $source, false);
+        $dateTime = ($dateISO . ' 12:00:00');
+        if (!$allDay)
+        {
+            $parsedTime = $this->parseModernCalendarTime($source);
+            if ($parsedTime === null)
+            {
+                return array(
+                    'success' => false,
+                    'statusCode' => 400,
+                    'code' => 'invalidTime',
+                    'message' => 'Invalid event time.'
+                );
+            }
+            $dateTime = $dateISO . ' ' . $parsedTime;
+        }
+
+        $duration = $this->parseModernOptionalInteger('duration', $source, 30);
+        if ($duration <= 0)
+        {
+            $duration = 30;
+        }
+
+        $description = $this->getTrimmedInput('description', $source);
+        $isPublic = $this->parseModernBoolean('isPublic', $source, $this->isChecked('publicEntry', $source));
+        $reminderEnabled = $this->parseModernBoolean('reminderEnabled', $source, $this->isChecked('reminderToggle', $source));
+        $reminderEmail = $this->getTrimmedInput('sendEmail', $source);
+        $reminderTime = $this->parseModernOptionalInteger(
+            'reminderTime',
+            $source,
+            $this->parseModernOptionalInteger('reminderMinutes', $source, 10)
+        );
+        if ($reminderTime < 0)
+        {
+            $reminderTime = 0;
+        }
+
+        $dataItemID = $this->parseModernOptionalInteger('dataItemID', $source, -1);
+        $dataItemType = $this->parseModernOptionalInteger('dataItemType', $source, -1);
+        $jobOrderID = $this->parseModernOptionalInteger('jobOrderID', $source, -1);
+
+        return array(
+            'success' => true,
+            'eventID' => $eventID,
+            'type' => $type,
+            'title' => $title,
+            'description' => $description,
+            'allDay' => $allDay,
+            'dateTime' => $dateTime,
+            'dateISO' => $dateISO,
+            'duration' => $duration,
+            'isPublic' => $isPublic,
+            'reminderEnabled' => $reminderEnabled,
+            'reminderEmail' => $reminderEmail,
+            'reminderTime' => $reminderTime,
+            'dataItemID' => $dataItemID,
+            'dataItemType' => $dataItemType,
+            'jobOrderID' => $jobOrderID
+        );
+    }
+
+    private function buildModernCalendarShowEventURL($eventID, $dateISO)
+    {
+        $parsedTimestamp = strtotime($dateISO . ' 00:00:00');
+        if ($parsedTimestamp === false)
+        {
+            $parsedTimestamp = DateUtility::getAdjustedDate();
+        }
+
+        return sprintf(
+            '%s?m=calendar&a=showCalendar&view=DAYVIEW&month=%d&year=%d&day=%d&showEvent=%d',
+            CATSUtility::getIndexName(),
+            (int) date('n', $parsedTimestamp),
+            (int) date('Y', $parsedTimestamp),
+            (int) date('j', $parsedTimestamp),
+            (int) $eventID
+        );
+    }
+
+    private function onAddEventModernJSON()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            $this->respondModernJSON(405, array(
+                'success' => false,
+                'code' => 'invalidMethod',
+                'message' => 'Invalid request method.'
+            ));
+            return;
+        }
+
+        if ($this->getUserAccessLevel('calendar.addEvent') < ACCESS_LEVEL_EDIT)
+        {
+            $this->respondModernJSON(403, array(
+                'success' => false,
+                'code' => 'forbidden',
+                'message' => 'You do not have permission to add events.'
+            ));
+            return;
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if ($securityToken === '')
+        {
+            $securityToken = $this->getTrimmedInput('csrfToken', $_POST);
+        }
+        if (!$this->isCSRFTokenValid('calendar.addEvent', $securityToken))
+        {
+            $this->respondModernJSON(403, array(
+                'success' => false,
+                'code' => 'invalidToken',
+                'message' => 'Invalid security token.'
+            ));
+            return;
+        }
+
+        $payload = $this->getModernEventMutationPayload($_POST, false);
+        if (empty($payload['success']))
+        {
+            $this->respondModernJSON(
+                (int) (isset($payload['statusCode']) ? $payload['statusCode'] : 400),
+                array(
+                    'success' => false,
+                    'code' => (isset($payload['code']) ? $payload['code'] : 'invalidInput'),
+                    'message' => (isset($payload['message']) ? $payload['message'] : 'Invalid event payload.')
+                )
+            );
+            return;
+        }
+
+        $calendar = new Calendar($this->_siteID);
+        $eventID = $calendar->addEvent(
+            $payload['type'],
+            $payload['dateTime'],
+            $payload['description'],
+            $payload['allDay'],
+            $this->_userID,
+            $payload['dataItemID'],
+            $payload['dataItemType'],
+            $payload['jobOrderID'],
+            $payload['title'],
+            $payload['duration'],
+            $payload['reminderEnabled'],
+            $payload['reminderEmail'],
+            $payload['reminderTime'],
+            $payload['isPublic'],
+            $_SESSION['CATS']->getTimeZoneOffset()
+        );
+
+        if ((int) $eventID <= 0)
+        {
+            $this->respondModernJSON(500, array(
+                'success' => false,
+                'code' => 'createFailed',
+                'message' => 'Failed to create calendar event.'
+            ));
+            return;
+        }
+
+        $this->respondModernJSON(200, array(
+            'success' => true,
+            'eventID' => (int) $eventID,
+            'dateISO' => $payload['dateISO'],
+            'showURL' => $this->buildModernCalendarShowEventURL((int) $eventID, $payload['dateISO']),
+            'message' => 'Event created.'
+        ));
+    }
+
+    private function onEditEventModernJSON()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            $this->respondModernJSON(405, array(
+                'success' => false,
+                'code' => 'invalidMethod',
+                'message' => 'Invalid request method.'
+            ));
+            return;
+        }
+
+        if ($this->getUserAccessLevel('calendar.editEvent') < ACCESS_LEVEL_EDIT)
+        {
+            $this->respondModernJSON(403, array(
+                'success' => false,
+                'code' => 'forbidden',
+                'message' => 'You do not have permission to edit events.'
+            ));
+            return;
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if ($securityToken === '')
+        {
+            $securityToken = $this->getTrimmedInput('csrfToken', $_POST);
+        }
+        if (!$this->isCSRFTokenValid('calendar.editEvent', $securityToken))
+        {
+            $this->respondModernJSON(403, array(
+                'success' => false,
+                'code' => 'invalidToken',
+                'message' => 'Invalid security token.'
+            ));
+            return;
+        }
+
+        $payload = $this->getModernEventMutationPayload($_POST, true);
+        if (empty($payload['success']))
+        {
+            $this->respondModernJSON(
+                (int) (isset($payload['statusCode']) ? $payload['statusCode'] : 400),
+                array(
+                    'success' => false,
+                    'code' => (isset($payload['code']) ? $payload['code'] : 'invalidInput'),
+                    'message' => (isset($payload['message']) ? $payload['message'] : 'Invalid event payload.')
+                )
+            );
+            return;
+        }
+
+        $calendar = new Calendar($this->_siteID);
+        if (!$calendar->updateEvent(
+            $payload['eventID'],
+            $payload['type'],
+            $payload['dateTime'],
+            $payload['description'],
+            $payload['allDay'],
+            $payload['dataItemID'],
+            $payload['dataItemType'],
+            $payload['jobOrderID'],
+            $payload['title'],
+            $payload['duration'],
+            $payload['reminderEnabled'],
+            $payload['reminderEmail'],
+            $payload['reminderTime'],
+            $payload['isPublic'],
+            $_SESSION['CATS']->getTimeZoneOffset()
+        ))
+        {
+            $this->respondModernJSON(500, array(
+                'success' => false,
+                'code' => 'updateFailed',
+                'message' => 'Failed to update calendar event.'
+            ));
+            return;
+        }
+
+        $this->respondModernJSON(200, array(
+            'success' => true,
+            'eventID' => (int) $payload['eventID'],
+            'dateISO' => $payload['dateISO'],
+            'showURL' => $this->buildModernCalendarShowEventURL((int) $payload['eventID'], $payload['dateISO']),
+            'message' => 'Event updated.'
+        ));
+    }
+
+    private function onDeleteEventModernJSON()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            $this->respondModernJSON(405, array(
+                'success' => false,
+                'code' => 'invalidMethod',
+                'message' => 'Invalid request method.'
+            ));
+            return;
+        }
+
+        if ($this->getUserAccessLevel('calendar.deleteEvent') < ACCESS_LEVEL_DELETE)
+        {
+            $this->respondModernJSON(403, array(
+                'success' => false,
+                'code' => 'forbidden',
+                'message' => 'You do not have permission to delete events.'
+            ));
+            return;
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if ($securityToken === '')
+        {
+            $securityToken = $this->getTrimmedInput('csrfToken', $_POST);
+        }
+        if (!$this->isCSRFTokenValid('calendar.deleteEvent', $securityToken))
+        {
+            $this->respondModernJSON(403, array(
+                'success' => false,
+                'code' => 'invalidToken',
+                'message' => 'Invalid security token.'
+            ));
+            return;
+        }
+
+        $eventID = $this->parseModernOptionalInteger('eventID', $_POST, 0);
+        if ($eventID <= 0)
+        {
+            $this->respondModernJSON(400, array(
+                'success' => false,
+                'code' => 'invalidEventID',
+                'message' => 'Invalid event ID.'
+            ));
+            return;
+        }
+
+        $calendar = new Calendar($this->_siteID);
+        $calendar->deleteEvent($eventID);
+
+        $this->respondModernJSON(200, array(
+            'success' => true,
+            'eventID' => $eventID,
+            'message' => 'Event deleted.'
+        ));
     }
 
     /*
@@ -439,6 +945,7 @@ class CalendarUI extends UserInterface
                 calendar_event.public AS isPublic,
                 DATE_FORMAT(calendar_event.date, '%%Y-%%m-%%d') AS dateISO,
                 DATE_FORMAT(calendar_event.date, '%%m-%%d-%%y') AS dateDisplay,
+                DATE_FORMAT(calendar_event.date, '%%H:%%i') AS timeHHMM,
                 DATE_FORMAT(calendar_event.date, '%%h:%%i %%p') AS timeDisplay,
                 calendar_event.date AS dateSort,
                 calendar_event_type.calendar_event_type_id AS eventTypeID,
@@ -550,6 +1057,7 @@ class CalendarUI extends UserInterface
                 'allDay' => ((int) (isset($eventRow['allDay']) ? $eventRow['allDay'] : 0) === 1),
                 'dateISO' => $eventDateISO,
                 'dateDisplay' => (isset($eventRow['dateDisplay']) ? (string) $eventRow['dateDisplay'] : ''),
+                'timeHHMM' => (isset($eventRow['timeHHMM']) ? (string) $eventRow['timeHHMM'] : ''),
                 'timeDisplay' => (isset($eventRow['timeDisplay']) ? (string) $eventRow['timeDisplay'] : ''),
                 'duration' => (int) (isset($eventRow['duration']) ? $eventRow['duration'] : 0),
                 'isPublic' => ((int) (isset($eventRow['isPublic']) ? $eventRow['isPublic'] : 0) === 1),
@@ -706,7 +1214,25 @@ class CalendarUI extends UserInterface
                 ),
                 'todayURL' => $todayURL,
                 'prevURL' => $prevURL,
-                'nextURL' => $nextURL
+                'nextURL' => $nextURL,
+                'addEventURL' => sprintf(
+                    '%s?m=calendar&a=addEvent&format=modern-json&modernPage=%s&ui=legacy',
+                    $baseURL,
+                    rawurlencode($modernPage)
+                ),
+                'addEventToken' => $this->getCSRFToken('calendar.addEvent'),
+                'editEventURL' => sprintf(
+                    '%s?m=calendar&a=editEvent&format=modern-json&modernPage=%s&ui=legacy',
+                    $baseURL,
+                    rawurlencode($modernPage)
+                ),
+                'editEventToken' => $this->getCSRFToken('calendar.editEvent'),
+                'deleteEventURL' => sprintf(
+                    '%s?m=calendar&a=deleteEvent&format=modern-json&modernPage=%s&ui=legacy',
+                    $baseURL,
+                    rawurlencode($modernPage)
+                ),
+                'deleteEventToken' => $this->getCSRFToken('calendar.deleteEvent')
             ),
             'summary' => array(
                 'eventsInRange' => count($eventRows),

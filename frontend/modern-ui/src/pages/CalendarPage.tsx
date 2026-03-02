@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { fetchCalendarModernData } from '../lib/api';
+import {
+  createCalendarEvent,
+  deleteCalendarEvent,
+  fetchCalendarModernData,
+  updateCalendarEvent
+} from '../lib/api';
 import type { CalendarModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
+import { MutationErrorSurface } from '../components/primitives/MutationErrorSurface';
+import { MutationToast, type MutationToastState } from '../components/primitives/MutationToast';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
-import { SelectMenu } from '../ui-core';
+import { InlineModal, SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import '../dashboard-avel.css';
 
@@ -32,13 +40,94 @@ function decodeURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
 }
 
+type CalendarModalMode = 'create' | 'edit';
+
+type CalendarEventEditorState = {
+  eventID: number;
+  eventTypeID: number;
+  title: string;
+  description: string;
+  dateISO: string;
+  timeHHMM: string;
+  allDay: boolean;
+  duration: number;
+  isPublic: boolean;
+  dataItemID: number;
+  dataItemType: number;
+  jobOrderID: number;
+};
+
+const DEFAULT_EVENT_TIME = '09:00';
+
+function normalizeTimeHHMM(value: unknown): string {
+  const normalized = String(value || '').trim();
+  if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(normalized)) {
+    return normalized;
+  }
+
+  return DEFAULT_EVENT_TIME;
+}
+
+function parseTimeDisplayToHHMM(value: unknown): string {
+  const normalized = String(value || '').trim().toUpperCase();
+  const match = normalized.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (!match) {
+    return DEFAULT_EVENT_TIME;
+  }
+
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const meridiem = match[3];
+  if (!Number.isFinite(hour) || !Number.isFinite(minute) || minute < 0 || minute > 59) {
+    return DEFAULT_EVENT_TIME;
+  }
+  if (hour < 1 || hour > 12) {
+    return DEFAULT_EVENT_TIME;
+  }
+
+  if (meridiem === 'PM' && hour < 12) {
+    hour += 12;
+  }
+  if (meridiem === 'AM' && hour === 12) {
+    hour = 0;
+  }
+
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+function buildInitialEditorState(data: CalendarModernDataResponse): CalendarEventEditorState {
+  return {
+    eventID: 0,
+    eventTypeID: Number(data.options.eventTypes[0]?.typeID || 0),
+    title: '',
+    description: '',
+    dateISO: data.filters.selectedDateISO,
+    timeHHMM: DEFAULT_EVENT_TIME,
+    allDay: false,
+    duration: 30,
+    isPublic: true,
+    dataItemID: -1,
+    dataItemType: -1,
+    jobOrderID: -1
+  };
+}
+
 export function CalendarPage({ bootstrap }: Props) {
   const [data, setData] = useState<CalendarModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [serverQueryString, setServerQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
+  const [modalMode, setModalMode] = useState<CalendarModalMode | null>(null);
+  const [editorState, setEditorState] = useState<CalendarEventEditorState | null>(null);
+  const [mutationPending, setMutationPending] = useState(false);
+  const [mutationError, setMutationError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ eventID: number; title: string } | null>(null);
+  const [deletePending, setDeletePending] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [toast, setToast] = useState<MutationToastState | null>(null);
   const loadRequestRef = useRef(0);
+  const toastIDRef = useRef(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -76,6 +165,15 @@ export function CalendarPage({ bootstrap }: Props) {
     setReloadToken((current) => current + 1);
   }, []);
   usePageRefreshEvents(refreshPageData);
+
+  const showToast = useCallback((tone: MutationToastState['tone'], message: string) => {
+    toastIDRef.current += 1;
+    setToast({
+      id: toastIDRef.current,
+      tone,
+      message
+    });
+  }, []);
 
   const navigateWithState = (next: {
     view?: string;
@@ -140,6 +238,172 @@ export function CalendarPage({ bootstrap }: Props) {
     [data]
   );
 
+  const eventTypeOptions = useMemo<SelectMenuOption[]>(
+    () =>
+      data
+        ? data.options.eventTypes.map((eventType) => ({
+            value: String(eventType.typeID),
+            label: eventType.description
+          }))
+        : [],
+    [data]
+  );
+
+  const focusEvent = (eventID: number, dateISO: string) => {
+    const [year, month, day] = String(dateISO || '')
+      .split('-')
+      .map((entry) => Number(entry));
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      refreshPageData();
+      return;
+    }
+
+    navigateWithState({ year, month, day, showEvent: eventID });
+    refreshPageData();
+  };
+
+  const closeEditorModal = useCallback(() => {
+    if (mutationPending) {
+      return;
+    }
+    setModalMode(null);
+    setEditorState(null);
+    setMutationError('');
+  }, [mutationPending]);
+
+  const openCreateModal = useCallback(() => {
+    if (!data || !data.meta.permissions.canAddEvent) {
+      return;
+    }
+
+    setEditorState(buildInitialEditorState(data));
+    setModalMode('create');
+    setMutationError('');
+  }, [data]);
+
+  const openEditModal = useCallback(
+    (event: CalendarModernDataResponse['events'][number]) => {
+      if (!data || !data.meta.permissions.canEditEvent) {
+        return;
+      }
+
+      setEditorState({
+        eventID: event.eventID,
+        eventTypeID: Number(event.eventTypeID || data.options.eventTypes[0]?.typeID || 0),
+        title: event.title || '',
+        description: event.description || '',
+        dateISO: event.dateISO || data.filters.selectedDateISO,
+        timeHHMM: normalizeTimeHHMM(event.timeHHMM || parseTimeDisplayToHHMM(event.timeDisplay)),
+        allDay: Boolean(event.allDay),
+        duration: Math.max(1, Number(event.duration || 30)),
+        isPublic: Boolean(event.isPublic),
+        dataItemID: Number(event.dataItemID || -1),
+        dataItemType: Number(event.dataItemType || -1),
+        jobOrderID: Number(event.regardingJobOrderID || -1)
+      });
+      setModalMode('edit');
+      setMutationError('');
+    },
+    [data]
+  );
+
+  const submitEditor = useCallback(async () => {
+    if (!data || !editorState || !modalMode) {
+      return;
+    }
+
+    const title = editorState.title.trim();
+    if (title === '') {
+      setMutationError('Event title is required.');
+      return;
+    }
+
+    const dateISO = editorState.dateISO.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) {
+      setMutationError('Date is required.');
+      return;
+    }
+
+    if (!editorState.allDay && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(editorState.timeHHMM.trim())) {
+      setMutationError('Time is required for non all-day events.');
+      return;
+    }
+
+    setMutationPending(true);
+    setMutationError('');
+
+    try {
+      const payload = {
+        eventID: editorState.eventID,
+        eventTypeID: Number(editorState.eventTypeID || 0),
+        title,
+        description: editorState.description || '',
+        allDay: editorState.allDay,
+        dateISO,
+        timeHHMM: editorState.allDay ? '12:00' : editorState.timeHHMM.trim(),
+        duration: Math.max(1, Number(editorState.duration || 30)),
+        isPublic: editorState.isPublic,
+        dataItemID: Number(editorState.dataItemID || -1),
+        dataItemType: Number(editorState.dataItemType || -1),
+        jobOrderID: Number(editorState.jobOrderID || -1)
+      };
+
+      const result =
+        modalMode === 'create'
+          ? await createCalendarEvent(data.actions.addEventURL, data.actions.addEventToken, payload)
+          : await updateCalendarEvent(data.actions.editEventURL, data.actions.editEventToken, payload);
+
+      if (!result.success) {
+        setMutationError(result.message || 'Calendar event save failed.');
+        return;
+      }
+
+      setModalMode(null);
+      setEditorState(null);
+      showToast('success', modalMode === 'create' ? 'Event created.' : 'Event updated.');
+
+      const nextEventID = Number(result.eventID || payload.eventID || 0);
+      if (nextEventID > 0) {
+        focusEvent(nextEventID, result.dateISO || payload.dateISO);
+      } else {
+        refreshPageData();
+      }
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : 'Calendar event save failed.');
+    } finally {
+      setMutationPending(false);
+    }
+  }, [data, editorState, modalMode, focusEvent, refreshPageData, showToast]);
+
+  const submitDelete = useCallback(async () => {
+    if (!data || !deleteTarget) {
+      return;
+    }
+
+    setDeletePending(true);
+    setDeleteError('');
+
+    try {
+      const result = await deleteCalendarEvent(
+        data.actions.deleteEventURL,
+        data.actions.deleteEventToken,
+        deleteTarget.eventID
+      );
+      if (!result.success) {
+        setDeleteError(result.message || 'Calendar event delete failed.');
+        return;
+      }
+
+      setDeleteTarget(null);
+      showToast('success', 'Event deleted.');
+      refreshPageData();
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Calendar event delete failed.');
+    } finally {
+      setDeletePending(false);
+    }
+  }, [data, deleteTarget, refreshPageData, showToast]);
+
   if (loading && !data) {
     return <div className="modern-state">Loading calendar...</div>;
   }
@@ -159,6 +423,7 @@ export function CalendarPage({ bootstrap }: Props) {
   }
 
   const highlightedEventID = data.filters.showEvent;
+  const canMutateEvents = data.meta.permissions.canEditEvent || data.meta.permissions.canDeleteEvent;
 
   return (
     <div className="avel-dashboard-page avel-joborders-page">
@@ -201,6 +466,11 @@ export function CalendarPage({ bootstrap }: Props) {
                 />
               </label>
               <div className="modern-command-actions modern-command-actions--primary">
+                {data.meta.permissions.canAddEvent ? (
+                  <button type="button" className="modern-btn modern-btn--emphasis" onClick={openCreateModal}>
+                    Add Event
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="modern-btn modern-btn--secondary"
@@ -254,7 +524,8 @@ export function CalendarPage({ bootstrap }: Props) {
                   { key: 'event', title: 'Event' },
                   { key: 'linked', title: 'Linked To' },
                   { key: 'regarding', title: 'Regarding' },
-                  { key: 'owner', title: 'Owner' }
+                  { key: 'owner', title: 'Owner' },
+                  ...(canMutateEvents ? [{ key: 'actions', title: 'Actions' }] : [])
                 ]}
                 hasRows={data.events.length > 0}
                 emptyMessage="No events in this range."
@@ -302,6 +573,36 @@ export function CalendarPage({ bootstrap }: Props) {
                       )}
                     </td>
                     <td>{toDisplayText(event.enteredByName)}</td>
+                    {canMutateEvents ? (
+                      <td>
+                        <div className="avel-calendar-event-actions">
+                          {data.meta.permissions.canEditEvent ? (
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--secondary"
+                              onClick={() => openEditModal(event)}
+                            >
+                              Edit
+                            </button>
+                          ) : null}
+                          {data.meta.permissions.canDeleteEvent ? (
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--danger"
+                              onClick={() => {
+                                setDeleteError('');
+                                setDeleteTarget({
+                                  eventID: event.eventID,
+                                  title: toDisplayText(event.title, 'this event')
+                                });
+                              }}
+                            >
+                              Delete
+                            </button>
+                          ) : null}
+                        </div>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </DataTable>
@@ -338,6 +639,219 @@ export function CalendarPage({ bootstrap }: Props) {
               </DataTable>
             </div>
           </section>
+
+          <InlineModal
+            isOpen={modalMode !== null && !!editorState}
+            ariaLabel={modalMode === 'edit' ? 'Edit Event' : 'Add Event'}
+            dialogClassName="modern-inline-modal__dialog--status"
+            closeOnBackdrop={!mutationPending}
+            closeOnEscape={!mutationPending}
+            onClose={closeEditorModal}
+          >
+              <div className="modern-inline-modal__header">
+                <h3>{modalMode === 'edit' ? 'Edit Calendar Event' : 'Add Calendar Event'}</h3>
+                <p>Changes are saved immediately to the shared calendar.</p>
+              </div>
+              <div className="modern-inline-modal__body modern-inline-modal__body--form">
+                {editorState ? (
+                  <div className="avel-calendar-event-form">
+                    <label className="avel-calendar-event-form__field avel-calendar-event-form__field--wide">
+                      <span>Title</span>
+                      <input
+                        type="text"
+                        value={editorState.title}
+                        onChange={(event) =>
+                          setEditorState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  title: event.target.value
+                                }
+                              : current
+                          )
+                        }
+                        placeholder="Event title"
+                        disabled={mutationPending}
+                      />
+                    </label>
+
+                    <label className="avel-calendar-event-form__field">
+                      <span>Event Type</span>
+                      <select
+                        value={String(editorState.eventTypeID || '')}
+                        onChange={(event) =>
+                          setEditorState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  eventTypeID: Number(event.target.value || 0)
+                                }
+                              : current
+                          )
+                        }
+                        disabled={mutationPending}
+                      >
+                        {eventTypeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="avel-calendar-event-form__field">
+                      <span>Date</span>
+                      <input
+                        type="date"
+                        value={editorState.dateISO}
+                        onChange={(event) =>
+                          setEditorState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  dateISO: event.target.value
+                                }
+                              : current
+                          )
+                        }
+                        disabled={mutationPending}
+                      />
+                    </label>
+
+                    <label className="avel-calendar-event-form__field">
+                      <span>Duration (min)</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={720}
+                        value={String(editorState.duration || 30)}
+                        onChange={(event) =>
+                          setEditorState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  duration: Math.max(1, Number(event.target.value || 30))
+                                }
+                              : current
+                          )
+                        }
+                        disabled={mutationPending}
+                      />
+                    </label>
+
+                    {!editorState.allDay ? (
+                      <label className="avel-calendar-event-form__field">
+                        <span>Time</span>
+                        <input
+                          type="time"
+                          value={editorState.timeHHMM}
+                          onChange={(event) =>
+                            setEditorState((current) =>
+                              current
+                                ? {
+                                    ...current,
+                                    timeHHMM: event.target.value
+                                  }
+                                : current
+                            )
+                          }
+                          disabled={mutationPending}
+                        />
+                      </label>
+                    ) : (
+                      <div className="avel-calendar-event-form__field avel-calendar-event-form__field--placeholder" />
+                    )}
+
+                    <label className="avel-calendar-event-form__check">
+                      <input
+                        type="checkbox"
+                        checked={editorState.allDay}
+                        onChange={(event) =>
+                          setEditorState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  allDay: event.target.checked
+                                }
+                              : current
+                          )
+                        }
+                        disabled={mutationPending}
+                      />
+                      <span>All day event</span>
+                    </label>
+
+                    <label className="avel-calendar-event-form__check">
+                      <input
+                        type="checkbox"
+                        checked={editorState.isPublic}
+                        onChange={(event) =>
+                          setEditorState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  isPublic: event.target.checked
+                                }
+                              : current
+                          )
+                        }
+                        disabled={mutationPending}
+                      />
+                      <span>Public visibility</span>
+                    </label>
+
+                    <label className="avel-calendar-event-form__field avel-calendar-event-form__field--wide">
+                      <span>Description</span>
+                      <textarea
+                        rows={4}
+                        value={editorState.description}
+                        onChange={(event) =>
+                          setEditorState((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  description: event.target.value
+                                }
+                              : current
+                          )
+                        }
+                        placeholder="Optional description"
+                        disabled={mutationPending}
+                      />
+                    </label>
+                  </div>
+                ) : null}
+
+                <MutationErrorSurface message={mutationError} />
+              </div>
+              <div className="modern-inline-modal__actions">
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={closeEditorModal} disabled={mutationPending}>
+                  Cancel
+                </button>
+                <button type="button" className="modern-btn modern-btn--emphasis" onClick={submitEditor} disabled={mutationPending || !editorState}>
+                  {mutationPending ? 'Saving...' : modalMode === 'edit' ? 'Save Event' : 'Create Event'}
+                </button>
+              </div>
+          </InlineModal>
+
+          <ConfirmActionModal
+            isOpen={!!deleteTarget}
+            title="Delete Calendar Event"
+            message={`Delete "${deleteTarget?.title || 'this event'}"? This cannot be undone.`}
+            confirmLabel="Delete Event"
+            pending={deletePending}
+            error={deleteError}
+            onCancel={() => {
+              if (deletePending) {
+                return;
+              }
+              setDeleteError('');
+              setDeleteTarget(null);
+            }}
+            onConfirm={submitDelete}
+          />
+
+          <MutationToast toast={toast} onDismiss={() => setToast(null)} />
         </div>
       </PageContainer>
     </div>
