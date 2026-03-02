@@ -134,12 +134,16 @@ function parseRouteRegistry(source) {
   }
 
   function parseExplicitBridgeRoutes(constName) {
-    const bridgeBlockMatch = new RegExp(`const\\s+${constName}\\s*=\\s*buildExplicitBridgeRoutes\\(\\{([\\s\\S]*?)\\}\\);`, 'm').exec(source);
+    const bridgeBlockMatch = new RegExp(
+      `const\\s+${constName}\\s*=\\s*buildExplicitBridgeRoutes\\(\\{([\\s\\S]*?)\\}(?:,\\s*([A-Za-z0-9_]+)\\s*)?\\);`,
+      'm'
+    ).exec(source);
     if (!bridgeBlockMatch) {
       return [];
     }
 
     const bridgeBody = bridgeBlockMatch[1];
+    const componentName = bridgeBlockMatch[2] ? String(bridgeBlockMatch[2]) : 'ModuleBridgePage';
     const entries = [];
     const moduleRegex = /([A-Za-z0-9_]+)\s*:\s*\[([\s\S]*?)\]/g;
     let moduleMatch;
@@ -151,7 +155,7 @@ function parseRouteRegistry(source) {
       while ((actionMatch = actionRegex.exec(actionsBody)) !== null) {
         entries.push({
           routeKey: `${moduleKey}.${actionMatch[1].toLowerCase()}`,
-          component: 'ModuleBridgePage'
+          component: componentName
         });
       }
     }
@@ -175,6 +179,9 @@ function parseRouteRegistry(source) {
     routes.set(entry.routeKey, entry.component);
   }
   for (const entry of parseExplicitBridgeRoutes('explicitBridgeActionRoutes')) {
+    routes.set(entry.routeKey, entry.component);
+  }
+  for (const entry of parseExplicitBridgeRoutes('explicitActionCompatRoutes')) {
     routes.set(entry.routeKey, entry.component);
   }
 

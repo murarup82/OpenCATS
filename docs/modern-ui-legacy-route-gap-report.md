@@ -1,14 +1,14 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-02T04:15:07.078Z
+Generated: 2026-03-02T04:26:02.516Z
 
 ## Summary
 
 - Legacy handleRequest actions discovered: 219
-- Native explicit modern coverage: 27
+- Native explicit modern coverage: 95
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 192
-- Bridge explicit route mapping: 68
+- Bridge coverage (explicit + fallback): 124
+- Bridge explicit route mapping: 0
 - Bridge wildcard fallback mapping: 124
 - Legacy unresolved: 0
 
@@ -18,21 +18,21 @@ Generated: 2026-03-02T04:15:07.078Z
 | --- | ---: | ---: | ---: | ---: | ---: |
 | activity | 2 | 2 | 0 | 0 | 0 |
 | attachments | 1 | 0 | 0 | 1 | 0 |
-| calendar | 5 | 1 | 0 | 4 | 0 |
-| candidates | 27 | 5 | 0 | 22 | 0 |
-| companies | 9 | 5 | 0 | 4 | 0 |
-| contacts | 9 | 5 | 0 | 4 | 0 |
+| calendar | 5 | 5 | 0 | 0 | 0 |
+| candidates | 27 | 27 | 0 | 0 | 0 |
+| companies | 9 | 9 | 0 | 0 | 0 |
+| contacts | 9 | 9 | 0 | 0 | 0 |
 | dashboard | 2 | 2 | 0 | 0 | 0 |
 | export | 2 | 0 | 0 | 2 | 0 |
 | gdpr | 2 | 0 | 0 | 2 | 0 |
 | graphs | 5 | 0 | 0 | 5 | 0 |
 | home | 22 | 0 | 0 | 22 | 0 |
 | import | 15 | 0 | 0 | 15 | 0 |
-| joborders | 23 | 5 | 0 | 18 | 0 |
+| joborders | 23 | 23 | 0 | 0 | 0 |
 | kpis | 1 | 0 | 0 | 1 | 0 |
-| lists | 7 | 1 | 0 | 6 | 0 |
+| lists | 7 | 7 | 0 | 0 | 0 |
 | login | 7 | 0 | 0 | 7 | 0 |
-| reports | 11 | 1 | 0 | 10 | 0 |
+| reports | 11 | 11 | 0 | 0 | 0 |
 | rss | 1 | 0 | 0 | 1 | 0 |
 | settings | 58 | 0 | 0 | 58 | 0 |
 | toolbar | 8 | 0 | 0 | 8 | 0 |
@@ -43,109 +43,7 @@ Generated: 2026-03-02T04:15:07.078Z
 
 These are legacy actions for modernized modules that are not mapped as explicit native routes.
 
-### calendar
-
-| Action | Classification | Resolved Route | Component |
-| --- | --- | --- | --- |
-| addEvent | bridge-explicit | calendar.addevent | ModuleBridgePage |
-| deleteEvent | bridge-explicit | calendar.deleteevent | ModuleBridgePage |
-| dynamicData | bridge-explicit | calendar.dynamicdata | ModuleBridgePage |
-| editEvent | bridge-explicit | calendar.editevent | ModuleBridgePage |
-
-### candidates
-
-| Action | Classification | Resolved Route | Component |
-| --- | --- | --- | --- |
-| addActivityChangeStatus | bridge-explicit | candidates.addactivitychangestatus | ModuleBridgePage |
-| addCandidateTags | bridge-explicit | candidates.addcandidatetags | ModuleBridgePage |
-| addDuplicates | bridge-explicit | candidates.addduplicates | ModuleBridgePage |
-| addEditImage | bridge-explicit | candidates.addeditimage | ModuleBridgePage |
-| addProfileComment | bridge-explicit | candidates.addprofilecomment | ModuleBridgePage |
-| addToPipeline | bridge-explicit | candidates.addtopipeline | ModuleBridgePage |
-| administrativeHideShow | bridge-explicit | candidates.administrativehideshow | ModuleBridgePage |
-| considerForJobSearch | bridge-explicit | candidates.considerforjobsearch | ModuleBridgePage |
-| createAttachment | bridge-explicit | candidates.createattachment | ModuleBridgePage |
-| delete | bridge-explicit | candidates.delete | ModuleBridgePage |
-| deleteAttachment | bridge-explicit | candidates.deleteattachment | ModuleBridgePage |
-| deleteMessageThread | bridge-explicit | candidates.deletemessagethread | ModuleBridgePage |
-| emailCandidates | bridge-explicit | candidates.emailcandidates | ModuleBridgePage |
-| linkDuplicate | bridge-explicit | candidates.linkduplicate | ModuleBridgePage |
-| merge | bridge-explicit | candidates.merge | ModuleBridgePage |
-| mergeInfo | bridge-explicit | candidates.mergeinfo | ModuleBridgePage |
-| postMessage | bridge-explicit | candidates.postmessage | ModuleBridgePage |
-| removeDuplicity | bridge-explicit | candidates.removeduplicity | ModuleBridgePage |
-| removeFromPipeline | bridge-explicit | candidates.removefrompipeline | ModuleBridgePage |
-| saveSources | bridge-explicit | candidates.savesources | ModuleBridgePage |
-| show_questionnaire | bridge-explicit | candidates.show_questionnaire | ModuleBridgePage |
-| viewResume | bridge-explicit | candidates.viewresume | ModuleBridgePage |
-
-### companies
-
-| Action | Classification | Resolved Route | Component |
-| --- | --- | --- | --- |
-| createAttachment | bridge-explicit | companies.createattachment | ModuleBridgePage |
-| delete | bridge-explicit | companies.delete | ModuleBridgePage |
-| deleteAttachment | bridge-explicit | companies.deleteattachment | ModuleBridgePage |
-| internalPostings | bridge-explicit | companies.internalpostings | ModuleBridgePage |
-
-### contacts
-
-| Action | Classification | Resolved Route | Component |
-| --- | --- | --- | --- |
-| addActivityScheduleEvent | bridge-explicit | contacts.addactivityscheduleevent | ModuleBridgePage |
-| delete | bridge-explicit | contacts.delete | ModuleBridgePage |
-| downloadVCard | bridge-explicit | contacts.downloadvcard | ModuleBridgePage |
-| showColdCallList | bridge-explicit | contacts.showcoldcalllist | ModuleBridgePage |
-
-### joborders
-
-| Action | Classification | Resolved Route | Component |
-| --- | --- | --- | --- |
-| addActivityChangeStatus | bridge-explicit | joborders.addactivitychangestatus | ModuleBridgePage |
-| addCandidateModal | bridge-explicit | joborders.addcandidatemodal | ModuleBridgePage |
-| addJobOrderPopup | bridge-explicit | joborders.addjoborderpopup | ModuleBridgePage |
-| addProfileComment | bridge-explicit | joborders.addprofilecomment | ModuleBridgePage |
-| addToPipeline | bridge-explicit | joborders.addtopipeline | ModuleBridgePage |
-| administrativeHideShow | bridge-explicit | joborders.administrativehideshow | ModuleBridgePage |
-| considerCandidateSearch | bridge-explicit | joborders.considercandidatesearch | ModuleBridgePage |
-| createAttachment | bridge-explicit | joborders.createattachment | ModuleBridgePage |
-| delete | bridge-explicit | joborders.delete | ModuleBridgePage |
-| deleteAttachment | bridge-explicit | joborders.deleteattachment | ModuleBridgePage |
-| deleteMessageThread | bridge-explicit | joborders.deletemessagethread | ModuleBridgePage |
-| editHiringPlan | bridge-explicit | joborders.edithiringplan | ModuleBridgePage |
-| pipelineStatusDetails | bridge-explicit | joborders.pipelinestatusdetails | ModuleBridgePage |
-| pipelineStatusEditDate | bridge-explicit | joborders.pipelinestatuseditdate | ModuleBridgePage |
-| postMessage | bridge-explicit | joborders.postmessage | ModuleBridgePage |
-| recruiterAllocation | bridge-explicit | joborders.recruiterallocation | ModuleBridgePage |
-| removeFromPipeline | bridge-explicit | joborders.removefrompipeline | ModuleBridgePage |
-| setMonitoredJobOrder | bridge-explicit | joborders.setmonitoredjoborder | ModuleBridgePage |
-
-### lists
-
-| Action | Classification | Resolved Route | Component |
-| --- | --- | --- | --- |
-| addToListFromDatagridModal | bridge-explicit | lists.addtolistfromdatagridmodal | ModuleBridgePage |
-| deleteStaticList | bridge-explicit | lists.deletestaticlist | ModuleBridgePage |
-| quickActionAddToListModal | bridge-explicit | lists.quickactionaddtolistmodal | ModuleBridgePage |
-| removeFromListDatagrid | bridge-explicit | lists.removefromlistdatagrid | ModuleBridgePage |
-| saveListAccess | bridge-explicit | lists.savelistaccess | ModuleBridgePage |
-| showList | bridge-explicit | lists.showlist | ModuleBridgePage |
-
-### reports
-
-| Action | Classification | Resolved Route | Component |
-| --- | --- | --- | --- |
-| customerDashboard | bridge-explicit | reports.customerdashboard | ModuleBridgePage |
-| customerDashboardDetails | bridge-explicit | reports.customerdashboarddetails | ModuleBridgePage |
-| customizeEEOReport | bridge-explicit | reports.customizeeeoreport | ModuleBridgePage |
-| customizeJobOrderReport | bridge-explicit | reports.customizejoborderreport | ModuleBridgePage |
-| generateEEOReportPreview | bridge-explicit | reports.generateeeoreportpreview | ModuleBridgePage |
-| generateJobOrderReportPDF | bridge-explicit | reports.generatejoborderreportpdf | ModuleBridgePage |
-| graphView | bridge-explicit | reports.graphview | ModuleBridgePage |
-| showHireReport | bridge-explicit | reports.showhirereport | ModuleBridgePage |
-| showPlacementReport | bridge-explicit | reports.showplacementreport | ModuleBridgePage |
-| showSubmissionReport | bridge-explicit | reports.showsubmissionreport | ModuleBridgePage |
-
+- None.
 ## Full Action Matrix
 
 | Module | Action | Classification | Resolved Route | Component |
@@ -153,56 +51,56 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | activity | listByViewDataGrid | native-explicit | activity.listbyviewdatagrid | ActivityListPage |
 | activity | viewByDate | native-explicit | activity.viewbydate | ActivityListPage |
 | attachments | getAttachment | bridge-global-fallback | *.* | ModuleBridgePage |
-| calendar | addEvent | bridge-explicit | calendar.addevent | ModuleBridgePage |
-| calendar | deleteEvent | bridge-explicit | calendar.deleteevent | ModuleBridgePage |
-| calendar | dynamicData | bridge-explicit | calendar.dynamicdata | ModuleBridgePage |
-| calendar | editEvent | bridge-explicit | calendar.editevent | ModuleBridgePage |
+| calendar | addEvent | native-explicit | calendar.addevent | ActionCompatPage |
+| calendar | deleteEvent | native-explicit | calendar.deleteevent | ActionCompatPage |
+| calendar | dynamicData | native-explicit | calendar.dynamicdata | ActionCompatPage |
+| calendar | editEvent | native-explicit | calendar.editevent | ActionCompatPage |
 | calendar | showCalendar | native-explicit | calendar.showcalendar | CalendarPage |
 | candidates | add | native-explicit | candidates.add | CandidatesAddPage |
-| candidates | addActivityChangeStatus | bridge-explicit | candidates.addactivitychangestatus | ModuleBridgePage |
-| candidates | addCandidateTags | bridge-explicit | candidates.addcandidatetags | ModuleBridgePage |
-| candidates | addDuplicates | bridge-explicit | candidates.addduplicates | ModuleBridgePage |
-| candidates | addEditImage | bridge-explicit | candidates.addeditimage | ModuleBridgePage |
-| candidates | addProfileComment | bridge-explicit | candidates.addprofilecomment | ModuleBridgePage |
-| candidates | addToPipeline | bridge-explicit | candidates.addtopipeline | ModuleBridgePage |
-| candidates | administrativeHideShow | bridge-explicit | candidates.administrativehideshow | ModuleBridgePage |
-| candidates | considerForJobSearch | bridge-explicit | candidates.considerforjobsearch | ModuleBridgePage |
-| candidates | createAttachment | bridge-explicit | candidates.createattachment | ModuleBridgePage |
-| candidates | delete | bridge-explicit | candidates.delete | ModuleBridgePage |
-| candidates | deleteAttachment | bridge-explicit | candidates.deleteattachment | ModuleBridgePage |
-| candidates | deleteMessageThread | bridge-explicit | candidates.deletemessagethread | ModuleBridgePage |
+| candidates | addActivityChangeStatus | native-explicit | candidates.addactivitychangestatus | ActionCompatPage |
+| candidates | addCandidateTags | native-explicit | candidates.addcandidatetags | ActionCompatPage |
+| candidates | addDuplicates | native-explicit | candidates.addduplicates | ActionCompatPage |
+| candidates | addEditImage | native-explicit | candidates.addeditimage | ActionCompatPage |
+| candidates | addProfileComment | native-explicit | candidates.addprofilecomment | ActionCompatPage |
+| candidates | addToPipeline | native-explicit | candidates.addtopipeline | ActionCompatPage |
+| candidates | administrativeHideShow | native-explicit | candidates.administrativehideshow | ActionCompatPage |
+| candidates | considerForJobSearch | native-explicit | candidates.considerforjobsearch | ActionCompatPage |
+| candidates | createAttachment | native-explicit | candidates.createattachment | ActionCompatPage |
+| candidates | delete | native-explicit | candidates.delete | ActionCompatPage |
+| candidates | deleteAttachment | native-explicit | candidates.deleteattachment | ActionCompatPage |
+| candidates | deleteMessageThread | native-explicit | candidates.deletemessagethread | ActionCompatPage |
 | candidates | edit | native-explicit-guarded | candidates.edit | CandidatesEditPage |
-| candidates | emailCandidates | bridge-explicit | candidates.emailcandidates | ModuleBridgePage |
-| candidates | linkDuplicate | bridge-explicit | candidates.linkduplicate | ModuleBridgePage |
+| candidates | emailCandidates | native-explicit | candidates.emailcandidates | ActionCompatPage |
+| candidates | linkDuplicate | native-explicit | candidates.linkduplicate | ActionCompatPage |
 | candidates | listByView | native-explicit | candidates.listbyview | CandidatesListPage |
-| candidates | merge | bridge-explicit | candidates.merge | ModuleBridgePage |
-| candidates | mergeInfo | bridge-explicit | candidates.mergeinfo | ModuleBridgePage |
-| candidates | postMessage | bridge-explicit | candidates.postmessage | ModuleBridgePage |
-| candidates | removeDuplicity | bridge-explicit | candidates.removeduplicity | ModuleBridgePage |
-| candidates | removeFromPipeline | bridge-explicit | candidates.removefrompipeline | ModuleBridgePage |
-| candidates | saveSources | bridge-explicit | candidates.savesources | ModuleBridgePage |
+| candidates | merge | native-explicit | candidates.merge | ActionCompatPage |
+| candidates | mergeInfo | native-explicit | candidates.mergeinfo | ActionCompatPage |
+| candidates | postMessage | native-explicit | candidates.postmessage | ActionCompatPage |
+| candidates | removeDuplicity | native-explicit | candidates.removeduplicity | ActionCompatPage |
+| candidates | removeFromPipeline | native-explicit | candidates.removefrompipeline | ActionCompatPage |
+| candidates | saveSources | native-explicit | candidates.savesources | ActionCompatPage |
 | candidates | search | native-explicit | candidates.search | CandidatesListPage |
 | candidates | show | native-explicit-guarded | candidates.show | CandidatesShowPage |
-| candidates | show_questionnaire | bridge-explicit | candidates.show_questionnaire | ModuleBridgePage |
-| candidates | viewResume | bridge-explicit | candidates.viewresume | ModuleBridgePage |
+| candidates | show_questionnaire | native-explicit | candidates.show_questionnaire | ActionCompatPage |
+| candidates | viewResume | native-explicit | candidates.viewresume | ActionCompatPage |
 | companies | add | native-explicit | companies.add | CompaniesFormBridgePage |
-| companies | createAttachment | bridge-explicit | companies.createattachment | ModuleBridgePage |
-| companies | delete | bridge-explicit | companies.delete | ModuleBridgePage |
-| companies | deleteAttachment | bridge-explicit | companies.deleteattachment | ModuleBridgePage |
+| companies | createAttachment | native-explicit | companies.createattachment | ActionCompatPage |
+| companies | delete | native-explicit | companies.delete | ActionCompatPage |
+| companies | deleteAttachment | native-explicit | companies.deleteattachment | ActionCompatPage |
 | companies | edit | native-explicit-guarded | companies.edit | CompaniesFormBridgePage |
-| companies | internalPostings | bridge-explicit | companies.internalpostings | ModuleBridgePage |
+| companies | internalPostings | native-explicit | companies.internalpostings | ActionCompatPage |
 | companies | listByView | native-explicit | companies.listbyview | CompaniesListPage |
 | companies | search | native-explicit | companies.search | CompaniesListPage |
 | companies | show | native-explicit-guarded | companies.show | CompaniesShowPage |
 | contacts | add | native-explicit | contacts.add | ContactsFormBridgePage |
-| contacts | addActivityScheduleEvent | bridge-explicit | contacts.addactivityscheduleevent | ModuleBridgePage |
-| contacts | delete | bridge-explicit | contacts.delete | ModuleBridgePage |
-| contacts | downloadVCard | bridge-explicit | contacts.downloadvcard | ModuleBridgePage |
+| contacts | addActivityScheduleEvent | native-explicit | contacts.addactivityscheduleevent | ActionCompatPage |
+| contacts | delete | native-explicit | contacts.delete | ActionCompatPage |
+| contacts | downloadVCard | native-explicit | contacts.downloadvcard | ActionCompatPage |
 | contacts | edit | native-explicit-guarded | contacts.edit | ContactsFormBridgePage |
 | contacts | listByView | native-explicit | contacts.listbyview | ContactsListPage |
 | contacts | search | native-explicit | contacts.search | ContactsListPage |
 | contacts | show | native-explicit-guarded | contacts.show | ContactsShowPage |
-| contacts | showColdCallList | bridge-explicit | contacts.showcoldcalllist | ModuleBridgePage |
+| contacts | showColdCallList | native-explicit | contacts.showcoldcalllist | ActionCompatPage |
 | dashboard | my | native-explicit | dashboard.my | DashboardMyPage |
 | dashboard | setPipelineStatus | native-explicit | dashboard.setpipelinestatus | DashboardMyPage |
 | export | export | bridge-global-fallback | *.* | ModuleBridgePage |
@@ -252,36 +150,36 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | import | viewpending | bridge-global-fallback | *.* | ModuleBridgePage |
 | import | whatIsBulkResumes | bridge-global-fallback | *.* | ModuleBridgePage |
 | joborders | add | native-explicit | joborders.add | JobOrdersFormBridgePage |
-| joborders | addActivityChangeStatus | bridge-explicit | joborders.addactivitychangestatus | ModuleBridgePage |
-| joborders | addCandidateModal | bridge-explicit | joborders.addcandidatemodal | ModuleBridgePage |
-| joborders | addJobOrderPopup | bridge-explicit | joborders.addjoborderpopup | ModuleBridgePage |
-| joborders | addProfileComment | bridge-explicit | joborders.addprofilecomment | ModuleBridgePage |
-| joborders | addToPipeline | bridge-explicit | joborders.addtopipeline | ModuleBridgePage |
-| joborders | administrativeHideShow | bridge-explicit | joborders.administrativehideshow | ModuleBridgePage |
-| joborders | considerCandidateSearch | bridge-explicit | joborders.considercandidatesearch | ModuleBridgePage |
-| joborders | createAttachment | bridge-explicit | joborders.createattachment | ModuleBridgePage |
-| joborders | delete | bridge-explicit | joborders.delete | ModuleBridgePage |
-| joborders | deleteAttachment | bridge-explicit | joborders.deleteattachment | ModuleBridgePage |
-| joborders | deleteMessageThread | bridge-explicit | joborders.deletemessagethread | ModuleBridgePage |
+| joborders | addActivityChangeStatus | native-explicit | joborders.addactivitychangestatus | ActionCompatPage |
+| joborders | addCandidateModal | native-explicit | joborders.addcandidatemodal | ActionCompatPage |
+| joborders | addJobOrderPopup | native-explicit | joborders.addjoborderpopup | ActionCompatPage |
+| joborders | addProfileComment | native-explicit | joborders.addprofilecomment | ActionCompatPage |
+| joborders | addToPipeline | native-explicit | joborders.addtopipeline | ActionCompatPage |
+| joborders | administrativeHideShow | native-explicit | joborders.administrativehideshow | ActionCompatPage |
+| joborders | considerCandidateSearch | native-explicit | joborders.considercandidatesearch | ActionCompatPage |
+| joborders | createAttachment | native-explicit | joborders.createattachment | ActionCompatPage |
+| joborders | delete | native-explicit | joborders.delete | ActionCompatPage |
+| joborders | deleteAttachment | native-explicit | joborders.deleteattachment | ActionCompatPage |
+| joborders | deleteMessageThread | native-explicit | joborders.deletemessagethread | ActionCompatPage |
 | joborders | edit | native-explicit-guarded | joborders.edit | JobOrdersFormBridgePage |
-| joborders | editHiringPlan | bridge-explicit | joborders.edithiringplan | ModuleBridgePage |
+| joborders | editHiringPlan | native-explicit | joborders.edithiringplan | ActionCompatPage |
 | joborders | listByView | native-explicit | joborders.listbyview | JobOrdersListPage |
-| joborders | pipelineStatusDetails | bridge-explicit | joborders.pipelinestatusdetails | ModuleBridgePage |
-| joborders | pipelineStatusEditDate | bridge-explicit | joborders.pipelinestatuseditdate | ModuleBridgePage |
-| joborders | postMessage | bridge-explicit | joborders.postmessage | ModuleBridgePage |
-| joborders | recruiterAllocation | bridge-explicit | joborders.recruiterallocation | ModuleBridgePage |
-| joborders | removeFromPipeline | bridge-explicit | joborders.removefrompipeline | ModuleBridgePage |
+| joborders | pipelineStatusDetails | native-explicit | joborders.pipelinestatusdetails | ActionCompatPage |
+| joborders | pipelineStatusEditDate | native-explicit | joborders.pipelinestatuseditdate | ActionCompatPage |
+| joborders | postMessage | native-explicit | joborders.postmessage | ActionCompatPage |
+| joborders | recruiterAllocation | native-explicit | joborders.recruiterallocation | ActionCompatPage |
+| joborders | removeFromPipeline | native-explicit | joborders.removefrompipeline | ActionCompatPage |
 | joborders | search | native-explicit | joborders.search | JobOrdersListPage |
-| joborders | setMonitoredJobOrder | bridge-explicit | joborders.setmonitoredjoborder | ModuleBridgePage |
+| joborders | setMonitoredJobOrder | native-explicit | joborders.setmonitoredjoborder | ActionCompatPage |
 | joborders | show | native-explicit-guarded | joborders.show | JobOrdersShowPage |
 | kpis | details | bridge-global-fallback | *.* | ModuleBridgePage |
-| lists | addToListFromDatagridModal | bridge-explicit | lists.addtolistfromdatagridmodal | ModuleBridgePage |
-| lists | deleteStaticList | bridge-explicit | lists.deletestaticlist | ModuleBridgePage |
+| lists | addToListFromDatagridModal | native-explicit | lists.addtolistfromdatagridmodal | ActionCompatPage |
+| lists | deleteStaticList | native-explicit | lists.deletestaticlist | ActionCompatPage |
 | lists | listByView | native-explicit | lists.listbyview | ListsManagePage |
-| lists | quickActionAddToListModal | bridge-explicit | lists.quickactionaddtolistmodal | ModuleBridgePage |
-| lists | removeFromListDatagrid | bridge-explicit | lists.removefromlistdatagrid | ModuleBridgePage |
-| lists | saveListAccess | bridge-explicit | lists.savelistaccess | ModuleBridgePage |
-| lists | showList | bridge-explicit | lists.showlist | ModuleBridgePage |
+| lists | quickActionAddToListModal | native-explicit | lists.quickactionaddtolistmodal | ActionCompatPage |
+| lists | removeFromListDatagrid | native-explicit | lists.removefromlistdatagrid | ActionCompatPage |
+| lists | saveListAccess | native-explicit | lists.savelistaccess | ActionCompatPage |
+| lists | showList | native-explicit | lists.showlist | ActionCompatPage |
 | login | attemptLogin | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | forgotPassword | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | googleCallback | bridge-global-fallback | *.* | ModuleBridgePage |
@@ -289,17 +187,17 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | login | noCookiesModal | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | requestAccess | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | showLoginForm | bridge-global-fallback | *.* | ModuleBridgePage |
-| reports | customerDashboard | bridge-explicit | reports.customerdashboard | ModuleBridgePage |
-| reports | customerDashboardDetails | bridge-explicit | reports.customerdashboarddetails | ModuleBridgePage |
-| reports | customizeEEOReport | bridge-explicit | reports.customizeeeoreport | ModuleBridgePage |
-| reports | customizeJobOrderReport | bridge-explicit | reports.customizejoborderreport | ModuleBridgePage |
-| reports | generateEEOReportPreview | bridge-explicit | reports.generateeeoreportpreview | ModuleBridgePage |
-| reports | generateJobOrderReportPDF | bridge-explicit | reports.generatejoborderreportpdf | ModuleBridgePage |
-| reports | graphView | bridge-explicit | reports.graphview | ModuleBridgePage |
+| reports | customerDashboard | native-explicit | reports.customerdashboard | ActionCompatPage |
+| reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ActionCompatPage |
+| reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | ActionCompatPage |
+| reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | ActionCompatPage |
+| reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | ActionCompatPage |
+| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | ActionCompatPage |
+| reports | graphView | native-explicit | reports.graphview | ActionCompatPage |
 | reports | reports | native-explicit | reports.reports | ReportsLauncherPage |
-| reports | showHireReport | bridge-explicit | reports.showhirereport | ModuleBridgePage |
-| reports | showPlacementReport | bridge-explicit | reports.showplacementreport | ModuleBridgePage |
-| reports | showSubmissionReport | bridge-explicit | reports.showsubmissionreport | ModuleBridgePage |
+| reports | showHireReport | native-explicit | reports.showhirereport | ActionCompatPage |
+| reports | showPlacementReport | native-explicit | reports.showplacementreport | ActionCompatPage |
+| reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | ActionCompatPage |
 | rss | jobOrders | bridge-global-fallback | *.* | ModuleBridgePage |
 | settings | addEmailTemplate | bridge-global-fallback | *.* | ModuleBridgePage |
 | settings | addUser | bridge-global-fallback | *.* | ModuleBridgePage |

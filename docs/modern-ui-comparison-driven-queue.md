@@ -1,17 +1,18 @@
 ﻿# Modern UI Comparison-Driven Queue
 
 Source: `docs/modern-ui-legacy-route-gap-report.md`  
-Generated from latest comparison snapshot: `2026-03-02T04:04:20.799Z`
+Generated from latest comparison snapshot: `2026-03-02T04:25:25.245Z`
 
 ## Snapshot
 
 - Legacy `handleRequest` actions discovered: `219`
-- Native explicit route coverage: `27`
+- Native explicit route coverage: `95`
 - Native default fallback: `0`
-- Bridge coverage: `192`
-- Bridge explicit mapping: `68`
+- Bridge coverage: `124`
+- Bridge explicit mapping: `0`
 - Bridge wildcard fallback mapping: `124`
 - In-scope wildcard/default fallbacks (core modules): `0`
+- In-scope non-native routes (core modules): `0`
 
 ## Execution Status
 
@@ -56,8 +57,13 @@ All 30 queued tasks were executed in **Phase 1 parity mode**:
 | 29 | reports launcher-to-report parity set | Done (Phase 1) | explicit bridge route mappings |
 | 30 | reports customization/export parity set | Done (Phase 1) | explicit bridge route mappings |
 
-## Phase 2 Native Deepening Backlog
+## Phase 2 Native Deepening Status
 
-- Replace explicit bridge actions with native contracts one action-family at a time.
-- Keep `verify:in-scope-routes` green while converting bridge-explicit routes into native-explicit routes.
-- Expand smoke fixtures for action families as each module migrates from bridge-explicit to native-explicit.
+Phase 2A complete:
+- explicit bridge action routes were moved to `ActionCompatPage` wrappers (native-explicit compatibility workspaces)
+- core modules now have zero in-scope wildcard/default fallbacks and zero in-scope non-native route classifications.
+
+Phase 2B backlog (functional deepening):
+- Replace compatibility wrappers with fully native contracts/UI per action family (Calendar, Reports, Lists, Candidates/JobOrders utility actions).
+- Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
+- Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

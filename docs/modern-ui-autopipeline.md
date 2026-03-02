@@ -362,10 +362,16 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 140. Extended quality gate with governance and coverage artifacts:
     - `quality:gate` now runs fixture coverage and ownership reminder checks
     - evidence validation now requires telemetry retention, fixture coverage, release changelog template, keyboard extension plan, and ownership reminder process artifacts.
+141. Executed phase-2A native deepening for explicit action routes:
+    - introduced `ActionCompatPage` and moved explicit action compatibility mappings from `ModuleBridgePage` to native-explicit wrapper routing
+    - in-scope action routes now resolve without wildcard/default fallback and without bridge-explicit classification.
+142. Refined comparison telemetry for phase-2 tracking:
+    - updated comparison parser to read component-targeted explicit action maps and preserve route-classification fidelity
+    - refreshed comparison artifacts showing `nativeExplicit=95`, `bridgeExplicit=0`, and `inScopeNonNative=0`.
 
 ## Next Queue (30-Slice Execution)
 
-1. Execute phase-2 native deepening backlog from `docs/modern-ui-comparison-driven-queue.md` (convert bridge-explicit -> native-explicit).
+1. Execute phase-2B native deepening backlog from `docs/modern-ui-comparison-driven-queue.md` (replace compatibility wrappers with fully native action contracts).
 2. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 3. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 4. Expand mutation-safe replay fixtures to reduce uncovered endpoint checks in `docs/modern-ui-smoke-fixture-coverage.md`.

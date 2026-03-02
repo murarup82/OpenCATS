@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-03-02T04:15:07.078Z",
+  "generatedAt": "2026-03-02T04:26:02.516Z",
   "totals": {
     "actions": 219,
-    "nativeExplicit": 27,
+    "nativeExplicit": 95,
     "nativeDefaultFallback": 0,
-    "bridge": 192,
-    "bridgeExplicit": 68,
+    "bridge": 124,
+    "bridgeExplicit": 0,
     "bridgeFallback": 124,
     "unresolved": 0
   },
@@ -29,33 +29,33 @@
     {
       "module": "calendar",
       "totalActions": 5,
-      "nativeExplicit": 1,
+      "nativeExplicit": 5,
       "nativeFallback": 0,
-      "bridge": 4,
+      "bridge": 0,
       "unresolved": 0
     },
     {
       "module": "candidates",
       "totalActions": 27,
-      "nativeExplicit": 5,
+      "nativeExplicit": 27,
       "nativeFallback": 0,
-      "bridge": 22,
+      "bridge": 0,
       "unresolved": 0
     },
     {
       "module": "companies",
       "totalActions": 9,
-      "nativeExplicit": 5,
+      "nativeExplicit": 9,
       "nativeFallback": 0,
-      "bridge": 4,
+      "bridge": 0,
       "unresolved": 0
     },
     {
       "module": "contacts",
       "totalActions": 9,
-      "nativeExplicit": 5,
+      "nativeExplicit": 9,
       "nativeFallback": 0,
-      "bridge": 4,
+      "bridge": 0,
       "unresolved": 0
     },
     {
@@ -109,9 +109,9 @@
     {
       "module": "joborders",
       "totalActions": 23,
-      "nativeExplicit": 5,
+      "nativeExplicit": 23,
       "nativeFallback": 0,
-      "bridge": 18,
+      "bridge": 0,
       "unresolved": 0
     },
     {
@@ -125,9 +125,9 @@
     {
       "module": "lists",
       "totalActions": 7,
-      "nativeExplicit": 1,
+      "nativeExplicit": 7,
       "nativeFallback": 0,
-      "bridge": 6,
+      "bridge": 0,
       "unresolved": 0
     },
     {
@@ -141,9 +141,9 @@
     {
       "module": "reports",
       "totalActions": 11,
-      "nativeExplicit": 1,
+      "nativeExplicit": 11,
       "nativeFallback": 0,
-      "bridge": 10,
+      "bridge": 0,
       "unresolved": 0
     },
     {
@@ -218,37 +218,37 @@
     {
       "module": "calendar",
       "action": "addEvent",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "calendar.addevent",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "calendar",
       "action": "deleteEvent",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "calendar.deleteevent",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "calendar",
       "action": "dynamicData",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "calendar.dynamicdata",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "calendar",
       "action": "editEvent",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "calendar.editevent",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -272,109 +272,109 @@
     {
       "module": "candidates",
       "action": "addActivityChangeStatus",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.addactivitychangestatus",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "addCandidateTags",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.addcandidatetags",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "addDuplicates",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.addduplicates",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "addEditImage",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.addeditimage",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "addProfileComment",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.addprofilecomment",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "addToPipeline",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.addtopipeline",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "administrativeHideShow",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.administrativehideshow",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "considerForJobSearch",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.considerforjobsearch",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "createAttachment",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.createattachment",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "delete",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.delete",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "deleteAttachment",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.deleteattachment",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "deleteMessageThread",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.deletemessagethread",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -389,19 +389,19 @@
     {
       "module": "candidates",
       "action": "emailCandidates",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.emailcandidates",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "linkDuplicate",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.linkduplicate",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -416,55 +416,55 @@
     {
       "module": "candidates",
       "action": "merge",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.merge",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "mergeInfo",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.mergeinfo",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "postMessage",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.postmessage",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "removeDuplicity",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.removeduplicity",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "removeFromPipeline",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.removefrompipeline",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "saveSources",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.savesources",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -488,19 +488,19 @@
     {
       "module": "candidates",
       "action": "show_questionnaire",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.show_questionnaire",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "candidates",
       "action": "viewResume",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "candidates.viewresume",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -515,28 +515,28 @@
     {
       "module": "companies",
       "action": "createAttachment",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "companies.createattachment",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "companies",
       "action": "delete",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "companies.delete",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "companies",
       "action": "deleteAttachment",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "companies.deleteattachment",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -551,10 +551,10 @@
     {
       "module": "companies",
       "action": "internalPostings",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "companies.internalpostings",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -596,28 +596,28 @@
     {
       "module": "contacts",
       "action": "addActivityScheduleEvent",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "contacts.addactivityscheduleevent",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "contacts",
       "action": "delete",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "contacts.delete",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "contacts",
       "action": "downloadVCard",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "contacts.downloadvcard",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -659,10 +659,10 @@
     {
       "module": "contacts",
       "action": "showColdCallList",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "contacts.showcoldcalllist",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -1109,100 +1109,100 @@
     {
       "module": "joborders",
       "action": "addActivityChangeStatus",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.addactivitychangestatus",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "addCandidateModal",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.addcandidatemodal",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "addJobOrderPopup",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.addjoborderpopup",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "addProfileComment",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.addprofilecomment",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "addToPipeline",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.addtopipeline",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "administrativeHideShow",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.administrativehideshow",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "considerCandidateSearch",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.considercandidatesearch",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "createAttachment",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.createattachment",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "delete",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.delete",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "deleteAttachment",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.deleteattachment",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "deleteMessageThread",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.deletemessagethread",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -1217,10 +1217,10 @@
     {
       "module": "joborders",
       "action": "editHiringPlan",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.edithiringplan",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -1235,46 +1235,46 @@
     {
       "module": "joborders",
       "action": "pipelineStatusDetails",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.pipelinestatusdetails",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "pipelineStatusEditDate",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.pipelinestatuseditdate",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "postMessage",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.postmessage",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "recruiterAllocation",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.recruiterallocation",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "removeFromPipeline",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.removefrompipeline",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -1289,10 +1289,10 @@
     {
       "module": "joborders",
       "action": "setMonitoredJobOrder",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "joborders.setmonitoredjoborder",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -1316,19 +1316,19 @@
     {
       "module": "lists",
       "action": "addToListFromDatagridModal",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "lists.addtolistfromdatagridmodal",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "lists",
       "action": "deleteStaticList",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "lists.deletestaticlist",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -1343,37 +1343,37 @@
     {
       "module": "lists",
       "action": "quickActionAddToListModal",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "lists.quickactionaddtolistmodal",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "lists",
       "action": "removeFromListDatagrid",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "lists.removefromlistdatagrid",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "lists",
       "action": "saveListAccess",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "lists.savelistaccess",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "lists",
       "action": "showList",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "lists.showlist",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -1442,64 +1442,64 @@
     {
       "module": "reports",
       "action": "customerDashboard",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.customerdashboard",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "reports",
       "action": "customerDashboardDetails",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.customerdashboarddetails",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "reports",
       "action": "customizeEEOReport",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.customizeeeoreport",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "reports",
       "action": "customizeJobOrderReport",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.customizejoborderreport",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "reports",
       "action": "generateEEOReportPreview",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.generateeeoreportpreview",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "reports",
       "action": "generateJobOrderReportPDF",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.generatejoborderreportpdf",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "reports",
       "action": "graphView",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.graphview",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
@@ -1514,28 +1514,28 @@
     {
       "module": "reports",
       "action": "showHireReport",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.showhirereport",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "reports",
       "action": "showPlacementReport",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.showplacementreport",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {
       "module": "reports",
       "action": "showSubmissionReport",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "reports.showsubmissionreport",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "ActionCompatPage",
       "guarded": false
     },
     {

@@ -19,6 +19,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
+import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
 
 export type ModernRouteComponentProps = {
@@ -34,14 +35,15 @@ export type ModernRouteResolution = {
 };
 
 function buildExplicitBridgeRoutes(
-  moduleActionMap: Record<string, string[]>
+  moduleActionMap: Record<string, string[]>,
+  component: ModernRouteComponent = ModuleBridgePage
 ): Record<string, ModernRouteComponent> {
   const routes: Record<string, ModernRouteComponent> = {};
   for (const [moduleName, actions] of Object.entries(moduleActionMap)) {
     const moduleKey = String(moduleName || '').toLowerCase();
     for (const actionName of actions) {
       const actionKey = String(actionName || '').toLowerCase();
-      routes[`${moduleKey}.${actionKey}`] = ModuleBridgePage;
+      routes[`${moduleKey}.${actionKey}`] = component;
     }
   }
   return routes;
@@ -56,7 +58,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
 };
 
 // Comparison-driven explicit action coverage. Keep behavior legacy-safe while avoiding wildcard fallbacks.
-const explicitBridgeActionRoutes = buildExplicitBridgeRoutes({
+const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
   calendar: ['addEvent', 'deleteEvent', 'dynamicData', 'editEvent'],
   candidates: [
     'addActivityChangeStatus',
@@ -127,7 +129,7 @@ const explicitBridgeActionRoutes = buildExplicitBridgeRoutes({
     'showPlacementReport',
     'showSubmissionReport'
   ]
-});
+}, ActionCompatPage);
 
 const registry: Record<string, ModernRouteComponent> = {
   'dashboard.my': DashboardMyPage,
@@ -164,7 +166,7 @@ const registry: Record<string, ModernRouteComponent> = {
   'reports.reports': ReportsLauncherPage,
   'reports.(default)': ReportsLauncherPage,
   ...explicitNativeActionRoutes,
-  ...explicitBridgeActionRoutes,
+  ...explicitActionCompatRoutes,
   'candidates.*': ModuleBridgePage,
   'joborders.*': ModuleBridgePage,
   'companies.*': ModuleBridgePage,
