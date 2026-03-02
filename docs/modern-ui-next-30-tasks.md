@@ -16,8 +16,8 @@ Status legend: `done`, `in_progress`, `pending`
 12. `done` Build native `companies/edit` form (replace bridge).
 13. `done` Build native `contacts/add` form (replace bridge).
 14. `done` Build native `contacts/edit` form (replace bridge).
-15. `pending` Build native `joborders/add` form (replace bridge).
-16. `pending` Build native `joborders/edit` form (replace bridge).
+15. `done` Build native `joborders/add` form (replace bridge).
+16. `done` Build native `joborders/edit` form (replace bridge).
 17. `pending` Build native `joborders/addCandidateModal` flow (replace compat action).
 18. `pending` Build native `candidates/createAttachment` drawer/modal and deprecate legacy popup.
 19. `pending` Build native `joborders/createAttachment` drawer/modal and deprecate legacy popup.

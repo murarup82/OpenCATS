@@ -1563,6 +1563,205 @@ export type JobOrdersShowModernDataResponse = {
   };
 };
 
+type JobOrderModernExtraField = {
+  postKey: string;
+  fieldName: string;
+  inputType: 'text' | 'textarea' | 'dropdown' | 'radio' | 'checkbox' | 'date';
+  value: string;
+  options: string[];
+};
+
+export type JobOrderCompanyContextModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    companyID: number;
+  };
+  location: {
+    city: string;
+    state: string;
+  };
+  contacts: Array<{
+    value: string;
+    label: string;
+  }>;
+  departments: {
+    csv: string;
+    items: Array<{
+      departmentID: number;
+      name: string;
+    }>;
+  };
+};
+
+export type JobOrdersAddModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    permissions: {
+      canAddJobOrder: boolean;
+    };
+  };
+  state: {
+    noCompanies: boolean;
+  };
+  actions: {
+    submitURL: string;
+    listURL: string;
+    legacyURL: string;
+    companyContextURL: string;
+  };
+  defaults: {
+    title: string;
+    startDate: string;
+    companyID: string;
+    department: string;
+    departmentsCSV: string;
+    contactID: string;
+    type: string;
+    city: string;
+    state: string;
+    duration: string;
+    maxRate: string;
+    salary: string;
+    openings: string;
+    companyJobID: string;
+    recruiter: string;
+    owner: string;
+    isHot: boolean;
+    public: boolean;
+    questionnaire: string;
+    description: string;
+    notes: string;
+  };
+  options: {
+    users: Array<{
+      value: string;
+      label: string;
+    }>;
+    companies: Array<{
+      value: string;
+      label: string;
+    }>;
+    contacts: Array<{
+      value: string;
+      label: string;
+    }>;
+    departments: Array<{
+      departmentID: number;
+      name: string;
+    }>;
+    jobTypes: Array<{
+      value: string;
+      label: string;
+      description: string;
+    }>;
+    questionnaires: Array<{
+      value: string;
+      label: string;
+    }>;
+    careerPortalEnabled: boolean;
+    defaultCompanyID: number;
+  };
+  extraFields: JobOrderModernExtraField[];
+};
+
+export type JobOrdersEditModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    jobOrderID: number;
+    permissions: {
+      canEditJobOrder: boolean;
+    };
+  };
+  actions: {
+    submitURL: string;
+    showURL: string;
+    listURL: string;
+    legacyURL: string;
+    companyContextURL: string;
+    hiringPlanURL: string;
+  };
+  jobOrder: {
+    jobOrderID: number;
+    title: string;
+    startDate: string;
+    createdDate: string;
+    createdTime: string;
+    companyID: string;
+    duration: string;
+    maxRate: string;
+    salary: string;
+    department: string;
+    departmentsCSV: string;
+    contactID: string;
+    type: string;
+    city: string;
+    state: string;
+    openings: string;
+    openingsAvailable: string;
+    recruiter: string;
+    companyJobID: string;
+    owner: string;
+    status: string;
+    isHot: boolean;
+    public: boolean;
+    questionnaire: string;
+    description: string;
+    notes: string;
+  };
+  options: {
+    users: Array<{
+      value: string;
+      label: string;
+    }>;
+    recruiters: Array<{
+      value: string;
+      label: string;
+    }>;
+    owners: Array<{
+      value: string;
+      label: string;
+    }>;
+    companies: Array<{
+      value: string;
+      label: string;
+    }>;
+    contacts: Array<{
+      value: string;
+      label: string;
+    }>;
+    departments: Array<{
+      departmentID: number;
+      name: string;
+    }>;
+    jobTypes: Array<{
+      value: string;
+      label: string;
+      description: string;
+    }>;
+    statusGroups: Array<{
+      group: string;
+      options: Array<{
+        value: string;
+        label: string;
+      }>;
+    }>;
+    questionnaires: Array<{
+      value: string;
+      label: string;
+    }>;
+    careerPortalEnabled: boolean;
+    defaultCompanyID: number;
+    canSendOwnershipEmail: boolean;
+    hasHiringPlan: boolean;
+  };
+  extraFields: JobOrderModernExtraField[];
+};
+
 export type CandidatesShowModernDataResponse = {
   meta: {
     contractVersion: number;

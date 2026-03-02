@@ -22,7 +22,10 @@ import type {
   HomeInboxModernDataResponse,
   HomeMyNotesModernDataResponse,
   HomeOverviewModernDataResponse,
+  JobOrderCompanyContextModernDataResponse,
   JobOrderAssignCandidateModernDataResponse,
+  JobOrdersAddModernDataResponse,
+  JobOrdersEditModernDataResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
   KpisDetailsModernDataResponse,
@@ -54,6 +57,8 @@ import {
   MODERN_CONTACTS_PAGE,
   MODERN_CONTACT_SHOW_PAGE,
   MODERN_DASHBOARD_PAGE,
+  MODERN_JOBORDER_ADD_PAGE,
+  MODERN_JOBORDER_EDIT_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
   MODERN_KPIS_PAGE,
@@ -1495,6 +1500,60 @@ export async function fetchJobOrdersShowModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<JobOrdersShowModernDataResponse>(url);
   assertModernContract(data.meta, 'joborders.show.v1', 'job order profile');
+
+  return data;
+}
+
+export async function fetchJobOrdersAddModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<JobOrdersAddModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'joborders',
+    action: 'add',
+    modernPage: MODERN_JOBORDER_ADD_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<JobOrdersAddModernDataResponse>(url);
+  assertModernContract(data.meta, 'joborders.add.v1', 'job order add form');
+
+  return data;
+}
+
+export async function fetchJobOrdersEditModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<JobOrdersEditModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'joborders',
+    action: 'edit',
+    modernPage: MODERN_JOBORDER_EDIT_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<JobOrdersEditModernDataResponse>(url);
+  assertModernContract(data.meta, 'joborders.edit.v1', 'job order edit form');
+
+  return data;
+}
+
+export async function fetchJobOrderCompanyContextModernData(
+  bootstrap: UIModeBootstrap,
+  companyID: number
+): Promise<JobOrderCompanyContextModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'joborders',
+    action: 'companyContext',
+    modernPage: 'joborders-company-context'
+  });
+  apiQuery.set('companyID', String(companyID || 0));
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<JobOrderCompanyContextModernDataResponse>(url);
+  assertModernContract(data.meta, 'joborders.companyContext.v1', 'job order company context');
 
   return data;
 }

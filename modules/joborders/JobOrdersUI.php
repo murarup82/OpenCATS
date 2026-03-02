@@ -204,6 +204,17 @@ class JobOrdersUI extends UserInterface
 
                 break;
 
+            case 'companyContext':
+                if (
+                    $this->getUserAccessLevel('joborders.add') < ACCESS_LEVEL_EDIT &&
+                    $this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT
+                )
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->companyContext();
+                break;
+
             case 'postMessage':
                 if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
                 {
@@ -1341,6 +1352,10 @@ class JobOrdersUI extends UserInterface
      */
     private function add()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $users = new Users($this->_siteID);
         $usersRS = $users->getSelectList();
 
@@ -1402,6 +1417,7 @@ class JobOrdersUI extends UserInterface
                 $selectedCompanyID
             );
             $departmentsRS = $companies->getDepartments($selectedCompanyID);
+            $selectedDepartments = $departmentsRS;
             $selectedDepartmentsString = ListEditor::getStringFromList(
                 $departmentsRS, 'name'
             );
@@ -1411,8 +1427,13 @@ class JobOrdersUI extends UserInterface
 
             $companyRS = $companies->get($selectedCompanyID);
         }
+        if ($selectedCompanyID === false)
+        {
+            $selectedDepartments = array();
+        }
 
         /* Should we prepopulate the blank JO with the contents of another JO? */
+        $jobOrderSourceRS = false;
         if (isset($_GET['typeOfAdd']) &&
             $this->isRequiredIDValid('jobOrderID', $_GET) &&
             $_GET['typeOfAdd'] == 'existing')
@@ -1443,6 +1464,48 @@ class JobOrdersUI extends UserInterface
         $careerPortalSettingsRS = $careerPortalSettings->getAll();
         $careerPortalEnabled = intval($careerPortalSettingsRS['enabled']) ? true : false;
 
+        $jobTypes = (new JobOrderTypes())->getAll();
+
+        if (!eval(Hooks::get('JO_ADD'))) return;
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'joborders-add')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernJobOrderAddJSON(
+                $noCompanies,
+                $selectedCompanyID,
+                $defaultCompanyID,
+                $usersRS,
+                $companiesRS,
+                $selectedCompanyContacts,
+                $selectedCompanyLocation,
+                $selectedDepartments,
+                $selectedDepartmentsString,
+                $jobTypes,
+                $questionnaires,
+                $careerPortalEnabled,
+                $extraFieldRS,
+                $jobOrderSourceRS,
+                'joborders-add'
+            );
+            return;
+        }
+
         $this->_template->assign('careerPortalEnabled', $careerPortalEnabled);
         $this->_template->assign('questionnaires', $questionnaires);
         $this->_template->assign('extraFieldRS', $extraFieldRS);
@@ -1461,11 +1524,103 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('selectedDepartmentsString', $selectedDepartmentsString);
         $this->_template->assign('isHrMode', $_SESSION['CATS']->isHrMode());
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
-        $this->_template->assign('jobTypes', (new JobOrderTypes())->getAll());
-
-        if (!eval(Hooks::get('JO_ADD'))) return;
+        $this->_template->assign('jobTypes', $jobTypes);
 
         $this->_template->display('./modules/joborders/Add.tpl');
+    }
+
+    private function companyContext()
+    {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        if (!$isModernJSON)
+        {
+            CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid request.');
+        }
+
+        if (!$this->isRequiredIDValid('companyID', $_REQUEST))
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 400 Bad Request');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'error' => true,
+                'message' => 'Invalid company ID.'
+            ));
+            return;
+        }
+
+        $companyID = (int) $_REQUEST['companyID'];
+        $companies = new Companies($this->_siteID);
+        $location = $companies->getLocationArray($companyID);
+        $contactsRS = $companies->getContactsArray($companyID);
+        $departmentsRS = $companies->getDepartments($companyID);
+        $departmentsCSV = ListEditor::getStringFromList($departmentsRS, 'name');
+
+        $contactsPayload = array();
+        foreach ($contactsRS as $contactData)
+        {
+            $contactID = (int) (isset($contactData['contactID']) ? $contactData['contactID'] : 0);
+            if ($contactID <= 0)
+            {
+                continue;
+            }
+
+            $label = trim(
+                (isset($contactData['lastName']) ? (string) $contactData['lastName'] : '') .
+                ', ' .
+                (isset($contactData['firstName']) ? (string) $contactData['firstName'] : '')
+            );
+            if ($label === ',')
+            {
+                $label = 'Contact #' . $contactID;
+            }
+            $label = trim($label, " \t\n\r\0\x0B,");
+            if ($label === '')
+            {
+                $label = 'Contact #' . $contactID;
+            }
+
+            $contactsPayload[] = array(
+                'value' => (string) $contactID,
+                'label' => $label
+            );
+        }
+
+        $departmentsPayload = array();
+        foreach ($departmentsRS as $departmentData)
+        {
+            $departmentsPayload[] = array(
+                'departmentID' => (int) (isset($departmentData['departmentID']) ? $departmentData['departmentID'] : 0),
+                'name' => (isset($departmentData['name']) ? (string) $departmentData['name'] : '')
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.companyContext.v1',
+                'companyID' => $companyID
+            ),
+            'location' => array(
+                'city' => (isset($location['city']) ? (string) $location['city'] : ''),
+                'state' => (isset($location['state']) ? (string) $location['state'] : '')
+            ),
+            'contacts' => $contactsPayload,
+            'departments' => array(
+                'csv' => (string) $departmentsCSV,
+                'items' => $departmentsPayload
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     /*
@@ -1599,6 +1754,10 @@ class JobOrdersUI extends UserInterface
      */
     private function edit()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Bail out if we don't have a valid candidate ID. */
         if (!$this->isRequiredIDValid('jobOrderID', $_GET))
         {
@@ -1720,6 +1879,56 @@ class JobOrdersUI extends UserInterface
             }
         }
 
+        $jobTypes = (new JobOrderTypes())->getAll();
+        $jobOrderStatuses = JobOrderStatuses::getAll();
+        $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
+        $hasHiringPlan = ($jobOrderHiringPlans->getCount($jobOrderID) > 0);
+        $hiringPlanLink = CATSUtility::getIndexName() . '?m=joborders&a=editHiringPlan&jobOrderID=' . $jobOrderID;
+
+        if (!eval(Hooks::get('JO_EDIT'))) return;
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'joborders-edit')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernJobOrderEditJSON(
+                $jobOrderID,
+                $data,
+                $usersRS,
+                $companiesRS,
+                $contactsRS,
+                $departmentsRS,
+                $departmentsString,
+                $extraFieldRS,
+                $jobTypes,
+                $jobOrderStatuses,
+                $questionnaires,
+                $careerPortalEnabled,
+                $questionnaireID,
+                $defaultCompanyID,
+                $canEmail,
+                $emailTemplateDisabled,
+                $hasHiringPlan,
+                $hiringPlanLink,
+                'joborders-edit'
+            );
+            return;
+        }
+
         $this->_template->assign('extraFieldRS', $extraFieldRS);
         $this->_template->assign('careerPortalEnabled', $careerPortalEnabled);
         $this->_template->assign('questionnaireID', $questionnaireID);
@@ -1740,15 +1949,554 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('jobOrderID', $jobOrderID);
         $this->_template->assign('isHrMode', $_SESSION['CATS']->isHrMode());
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
-        $this->_template->assign('jobTypes', (new JobOrderTypes())->getAll());
-        $this->_template->assign('jobOrderStatuses', (JobOrderStatuses::getAll()));
-        $jobOrderHiringPlans = new JobOrderHiringPlans($this->_siteID);
-        $this->_template->assign('hasHiringPlan', ($jobOrderHiringPlans->getCount($jobOrderID) > 0));
-        $this->_template->assign('hiringPlanLink', CATSUtility::getIndexName() . '?m=joborders&a=editHiringPlan&jobOrderID=' . $jobOrderID);
-
-        if (!eval(Hooks::get('JO_EDIT'))) return;
+        $this->_template->assign('jobTypes', $jobTypes);
+        $this->_template->assign('jobOrderStatuses', $jobOrderStatuses);
+        $this->_template->assign('hasHiringPlan', $hasHiringPlan);
+        $this->_template->assign('hiringPlanLink', $hiringPlanLink);
 
         $this->_template->display('./modules/joborders/Edit.tpl');
+    }
+
+    private function mapModernJobOrderExtraFieldInputType($extraFieldType)
+    {
+        switch ((int) $extraFieldType)
+        {
+            case EXTRA_FIELD_TEXTAREA:
+                return 'textarea';
+
+            case EXTRA_FIELD_CHECKBOX:
+                return 'checkbox';
+
+            case EXTRA_FIELD_DROPDOWN:
+                return 'dropdown';
+
+            case EXTRA_FIELD_RADIO:
+                return 'radio';
+
+            case EXTRA_FIELD_DATE:
+                return 'date';
+
+            case EXTRA_FIELD_TEXT:
+            default:
+                return 'text';
+        }
+    }
+
+    private function buildModernJobOrderExtraFieldPayload($extraFieldRS, $isEditMode)
+    {
+        $payload = array();
+        if (!is_array($extraFieldRS))
+        {
+            return $payload;
+        }
+
+        foreach ($extraFieldRS as $index => $fieldData)
+        {
+            $options = array();
+            if (isset($fieldData['extraFieldOptions']) && trim((string) $fieldData['extraFieldOptions']) !== '')
+            {
+                $rawOptions = explode(',', (string) $fieldData['extraFieldOptions']);
+                foreach ($rawOptions as $rawOption)
+                {
+                    $decoded = trim(urldecode((string) $rawOption));
+                    if ($decoded === '')
+                    {
+                        continue;
+                    }
+                    $options[] = $decoded;
+                }
+            }
+
+            $value = '';
+            if ($isEditMode && isset($fieldData['value']))
+            {
+                $value = (string) $fieldData['value'];
+            }
+            else if (!$isEditMode && isset($fieldData['value']))
+            {
+                $value = (string) $fieldData['value'];
+            }
+
+            if ($this->mapModernJobOrderExtraFieldInputType(
+                (isset($fieldData['extraFieldType']) ? (int) $fieldData['extraFieldType'] : EXTRA_FIELD_TEXT)
+            ) === 'checkbox' && $value === '')
+            {
+                $value = 'No';
+            }
+
+            $payload[] = array(
+                'postKey' => 'extraField' . $index,
+                'fieldName' => (isset($fieldData['fieldName']) ? (string) $fieldData['fieldName'] : ('Extra Field ' . $index)),
+                'inputType' => $this->mapModernJobOrderExtraFieldInputType(
+                    (isset($fieldData['extraFieldType']) ? (int) $fieldData['extraFieldType'] : EXTRA_FIELD_TEXT)
+                ),
+                'value' => $value,
+                'options' => $options
+            );
+        }
+
+        return $payload;
+    }
+
+    private function renderModernJobOrderAddJSON(
+        $noCompanies,
+        $selectedCompanyID,
+        $defaultCompanyID,
+        $usersRS,
+        $companiesRS,
+        $selectedCompanyContacts,
+        $selectedCompanyLocation,
+        $selectedDepartments,
+        $selectedDepartmentsString,
+        $jobTypes,
+        $questionnaires,
+        $careerPortalEnabled,
+        $extraFieldRS,
+        $jobOrderSourceRS,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $source = (is_array($jobOrderSourceRS) ? $jobOrderSourceRS : array());
+        $extraFieldsPayload = $this->buildModernJobOrderExtraFieldPayload($extraFieldRS, false);
+
+        $companyOptions = array(
+            array(
+                'value' => '0',
+                'label' => '(Select a Company)'
+            )
+        );
+        foreach ($companiesRS as $companyData)
+        {
+            $companyID = (int) (isset($companyData['companyID']) ? $companyData['companyID'] : 0);
+            if ($companyID <= 0)
+            {
+                continue;
+            }
+            $companyOptions[] = array(
+                'value' => (string) $companyID,
+                'label' => (isset($companyData['name']) ? (string) $companyData['name'] : ('Company #' . $companyID))
+            );
+        }
+
+        $userOptions = array(
+            array(
+                'value' => '',
+                'label' => '(Select a User)'
+            )
+        );
+        foreach ($usersRS as $userData)
+        {
+            $lastName = (isset($userData['lastName']) ? trim((string) $userData['lastName']) : '');
+            $firstName = (isset($userData['firstName']) ? trim((string) $userData['firstName']) : '');
+            $label = trim($lastName . ', ' . $firstName, " \t\n\r\0\x0B,");
+            if ($label === '')
+            {
+                $label = 'User #' . (int) $userData['userID'];
+            }
+            $userOptions[] = array(
+                'value' => (string) (int) $userData['userID'],
+                'label' => $label
+            );
+        }
+
+        $contactOptions = array(
+            array(
+                'value' => '-1',
+                'label' => 'None'
+            )
+        );
+        foreach ($selectedCompanyContacts as $contactData)
+        {
+            $contactID = (int) (isset($contactData['contactID']) ? $contactData['contactID'] : 0);
+            if ($contactID <= 0)
+            {
+                continue;
+            }
+            $label = trim(
+                (isset($contactData['lastName']) ? (string) $contactData['lastName'] : '') .
+                ', ' .
+                (isset($contactData['firstName']) ? (string) $contactData['firstName'] : '')
+            );
+            $label = trim($label, " \t\n\r\0\x0B,");
+            if ($label === '')
+            {
+                $label = 'Contact #' . $contactID;
+            }
+
+            $contactOptions[] = array(
+                'value' => (string) $contactID,
+                'label' => $label
+            );
+        }
+
+        $departmentOptions = array();
+        foreach ($selectedDepartments as $departmentData)
+        {
+            $departmentOptions[] = array(
+                'departmentID' => (int) (isset($departmentData['departmentID']) ? $departmentData['departmentID'] : 0),
+                'name' => (isset($departmentData['name']) ? (string) $departmentData['name'] : '')
+            );
+        }
+
+        $jobTypeOptions = array();
+        foreach ($jobTypes as $jobTypeShort => $jobTypeLong)
+        {
+            $jobTypeOptions[] = array(
+                'value' => (string) $jobTypeShort,
+                'label' => (string) $jobTypeShort,
+                'description' => (string) $jobTypeLong
+            );
+        }
+        if (empty($jobTypeOptions))
+        {
+            $jobTypeOptions[] = array(
+                'value' => 'N/A',
+                'label' => 'N/A',
+                'description' => 'Not Applicable'
+            );
+        }
+
+        $questionnaireOptions = array(
+            array(
+                'value' => 'none',
+                'label' => 'None'
+            )
+        );
+        foreach ($questionnaires as $questionnaireData)
+        {
+            $questionnaireID = (int) (isset($questionnaireData['questionnaireID']) ? $questionnaireData['questionnaireID'] : 0);
+            if ($questionnaireID <= 0)
+            {
+                continue;
+            }
+            $questionnaireOptions[] = array(
+                'value' => (string) $questionnaireID,
+                'label' => (isset($questionnaireData['title']) ? (string) $questionnaireData['title'] : ('Questionnaire #' . $questionnaireID))
+            );
+        }
+
+        $defaultCompany = 0;
+        if ($selectedCompanyID !== false)
+        {
+            $defaultCompany = (int) $selectedCompanyID;
+        }
+        else if (isset($source['companyID']) && (int) $source['companyID'] > 0)
+        {
+            $defaultCompany = (int) $source['companyID'];
+        }
+
+        $defaultType = (isset($source['type']) && trim((string) $source['type']) !== '')
+            ? (string) $source['type']
+            : (string) $jobTypeOptions[0]['value'];
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.add.v1',
+                'modernPage' => $modernPage,
+                'permissions' => array(
+                    'canAddJobOrder' => ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'state' => array(
+                'noCompanies' => ((bool) $noCompanies)
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=joborders&a=add&ui=modern', $baseURL),
+                'listURL' => sprintf('%s?m=joborders&a=listByView&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=joborders&a=add&ui=legacy', $baseURL),
+                'companyContextURL' => sprintf('%s?m=joborders&a=companyContext&ui=legacy', $baseURL)
+            ),
+            'defaults' => array(
+                'title' => (isset($source['title']) ? (string) $source['title'] : ''),
+                'startDate' => '',
+                'companyID' => (string) $defaultCompany,
+                'department' => (isset($source['department']) && trim((string) $source['department']) !== '' ? (string) $source['department'] : '(none)'),
+                'departmentsCSV' => (string) $selectedDepartmentsString,
+                'contactID' => '-1',
+                'type' => $defaultType,
+                'city' => (isset($selectedCompanyLocation['city']) && trim((string) $selectedCompanyLocation['city']) !== '' ? (string) $selectedCompanyLocation['city'] : (isset($source['city']) ? (string) $source['city'] : '')),
+                'state' => (isset($selectedCompanyLocation['state']) && trim((string) $selectedCompanyLocation['state']) !== '' ? (string) $selectedCompanyLocation['state'] : (isset($source['state']) ? (string) $source['state'] : '')),
+                'duration' => (isset($source['duration']) ? (string) $source['duration'] : ''),
+                'maxRate' => (isset($source['maxRate']) ? (string) $source['maxRate'] : ''),
+                'salary' => (isset($source['salary']) ? (string) $source['salary'] : ''),
+                'openings' => (isset($source['openings']) && (int) $source['openings'] > 0 ? (string) $source['openings'] : '1'),
+                'companyJobID' => (isset($source['companyJobID']) ? (string) $source['companyJobID'] : ''),
+                'recruiter' => (string) $this->_userID,
+                'owner' => (string) $this->_userID,
+                'isHot' => ((isset($source['isHot']) && (int) $source['isHot'] === 1) ? true : false),
+                'public' => ((isset($source['public']) && (int) $source['public'] === 1) ? true : false),
+                'questionnaire' => (isset($source['questionnaireID']) && (int) $source['questionnaireID'] > 0 ? (string) (int) $source['questionnaireID'] : 'none'),
+                'description' => (isset($source['description']) ? (string) $source['description'] : ''),
+                'notes' => (isset($source['notes']) ? (string) $source['notes'] : '')
+            ),
+            'options' => array(
+                'users' => $userOptions,
+                'companies' => $companyOptions,
+                'contacts' => $contactOptions,
+                'departments' => $departmentOptions,
+                'jobTypes' => $jobTypeOptions,
+                'questionnaires' => $questionnaireOptions,
+                'careerPortalEnabled' => ($careerPortalEnabled ? true : false),
+                'defaultCompanyID' => (($defaultCompanyID !== false) ? (int) $defaultCompanyID : 0)
+            ),
+            'extraFields' => $extraFieldsPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
+    private function renderModernJobOrderEditJSON(
+        $jobOrderID,
+        $data,
+        $usersRS,
+        $companiesRS,
+        $contactsRS,
+        $departmentsRS,
+        $departmentsString,
+        $extraFieldRS,
+        $jobTypes,
+        $jobOrderStatuses,
+        $questionnaires,
+        $careerPortalEnabled,
+        $questionnaireID,
+        $defaultCompanyID,
+        $canEmail,
+        $emailTemplateDisabled,
+        $hasHiringPlan,
+        $hiringPlanLink,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $jobOrderID = (int) $jobOrderID;
+        $extraFieldsPayload = $this->buildModernJobOrderExtraFieldPayload($extraFieldRS, true);
+
+        $companyOptions = array(
+            array(
+                'value' => '0',
+                'label' => '(Select a Company)'
+            )
+        );
+        foreach ($companiesRS as $companyData)
+        {
+            $companyID = (int) (isset($companyData['companyID']) ? $companyData['companyID'] : 0);
+            if ($companyID <= 0)
+            {
+                continue;
+            }
+            $companyOptions[] = array(
+                'value' => (string) $companyID,
+                'label' => (isset($companyData['name']) ? (string) $companyData['name'] : ('Company #' . $companyID))
+            );
+        }
+
+        $userOptions = array(
+            array(
+                'value' => '-1',
+                'label' => 'None'
+            )
+        );
+        foreach ($usersRS as $userData)
+        {
+            $lastName = (isset($userData['lastName']) ? trim((string) $userData['lastName']) : '');
+            $firstName = (isset($userData['firstName']) ? trim((string) $userData['firstName']) : '');
+            $label = trim($lastName . ', ' . $firstName, " \t\n\r\0\x0B,");
+            if ($label === '')
+            {
+                $label = 'User #' . (int) $userData['userID'];
+            }
+            $userOptions[] = array(
+                'value' => (string) (int) $userData['userID'],
+                'label' => $label
+            );
+        }
+
+        $recruiterOptions = array(
+            array(
+                'value' => '',
+                'label' => '(Select a User)'
+            )
+        );
+        foreach ($userOptions as $optionData)
+        {
+            if ($optionData['value'] === '-1')
+            {
+                continue;
+            }
+            $recruiterOptions[] = $optionData;
+        }
+
+        $contactOptions = array(
+            array(
+                'value' => '-1',
+                'label' => 'None'
+            )
+        );
+        foreach ($contactsRS as $contactData)
+        {
+            $contactID = (int) (isset($contactData['contactID']) ? $contactData['contactID'] : 0);
+            if ($contactID <= 0)
+            {
+                continue;
+            }
+            $label = trim(
+                (isset($contactData['lastName']) ? (string) $contactData['lastName'] : '') .
+                ', ' .
+                (isset($contactData['firstName']) ? (string) $contactData['firstName'] : '')
+            );
+            $label = trim($label, " \t\n\r\0\x0B,");
+            if ($label === '')
+            {
+                $label = 'Contact #' . $contactID;
+            }
+
+            $contactOptions[] = array(
+                'value' => (string) $contactID,
+                'label' => $label
+            );
+        }
+
+        $departmentOptions = array();
+        foreach ($departmentsRS as $departmentData)
+        {
+            $departmentOptions[] = array(
+                'departmentID' => (int) (isset($departmentData['departmentID']) ? $departmentData['departmentID'] : 0),
+                'name' => (isset($departmentData['name']) ? (string) $departmentData['name'] : '')
+            );
+        }
+
+        $jobTypeOptions = array();
+        foreach ($jobTypes as $jobTypeShort => $jobTypeLong)
+        {
+            $jobTypeOptions[] = array(
+                'value' => (string) $jobTypeShort,
+                'label' => (string) $jobTypeShort,
+                'description' => (string) $jobTypeLong
+            );
+        }
+        if (empty($jobTypeOptions))
+        {
+            $jobTypeOptions[] = array(
+                'value' => 'N/A',
+                'label' => 'N/A',
+                'description' => 'Not Applicable'
+            );
+        }
+
+        $statusGroups = array();
+        foreach ($jobOrderStatuses as $groupName => $statusList)
+        {
+            $options = array();
+            foreach ($statusList as $statusValue)
+            {
+                $options[] = array(
+                    'value' => (string) $statusValue,
+                    'label' => (string) $statusValue
+                );
+            }
+
+            $statusGroups[] = array(
+                'group' => (string) $groupName,
+                'options' => $options
+            );
+        }
+
+        $questionnaireOptions = array(
+            array(
+                'value' => 'none',
+                'label' => 'None'
+            )
+        );
+        foreach ($questionnaires as $questionnaireData)
+        {
+            $qID = (int) (isset($questionnaireData['questionnaireID']) ? $questionnaireData['questionnaireID'] : 0);
+            if ($qID <= 0)
+            {
+                continue;
+            }
+            $questionnaireOptions[] = array(
+                'value' => (string) $qID,
+                'label' => (isset($questionnaireData['title']) ? (string) $questionnaireData['title'] : ('Questionnaire #' . $qID))
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.edit.v1',
+                'modernPage' => $modernPage,
+                'jobOrderID' => $jobOrderID,
+                'permissions' => array(
+                    'canEditJobOrder' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=joborders&a=edit&ui=modern', $baseURL),
+                'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
+                'listURL' => sprintf('%s?m=joborders&a=listByView&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=joborders&a=edit&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'companyContextURL' => sprintf('%s?m=joborders&a=companyContext&ui=legacy', $baseURL),
+                'hiringPlanURL' => $hiringPlanLink
+            ),
+            'jobOrder' => array(
+                'jobOrderID' => $jobOrderID,
+                'title' => (isset($data['title']) ? (string) $data['title'] : ''),
+                'startDate' => (isset($data['startDateMDY']) ? (string) $data['startDateMDY'] : ''),
+                'createdDate' => (isset($data['createdDateMDY']) ? (string) $data['createdDateMDY'] : ''),
+                'createdTime' => (isset($data['createdTime']) ? (string) $data['createdTime'] : ''),
+                'companyID' => (isset($data['companyID']) ? (string) (int) $data['companyID'] : '0'),
+                'duration' => (isset($data['duration']) ? (string) $data['duration'] : ''),
+                'maxRate' => (isset($data['maxRate']) ? (string) $data['maxRate'] : ''),
+                'salary' => (isset($data['salary']) ? (string) $data['salary'] : ''),
+                'department' => (isset($data['department']) && trim((string) $data['department']) !== '' ? (string) $data['department'] : '(none)'),
+                'departmentsCSV' => (string) $departmentsString,
+                'contactID' => (isset($data['contactID']) ? (string) (int) $data['contactID'] : '-1'),
+                'type' => (isset($data['type']) ? (string) $data['type'] : ''),
+                'city' => (isset($data['city']) ? (string) $data['city'] : ''),
+                'state' => (isset($data['state']) ? (string) $data['state'] : ''),
+                'openings' => (isset($data['openings']) ? (string) $data['openings'] : ''),
+                'openingsAvailable' => (isset($data['openingsAvailable']) ? (string) $data['openingsAvailable'] : ''),
+                'recruiter' => (isset($data['recruiter']) ? (string) (int) $data['recruiter'] : ''),
+                'companyJobID' => (isset($data['companyJobID']) ? (string) $data['companyJobID'] : ''),
+                'owner' => (isset($data['owner']) ? (string) (int) $data['owner'] : '-1'),
+                'status' => (isset($data['status']) ? (string) $data['status'] : ''),
+                'isHot' => ((isset($data['isHot']) && (int) $data['isHot'] === 1) ? true : false),
+                'public' => ((isset($data['public']) && (int) $data['public'] === 1) ? true : false),
+                'questionnaire' => ($questionnaireID !== false ? (string) (int) $questionnaireID : 'none'),
+                'description' => (isset($data['description']) ? (string) $data['description'] : ''),
+                'notes' => (isset($data['notes']) ? (string) $data['notes'] : '')
+            ),
+            'options' => array(
+                'users' => $userOptions,
+                'recruiters' => $recruiterOptions,
+                'owners' => $userOptions,
+                'companies' => $companyOptions,
+                'contacts' => $contactOptions,
+                'departments' => $departmentOptions,
+                'jobTypes' => $jobTypeOptions,
+                'statusGroups' => $statusGroups,
+                'questionnaires' => $questionnaireOptions,
+                'careerPortalEnabled' => ($careerPortalEnabled ? true : false),
+                'defaultCompanyID' => (($defaultCompanyID !== false) ? (int) $defaultCompanyID : 0),
+                'canSendOwnershipEmail' => ($canEmail && !$emailTemplateDisabled),
+                'hasHiringPlan' => ($hasHiringPlan ? true : false)
+            ),
+            'extraFields' => $extraFieldsPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function editHiringPlan()
