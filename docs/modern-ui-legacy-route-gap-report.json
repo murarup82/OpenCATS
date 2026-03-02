@@ -1,10 +1,12 @@
 {
-  "generatedAt": "2026-03-02T03:57:04.527Z",
+  "generatedAt": "2026-03-02T04:07:16.751Z",
   "totals": {
-    "actions": 223,
-    "nativeExplicit": 18,
-    "nativeDefaultFallback": 1,
-    "bridge": 204,
+    "actions": 219,
+    "nativeExplicit": 27,
+    "nativeDefaultFallback": 0,
+    "bridge": 192,
+    "bridgeExplicit": 68,
+    "bridgeFallback": 124,
     "unresolved": 0
   },
   "moduleSummaries": [
@@ -34,33 +36,33 @@
     },
     {
       "module": "candidates",
-      "totalActions": 28,
-      "nativeExplicit": 4,
+      "totalActions": 27,
+      "nativeExplicit": 5,
       "nativeFallback": 0,
-      "bridge": 24,
+      "bridge": 22,
       "unresolved": 0
     },
     {
       "module": "companies",
       "totalActions": 9,
-      "nativeExplicit": 2,
+      "nativeExplicit": 5,
       "nativeFallback": 0,
-      "bridge": 7,
+      "bridge": 4,
       "unresolved": 0
     },
     {
       "module": "contacts",
       "totalActions": 9,
-      "nativeExplicit": 2,
+      "nativeExplicit": 5,
       "nativeFallback": 0,
-      "bridge": 7,
+      "bridge": 4,
       "unresolved": 0
     },
     {
       "module": "dashboard",
       "totalActions": 2,
-      "nativeExplicit": 1,
-      "nativeFallback": 1,
+      "nativeExplicit": 2,
+      "nativeFallback": 0,
       "bridge": 0,
       "unresolved": 0
     },
@@ -90,10 +92,10 @@
     },
     {
       "module": "home",
-      "totalActions": 23,
+      "totalActions": 22,
       "nativeExplicit": 0,
       "nativeFallback": 0,
-      "bridge": 23,
+      "bridge": 22,
       "unresolved": 0
     },
     {
@@ -106,10 +108,10 @@
     },
     {
       "module": "joborders",
-      "totalActions": 24,
-      "nativeExplicit": 4,
+      "totalActions": 23,
+      "nativeExplicit": 5,
       "nativeFallback": 0,
-      "bridge": 20,
+      "bridge": 18,
       "unresolved": 0
     },
     {
@@ -122,10 +124,10 @@
     },
     {
       "module": "lists",
-      "totalActions": 8,
+      "totalActions": 7,
       "nativeExplicit": 1,
       "nativeFallback": 0,
-      "bridge": 7,
+      "bridge": 6,
       "unresolved": 0
     },
     {
@@ -216,8 +218,8 @@
     {
       "module": "calendar",
       "action": "addEvent",
-      "classification": "bridge-module-fallback",
-      "routeKey": "calendar.*",
+      "classification": "bridge-explicit",
+      "routeKey": "calendar.addevent",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -225,8 +227,8 @@
     {
       "module": "calendar",
       "action": "deleteEvent",
-      "classification": "bridge-module-fallback",
-      "routeKey": "calendar.*",
+      "classification": "bridge-explicit",
+      "routeKey": "calendar.deleteevent",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -234,8 +236,8 @@
     {
       "module": "calendar",
       "action": "dynamicData",
-      "classification": "bridge-module-fallback",
-      "routeKey": "calendar.*",
+      "classification": "bridge-explicit",
+      "routeKey": "calendar.dynamicdata",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -243,8 +245,8 @@
     {
       "module": "calendar",
       "action": "editEvent",
-      "classification": "bridge-module-fallback",
-      "routeKey": "calendar.*",
+      "classification": "bridge-explicit",
+      "routeKey": "calendar.editevent",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -270,8 +272,8 @@
     {
       "module": "candidates",
       "action": "addActivityChangeStatus",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.addactivitychangestatus",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -279,8 +281,8 @@
     {
       "module": "candidates",
       "action": "addCandidateTags",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.addcandidatetags",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -288,8 +290,8 @@
     {
       "module": "candidates",
       "action": "addDuplicates",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.addduplicates",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -297,8 +299,8 @@
     {
       "module": "candidates",
       "action": "addEditImage",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.addeditimage",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -306,8 +308,8 @@
     {
       "module": "candidates",
       "action": "addProfileComment",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.addprofilecomment",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -315,8 +317,8 @@
     {
       "module": "candidates",
       "action": "addToPipeline",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.addtopipeline",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -324,8 +326,8 @@
     {
       "module": "candidates",
       "action": "administrativeHideShow",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.administrativehideshow",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -333,8 +335,8 @@
     {
       "module": "candidates",
       "action": "considerForJobSearch",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.considerforjobsearch",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -342,8 +344,8 @@
     {
       "module": "candidates",
       "action": "createAttachment",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.createattachment",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -351,8 +353,8 @@
     {
       "module": "candidates",
       "action": "delete",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.delete",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -360,8 +362,8 @@
     {
       "module": "candidates",
       "action": "deleteAttachment",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.deleteattachment",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -369,8 +371,8 @@
     {
       "module": "candidates",
       "action": "deleteMessageThread",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.deletemessagethread",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -387,8 +389,8 @@
     {
       "module": "candidates",
       "action": "emailCandidates",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.emailcandidates",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -396,8 +398,8 @@
     {
       "module": "candidates",
       "action": "linkDuplicate",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.linkduplicate",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -414,8 +416,8 @@
     {
       "module": "candidates",
       "action": "merge",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.merge",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -423,8 +425,8 @@
     {
       "module": "candidates",
       "action": "mergeInfo",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.mergeinfo",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -432,8 +434,8 @@
     {
       "module": "candidates",
       "action": "postMessage",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.postmessage",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -441,8 +443,8 @@
     {
       "module": "candidates",
       "action": "removeDuplicity",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.removeduplicity",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -450,17 +452,8 @@
     {
       "module": "candidates",
       "action": "removeFromPipeline",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
-      "guarded": false
-    },
-    {
-      "module": "candidates",
-      "action": "savedLists",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.removefrompipeline",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -468,8 +461,8 @@
     {
       "module": "candidates",
       "action": "saveSources",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.savesources",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -477,10 +470,10 @@
     {
       "module": "candidates",
       "action": "search",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "classification": "native-explicit",
+      "routeKey": "candidates.search",
+      "resolution": "native",
+      "component": "CandidatesListPage",
       "guarded": false
     },
     {
@@ -495,8 +488,8 @@
     {
       "module": "candidates",
       "action": "show_questionnaire",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.show_questionnaire",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -504,8 +497,8 @@
     {
       "module": "candidates",
       "action": "viewResume",
-      "classification": "bridge-module-fallback",
-      "routeKey": "candidates.*",
+      "classification": "bridge-explicit",
+      "routeKey": "candidates.viewresume",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -513,17 +506,17 @@
     {
       "module": "companies",
       "action": "add",
-      "classification": "bridge-module-fallback",
-      "routeKey": "companies.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "classification": "native-explicit",
+      "routeKey": "companies.add",
+      "resolution": "native",
+      "component": "CompaniesFormBridgePage",
       "guarded": false
     },
     {
       "module": "companies",
       "action": "createAttachment",
-      "classification": "bridge-module-fallback",
-      "routeKey": "companies.*",
+      "classification": "bridge-explicit",
+      "routeKey": "companies.createattachment",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -531,8 +524,8 @@
     {
       "module": "companies",
       "action": "delete",
-      "classification": "bridge-module-fallback",
-      "routeKey": "companies.*",
+      "classification": "bridge-explicit",
+      "routeKey": "companies.delete",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -540,8 +533,8 @@
     {
       "module": "companies",
       "action": "deleteAttachment",
-      "classification": "bridge-module-fallback",
-      "routeKey": "companies.*",
+      "classification": "bridge-explicit",
+      "routeKey": "companies.deleteattachment",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -549,17 +542,17 @@
     {
       "module": "companies",
       "action": "edit",
-      "classification": "bridge-module-fallback",
-      "routeKey": "companies.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
-      "guarded": false
+      "classification": "native-explicit-guarded",
+      "routeKey": "companies.edit",
+      "resolution": "native",
+      "component": "CompaniesFormBridgePage",
+      "guarded": true
     },
     {
       "module": "companies",
       "action": "internalPostings",
-      "classification": "bridge-module-fallback",
-      "routeKey": "companies.*",
+      "classification": "bridge-explicit",
+      "routeKey": "companies.internalpostings",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -576,10 +569,10 @@
     {
       "module": "companies",
       "action": "search",
-      "classification": "bridge-module-fallback",
-      "routeKey": "companies.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "classification": "native-explicit",
+      "routeKey": "companies.search",
+      "resolution": "native",
+      "component": "CompaniesListPage",
       "guarded": false
     },
     {
@@ -594,17 +587,17 @@
     {
       "module": "contacts",
       "action": "add",
-      "classification": "bridge-module-fallback",
-      "routeKey": "contacts.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "classification": "native-explicit",
+      "routeKey": "contacts.add",
+      "resolution": "native",
+      "component": "ContactsFormBridgePage",
       "guarded": false
     },
     {
       "module": "contacts",
       "action": "addActivityScheduleEvent",
-      "classification": "bridge-module-fallback",
-      "routeKey": "contacts.*",
+      "classification": "bridge-explicit",
+      "routeKey": "contacts.addactivityscheduleevent",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -612,8 +605,8 @@
     {
       "module": "contacts",
       "action": "delete",
-      "classification": "bridge-module-fallback",
-      "routeKey": "contacts.*",
+      "classification": "bridge-explicit",
+      "routeKey": "contacts.delete",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -621,8 +614,8 @@
     {
       "module": "contacts",
       "action": "downloadVCard",
-      "classification": "bridge-module-fallback",
-      "routeKey": "contacts.*",
+      "classification": "bridge-explicit",
+      "routeKey": "contacts.downloadvcard",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -630,11 +623,11 @@
     {
       "module": "contacts",
       "action": "edit",
-      "classification": "bridge-module-fallback",
-      "routeKey": "contacts.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
-      "guarded": false
+      "classification": "native-explicit-guarded",
+      "routeKey": "contacts.edit",
+      "resolution": "native",
+      "component": "ContactsFormBridgePage",
+      "guarded": true
     },
     {
       "module": "contacts",
@@ -648,10 +641,10 @@
     {
       "module": "contacts",
       "action": "search",
-      "classification": "bridge-module-fallback",
-      "routeKey": "contacts.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "classification": "native-explicit",
+      "routeKey": "contacts.search",
+      "resolution": "native",
+      "component": "ContactsListPage",
       "guarded": false
     },
     {
@@ -666,8 +659,8 @@
     {
       "module": "contacts",
       "action": "showColdCallList",
-      "classification": "bridge-module-fallback",
-      "routeKey": "contacts.*",
+      "classification": "bridge-explicit",
+      "routeKey": "contacts.showcoldcalllist",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -684,8 +677,8 @@
     {
       "module": "dashboard",
       "action": "setPipelineStatus",
-      "classification": "native-default-fallback",
-      "routeKey": "dashboard.(default)",
+      "classification": "native-explicit",
+      "routeKey": "dashboard.setpipelinestatus",
       "resolution": "native",
       "component": "DashboardMyPage",
       "guarded": false
@@ -846,15 +839,6 @@
     {
       "module": "home",
       "action": "deleteSavedSearch",
-      "classification": "bridge-module-fallback",
-      "routeKey": "home.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
-      "guarded": false
-    },
-    {
-      "module": "home",
-      "action": "getAttachment",
       "classification": "bridge-module-fallback",
       "routeKey": "home.*",
       "resolution": "bridge",
@@ -1125,8 +1109,8 @@
     {
       "module": "joborders",
       "action": "addActivityChangeStatus",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.addactivitychangestatus",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1134,8 +1118,8 @@
     {
       "module": "joborders",
       "action": "addCandidateModal",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.addcandidatemodal",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1143,8 +1127,8 @@
     {
       "module": "joborders",
       "action": "addJobOrderPopup",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.addjoborderpopup",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1152,8 +1136,8 @@
     {
       "module": "joborders",
       "action": "addProfileComment",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.addprofilecomment",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1161,8 +1145,8 @@
     {
       "module": "joborders",
       "action": "addToPipeline",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.addtopipeline",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1170,8 +1154,8 @@
     {
       "module": "joborders",
       "action": "administrativeHideShow",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.administrativehideshow",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1179,8 +1163,8 @@
     {
       "module": "joborders",
       "action": "considerCandidateSearch",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.considercandidatesearch",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1188,8 +1172,8 @@
     {
       "module": "joborders",
       "action": "createAttachment",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.createattachment",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1197,8 +1181,8 @@
     {
       "module": "joborders",
       "action": "delete",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.delete",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1206,8 +1190,8 @@
     {
       "module": "joborders",
       "action": "deleteAttachment",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.deleteattachment",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1215,8 +1199,8 @@
     {
       "module": "joborders",
       "action": "deleteMessageThread",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.deletemessagethread",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1233,8 +1217,8 @@
     {
       "module": "joborders",
       "action": "editHiringPlan",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.edithiringplan",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1251,8 +1235,8 @@
     {
       "module": "joborders",
       "action": "pipelineStatusDetails",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.pipelinestatusdetails",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1260,8 +1244,8 @@
     {
       "module": "joborders",
       "action": "pipelineStatusEditDate",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.pipelinestatuseditdate",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1269,8 +1253,8 @@
     {
       "module": "joborders",
       "action": "postMessage",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.postmessage",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1278,8 +1262,8 @@
     {
       "module": "joborders",
       "action": "recruiterAllocation",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.recruiterallocation",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1287,8 +1271,8 @@
     {
       "module": "joborders",
       "action": "removeFromPipeline",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.removefrompipeline",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1296,26 +1280,17 @@
     {
       "module": "joborders",
       "action": "search",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
-      "guarded": false
-    },
-    {
-      "module": "joborders",
-      "action": "setCandidateJobOrder",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "classification": "native-explicit",
+      "routeKey": "joborders.search",
+      "resolution": "native",
+      "component": "JobOrdersListPage",
       "guarded": false
     },
     {
       "module": "joborders",
       "action": "setMonitoredJobOrder",
-      "classification": "bridge-module-fallback",
-      "routeKey": "joborders.*",
+      "classification": "bridge-explicit",
+      "routeKey": "joborders.setmonitoredjoborder",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1341,8 +1316,8 @@
     {
       "module": "lists",
       "action": "addToListFromDatagridModal",
-      "classification": "bridge-module-fallback",
-      "routeKey": "lists.*",
+      "classification": "bridge-explicit",
+      "routeKey": "lists.addtolistfromdatagridmodal",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1350,8 +1325,8 @@
     {
       "module": "lists",
       "action": "deleteStaticList",
-      "classification": "bridge-module-fallback",
-      "routeKey": "lists.*",
+      "classification": "bridge-explicit",
+      "routeKey": "lists.deletestaticlist",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1368,8 +1343,8 @@
     {
       "module": "lists",
       "action": "quickActionAddToListModal",
-      "classification": "bridge-module-fallback",
-      "routeKey": "lists.*",
+      "classification": "bridge-explicit",
+      "routeKey": "lists.quickactionaddtolistmodal",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1377,8 +1352,8 @@
     {
       "module": "lists",
       "action": "removeFromListDatagrid",
-      "classification": "bridge-module-fallback",
-      "routeKey": "lists.*",
+      "classification": "bridge-explicit",
+      "routeKey": "lists.removefromlistdatagrid",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1386,17 +1361,8 @@
     {
       "module": "lists",
       "action": "saveListAccess",
-      "classification": "bridge-module-fallback",
-      "routeKey": "lists.*",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
-      "guarded": false
-    },
-    {
-      "module": "lists",
-      "action": "show",
-      "classification": "bridge-module-fallback",
-      "routeKey": "lists.*",
+      "classification": "bridge-explicit",
+      "routeKey": "lists.savelistaccess",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1404,8 +1370,8 @@
     {
       "module": "lists",
       "action": "showList",
-      "classification": "bridge-module-fallback",
-      "routeKey": "lists.*",
+      "classification": "bridge-explicit",
+      "routeKey": "lists.showlist",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1476,8 +1442,8 @@
     {
       "module": "reports",
       "action": "customerDashboard",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.customerdashboard",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1485,8 +1451,8 @@
     {
       "module": "reports",
       "action": "customerDashboardDetails",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.customerdashboarddetails",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1494,8 +1460,8 @@
     {
       "module": "reports",
       "action": "customizeEEOReport",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.customizeeeoreport",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1503,8 +1469,8 @@
     {
       "module": "reports",
       "action": "customizeJobOrderReport",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.customizejoborderreport",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1512,8 +1478,8 @@
     {
       "module": "reports",
       "action": "generateEEOReportPreview",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.generateeeoreportpreview",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1521,8 +1487,8 @@
     {
       "module": "reports",
       "action": "generateJobOrderReportPDF",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.generatejoborderreportpdf",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1530,8 +1496,8 @@
     {
       "module": "reports",
       "action": "graphView",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.graphview",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1548,8 +1514,8 @@
     {
       "module": "reports",
       "action": "showHireReport",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.showhirereport",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1557,8 +1523,8 @@
     {
       "module": "reports",
       "action": "showPlacementReport",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.showplacementreport",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false
@@ -1566,8 +1532,8 @@
     {
       "module": "reports",
       "action": "showSubmissionReport",
-      "classification": "bridge-module-fallback",
-      "routeKey": "reports.*",
+      "classification": "bridge-explicit",
+      "routeKey": "reports.showsubmissionreport",
       "resolution": "bridge",
       "component": "ModuleBridgePage",
       "guarded": false

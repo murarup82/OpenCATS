@@ -331,20 +331,28 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - re-ran `npm run compare:legacy-routes` to refresh action parity snapshot
     - added `docs/modern-ui-comparison-driven-queue.md` with a prioritized 30-task execution plan based on the comparison report
     - documented in-scope bridged action counts by module to drive the next implementation wave.
+131. Executed comparison-driven 30-task parity wave (phase 1):
+    - added explicit in-scope action mappings in route registry (native-explicit or bridge-explicit by action family)
+    - added dedicated modern compatibility form pages for `companies.add/edit` and `contacts.add/edit`
+    - removed in-scope wildcard/default fallback resolution (`verify:in-scope-routes` now enforces zero fallback for core modules).
+132. Hardened comparison tooling for dynamic route definitions:
+    - upgraded `compare-legacy-modern-routes.mjs` parser to include explicit dynamic route maps and strip commented legacy code from action extraction
+    - report now includes `bridgeExplicit` vs `bridgeFallback` counters for clearer migration progress.
+133. Added in-scope fallback guard automation:
+    - introduced `frontend/modern-ui/scripts/verify-no-inscope-wildcard-fallbacks.mjs` and npm script `verify:in-scope-routes`
+    - wired quality gate to run route comparison plus in-scope fallback guard before evidence publication.
 
 ## Next Queue (30-Slice Execution)
 
-1. Execute tasks 1-10 from `docs/modern-ui-comparison-driven-queue.md` (P0 route/control parity wave).
-2. Execute tasks 11-20 from `docs/modern-ui-comparison-driven-queue.md` (Candidates/Companies/Contacts parity wave).
-3. Execute tasks 21-30 from `docs/modern-ui-comparison-driven-queue.md` (Job Orders/Lists/Reports parity wave).
-4. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
-5. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-6. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-7. Add telemetry retention guidance (session vs persisted metrics) for production observability.
-8. Add smoke fixture coverage report (which modules/actions have replay probes vs gaps).
-9. Add release readiness changelog template linking quality gate snapshots over time.
-10. Add scorecard prefill confidence notes (distinguish skipped smoke checks from validated target-env checks).
-11. Add periodic ownership-matrix review reminder process.
+1. Execute phase-2 native deepening backlog from `docs/modern-ui-comparison-driven-queue.md` (convert bridge-explicit -> native-explicit).
+2. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
+3. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
+4. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
+5. Add telemetry retention guidance (session vs persisted metrics) for production observability.
+6. Add smoke fixture coverage report (which modules/actions have replay probes vs gaps).
+7. Add release readiness changelog template linking quality gate snapshots over time.
+8. Add scorecard prefill confidence notes (distinguish skipped smoke checks from validated target-env checks).
+9. Add periodic ownership-matrix review reminder process.
 
 ## Rules
 

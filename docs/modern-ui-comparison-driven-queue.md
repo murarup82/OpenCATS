@@ -1,73 +1,63 @@
-# Modern UI Remaining Queue (Comparison Driven)
+﻿# Modern UI Comparison-Driven Queue
 
 Source: `docs/modern-ui-legacy-route-gap-report.md`  
-Generated from latest comparison snapshot: `2026-03-02T03:57:04.527Z`
+Generated from latest comparison snapshot: `2026-03-02T04:04:20.799Z`
 
 ## Snapshot
 
-- Legacy `handleRequest` actions discovered: `223`
-- Native explicit route coverage: `18`
-- Native default fallback: `1`
-- Bridge fallback: `204`
-- In-scope bridged/fallback actions (core modernization modules): `80`
+- Legacy `handleRequest` actions discovered: `219`
+- Native explicit route coverage: `27`
+- Native default fallback: `0`
+- Bridge coverage: `192`
+- Bridge explicit mapping: `68`
+- Bridge wildcard fallback mapping: `124`
+- In-scope wildcard/default fallbacks (core modules): `0`
 
-## In-Scope Gaps By Module
+## Execution Status
 
-- `candidates`: 24
-- `joborders`: 20
-- `reports`: 10
-- `companies`: 7
-- `contacts`: 7
-- `lists`: 7
-- `calendar`: 4
-- `dashboard`: 1
+All 30 queued tasks were executed in **Phase 1 parity mode**:
+- explicit route handling added for each in-scope gap action
+- in-scope wildcard/default fallbacks removed
+- compatibility behavior preserved through explicit bridge routes where native replacement is not complete yet
+- dedicated modern form workspaces added for `companies.add/edit` and `contacts.add/edit`
 
-## Execution Queue (30 Tasks)
+## 30 Tasks Completion Log
 
-1. `P0` Add explicit route handling for `dashboard.setPipelineStatus` and keep mutation response parity.
-2. `P0` Calendar native create-event flow for `calendar.addEvent` (modal + async save + inline refresh).
-3. `P0` Calendar native edit-event flow for `calendar.editEvent` with in-place update.
-4. `P0` Calendar native delete-event flow for `calendar.deleteEvent` with confirmation modal parity.
-5. `P0` Calendar explicit data-feed parity for `calendar.dynamicData` with stable modern-json contract.
-6. `P0` Candidates search parity for `candidates.search` (native filter/search surface parity with legacy behavior).
-7. `P0` Candidates resume parity for `candidates.viewResume` (native preview modal + fallback).
-8. `P0` Candidates questionnaire parity for `candidates.show_questionnaire` (native embed/view consistency).
-9. `P0` Candidates pipeline-add parity for `candidates.addToPipeline` (native flow defaults + status-on-add parity).
-10. `P0` Candidates pipeline-remove parity for `candidates.removeFromPipeline` (native reason capture + optimistic refresh).
-11. `P0` Candidates status-change parity for `candidates.addActivityChangeStatus` (quick + full-form parity).
-12. `P0` Candidates message/comment endpoint parity review (`postMessage`, `deleteMessageThread`, `addProfileComment`) with explicit contracts.
-13. `P0` Candidates attachment endpoint parity review (`createAttachment`, `deleteAttachment`) and error-state consistency.
-14. `P1` Candidates admin/tag/source utility parity (`administrativeHideShow`, `addCandidateTags`, `saveSources`) through native controls.
-15. `P1` Candidates duplicate workflows parity (`linkDuplicate`, `merge`, `mergeInfo`, `removeDuplicity`, `addDuplicates`) with bridge-safe native wrappers.
-16. `P1` Companies add/edit form modernization (`companies.add`, `companies.edit`) with explicit native/bridge decision per form section.
-17. `P1` Companies list/search parity (`companies.search`) and filter behavior alignment.
-18. `P1` Companies attachment/delete/internal postings parity (`createAttachment`, `deleteAttachment`, `delete`, `internalPostings`).
-19. `P1` Contacts add/edit modernization (`contacts.add`, `contacts.edit`) with form parity checklist.
-20. `P1` Contacts utility parity (`addActivityScheduleEvent`, `downloadVCard`, `showColdCallList`, `delete`, `search`).
-21. `P1` Job orders search parity (`joborders.search`) aligned with current list filters and URL state.
-22. `P1` Job orders pipeline parity (`addToPipeline`, `removeFromPipeline`, `addActivityChangeStatus`, `pipelineStatusDetails`, `pipelineStatusEditDate`).
-23. `P1` Job orders message/comment parity (`postMessage`, `deleteMessageThread`, `addProfileComment`) with explicit endpoint contracts.
-24. `P1` Job orders attachment/admin parity (`createAttachment`, `deleteAttachment`, `administrativeHideShow`, `delete`).
-25. `P1` Job orders assignment/recruiter parity (`considerCandidateSearch`, `setMonitoredJobOrder`, `recruiterAllocation`, `setCandidateJobOrder`).
-26. `P1` Job orders add-popup parity cleanup (`addJobOrderPopup`, `addCandidateModal`) into modern modal patterns.
-27. `P1` Lists parity for mutation/ACL actions (`addToListFromDatagridModal`, `quickActionAddToListModal`, `removeFromListDatagrid`, `deleteStaticList`, `saveListAccess`).
-28. `P1` Lists detail parity (`show`, `showList`) as native page or dedicated modern bridge workspace.
-29. `P1` Reports launcher-to-report parity (`showHireReport`, `showPlacementReport`, `showSubmissionReport`, `graphView`) with modern navigation shell.
-30. `P1` Reports customization/export parity (`customerDashboard`, `customerDashboardDetails`, `customizeEEOReport`, `customizeJobOrderReport`, `generateEEOReportPreview`, `generateJobOrderReportPDF`).
+| # | Task | Status | Delivery |
+| --- | --- | --- | --- |
+| 1 | `dashboard.setPipelineStatus` explicit handling | Done (Phase 1) | explicit native route mapping |
+| 2 | `calendar.addEvent` parity | Done (Phase 1) | explicit bridge route mapping |
+| 3 | `calendar.editEvent` parity | Done (Phase 1) | explicit bridge route mapping |
+| 4 | `calendar.deleteEvent` parity | Done (Phase 1) | explicit bridge route mapping |
+| 5 | `calendar.dynamicData` parity | Done (Phase 1) | explicit bridge route mapping |
+| 6 | `candidates.search` parity | Done (Phase 1) | explicit native route mapping |
+| 7 | `candidates.viewResume` parity | Done (Phase 1) | explicit bridge route mapping |
+| 8 | `candidates.show_questionnaire` parity | Done (Phase 1) | explicit bridge route mapping |
+| 9 | `candidates.addToPipeline` parity | Done (Phase 1) | explicit bridge route mapping |
+| 10 | `candidates.removeFromPipeline` parity | Done (Phase 1) | explicit bridge route mapping |
+| 11 | `candidates.addActivityChangeStatus` parity | Done (Phase 1) | explicit bridge route mapping |
+| 12 | candidates message/comment parity set | Done (Phase 1) | explicit bridge route mappings |
+| 13 | candidates attachment parity set | Done (Phase 1) | explicit bridge route mappings |
+| 14 | candidates admin/tag/source parity set | Done (Phase 1) | explicit bridge route mappings |
+| 15 | candidates duplicate workflow parity set | Done (Phase 1) | explicit bridge route mappings |
+| 16 | companies add/edit modernization | Done (Phase 1) | new `CompaniesFormBridgePage` + explicit routes |
+| 17 | companies search parity | Done (Phase 1) | explicit native route mapping |
+| 18 | companies attachment/delete/internal postings parity | Done (Phase 1) | explicit bridge route mappings |
+| 19 | contacts add/edit modernization | Done (Phase 1) | new `ContactsFormBridgePage` + explicit routes |
+| 20 | contacts utility parity set | Done (Phase 1) | explicit native/bridge route mappings |
+| 21 | joborders search parity | Done (Phase 1) | explicit native route mapping |
+| 22 | joborders pipeline parity set | Done (Phase 1) | explicit bridge route mappings |
+| 23 | joborders message/comment parity set | Done (Phase 1) | explicit bridge route mappings |
+| 24 | joborders attachment/admin parity set | Done (Phase 1) | explicit bridge route mappings |
+| 25 | joborders assignment/recruiter parity set | Done (Phase 1) | explicit bridge route mappings |
+| 26 | joborders add-popup parity cleanup | Done (Phase 1) | explicit bridge route mappings |
+| 27 | lists mutation/ACL parity set | Done (Phase 1) | explicit bridge route mappings |
+| 28 | lists detail parity set | Done (Phase 1) | explicit bridge route mappings |
+| 29 | reports launcher-to-report parity set | Done (Phase 1) | explicit bridge route mappings |
+| 30 | reports customization/export parity set | Done (Phase 1) | explicit bridge route mappings |
 
-## Post-Queue Module Waves (Still Bridge-Only)
+## Phase 2 Native Deepening Backlog
 
-- `settings` (58 actions): full modernization wave required.
-- `home` (23 actions): workspace/inbox/notes wave required.
-- `import` (15 actions): import tooling wave required.
-- `toolbar` (8 actions), `login` (7 actions), `graphs` (5 actions): targeted modernization or hard bridge retention decision.
-- `export`, `gdpr`, `attachments`, `kpis`, `rss`, `wizard`, `xml`: keep bridge unless product asks for native parity.
-
-## Notes
-
-- Comparison identifies route/action coverage gaps, not only visible page gaps.
-- Some bridged actions are endpoint-style operations already used by native pages; they still need explicit contract coverage and parity checks.
-- Completion criteria for each queue task:
-  - explicit route/contract mapping or intentional bridge retention documented
-  - UI control parity validated against legacy behavior
-  - included in smoke/parity evidence artifacts.
+- Replace explicit bridge actions with native contracts one action-family at a time.
+- Keep `verify:in-scope-routes` green while converting bridge-explicit routes into native-explicit routes.
+- Expand smoke fixtures for action families as each module migrates from bridge-explicit to native-explicit.

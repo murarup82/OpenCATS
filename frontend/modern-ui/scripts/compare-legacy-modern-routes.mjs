@@ -13,6 +13,12 @@ const reportJsonPath = path.join(docsDir, 'modern-ui-legacy-route-gap-report.jso
 
 const skipModuleDirs = new Set(['tests']);
 
+function stripPhpComments(source) {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  const withoutLineComments = withoutBlockComments.replace(/^\s*\/\/.*$/gm, '');
+  return withoutLineComments;
+}
+
 function listModuleUIFiles(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const files = [];
@@ -107,6 +113,52 @@ function extractHandleRequestActions(source) {
 }
 
 function parseRouteRegistry(source) {
+  function parseNamedObjectRoutes(constName) {
+    const namedBlockMatch = new RegExp(`const\\s+${constName}:[\\s\\S]*?=\\s*\\{([\\s\\S]*?)\\n\\};`, 'm').exec(source);
+    if (!namedBlockMatch) {
+      return [];
+    }
+
+    const namedBody = namedBlockMatch[1];
+    const entries = [];
+    const routeRegex = /'([^']+)'\s*:\s*([A-Za-z0-9_]+)/g;
+    let routeMatch;
+    while ((routeMatch = routeRegex.exec(namedBody)) !== null) {
+      entries.push({
+        routeKey: routeMatch[1].toLowerCase(),
+        component: routeMatch[2]
+      });
+    }
+
+    return entries;
+  }
+
+  function parseExplicitBridgeRoutes(constName) {
+    const bridgeBlockMatch = new RegExp(`const\\s+${constName}\\s*=\\s*buildExplicitBridgeRoutes\\(\\{([\\s\\S]*?)\\}\\);`, 'm').exec(source);
+    if (!bridgeBlockMatch) {
+      return [];
+    }
+
+    const bridgeBody = bridgeBlockMatch[1];
+    const entries = [];
+    const moduleRegex = /([A-Za-z0-9_]+)\s*:\s*\[([\s\S]*?)\]/g;
+    let moduleMatch;
+    while ((moduleMatch = moduleRegex.exec(bridgeBody)) !== null) {
+      const moduleKey = moduleMatch[1].toLowerCase();
+      const actionsBody = moduleMatch[2];
+      const actionRegex = /'([^']+)'/g;
+      let actionMatch;
+      while ((actionMatch = actionRegex.exec(actionsBody)) !== null) {
+        entries.push({
+          routeKey: `${moduleKey}.${actionMatch[1].toLowerCase()}`,
+          component: 'ModuleBridgePage'
+        });
+      }
+    }
+
+    return entries;
+  }
+
   const registryBlockMatch = /const\s+registry:[\s\S]*?=\s*\{([\s\S]*?)\n\};/m.exec(source);
   if (!registryBlockMatch) {
     throw new Error('Unable to parse route registry block.');
@@ -118,6 +170,12 @@ function parseRouteRegistry(source) {
   let routeMatch;
   while ((routeMatch = routeRegex.exec(registryBody)) !== null) {
     routes.set(routeMatch[1].toLowerCase(), routeMatch[2]);
+  }
+  for (const entry of parseNamedObjectRoutes('explicitNativeActionRoutes')) {
+    routes.set(entry.routeKey, entry.component);
+  }
+  for (const entry of parseExplicitBridgeRoutes('explicitBridgeActionRoutes')) {
+    routes.set(entry.routeKey, entry.component);
   }
 
   const guardedBlockMatch = /const\s+guardedRouteParams:[\s\S]*?=\s*\{([\s\S]*?)\n\};/m.exec(source);
@@ -209,7 +267,7 @@ const moduleUiFiles = listModuleUIFiles(modulesDir);
 const rows = [];
 for (const moduleFile of moduleUiFiles) {
   const moduleName = path.basename(path.dirname(moduleFile)).toLowerCase();
-  const source = fs.readFileSync(moduleFile, 'utf8');
+  const source = stripPhpComments(fs.readFileSync(moduleFile, 'utf8'));
   const actions = extractHandleRequestActions(source);
 
   for (const actionName of actions) {
@@ -304,6 +362,8 @@ const reportJson = {
     nativeExplicit: rows.filter((row) => row.classification === 'native-explicit' || row.classification === 'native-explicit-guarded').length,
     nativeDefaultFallback: rows.filter((row) => row.classification === 'native-default-fallback').length,
     bridge: rows.filter((row) => row.classification.startsWith('bridge-')).length,
+    bridgeExplicit: rows.filter((row) => row.classification === 'bridge-explicit').length,
+    bridgeFallback: rows.filter((row) => row.classification === 'bridge-module-fallback' || row.classification === 'bridge-global-fallback').length,
     unresolved: rows.filter((row) => row.classification === 'legacy-unresolved').length
   },
   moduleSummaries,
@@ -326,7 +386,9 @@ markdown.push('');
 markdown.push(`- Legacy handleRequest actions discovered: ${reportJson.totals.actions}`);
 markdown.push(`- Native explicit modern coverage: ${reportJson.totals.nativeExplicit}`);
 markdown.push(`- Native default fallback coverage: ${reportJson.totals.nativeDefaultFallback}`);
-markdown.push(`- Bridge fallback coverage: ${reportJson.totals.bridge}`);
+markdown.push(`- Bridge coverage (explicit + fallback): ${reportJson.totals.bridge}`);
+markdown.push(`- Bridge explicit route mapping: ${reportJson.totals.bridgeExplicit}`);
+markdown.push(`- Bridge wildcard fallback mapping: ${reportJson.totals.bridgeFallback}`);
 markdown.push(`- Legacy unresolved: ${reportJson.totals.unresolved}`);
 markdown.push('');
 markdown.push('## Module Coverage');

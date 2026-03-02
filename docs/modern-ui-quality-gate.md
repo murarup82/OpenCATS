@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-02T03:52:55.625Z
-Finished: 2026-03-02T03:53:07.260Z
+Started: 2026-03-02T04:07:06.515Z
+Finished: 2026-03-02T04:07:18.474Z
 Overall Status: **Pass**
 
 ## Summary
@@ -11,6 +11,8 @@ Overall Status: **Pass**
 | Command: Sanity Report | Pass | 0 |
 | Command: Scorecard Prefill | Pass | 0 |
 | Command: Fixture Lint | Pass | 0 |
+| Command: Legacy Route Comparison | Pass | 0 |
+| Command: In-Scope Route Fallback Guard | Pass | 0 |
 | Command: Cutover Evidence Snapshot | Pass | 0 |
 | Command: Deprecation Evidence Validation | Pass | 0 |
 | Evidence: `docs/modern-ui-route-coverage.md` | Pass | present |
@@ -22,6 +24,7 @@ Overall Status: **Pass**
 | Evidence: `docs/modern-ui-cutover-checklist.md` | Pass | present |
 | Evidence: `docs/modern-ui-cutover-evidence-links.md` | Pass | present |
 | Evidence: `docs/modern-ui-deprecation-evidence-check.md` | Pass | present |
+| Evidence: `docs/modern-ui-legacy-route-gap-report.md` | Pass | present |
 
 ## Command Details
 
@@ -65,6 +68,37 @@ Command: `npm.cmd run fixtures:lint`
 > node ./scripts/lint-smoke-fixtures.mjs
 
 [fixtures:lint] OK (5 fixtures validated)
+```
+
+**stderr**
+`(no output)`
+
+### Legacy Route Comparison (Pass)
+
+Command: `npm.cmd run compare:legacy-routes`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 compare:legacy-routes
+> node ./scripts/compare-legacy-modern-routes.mjs
+
+Wrote docs\modern-ui-legacy-route-gap-report.md
+Wrote docs\modern-ui-legacy-route-gap-report.json
+```
+
+**stderr**
+`(no output)`
+
+### In-Scope Route Fallback Guard (Pass)
+
+Command: `npm.cmd run verify:in-scope-routes`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:in-scope-routes
+> node ./scripts/verify-no-inscope-wildcard-fallbacks.mjs
+
+[modern-ui] No in-scope wildcard/default fallback routes detected.
 ```
 
 **stderr**

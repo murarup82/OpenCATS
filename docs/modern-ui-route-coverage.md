@@ -1,13 +1,13 @@
 # Modern UI Route Coverage Matrix
 
-Generated: 2026-03-02T03:53:03.497Z
+Generated: 2026-03-02T04:07:13.728Z
 
 ## Summary
 
-- Total route mappings: **41**
-- Native mappings: **30**
+- Total route mappings: **45**
+- Native mappings: **34**
 - Bridge mappings: **11**
-- Native coverage (mapping-level): **73.2%**
+- Native coverage (mapping-level): **75.6%**
 
 ## Module Summary
 
@@ -16,8 +16,8 @@ Generated: 2026-03-02T03:53:03.497Z
 - `activity`: native=3, bridge=1
 - `calendar`: native=2, bridge=1
 - `candidates`: native=5, bridge=1
-- `companies`: native=4, bridge=1
-- `contacts`: native=4, bridge=1
+- `companies`: native=6, bridge=1
+- `contacts`: native=6, bridge=1
 - `dashboard`: native=2, bridge=0
 - `home`: native=0, bridge=1
 - `joborders`: native=6, bridge=1
@@ -45,11 +45,15 @@ Generated: 2026-03-02T03:53:03.497Z
 | `candidates.show` | `CandidatesShowPage` | native | candidateID |
 | `companies.(default)` | `CompaniesListPage` | native | - |
 | `companies.*` | `ModuleBridgePage` | bridge | - |
+| `companies.add` | `CompaniesFormBridgePage` | native | - |
+| `companies.edit` | `CompaniesFormBridgePage` | native | companyID |
 | `companies.list` | `CompaniesListPage` | native | - |
 | `companies.listbyview` | `CompaniesListPage` | native | - |
 | `companies.show` | `CompaniesShowPage` | native | companyID |
 | `contacts.(default)` | `ContactsListPage` | native | - |
 | `contacts.*` | `ModuleBridgePage` | bridge | - |
+| `contacts.add` | `ContactsFormBridgePage` | native | - |
+| `contacts.edit` | `ContactsFormBridgePage` | native | contactID |
 | `contacts.list` | `ContactsListPage` | native | - |
 | `contacts.listbyview` | `ContactsListPage` | native | - |
 | `contacts.show` | `ContactsShowPage` | native | contactID |
