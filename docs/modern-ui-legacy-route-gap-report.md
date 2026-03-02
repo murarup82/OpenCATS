@@ -1,15 +1,15 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-02T04:43:44.844Z
+Generated: 2026-03-02T06:55:24.846Z
 
 ## Summary
 
-- Legacy handleRequest actions discovered: 219
+- Legacy handleRequest actions discovered: 220
 - Native explicit modern coverage: 95
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 124
+- Bridge coverage (explicit + fallback): 125
 - Bridge explicit route mapping: 0
-- Bridge wildcard fallback mapping: 124
+- Bridge wildcard fallback mapping: 125
 - Legacy unresolved: 0
 
 ## Module Coverage
@@ -32,6 +32,7 @@ Generated: 2026-03-02T04:43:44.844Z
 | kpis | 1 | 0 | 0 | 1 | 0 |
 | lists | 7 | 7 | 0 | 0 | 0 |
 | login | 7 | 0 | 0 | 7 | 0 |
+| logs | 1 | 0 | 0 | 1 | 0 |
 | reports | 11 | 11 | 0 | 0 | 0 |
 | rss | 1 | 0 | 0 | 1 | 0 |
 | settings | 58 | 0 | 0 | 58 | 0 |
@@ -56,7 +57,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | calendar | dynamicData | native-explicit | calendar.dynamicdata | ActionCompatPage |
 | calendar | editEvent | native-explicit | calendar.editevent | ActionCompatPage |
 | calendar | showCalendar | native-explicit | calendar.showcalendar | CalendarPage |
-| candidates | add | native-explicit | candidates.add | CandidatesAddPage |
+| candidates | add | native-explicit | candidates.add | CandidatesFormBridgePage |
 | candidates | addActivityChangeStatus | native-explicit | candidates.addactivitychangestatus | ActionCompatPage |
 | candidates | addCandidateTags | native-explicit | candidates.addcandidatetags | ActionCompatPage |
 | candidates | addDuplicates | native-explicit | candidates.addduplicates | ActionCompatPage |
@@ -69,7 +70,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | delete | native-explicit | candidates.delete | ActionCompatPage |
 | candidates | deleteAttachment | native-explicit | candidates.deleteattachment | ActionCompatPage |
 | candidates | deleteMessageThread | native-explicit | candidates.deletemessagethread | ActionCompatPage |
-| candidates | edit | native-explicit-guarded | candidates.edit | CandidatesEditPage |
+| candidates | edit | native-explicit-guarded | candidates.edit | CandidatesFormBridgePage |
 | candidates | emailCandidates | native-explicit | candidates.emailcandidates | ActionCompatPage |
 | candidates | linkDuplicate | native-explicit | candidates.linkduplicate | ActionCompatPage |
 | candidates | listByView | native-explicit | candidates.listbyview | CandidatesListPage |
@@ -187,6 +188,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | login | noCookiesModal | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | requestAccess | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | showLoginForm | bridge-global-fallback | *.* | ModuleBridgePage |
+| logs | view | bridge-global-fallback | *.* | ModuleBridgePage |
 | reports | customerDashboard | native-explicit | reports.customerdashboard | ActionCompatPage |
 | reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ActionCompatPage |
 | reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | ActionCompatPage |

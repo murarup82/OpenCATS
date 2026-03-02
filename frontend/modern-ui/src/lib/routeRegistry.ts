@@ -3,8 +3,7 @@ import type { UIModeBootstrap } from '../types';
 import { DashboardMyPage } from '../pages/DashboardMyPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
-import { CandidatesAddPage } from '../pages/CandidatesAddPage';
-import { CandidatesEditPage } from '../pages/CandidatesEditPage';
+import { CandidatesFormBridgePage } from '../pages/CandidatesFormBridgePage';
 import { JobOrdersFormBridgePage } from '../pages/JobOrdersFormBridgePage';
 import { JobOrdersListPage } from '../pages/JobOrdersListPage';
 import { JobOrdersShowPage } from '../pages/JobOrdersShowPage';
@@ -136,8 +135,9 @@ const registry: Record<string, ModernRouteComponent> = {
   'dashboard.(default)': DashboardMyPage,
   'candidates.listbyview': CandidatesListPage,
   'candidates.show': CandidatesShowPage,
-  'candidates.add': CandidatesAddPage,
-  'candidates.edit': CandidatesEditPage,
+  // Keep add/edit in legacy form bridge until modern parity includes AI prefill/refill and CV parsing.
+  'candidates.add': CandidatesFormBridgePage,
+  'candidates.edit': CandidatesFormBridgePage,
   'joborders.listbyview': JobOrdersListPage,
   'joborders.list': JobOrdersListPage,
   'joborders.(default)': JobOrdersListPage,

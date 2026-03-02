@@ -1453,18 +1453,35 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             <section className="avel-list-panel">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Attachments</h2>
-                {permissions.canCreateAttachment ? (
-                  <button
-                    type="button"
-                    className="modern-btn modern-btn--mini modern-btn--secondary"
-                    onClick={() => {
-                      setAttachmentUploadOpen((current) => !current);
-                      setAttachmentUploadError('');
-                    }}
-                  >
-                    {attachmentUploadOpen ? 'Cancel Upload' : 'Add Attachment'}
-                  </button>
-                ) : null}
+                <div className="modern-table-actions">
+                  {data.attachments.transformCandidates.length > 0 ? (
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      onClick={() =>
+                        setPipelineModal({
+                          url: decodeLegacyURL(data.actions.legacyURL),
+                          title: 'Transform CV (Legacy)',
+                          showRefreshClose: true
+                        })
+                      }
+                    >
+                      Transform CV (Legacy)
+                    </button>
+                  ) : null}
+                  {permissions.canCreateAttachment ? (
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      onClick={() => {
+                        setAttachmentUploadOpen((current) => !current);
+                        setAttachmentUploadError('');
+                      }}
+                    >
+                      {attachmentUploadOpen ? 'Cancel Upload' : 'Add Attachment'}
+                    </button>
+                  ) : null}
+                </div>
               </div>
               {permissions.canCreateAttachment && attachmentUploadOpen ? (
                 <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>

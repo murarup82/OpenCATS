@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-03-02T04:43:44.844Z",
+  "generatedAt": "2026-03-02T06:55:24.846Z",
   "totals": {
-    "actions": 219,
+    "actions": 220,
     "nativeExplicit": 95,
     "nativeDefaultFallback": 0,
-    "bridge": 124,
+    "bridge": 125,
     "bridgeExplicit": 0,
-    "bridgeFallback": 124,
+    "bridgeFallback": 125,
     "unresolved": 0
   },
   "moduleSummaries": [
@@ -139,6 +139,14 @@
       "unresolved": 0
     },
     {
+      "module": "logs",
+      "totalActions": 1,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 1,
+      "unresolved": 0
+    },
+    {
       "module": "reports",
       "totalActions": 11,
       "nativeExplicit": 11,
@@ -266,7 +274,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.add",
       "resolution": "native",
-      "component": "CandidatesAddPage",
+      "component": "CandidatesFormBridgePage",
       "guarded": false
     },
     {
@@ -383,7 +391,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.edit",
       "resolution": "native",
-      "component": "CandidatesEditPage",
+      "component": "CandidatesFormBridgePage",
       "guarded": true
     },
     {
@@ -1433,6 +1441,15 @@
     {
       "module": "login",
       "action": "showLoginForm",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "logs",
+      "action": "view",
       "classification": "bridge-global-fallback",
       "routeKey": "*.*",
       "resolution": "bridge",
