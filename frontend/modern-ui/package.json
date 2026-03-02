@@ -18,8 +18,10 @@
     "sanity:modern": "node ./scripts/modern-sanity-report.mjs",
     "scorecard:prefill": "node ./scripts/prefill-rollout-scorecard.mjs",
     "fixtures:lint": "node ./scripts/lint-smoke-fixtures.mjs",
+    "fixtures:coverage": "node ./scripts/generate-smoke-fixture-coverage.mjs",
     "deprecation:validate": "node ./scripts/validate-deprecation-signoff.mjs",
     "cutover:evidence": "node ./scripts/generate-cutover-evidence-links.mjs",
+    "ownership:reminder": "node ./scripts/generate-ownership-review-reminder.mjs",
     "quality:gate": "node ./scripts/quality-gate.mjs"
   },
   "dependencies": {

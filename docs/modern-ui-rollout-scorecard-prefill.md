@@ -1,6 +1,6 @@
 # Modern UI Rollout Scorecard (Prefilled)
 
-Generated: 2026-03-02T04:07:15.505Z
+Generated: 2026-03-02T04:15:05.298Z
 
 Auto-filled total score: **15 / 20**
 Suggested outcome: **Hold**
@@ -22,3 +22,9 @@ Suggested outcome: **Hold**
 
 - This prefill only covers machine-derivable checks from the latest sanity report.
 - Replace `Pending manual review` entries with validated evidence before final go/no-go decisions.
+
+## Confidence Notes
+
+- Route smoke confidence: Validated by executed check.
+- Endpoint smoke confidence: Validated by executed check.
+- Treat skipped smoke checks as provisional and require target-environment execution before final Go decision.

@@ -341,18 +341,36 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 133. Added in-scope fallback guard automation:
     - introduced `frontend/modern-ui/scripts/verify-no-inscope-wildcard-fallbacks.mjs` and npm script `verify:in-scope-routes`
     - wired quality gate to run route comparison plus in-scope fallback guard before evidence publication.
+134. Added telemetry retention guidance for rollout observability:
+    - introduced `docs/modern-ui-telemetry-retention-guidance.md` with tiered retention policy (session snapshots and optional persisted telemetry)
+    - documented privacy/data-minimization requirements and escalation triggers for retention upgrades.
+135. Added smoke fixture coverage reporting automation:
+    - introduced `frontend/modern-ui/scripts/generate-smoke-fixture-coverage.mjs` and npm script `fixtures:coverage`
+    - generated `docs/modern-ui-smoke-fixture-coverage.md` with endpoint-check coverage, uncovered gaps, and orphan fixture detection.
+136. Added release readiness changelog template:
+    - introduced `docs/modern-ui-release-readiness-changelog-template.md` with per-slice evidence linkage and interpretation rules
+    - aligned changelog fields with quality gate, scorecard, and fallback metrics.
+137. Added scorecard prefill confidence-note support:
+    - updated `frontend/modern-ui/scripts/prefill-rollout-scorecard.mjs` to append confidence notes for smoke validation context
+    - prefill artifact now explicitly calls out provisional/skipped smoke confidence handling.
+138. Added periodic ownership-matrix review reminder process:
+    - introduced `frontend/modern-ui/scripts/generate-ownership-review-reminder.mjs` and npm script `ownership:reminder`
+    - generated `docs/modern-ui-operations-ownership-review-reminder.md` and documented workflow in `docs/modern-ui-operations-ownership-review-reminder-process.md`.
+139. Added keyboard shortcut extension plan for next modernization wave:
+    - introduced `docs/modern-ui-keyboard-shortcuts-extension-plan.md` with module-jump, action-palette, and context-action shortcut roadmap
+    - documented accessibility/safety constraints and phased rollout strategy.
+140. Extended quality gate with governance and coverage artifacts:
+    - `quality:gate` now runs fixture coverage and ownership reminder checks
+    - evidence validation now requires telemetry retention, fixture coverage, release changelog template, keyboard extension plan, and ownership reminder process artifacts.
 
 ## Next Queue (30-Slice Execution)
 
 1. Execute phase-2 native deepening backlog from `docs/modern-ui-comparison-driven-queue.md` (convert bridge-explicit -> native-explicit).
 2. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 3. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-4. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-5. Add telemetry retention guidance (session vs persisted metrics) for production observability.
-6. Add smoke fixture coverage report (which modules/actions have replay probes vs gaps).
-7. Add release readiness changelog template linking quality gate snapshots over time.
-8. Add scorecard prefill confidence notes (distinguish skipped smoke checks from validated target-env checks).
-9. Add periodic ownership-matrix review reminder process.
+4. Expand mutation-safe replay fixtures to reduce uncovered endpoint checks in `docs/modern-ui-smoke-fixture-coverage.md`.
+5. Fill and maintain ownership assignments in `docs/modern-ui-operations-ownership-matrix.md` (current reminder report shows unassigned rows).
+6. Run target-environment smoke checks so scorecard confidence moves from provisional to validated.
 
 ## Rules
 

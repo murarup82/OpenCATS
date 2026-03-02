@@ -46,6 +46,23 @@ function extractCheckStatus(report, checkName) {
   };
 }
 
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function checkWasSkipped(report, checkName) {
+  const pattern = new RegExp(
+    `###\\s+${escapeRegExp(checkName)}\\s+\\([^\\n]+\\)([\\s\\S]*?)(?=\\n###\\s+|$)`,
+    'm'
+  );
+  const match = pattern.exec(report);
+  if (!match) {
+    return false;
+  }
+  const body = String(match[1] || '');
+  return body.includes('Skipped:');
+}
+
 function scoreFromStatus(status) {
   if (status === 'Pass') {
     return 2;
@@ -61,6 +78,8 @@ const build = extractCheckStatus(sanity, 'Frontend Build');
 const coverage = extractCheckStatus(sanity, 'Coverage Matrix');
 const routes = extractCheckStatus(sanity, 'Route Smoke');
 const endpoints = extractCheckStatus(sanity, 'Endpoint Smoke');
+const routesSkipped = checkWasSkipped(sanity, 'Route Smoke');
+const endpointsSkipped = checkWasSkipped(sanity, 'Endpoint Smoke');
 
 const rows = [
   {
@@ -78,14 +97,18 @@ const rows = [
   {
     criterion: 'Route smoke in target env (`npm run smoke:routes`)',
     critical: 'Yes',
-    score: scoreFromStatus(routes.status),
-    evidence: `Sanity report: ${routes.status} (exit ${routes.exitCode})`
+    score: routesSkipped ? 1 : scoreFromStatus(routes.status),
+    evidence: routesSkipped
+      ? `Sanity report: ${routes.status} (exit ${routes.exitCode}); skipped in current environment.`
+      : `Sanity report: ${routes.status} (exit ${routes.exitCode})`
   },
   {
     criterion: 'Endpoint smoke in target env (`npm run smoke:endpoints`)',
     critical: 'Yes',
-    score: scoreFromStatus(endpoints.status),
-    evidence: `Sanity report: ${endpoints.status} (exit ${endpoints.exitCode})`
+    score: endpointsSkipped ? 1 : scoreFromStatus(endpoints.status),
+    evidence: endpointsSkipped
+      ? `Sanity report: ${endpoints.status} (exit ${endpoints.exitCode}); skipped in current environment.`
+      : `Sanity report: ${endpoints.status} (exit ${endpoints.exitCode})`
   },
   {
     criterion: 'Sanity report generated (`npm run sanity:modern`)',
@@ -146,7 +169,13 @@ const markdown = [
   '## Notes',
   '',
   '- This prefill only covers machine-derivable checks from the latest sanity report.',
-  '- Replace `Pending manual review` entries with validated evidence before final go/no-go decisions.'
+  '- Replace `Pending manual review` entries with validated evidence before final go/no-go decisions.',
+  '',
+  '## Confidence Notes',
+  '',
+  `- Route smoke confidence: ${routesSkipped ? 'Limited (skipped, not target-validated)' : 'Validated by executed check'}.`,
+  `- Endpoint smoke confidence: ${endpointsSkipped ? 'Limited (skipped, not target-validated)' : 'Validated by executed check'}.`,
+  '- Treat skipped smoke checks as provisional and require target-environment execution before final Go decision.'
 ].join('\n');
 
 writeFileSync(outputPath, markdown, 'utf8');

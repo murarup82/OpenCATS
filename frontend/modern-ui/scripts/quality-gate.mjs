@@ -12,10 +12,12 @@ const checks = [
   { id: 'sanity', label: 'Sanity Report', command: ['run', 'sanity:modern'], required: true },
   { id: 'scorecard', label: 'Scorecard Prefill', command: ['run', 'scorecard:prefill'], required: true },
   { id: 'fixtures', label: 'Fixture Lint', command: ['run', 'fixtures:lint'], required: true },
+  { id: 'fixtureCoverage', label: 'Fixture Coverage Report', command: ['run', 'fixtures:coverage'], required: true },
   { id: 'compareRoutes', label: 'Legacy Route Comparison', command: ['run', 'compare:legacy-routes'], required: true },
   { id: 'verifyInScopeRoutes', label: 'In-Scope Route Fallback Guard', command: ['run', 'verify:in-scope-routes'], required: true },
   { id: 'cutoverEvidence', label: 'Cutover Evidence Snapshot', command: ['run', 'cutover:evidence'], required: true },
-  { id: 'deprecationEvidence', label: 'Deprecation Evidence Validation', command: ['run', 'deprecation:validate'], required: true }
+  { id: 'deprecationEvidence', label: 'Deprecation Evidence Validation', command: ['run', 'deprecation:validate'], required: true },
+  { id: 'ownershipReminder', label: 'Ownership Review Reminder', command: ['run', 'ownership:reminder'], required: true }
 ];
 
 const evidenceFiles = [
@@ -28,7 +30,13 @@ const evidenceFiles = [
   'docs/modern-ui-cutover-checklist.md',
   'docs/modern-ui-cutover-evidence-links.md',
   'docs/modern-ui-deprecation-evidence-check.md',
-  'docs/modern-ui-legacy-route-gap-report.md'
+  'docs/modern-ui-legacy-route-gap-report.md',
+  'docs/modern-ui-smoke-fixture-coverage.md',
+  'docs/modern-ui-telemetry-retention-guidance.md',
+  'docs/modern-ui-release-readiness-changelog-template.md',
+  'docs/modern-ui-keyboard-shortcuts-extension-plan.md',
+  'docs/modern-ui-operations-ownership-review-reminder.md',
+  'docs/modern-ui-operations-ownership-review-reminder-process.md'
 ];
 
 function runCommand(check) {

@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-02T04:07:06.515Z
-Finished: 2026-03-02T04:07:18.474Z
+Started: 2026-03-02T04:14:56.209Z
+Finished: 2026-03-02T04:15:09.375Z
 Overall Status: **Pass**
 
 ## Summary
@@ -11,10 +11,12 @@ Overall Status: **Pass**
 | Command: Sanity Report | Pass | 0 |
 | Command: Scorecard Prefill | Pass | 0 |
 | Command: Fixture Lint | Pass | 0 |
+| Command: Fixture Coverage Report | Pass | 0 |
 | Command: Legacy Route Comparison | Pass | 0 |
 | Command: In-Scope Route Fallback Guard | Pass | 0 |
 | Command: Cutover Evidence Snapshot | Pass | 0 |
 | Command: Deprecation Evidence Validation | Pass | 0 |
+| Command: Ownership Review Reminder | Pass | 0 |
 | Evidence: `docs/modern-ui-route-coverage.md` | Pass | present |
 | Evidence: `docs/modern-ui-sanity-report.md` | Pass | present |
 | Evidence: `docs/modern-ui-parity-checklist.md` | Pass | present |
@@ -25,6 +27,12 @@ Overall Status: **Pass**
 | Evidence: `docs/modern-ui-cutover-evidence-links.md` | Pass | present |
 | Evidence: `docs/modern-ui-deprecation-evidence-check.md` | Pass | present |
 | Evidence: `docs/modern-ui-legacy-route-gap-report.md` | Pass | present |
+| Evidence: `docs/modern-ui-smoke-fixture-coverage.md` | Pass | present |
+| Evidence: `docs/modern-ui-telemetry-retention-guidance.md` | Pass | present |
+| Evidence: `docs/modern-ui-release-readiness-changelog-template.md` | Pass | present |
+| Evidence: `docs/modern-ui-keyboard-shortcuts-extension-plan.md` | Pass | present |
+| Evidence: `docs/modern-ui-operations-ownership-review-reminder.md` | Pass | present |
+| Evidence: `docs/modern-ui-operations-ownership-review-reminder-process.md` | Pass | present |
 
 ## Command Details
 
@@ -68,6 +76,21 @@ Command: `npm.cmd run fixtures:lint`
 > node ./scripts/lint-smoke-fixtures.mjs
 
 [fixtures:lint] OK (5 fixtures validated)
+```
+
+**stderr**
+`(no output)`
+
+### Fixture Coverage Report (Pass)
+
+Command: `npm.cmd run fixtures:coverage`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 fixtures:coverage
+> node ./scripts/generate-smoke-fixture-coverage.mjs
+
+[modern-ui] Wrote smoke fixture coverage report: D:\Work\opencats\OpenCATS\docs\modern-ui-smoke-fixture-coverage.md
 ```
 
 **stderr**
@@ -129,6 +152,21 @@ Command: `npm.cmd run deprecation:validate`
 > node ./scripts/validate-deprecation-signoff.mjs
 
 [modern-ui] Wrote deprecation evidence check: D:\Work\opencats\OpenCATS\docs\modern-ui-deprecation-evidence-check.md
+```
+
+**stderr**
+`(no output)`
+
+### Ownership Review Reminder (Pass)
+
+Command: `npm.cmd run ownership:reminder`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 ownership:reminder
+> node ./scripts/generate-ownership-review-reminder.mjs
+
+[modern-ui] Wrote ownership review reminder: D:\Work\opencats\OpenCATS\docs\modern-ui-operations-ownership-review-reminder.md
 ```
 
 **stderr**
