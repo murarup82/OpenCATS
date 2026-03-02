@@ -1,0 +1,2197 @@
+{
+  "generatedAt": "2026-03-02T03:48:05.908Z",
+  "totals": {
+    "actions": 223,
+    "nativeExplicit": 18,
+    "nativeDefaultFallback": 1,
+    "bridge": 204,
+    "unresolved": 0
+  },
+  "moduleSummaries": [
+    {
+      "module": "activity",
+      "totalActions": 2,
+      "nativeExplicit": 2,
+      "nativeFallback": 0,
+      "bridge": 0,
+      "unresolved": 0
+    },
+    {
+      "module": "attachments",
+      "totalActions": 1,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 1,
+      "unresolved": 0
+    },
+    {
+      "module": "calendar",
+      "totalActions": 5,
+      "nativeExplicit": 1,
+      "nativeFallback": 0,
+      "bridge": 4,
+      "unresolved": 0
+    },
+    {
+      "module": "candidates",
+      "totalActions": 28,
+      "nativeExplicit": 4,
+      "nativeFallback": 0,
+      "bridge": 24,
+      "unresolved": 0
+    },
+    {
+      "module": "companies",
+      "totalActions": 9,
+      "nativeExplicit": 2,
+      "nativeFallback": 0,
+      "bridge": 7,
+      "unresolved": 0
+    },
+    {
+      "module": "contacts",
+      "totalActions": 9,
+      "nativeExplicit": 2,
+      "nativeFallback": 0,
+      "bridge": 7,
+      "unresolved": 0
+    },
+    {
+      "module": "dashboard",
+      "totalActions": 2,
+      "nativeExplicit": 1,
+      "nativeFallback": 1,
+      "bridge": 0,
+      "unresolved": 0
+    },
+    {
+      "module": "export",
+      "totalActions": 2,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 2,
+      "unresolved": 0
+    },
+    {
+      "module": "gdpr",
+      "totalActions": 2,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 2,
+      "unresolved": 0
+    },
+    {
+      "module": "graphs",
+      "totalActions": 5,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 5,
+      "unresolved": 0
+    },
+    {
+      "module": "home",
+      "totalActions": 23,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 23,
+      "unresolved": 0
+    },
+    {
+      "module": "import",
+      "totalActions": 15,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 15,
+      "unresolved": 0
+    },
+    {
+      "module": "joborders",
+      "totalActions": 24,
+      "nativeExplicit": 4,
+      "nativeFallback": 0,
+      "bridge": 20,
+      "unresolved": 0
+    },
+    {
+      "module": "kpis",
+      "totalActions": 1,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 1,
+      "unresolved": 0
+    },
+    {
+      "module": "lists",
+      "totalActions": 8,
+      "nativeExplicit": 1,
+      "nativeFallback": 0,
+      "bridge": 7,
+      "unresolved": 0
+    },
+    {
+      "module": "login",
+      "totalActions": 7,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 7,
+      "unresolved": 0
+    },
+    {
+      "module": "reports",
+      "totalActions": 11,
+      "nativeExplicit": 1,
+      "nativeFallback": 0,
+      "bridge": 10,
+      "unresolved": 0
+    },
+    {
+      "module": "rss",
+      "totalActions": 1,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 1,
+      "unresolved": 0
+    },
+    {
+      "module": "settings",
+      "totalActions": 58,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 58,
+      "unresolved": 0
+    },
+    {
+      "module": "toolbar",
+      "totalActions": 8,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 8,
+      "unresolved": 0
+    },
+    {
+      "module": "wizard",
+      "totalActions": 1,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 1,
+      "unresolved": 0
+    },
+    {
+      "module": "xml",
+      "totalActions": 1,
+      "nativeExplicit": 0,
+      "nativeFallback": 0,
+      "bridge": 1,
+      "unresolved": 0
+    }
+  ],
+  "rows": [
+    {
+      "module": "activity",
+      "action": "listByViewDataGrid",
+      "classification": "native-explicit",
+      "routeKey": "activity.listbyviewdatagrid",
+      "resolution": "native",
+      "component": "ActivityListPage",
+      "guarded": false
+    },
+    {
+      "module": "activity",
+      "action": "viewByDate",
+      "classification": "native-explicit",
+      "routeKey": "activity.viewbydate",
+      "resolution": "native",
+      "component": "ActivityListPage",
+      "guarded": false
+    },
+    {
+      "module": "attachments",
+      "action": "getAttachment",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "calendar",
+      "action": "addEvent",
+      "classification": "bridge-module-fallback",
+      "routeKey": "calendar.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "calendar",
+      "action": "deleteEvent",
+      "classification": "bridge-module-fallback",
+      "routeKey": "calendar.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "calendar",
+      "action": "dynamicData",
+      "classification": "bridge-module-fallback",
+      "routeKey": "calendar.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "calendar",
+      "action": "editEvent",
+      "classification": "bridge-module-fallback",
+      "routeKey": "calendar.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "calendar",
+      "action": "showCalendar",
+      "classification": "native-explicit",
+      "routeKey": "calendar.showcalendar",
+      "resolution": "native",
+      "component": "CalendarPage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "add",
+      "classification": "native-explicit",
+      "routeKey": "candidates.add",
+      "resolution": "native",
+      "component": "CandidatesAddPage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "addActivityChangeStatus",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "addCandidateTags",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "addDuplicates",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "addEditImage",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "addProfileComment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "addToPipeline",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "administrativeHideShow",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "considerForJobSearch",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "createAttachment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "delete",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "deleteAttachment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "deleteMessageThread",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "edit",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.edit",
+      "resolution": "native",
+      "component": "CandidatesEditPage",
+      "guarded": true
+    },
+    {
+      "module": "candidates",
+      "action": "emailCandidates",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "linkDuplicate",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "listByView",
+      "classification": "native-explicit",
+      "routeKey": "candidates.listbyview",
+      "resolution": "native",
+      "component": "CandidatesListPage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "merge",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "mergeInfo",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "postMessage",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "removeDuplicity",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "removeFromPipeline",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "savedLists",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "saveSources",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "search",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "show",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.show",
+      "resolution": "native",
+      "component": "CandidatesShowPage",
+      "guarded": true
+    },
+    {
+      "module": "candidates",
+      "action": "show_questionnaire",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "candidates",
+      "action": "viewResume",
+      "classification": "bridge-module-fallback",
+      "routeKey": "candidates.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "add",
+      "classification": "bridge-module-fallback",
+      "routeKey": "companies.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "createAttachment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "companies.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "delete",
+      "classification": "bridge-module-fallback",
+      "routeKey": "companies.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "deleteAttachment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "companies.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "edit",
+      "classification": "bridge-module-fallback",
+      "routeKey": "companies.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "internalPostings",
+      "classification": "bridge-module-fallback",
+      "routeKey": "companies.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "listByView",
+      "classification": "native-explicit",
+      "routeKey": "companies.listbyview",
+      "resolution": "native",
+      "component": "CompaniesListPage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "search",
+      "classification": "bridge-module-fallback",
+      "routeKey": "companies.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "companies",
+      "action": "show",
+      "classification": "native-explicit-guarded",
+      "routeKey": "companies.show",
+      "resolution": "native",
+      "component": "CompaniesShowPage",
+      "guarded": true
+    },
+    {
+      "module": "contacts",
+      "action": "add",
+      "classification": "bridge-module-fallback",
+      "routeKey": "contacts.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "contacts",
+      "action": "addActivityScheduleEvent",
+      "classification": "bridge-module-fallback",
+      "routeKey": "contacts.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "contacts",
+      "action": "delete",
+      "classification": "bridge-module-fallback",
+      "routeKey": "contacts.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "contacts",
+      "action": "downloadVCard",
+      "classification": "bridge-module-fallback",
+      "routeKey": "contacts.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "contacts",
+      "action": "edit",
+      "classification": "bridge-module-fallback",
+      "routeKey": "contacts.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "contacts",
+      "action": "listByView",
+      "classification": "native-explicit",
+      "routeKey": "contacts.listbyview",
+      "resolution": "native",
+      "component": "ContactsListPage",
+      "guarded": false
+    },
+    {
+      "module": "contacts",
+      "action": "search",
+      "classification": "bridge-module-fallback",
+      "routeKey": "contacts.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "contacts",
+      "action": "show",
+      "classification": "native-explicit-guarded",
+      "routeKey": "contacts.show",
+      "resolution": "native",
+      "component": "ContactsShowPage",
+      "guarded": true
+    },
+    {
+      "module": "contacts",
+      "action": "showColdCallList",
+      "classification": "bridge-module-fallback",
+      "routeKey": "contacts.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "dashboard",
+      "action": "my",
+      "classification": "native-explicit",
+      "routeKey": "dashboard.my",
+      "resolution": "native",
+      "component": "DashboardMyPage",
+      "guarded": false
+    },
+    {
+      "module": "dashboard",
+      "action": "setPipelineStatus",
+      "classification": "native-default-fallback",
+      "routeKey": "dashboard.(default)",
+      "resolution": "native",
+      "component": "DashboardMyPage",
+      "guarded": false
+    },
+    {
+      "module": "export",
+      "action": "export",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "export",
+      "action": "exportByDataGrid",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "gdpr",
+      "action": "export",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "gdpr",
+      "action": "requests",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "graphs",
+      "action": "generic",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "graphs",
+      "action": "genericPie",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "graphs",
+      "action": "jobOrderReportGraph",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "graphs",
+      "action": "testGraph",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "graphs",
+      "action": "wordVerify",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "addPersonalItem",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "addSavedSearch",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "appendPersonalNote",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "archiveInboxThread",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "createInboxNote",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "createInboxTodo",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "deleteInboxThread",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "deletePersonalItem",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "deleteSavedSearch",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "getAttachment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "home",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "inbox",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "movePersonalNoteToTodo",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "myNotes",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "postInboxMessage",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "quickSearch",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "sendPersonalNote",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "setPersonalNoteArchived",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "setPersonalTodoStatus",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "submitFeedback",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "togglePersonalTodo",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "updatePersonalNote",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "home",
+      "action": "updatePersonalTodo",
+      "classification": "bridge-module-fallback",
+      "routeKey": "home.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "commit",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "deleteBulkResumes",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "import",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "importBulkResumes",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "importSelectType",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "importUploadFile",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "importUploadResume",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "massImport",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "massImportDocument",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "massImportEdit",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "revert",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "showMassImport",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "viewerrors",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "viewpending",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "import",
+      "action": "whatIsBulkResumes",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "add",
+      "classification": "native-explicit",
+      "routeKey": "joborders.add",
+      "resolution": "native",
+      "component": "JobOrdersFormBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "addActivityChangeStatus",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "addCandidateModal",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "addJobOrderPopup",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "addProfileComment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "addToPipeline",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "administrativeHideShow",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "considerCandidateSearch",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "createAttachment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "delete",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "deleteAttachment",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "deleteMessageThread",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "edit",
+      "classification": "native-explicit-guarded",
+      "routeKey": "joborders.edit",
+      "resolution": "native",
+      "component": "JobOrdersFormBridgePage",
+      "guarded": true
+    },
+    {
+      "module": "joborders",
+      "action": "editHiringPlan",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "listByView",
+      "classification": "native-explicit",
+      "routeKey": "joborders.listbyview",
+      "resolution": "native",
+      "component": "JobOrdersListPage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "pipelineStatusDetails",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "pipelineStatusEditDate",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "postMessage",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "recruiterAllocation",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "removeFromPipeline",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "search",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "setCandidateJobOrder",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "setMonitoredJobOrder",
+      "classification": "bridge-module-fallback",
+      "routeKey": "joborders.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "show",
+      "classification": "native-explicit-guarded",
+      "routeKey": "joborders.show",
+      "resolution": "native",
+      "component": "JobOrdersShowPage",
+      "guarded": true
+    },
+    {
+      "module": "kpis",
+      "action": "details",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "lists",
+      "action": "addToListFromDatagridModal",
+      "classification": "bridge-module-fallback",
+      "routeKey": "lists.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "lists",
+      "action": "deleteStaticList",
+      "classification": "bridge-module-fallback",
+      "routeKey": "lists.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "lists",
+      "action": "listByView",
+      "classification": "native-explicit",
+      "routeKey": "lists.listbyview",
+      "resolution": "native",
+      "component": "ListsManagePage",
+      "guarded": false
+    },
+    {
+      "module": "lists",
+      "action": "quickActionAddToListModal",
+      "classification": "bridge-module-fallback",
+      "routeKey": "lists.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "lists",
+      "action": "removeFromListDatagrid",
+      "classification": "bridge-module-fallback",
+      "routeKey": "lists.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "lists",
+      "action": "saveListAccess",
+      "classification": "bridge-module-fallback",
+      "routeKey": "lists.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "lists",
+      "action": "show",
+      "classification": "bridge-module-fallback",
+      "routeKey": "lists.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "lists",
+      "action": "showList",
+      "classification": "bridge-module-fallback",
+      "routeKey": "lists.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "login",
+      "action": "attemptLogin",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "login",
+      "action": "forgotPassword",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "login",
+      "action": "googleCallback",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "login",
+      "action": "googleStart",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "login",
+      "action": "noCookiesModal",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "login",
+      "action": "requestAccess",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "login",
+      "action": "showLoginForm",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "customerDashboard",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "customerDashboardDetails",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "customizeEEOReport",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "customizeJobOrderReport",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "generateEEOReportPreview",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "generateJobOrderReportPDF",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "graphView",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "reports",
+      "classification": "native-explicit",
+      "routeKey": "reports.reports",
+      "resolution": "native",
+      "component": "ReportsLauncherPage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "showHireReport",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "showPlacementReport",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "reports",
+      "action": "showSubmissionReport",
+      "classification": "bridge-module-fallback",
+      "routeKey": "reports.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "rss",
+      "action": "jobOrders",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "addEmailTemplate",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "addUser",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "administration",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_tags_add",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_tags_del",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_tags_upd",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardAddUser",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardCheckKey",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardDeleteUser",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardEmail",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardFirstTimeSetup",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardImport",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardLicense",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardLocalization",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardPassword",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardSiteName",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "ajax_wizardWebsite",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "aspLocalization",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "careerPortalQuestionnaire",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "careerPortalQuestionnairePreview",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "careerPortalQuestionnaireUpdate",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "careerPortalSettings",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "careerPortalTemplateEdit",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "changePassword",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "createBackup",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "customizeCalendar",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "customizeExtraFields",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "deleteBackup",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "deleteEmailTemplate",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "deleteUser",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "editUser",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "eeo",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "emailSettings",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "emailTemplates",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "feedbackSettings",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "forceEmail",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "gdprSettings",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "getFirefoxModal",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "googleOIDCSettings",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "loginActivity",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "manageUsers",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "myProfile",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "newInstallFinished",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "newInstallPassword",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "newSiteName",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "onCareerPortalTweak",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "previewPage",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "previewPageTop",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "professional",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "rejectionReasons",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "reports",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "rolePagePermissions",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "schemaMigrations",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "showUser",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "tags",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "talentFitFlowSettings",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "upgradeSiteName",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "settings",
+      "action": "viewItemHistory",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "toolbar",
+      "action": "attemptLogin",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "toolbar",
+      "action": "authenticate",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "toolbar",
+      "action": "checkEmailIsInSystem",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "toolbar",
+      "action": "getJavaScriptLib",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "toolbar",
+      "action": "getLicenseKey",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "toolbar",
+      "action": "getRemoteVersion",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "toolbar",
+      "action": "install",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "toolbar",
+      "action": "storeMonsterResumeText",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "wizard",
+      "action": "ajax_getPage",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    },
+    {
+      "module": "xml",
+      "action": "jobOrders",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false
+    }
+  ]
+}

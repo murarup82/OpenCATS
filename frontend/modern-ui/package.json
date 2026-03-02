@@ -10,6 +10,7 @@
     "build:dev": "npm run clean:build && vite build --mode development",
     "preview": "vite preview",
     "verify:build": "node ./scripts/verify-build-output.mjs",
+    "compare:legacy-routes": "node ./scripts/compare-legacy-modern-routes.mjs",
     "coverage:matrix": "node ./scripts/generate-coverage-matrix.mjs",
     "smoke:routes": "node ./scripts/smoke-modern-routes.mjs",
     "smoke:endpoints": "node ./scripts/smoke-modern-endpoints.mjs",

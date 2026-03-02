@@ -101,21 +101,43 @@ export function resolveModernRoute(
 ): ModernRouteResolution {
   const moduleKey = (moduleName || '').toLowerCase();
   const actionKey = (actionName || '').toLowerCase();
-  const candidates = [
-    `${moduleKey}.${actionKey}`,
-    `${moduleKey}.(default)`,
-    `${moduleKey}.*`,
-    '*.*'
-  ];
 
-  for (const routeKey of candidates) {
-    const component = registry[routeKey];
-    if (component && routeGuardPasses(routeKey, requestURI)) {
+  const explicitRouteKey = `${moduleKey}.${actionKey}`;
+  const explicitComponent = registry[explicitRouteKey];
+  if (explicitComponent) {
+    if (routeGuardPasses(explicitRouteKey, requestURI)) {
       return {
-        component,
-        matchedRouteKey: routeKey,
-        resolutionType: component === ModuleBridgePage ? 'bridge' : 'native'
+        component: explicitComponent,
+        matchedRouteKey: explicitRouteKey,
+        resolutionType: explicitComponent === ModuleBridgePage ? 'bridge' : 'native'
       };
+    }
+
+    const guardedFallbacks = [`${moduleKey}.(default)`, `${moduleKey}.*`, '*.*'];
+    for (const routeKey of guardedFallbacks) {
+      const component = registry[routeKey];
+      if (component && routeGuardPasses(routeKey, requestURI)) {
+        return {
+          component,
+          matchedRouteKey: routeKey,
+          resolutionType: component === ModuleBridgePage ? 'bridge' : 'native'
+        };
+      }
+    }
+  } else {
+    const fallbackCandidates = actionKey
+      ? [`${moduleKey}.*`, `${moduleKey}.(default)`, '*.*']
+      : [`${moduleKey}.(default)`, `${moduleKey}.*`, '*.*'];
+
+    for (const routeKey of fallbackCandidates) {
+      const component = registry[routeKey];
+      if (component && routeGuardPasses(routeKey, requestURI)) {
+        return {
+          component,
+          matchedRouteKey: routeKey,
+          resolutionType: component === ModuleBridgePage ? 'bridge' : 'native'
+        };
+      }
     }
   }
 

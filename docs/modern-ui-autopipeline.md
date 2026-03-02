@@ -319,6 +319,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 127. Added post-cutover review checklist:
     - introduced `docs/modern-ui-post-cutover-review-checklist.md` with Day 1 / Day 7 / Day 30 review gates
     - formalizes post-release telemetry/parity/accessibility follow-through and retirement candidate identification.
+128. Added legacy-vs-modern route parity audit and safer fallback routing:
+    - introduced `frontend/modern-ui/scripts/compare-legacy-modern-routes.mjs` and npm script `compare:legacy-routes`
+    - generated `docs/modern-ui-legacy-route-gap-report.md` + `.json` with per-module action parity classification
+    - updated route resolution to prefer module bridge fallback for unknown actions (instead of default native page), reducing hidden-control regressions.
 
 ## Next Queue (30-Slice Execution)
 
