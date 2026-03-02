@@ -230,6 +230,10 @@ class HomeUI extends UserInterface
     private function home()
     {        
         if (!eval(Hooks::get('HOME'))) return;
+
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
         
         NewVersionCheck::getNews();
         
@@ -280,6 +284,36 @@ class HomeUI extends UserInterface
                 'title' => $row['title']
             );
         }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'home-overview')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernHomeOverviewJSON(
+                'home-overview',
+                $hiredRS,
+                $upcomingEventsHTML,
+                $upcomingEventsFupHTML,
+                $jobOrderOptions,
+                $dataGrid->getNumberOfRows()
+            );
+            return;
+        }
+
         $this->_template->assign('jobOrderOptions', $jobOrderOptions);
         
         $this->_template->assign('active', $this);
@@ -289,6 +323,70 @@ class HomeUI extends UserInterface
         $this->_template->assign('wildCardQuickSearch', '');
         $this->_template->assign('subActive', 'Dashboard');
         $this->_template->display('./modules/home/Home.tpl');
+    }
+
+    private function renderModernHomeOverviewJSON(
+        $modernPage,
+        $hiredRS,
+        $upcomingEventsHTML,
+        $upcomingEventsFupHTML,
+        $jobOrderOptions,
+        $importantCandidatesCount
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $recentHires = array();
+        foreach ($hiredRS as $row)
+        {
+            $candidateID = (int) $row['candidateID'];
+            $companyID = (int) $row['companyID'];
+            $recentHires[] = array(
+                'candidateID' => $candidateID,
+                'candidateName' => trim((string) $row['firstName'] . ' ' . (string) $row['lastName']),
+                'candidateURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
+                'companyID' => $companyID,
+                'companyName' => (string) $row['companyName'],
+                'companyURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, $companyID),
+                'recruiterName' => trim((string) $row['userFirstName'] . ' ' . (string) $row['userLastName']),
+                'date' => (string) $row['date']
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'home.overview.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'inboxURL' => sprintf('%s?m=home&a=inbox&ui=modern', $baseURL),
+                'myNotesURL' => sprintf('%s?m=home&a=myNotes&ui=modern', $baseURL),
+                'dashboardURL' => sprintf('%s?m=dashboard&a=my&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=home&a=home&ui=legacy', $baseURL)
+            ),
+            'summary' => array(
+                'recentHiresCount' => count($recentHires),
+                'importantCandidatesCount' => (int) $importantCandidatesCount
+            ),
+            'events' => array(
+                'upcomingEventsHTML' => (string) $upcomingEventsHTML,
+                'followUpEventsHTML' => (string) $upcomingEventsFupHTML
+            ),
+            'charts' => array(
+                'hiringOverviewURL' => sprintf('%s?m=graphs&a=miniHireStatistics&width=495&height=230', $baseURL),
+                'funnelSnapshotURL' => sprintf('%s?m=graphs&a=pipelineFunnelSnapshot&width=495&height=230', $baseURL),
+                'seniorityDistributionURL' => sprintf('%s?m=graphs&a=seniorityDistribution&width=495&height=230', $baseURL)
+            ),
+            'jobOrderOptions' => $jobOrderOptions,
+            'recentHires' => $recentHires
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function inbox()

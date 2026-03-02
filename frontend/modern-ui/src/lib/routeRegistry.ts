@@ -1,6 +1,8 @@
 import type { ComponentType } from 'react';
 import type { UIModeBootstrap } from '../types';
 import { DashboardMyPage } from '../pages/DashboardMyPage';
+import { HomePage } from '../pages/HomePage';
+import { KpisPage } from '../pages/KpisPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
 import { CandidatesAddPage } from '../pages/CandidatesAddPage';
@@ -166,12 +168,12 @@ const registry: Record<string, ModernRouteComponent> = {
   'lists.(default)': ListsManagePage,
   'reports.reports': ReportsLauncherPage,
   'reports.(default)': ReportsLauncherPage,
-  'home.home': ModuleBridgePage,
+  'home.home': HomePage,
   'home.inbox': ModuleBridgePage,
   'home.mynotes': ModuleBridgePage,
-  'home.(default)': ModuleBridgePage,
+  'home.(default)': HomePage,
   'kpis.details': ModuleBridgePage,
-  'kpis.(default)': ModuleBridgePage,
+  'kpis.(default)': KpisPage,
   'logs.view': LogsPage,
   'logs.(default)': LogsPage,
   ...explicitNativeActionRoutes,

@@ -15,9 +15,11 @@ import type {
   ContactsShowModernDataResponse,
   DashboardModernDataResponse,
   DashboardSetPipelineStatusResponse,
+  HomeOverviewModernDataResponse,
   JobOrderAssignCandidateModernDataResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
+  KpisListModernDataResponse,
   ListsManageModernDataResponse,
   ModernMutationResponse,
   PipelineStatusDetailsModernDataResponse,
@@ -43,7 +45,9 @@ import {
   MODERN_DASHBOARD_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
+  MODERN_KPIS_PAGE,
   MODERN_LISTS_PAGE,
+  MODERN_HOME_OVERVIEW_PAGE,
   MODERN_REPORTS_PAGE,
   buildModernJSONRequestQuery
 } from './modernContract';
@@ -65,6 +69,43 @@ export async function fetchDashboardModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<DashboardModernDataResponse>(url);
   assertModernContract(data.meta, ['dashboard.my.readonly.v1', 'dashboard.my.interactive.v1'], 'dashboard data');
+
+  return data;
+}
+
+export async function fetchHomeOverviewModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<HomeOverviewModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'home',
+    action: 'home',
+    modernPage: MODERN_HOME_OVERVIEW_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<HomeOverviewModernDataResponse>(url);
+  assertModernContract(data.meta, 'home.overview.v1', 'home overview data');
+
+  return data;
+}
+
+export async function fetchKpisListModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<KpisListModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'kpis',
+    action: '',
+    modernPage: MODERN_KPIS_PAGE,
+    query
+  });
+  apiQuery.delete('a');
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<KpisListModernDataResponse>(url);
+  assertModernContract(data.meta, 'kpis.list.v1', 'kpis list data');
 
   return data;
 }

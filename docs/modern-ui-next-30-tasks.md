@@ -7,10 +7,10 @@ Status legend: `done`, `in_progress`, `pending`
 3. `done` Add modern route coverage for `home/*` through compatibility workspace.
 4. `done` Add modern route coverage for `kpis/*` through compatibility workspace.
 5. `done` Expand route-map configuration for remaining modules to run in modern shell compatibility mode.
-6. `pending` Build native `home/home` modern contract (`home.overview.v1`) and React page.
+6. `done` Build native `home/home` modern contract (`home.overview.v1`) and React page.
 7. `pending` Build native `home/inbox` modern contract and React workspace.
 8. `pending` Build native `home/myNotes` modern contract and React workspace.
-9. `pending` Build native `kpis/(default)` modern contract and React KPI grid.
+9. `done` Build native `kpis/(default)` modern contract and React KPI grid.
 10. `pending` Build native `kpis/details` modern contract and detail drill-down page.
 11. `pending` Build native `companies/add` form (replace bridge).
 12. `pending` Build native `companies/edit` form (replace bridge).
@@ -32,4 +32,3 @@ Status legend: `done`, `in_progress`, `pending`
 28. `pending` Add per-route parity checklist automation for all newly modernized pages.
 29. `pending` Add Playwright smoke coverage for add/edit workflows across candidates/companies/contacts/joborders.
 30. `pending` Cut bridge debt by removing wildcard module bridges after parity signoff.
-

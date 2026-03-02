@@ -790,6 +790,145 @@ export type ReportsLauncherModernDataResponse = {
   };
 };
 
+export type HomeOverviewModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    inboxURL: string;
+    myNotesURL: string;
+    dashboardURL: string;
+    legacyURL: string;
+  };
+  summary: {
+    recentHiresCount: number;
+    importantCandidatesCount: number;
+  };
+  events: {
+    upcomingEventsHTML: string;
+    followUpEventsHTML: string;
+  };
+  charts: {
+    hiringOverviewURL: string;
+    funnelSnapshotURL: string;
+    seniorityDistributionURL: string;
+  };
+  jobOrderOptions: Array<{
+    id: number;
+    title: string;
+  }>;
+  recentHires: Array<{
+    candidateID: number;
+    candidateName: string;
+    candidateURL: string;
+    companyID: number;
+    companyName: string;
+    companyURL: string;
+    recruiterName: string;
+    date: string;
+  }>;
+};
+
+export type KpisListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    legacyURL: string;
+    detailsURL: string;
+  };
+  state: {
+    weekLabel: string;
+    dataAsOfLabel: string;
+  };
+  filters: {
+    officialReports: boolean;
+    showDeadline: boolean;
+    showCompletionRate: boolean;
+    showExpectedFilled: boolean;
+    hideZeroOpenPositions: boolean;
+    candidateSourceScope: string;
+    jobOrderScope: string;
+    trendView: string;
+    trendStart: string;
+    trendEnd: string;
+  };
+  summary: {
+    totals: {
+      newPositions: number;
+      totalOpenPositions: number;
+      filledPositions: number;
+      expectedFilled: number;
+      expectedInFullPlan: number;
+    };
+    totalsLastWeek: {
+      newPositions: number;
+      totalOpenPositions: number;
+      filledPositions: number;
+      expectedFilled: number;
+      expectedInFullPlan: number;
+    };
+    totalsDiff: {
+      newPositions: number;
+      totalOpenPositions: number;
+      filledPositions: number;
+      expectedFilled: number;
+      expectedInFullPlan: number;
+    };
+  };
+  rows: {
+    kpiRows: Array<{
+      companyID: number;
+      companyName: string;
+      newPositions: number;
+      totalOpenPositions: number;
+      filledPositions: number;
+      expectedConversionDisplay: string;
+      expectedFilled: number;
+      expectedInFullPlan: number;
+    }>;
+    jobOrderKpiRows: Array<{
+      jobOrderID: number;
+      title: string;
+      status: string;
+      companyName: string;
+      timeToDeadline: string;
+      timeToDeadlineClass: string;
+      totalOpenPositions: number;
+      submittedCount: number;
+      acceptanceRate: string;
+      acceptanceRateClass: string;
+      hiringRate: string;
+    }>;
+    candidateSourceRows: Array<{
+      label: string;
+      thisWeek: number;
+      lastWeek: number;
+      delta: number;
+      sourceScope?: string;
+      thisWeekLink?: string;
+      lastWeekLink?: string;
+    }>;
+    candidateMetricRows: Array<{
+      label: string;
+      thisWeek: number;
+      lastWeek: number;
+      delta: number;
+      thisWeekLink?: string;
+      lastWeekLink?: string;
+    }>;
+    candidateSourceSnapshot: {
+      internal: number;
+      partner: number;
+      total: number;
+    };
+  };
+};
+
 type ReportMetricBlock = {
   toDate: number;
   today: number;

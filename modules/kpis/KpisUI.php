@@ -46,6 +46,10 @@ class KpisUI extends UserInterface
 
     private function listKpis()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $db = DatabaseConnection::getInstance();
         $siteID = $this->_siteID;
         $kpiDefaultPrefs = $this->getKpiPreferenceDefaults();
@@ -1049,6 +1053,50 @@ class KpisUI extends UserInterface
         $weekLabel = $this->formatDateLabel($weekStart) . ' - ' . $this->formatDateLabel($weekEnd);
         $dataAsOfLabel = $this->formatDateTimeLabel(new DateTime());
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'kpis-list')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernKpisJSON(
+                'kpis-list',
+                $rows,
+                $totals,
+                $totalsLastWeek,
+                $totalsDiff,
+                $jobOrderKpiRows,
+                $candidateSourceRows,
+                $candidateMetricRows,
+                $candidateSourceSnapshot,
+                $officialReports,
+                $showDeadline,
+                $showCompletionRate,
+                $showExpectedFilled,
+                $hideZeroOpenPositions,
+                $candidateSourceScope,
+                $jobOrderScope,
+                $trendView,
+                $trendStart->format('Y-m-d'),
+                $trendEnd->format('Y-m-d'),
+                $weekLabel,
+                $dataAsOfLabel
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('kpiRows', $rows);
         $this->_template->assign('totals', $totals);
@@ -1079,6 +1127,79 @@ class KpisUI extends UserInterface
         $this->_template->assign('candidateSourceScope', $candidateSourceScope);
         $this->_template->assign('candidateSourceScopeLabel', $this->getCandidateSourceScopeLabel($candidateSourceScope));
         $this->_template->display('./modules/kpis/Kpis.tpl');
+    }
+
+    private function renderModernKpisJSON(
+        $modernPage,
+        $kpiRows,
+        $totals,
+        $totalsLastWeek,
+        $totalsDiff,
+        $jobOrderKpiRows,
+        $candidateSourceRows,
+        $candidateMetricRows,
+        $candidateSourceSnapshot,
+        $officialReports,
+        $showDeadline,
+        $showCompletionRate,
+        $showExpectedFilled,
+        $hideZeroOpenPositions,
+        $candidateSourceScope,
+        $jobOrderScope,
+        $trendView,
+        $trendStart,
+        $trendEnd,
+        $weekLabel,
+        $dataAsOfLabel
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'kpis.list.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=kpis&ui=legacy', $baseURL),
+                'detailsURL' => sprintf('%s?m=kpis&a=details&ui=modern', $baseURL)
+            ),
+            'state' => array(
+                'weekLabel' => (string) $weekLabel,
+                'dataAsOfLabel' => (string) $dataAsOfLabel
+            ),
+            'filters' => array(
+                'officialReports' => ($officialReports ? true : false),
+                'showDeadline' => ($showDeadline ? true : false),
+                'showCompletionRate' => ($showCompletionRate ? true : false),
+                'showExpectedFilled' => ($showExpectedFilled ? true : false),
+                'hideZeroOpenPositions' => ($hideZeroOpenPositions ? true : false),
+                'candidateSourceScope' => (string) $candidateSourceScope,
+                'jobOrderScope' => (string) $jobOrderScope,
+                'trendView' => (string) $trendView,
+                'trendStart' => (string) $trendStart,
+                'trendEnd' => (string) $trendEnd
+            ),
+            'summary' => array(
+                'totals' => $totals,
+                'totalsLastWeek' => $totalsLastWeek,
+                'totalsDiff' => $totalsDiff
+            ),
+            'rows' => array(
+                'kpiRows' => $kpiRows,
+                'jobOrderKpiRows' => $jobOrderKpiRows,
+                'candidateSourceRows' => $candidateSourceRows,
+                'candidateMetricRows' => $candidateMetricRows,
+                'candidateSourceSnapshot' => $candidateSourceSnapshot
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function details()
