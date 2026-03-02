@@ -1,0 +1,73 @@
+<?php
+/**
+ * Modern UI switch configuration (runtime file).
+ *
+ * This file is loaded by index.php when present.
+ * Keep route-match safety enabled so non-modernized routes stay on legacy.
+ */
+
+/* Master kill switch. */
+define('UI_SWITCH_ENABLED', true);
+
+/* legacy | hybrid | modern */
+define('UI_SWITCH_DEFAULT_MODE', 'modern');
+
+/* Safety guard: modern UI only for explicitly mapped routes. */
+define('UI_SWITCH_REQUIRE_ROUTE_MATCH', true);
+
+/* Temporary broad preview toggle: when true, route map is treated as * => * (except explicit excludes). */
+define('UI_SWITCH_PREVIEW_ALL_ROUTES', false);
+
+/* Keep non-idempotent requests in legacy unless explicitly enabled. */
+define('UI_SWITCH_ALLOW_POST', false);
+define('UI_SWITCH_ALLOW_AJAX', false);
+
+/* If true, ui=modern can bypass route mapping. Keep false for safety. */
+define('UI_SWITCH_OVERRIDE_BYPASS_ROUTE_MAP', false);
+
+/* Optional logging of routing decisions (written via error_log). */
+define('UI_SWITCH_LOGGING', true);
+
+/* Optional explicit bundle URL. Leave empty to use manifest resolution. */
+define('UI_SWITCH_MODERN_BUNDLE_URL', '');
+
+/* Manifest-based bundle resolution (recommended). */
+define('UI_SWITCH_USE_MANIFEST', true);
+define('UI_SWITCH_MANIFEST_PATH', './public/modern-ui/build/asset-manifest.json');
+define('UI_SWITCH_MANIFEST_ENTRY', 'src/mount.tsx');
+
+/* Optional dev URL for local proxy/iframe integration in non-prod. */
+define('UI_SWITCH_MODERN_DEV_SERVER_URL', '');
+
+/* Client-side shell observability controls. */
+define('UI_SWITCH_CLIENT_LOGGING', true);
+define('UI_SWITCH_CLIENT_AUTO_FALLBACK_SECONDS', 0);
+
+/* Show migration preview header/chrome in modern shell. */
+define('UI_SWITCH_SHOW_SHELL_CHROME', false);
+
+/* Route map:
+ * - key: module name
+ * - value: array of actions, or '*' for all module actions
+ */
+$GLOBALS['UI_SWITCH_ROUTE_MAP'] = array(
+    'dashboard'  => array('*'),
+    'candidates' => array('*'),
+    'joborders'  => array('*'),
+    'companies'  => array('*'),
+    'contacts'   => array('*'),
+    'activity'   => array('*'),
+    'calendar'   => array('*'),
+    'lists'      => array('*'),
+    'reports'    => array('*')
+);
+
+/* Optional phased rollout by cohorts. Empty arrays = all users. */
+$GLOBALS['UI_SWITCH_TARGET_USER_IDS'] = array();
+$GLOBALS['UI_SWITCH_TARGET_ACCESS_LEVELS'] = array();
+
+/* Optional hard excludes. */
+$GLOBALS['UI_SWITCH_EXCLUDE_MODULES'] = array('login', 'settings', 'import', 'export', 'attachments');
+$GLOBALS['UI_SWITCH_EXCLUDE_ROUTES'] = array(
+    'dashboard.myPipeline'
+);
