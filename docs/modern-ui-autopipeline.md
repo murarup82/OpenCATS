@@ -250,6 +250,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `docs/modern-ui-parity-checklist.md` with global/module/release-gate validation grids
     - checklist now tracks parity status across Dashboard, Candidates, Job Orders, Companies, Contacts, Activity, Calendar, Lists, and Reports
     - provides explicit go/no-go criteria before switching default mode from hybrid to modern.
+110. Added one-command modernization sanity report:
+    - introduced `frontend/modern-ui/scripts/modern-sanity-report.mjs` and npm script `sanity:modern`
+    - sanity command runs build + coverage matrix + smoke scripts and writes consolidated output to `docs/modern-ui-sanity-report.md`
+    - required checks (`build`, `coverage`) now provide immediate pass/fail gate for release readiness.
 
 ## Next Queue (30-Slice Execution)
 
@@ -258,11 +262,11 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 3. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
 4. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
 5. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
-6. Add fast sanity report command that bundles build + matrix + endpoint checks for one-shot release readiness.
-7. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
-8. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
-9. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
-10. Add release runbook for temporary rollback/feature-flag response during production cutover.
+6. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
+7. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
+8. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
+9. Add release runbook for temporary rollback/feature-flag response during production cutover.
+10. Add hybrid-to-modern cutover checklist with owner/date tracking fields.
 
 ## Rules
 

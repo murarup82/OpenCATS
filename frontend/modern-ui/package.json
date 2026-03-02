@@ -12,7 +12,8 @@
     "verify:build": "node ./scripts/verify-build-output.mjs",
     "coverage:matrix": "node ./scripts/generate-coverage-matrix.mjs",
     "smoke:routes": "node ./scripts/smoke-modern-routes.mjs",
-    "smoke:endpoints": "node ./scripts/smoke-modern-endpoints.mjs"
+    "smoke:endpoints": "node ./scripts/smoke-modern-endpoints.mjs",
+    "sanity:modern": "node ./scripts/modern-sanity-report.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
