@@ -300,7 +300,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         )}
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--add">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Candidate Details</h2>
               <p className="avel-list-panel__hint">Required fields: First Name, Last Name.</p>
@@ -372,7 +372,17 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
               <input type="hidden" name="dup_soft_override" value={softOverrideAccepted ? '1' : '0'} />
 
+              <div className="avel-candidate-form-strip">
+                <span className="modern-chip modern-chip--info">Required: First Name, Last Name</span>
+                <span className="modern-chip modern-chip--warning">Duplicate Protection: Enabled</span>
+                <span className="modern-chip">Flow: Add + Validate + Save</span>
+              </div>
+
               <div className="avel-candidate-edit-grid">
+                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
+                  <strong>Identity & Contact</strong>
+                  <span>Core profile identity and communication data.</span>
+                </div>
                 <label className="modern-command-field">
                   <span className="modern-command-label">First Name *</span>
                   <input
@@ -441,6 +451,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                   />
                 </label>
 
+                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
+                  <strong>Availability & Source</strong>
+                  <span>When candidate is reachable and where profile originates.</span>
+                </div>
                 <label className="modern-command-field">
                   <span className="modern-command-label">Best Time To Call</span>
                   <input
@@ -501,6 +515,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                   />
                 </label>
 
+                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
+                  <strong>Compensation & Narrative</strong>
+                  <span>Comp package expectations plus role-fit context for recruiters.</span>
+                </div>
                 <label className="modern-command-field">
                   <span className="modern-command-label">Current Pay</span>
                   <input
@@ -557,6 +575,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </label>
               </div>
 
+              <div className="avel-candidate-form-divider">
+                <strong>Mobility & Compliance Attributes</strong>
+                <span>Controls used for relocation and compliance reporting.</span>
+              </div>
               <div className="avel-candidate-edit-toggles">
                 <label className="modern-command-toggle">
                   <input
@@ -605,7 +627,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               </div>
 
               {data.extraFields.length > 0 ? (
-                <div className="avel-candidate-edit-extra">
+                <div className="avel-candidate-edit-extra avel-candidate-edit-extra--custom">
                   <div className="avel-list-panel__header">
                     <h3 className="avel-list-panel__title">Custom Fields</h3>
                     <p className="avel-list-panel__hint">Configured per tenant in legacy settings.</p>
@@ -701,7 +723,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </div>
               ) : null}
 
-              <div className="modern-table-actions">
+              <div className="modern-table-actions avel-candidate-edit-actions">
                 {duplicateMode === 'soft' ? (
                   <button
                     type="button"

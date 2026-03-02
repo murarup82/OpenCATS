@@ -43,7 +43,7 @@ export function PipelineStatusCommentModal({
     <InlineModal
       isOpen={isOpen}
       ariaLabel={title}
-      dialogClassName="modern-inline-modal__dialog--compact"
+      dialogClassName="modern-inline-modal__dialog--compact modern-inline-modal__dialog--status-comment"
       closeOnBackdrop={!submitPending}
       closeOnEscape={!submitPending}
       onClose={onCancel}
@@ -56,10 +56,10 @@ export function PipelineStatusCommentModal({
       </div>
 
       <div className="modern-inline-modal__body modern-inline-modal__body--form">
-        <label className="modern-command-field modern-rejection-modal__section">
+        <label className="modern-command-field modern-rejection-modal__section modern-status-comment-modal__section">
           <span className="modern-command-label">Transition Comment (Required)</span>
           <textarea
-            className="avel-form-control"
+            className="avel-form-control modern-status-comment-modal__textarea"
             value={comment}
             disabled={submitPending}
             rows={4}

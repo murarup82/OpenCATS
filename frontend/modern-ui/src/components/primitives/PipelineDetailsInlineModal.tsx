@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { PipelineStatusDetailsModernDataResponse } from '../../types';
-import { InlineModal } from '../../ui-core';
+import { InlineModal, SelectMenu } from '../../ui-core';
 
 type Props = {
   isOpen: boolean;
@@ -61,6 +61,39 @@ function combineDateTimeParts(datePart: string, timePart: string): string {
   return `${normalizedDate}T${normalizedTime}:00`;
 }
 
+function pad2(value: number): string {
+  if (value < 10) {
+    return `0${value}`;
+  }
+  return String(value);
+}
+
+function toTimeLabel(timeValue: string): string {
+  const normalized = String(timeValue || '').trim();
+  const match = normalized.match(/^(\d{2}):(\d{2})$/);
+  if (!match) {
+    return normalized;
+  }
+  const hour24 = Number(match[1]);
+  const minute = Number(match[2]);
+  if (Number.isNaN(hour24) || Number.isNaN(minute)) {
+    return normalized;
+  }
+  const suffix = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${pad2(hour12)}:${pad2(minute)} ${suffix}`;
+}
+
+const TIME_OPTIONS_15_MIN = Array.from({ length: 24 * 4 }, (_, index) => {
+  const hour = Math.floor(index / 4);
+  const minute = (index % 4) * 15;
+  const value = `${pad2(hour)}:${pad2(minute)}`;
+  return {
+    value,
+    label: toTimeLabel(value)
+  };
+});
+
 export function PipelineDetailsInlineModal({
   isOpen,
   title,
@@ -97,6 +130,24 @@ export function PipelineDetailsInlineModal({
     }
     return details.history.find((item) => item.historyID === editingHistoryID) || null;
   }, [details, editingHistoryID]);
+
+  const timeOptions = useMemo(() => {
+    const normalized = String(draftTimePart || '').trim();
+    if (normalized === '') {
+      return TIME_OPTIONS_15_MIN;
+    }
+    const hasCurrent = TIME_OPTIONS_15_MIN.some((option) => option.value === normalized);
+    if (hasCurrent) {
+      return TIME_OPTIONS_15_MIN;
+    }
+    return [
+      {
+        value: normalized,
+        label: `${toTimeLabel(normalized)} (current)`
+      },
+      ...TIME_OPTIONS_15_MIN
+    ];
+  }, [draftTimePart]);
 
   if (!isOpen) {
     return null;
@@ -235,16 +286,25 @@ export function PipelineDetailsInlineModal({
                                         onChange={(event) => setDraftDatePart(event.target.value)}
                                       />
                                     </label>
-                                    <label className="modern-pipeline-details__date-field">
-                                      <span className="modern-command-label">Time</span>
-                                      <input
-                                        type="time"
-                                        step={60}
-                                        className="avel-form-control modern-pipeline-details__date-input"
+                                    <div className="modern-pipeline-details__date-field">
+                                      <SelectMenu
+                                        label="Time"
                                         value={draftTimePart}
-                                        onChange={(event) => setDraftTimePart(event.target.value)}
+                                        options={timeOptions}
+                                        onChange={setDraftTimePart}
+                                        className="modern-pipeline-details__time-field"
+                                        labelClassName="modern-command-label modern-pipeline-details__time-label"
+                                        comboClassName="modern-pipeline-details__time-combo"
+                                        triggerClassName="modern-pipeline-details__time-trigger"
+                                        triggerValueClassName="modern-pipeline-details__time-trigger-value"
+                                        triggerCaretClassName="modern-pipeline-details__time-trigger-caret"
+                                        menuClassName="modern-pipeline-details__time-menu"
+                                        optionClassName="modern-pipeline-details__time-option"
+                                        optionDotClassName="modern-pipeline-details__time-option-dot"
+                                        optionToneClassNamePrefix="modern-pipeline-details__time-option--tone-"
+                                        emptyLabel="Select time"
                                       />
-                                    </label>
+                                    </div>
                                   </div>
                                   <input
                                     type="text"

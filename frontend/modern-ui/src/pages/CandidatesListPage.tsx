@@ -557,59 +557,59 @@ export function CandidatesListPage({ bootstrap }: Props) {
               </label>
             </div>
 
-            <div className="avel-candidate-toolbar__active">
-              <div className={`modern-command-active__count${hasActiveFilters ? ' is-active' : ''}`}>
-                {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
+            <div className="avel-candidate-toolbar__compact-meta">
+              <div className="avel-candidate-toolbar__focus" aria-label="Quick focus filters">
+                <button
+                  type="button"
+                  className={`avel-candidate-focus-chip${localFocus === 'all' ? ' is-active' : ''}`}
+                  onClick={() => setLocalFocus('all')}
+                >
+                  All <strong>{data.rows.length}</strong>
+                </button>
+                <button
+                  type="button"
+                  className={`avel-candidate-focus-chip${localFocus === 'hot' ? ' is-active' : ''}`}
+                  onClick={() => setLocalFocus('hot')}
+                >
+                  Hot <strong>{visibleHotCount}</strong>
+                </button>
+                <button
+                  type="button"
+                  className={`avel-candidate-focus-chip${localFocus === 'submitted' ? ' is-active' : ''}`}
+                  onClick={() => setLocalFocus('submitted')}
+                >
+                  Submitted <strong>{visibleSubmittedCount}</strong>
+                </button>
+                <button
+                  type="button"
+                  className={`avel-candidate-focus-chip${localFocus === 'duplicates' ? ' is-active' : ''}`}
+                  onClick={() => setLocalFocus('duplicates')}
+                >
+                  Duplicates <strong>{visibleDuplicateCount}</strong>
+                </button>
+                <button
+                  type="button"
+                  className={`avel-candidate-focus-chip${localFocus === 'resume' ? ' is-active' : ''}`}
+                  onClick={() => setLocalFocus('resume')}
+                >
+                  Resume <strong>{visibleResumeCount}</strong>
+                </button>
               </div>
-              {hasActiveFilters ? (
-                <div className="modern-command-active__list">
-                  {activeFilterLabels.map((label) => (
-                    <span className="modern-active-filter modern-active-filter--server" key={label}>
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className="modern-command-active__empty">No active filters. Showing the full candidate pipeline.</div>
-              )}
-            </div>
 
-            <div className="avel-candidate-toolbar__focus" aria-label="Quick focus filters">
-              <button
-                type="button"
-                className={`avel-candidate-focus-chip${localFocus === 'all' ? ' is-active' : ''}`}
-                onClick={() => setLocalFocus('all')}
-              >
-                All <strong>{data.rows.length}</strong>
-              </button>
-              <button
-                type="button"
-                className={`avel-candidate-focus-chip${localFocus === 'hot' ? ' is-active' : ''}`}
-                onClick={() => setLocalFocus('hot')}
-              >
-                Hot <strong>{visibleHotCount}</strong>
-              </button>
-              <button
-                type="button"
-                className={`avel-candidate-focus-chip${localFocus === 'submitted' ? ' is-active' : ''}`}
-                onClick={() => setLocalFocus('submitted')}
-              >
-                Submitted <strong>{visibleSubmittedCount}</strong>
-              </button>
-              <button
-                type="button"
-                className={`avel-candidate-focus-chip${localFocus === 'duplicates' ? ' is-active' : ''}`}
-                onClick={() => setLocalFocus('duplicates')}
-              >
-                Duplicates <strong>{visibleDuplicateCount}</strong>
-              </button>
-              <button
-                type="button"
-                className={`avel-candidate-focus-chip${localFocus === 'resume' ? ' is-active' : ''}`}
-                onClick={() => setLocalFocus('resume')}
-              >
-                Resume <strong>{visibleResumeCount}</strong>
-              </button>
+              {hasActiveFilters ? (
+                <div className="avel-candidate-toolbar__active">
+                  <div className="modern-command-active__count is-active">
+                    {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
+                  </div>
+                  <div className="modern-command-active__list">
+                    {activeFilterLabels.map((label) => (
+                      <span className="modern-active-filter modern-active-filter--server" key={label}>
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </section>
 

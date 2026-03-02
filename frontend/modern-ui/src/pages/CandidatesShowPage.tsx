@@ -1039,16 +1039,16 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               </div>
               <div className="avel-candidate-hero__meta">
                 {String(candidate.email1 || '').trim() !== '' ? (
-                  <a className="modern-link" href={`mailto:${candidate.email1}`}>
+                  <a className="modern-link avel-candidate-hero__meta-item avel-candidate-hero__meta-item--email" href={`mailto:${candidate.email1}`}>
                     {toDisplayText(candidate.email1)}
                   </a>
                 ) : (
-                  <span>{toDisplayText(candidate.email1)}</span>
+                  <span className="avel-candidate-hero__meta-item">{toDisplayText(candidate.email1)}</span>
                 )}
-                <span>{toDisplayText(candidate.phoneCell)}</span>
-                <span>{`${toDisplayText(candidate.city)}, ${toDisplayText(candidate.country)}`}</span>
-                <span>Owner: {toDisplayText(candidate.owner)}</span>
-                <span>Source: {toDisplayText(candidate.source)}</span>
+                <span className="avel-candidate-hero__meta-item">{toDisplayText(candidate.phoneCell)}</span>
+                <span className="avel-candidate-hero__meta-item">{`${toDisplayText(candidate.city)}, ${toDisplayText(candidate.country)}`}</span>
+                <span className="avel-candidate-hero__meta-item avel-candidate-hero__meta-item--owner">Owner: {toDisplayText(candidate.owner)}</span>
+                <span className="avel-candidate-hero__meta-item avel-candidate-hero__meta-item--source">Source: {toDisplayText(candidate.source)}</span>
               </div>
               {candidate.duplicates.length > 0 ? (
                 <div className="avel-candidate-hero__duplicates">
@@ -1091,12 +1091,12 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           </section>
 
           <div className="avel-candidate-grid">
-            <section className="avel-list-panel">
+            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--profile">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Details</h2>
                 <p className="avel-list-panel__hint">Core profile data and custom fields.</p>
               </div>
-              <div className="avel-candidate-details">
+              <div className="avel-candidate-details avel-candidate-details--profile">
                 <div><strong>Current Employer:</strong> {toDisplayText(candidate.currentEmployer)}</div>
                 <div><strong>Date Available:</strong> {toDisplayText(candidate.dateAvailable)}</div>
                 <div><strong>Best Time To Call:</strong> {toDisplayText(candidate.bestTimeToCall)}</div>
@@ -1115,14 +1115,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               </div>
             </section>
 
-            <section className="avel-list-panel">
+            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--gdpr">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">GDPR</h2>
                 <p className="avel-list-panel__hint">
                   Latest status: {toDisplayText(gdpr.latestRequest.status)}
                 </p>
               </div>
-              <div className="avel-candidate-details">
+              <div className="avel-candidate-details avel-candidate-details--gdpr">
                 <div><strong>Request Created:</strong> {toDisplayText(gdpr.latestRequest.createdAt)}</div>
                 <div><strong>Email Sent:</strong> {toDisplayText(gdpr.latestRequest.emailSentAt)}</div>
                 <div><strong>Link Expires:</strong> {toDisplayText(gdpr.latestRequest.expiresAt)}</div>
@@ -1150,12 +1150,12 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           </div>
 
           {data.eeoValues.length > 0 ? (
-            <section className="avel-list-panel">
+            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--eeo">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">EEO Information</h2>
                 <p className="avel-list-panel__hint">Compliance-related candidate attributes.</p>
               </div>
-              <div className="avel-candidate-details">
+              <div className="avel-candidate-details avel-candidate-details--eeo">
                 {data.eeoValues.map((item) => (
                   <div key={item.fieldName}>
                     <strong>{toDisplayText(item.fieldName)}:</strong> {toDisplayText(item.fieldValue)}
@@ -1165,7 +1165,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             </section>
           ) : null}
 
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--notes">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Notes & Comments</h2>
               <div className="modern-table-actions">
@@ -1251,7 +1251,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             ) : null}
           </section>
 
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--messages">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Team Inbox</h2>
                 <div className="modern-table-actions">
@@ -1369,7 +1369,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             ) : null}
           </section>
 
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--pipelines">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Pipelines</h2>
               <div className="avel-candidates-pagination">
@@ -1450,7 +1450,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           </section>
 
           <div className="avel-candidate-grid">
-            <section className="avel-list-panel">
+            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--attachments">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Attachments</h2>
                 <div className="modern-table-actions">
@@ -1584,7 +1584,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               </DataTable>
             </section>
 
-            <section className="avel-list-panel">
+            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--tags">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Tags & Lists</h2>
                 <div className="modern-table-actions">
@@ -1625,7 +1625,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           </div>
 
           <div className="avel-candidate-grid">
-            <section className="avel-list-panel">
+            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--events">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Upcoming Events</h2>
                 <p className="avel-list-panel__hint">Calendar items linked to this profile.</p>
@@ -1655,7 +1655,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               )}
             </section>
 
-            <section className="avel-list-panel">
+            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--questionnaires">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Questionnaires</h2>
                 <p className="avel-list-panel__hint">Submitted candidate questionnaires.</p>

@@ -414,7 +414,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
         )}
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--edit">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Candidate Details</h2>
               <p className="avel-list-panel__hint">Required fields: First Name, Last Name, Owner.</p>
@@ -441,10 +441,24 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               <input type="hidden" name="candidateID" value={String(data.meta.candidateID)} />
               <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
 
+              <div className="avel-candidate-form-strip">
+                <span className="modern-chip modern-chip--info">Candidate ID: {data.meta.candidateID}</span>
+                <span className={`modern-chip ${formState.isActive ? 'modern-chip--success' : 'modern-chip--critical'}`}>
+                  {formState.isActive ? 'Active Profile' : 'Inactive Profile'}
+                </span>
+                <span className={`modern-chip ${formState.isHot ? 'modern-chip--warning' : 'modern-chip--info'}`}>
+                  {formState.isHot ? 'Hot Candidate' : 'Standard Priority'}
+                </span>
+              </div>
+
               <div className="avel-candidate-edit-grid">
                 {validationError !== '' ? (
                   <div className="modern-state modern-state--error avel-candidate-edit-field--full">{validationError}</div>
                 ) : null}
+                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
+                  <strong>Identity & Contact</strong>
+                  <span>Primary profile data and communication details.</span>
+                </div>
                 <label className="modern-command-field">
                   <span className="modern-command-label">First Name *</span>
                   <input
@@ -535,6 +549,10 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   />
                 </label>
 
+                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
+                  <strong>Ownership, Source & GDPR</strong>
+                  <span>Ownership accountability and privacy configuration.</span>
+                </div>
                 <input type="hidden" name="source" value={formState.source} />
                 <SelectMenu
                   label="Source"
@@ -581,6 +599,10 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   />
                 </label>
 
+                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
+                  <strong>Compensation & Narrative</strong>
+                  <span>Comp package and recruiter context for submissions.</span>
+                </div>
                 <label className="modern-command-field">
                   <span className="modern-command-label">Current Pay</span>
                   <input
@@ -637,6 +659,10 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </label>
               </div>
 
+              <div className="avel-candidate-form-divider">
+                <strong>Status, Mobility & Compliance Attributes</strong>
+                <span>State toggles used in operations and reporting.</span>
+              </div>
               <div className="avel-candidate-edit-toggles">
                 <label className="modern-command-toggle">
                   <input
@@ -707,7 +733,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               </div>
 
               {data.extraFields.length > 0 ? (
-                <div className="avel-candidate-edit-extra">
+                <div className="avel-candidate-edit-extra avel-candidate-edit-extra--custom">
                   <div className="avel-list-panel__header">
                     <h3 className="avel-list-panel__title">Custom Fields</h3>
                     <p className="avel-list-panel__hint">Values are saved to legacy extra fields.</p>
@@ -752,7 +778,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </div>
               ) : null}
 
-              <div className="modern-table-actions">
+              <div className="modern-table-actions avel-candidate-edit-actions">
                 <button type="submit" className="modern-btn modern-btn--emphasis">
                   Save Candidate
                 </button>
@@ -762,7 +788,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               </div>
             </form>
 
-            <section className="avel-candidate-edit-attachments">
+            <section className="avel-candidate-edit-attachments avel-candidate-edit-attachments--panel">
               <div className="avel-list-panel__header">
                 <h3 className="avel-list-panel__title">Attachments</h3>
                 <div className="modern-table-actions">
