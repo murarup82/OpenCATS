@@ -37,3 +37,12 @@ Use this scorecard during go-live decisions for switching default mode from `hyb
   - `docs/modern-ui-sanity-report.md`
   - `docs/modern-ui-parity-checklist.md`
   - `docs/modern-ui-compat-deprecation-tracker.md`
+
+## No-JS Acceptance Criteria
+
+Minimum acceptance before default-mode switch:
+
+1. All native pages expose an explicit `Open Legacy UI` escape hatch.
+2. Critical mutation workflows have documented legacy fallback routes.
+3. No-JS blocker list is reviewed against `docs/modern-ui-nojs-fallback-audit.md`.
+4. Product/operations stakeholders accept residual no-JS limitations.
