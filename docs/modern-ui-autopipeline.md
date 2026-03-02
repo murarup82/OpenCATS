@@ -254,19 +254,23 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `frontend/modern-ui/scripts/modern-sanity-report.mjs` and npm script `sanity:modern`
     - sanity command runs build + coverage matrix + smoke scripts and writes consolidated output to `docs/modern-ui-sanity-report.md`
     - required checks (`build`, `coverage`) now provide immediate pass/fail gate for release readiness.
+111. Added baseline modern keyboard shortcuts and reference documentation:
+    - introduced `useModernKeyboardShortcuts()` with `/` (focus search) and `Shift+R` (in-page refresh event)
+    - wired shortcut hook in app shell so all native modern pages can use consistent quick actions
+    - added keyboard shortcut reference in `docs/modern-ui-keyboard-shortcuts.md`.
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
-3. Add keyboard shortcut map for high-frequency recruiter workflows (quick search, refresh, open legacy fallback).
-4. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
-5. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
-6. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
-7. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
-8. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
-9. Add release runbook for temporary rollback/feature-flag response during production cutover.
-10. Add hybrid-to-modern cutover checklist with owner/date tracking fields.
+3. Add compatibility-route deprecation tracker for safe legacy retirement once parity is validated.
+4. Add explicit fallback telemetry counters (native -> bridge -> legacy) for rollout confidence.
+5. Add mutation-safe replay fixtures for recurring smoke scenarios (dashboard/candidate/joborder).
+6. Add rollout scorecard document with pass/fail criteria before setting modern as default mode.
+7. Add targeted no-JS fallback audit for critical workflows still depending on scripted controls.
+8. Add release runbook for temporary rollback/feature-flag response during production cutover.
+9. Add hybrid-to-modern cutover checklist with owner/date tracking fields.
+10. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
 
 ## Rules
 

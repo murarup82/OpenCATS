@@ -1,5 +1,6 @@
 import type { UIModeBootstrap } from './types';
 import { resolveModernRouteComponent } from './lib/routeRegistry';
+import { useModernKeyboardShortcuts } from './lib/useModernKeyboardShortcuts';
 import { ModernOverlayHost } from './components/modals/ModernOverlayHost';
 import { LegacyCompatPage } from './components/states/LegacyCompatPage';
 
@@ -8,6 +9,8 @@ type AppProps = {
 };
 
 export function App({ bootstrap }: AppProps) {
+  useModernKeyboardShortcuts();
+
   const pageComponent = resolveModernRouteComponent(
     bootstrap.targetModule || '',
     bootstrap.targetAction || '',
