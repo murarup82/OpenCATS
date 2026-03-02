@@ -409,55 +409,8 @@ export function DashboardMyPage({ bootstrap }: Props) {
     setInteractionError('');
   }, [bootstrap.indexName, data?.filters.jobOrderID, data?.options.jobOrders]);
 
-  if (loading && !data) {
-    return <DashboardKanbanSkeleton />;
-  }
-
-  if (error) {
-    return (
-      <ErrorState
-        message={error}
-        actionLabel="Open Legacy UI"
-        actionURL={bootstrap.legacyURL}
-      />
-    );
-  }
-
-  if (!data) {
-    return <EmptyState message="No data available." />;
-  }
-
-  const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredRows = data.rows
-    .filter((row) => {
-      if (localStatusID !== 'all' && String(row.statusID) !== localStatusID) {
-        return false;
-      }
-
-      if (normalizedSearch === '') {
-        return true;
-      }
-
-      const searchable = [
-        row.candidateName,
-        row.jobOrderTitle,
-        row.companyName,
-        row.location,
-        row.statusLabel
-      ]
-        .map((value) => toSearchText(value))
-        .join(' ')
-        .toLowerCase();
-
-      return searchable.includes(normalizedSearch);
-    })
-    .map((row) => ({
-      ...row,
-      candidateURL: ensureModernUIURL(row.candidateURL)
-    }));
-
   const byStatusID = new Map<number, StatusCatalogEntry>();
-  data.options.statuses.forEach((statusOption) => {
+  (data?.options.statuses ?? []).forEach((statusOption) => {
     const statusLabel = toDisplayText(statusOption.status);
     byStatusID.set(statusOption.statusID, {
       statusID: statusOption.statusID,
@@ -465,7 +418,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
       statusSlug: toStatusSlug(statusLabel)
     });
   });
-  data.rows.forEach((row) => {
+  (data?.rows ?? []).forEach((row) => {
     if (!byStatusID.has(row.statusID)) {
       const statusLabel = toDisplayText(row.statusLabel);
       byStatusID.set(row.statusID, {
@@ -476,20 +429,20 @@ export function DashboardMyPage({ bootstrap }: Props) {
     }
   });
   const statusCatalog: StatusCatalogEntry[] = Array.from(byStatusID.values());
-  const canChangeStatus = isCapabilityEnabled(data.meta.permissions?.canChangeStatus);
-  const canAssignToJobOrder = isCapabilityEnabled(data.meta.permissions?.canAssignToJobOrder);
+  const canChangeStatus = isCapabilityEnabled(data?.meta.permissions?.canChangeStatus);
+  const canAssignToJobOrder = isCapabilityEnabled(data?.meta.permissions?.canAssignToJobOrder);
   const rejectedStatusID =
-    Number(data.meta.statusRules?.rejectedStatusID || 0) > 0
-      ? Number(data.meta.statusRules?.rejectedStatusID)
+    Number(data?.meta.statusRules?.rejectedStatusID || 0) > 0
+      ? Number(data?.meta.statusRules?.rejectedStatusID)
       : Number(
           statusCatalog.find((status) => status.statusSlug === 'rejected')?.statusID || 0
         );
   const orderedStatusIDs =
-    Array.isArray(data.meta.statusRules?.orderedStatusIDs) &&
+    Array.isArray(data?.meta.statusRules?.orderedStatusIDs) &&
     data.meta.statusRules?.orderedStatusIDs.length > 0
       ? data.meta.statusRules.orderedStatusIDs
       : statusCatalog.map((status) => status.statusID);
-  const rejectionReasons = Array.isArray(data.options.rejectionReasons)
+  const rejectionReasons = Array.isArray(data?.options.rejectionReasons)
     ? data.options.rejectionReasons
         .map((reason) => ({
           reasonID: Number(reason.reasonID || 0),
@@ -498,11 +451,20 @@ export function DashboardMyPage({ bootstrap }: Props) {
         .filter((reason) => reason.reasonID > 0)
     : [];
   const rejectionOtherReasonID =
-    Number(data.meta.statusRules?.rejectionOtherReasonID || 0) > 0
-      ? Number(data.meta.statusRules?.rejectionOtherReasonID)
+    Number(data?.meta.statusRules?.rejectionOtherReasonID || 0) > 0
+      ? Number(data?.meta.statusRules?.rejectionOtherReasonID)
       : 0;
   const requestStatusChange = useCallback(
     async (row: DashboardRow, targetStatusID: number | null) => {
+      if (!data) {
+        return {
+          success: false,
+          openedLegacy: false,
+          openedInline: false,
+          message: 'Dashboard data unavailable.'
+        };
+      }
+
       if (targetStatusID === null || targetStatusID <= 0) {
         openStatusModal(row, null);
         return {
@@ -692,7 +654,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
 
   const submitRejectionStatus = useCallback(
     async (payload: { rejectionReasonIDs: number[]; rejectionReasonOther: string; statusComment: string }) => {
-      if (!rejectionModal || rejectionPending) {
+      if (!data || !rejectionModal || rejectionPending) {
         return;
       }
 
@@ -752,6 +714,53 @@ export function DashboardMyPage({ bootstrap }: Props) {
       showToast
     ]
   );
+
+  if (loading && !data) {
+    return <DashboardKanbanSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        message={error}
+        actionLabel="Open Legacy UI"
+        actionURL={bootstrap.legacyURL}
+      />
+    );
+  }
+
+  if (!data) {
+    return <EmptyState message="No data available." />;
+  }
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredRows = data.rows
+    .filter((row) => {
+      if (localStatusID !== 'all' && String(row.statusID) !== localStatusID) {
+        return false;
+      }
+
+      if (normalizedSearch === '') {
+        return true;
+      }
+
+      const searchable = [
+        row.candidateName,
+        row.jobOrderTitle,
+        row.companyName,
+        row.location,
+        row.statusLabel
+      ]
+        .map((value) => toSearchText(value))
+        .join(' ')
+        .toLowerCase();
+
+      return searchable.includes(normalizedSearch);
+    })
+    .map((row) => ({
+      ...row,
+      candidateURL: ensureModernUIURL(row.candidateURL)
+    }));
 
   const visibleStatuses = localStatusID === 'all'
     ? statusCatalog
