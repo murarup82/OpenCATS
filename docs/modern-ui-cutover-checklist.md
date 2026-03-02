@@ -17,6 +17,8 @@ Complete this checklist before and during default-mode switch.
 
 ## Evidence Links
 
+- `docs/modern-ui-cutover-evidence-links.md` (auto-generated snapshot)
+
 - `docs/modern-ui-sanity-report.md`
 - `docs/modern-ui-route-coverage.md`
 - `docs/modern-ui-parity-checklist.md`

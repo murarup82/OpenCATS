@@ -11,7 +11,9 @@ const npmBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const checks = [
   { id: 'sanity', label: 'Sanity Report', command: ['run', 'sanity:modern'], required: true },
   { id: 'scorecard', label: 'Scorecard Prefill', command: ['run', 'scorecard:prefill'], required: true },
-  { id: 'fixtures', label: 'Fixture Lint', command: ['run', 'fixtures:lint'], required: true }
+  { id: 'fixtures', label: 'Fixture Lint', command: ['run', 'fixtures:lint'], required: true },
+  { id: 'cutoverEvidence', label: 'Cutover Evidence Snapshot', command: ['run', 'cutover:evidence'], required: true },
+  { id: 'deprecationEvidence', label: 'Deprecation Evidence Validation', command: ['run', 'deprecation:validate'], required: true }
 ];
 
 const evidenceFiles = [
@@ -21,7 +23,9 @@ const evidenceFiles = [
   'docs/modern-ui-rollout-scorecard.md',
   'docs/modern-ui-rollout-scorecard-prefill.md',
   'docs/modern-ui-release-runbook.md',
-  'docs/modern-ui-cutover-checklist.md'
+  'docs/modern-ui-cutover-checklist.md',
+  'docs/modern-ui-cutover-evidence-links.md',
+  'docs/modern-ui-deprecation-evidence-check.md'
 ];
 
 function runCommand(check) {

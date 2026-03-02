@@ -323,19 +323,21 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `frontend/modern-ui/scripts/compare-legacy-modern-routes.mjs` and npm script `compare:legacy-routes`
     - generated `docs/modern-ui-legacy-route-gap-report.md` + `.json` with per-module action parity classification
     - updated route resolution to prefer module bridge fallback for unknown actions (instead of default native page), reducing hidden-control regressions.
+129. Added deprecation evidence validation + cutover evidence auto-link automation:
+    - introduced `frontend/modern-ui/scripts/validate-deprecation-signoff.mjs` and npm script `deprecation:validate`
+    - introduced `frontend/modern-ui/scripts/generate-cutover-evidence-links.mjs` and npm script `cutover:evidence`
+    - extended quality gate to run both checks and validate generated artifacts (`docs/modern-ui-deprecation-evidence-check.md`, `docs/modern-ui-cutover-evidence-links.md`).
 
 ## Next Queue (30-Slice Execution)
 
 1. Complete ARIA/labeling sweep for remaining custom controls not yet covered (toggle switches and icon-only actions outside dashboard/joborders surfaces).
 2. Run end-to-end stabilization sweep across migrated pages and fix parity gaps before defaulting additional routes to modern.
 3. Add keyboard shortcut extension plan for next wave (module jump keys and action palette).
-4. Add deprecation checklist automation hook to validate required evidence links.
-5. Add telemetry retention guidance (session vs persisted metrics) for production observability.
-6. Add smoke fixture coverage report (which modules/actions have replay probes vs gaps).
-7. Add release readiness changelog template linking quality gate snapshots over time.
-8. Add scorecard prefill confidence notes (distinguish skipped smoke checks from validated target-env checks).
-9. Add cutover checklist evidence auto-link helper.
-10. Add periodic ownership-matrix review reminder process.
+4. Add telemetry retention guidance (session vs persisted metrics) for production observability.
+5. Add smoke fixture coverage report (which modules/actions have replay probes vs gaps).
+6. Add release readiness changelog template linking quality gate snapshots over time.
+7. Add scorecard prefill confidence notes (distinguish skipped smoke checks from validated target-env checks).
+8. Add periodic ownership-matrix review reminder process.
 
 ## Rules
 
