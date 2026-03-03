@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-03T06:52:25.856Z
-Finished: 2026-03-03T06:52:36.816Z
+Started: 2026-03-03T07:32:53.952Z
+Finished: 2026-03-03T07:33:12.177Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -12,6 +12,7 @@ Overall Required Status: **Pass**
 | Coverage Matrix | Pass | Yes | 0 |
 | Route Parity Checklist | Pass | Yes | 0 |
 | Bridge Wildcard Retirement | Pass | Yes | 0 |
+| Legacy Fallback Link Guard | Pass | Yes | 0 |
 | Playwright Workflow Smoke | Pass | Yes | 0 |
 | Route Smoke | Pass | No | 0 |
 | Endpoint Smoke | Pass | No | 0 |
@@ -39,7 +40,7 @@ rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m    0.20 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  134.90 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,040.42 kB[39m[22m[2m │ map: 3,807.45 kB[22m
-[32m✓ built in 4.39s[39m
+[32m✓ built in 7.46s[39m
 ```
 
 **stderr**
@@ -85,6 +86,21 @@ Command: `npm run verify:bridge-wildcards`
 > node ./scripts/verify-bridge-wildcard-retirement.mjs
 
 [modern-ui] Wrote bridge wildcard retirement check: D:\Work\opencats\OpenCATS\docs\modern-ui-bridge-wildcard-retirement.md
+```
+
+**stderr**
+`(no output)`
+
+### Legacy Fallback Link Guard (Pass)
+
+Command: `npm run verify:legacy-fallback-links`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:legacy-fallback-links
+> node ./scripts/verify-legacy-fallback-links.mjs
+
+[modern-ui] Legacy fallback link coverage passed (33 pages).
 ```
 
 **stderr**

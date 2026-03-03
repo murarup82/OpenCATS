@@ -83,5 +83,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Candidate/joborder utility action families (`candidates.*` and `joborders.*` remaining compat actions) now route to native `EntityUtilityActionPage` workspaces with embedded legacy rendering and context-aware return navigation.
 - Completed: Remaining compat-tail actions (`calendar.deleteEvent`, `calendar.dynamicData`, `companies.deleteAttachment`, `lists.deleteStaticList`, `lists.removeFromListDatagrid`, `lists.saveListAccess`) now route via native `EntityUtilityActionPage`, retiring explicit `ActionCompatPage` route usage.
 - Completed: Removed dead `ActionCompatPage` runtime source after explicit compat-route retirement.
+- Completed: Added CI guard for no-JS fallback parity (`verify:legacy-fallback-links`) to enforce `Open Legacy` link presence on core native pages.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

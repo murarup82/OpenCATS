@@ -13,6 +13,7 @@ const checks = [
   { id: 'coverage', label: 'Coverage Matrix', command: ['run', 'coverage:matrix'], required: true },
   { id: 'parity-routes', label: 'Route Parity Checklist', command: ['run', 'parity:routes'], required: true },
   { id: 'bridge-wildcards', label: 'Bridge Wildcard Retirement', command: ['run', 'verify:bridge-wildcards'], required: true },
+  { id: 'legacy-fallback-links', label: 'Legacy Fallback Link Guard', command: ['run', 'verify:legacy-fallback-links'], required: true },
   { id: 'playwright-smoke', label: 'Playwright Workflow Smoke', command: ['run', 'smoke:playwright'], required: true },
   { id: 'smoke-routes', label: 'Route Smoke', command: ['run', 'smoke:routes'], required: false },
   { id: 'smoke-endpoints', label: 'Endpoint Smoke', command: ['run', 'smoke:endpoints'], required: false }

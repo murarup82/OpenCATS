@@ -470,6 +470,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 160. Removed obsolete compatibility-wrapper page component:
     - deleted unused `frontend/modern-ui/src/pages/ActionCompatPage.tsx` after complete route retirement
     - kept migration history in docs while removing dead runtime source.
+161. Added no-JS fallback-link guard to modernization CI gates:
+    - introduced `frontend/modern-ui/scripts/verify-legacy-fallback-links.mjs` to assert `Open Legacy` fallback links remain present on core native page headers
+    - wired `verify:legacy-fallback-links` into both `sanity:modern` and `quality:gate` required command suites
+    - documented guard rollout in `docs/modern-ui-nojs-fallback-audit.md`.
 
 ## Next Queue (30-Slice Execution)
 

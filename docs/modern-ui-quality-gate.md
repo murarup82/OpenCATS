@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-03T06:52:25.360Z
-Finished: 2026-03-03T06:52:43.878Z
+Started: 2026-03-03T07:32:52.137Z
+Finished: 2026-03-03T07:33:22.003Z
 Overall Status: **Pass**
 
 ## Summary
@@ -16,6 +16,7 @@ Overall Status: **Pass**
 | Command: Legacy Route Comparison | Pass | 0 |
 | Command: In-Scope Route Fallback Guard | Pass | 0 |
 | Command: Bridge Wildcard Retirement Guard | Pass | 0 |
+| Command: Legacy Fallback Link Guard | Pass | 0 |
 | Command: Cutover Evidence Snapshot | Pass | 0 |
 | Command: Deprecation Evidence Validation | Pass | 0 |
 | Command: Ownership Review Reminder | Pass | 0 |
@@ -168,6 +169,21 @@ Command: `npm.cmd run verify:bridge-wildcards`
 > node ./scripts/verify-bridge-wildcard-retirement.mjs
 
 [modern-ui] Wrote bridge wildcard retirement check: D:\Work\opencats\OpenCATS\docs\modern-ui-bridge-wildcard-retirement.md
+```
+
+**stderr**
+`(no output)`
+
+### Legacy Fallback Link Guard (Pass)
+
+Command: `npm.cmd run verify:legacy-fallback-links`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:legacy-fallback-links
+> node ./scripts/verify-legacy-fallback-links.mjs
+
+[modern-ui] Legacy fallback link coverage passed (33 pages).
 ```
 
 **stderr**

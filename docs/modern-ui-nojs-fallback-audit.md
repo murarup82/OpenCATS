@@ -27,3 +27,9 @@ This audit identifies critical workflows that rely on JavaScript in modern UI an
 1. Keep `Open Legacy UI` action visible on all native modern pages until no-JS parity is intentionally solved.
 2. Prioritize server-render fallback for at least one critical list page (`dashboard.my` or `candidates.listByView`) if strict no-JS support becomes a requirement.
 3. Add CI smoke check that verifies legacy fallback links are present on all native page headers.
+
+## Implemented Guard
+
+- Added CI/runtime guard script `frontend/modern-ui/scripts/verify-legacy-fallback-links.mjs`.
+- The guard validates `Open Legacy` fallback action labels across core native pages.
+- Wired into both `sanity:modern` and `quality:gate` pipelines as required checks.
