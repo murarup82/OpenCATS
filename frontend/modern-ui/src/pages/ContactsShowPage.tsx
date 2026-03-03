@@ -412,12 +412,10 @@ export function ContactsShowPage({ bootstrap }: Props) {
 
       {legacyModal ? (
         <LegacyFrameModal
-          open={true}
+          isOpen={true}
           title={legacyModal.title}
-          src={legacyModal.url}
-          width="min(980px, 96vw)"
-          height="min(760px, 88vh)"
-          onClose={(options) => closeLegacyModal(Boolean(options?.refreshOnClose))}
+          url={legacyModal.url}
+          onClose={closeLegacyModal}
           showRefreshClose={legacyModal.showRefreshClose}
         />
       ) : null}

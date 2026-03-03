@@ -60,6 +60,7 @@ function buildExplicitBridgeRoutes(
 
 const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'dashboard.setpipelinestatus': DashboardMyPage,
+  'joborders.addcandidatemodal': CandidatesAddPage,
   'candidates.search': CandidatesListPage,
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
@@ -98,7 +99,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
   contacts: ['addActivityScheduleEvent', 'delete', 'downloadVCard', 'showColdCallList'],
   joborders: [
     'addActivityChangeStatus',
-    'addCandidateModal',
     'addJobOrderPopup',
     'addProfileComment',
     'addToPipeline',
@@ -213,6 +213,7 @@ const guardedRouteParams: Record<string, string[]> = {
   'candidates.edit': ['candidateID'],
   'joborders.show': ['jobOrderID'],
   'joborders.edit': ['jobOrderID'],
+  'joborders.addcandidatemodal': ['jobOrderID'],
   'companies.show': ['companyID'],
   'companies.edit': ['companyID'],
   'contacts.show': ['contactID'],

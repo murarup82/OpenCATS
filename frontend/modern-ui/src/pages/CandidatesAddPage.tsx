@@ -291,6 +291,11 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [aiPrefillError, setAiPrefillError] = useState('');
   const [aiUndoSnapshot, setAiUndoSnapshot] = useState<CandidateAddFormState | null>(null);
   const [fieldSources, setFieldSources] = useState<Partial<Record<CandidateTrackedFieldKey, CandidateFieldSource>>>({});
+  const targetModule = String(bootstrap.targetModule || '').toLowerCase();
+  const targetAction = String(bootstrap.targetAction || '').toLowerCase();
+  const isJobOrderQuickAddMode = targetModule === 'joborders' && targetAction === 'addcandidatemodal';
+  const jobOrderID = Number(new URLSearchParams(serverQueryString).get('jobOrderID') || 0);
+  const hasValidJobOrderID = Number.isFinite(jobOrderID) && jobOrderID > 0;
 
   useEffect(() => {
     let isMounted = true;
@@ -515,6 +520,9 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     formData.set('disability', formState.disability);
     formData.set('documentText', resumeText);
     formData.set('documentTempFile', resumeTempFile);
+    if (isJobOrderQuickAddMode && hasValidJobOrderID) {
+      formData.set('jobOrderID', String(jobOrderID));
+    }
 
     Object.entries(formState.extraFields).forEach(([postKey, value]) => {
       formData.set(postKey, value);
@@ -659,8 +667,30 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     return <EmptyState message="Candidate form is not available." />;
   }
 
-  const submitURL = data.actions.submitURL || `${bootstrap.indexName}?m=candidates&a=add&ui=modern`;
-  const listURL = data.actions.listURL || `${bootstrap.indexName}?m=candidates&a=listByView&ui=modern`;
+  if (isJobOrderQuickAddMode && !hasValidJobOrderID) {
+    return (
+      <ErrorState
+        message="Unable to open quick add candidate flow: missing job order ID."
+        actionLabel="Open Legacy UI"
+        actionURL={bootstrap.legacyURL}
+      />
+    );
+  }
+
+  const submitURL = isJobOrderQuickAddMode && hasValidJobOrderID
+    ? `${bootstrap.indexName}?m=joborders&a=addCandidateModal&jobOrderID=${jobOrderID}&ui=modern`
+    : data.actions.submitURL || `${bootstrap.indexName}?m=candidates&a=add&ui=modern`;
+  const backURL = isJobOrderQuickAddMode && hasValidJobOrderID
+    ? `${bootstrap.indexName}?m=joborders&a=considerCandidateSearch&jobOrderID=${jobOrderID}&ui=modern`
+    : data.actions.listURL || `${bootstrap.indexName}?m=candidates&a=listByView&ui=modern`;
+  const legacyURL = isJobOrderQuickAddMode && hasValidJobOrderID
+    ? `${bootstrap.indexName}?m=joborders&a=addCandidateModal&jobOrderID=${jobOrderID}&ui=legacy`
+    : data.actions.legacyURL;
+  const pageTitle = isJobOrderQuickAddMode ? 'Quick Add Candidate' : 'Add Candidate';
+  const pageSubtitle = isJobOrderQuickAddMode
+    ? `Create a new candidate and assign directly to job order #${jobOrderID}.`
+    : 'Modern candidate creation form. Save action uses the proven legacy backend.';
+  const backLabel = isJobOrderQuickAddMode ? 'Back To Candidate Search' : 'Back To Candidates';
   const sourceOptions: SelectMenuOption[] = data.options.sources.map((option) => ({
     value: option.value,
     label: option.label
@@ -700,14 +730,14 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page">
       <PageContainer
-        title="Add Candidate"
-        subtitle="Modern candidate creation form. Save action uses the proven legacy backend."
+        title={pageTitle}
+        subtitle={pageSubtitle}
         actions={(
           <>
-            <a className="modern-btn modern-btn--secondary" href={listURL}>
-              Back To Candidates
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              {backLabel}
             </a>
-            <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
               Open Legacy UI
             </a>
           </>
@@ -784,6 +814,9 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               }}
             >
               <input type="hidden" name="postback" value="postback" />
+              {isJobOrderQuickAddMode && hasValidJobOrderID ? (
+                <input type="hidden" name="jobOrderID" value={String(jobOrderID)} />
+              ) : null}
               <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
               <input type="hidden" name="dup_soft_override" value={softOverrideAccepted ? '1' : '0'} />
               <input type="hidden" name="documentTempFile" id="documentTempFile" value={resumeTempFile} />
@@ -1326,7 +1359,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                     Dismiss Warning
                   </button>
                 ) : null}
-                <a className="modern-btn modern-btn--secondary" href={listURL}>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
                   Cancel
                 </a>
               </div>
