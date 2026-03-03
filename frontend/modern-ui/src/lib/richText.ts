@@ -1,5 +1,8 @@
 const HTML_TAG_PATTERN = /<\s*\/?\s*[a-z][^>]*>/i;
 const UNSAFE_URL_PATTERN = /^\s*(javascript|data|vbscript):/i;
+const RICH_FORMAT_TAG_PATTERN = /<(strong|b|em|i|u|ul|ol|li|h[1-6]|blockquote|code|pre|a)\b/i;
+const MARKDOWN_MARKER_PATTERN =
+  /(^|\n)\s{0,3}(#{1,6}\s+|[-*+]\s+|\d+\.\s+|>\s+)|\*\*[^*\n]+\*\*|__[^_\n]+__|_[^_\n]+_|`[^`\n]+`/m;
 const ALLOWED_TAGS = new Set([
   'p',
   'br',
@@ -150,6 +153,32 @@ function sanitizeLegacyHTML(input: string): string {
   return template.innerHTML;
 }
 
+function decodeHTMLEntities(input: string): string {
+  if (typeof document === 'undefined') {
+    return input
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&');
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = input;
+  return textarea.value;
+}
+
+function extractTextFromSanitizedHTML(input: string): string {
+  const withLineBreaks = input
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li\b[^>]*>/gi, '- ')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|blockquote|pre|ul|ol)>/gi, '\n')
+    .replace(/<[^>]+>/g, '');
+
+  return decodeHTMLEntities(withLineBreaks).replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 export function formatRichTextToHTML(input: string): string {
   const normalized = String(input || '');
   if (normalized.trim() === '') {
@@ -157,7 +186,16 @@ export function formatRichTextToHTML(input: string): string {
   }
 
   if (HTML_TAG_PATTERN.test(normalized)) {
-    return sanitizeLegacyHTML(normalized);
+    const sanitized = sanitizeLegacyHTML(normalized);
+
+    if (!RICH_FORMAT_TAG_PATTERN.test(sanitized)) {
+      const extractedText = extractTextFromSanitizedHTML(sanitized);
+      if (MARKDOWN_MARKER_PATTERN.test(extractedText)) {
+        return toMarkdownHTML(extractedText);
+      }
+    }
+
+    return sanitized;
   }
 
   return toMarkdownHTML(normalized);
