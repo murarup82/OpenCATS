@@ -1822,6 +1822,74 @@ export type JobOrdersListModernDataResponse = {
   }>;
 };
 
+export type JobOrdersRecruiterAllocationModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    permissions: {
+      canManageRecruiterAllocation: boolean;
+    };
+  };
+  filters: {
+    scope: string;
+    search: string;
+    ownerUserID: number;
+    recruiterUserID: number;
+  };
+  options: {
+    scopes: Array<{
+      value: string;
+      label: string;
+    }>;
+    owners: Array<{
+      value: string;
+      label: string;
+    }>;
+    recruiters: Array<{
+      value: string;
+      label: string;
+    }>;
+  };
+  state: {
+    noticeMessage: string;
+    errorMessage: string;
+    startRow: number;
+    endRow: number;
+  };
+  actions: {
+    submitURL: string;
+    listURL: string;
+    legacyURL: string;
+  };
+  rows: Array<{
+    jobOrderID: number;
+    companyJobID: string;
+    title: string;
+    companyName: string;
+    status: string;
+    ownerUserID: number;
+    ownerFullName: string;
+    recruiterUserID: number;
+    recruiterFullName: string;
+    dateModified: string;
+    showURL: string;
+  }>;
+};
+
+export type JobOrdersRecruiterAllocationMutationResponse = {
+  success: boolean;
+  code?: string;
+  noticeMessage?: string;
+  errorMessage?: string;
+  updatedCount?: number;
+  errorCount?: number;
+};
+
 export type JobOrdersShowModernDataResponse = {
   meta: {
     contractVersion: number;

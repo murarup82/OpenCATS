@@ -6584,6 +6584,10 @@ class JobOrdersUI extends UserInterface
 
     private function recruiterAllocation($noticeMessage = '', $errorMessage = '')
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $scope = strtolower(trim($this->getTrimmedInput('scope', $_REQUEST)));
         if (!in_array($scope, array('all', 'mine', 'unassigned'), true))
         {
@@ -6643,6 +6647,43 @@ class JobOrdersUI extends UserInterface
         $ownerOptions = $users->getSelectList();
         $recruiterOptions = $this->getRecruiterAllocationUsers();
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'joborders-recruiter-allocation')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernRecruiterAllocationJSON(
+                $scope,
+                $search,
+                $ownerUserID,
+                $recruiterUserID,
+                $page,
+                $perPage,
+                $totalRows,
+                $totalPages,
+                $rows,
+                $ownerOptions,
+                $recruiterOptions,
+                $noticeMessage,
+                $errorMessage,
+                'joborders-recruiter-allocation'
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('scope', $scope);
         $this->_template->assign('search', $search);
@@ -6660,8 +6701,175 @@ class JobOrdersUI extends UserInterface
         $this->_template->display('./modules/joborders/RecruiterAllocation.tpl');
     }
 
+    private function renderModernRecruiterAllocationJSON(
+        $scope,
+        $search,
+        $ownerUserID,
+        $recruiterUserID,
+        $page,
+        $perPage,
+        $totalRows,
+        $totalPages,
+        $rows,
+        $ownerOptions,
+        $recruiterOptions,
+        $noticeMessage,
+        $errorMessage,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $ownerOptionsPayload = array(
+            array(
+                'value' => '0',
+                'label' => 'Any Owner'
+            )
+        );
+        foreach ($ownerOptions as $ownerData)
+        {
+            $ownerID = (int) (isset($ownerData['userID']) ? $ownerData['userID'] : 0);
+            if ($ownerID <= 0)
+            {
+                continue;
+            }
+
+            $label = trim(
+                (isset($ownerData['firstName']) ? (string) $ownerData['firstName'] : '') . ' ' .
+                (isset($ownerData['lastName']) ? (string) $ownerData['lastName'] : '')
+            );
+            if ($label === '')
+            {
+                $label = 'User #' . $ownerID;
+            }
+
+            $ownerOptionsPayload[] = array(
+                'value' => (string) $ownerID,
+                'label' => $label
+            );
+        }
+
+        $recruiterOptionsPayload = array(
+            array(
+                'value' => '-2',
+                'label' => 'Any Recruiter'
+            ),
+            array(
+                'value' => '-1',
+                'label' => 'Unassigned'
+            )
+        );
+        foreach ($recruiterOptions as $recruiterData)
+        {
+            $recruiterID = (int) (isset($recruiterData['userID']) ? $recruiterData['userID'] : 0);
+            if ($recruiterID <= 0)
+            {
+                continue;
+            }
+            $label = trim((string) (isset($recruiterData['fullName']) ? $recruiterData['fullName'] : ''));
+            if ($label === '')
+            {
+                $label = 'User #' . $recruiterID;
+            }
+            $recruiterOptionsPayload[] = array(
+                'value' => (string) $recruiterID,
+                'label' => $label
+            );
+        }
+
+        $rowPayload = array();
+        foreach ($rows as $row)
+        {
+            $jobOrderID = (int) (isset($row['jobOrderID']) ? $row['jobOrderID'] : 0);
+            if ($jobOrderID <= 0)
+            {
+                continue;
+            }
+
+            $recruiterUserID = (int) (isset($row['recruiterUserID']) ? $row['recruiterUserID'] : 0);
+            $recruiterFullName = trim((string) (isset($row['recruiterFullName']) ? $row['recruiterFullName'] : ''));
+            if ($recruiterFullName === '')
+            {
+                $recruiterFullName = ($recruiterUserID > 0 ? '(User ID ' . $recruiterUserID . ')' : '(Unassigned)');
+            }
+
+            $ownerFullName = trim((string) (isset($row['ownerFullName']) ? $row['ownerFullName'] : ''));
+            if ($ownerFullName === '')
+            {
+                $ownerFullName = '--';
+            }
+
+            $rowPayload[] = array(
+                'jobOrderID' => $jobOrderID,
+                'companyJobID' => (string) (isset($row['companyJobID']) ? $row['companyJobID'] : ''),
+                'title' => (string) (isset($row['title']) ? $row['title'] : ''),
+                'companyName' => (string) (isset($row['companyName']) ? $row['companyName'] : ''),
+                'status' => (string) (isset($row['status']) ? $row['status'] : ''),
+                'ownerUserID' => (int) (isset($row['ownerUserID']) ? $row['ownerUserID'] : 0),
+                'ownerFullName' => $ownerFullName,
+                'recruiterUserID' => $recruiterUserID,
+                'recruiterFullName' => $recruiterFullName,
+                'dateModified' => (string) (isset($row['dateModified']) ? $row['dateModified'] : '--'),
+                'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID)
+            );
+        }
+
+        $startRow = ($totalRows > 0 ? (($page - 1) * $perPage) + 1 : 0);
+        $endRow = ($totalRows > 0 ? min($totalRows, $page * $perPage) : 0);
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.recruiterAllocation.v1',
+                'modernPage' => $modernPage,
+                'page' => (int) $page,
+                'totalPages' => (int) $totalPages,
+                'totalRows' => (int) $totalRows,
+                'entriesPerPage' => (int) $perPage,
+                'permissions' => array(
+                    'canManageRecruiterAllocation' => ((bool) $this->canManageRecruiterAllocation())
+                )
+            ),
+            'filters' => array(
+                'scope' => (string) $scope,
+                'search' => (string) $search,
+                'ownerUserID' => (int) $ownerUserID,
+                'recruiterUserID' => (int) $recruiterUserID
+            ),
+            'options' => array(
+                'scopes' => array(
+                    array('value' => 'all', 'label' => 'All Job Orders'),
+                    array('value' => 'mine', 'label' => 'My Job Orders'),
+                    array('value' => 'unassigned', 'label' => 'Unassigned Recruiter')
+                ),
+                'owners' => $ownerOptionsPayload,
+                'recruiters' => $recruiterOptionsPayload
+            ),
+            'state' => array(
+                'noticeMessage' => (string) $noticeMessage,
+                'errorMessage' => (string) $errorMessage,
+                'startRow' => (int) $startRow,
+                'endRow' => (int) $endRow
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=joborders&a=recruiterAllocation', $baseURL),
+                'listURL' => sprintf('%s?m=joborders&a=listByView&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=joborders&a=recruiterAllocation&ui=legacy', $baseURL)
+            ),
+            'rows' => $rowPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
     private function onRecruiterAllocation()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $assignments = array();
         if (isset($_POST['recruiterAssignment']) && is_array($_POST['recruiterAssignment']))
         {
@@ -6740,6 +6948,38 @@ class JobOrdersUI extends UserInterface
             {
                 $errorMessage = '';
             }
+        }
+
+        if ($isModernJSON)
+        {
+            $code = 'noChanges';
+            if ($updatedCount > 0 && $errorCount > 0)
+            {
+                $code = 'partial';
+            }
+            else if ($updatedCount > 0)
+            {
+                $code = 'updated';
+            }
+            else if ($errorCount > 0)
+            {
+                $code = 'failed';
+            }
+
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => ($errorCount === 0),
+                'code' => $code,
+                'noticeMessage' => (string) $noticeMessage,
+                'errorMessage' => (string) $errorMessage,
+                'updatedCount' => (int) $updatedCount,
+                'errorCount' => (int) $errorCount
+            ));
+            return;
         }
 
         $this->recruiterAllocation($noticeMessage, $errorMessage);

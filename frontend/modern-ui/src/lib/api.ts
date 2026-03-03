@@ -29,6 +29,8 @@ import type {
   JobOrderAssignCandidateModernDataResponse,
   JobOrdersAddModernDataResponse,
   JobOrdersEditModernDataResponse,
+  JobOrdersRecruiterAllocationModernDataResponse,
+  JobOrdersRecruiterAllocationMutationResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
   KpisDetailsModernDataResponse,
@@ -71,6 +73,7 @@ import {
   MODERN_JOBORDER_ADD_PAGE,
   MODERN_JOBORDER_ADD_POPUP_PAGE,
   MODERN_JOBORDER_EDIT_PAGE,
+  MODERN_JOBORDER_RECRUITER_ALLOCATION_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
   MODERN_KPIS_PAGE,
@@ -1741,6 +1744,85 @@ export async function fetchJobOrdersListModernData(
   assertModernContract(data.meta, 'joborders.listByView.v1', 'job orders data');
 
   return data;
+}
+
+export async function fetchJobOrdersRecruiterAllocationModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<JobOrdersRecruiterAllocationModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'joborders',
+    action: 'recruiterAllocation',
+    modernPage: MODERN_JOBORDER_RECRUITER_ALLOCATION_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<JobOrdersRecruiterAllocationModernDataResponse>(url);
+  assertModernContract(data.meta, 'joborders.recruiterAllocation.v1', 'job orders recruiter allocation');
+
+  return data;
+}
+
+export async function saveJobOrderRecruiterAllocation(
+  submitURL: string,
+  payload: {
+    scope: string;
+    ownerUserID: number;
+    recruiterUserID: number;
+    search: string;
+    page: number;
+    assignments: Record<number, number>;
+    currentAssignments: Record<number, number>;
+  }
+): Promise<JobOrdersRecruiterAllocationMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', '1');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_JOBORDER_RECRUITER_ALLOCATION_PAGE);
+  body.set('scope', payload.scope || 'all');
+  body.set('ownerUserID', String(payload.ownerUserID || 0));
+  body.set('recruiterUserID', String(payload.recruiterUserID));
+  body.set('search', payload.search || '');
+  body.set('page', String(payload.page || 1));
+
+  Object.entries(payload.assignments || {}).forEach(([jobOrderIDRaw, recruiterUserID]) => {
+    const jobOrderID = Number(jobOrderIDRaw);
+    if (!Number.isFinite(jobOrderID) || jobOrderID <= 0) {
+      return;
+    }
+    body.set(`recruiterAssignment[${jobOrderID}]`, String(recruiterUserID || 0));
+  });
+
+  Object.entries(payload.currentAssignments || {}).forEach(([jobOrderIDRaw, recruiterUserID]) => {
+    const jobOrderID = Number(jobOrderIDRaw);
+    if (!Number.isFinite(jobOrderID) || jobOrderID <= 0) {
+      return;
+    }
+    body.set(`currentRecruiterAssignment[${jobOrderID}]`, String(recruiterUserID || 0));
+  });
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: JobOrdersRecruiterAllocationMutationResponse | null = null;
+  try {
+    result = (await response.json()) as JobOrdersRecruiterAllocationMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Recruiter allocation update failed (${response.status}).`);
+  }
+
+  return result;
 }
 
 export async function fetchJobOrdersShowModernData(

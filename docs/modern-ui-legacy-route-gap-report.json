@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T05:35:32.464Z",
+  "generatedAt": "2026-03-03T06:17:56.211Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -1282,7 +1282,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.recruiterallocation",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "JobOrdersRecruiterAllocationPage",
       "guarded": false
     },
     {

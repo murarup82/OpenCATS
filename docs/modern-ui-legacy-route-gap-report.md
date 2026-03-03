@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T05:35:32.464Z
+Generated: 2026-03-03T06:17:56.211Z
 
 ## Summary
 
@@ -169,7 +169,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | pipelineStatusDetails | native-explicit-guarded | joborders.pipelinestatusdetails | PipelineStatusActionPage |
 | joborders | pipelineStatusEditDate | native-explicit-guarded | joborders.pipelinestatuseditdate | PipelineStatusActionPage |
 | joborders | postMessage | native-explicit | joborders.postmessage | ActionCompatPage |
-| joborders | recruiterAllocation | native-explicit | joborders.recruiterallocation | ActionCompatPage |
+| joborders | recruiterAllocation | native-explicit | joborders.recruiterallocation | JobOrdersRecruiterAllocationPage |
 | joborders | removeFromPipeline | native-explicit | joborders.removefrompipeline | ActionCompatPage |
 | joborders | search | native-explicit | joborders.search | JobOrdersListPage |
 | joborders | setMonitoredJobOrder | native-explicit | joborders.setmonitoredjoborder | ActionCompatPage |

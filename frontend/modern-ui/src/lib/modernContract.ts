@@ -9,6 +9,7 @@ export const MODERN_JOBORDERS_PAGE = 'joborders-list';
 export const MODERN_JOBORDER_SHOW_PAGE = 'joborders-show';
 export const MODERN_JOBORDER_ADD_PAGE = 'joborders-add';
 export const MODERN_JOBORDER_ADD_POPUP_PAGE = 'joborders-add-popup';
+export const MODERN_JOBORDER_RECRUITER_ALLOCATION_PAGE = 'joborders-recruiter-allocation';
 export const MODERN_JOBORDER_EDIT_PAGE = 'joborders-edit';
 export const MODERN_COMPANIES_PAGE = 'companies-list';
 export const MODERN_COMPANY_SHOW_PAGE = 'companies-show';

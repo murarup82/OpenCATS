@@ -15,6 +15,7 @@ import { CandidatesEditPage } from '../pages/CandidatesEditPage';
 import { JobOrdersAddPage } from '../pages/JobOrdersAddPage';
 import { JobOrdersEditPage } from '../pages/JobOrdersEditPage';
 import { JobOrdersListPage } from '../pages/JobOrdersListPage';
+import { JobOrdersRecruiterAllocationPage } from '../pages/JobOrdersRecruiterAllocationPage';
 import { JobOrdersShowPage } from '../pages/JobOrdersShowPage';
 import { CompaniesListPage } from '../pages/CompaniesListPage';
 import { CompaniesShowPage } from '../pages/CompaniesShowPage';
@@ -92,6 +93,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.considercandidatesearch': JobOrderAssignActionPage,
   'joborders.companycontext': JobOrderCompanyContextActionPage,
   'joborders.addjoborderpopup': JobOrderAddActionPage,
+  'joborders.recruiterallocation': JobOrdersRecruiterAllocationPage,
   'joborders.pipelinestatusdetails': PipelineStatusActionPage,
   'joborders.pipelinestatuseditdate': PipelineStatusActionPage,
   'lists.quickactionaddtolistmodal': ListsActionPage,
@@ -177,7 +179,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'deleteMessageThread',
     'editHiringPlan',
     'postMessage',
-    'recruiterAllocation',
     'removeFromPipeline',
     'setCandidateJobOrder',
     'setMonitoredJobOrder'

@@ -72,5 +72,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Job order company context action (`joborders.companyContext`) now routes to native `JobOrderCompanyContextActionPage` with contract-backed context rendering.
 - Completed: Job order add-popup action (`joborders.addJobOrderPopup`) now routes to native `JobOrderAddActionPage` backed by `joborders.addPopup.v1` contract and direct modern add-form handoff.
 - Completed: Candidate resume preview action (`candidates.viewResume`) now routes to native `CandidateResumeActionPage` backed by `candidates.viewResume.v1` contract and in-page highlight rendering.
+- Completed: Job order recruiter allocation action (`joborders.recruiterAllocation`) now routes to native `JobOrdersRecruiterAllocationPage` backed by `joborders.recruiterAllocation.v1` contract plus async modern-json assignment mutation responses.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.
