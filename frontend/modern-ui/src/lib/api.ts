@@ -19,6 +19,7 @@ import type {
   ContactsShowModernDataResponse,
   DashboardModernDataResponse,
   DashboardSetPipelineStatusResponse,
+  GraphsOverviewModernDataResponse,
   HomeInboxModernDataResponse,
   HomeMyNotesModernDataResponse,
   HomeOverviewModernDataResponse,
@@ -63,6 +64,7 @@ import {
   MODERN_CONTACTS_PAGE,
   MODERN_CONTACT_SHOW_PAGE,
   MODERN_DASHBOARD_PAGE,
+  MODERN_GRAPHS_PAGE,
   MODERN_JOBORDER_ADD_PAGE,
   MODERN_JOBORDER_EDIT_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
@@ -1400,6 +1402,25 @@ export async function fetchQueueOverviewModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<QueueOverviewModernDataResponse>(url);
   assertModernContract(data.meta, 'queue.overview.v1', 'queue workspace');
+
+  return data;
+}
+
+export async function fetchGraphsOverviewModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<GraphsOverviewModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'graphs',
+    action: '',
+    modernPage: MODERN_GRAPHS_PAGE,
+    query
+  });
+  apiQuery.delete('a');
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<GraphsOverviewModernDataResponse>(url);
+  assertModernContract(data.meta, 'graphs.overview.v1', 'graphs workspace');
 
   return data;
 }

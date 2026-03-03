@@ -32,6 +32,7 @@ import { ReportsCustomerDashboardPage } from '../pages/ReportsCustomerDashboardP
 import { ReportsGraphViewPage } from '../pages/ReportsGraphViewPage';
 import { SourcingPage } from '../pages/SourcingPage';
 import { QueuePage } from '../pages/QueuePage';
+import { GraphsPage } from '../pages/GraphsPage';
 import { LogsPage } from '../pages/LogsPage';
 import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
@@ -230,6 +231,7 @@ const registry: Record<string, ModernRouteComponent> = {
   'reports.(default)': ReportsLauncherPage,
   'sourcing.(default)': SourcingPage,
   'queue.(default)': QueuePage,
+  'graphs.(default)': GraphsPage,
   'home.home': HomePage,
   'home.inbox': HomeInboxPage,
   'home.mynotes': HomeMyNotesPage,

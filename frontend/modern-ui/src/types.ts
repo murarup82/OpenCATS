@@ -1352,6 +1352,37 @@ export type QueueOverviewModernDataResponse = {
   }>;
 };
 
+export type GraphsOverviewModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  state: {
+    isLoggedIn: boolean;
+    defaultWidth: number;
+    defaultHeight: number;
+  };
+  options: {
+    viewModes: Array<{
+      value: number;
+      label: string;
+    }>;
+  };
+  actions: {
+    legacyURL: string;
+    reportsURL: string;
+  };
+  graphs: Array<{
+    id: string;
+    title: string;
+    description: string;
+    action: string;
+    defaultParams: Record<string, number | string>;
+    imageURL: string;
+  }>;
+};
+
 export type HomeOverviewModernDataResponse = {
   meta: {
     contractVersion: number;

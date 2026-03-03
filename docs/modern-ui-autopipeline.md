@@ -388,6 +388,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - extended `modules/queue/QueueUI.php` with `queue.overview.v1` modern-json payload containing processor health, queue summaries, priority buckets, and recent task rows
     - introduced `QueuePage` with in-page interactive filters (state/search/row-limit) and interactive priority distribution modes
     - routed `queue.(default)` to native React page while preserving `queue.*` compatibility fallback behavior.
+147. Added native `graphs/(default)` modernization contract and page:
+    - extended `modules/graphs/GraphsUI.php` with `graphs.overview.v1` modern-json payload for graph launcher metadata and defaults
+    - introduced `GraphsPage` with interactive in-page controls for graph selection, sizing, refresh cadence, and render styling
+    - routed `graphs.(default)` to native React page while keeping `graphs.*` fallback behavior for raw image actions.
 
 ## Next Queue (30-Slice Execution)
 

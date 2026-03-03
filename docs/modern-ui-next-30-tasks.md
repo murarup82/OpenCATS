@@ -28,7 +28,7 @@ Status legend: `done`, `in_progress`, `pending`
 24. `done` Build native `reports/graphView` page contract and UI.
 25. `done` Build native `sourcing/(default)` compatibility-to-native migration page.
 26. `done` Build native `queue/(default)` compatibility-to-native migration page.
-27. `pending` Build native `graphs/(default)` compatibility-to-native migration page.
+27. `done` Build native `graphs/(default)` compatibility-to-native migration page.
 28. `pending` Add per-route parity checklist automation for all newly modernized pages.
 29. `pending` Add Playwright smoke coverage for add/edit workflows across candidates/companies/contacts/joborders.
 30. `pending` Cut bridge debt by removing wildcard module bridges after parity signoff.

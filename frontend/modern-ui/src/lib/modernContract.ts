@@ -25,6 +25,7 @@ export const MODERN_REPORTS_CUSTOMER_DASHBOARD_PAGE = 'reports-customer-dashboar
 export const MODERN_REPORTS_GRAPH_VIEW_PAGE = 'reports-graph-view';
 export const MODERN_SOURCING_PAGE = 'sourcing-workspace';
 export const MODERN_QUEUE_PAGE = 'queue-workspace';
+export const MODERN_GRAPHS_PAGE = 'graphs-workspace';
 export const MODERN_HOME_OVERVIEW_PAGE = 'home-overview';
 export const MODERN_HOME_INBOX_PAGE = 'home-inbox';
 export const MODERN_HOME_MYNOTES_PAGE = 'home-mynotes';

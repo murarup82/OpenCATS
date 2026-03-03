@@ -73,6 +73,26 @@ class GraphsUI extends UserInterface
     public function handleRequest()
     {
         $action = $this->getAction();
+        $isModernJSON = $this->isModernJSONRequest();
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $actionKey = strtolower(trim((string) $action));
+
+        if ($isModernJSON &&
+            ($actionKey === '' || $actionKey === '(default)' || $actionKey === 'default' || $actionKey === 'index'))
+        {
+            if ($modernPage !== '' && $modernPage !== 'graphs-workspace')
+            {
+                $this->respondModernJSON(400, array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernGraphsOverviewJSON('graphs-workspace');
+            return;
+        }
 
         //These graphs do not require a login.
         switch ($action)
@@ -777,6 +797,160 @@ class GraphsUI extends UserInterface
     {
         // FIXME: Generate an image containing the error message?
         die($error);
+    }
+
+    private function renderModernGraphsOverviewJSON($modernPage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $defaultWidth = 640;
+        $defaultHeight = 320;
+
+        $viewOptions = array(
+            array('value' => (int) DASHBOARD_GRAPH_WEEKLY, 'label' => 'Weekly'),
+            array('value' => (int) DASHBOARD_GRAPH_MONTHLY, 'label' => 'Monthly'),
+            array('value' => (int) DASHBOARD_GRAPH_YEARLY, 'label' => 'Yearly')
+        );
+
+        $graphDefinitions = array(
+            array(
+                'id' => 'activity',
+                'title' => 'Activity (Last Two Weeks)',
+                'description' => 'Daily activity count over the last two weeks.',
+                'action' => 'activity',
+                'defaultParams' => array()
+            ),
+            array(
+                'id' => 'new-candidates',
+                'title' => 'New Candidates',
+                'description' => 'Daily candidate creation trend over the last two weeks.',
+                'action' => 'newCandidates',
+                'defaultParams' => array()
+            ),
+            array(
+                'id' => 'new-job-orders',
+                'title' => 'New Job Orders',
+                'description' => 'Daily job order creation trend over the last two weeks.',
+                'action' => 'newJobOrders',
+                'defaultParams' => array()
+            ),
+            array(
+                'id' => 'new-submissions',
+                'title' => 'New Submissions',
+                'description' => 'Daily submission trend over the last two weeks.',
+                'action' => 'newSubmissions',
+                'defaultParams' => array()
+            ),
+            array(
+                'id' => 'mini-hire-statistics',
+                'title' => 'Pipeline Statistics',
+                'description' => 'Submitted, interviewing, and hired counts by period.',
+                'action' => 'miniHireStatistics',
+                'defaultParams' => array(
+                    'view' => (int) DASHBOARD_GRAPH_WEEKLY
+                )
+            ),
+            array(
+                'id' => 'pipeline-funnel-snapshot',
+                'title' => 'Pipeline Funnel Snapshot',
+                'description' => 'Stage distribution snapshot across the pipeline.',
+                'action' => 'pipelineFunnelSnapshot',
+                'defaultParams' => array(
+                    'view' => 0
+                )
+            ),
+            array(
+                'id' => 'seniority-distribution',
+                'title' => 'Seniority Distribution',
+                'description' => 'Distribution of open jobs by seniority.',
+                'action' => 'seniorityDistribution',
+                'defaultParams' => array(
+                    'includeInactive' => 0
+                )
+            )
+        );
+
+        $graphCards = array();
+        foreach ($graphDefinitions as $definition)
+        {
+            $params = array_merge(
+                array(
+                    'm' => 'graphs',
+                    'a' => $definition['action'],
+                    'width' => $defaultWidth,
+                    'height' => $defaultHeight
+                ),
+                $definition['defaultParams']
+            );
+
+            $queryParts = array();
+            foreach ($params as $key => $value)
+            {
+                $queryParts[] = urlencode($key) . '=' . urlencode((string) $value);
+            }
+            $graphURL = $baseURL . '?' . implode('&', $queryParts);
+
+            $graphCards[] = array(
+                'id' => $definition['id'],
+                'title' => $definition['title'],
+                'description' => $definition['description'],
+                'action' => $definition['action'],
+                'defaultParams' => $definition['defaultParams'],
+                'imageURL' => $graphURL
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'graphs.overview.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'isLoggedIn' => ($_SESSION['CATS']->isLoggedIn() ? true : false),
+                'defaultWidth' => $defaultWidth,
+                'defaultHeight' => $defaultHeight
+            ),
+            'options' => array(
+                'viewModes' => $viewOptions
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=graphs&ui=legacy', $baseURL),
+                'reportsURL' => sprintf('%s?m=reports&a=reports&ui=modern', $baseURL)
+            ),
+            'graphs' => $graphCards
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function isModernJSONRequest()
+    {
+        return (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+    }
+
+    private function respondModernJSON($statusCode, $payload)
+    {
+        $statusCode = (int) $statusCode;
+        if ($statusCode <= 0)
+        {
+            $statusCode = 200;
+        }
+
+        if (!headers_sent())
+        {
+            if (function_exists('http_response_code'))
+            {
+                http_response_code($statusCode);
+            }
+            else
+            {
+                header(sprintf('HTTP/1.1 %d', $statusCode));
+            }
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        echo json_encode($payload);
     }
 }
 
