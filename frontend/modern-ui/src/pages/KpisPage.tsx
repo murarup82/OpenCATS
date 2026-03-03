@@ -514,11 +514,12 @@ export function KpisPage({ bootstrap }: Props) {
                     <span>Total</span>
                   </div>
                 </div>
-                <div className="avel-source-mix__legend">
+                <div className="avel-source-mix__legend" role="group" aria-label="Source mix focus">
                   <button
                     type="button"
                     className={`avel-source-chip${sourceFocusMode === 'all' ? ' is-active' : ''}`}
                     onClick={() => setSourceFocusMode('all')}
+                    aria-pressed={sourceFocusMode === 'all'}
                   >
                     All
                   </button>
@@ -526,6 +527,7 @@ export function KpisPage({ bootstrap }: Props) {
                     type="button"
                     className={`avel-source-chip${sourceFocusMode === 'internal' ? ' is-active' : ''}`}
                     onClick={() => setSourceFocusMode('internal')}
+                    aria-pressed={sourceFocusMode === 'internal'}
                   >
                     Internal: {sourceInternal} ({toPercent(sourceInternal, sourceTotal)})
                   </button>
@@ -533,6 +535,7 @@ export function KpisPage({ bootstrap }: Props) {
                     type="button"
                     className={`avel-source-chip${sourceFocusMode === 'partner' ? ' is-active' : ''}`}
                     onClick={() => setSourceFocusMode('partner')}
+                    aria-pressed={sourceFocusMode === 'partner'}
                   >
                     Partner: {sourcePartner} ({toPercent(sourcePartner, sourceTotal)})
                   </button>

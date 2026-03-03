@@ -642,6 +642,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                       type="button"
                       className={`avel-candidate-inline-sort__chip${selectedSortBy === option.value ? ' is-active' : ''}`}
                       onClick={() => navigateWithFilters({ sortBy: option.value, page: 1 })}
+                      aria-pressed={selectedSortBy === option.value}
                     >
                       {option.label}
                     </button>

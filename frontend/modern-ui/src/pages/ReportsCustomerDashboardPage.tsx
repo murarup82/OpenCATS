@@ -333,7 +333,13 @@ export function ReportsCustomerDashboardPage({ bootstrap }: Props) {
                   ))}
                 </select>
               </label>
-              <button type="button" className="modern-btn modern-btn--secondary" onClick={() => updateFilters({ focusMetric: '' })}>
+              <button
+                type="button"
+                className="modern-btn modern-btn--secondary"
+                onClick={() => updateFilters({ focusMetric: '' })}
+                aria-pressed={String(data.filters.focusMetric || '').trim() === ''}
+                aria-label="Clear focused metric detail"
+              >
                 Clear Detail
               </button>
             </div>
@@ -350,7 +356,13 @@ export function ReportsCustomerDashboardPage({ bootstrap }: Props) {
                 <p className="avel-kpi__label">{card.label}</p>
                 <p className="avel-kpi__value">{toText(card.value, '0')}</p>
                 <p className="avel-kpi__hint">{card.hint}</p>
-                <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={() => updateFilters({ focusMetric: card.key })}>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--mini modern-btn--secondary"
+                  onClick={() => updateFilters({ focusMetric: card.key })}
+                  aria-pressed={String(data.filters.focusMetric || '').trim() === String(card.key)}
+                  aria-label={`Inspect ${card.label} metric`}
+                >
                   Inspect
                 </button>
               </article>

@@ -95,5 +95,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Reclassified modernized entity utility routes in `EntityUtilityActionPage` to native workspace redirects (candidate/joborder show-action families and company attachment delete), reducing legacy-embedded action page entry points.
 - Completed: Added guarded-route parameter requirements for utility actions and reclassified lists utility actions (`deletestaticlist`, `removefromlistdatagrid`, `savelistaccess`) to native workspace redirects, reducing invalid compat-route entry surfaces.
 - Completed: Added polite live-region announcements for dynamic filter/status counters across modern list/report pages and explicit `aria-pressed` semantics for candidate quick-focus chips.
+- Completed: Added `aria-pressed`/group semantics for additional toggle-style chip controls (candidate inline sort + KPI source focus) and unique ARIA labels for reports metric-inspection actions.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

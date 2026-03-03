@@ -517,6 +517,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added `aria-live="polite"` and `aria-atomic="true"` to dynamic filter/status summary counters across candidates, companies, contacts, activity, lists, queue, sourcing, and reports dashboard pages
     - added explicit `aria-pressed` state semantics to candidate quick-focus chips to reflect active focus mode for assistive technologies
     - kept existing visual behavior unchanged while improving screen-reader announcements for filter/scope transitions.
+173. Completed next accessibility semantics pass for toggle-style controls and repeated action labels:
+    - added `aria-pressed` semantics to candidate inline sort chips and KPI source-focus chips (all/internal/partner) to expose active state beyond visual styling
+    - added group labeling for KPI source-focus control cluster (`role="group"` + explicit label)
+    - improved reports customer dashboard metric-inspection controls with unique `aria-label` values and active-state `aria-pressed` semantics for focused metric toggles.
 
 ## Next Queue (30-Slice Execution)
 
