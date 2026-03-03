@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-03-03T16:51:42.438Z",
+  "generatedAt": "2026-03-03T16:54:55.550Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 222,
-    "modernNative": 201,
-    "legacyDependent": 21,
+    "modernNative": 210,
+    "legacyDependent": 12,
     "bridge": 0,
     "unresolved": 0
   },
@@ -18,12 +18,8 @@
       "count": 7
     },
     {
-      "bucket": "legacy-utility-wrapper",
-      "count": 9
-    },
-    {
       "bucket": "native-action",
-      "count": 108
+      "count": 117
     },
     {
       "bucket": "native-surface",
@@ -52,8 +48,8 @@
     {
       "module": "candidates",
       "totalActions": 27,
-      "modernNative": 19,
-      "legacyDependent": 8
+      "modernNative": 27,
+      "legacyDependent": 0
     },
     {
       "module": "companies",
@@ -106,8 +102,8 @@
     {
       "module": "joborders",
       "totalActions": 24,
-      "modernNative": 23,
-      "legacyDependent": 1
+      "modernNative": 24,
+      "legacyDependent": 0
     },
     {
       "module": "kpis",
@@ -173,87 +169,6 @@
   "next50Targets": [
     {
       "order": 1,
-      "module": "candidates",
-      "action": "addDuplicates",
-      "routeKey": "candidates.addduplicates",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 2,
-      "module": "candidates",
-      "action": "addEditImage",
-      "routeKey": "candidates.addeditimage",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 3,
-      "module": "candidates",
-      "action": "emailCandidates",
-      "routeKey": "candidates.emailcandidates",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 4,
-      "module": "candidates",
-      "action": "linkDuplicate",
-      "routeKey": "candidates.linkduplicate",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 5,
-      "module": "candidates",
-      "action": "merge",
-      "routeKey": "candidates.merge",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 6,
-      "module": "candidates",
-      "action": "mergeInfo",
-      "routeKey": "candidates.mergeinfo",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 7,
-      "module": "candidates",
-      "action": "removeDuplicity",
-      "routeKey": "candidates.removeduplicity",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 8,
-      "module": "candidates",
-      "action": "saveSources",
-      "routeKey": "candidates.savesources",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 9,
-      "module": "joborders",
-      "action": "editHiringPlan",
-      "routeKey": "joborders.edithiringplan",
-      "component": "EntityUtilityActionPage",
-      "bucket": "legacy-utility-wrapper",
-      "guidance": "Split this utility action into a dedicated native page/action handler."
-    },
-    {
-      "order": 10,
       "module": "graphs",
       "action": "generic",
       "routeKey": "graphs.generic",
@@ -262,7 +177,7 @@
       "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
     },
     {
-      "order": 11,
+      "order": 2,
       "module": "graphs",
       "action": "genericPie",
       "routeKey": "graphs.genericpie",
@@ -271,7 +186,7 @@
       "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
     },
     {
-      "order": 12,
+      "order": 3,
       "module": "graphs",
       "action": "jobOrderReportGraph",
       "routeKey": "graphs.joborderreportgraph",
@@ -280,7 +195,7 @@
       "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
     },
     {
-      "order": 13,
+      "order": 4,
       "module": "graphs",
       "action": "testGraph",
       "routeKey": "graphs.testgraph",
@@ -289,7 +204,7 @@
       "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
     },
     {
-      "order": 14,
+      "order": 5,
       "module": "graphs",
       "action": "wordVerify",
       "routeKey": "graphs.wordverify",
@@ -298,7 +213,7 @@
       "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
     },
     {
-      "order": 15,
+      "order": 6,
       "module": "reports",
       "action": "customizeEEOReport",
       "routeKey": "reports.customizeeeoreport",
@@ -307,7 +222,7 @@
       "guidance": "Replace embedded legacy report action with native report workflow."
     },
     {
-      "order": 16,
+      "order": 7,
       "module": "reports",
       "action": "customizeJobOrderReport",
       "routeKey": "reports.customizejoborderreport",
@@ -316,7 +231,7 @@
       "guidance": "Replace embedded legacy report action with native report workflow."
     },
     {
-      "order": 17,
+      "order": 8,
       "module": "reports",
       "action": "generateEEOReportPreview",
       "routeKey": "reports.generateeeoreportpreview",
@@ -325,7 +240,7 @@
       "guidance": "Replace embedded legacy report action with native report workflow."
     },
     {
-      "order": 18,
+      "order": 9,
       "module": "reports",
       "action": "generateJobOrderReportPDF",
       "routeKey": "reports.generatejoborderreportpdf",
@@ -334,7 +249,7 @@
       "guidance": "Replace embedded legacy report action with native report workflow."
     },
     {
-      "order": 19,
+      "order": 10,
       "module": "reports",
       "action": "showHireReport",
       "routeKey": "reports.showhirereport",
@@ -343,7 +258,7 @@
       "guidance": "Replace embedded legacy report action with native report workflow."
     },
     {
-      "order": 20,
+      "order": 11,
       "module": "reports",
       "action": "showPlacementReport",
       "routeKey": "reports.showplacementreport",
@@ -352,7 +267,7 @@
       "guidance": "Replace embedded legacy report action with native report workflow."
     },
     {
-      "order": 21,
+      "order": 12,
       "module": "reports",
       "action": "showSubmissionReport",
       "routeKey": "reports.showsubmissionreport",
@@ -362,123 +277,6 @@
     }
   ],
   "rows": [
-    {
-      "module": "candidates",
-      "action": "addDuplicates",
-      "classification": "native-explicit-guarded",
-      "routeKey": "candidates.addduplicates",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": true,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
-    {
-      "module": "candidates",
-      "action": "addEditImage",
-      "classification": "native-explicit-guarded",
-      "routeKey": "candidates.addeditimage",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": true,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
-    {
-      "module": "candidates",
-      "action": "emailCandidates",
-      "classification": "native-explicit",
-      "routeKey": "candidates.emailcandidates",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
-    {
-      "module": "candidates",
-      "action": "linkDuplicate",
-      "classification": "native-explicit-guarded",
-      "routeKey": "candidates.linkduplicate",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": true,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
-    {
-      "module": "candidates",
-      "action": "merge",
-      "classification": "native-explicit-guarded",
-      "routeKey": "candidates.merge",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": true,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
-    {
-      "module": "candidates",
-      "action": "mergeInfo",
-      "classification": "native-explicit",
-      "routeKey": "candidates.mergeinfo",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
-    {
-      "module": "candidates",
-      "action": "removeDuplicity",
-      "classification": "native-explicit-guarded",
-      "routeKey": "candidates.removeduplicity",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": true,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
-    {
-      "module": "candidates",
-      "action": "saveSources",
-      "classification": "native-explicit",
-      "routeKey": "candidates.savesources",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
-    {
-      "module": "joborders",
-      "action": "editHiringPlan",
-      "classification": "native-explicit-guarded",
-      "routeKey": "joborders.edithiringplan",
-      "resolution": "native",
-      "component": "EntityUtilityActionPage",
-      "guarded": true,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-utility-wrapper",
-      "modernizationRank": 2,
-      "legacyDependent": true
-    },
     {
       "module": "graphs",
       "action": "generic",
@@ -676,6 +474,32 @@
     },
     {
       "module": "candidates",
+      "action": "addDuplicates",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.addduplicates",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
+      "action": "addEditImage",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.addeditimage",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
       "action": "considerForJobSearch",
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.considerforjobsearch",
@@ -695,6 +519,84 @@
       "resolution": "native",
       "component": "EntityDeleteActionPage",
       "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
+      "action": "emailCandidates",
+      "classification": "native-explicit",
+      "routeKey": "candidates.emailcandidates",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
+      "action": "linkDuplicate",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.linkduplicate",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
+      "action": "merge",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.merge",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
+      "action": "mergeInfo",
+      "classification": "native-explicit",
+      "routeKey": "candidates.mergeinfo",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
+      "action": "removeDuplicity",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.removeduplicity",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
+      "action": "saveSources",
+      "classification": "native-explicit",
+      "routeKey": "candidates.savesources",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-action",
       "modernizationRank": 9,
@@ -1045,6 +947,19 @@
       "routeKey": "joborders.delete",
       "resolution": "native",
       "component": "EntityDeleteActionPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "joborders",
+      "action": "editHiringPlan",
+      "classification": "native-explicit-guarded",
+      "routeKey": "joborders.edithiringplan",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": true,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-action",

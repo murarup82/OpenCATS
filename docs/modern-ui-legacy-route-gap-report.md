@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T16:49:05.267Z
+Generated: 2026-03-03T16:53:21.656Z
 
 ## Summary
 
@@ -60,8 +60,8 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | add | native-explicit | candidates.add | CandidatesAddPage |
 | candidates | addActivityChangeStatus | native-explicit-guarded | candidates.addactivitychangestatus | CandidatesShowPage |
 | candidates | addCandidateTags | native-explicit-guarded | candidates.addcandidatetags | CandidatesShowPage |
-| candidates | addDuplicates | native-explicit-guarded | candidates.addduplicates | EntityUtilityActionPage |
-| candidates | addEditImage | native-explicit-guarded | candidates.addeditimage | EntityUtilityActionPage |
+| candidates | addDuplicates | native-explicit-guarded | candidates.addduplicates | LegacyUtilityForwardActionPage |
+| candidates | addEditImage | native-explicit-guarded | candidates.addeditimage | LegacyUtilityForwardActionPage |
 | candidates | addProfileComment | native-explicit-guarded | candidates.addprofilecomment | CandidatesShowPage |
 | candidates | addToPipeline | native-explicit-guarded | candidates.addtopipeline | CandidatesShowPage |
 | candidates | administrativeHideShow | native-explicit-guarded | candidates.administrativehideshow | CandidatesShowPage |
@@ -71,15 +71,15 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | deleteAttachment | native-explicit-guarded | candidates.deleteattachment | CandidatesShowPage |
 | candidates | deleteMessageThread | native-explicit-guarded | candidates.deletemessagethread | CandidatesShowPage |
 | candidates | edit | native-explicit-guarded | candidates.edit | CandidatesEditPage |
-| candidates | emailCandidates | native-explicit | candidates.emailcandidates | EntityUtilityActionPage |
-| candidates | linkDuplicate | native-explicit-guarded | candidates.linkduplicate | EntityUtilityActionPage |
+| candidates | emailCandidates | native-explicit | candidates.emailcandidates | LegacyUtilityForwardActionPage |
+| candidates | linkDuplicate | native-explicit-guarded | candidates.linkduplicate | LegacyUtilityForwardActionPage |
 | candidates | listByView | native-explicit | candidates.listbyview | CandidatesListPage |
-| candidates | merge | native-explicit-guarded | candidates.merge | EntityUtilityActionPage |
-| candidates | mergeInfo | native-explicit | candidates.mergeinfo | EntityUtilityActionPage |
+| candidates | merge | native-explicit-guarded | candidates.merge | LegacyUtilityForwardActionPage |
+| candidates | mergeInfo | native-explicit | candidates.mergeinfo | LegacyUtilityForwardActionPage |
 | candidates | postMessage | native-explicit-guarded | candidates.postmessage | CandidatesShowPage |
-| candidates | removeDuplicity | native-explicit-guarded | candidates.removeduplicity | EntityUtilityActionPage |
+| candidates | removeDuplicity | native-explicit-guarded | candidates.removeduplicity | LegacyUtilityForwardActionPage |
 | candidates | removeFromPipeline | native-explicit-guarded | candidates.removefrompipeline | CandidatesShowPage |
-| candidates | saveSources | native-explicit | candidates.savesources | EntityUtilityActionPage |
+| candidates | saveSources | native-explicit | candidates.savesources | LegacyUtilityForwardActionPage |
 | candidates | search | native-explicit | candidates.search | CandidatesListPage |
 | candidates | show | native-explicit-guarded | candidates.show | CandidatesShowPage |
 | candidates | show_questionnaire | native-explicit-guarded | candidates.show_questionnaire | CandidateQuestionnaireActionPage |
@@ -164,7 +164,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | deleteAttachment | native-explicit-guarded | joborders.deleteattachment | JobOrdersShowPage |
 | joborders | deleteMessageThread | native-explicit-guarded | joborders.deletemessagethread | JobOrdersShowPage |
 | joborders | edit | native-explicit-guarded | joborders.edit | JobOrdersEditPage |
-| joborders | editHiringPlan | native-explicit-guarded | joborders.edithiringplan | EntityUtilityActionPage |
+| joborders | editHiringPlan | native-explicit-guarded | joborders.edithiringplan | LegacyUtilityForwardActionPage |
 | joborders | listByView | native-explicit | joborders.listbyview | JobOrdersListPage |
 | joborders | pipelineStatusDetails | native-explicit-guarded | joborders.pipelinestatusdetails | PipelineStatusActionPage |
 | joborders | pipelineStatusEditDate | native-explicit-guarded | joborders.pipelinestatuseditdate | PipelineStatusActionPage |

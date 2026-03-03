@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T16:49:05.267Z",
+  "generatedAt": "2026-03-03T16:53:21.656Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 222,
@@ -301,7 +301,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addduplicates",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": true
     },
     {
@@ -310,7 +310,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addeditimage",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": true
     },
     {
@@ -400,7 +400,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.emailcandidates",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -409,7 +409,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.linkduplicate",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": true
     },
     {
@@ -427,7 +427,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.merge",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": true
     },
     {
@@ -436,7 +436,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.mergeinfo",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -454,7 +454,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.removeduplicity",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": true
     },
     {
@@ -472,7 +472,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.savesources",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1237,7 +1237,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.edithiringplan",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": true
     },
     {
