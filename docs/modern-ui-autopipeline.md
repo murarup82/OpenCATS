@@ -505,6 +505,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - extended replay runner to support fixture-level query params and safe GET/HEAD execution without request bodies
     - added non-mutating invalid-modern-page probes for uncovered list/show/add/report endpoints, plus a safe invalid candidate attachment delete probe for `candidates.edit`
     - raised fixture coverage from 5/16 to 16/16 endpoint checks with lint/sanity/quality gates passing.
+170. Reduced legacy-embedded utility action exposure for already-modernized entity workflows:
+    - upgraded `EntityUtilityActionPage` mode resolution to distinguish `modern-redirect` vs `legacy-redirect` vs `embed`
+    - mapped candidate/joborder utility actions already covered in native show pages (status, tags, comments/messages, pipeline, attachment, admin hide/show) to automatic redirect back into modern workspaces
+    - mapped company attachment deletion utility route to modern company profile redirect while keeping legacy-safe redirect/embed behavior for non-modernized modules and download/export actions.
 
 ## Next Queue (30-Slice Execution)
 

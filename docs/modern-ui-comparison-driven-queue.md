@@ -92,5 +92,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Added CI no-bridge route guard (`verify:no-bridge-actions`) and wired it into sanity and quality gates to prevent bridge regression after full explicit route coverage.
 - Completed: Expanded mutation-safe replay fixtures with calendar and pipeline-status probes (`calendar.deleteEvent.safeInvalid`, `joborders.pipelineStatusEditDate.safeInvalid`) to increase endpoint-fixture coverage breadth.
 - Completed: Expanded replay fixture framework with query-aware GET probes and filled all remaining endpoint-check fixture gaps (16/16 covered) using non-mutating invalid-modern-page contract checks.
+- Completed: Reclassified modernized entity utility routes in `EntityUtilityActionPage` to native workspace redirects (candidate/joborder show-action families and company attachment delete), reducing legacy-embedded action page entry points.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

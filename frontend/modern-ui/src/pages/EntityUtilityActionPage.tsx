@@ -25,7 +25,32 @@ type ModuleKey =
   | 'toolbar'
   | 'wizard'
   | 'xml';
-type ActionMode = 'embed' | 'redirect';
+type ActionMode = 'embed' | 'legacy-redirect' | 'modern-redirect';
+
+const CANDIDATE_NATIVE_REDIRECT_ACTIONS = new Set([
+  'addactivitychangestatus',
+  'addcandidatetags',
+  'addprofilecomment',
+  'addtopipeline',
+  'administrativehideshow',
+  'deleteattachment',
+  'deletemessagethread',
+  'postmessage',
+  'removefrompipeline'
+]);
+
+const JOBORDER_NATIVE_REDIRECT_ACTIONS = new Set([
+  'addactivitychangestatus',
+  'addprofilecomment',
+  'addtopipeline',
+  'administrativehideshow',
+  'deleteattachment',
+  'deletemessagethread',
+  'postmessage',
+  'removefrompipeline'
+]);
+
+const COMPANY_NATIVE_REDIRECT_ACTIONS = new Set(['deleteattachment']);
 
 const CANDIDATE_ACTION_LABELS: Record<string, string> = {
   addactivitychangestatus: 'Change Pipeline Status',
@@ -236,17 +261,27 @@ function resolveActionLabel(moduleKey: ModuleKey, actionKey: string): string {
 }
 
 function resolveActionMode(moduleKey: ModuleKey, actionKey: string): ActionMode {
+  if (moduleKey === 'candidates' && CANDIDATE_NATIVE_REDIRECT_ACTIONS.has(actionKey)) {
+    return 'modern-redirect';
+  }
+  if (moduleKey === 'joborders' && JOBORDER_NATIVE_REDIRECT_ACTIONS.has(actionKey)) {
+    return 'modern-redirect';
+  }
+  if (moduleKey === 'companies' && COMPANY_NATIVE_REDIRECT_ACTIONS.has(actionKey)) {
+    return 'modern-redirect';
+  }
+
   if (moduleKey === 'calendar' && (actionKey === 'deleteevent' || actionKey === 'dynamicdata')) {
-    return 'redirect';
+    return 'legacy-redirect';
   }
   if (moduleKey === 'attachments' || moduleKey === 'export' || moduleKey === 'toolbar' || moduleKey === 'xml') {
-    return 'redirect';
+    return 'legacy-redirect';
   }
   if (moduleKey === 'gdpr' && actionKey === 'export') {
-    return 'redirect';
+    return 'legacy-redirect';
   }
   if (moduleKey === 'wizard' && actionKey === 'ajax_getpage') {
-    return 'redirect';
+    return 'legacy-redirect';
   }
   return 'embed';
 }
@@ -331,14 +366,18 @@ export function EntityUtilityActionPage({ bootstrap }: Props) {
   const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
 
   useEffect(() => {
-    if (mode !== 'redirect') {
+    if (mode === 'embed') {
       return;
     }
     const timer = window.setTimeout(() => {
+      if (mode === 'modern-redirect') {
+        window.location.assign(returnURL);
+        return;
+      }
       window.location.assign(legacyURL);
     }, 80);
     return () => window.clearTimeout(timer);
-  }, [legacyURL, mode]);
+  }, [legacyURL, mode, returnURL]);
 
   if (!moduleKey) {
     return (
@@ -367,9 +406,13 @@ export function EntityUtilityActionPage({ bootstrap }: Props) {
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          {mode === 'redirect' ? (
+          {mode !== 'embed' ? (
             <section className="avel-list-panel">
-              <div className="modern-state">Continuing to legacy action endpoint...</div>
+              <div className="modern-state">
+                {mode === 'modern-redirect'
+                  ? 'Continuing to modern workspace for this utility action...'
+                  : 'Continuing to legacy action endpoint...'}
+              </div>
             </section>
           ) : (
             <section className="modern-compat-page">
