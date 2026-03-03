@@ -11,7 +11,7 @@ type Props = {
   bootstrap: UIModeBootstrap;
 };
 
-type ActionMode = 'embed' | 'download';
+type ActionMode = 'embed' | 'download' | 'modern-redirect';
 
 type ReportsActionMeta = {
   canonicalAction: string;
@@ -25,7 +25,7 @@ const REPORTS_ACTION_META: Record<string, ReportsActionMeta> = {
     canonicalAction: 'customerDashboardDetails',
     title: 'Customer Dashboard Detail',
     subtitle: 'Metric drill-down view for the selected customer window.',
-    mode: 'embed'
+    mode: 'modern-redirect'
   },
   customizeeeoreport: {
     canonicalAction: 'customizeEEOReport',
@@ -106,6 +106,7 @@ function buildModernCustomerDashboardURL(indexName: string, source: URLSearchPar
   const companyID = source.get('companyID');
   const rangeDays = source.get('rangeDays');
   const activityType = source.get('activityType');
+  const focusMetric = source.get('focusMetric');
   if (companyID) {
     query.set('companyID', companyID);
   }
@@ -114,6 +115,9 @@ function buildModernCustomerDashboardURL(indexName: string, source: URLSearchPar
   }
   if (activityType) {
     query.set('activityType', activityType);
+  }
+  if (focusMetric) {
+    query.set('focusMetric', focusMetric);
   }
 
   return ensureModernUIURL(`${indexName}?${query.toString()}`);
@@ -154,14 +158,18 @@ export function ReportsActionPage({ bootstrap }: Props) {
   const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
 
   useEffect(() => {
-    if (!actionMeta || actionMeta.mode !== 'download') {
+    if (!actionMeta || actionMeta.mode === 'embed') {
       return;
     }
     const timer = window.setTimeout(() => {
+      if (actionMeta.mode === 'modern-redirect') {
+        window.location.assign(customerDashboardURL);
+        return;
+      }
       window.location.assign(legacyRouteURL);
     }, 80);
     return () => window.clearTimeout(timer);
-  }, [actionMeta, legacyRouteURL]);
+  }, [actionMeta, customerDashboardURL, legacyRouteURL]);
 
   if (!actionMeta) {
     return <ErrorState message="Unsupported reports action." actionLabel="Back To Reports" actionURL={reportsURL} />;
@@ -184,9 +192,13 @@ export function ReportsActionPage({ bootstrap }: Props) {
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          {actionMeta.mode === 'download' ? (
+          {actionMeta.mode !== 'embed' ? (
             <section className="avel-list-panel">
-              <div className="modern-state">Starting report export download from the legacy endpoint...</div>
+              <div className="modern-state">
+                {actionMeta.mode === 'modern-redirect'
+                  ? 'Continuing to the modern customer dashboard workspace...'
+                  : 'Starting report export download from the legacy endpoint...'}
+              </div>
             </section>
           ) : (
             <section className="modern-compat-page">
