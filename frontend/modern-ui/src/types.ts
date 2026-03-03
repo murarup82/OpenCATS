@@ -1050,6 +1050,225 @@ export type ReportsLauncherModernDataResponse = {
   };
 };
 
+export type ReportsCustomerDashboardModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  filters: {
+    selectedCompanyID: number;
+    rangeDays: number;
+    activityType: string;
+    focusMetric: string;
+  };
+  options: {
+    companies: Array<{
+      companyID: number;
+      name: string;
+    }>;
+    rangeDays: Array<{
+      value: number;
+      label: string;
+    }>;
+    activityTypes: Array<{
+      value: string;
+      label: string;
+    }>;
+    focusMetrics: string[];
+  };
+  state: {
+    selectedCompanyName: string;
+    activityTypeLabel: string;
+    rangeStartLabel: string;
+    rangeEndLabel: string;
+    hasCompanies: boolean;
+  };
+  dashboard: {
+    snapshot: {
+      totalJobOrders: number;
+      openJobOrders: number;
+      hiresInRange: number;
+      confirmedFutureHires: number;
+      medianDaysToFill: number | null;
+      activePipelineCount: number;
+      offersMade: number;
+      offersAccepted: number;
+      offerAcceptanceRate: number | null;
+      offerAcceptanceLabel: string;
+      slaHitRate: number | null;
+      slaHitLabel: string;
+      slaWindowDays: number;
+      riskNoActivityDays: number;
+      riskLongOpenDays: number;
+    };
+    aging: {
+      bucket0to15: number;
+      bucket16to30: number;
+      bucket31plus: number;
+    };
+    openJobRows: Array<{
+      jobOrderID: number;
+      title: string;
+      status: string;
+      openingsTotal: number;
+      openingsAvailable: number;
+      activeCandidates: number;
+      daysOpen: number;
+      lastPipelineDateLabel: string;
+      daysSinceActivity: number | null;
+      healthLabel: string;
+      healthClass: string;
+      riskScore: number;
+      riskReasonsLabel: string;
+    }>;
+    atRiskJobs: Array<{
+      jobOrderID: number;
+      title: string;
+      status: string;
+      openingsTotal: number;
+      openingsAvailable: number;
+      activeCandidates: number;
+      daysOpen: number;
+      lastPipelineDateLabel: string;
+      daysSinceActivity: number | null;
+      healthLabel: string;
+      healthClass: string;
+      riskScore: number;
+      riskReasonsLabel: string;
+    }>;
+    activePipelineRows: Array<{
+      candidateID: number;
+      candidateName: string;
+      statusLabel: string;
+      statusSlug: string;
+      jobOrderID: number;
+      jobOrderTitle: string;
+      lastUpdatedLabel: string;
+    }>;
+    hireRowsInRange: Array<{
+      candidateID: number;
+      candidateName: string;
+      jobOrderID: number;
+      jobOrderTitle: string;
+      hireDateLabel: string;
+      daysToFill: number;
+    }>;
+    futureHireRows: Array<{
+      candidateID: number;
+      candidateName: string;
+      jobOrderID: number;
+      jobOrderTitle: string;
+      hireDateLabel: string;
+      daysToFill: number;
+    }>;
+    offerBreakdownRows: Array<{
+      candidateID: number;
+      candidateName: string;
+      jobOrderID: number;
+      jobOrderTitle: string;
+      offerDateLabel: string;
+      outcomeLabel: string;
+      outcomeSlug: string;
+    }>;
+    cardDetail: {
+      key: string;
+      title: string;
+      emptyLabel: string;
+      rows: Array<Record<string, unknown>>;
+    } | Record<string, never>;
+    funnelStages: Array<{
+      key: string;
+      label: string;
+      count: number;
+      barWidth: number;
+      statusID: number;
+    }>;
+    funnelConversions: Array<{
+      from: string;
+      to: string;
+      rate: number | null;
+      rateLabel: string;
+    }>;
+    biggestDropoff: {
+      from: string;
+      to: string;
+      drop: number;
+      dropLabel: string;
+    } | null;
+    activityTrendRows: Array<{
+      weekLabel: string;
+      submissionsCount: number;
+      interviewsCount: number;
+      offersCount: number;
+      hiresCount: number;
+      submissionsWidth: number;
+      interviewsWidth: number;
+      offersWidth: number;
+      hiresWidth: number;
+    }>;
+    activityTrendMax: number;
+    sourceQualityRows: Array<{
+      source: string;
+      interviewPathCount: number;
+      hireCount: number;
+      hireRateLabel: string;
+    }>;
+    rejectionReasonRows: Array<{
+      label: string;
+      rejectionCount: number;
+    }>;
+    upcomingOutcomes: {
+      upcomingInterviewCount: number;
+      recentActivityCount: number;
+      pendingInterviewCount: number;
+      pendingOfferCount: number;
+      overdueOfferCount: number;
+      upcomingInterviewsRS: Array<Record<string, unknown>>;
+      recentPipelineActivityRS: Array<{
+        activityDate: string;
+        candidateID: number;
+        candidateName: string;
+        stageToLabel: string;
+        stageToSlug: string;
+        jobOrderID: number;
+        jobOrderTitle: string;
+      }>;
+    };
+    insightLine: string;
+  };
+  actions: {
+    legacyURL: string;
+    selfURL: string;
+    companyDetailsURL: string;
+    addJobOrderURL: string;
+    jobOrdersURL: string;
+    kpisURL: string;
+    graphViewURL: string;
+  };
+};
+
+export type ReportsGraphViewModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  graph: {
+    imageURL: string;
+    hasImage: boolean;
+    siteName: string;
+  };
+  settings: {
+    refreshSecondsDefault: number;
+    refreshIntervals: number[];
+  };
+  actions: {
+    legacyURL: string;
+    reportsURL: string;
+  };
+};
+
 export type HomeOverviewModernDataResponse = {
   meta: {
     contractVersion: number;

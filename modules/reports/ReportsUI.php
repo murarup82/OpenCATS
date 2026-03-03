@@ -338,6 +338,10 @@ class ReportsUI extends UserInterface
 
     private function customerDashboard()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $db = DatabaseConnection::getInstance();
 
         $companiesRS = $this->getCompanyListForDashboard($db);
@@ -385,6 +389,11 @@ class ReportsUI extends UserInterface
             $activityType = 'all';
         }
         $activityStatusIDs = $activityTypeOptions[$activityType]['statusIDs'];
+        $focusMetric = $this->getTrimmedInput('focusMetric', $_GET);
+        if (!in_array($focusMetric, $this->getCustomerDashboardFocusMetrics()))
+        {
+            $focusMetric = '';
+        }
 
         $selectedCompanyID = (int) $this->getTrimmedInput('companyID', $_GET);
         $selectedCompanyName = '';
@@ -420,8 +429,44 @@ class ReportsUI extends UserInterface
                 $rangeStart,
                 $rangeEnd,
                 $thresholds,
-                $activityStatusIDs
+                $activityStatusIDs,
+                $focusMetric
             );
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'reports-customer-dashboard')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernCustomerDashboardJSON(
+                'reports-customer-dashboard',
+                $companiesRS,
+                $selectedCompanyID,
+                $selectedCompanyName,
+                $rangeDays,
+                $rangeOptions,
+                $activityType,
+                $activityTypeOptions,
+                $focusMetric,
+                $rangeStart,
+                $rangeEnd,
+                $dashboardData
+            );
+            return;
         }
 
         if (!eval(Hooks::get('REPORTS_CUSTOMER_DASHBOARD'))) return;
@@ -498,16 +543,7 @@ class ReportsUI extends UserInterface
         $activityStatusIDs = $activityTypeOptions[$activityType]['statusIDs'];
 
         $focusMetric = $this->getTrimmedInput('focusMetric', $_GET);
-        $allowedFocusMetrics = array(
-            'openJobOrders',
-            'currentHires',
-            'confirmedFutureHires',
-            'activePipeline',
-            'offerAcceptance',
-            'aging0to15',
-            'aging16to30',
-            'aging31plus'
-        );
+        $allowedFocusMetrics = $this->getCustomerDashboardFocusMetrics();
         if (!in_array($focusMetric, $allowedFocusMetrics))
         {
             $focusMetric = '';
@@ -570,6 +606,196 @@ class ReportsUI extends UserInterface
         $this->_template->assign('rangeEndLabel', $rangeEnd->format('M j, Y'));
         $this->_template->assign('cardDetail', $cardDetail);
         $this->_template->display('./modules/reports/CustomerDashboardDetails.tpl');
+    }
+
+    private function getCustomerDashboardFocusMetrics()
+    {
+        return array(
+            'openJobOrders',
+            'currentHires',
+            'confirmedFutureHires',
+            'activePipeline',
+            'offerAcceptance',
+            'aging0to15',
+            'aging16to30',
+            'aging31plus'
+        );
+    }
+
+    private function renderModernCustomerDashboardJSON(
+        $modernPage,
+        $companiesRS,
+        $selectedCompanyID,
+        $selectedCompanyName,
+        $rangeDays,
+        $rangeOptions,
+        $activityType,
+        $activityTypeOptions,
+        $focusMetric,
+        $rangeStart,
+        $rangeEnd,
+        $dashboardData
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        if (!is_array($dashboardData))
+        {
+            $dashboardData = array();
+        }
+
+        $dashboardData = array_merge(
+            array(
+                'snapshot' => array(
+                    'totalJobOrders' => 0,
+                    'openJobOrders' => 0,
+                    'hiresInRange' => 0,
+                    'confirmedFutureHires' => 0,
+                    'medianDaysToFill' => null,
+                    'activePipelineCount' => 0,
+                    'offersMade' => 0,
+                    'offersAccepted' => 0,
+                    'offerAcceptanceRate' => null,
+                    'offerAcceptanceLabel' => 'N/A',
+                    'slaHitRate' => null,
+                    'slaHitLabel' => 'N/A',
+                    'slaWindowDays' => (int) self::CUSTOMER_DASH_SLA_ACTIVITY_DAYS,
+                    'riskNoActivityDays' => (int) self::CUSTOMER_DASH_RISK_NO_ACTIVITY_DAYS,
+                    'riskLongOpenDays' => (int) self::CUSTOMER_DASH_RISK_LONG_OPEN_DAYS
+                ),
+                'aging' => array(
+                    'bucket0to15' => 0,
+                    'bucket16to30' => 0,
+                    'bucket31plus' => 0
+                ),
+                'openJobRows' => array(),
+                'atRiskJobs' => array(),
+                'hireRowsInRange' => array(),
+                'futureHireRows' => array(),
+                'activePipelineRows' => array(),
+                'offerBreakdownRows' => array(),
+                'cardDetail' => array(),
+                'funnelStages' => array(),
+                'funnelConversions' => array(),
+                'biggestDropoff' => null,
+                'activityTrendRows' => array(),
+                'activityTrendMax' => 0,
+                'sourceQualityRows' => array(),
+                'rejectionReasonRows' => array(),
+                'upcomingOutcomes' => array(
+                    'upcomingInterviewCount' => 0,
+                    'recentActivityCount' => 0,
+                    'pendingInterviewCount' => 0,
+                    'pendingOfferCount' => 0,
+                    'overdueOfferCount' => 0,
+                    'upcomingInterviewsRS' => array(),
+                    'recentPipelineActivityRS' => array()
+                ),
+                'insightLine' => ''
+            ),
+            $dashboardData
+        );
+
+        $activityTypeTemplateOptions = array();
+        foreach ($activityTypeOptions as $key => $meta)
+        {
+            $activityTypeTemplateOptions[$key] = $meta['label'];
+        }
+        $activityTypeLabel = 'All Moves';
+        if (isset($activityTypeTemplateOptions[$activityType]))
+        {
+            $activityTypeLabel = $activityTypeTemplateOptions[$activityType];
+        }
+
+        $companyOptions = array();
+        foreach ($companiesRS as $companyData)
+        {
+            $companyOptions[] = array(
+                'companyID' => (int) $companyData['companyID'],
+                'name' => (isset($companyData['name']) ? (string) $companyData['name'] : '')
+            );
+        }
+
+        $rangeOptionValues = array();
+        foreach ($rangeOptions as $rangeValue => $rangeLabel)
+        {
+            $rangeOptionValues[] = array(
+                'value' => (int) $rangeValue,
+                'label' => (string) $rangeLabel
+            );
+        }
+
+        $activityOptions = array();
+        foreach ($activityTypeTemplateOptions as $activityValue => $activityLabel)
+        {
+            $activityOptions[] = array(
+                'value' => (string) $activityValue,
+                'label' => (string) $activityLabel
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'reports.customerDashboard.v1',
+                'modernPage' => $modernPage
+            ),
+            'filters' => array(
+                'selectedCompanyID' => (int) $selectedCompanyID,
+                'rangeDays' => (int) $rangeDays,
+                'activityType' => (string) $activityType,
+                'focusMetric' => (string) $focusMetric
+            ),
+            'options' => array(
+                'companies' => $companyOptions,
+                'rangeDays' => $rangeOptionValues,
+                'activityTypes' => $activityOptions,
+                'focusMetrics' => $this->getCustomerDashboardFocusMetrics()
+            ),
+            'state' => array(
+                'selectedCompanyName' => (string) $selectedCompanyName,
+                'activityTypeLabel' => (string) $activityTypeLabel,
+                'rangeStartLabel' => $rangeStart->format('M j, Y'),
+                'rangeEndLabel' => $rangeEnd->format('M j, Y'),
+                'hasCompanies' => (count($companiesRS) > 0)
+            ),
+            'dashboard' => $dashboardData,
+            'actions' => array(
+                'legacyURL' => sprintf(
+                    '%s?m=reports&a=customerDashboard&companyID=%d&rangeDays=%d&activityType=%s&ui=legacy',
+                    $baseURL,
+                    (int) $selectedCompanyID,
+                    (int) $rangeDays,
+                    urlencode((string) $activityType)
+                ),
+                'selfURL' => sprintf(
+                    '%s?m=reports&a=customerDashboard&companyID=%d&rangeDays=%d&activityType=%s&ui=modern',
+                    $baseURL,
+                    (int) $selectedCompanyID,
+                    (int) $rangeDays,
+                    urlencode((string) $activityType)
+                ),
+                'companyDetailsURL' => sprintf(
+                    '%s?m=companies&a=show&companyID=%d',
+                    $baseURL,
+                    (int) $selectedCompanyID
+                ),
+                'addJobOrderURL' => sprintf(
+                    '%s?m=joborders&a=add&selected_company_id=%d',
+                    $baseURL,
+                    (int) $selectedCompanyID
+                ),
+                'jobOrdersURL' => sprintf('%s?m=joborders', $baseURL),
+                'kpisURL' => sprintf('%s?m=kpis', $baseURL),
+                'graphViewURL' => sprintf('%s?m=reports&a=graphView', $baseURL)
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function getCompanyListForDashboard($db)
@@ -1865,19 +2091,77 @@ class ReportsUI extends UserInterface
 
     private function graphView()
     {
-        if (isset($_GET['theImage']))
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+        $theImage = $this->getTrimmedInput('theImage', $_GET);
+
+        if ($isModernJSON)
         {
-            $this->_template->assign('theImage', $_GET['theImage']);
+            if ($modernPage !== '' && $modernPage !== 'reports-graph-view')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernReportsGraphViewJSON('reports-graph-view', $theImage);
+            return;
         }
-        else
-        {
-            $this->_template->assign('theImage', '');
-        }
+
+        $this->_template->assign('theImage', $theImage);
 
         if (!eval(Hooks::get('REPORTS_GRAPH'))) return;
 
         $this->_template->assign('active', $this);
         $this->_template->display('./modules/reports/GraphView.tpl');
+    }
+
+    private function renderModernReportsGraphViewJSON($modernPage, $theImage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $theImage = trim((string) $theImage);
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'reports.graphView.v1',
+                'modernPage' => $modernPage
+            ),
+            'graph' => array(
+                'imageURL' => $theImage,
+                'hasImage' => ($theImage !== ''),
+                'siteName' => $_SESSION['CATS']->getSiteName()
+            ),
+            'settings' => array(
+                'refreshSecondsDefault' => 300,
+                'refreshIntervals' => array(60, 120, 300, 600, 900, 1800)
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf(
+                    '%s?m=reports&a=graphView&theImage=%s&ui=legacy',
+                    $baseURL,
+                    urlencode($theImage)
+                ),
+                'reportsURL' => sprintf('%s?m=reports&a=reports&ui=modern', $baseURL)
+            )
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function showSubmissionReport()

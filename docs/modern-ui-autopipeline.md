@@ -372,6 +372,14 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 142. Refined comparison telemetry for phase-2 tracking:
     - updated comparison parser to read component-targeted explicit action maps and preserve route-classification fidelity
     - refreshed comparison artifacts showing `nativeExplicit=95`, `bridgeExplicit=0`, and `inScopeNonNative=0`.
+143. Added native `reports.customerDashboard` modernization contract and page:
+    - extended `modules/reports/ReportsUI.php` with `reports.customerDashboard.v1` modern-json payload and legacy-safe fallback behavior
+    - introduced `ReportsCustomerDashboardPage` with in-page filter controls, interactive trend/source charts, and metric drill-down table rendering
+    - routed `reports.customerDashboard` away from compatibility iframe to native React page resolution.
+144. Added native `reports.graphView` modernization contract and page:
+    - extended `modules/reports/ReportsUI.php` with `reports.graphView.v1` modern-json payload for fullscreen graph mode metadata
+    - introduced `ReportsGraphViewPage` with auto-refresh controls, fullscreen toggle, and in-page visual customization sliders
+    - routed `reports.graphView` away from compatibility iframe to native React page resolution.
 
 ## Next Queue (30-Slice Execution)
 

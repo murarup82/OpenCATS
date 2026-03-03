@@ -37,6 +37,8 @@ import type {
   PipelineStatusHistoryUpdateResponse,
   PipelineRemoveModernResponse,
   QuickActionAddToListModernDataResponse,
+  ReportsCustomerDashboardModernDataResponse,
+  ReportsGraphViewModernDataResponse,
   ReportsLauncherModernDataResponse,
   UIModeBootstrap
 } from '../types';
@@ -68,6 +70,8 @@ import {
   MODERN_HOME_OVERVIEW_PAGE,
   MODERN_HOME_INBOX_PAGE,
   MODERN_HOME_MYNOTES_PAGE,
+  MODERN_REPORTS_CUSTOMER_DASHBOARD_PAGE,
+  MODERN_REPORTS_GRAPH_VIEW_PAGE,
   MODERN_REPORTS_PAGE,
   MODERN_KPIS_DETAILS_PAGE,
   buildModernJSONRequestQuery
@@ -1280,6 +1284,42 @@ export async function fetchReportsLauncherModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ReportsLauncherModernDataResponse>(url);
   assertModernContract(data.meta, 'reports.launcher.v1', 'reports');
+
+  return data;
+}
+
+export async function fetchReportsCustomerDashboardModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ReportsCustomerDashboardModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'reports',
+    action: 'customerDashboard',
+    modernPage: MODERN_REPORTS_CUSTOMER_DASHBOARD_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ReportsCustomerDashboardModernDataResponse>(url);
+  assertModernContract(data.meta, 'reports.customerDashboard.v1', 'reports customer dashboard');
+
+  return data;
+}
+
+export async function fetchReportsGraphViewModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ReportsGraphViewModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'reports',
+    action: 'graphView',
+    modernPage: MODERN_REPORTS_GRAPH_VIEW_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ReportsGraphViewModernDataResponse>(url);
+  assertModernContract(data.meta, 'reports.graphView.v1', 'reports graph view');
 
   return data;
 }

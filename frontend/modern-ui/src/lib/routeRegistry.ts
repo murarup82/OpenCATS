@@ -28,6 +28,8 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
 import { ListsDetailPage } from '../pages/ListsDetailPage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
+import { ReportsCustomerDashboardPage } from '../pages/ReportsCustomerDashboardPage';
+import { ReportsGraphViewPage } from '../pages/ReportsGraphViewPage';
 import { LogsPage } from '../pages/LogsPage';
 import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
@@ -175,13 +177,11 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'saveListAccess'
   ],
   reports: [
-    'customerDashboard',
     'customerDashboardDetails',
     'customizeEEOReport',
     'customizeJobOrderReport',
     'generateEEOReportPreview',
     'generateJobOrderReportPDF',
-    'graphView',
     'showHireReport',
     'showPlacementReport',
     'showSubmissionReport'
@@ -223,6 +223,8 @@ const registry: Record<string, ModernRouteComponent> = {
   'lists.showlist': ListsDetailPage,
   'lists.(default)': ListsManagePage,
   'reports.reports': ReportsLauncherPage,
+  'reports.customerdashboard': ReportsCustomerDashboardPage,
+  'reports.graphview': ReportsGraphViewPage,
   'reports.(default)': ReportsLauncherPage,
   'home.home': HomePage,
   'home.inbox': HomeInboxPage,
