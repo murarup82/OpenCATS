@@ -9,6 +9,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { FormattedTextBlock } from '../components/primitives/FormattedTextBlock';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -500,7 +501,7 @@ export function CompaniesShowPage({ bootstrap }: Props) {
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Notes</h2>
             </div>
-            <p>{toDisplayText(company.notesText, '') || 'No notes available.'}</p>
+            <FormattedTextBlock text={toDisplayText(company.notesText, '')} emptyMessage="No notes available." />
           </section>
         </div>
 

@@ -2783,13 +2783,80 @@
   font: 700 0.8rem / 1.1 'Space Grotesk', 'Segoe UI', sans-serif;
 }
 
-.avel-joborder-show-page .avel-joborder-richtext p {
-  margin: 0;
+.avel-richtext-block {
   border: 1px dashed #cde1ed;
   border-radius: 10px;
   background: #f9fdff;
   padding: 8px;
+  color: #1f4253;
+  font: 500 0.8rem/1.45 'Manrope', 'Segoe UI', sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.avel-richtext-block p,
+.avel-richtext-block ul,
+.avel-richtext-block ol,
+.avel-richtext-block blockquote,
+.avel-richtext-block pre,
+.avel-richtext-block h1,
+.avel-richtext-block h2,
+.avel-richtext-block h3,
+.avel-richtext-block h4,
+.avel-richtext-block h5,
+.avel-richtext-block h6 {
+  margin: 0 0 8px 0;
+}
+
+.avel-richtext-block p:last-child,
+.avel-richtext-block ul:last-child,
+.avel-richtext-block ol:last-child,
+.avel-richtext-block blockquote:last-child,
+.avel-richtext-block pre:last-child,
+.avel-richtext-block h1:last-child,
+.avel-richtext-block h2:last-child,
+.avel-richtext-block h3:last-child,
+.avel-richtext-block h4:last-child,
+.avel-richtext-block h5:last-child,
+.avel-richtext-block h6:last-child {
+  margin-bottom: 0;
+}
+
+.avel-richtext-block ul,
+.avel-richtext-block ol {
+  padding-left: 18px;
+}
+
+.avel-richtext-block code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #ecf5fb;
+  font: 600 0.75rem/1.2 'IBM Plex Mono', 'Consolas', monospace;
+}
+
+.avel-richtext-block a {
+  color: #0d5977;
+  text-decoration: underline;
+}
+
+.avel-joborder-show-page .avel-joborder-richtext .avel-richtext-block {
   white-space: pre-wrap;
+}
+
+.avel-markdown-field {
+  display: grid;
+  gap: 6px;
+}
+
+.avel-markdown-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.avel-markdown-hint {
+  margin: 0;
+  color: #537286;
+  font: 500 0.72rem/1.35 'Manrope', 'Segoe UI', sans-serif;
 }
 
 .avel-joborder-show-page .avel-joborder-thread-block {
@@ -3021,12 +3088,11 @@
   padding: 10px;
 }
 
-.avel-candidate-show-page .avel-candidate-notes pre {
-  margin: 0;
+.avel-candidate-show-page .avel-candidate-notes .avel-richtext-block {
   white-space: pre-wrap;
-  word-break: break-word;
-  color: #1f4253;
-  font: 500 0.8rem/1.45 'Manrope', 'Segoe UI', sans-serif;
+  border: none;
+  padding: 0;
+  background: transparent;
 }
 
 .avel-candidate-show-page .avel-candidate-comments {

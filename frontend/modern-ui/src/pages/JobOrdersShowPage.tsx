@@ -22,6 +22,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { FormattedTextBlock } from '../components/primitives/FormattedTextBlock';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
@@ -1118,9 +1119,12 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
               </div>
               <div className="avel-joborder-richtext">
                 <h4>Description</h4>
-                <p>{toDisplayText(jobOrder.description)}</p>
+                <FormattedTextBlock
+                  text={toDisplayText(jobOrder.description, '')}
+                  emptyMessage="No description provided."
+                />
                 <h4>Notes</h4>
-                <p>{toDisplayText(jobOrder.notes)}</p>
+                <FormattedTextBlock text={toDisplayText(jobOrder.notes, '')} emptyMessage="No notes provided." />
               </div>
             </div>
 

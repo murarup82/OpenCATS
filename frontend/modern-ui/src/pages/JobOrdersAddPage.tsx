@@ -5,6 +5,7 @@ import type { JobOrdersAddModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
+import { MarkdownTextarea } from '../components/primitives/MarkdownTextarea';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -523,12 +524,28 @@ export function JobOrdersAddPage({ bootstrap }: Props) {
 
               <label className="modern-command-field avel-candidate-edit-field--full">
                 <span className="modern-command-label">Description</span>
-                <textarea className="avel-form-control" name="description" rows={8} value={formState.description} onChange={(event) => setFormState((current) => (current ? { ...current, description: event.target.value } : current))} />
+                <MarkdownTextarea
+                  name="description"
+                  value={formState.description}
+                  rows={8}
+                  ariaLabel="Job order description"
+                  onChange={(nextValue) =>
+                    setFormState((current) => (current ? { ...current, description: nextValue } : current))
+                  }
+                />
               </label>
 
               <label className="modern-command-field avel-candidate-edit-field--full">
                 <span className="modern-command-label">Internal Notes</span>
-                <textarea className="avel-form-control" name="notes" rows={5} value={formState.notes} onChange={(event) => setFormState((current) => (current ? { ...current, notes: event.target.value } : current))} />
+                <MarkdownTextarea
+                  name="notes"
+                  value={formState.notes}
+                  rows={5}
+                  ariaLabel="Job order internal notes"
+                  onChange={(nextValue) =>
+                    setFormState((current) => (current ? { ...current, notes: nextValue } : current))
+                  }
+                />
               </label>
 
               {data.extraFields.length > 0 ? (

@@ -22,6 +22,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { FormattedTextBlock } from '../components/primitives/FormattedTextBlock';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { CandidateAssignJobOrderModal } from '../components/primitives/CandidateAssignJobOrderModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
@@ -1195,7 +1196,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               </div>
             </div>
             <div className="avel-candidate-notes">
-              <pre>{toDisplayText(candidate.notesText, '') || 'No notes provided.'}</pre>
+              <FormattedTextBlock text={toDisplayText(candidate.notesText, '')} emptyMessage="No notes provided." />
             </div>
             {data.comments.flashMessage ? (
               <div className={`modern-state ${data.comments.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
