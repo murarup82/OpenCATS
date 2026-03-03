@@ -497,6 +497,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `frontend/modern-ui/scripts/verify-no-bridge-actions.mjs` and npm script `verify:no-bridge-actions`
     - wired no-bridge guard into required sanity and quality workflows to fail CI if route comparison reintroduces any bridge-classified action
     - added generated evidence artifact `docs/modern-ui-no-bridge-actions-check.md` to quality gate evidence validation.
+168. Expanded mutation-safe replay fixtures for modern endpoint smoke coverage:
+    - added fixture `calendar.deleteEvent.safeInvalid` sourced from `calendar.showCalendar` using contract tokenized delete endpoint with invalid event ID
+    - added fixture `joborders.pipelineStatusEditDate.safeInvalid` sourced from `joborders.pipelineStatusDetails` using modern-json invalid pipeline probe
+    - improved fixture coverage baseline from 3/16 to 5/16 endpoint checks while keeping lint, sanity, and quality gates green.
 
 ## Next Queue (30-Slice Execution)
 

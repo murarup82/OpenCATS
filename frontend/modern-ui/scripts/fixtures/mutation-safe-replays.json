@@ -72,5 +72,29 @@
       "messageBody": "smoke replay probe"
     },
     "expectsBooleanField": "success"
+  },
+  {
+    "id": "calendar.deleteEvent.safeInvalid",
+    "sourceCheckID": "calendar.showCalendar",
+    "method": "POST",
+    "endpointPath": "actions.deleteEventURL",
+    "tokenPath": "actions.deleteEventToken",
+    "tokenField": "securityToken",
+    "body": {
+      "format": "modern-json",
+      "eventID": "0"
+    },
+    "expectsBooleanField": "success"
+  },
+  {
+    "id": "joborders.pipelineStatusEditDate.safeInvalid",
+    "sourceCheckID": "joborders.pipelineStatusDetails",
+    "method": "POST",
+    "endpointPath": "actions.editDateURL",
+    "body": {
+      "format": "modern-json",
+      "pipelineID": "0"
+    },
+    "expectsBooleanField": "success"
   }
 ]
