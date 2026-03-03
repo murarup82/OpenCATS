@@ -214,7 +214,7 @@ function resolveRoute(moduleName, actionName, routes, guardedRoutes) {
     };
   } else {
     const fallbackCandidates = actionKey
-      ? [`${moduleKey}.*`, `${moduleKey}.(default)`, '*.*']
+      ? [`${moduleKey}.*`, '*.*', `${moduleKey}.(default)`]
       : [`${moduleKey}.(default)`, `${moduleKey}.*`, '*.*'];
 
     for (const routeKey of fallbackCandidates) {

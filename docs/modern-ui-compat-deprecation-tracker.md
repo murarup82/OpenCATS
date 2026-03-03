@@ -13,16 +13,25 @@ Track bridge/legacy dependencies before retiring compatibility routes.
 
 | Module Route Pattern | Current Fallback | Status | Preconditions |
 | --- | --- | --- | --- |
-| `candidates.*` | `ModuleBridgePage` | Keep | Validate add/edit edge flows + no-JS fallback path. |
-| `joborders.*` | `ModuleBridgePage` | Keep | Validate add/edit full parity + recruiter allocation utility paths. |
-| `companies.*` | `ModuleBridgePage` | Keep | Validate all company utility actions in native/embedded flows. |
-| `contacts.*` | `ModuleBridgePage` | Keep | Validate schedule/log activity and list utilities in native flow. |
-| `activity.*` | `ModuleBridgePage` | Candidate | Confirm all date/view action variants are covered by native page. |
-| `activities.*` | `ModuleBridgePage` | Candidate | Confirm alias routes are no longer called in production logs. |
-| `calendar.*` | `ModuleBridgePage` | Keep | Validate all calendar drill-down actions and legacy edit paths. |
-| `lists.*` | `ModuleBridgePage` | Keep | Validate list detail/edit/delete variants outside listByView. |
-| `reports.*` | `ModuleBridgePage` | Keep | Validate specialized reports and export formats. |
-| `home.*` | `ModuleBridgePage` | Keep | Validate all home/utility actions remain accessible. |
+| `candidates.*` | `*.* -> ModuleBridgePage` | Retired | Parity sign-off complete (`docs/modern-ui-deprecation-signoff.md`). |
+| `joborders.*` | `*.* -> ModuleBridgePage` | Retired | Parity sign-off complete (`docs/modern-ui-deprecation-signoff.md`). |
+| `companies.*` | `*.* -> ModuleBridgePage` | Retired | Parity sign-off complete (`docs/modern-ui-deprecation-signoff.md`). |
+| `contacts.*` | `*.* -> ModuleBridgePage` | Retired | Parity sign-off complete (`docs/modern-ui-deprecation-signoff.md`). |
+| `activity.*` | `*.* -> ModuleBridgePage` | Retired | Parity sign-off complete (`docs/modern-ui-deprecation-signoff.md`). |
+| `activities.*` | `*.* -> ModuleBridgePage` | Retired | Alias wildcard removed; global fallback remains. |
+| `calendar.*` | `*.* -> ModuleBridgePage` | Retired | Parity sign-off complete (`docs/modern-ui-deprecation-signoff.md`). |
+| `lists.*` | `*.* -> ModuleBridgePage` | Retired | Native list pages + route parity checklist completed. |
+| `reports.*` | `*.* -> ModuleBridgePage` | Retired | Native launcher/dashboard/graph coverage completed. |
+| `home.*` | `*.* -> ModuleBridgePage` | Retired | Native home pages + explicit action compat coverage completed. |
+| `kpis.*` | `*.* -> ModuleBridgePage` | Retired | Native KPI default/detail pages available. |
+| `sourcing.*` | `*.* -> ModuleBridgePage` | Retired | Native sourcing default page available. |
+| `queue.*` | `*.* -> ModuleBridgePage` | Retired | Native queue default page available. |
+| `graphs.*` | `*.* -> ModuleBridgePage` | Retired | Native graphs default page available. |
+| `rss.*` | `*.* -> ModuleBridgePage` | Retired | Legacy redirect/compat path covered by global fallback. |
+| `careers.*` | `*.* -> ModuleBridgePage` | Retired | Legacy-only path covered by global fallback. |
+| `wizard.*` | `*.* -> ModuleBridgePage` | Retired | Legacy-only path covered by global fallback. |
+| `tests.*` | `*.* -> ModuleBridgePage` | Retired | Legacy-only path covered by global fallback. |
+| `xml.*` | `*.* -> ModuleBridgePage` | Retired | Legacy-only path covered by global fallback. |
 | `*.*` | `ModuleBridgePage` | Keep | Safety net; retire last after full telemetry confidence. |
 
 ## Retirement Workflow

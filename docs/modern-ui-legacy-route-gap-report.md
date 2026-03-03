@@ -1,15 +1,15 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-02T06:55:24.846Z
+Generated: 2026-03-03T04:58:55.466Z
 
 ## Summary
 
-- Legacy handleRequest actions discovered: 220
-- Native explicit modern coverage: 95
+- Legacy handleRequest actions discovered: 222
+- Native explicit modern coverage: 102
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 125
+- Bridge coverage (explicit + fallback): 120
 - Bridge explicit route mapping: 0
-- Bridge wildcard fallback mapping: 125
+- Bridge wildcard fallback mapping: 120
 - Legacy unresolved: 0
 
 ## Module Coverage
@@ -26,13 +26,13 @@ Generated: 2026-03-02T06:55:24.846Z
 | export | 2 | 0 | 0 | 2 | 0 |
 | gdpr | 2 | 0 | 0 | 2 | 0 |
 | graphs | 5 | 0 | 0 | 5 | 0 |
-| home | 22 | 0 | 0 | 22 | 0 |
+| home | 22 | 3 | 0 | 19 | 0 |
 | import | 15 | 0 | 0 | 15 | 0 |
-| joborders | 23 | 23 | 0 | 0 | 0 |
-| kpis | 1 | 0 | 0 | 1 | 0 |
-| lists | 7 | 7 | 0 | 0 | 0 |
+| joborders | 24 | 24 | 0 | 0 | 0 |
+| kpis | 1 | 1 | 0 | 0 | 0 |
+| lists | 8 | 8 | 0 | 0 | 0 |
 | login | 7 | 0 | 0 | 7 | 0 |
-| logs | 1 | 0 | 0 | 1 | 0 |
+| logs | 1 | 1 | 0 | 0 | 0 |
 | reports | 11 | 11 | 0 | 0 | 0 |
 | rss | 1 | 0 | 0 | 1 | 0 |
 | settings | 58 | 0 | 0 | 58 | 0 |
@@ -52,12 +52,12 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | activity | listByViewDataGrid | native-explicit | activity.listbyviewdatagrid | ActivityListPage |
 | activity | viewByDate | native-explicit | activity.viewbydate | ActivityListPage |
 | attachments | getAttachment | bridge-global-fallback | *.* | ModuleBridgePage |
-| calendar | addEvent | native-explicit | calendar.addevent | ActionCompatPage |
+| calendar | addEvent | native-explicit | calendar.addevent | CalendarPage |
 | calendar | deleteEvent | native-explicit | calendar.deleteevent | ActionCompatPage |
 | calendar | dynamicData | native-explicit | calendar.dynamicdata | ActionCompatPage |
-| calendar | editEvent | native-explicit | calendar.editevent | ActionCompatPage |
+| calendar | editEvent | native-explicit | calendar.editevent | CalendarPage |
 | calendar | showCalendar | native-explicit | calendar.showcalendar | CalendarPage |
-| candidates | add | native-explicit | candidates.add | CandidatesFormBridgePage |
+| candidates | add | native-explicit | candidates.add | CandidatesAddPage |
 | candidates | addActivityChangeStatus | native-explicit | candidates.addactivitychangestatus | ActionCompatPage |
 | candidates | addCandidateTags | native-explicit | candidates.addcandidatetags | ActionCompatPage |
 | candidates | addDuplicates | native-explicit | candidates.addduplicates | ActionCompatPage |
@@ -66,11 +66,11 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | addToPipeline | native-explicit | candidates.addtopipeline | ActionCompatPage |
 | candidates | administrativeHideShow | native-explicit | candidates.administrativehideshow | ActionCompatPage |
 | candidates | considerForJobSearch | native-explicit | candidates.considerforjobsearch | ActionCompatPage |
-| candidates | createAttachment | native-explicit | candidates.createattachment | ActionCompatPage |
+| candidates | createAttachment | native-explicit-guarded | candidates.createattachment | CandidatesShowPage |
 | candidates | delete | native-explicit | candidates.delete | ActionCompatPage |
 | candidates | deleteAttachment | native-explicit | candidates.deleteattachment | ActionCompatPage |
 | candidates | deleteMessageThread | native-explicit | candidates.deletemessagethread | ActionCompatPage |
-| candidates | edit | native-explicit-guarded | candidates.edit | CandidatesFormBridgePage |
+| candidates | edit | native-explicit-guarded | candidates.edit | CandidatesEditPage |
 | candidates | emailCandidates | native-explicit | candidates.emailcandidates | ActionCompatPage |
 | candidates | linkDuplicate | native-explicit | candidates.linkduplicate | ActionCompatPage |
 | candidates | listByView | native-explicit | candidates.listbyview | CandidatesListPage |
@@ -84,20 +84,20 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | show | native-explicit-guarded | candidates.show | CandidatesShowPage |
 | candidates | show_questionnaire | native-explicit | candidates.show_questionnaire | ActionCompatPage |
 | candidates | viewResume | native-explicit | candidates.viewresume | ActionCompatPage |
-| companies | add | native-explicit | companies.add | CompaniesFormBridgePage |
-| companies | createAttachment | native-explicit | companies.createattachment | ActionCompatPage |
+| companies | add | native-explicit | companies.add | CompaniesAddPage |
+| companies | createAttachment | native-explicit-guarded | companies.createattachment | CompaniesShowPage |
 | companies | delete | native-explicit | companies.delete | ActionCompatPage |
 | companies | deleteAttachment | native-explicit | companies.deleteattachment | ActionCompatPage |
-| companies | edit | native-explicit-guarded | companies.edit | CompaniesFormBridgePage |
+| companies | edit | native-explicit-guarded | companies.edit | CompaniesEditPage |
 | companies | internalPostings | native-explicit | companies.internalpostings | ActionCompatPage |
 | companies | listByView | native-explicit | companies.listbyview | CompaniesListPage |
 | companies | search | native-explicit | companies.search | CompaniesListPage |
 | companies | show | native-explicit-guarded | companies.show | CompaniesShowPage |
-| contacts | add | native-explicit | contacts.add | ContactsFormBridgePage |
+| contacts | add | native-explicit | contacts.add | ContactsAddPage |
 | contacts | addActivityScheduleEvent | native-explicit | contacts.addactivityscheduleevent | ActionCompatPage |
 | contacts | delete | native-explicit | contacts.delete | ActionCompatPage |
 | contacts | downloadVCard | native-explicit | contacts.downloadvcard | ActionCompatPage |
-| contacts | edit | native-explicit-guarded | contacts.edit | ContactsFormBridgePage |
+| contacts | edit | native-explicit-guarded | contacts.edit | ContactsEditPage |
 | contacts | listByView | native-explicit | contacts.listbyview | ContactsListPage |
 | contacts | search | native-explicit | contacts.search | ContactsListPage |
 | contacts | show | native-explicit-guarded | contacts.show | ContactsShowPage |
@@ -113,28 +113,28 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | graphs | jobOrderReportGraph | bridge-global-fallback | *.* | ModuleBridgePage |
 | graphs | testGraph | bridge-global-fallback | *.* | ModuleBridgePage |
 | graphs | wordVerify | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | addPersonalItem | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | addSavedSearch | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | appendPersonalNote | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | archiveInboxThread | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | createInboxNote | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | createInboxTodo | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | deleteInboxThread | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | deletePersonalItem | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | deleteSavedSearch | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | home | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | inbox | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | movePersonalNoteToTodo | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | myNotes | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | postInboxMessage | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | quickSearch | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | sendPersonalNote | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | setPersonalNoteArchived | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | setPersonalTodoStatus | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | submitFeedback | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | togglePersonalTodo | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | updatePersonalNote | bridge-module-fallback | home.* | ModuleBridgePage |
-| home | updatePersonalTodo | bridge-module-fallback | home.* | ModuleBridgePage |
+| home | addPersonalItem | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | addSavedSearch | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | appendPersonalNote | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | archiveInboxThread | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | createInboxNote | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | createInboxTodo | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | deleteInboxThread | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | deletePersonalItem | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | deleteSavedSearch | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | home | native-explicit | home.home | HomePage |
+| home | inbox | native-explicit | home.inbox | HomeInboxPage |
+| home | movePersonalNoteToTodo | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | myNotes | native-explicit | home.mynotes | HomeMyNotesPage |
+| home | postInboxMessage | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | quickSearch | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | sendPersonalNote | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | setPersonalNoteArchived | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | setPersonalTodoStatus | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | submitFeedback | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | togglePersonalTodo | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | updatePersonalNote | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | updatePersonalTodo | bridge-global-fallback | *.* | ModuleBridgePage |
 | import | commit | bridge-global-fallback | *.* | ModuleBridgePage |
 | import | deleteBulkResumes | bridge-global-fallback | *.* | ModuleBridgePage |
 | import | import | bridge-global-fallback | *.* | ModuleBridgePage |
@@ -150,19 +150,20 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | import | viewerrors | bridge-global-fallback | *.* | ModuleBridgePage |
 | import | viewpending | bridge-global-fallback | *.* | ModuleBridgePage |
 | import | whatIsBulkResumes | bridge-global-fallback | *.* | ModuleBridgePage |
-| joborders | add | native-explicit | joborders.add | JobOrdersFormBridgePage |
+| joborders | add | native-explicit | joborders.add | JobOrdersAddPage |
 | joborders | addActivityChangeStatus | native-explicit | joborders.addactivitychangestatus | ActionCompatPage |
-| joborders | addCandidateModal | native-explicit | joborders.addcandidatemodal | ActionCompatPage |
+| joborders | addCandidateModal | native-explicit-guarded | joborders.addcandidatemodal | CandidatesAddPage |
 | joborders | addJobOrderPopup | native-explicit | joborders.addjoborderpopup | ActionCompatPage |
 | joborders | addProfileComment | native-explicit | joborders.addprofilecomment | ActionCompatPage |
 | joborders | addToPipeline | native-explicit | joborders.addtopipeline | ActionCompatPage |
 | joborders | administrativeHideShow | native-explicit | joborders.administrativehideshow | ActionCompatPage |
+| joborders | companyContext | native-explicit | joborders.companycontext | ActionCompatPage |
 | joborders | considerCandidateSearch | native-explicit | joborders.considercandidatesearch | ActionCompatPage |
-| joborders | createAttachment | native-explicit | joborders.createattachment | ActionCompatPage |
+| joborders | createAttachment | native-explicit-guarded | joborders.createattachment | JobOrdersShowPage |
 | joborders | delete | native-explicit | joborders.delete | ActionCompatPage |
 | joborders | deleteAttachment | native-explicit | joborders.deleteattachment | ActionCompatPage |
 | joborders | deleteMessageThread | native-explicit | joborders.deletemessagethread | ActionCompatPage |
-| joborders | edit | native-explicit-guarded | joborders.edit | JobOrdersFormBridgePage |
+| joborders | edit | native-explicit-guarded | joborders.edit | JobOrdersEditPage |
 | joborders | editHiringPlan | native-explicit | joborders.edithiringplan | ActionCompatPage |
 | joborders | listByView | native-explicit | joborders.listbyview | JobOrdersListPage |
 | joborders | pipelineStatusDetails | native-explicit | joborders.pipelinestatusdetails | ActionCompatPage |
@@ -173,14 +174,15 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | search | native-explicit | joborders.search | JobOrdersListPage |
 | joborders | setMonitoredJobOrder | native-explicit | joborders.setmonitoredjoborder | ActionCompatPage |
 | joborders | show | native-explicit-guarded | joborders.show | JobOrdersShowPage |
-| kpis | details | bridge-global-fallback | *.* | ModuleBridgePage |
+| kpis | details | native-explicit | kpis.details | KpisDetailsPage |
 | lists | addToListFromDatagridModal | native-explicit | lists.addtolistfromdatagridmodal | ActionCompatPage |
 | lists | deleteStaticList | native-explicit | lists.deletestaticlist | ActionCompatPage |
 | lists | listByView | native-explicit | lists.listbyview | ListsManagePage |
 | lists | quickActionAddToListModal | native-explicit | lists.quickactionaddtolistmodal | ActionCompatPage |
 | lists | removeFromListDatagrid | native-explicit | lists.removefromlistdatagrid | ActionCompatPage |
 | lists | saveListAccess | native-explicit | lists.savelistaccess | ActionCompatPage |
-| lists | showList | native-explicit | lists.showlist | ActionCompatPage |
+| lists | show | native-explicit-guarded | lists.show | ListsDetailPage |
+| lists | showList | native-explicit-guarded | lists.showlist | ListsDetailPage |
 | login | attemptLogin | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | forgotPassword | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | googleCallback | bridge-global-fallback | *.* | ModuleBridgePage |
@@ -188,14 +190,14 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | login | noCookiesModal | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | requestAccess | bridge-global-fallback | *.* | ModuleBridgePage |
 | login | showLoginForm | bridge-global-fallback | *.* | ModuleBridgePage |
-| logs | view | bridge-global-fallback | *.* | ModuleBridgePage |
-| reports | customerDashboard | native-explicit | reports.customerdashboard | ActionCompatPage |
+| logs | view | native-explicit | logs.view | LogsPage |
+| reports | customerDashboard | native-explicit | reports.customerdashboard | ReportsCustomerDashboardPage |
 | reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ActionCompatPage |
 | reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | ActionCompatPage |
 | reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | ActionCompatPage |
 | reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | ActionCompatPage |
 | reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | ActionCompatPage |
-| reports | graphView | native-explicit | reports.graphview | ActionCompatPage |
+| reports | graphView | native-explicit | reports.graphview | ReportsGraphViewPage |
 | reports | reports | native-explicit | reports.reports | ReportsLauncherPage |
 | reports | showHireReport | native-explicit | reports.showhirereport | ActionCompatPage |
 | reports | showPlacementReport | native-explicit | reports.showplacementreport | ActionCompatPage |

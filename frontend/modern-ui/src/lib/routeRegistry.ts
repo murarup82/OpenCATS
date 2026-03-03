@@ -160,6 +160,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'addToPipeline',
     'administrativeHideShow',
     'considerCandidateSearch',
+    'companyContext',
     'delete',
     'deleteAttachment',
     'deleteMessageThread',
@@ -242,26 +243,7 @@ const registry: Record<string, ModernRouteComponent> = {
   'logs.(default)': LogsPage,
   ...explicitNativeActionRoutes,
   ...explicitActionCompatRoutes,
-  'candidates.*': ModuleBridgePage,
-  'joborders.*': ModuleBridgePage,
-  'companies.*': ModuleBridgePage,
-  'contacts.*': ModuleBridgePage,
-  'activity.*': ModuleBridgePage,
-  'activities.*': ModuleBridgePage,
-  'calendar.*': ModuleBridgePage,
-  'lists.*': ModuleBridgePage,
-  'reports.*': ModuleBridgePage,
-  'home.*': ModuleBridgePage,
-  'kpis.*': ModuleBridgePage,
   'logs.*': LogsPage,
-  'sourcing.*': ModuleBridgePage,
-  'queue.*': ModuleBridgePage,
-  'graphs.*': ModuleBridgePage,
-  'rss.*': ModuleBridgePage,
-  'careers.*': ModuleBridgePage,
-  'wizard.*': ModuleBridgePage,
-  'tests.*': ModuleBridgePage,
-  'xml.*': ModuleBridgePage,
   '*.*': ModuleBridgePage,
   'candidates.(default)': CandidatesListPage
 };
@@ -325,7 +307,7 @@ export function resolveModernRoute(
     }
   } else {
     const fallbackCandidates = actionKey
-      ? [`${moduleKey}.*`, `${moduleKey}.(default)`, '*.*']
+      ? [`${moduleKey}.*`, '*.*', `${moduleKey}.(default)`]
       : [`${moduleKey}.(default)`, `${moduleKey}.*`, '*.*'];
 
     for (const routeKey of fallbackCandidates) {

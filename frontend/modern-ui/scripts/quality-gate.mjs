@@ -13,8 +13,10 @@ const checks = [
   { id: 'scorecard', label: 'Scorecard Prefill', command: ['run', 'scorecard:prefill'], required: true },
   { id: 'fixtures', label: 'Fixture Lint', command: ['run', 'fixtures:lint'], required: true },
   { id: 'fixtureCoverage', label: 'Fixture Coverage Report', command: ['run', 'fixtures:coverage'], required: true },
+  { id: 'playwrightSmoke', label: 'Playwright Workflow Smoke', command: ['run', 'smoke:playwright'], required: true },
   { id: 'compareRoutes', label: 'Legacy Route Comparison', command: ['run', 'compare:legacy-routes'], required: true },
   { id: 'verifyInScopeRoutes', label: 'In-Scope Route Fallback Guard', command: ['run', 'verify:in-scope-routes'], required: true },
+  { id: 'verifyBridgeWildcards', label: 'Bridge Wildcard Retirement Guard', command: ['run', 'verify:bridge-wildcards'], required: true },
   { id: 'cutoverEvidence', label: 'Cutover Evidence Snapshot', command: ['run', 'cutover:evidence'], required: true },
   { id: 'deprecationEvidence', label: 'Deprecation Evidence Validation', command: ['run', 'deprecation:validate'], required: true },
   { id: 'ownershipReminder', label: 'Ownership Review Reminder', command: ['run', 'ownership:reminder'], required: true }
@@ -22,6 +24,8 @@ const checks = [
 
 const evidenceFiles = [
   'docs/modern-ui-route-coverage.md',
+  'docs/modern-ui-route-parity-checklist.md',
+  'docs/modern-ui-bridge-wildcard-retirement.md',
   'docs/modern-ui-sanity-report.md',
   'docs/modern-ui-parity-checklist.md',
   'docs/modern-ui-rollout-scorecard.md',

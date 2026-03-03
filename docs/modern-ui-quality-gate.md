@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-02T04:43:33.876Z
-Finished: 2026-03-02T04:43:47.115Z
+Started: 2026-03-03T04:58:39.253Z
+Finished: 2026-03-03T04:58:58.242Z
 Overall Status: **Pass**
 
 ## Summary
@@ -12,12 +12,16 @@ Overall Status: **Pass**
 | Command: Scorecard Prefill | Pass | 0 |
 | Command: Fixture Lint | Pass | 0 |
 | Command: Fixture Coverage Report | Pass | 0 |
+| Command: Playwright Workflow Smoke | Pass | 0 |
 | Command: Legacy Route Comparison | Pass | 0 |
 | Command: In-Scope Route Fallback Guard | Pass | 0 |
+| Command: Bridge Wildcard Retirement Guard | Pass | 0 |
 | Command: Cutover Evidence Snapshot | Pass | 0 |
 | Command: Deprecation Evidence Validation | Pass | 0 |
 | Command: Ownership Review Reminder | Pass | 0 |
 | Evidence: `docs/modern-ui-route-coverage.md` | Pass | present |
+| Evidence: `docs/modern-ui-route-parity-checklist.md` | Pass | present |
+| Evidence: `docs/modern-ui-bridge-wildcard-retirement.md` | Pass | present |
 | Evidence: `docs/modern-ui-sanity-report.md` | Pass | present |
 | Evidence: `docs/modern-ui-parity-checklist.md` | Pass | present |
 | Evidence: `docs/modern-ui-rollout-scorecard.md` | Pass | present |
@@ -96,6 +100,33 @@ Command: `npm.cmd run fixtures:coverage`
 **stderr**
 `(no output)`
 
+### Playwright Workflow Smoke (Pass)
+
+Command: `npm.cmd run smoke:playwright`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 smoke:playwright
+> playwright test --config=playwright.config.mjs
+
+
+Running 8 tests using 1 worker
+
+  -  1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
+  -  2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
+  -  3 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › companies.add modern contract
+  -  4 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › companies.edit modern contract
+  -  5 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › contacts.add modern contract
+  -  6 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › contacts.edit modern contract
+  -  7 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › joborders.add modern contract
+  -  8 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › joborders.edit modern contract
+
+  8 skipped
+```
+
+**stderr**
+`(no output)`
+
 ### Legacy Route Comparison (Pass)
 
 Command: `npm.cmd run compare:legacy-routes`
@@ -122,6 +153,21 @@ Command: `npm.cmd run verify:in-scope-routes`
 > node ./scripts/verify-no-inscope-wildcard-fallbacks.mjs
 
 [modern-ui] No in-scope wildcard/default fallback routes detected.
+```
+
+**stderr**
+`(no output)`
+
+### Bridge Wildcard Retirement Guard (Pass)
+
+Command: `npm.cmd run verify:bridge-wildcards`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:bridge-wildcards
+> node ./scripts/verify-bridge-wildcard-retirement.mjs
+
+[modern-ui] Wrote bridge wildcard retirement check: D:\Work\opencats\OpenCATS\docs\modern-ui-bridge-wildcard-retirement.md
 ```
 
 **stderr**

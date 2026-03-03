@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-02T04:43:34.396Z
-Finished: 2026-03-02T04:43:42.521Z
+Started: 2026-03-03T04:58:39.748Z
+Finished: 2026-03-03T04:58:51.075Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -10,6 +10,9 @@ Overall Required Status: **Pass**
 | --- | --- | --- | --- |
 | Frontend Build | Pass | Yes | 0 |
 | Coverage Matrix | Pass | Yes | 0 |
+| Route Parity Checklist | Pass | Yes | 0 |
+| Bridge Wildcard Retirement | Pass | Yes | 0 |
+| Playwright Workflow Smoke | Pass | Yes | 0 |
 | Route Smoke | Pass | No | 0 |
 | Endpoint Smoke | Pass | No | 0 |
 
@@ -31,12 +34,12 @@ Command: `npm run build`
 [modern-ui] Cleaned build output directory: D:\Work\opencats\OpenCATS\public\modern-ui\build
 [36mvite v5.4.21 [32mbuilding for production...[36m[39m
 transforming...
-[32m✓[39m 93 modules transformed.
+[32m✓[39m 111 modules transformed.
 rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m  0.20 kB[22m[1m[22m
-[2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m109.59 kB[22m[1m[22m
-[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m786.59 kB[39m[22m[2m │ map: 3,041.10 kB[22m
-[32m✓ built in 4.51s[39m
+[2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m134.90 kB[22m[1m[22m
+[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m982.86 kB[39m[22m[2m │ map: 3,631.52 kB[22m
+[32m✓ built in 4.62s[39m
 ```
 
 **stderr**
@@ -52,6 +55,63 @@ Command: `npm run coverage:matrix`
 > node ./scripts/generate-coverage-matrix.mjs
 
 [modern-ui] Wrote route coverage matrix: D:\Work\opencats\OpenCATS\docs\modern-ui-route-coverage.md
+```
+
+**stderr**
+`(no output)`
+
+### Route Parity Checklist (Pass)
+
+Command: `npm run parity:routes`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 parity:routes
+> node ./scripts/generate-route-parity-checklist.mjs
+
+[modern-ui] Wrote route parity checklist: D:\Work\opencats\OpenCATS\docs\modern-ui-route-parity-checklist.md
+```
+
+**stderr**
+`(no output)`
+
+### Bridge Wildcard Retirement (Pass)
+
+Command: `npm run verify:bridge-wildcards`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:bridge-wildcards
+> node ./scripts/verify-bridge-wildcard-retirement.mjs
+
+[modern-ui] Wrote bridge wildcard retirement check: D:\Work\opencats\OpenCATS\docs\modern-ui-bridge-wildcard-retirement.md
+```
+
+**stderr**
+`(no output)`
+
+### Playwright Workflow Smoke (Pass)
+
+Command: `npm run smoke:playwright`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 smoke:playwright
+> playwright test --config=playwright.config.mjs
+
+
+Running 8 tests using 1 worker
+
+  -  1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
+  -  2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
+  -  3 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › companies.add modern contract
+  -  4 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › companies.edit modern contract
+  -  5 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › contacts.add modern contract
+  -  6 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › contacts.edit modern contract
+  -  7 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › joborders.add modern contract
+  -  8 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › joborders.edit modern contract
+
+  8 skipped
 ```
 
 **stderr**

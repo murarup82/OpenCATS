@@ -2,6 +2,9 @@
 
 Use this checklist before changing default mode from `hybrid` to `modern`.
 
+Route-level automation companion:
+- Generated per-route checklist: `docs/modern-ui-route-parity-checklist.md` (run `npm run parity:routes`).
+
 Status legend:
 - `Pending`: not yet validated.
 - `Pass`: validated in modern UI.

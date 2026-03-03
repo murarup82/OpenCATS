@@ -392,6 +392,18 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - extended `modules/graphs/GraphsUI.php` with `graphs.overview.v1` modern-json payload for graph launcher metadata and defaults
     - introduced `GraphsPage` with interactive in-page controls for graph selection, sizing, refresh cadence, and render styling
     - routed `graphs.(default)` to native React page while keeping `graphs.*` fallback behavior for raw image actions.
+148. Added per-route parity checklist automation for newly modernized pages:
+    - introduced `frontend/modern-ui/scripts/generate-route-parity-checklist.mjs` and npm script `parity:routes`
+    - generated `docs/modern-ui-route-parity-checklist.md` with route-level checklist rows for lists/reports/sourcing/queue/graphs modern pages
+    - wired parity checklist generation into sanity and quality governance workflows (`modern-sanity-report` + quality-gate evidence validation).
+149. Added Playwright smoke coverage for modern add/edit workflows:
+    - introduced Playwright configuration (`frontend/modern-ui/playwright.config.mjs`) and suite `tests/playwright/add-edit-workflows.spec.mjs`
+    - added npm command `smoke:playwright` validating add/edit contract payloads for `candidates`, `companies`, `contacts`, and `joborders`
+    - wired Playwright workflow smoke into sanity and quality gate automation.
+150. Retired module-specific wildcard bridge mappings after deprecation sign-off:
+    - removed module-level `module.*` bridge mappings from route registry and kept only the global `*.*` safety net
+    - updated fallback order for unknown action routes so unresolved action requests flow to global compatibility bridge before module default
+    - added `verify-bridge-wildcard-retirement.mjs` guard plus deprecation artifacts (`docs/modern-ui-deprecation-signoff.md`, updated tracker) to keep wildcard debt from reappearing.
 
 ## Next Queue (30-Slice Execution)
 

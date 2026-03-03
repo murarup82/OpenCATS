@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(scriptDir, '..');
 const repoRoot = resolve(packageRoot, '..', '..');
-const signoffRelativePath = process.env.DEPRECATION_SIGNOFF_FILE || 'docs/modern-ui-deprecation-signoff-template.md';
+const signoffRelativePath = process.env.DEPRECATION_SIGNOFF_FILE || 'docs/modern-ui-deprecation-signoff.md';
 const signoffPath = resolve(repoRoot, signoffRelativePath);
 const reportPath = resolve(repoRoot, 'docs', 'modern-ui-deprecation-evidence-check.md');
 const strict = process.env.DEPRECATION_SIGNOFF_STRICT === '1';
