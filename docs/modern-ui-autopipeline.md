@@ -521,6 +521,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added `aria-pressed` semantics to candidate inline sort chips and KPI source-focus chips (all/internal/partner) to expose active state beyond visual styling
     - added group labeling for KPI source-focus control cluster (`role="group"` + explicit label)
     - improved reports customer dashboard metric-inspection controls with unique `aria-label` values and active-state `aria-pressed` semantics for focused metric toggles.
+174. Expanded route guard precision for utility and modal entry actions:
+    - added explicit guarded query requirements for `candidates.considerForJobSearch`, `joborders.considerCandidateSearch`, and lists add-to-list modal routes (`quickActionAddToListModal`, `addToListFromDatagridModal`)
+    - added duplicate-workflow guard requirements for candidate utility routes requiring pair IDs (`candidates.addDuplicates`, `candidates.merge`, `candidates.removeDuplicity`)
+    - tightened fallback behavior for malformed utility action URLs by forcing guarded module defaults when required IDs are missing.
 
 ## Next Queue (30-Slice Execution)
 

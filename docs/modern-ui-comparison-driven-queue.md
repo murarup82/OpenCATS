@@ -96,5 +96,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Added guarded-route parameter requirements for utility actions and reclassified lists utility actions (`deletestaticlist`, `removefromlistdatagrid`, `savelistaccess`) to native workspace redirects, reducing invalid compat-route entry surfaces.
 - Completed: Added polite live-region announcements for dynamic filter/status counters across modern list/report pages and explicit `aria-pressed` semantics for candidate quick-focus chips.
 - Completed: Added `aria-pressed`/group semantics for additional toggle-style chip controls (candidate inline sort + KPI source focus) and unique ARIA labels for reports metric-inspection actions.
+- Completed: Increased guarded-route precision for utility/modal entry actions by adding required query-ID guards to candidate duplicate workflows, assignment modals, and lists add-to-list modal routes.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

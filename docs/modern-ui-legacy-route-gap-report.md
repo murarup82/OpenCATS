@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T10:28:33.577Z
+Generated: 2026-03-03T10:37:54.469Z
 
 ## Summary
 
@@ -60,12 +60,12 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | add | native-explicit | candidates.add | CandidatesAddPage |
 | candidates | addActivityChangeStatus | native-explicit-guarded | candidates.addactivitychangestatus | EntityUtilityActionPage |
 | candidates | addCandidateTags | native-explicit-guarded | candidates.addcandidatetags | EntityUtilityActionPage |
-| candidates | addDuplicates | native-explicit | candidates.addduplicates | EntityUtilityActionPage |
+| candidates | addDuplicates | native-explicit-guarded | candidates.addduplicates | EntityUtilityActionPage |
 | candidates | addEditImage | native-explicit-guarded | candidates.addeditimage | EntityUtilityActionPage |
 | candidates | addProfileComment | native-explicit-guarded | candidates.addprofilecomment | EntityUtilityActionPage |
 | candidates | addToPipeline | native-explicit-guarded | candidates.addtopipeline | EntityUtilityActionPage |
 | candidates | administrativeHideShow | native-explicit-guarded | candidates.administrativehideshow | EntityUtilityActionPage |
-| candidates | considerForJobSearch | native-explicit | candidates.considerforjobsearch | CandidateAssignActionPage |
+| candidates | considerForJobSearch | native-explicit-guarded | candidates.considerforjobsearch | CandidateAssignActionPage |
 | candidates | createAttachment | native-explicit-guarded | candidates.createattachment | CandidatesShowPage |
 | candidates | delete | native-explicit-guarded | candidates.delete | EntityDeleteActionPage |
 | candidates | deleteAttachment | native-explicit-guarded | candidates.deleteattachment | EntityUtilityActionPage |
@@ -74,10 +74,10 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | emailCandidates | native-explicit | candidates.emailcandidates | EntityUtilityActionPage |
 | candidates | linkDuplicate | native-explicit-guarded | candidates.linkduplicate | EntityUtilityActionPage |
 | candidates | listByView | native-explicit | candidates.listbyview | CandidatesListPage |
-| candidates | merge | native-explicit | candidates.merge | EntityUtilityActionPage |
+| candidates | merge | native-explicit-guarded | candidates.merge | EntityUtilityActionPage |
 | candidates | mergeInfo | native-explicit | candidates.mergeinfo | EntityUtilityActionPage |
 | candidates | postMessage | native-explicit-guarded | candidates.postmessage | EntityUtilityActionPage |
-| candidates | removeDuplicity | native-explicit | candidates.removeduplicity | EntityUtilityActionPage |
+| candidates | removeDuplicity | native-explicit-guarded | candidates.removeduplicity | EntityUtilityActionPage |
 | candidates | removeFromPipeline | native-explicit-guarded | candidates.removefrompipeline | EntityUtilityActionPage |
 | candidates | saveSources | native-explicit | candidates.savesources | EntityUtilityActionPage |
 | candidates | search | native-explicit | candidates.search | CandidatesListPage |
@@ -158,7 +158,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | addToPipeline | native-explicit-guarded | joborders.addtopipeline | EntityUtilityActionPage |
 | joborders | administrativeHideShow | native-explicit-guarded | joborders.administrativehideshow | EntityUtilityActionPage |
 | joborders | companyContext | native-explicit-guarded | joborders.companycontext | JobOrderCompanyContextActionPage |
-| joborders | considerCandidateSearch | native-explicit | joborders.considercandidatesearch | JobOrderAssignActionPage |
+| joborders | considerCandidateSearch | native-explicit-guarded | joborders.considercandidatesearch | JobOrderAssignActionPage |
 | joborders | createAttachment | native-explicit-guarded | joborders.createattachment | JobOrdersShowPage |
 | joborders | delete | native-explicit-guarded | joborders.delete | EntityDeleteActionPage |
 | joborders | deleteAttachment | native-explicit-guarded | joborders.deleteattachment | EntityUtilityActionPage |
@@ -175,10 +175,10 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | setMonitoredJobOrder | native-explicit-guarded | joborders.setmonitoredjoborder | JobOrderMonitorActionPage |
 | joborders | show | native-explicit-guarded | joborders.show | JobOrdersShowPage |
 | kpis | details | native-explicit | kpis.details | KpisDetailsPage |
-| lists | addToListFromDatagridModal | native-explicit | lists.addtolistfromdatagridmodal | ListsActionPage |
+| lists | addToListFromDatagridModal | native-explicit-guarded | lists.addtolistfromdatagridmodal | ListsActionPage |
 | lists | deleteStaticList | native-explicit-guarded | lists.deletestaticlist | EntityUtilityActionPage |
 | lists | listByView | native-explicit | lists.listbyview | ListsManagePage |
-| lists | quickActionAddToListModal | native-explicit | lists.quickactionaddtolistmodal | ListsActionPage |
+| lists | quickActionAddToListModal | native-explicit-guarded | lists.quickactionaddtolistmodal | ListsActionPage |
 | lists | removeFromListDatagrid | native-explicit-guarded | lists.removefromlistdatagrid | EntityUtilityActionPage |
 | lists | saveListAccess | native-explicit-guarded | lists.savelistaccess | EntityUtilityActionPage |
 | lists | show | native-explicit-guarded | lists.show | ListsDetailPage |
