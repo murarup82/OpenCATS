@@ -51,6 +51,7 @@ const JOBORDER_NATIVE_REDIRECT_ACTIONS = new Set([
 ]);
 
 const COMPANY_NATIVE_REDIRECT_ACTIONS = new Set(['deleteattachment']);
+const LISTS_NATIVE_REDIRECT_ACTIONS = new Set(['deletestaticlist', 'removefromlistdatagrid', 'savelistaccess']);
 
 const CANDIDATE_ACTION_LABELS: Record<string, string> = {
   addactivitychangestatus: 'Change Pipeline Status',
@@ -268,6 +269,9 @@ function resolveActionMode(moduleKey: ModuleKey, actionKey: string): ActionMode 
     return 'modern-redirect';
   }
   if (moduleKey === 'companies' && COMPANY_NATIVE_REDIRECT_ACTIONS.has(actionKey)) {
+    return 'modern-redirect';
+  }
+  if (moduleKey === 'lists' && LISTS_NATIVE_REDIRECT_ACTIONS.has(actionKey)) {
     return 'modern-redirect';
   }
 

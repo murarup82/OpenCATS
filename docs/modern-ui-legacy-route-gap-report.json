@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T09:29:23.556Z",
+  "generatedAt": "2026-03-03T09:33:11.199Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 222,
@@ -280,20 +280,20 @@
     {
       "module": "candidates",
       "action": "addActivityChangeStatus",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.addactivitychangestatus",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
       "action": "addCandidateTags",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.addcandidatetags",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
@@ -307,38 +307,38 @@
     {
       "module": "candidates",
       "action": "addEditImage",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.addeditimage",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
       "action": "addProfileComment",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.addprofilecomment",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
       "action": "addToPipeline",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.addtopipeline",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
       "action": "administrativeHideShow",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.administrativehideshow",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
@@ -370,20 +370,20 @@
     {
       "module": "candidates",
       "action": "deleteAttachment",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.deleteattachment",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
       "action": "deleteMessageThread",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.deletemessagethread",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
@@ -406,11 +406,11 @@
     {
       "module": "candidates",
       "action": "linkDuplicate",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.linkduplicate",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
@@ -442,11 +442,11 @@
     {
       "module": "candidates",
       "action": "postMessage",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.postmessage",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
@@ -460,11 +460,11 @@
     {
       "module": "candidates",
       "action": "removeFromPipeline",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.removefrompipeline",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "candidates",
@@ -541,11 +541,11 @@
     {
       "module": "companies",
       "action": "deleteAttachment",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "companies.deleteattachment",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "companies",
@@ -1117,11 +1117,11 @@
     {
       "module": "joborders",
       "action": "addActivityChangeStatus",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.addactivitychangestatus",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
@@ -1144,29 +1144,29 @@
     {
       "module": "joborders",
       "action": "addProfileComment",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.addprofilecomment",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
       "action": "addToPipeline",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.addtopipeline",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
       "action": "administrativeHideShow",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.administrativehideshow",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
@@ -1207,20 +1207,20 @@
     {
       "module": "joborders",
       "action": "deleteAttachment",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.deleteattachment",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
       "action": "deleteMessageThread",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.deletemessagethread",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
@@ -1234,11 +1234,11 @@
     {
       "module": "joborders",
       "action": "editHiringPlan",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.edithiringplan",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
@@ -1270,11 +1270,11 @@
     {
       "module": "joborders",
       "action": "postMessage",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.postmessage",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
@@ -1288,11 +1288,11 @@
     {
       "module": "joborders",
       "action": "removeFromPipeline",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.removefrompipeline",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "joborders",
@@ -1342,11 +1342,11 @@
     {
       "module": "lists",
       "action": "deleteStaticList",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "lists.deletestaticlist",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "lists",
@@ -1369,20 +1369,20 @@
     {
       "module": "lists",
       "action": "removeFromListDatagrid",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "lists.removefromlistdatagrid",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "lists",
       "action": "saveListAccess",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "lists.savelistaccess",
       "resolution": "native",
       "component": "EntityUtilityActionPage",
-      "guarded": false
+      "guarded": true
     },
     {
       "module": "lists",

@@ -509,6 +509,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - upgraded `EntityUtilityActionPage` mode resolution to distinguish `modern-redirect` vs `legacy-redirect` vs `embed`
     - mapped candidate/joborder utility actions already covered in native show pages (status, tags, comments/messages, pipeline, attachment, admin hide/show) to automatic redirect back into modern workspaces
     - mapped company attachment deletion utility route to modern company profile redirect while keeping legacy-safe redirect/embed behavior for non-modernized modules and download/export actions.
+171. Hardened utility-route guardrails and shifted legacy list utility actions to native workspace redirects:
+    - added explicit route guard parameter requirements for candidate/joborder/company/list utility action routes in `routeRegistry`
+    - mapped list utility actions (`lists.deletestaticlist`, `lists.removefromlistdatagrid`, `lists.savelistaccess`) to `modern-redirect` behavior in `EntityUtilityActionPage`
+    - reduced invalid utility-action entry points and kept fallback behavior deterministic by routing incomplete utility URLs to guarded module defaults.
 
 ## Next Queue (30-Slice Execution)
 
