@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T13:49:31.075Z",
+  "generatedAt": "2026-03-03T16:02:35.083Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 222,
@@ -283,7 +283,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addactivitychangestatus",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -292,7 +292,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addcandidatetags",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -319,7 +319,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addprofilecomment",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -328,7 +328,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addtopipeline",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -337,7 +337,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.administrativehideshow",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -373,7 +373,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.deleteattachment",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -382,7 +382,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.deletemessagethread",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -445,7 +445,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.postmessage",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -463,7 +463,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.removefrompipeline",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CandidatesShowPage",
       "guarded": true
     },
     {
@@ -544,7 +544,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "companies.deleteattachment",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "CompaniesShowPage",
       "guarded": true
     },
     {
@@ -778,7 +778,7 @@
       "classification": "native-explicit",
       "routeKey": "home.addpersonalitem",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -787,7 +787,7 @@
       "classification": "native-explicit",
       "routeKey": "home.addsavedsearch",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomePage",
       "guarded": false
     },
     {
@@ -796,7 +796,7 @@
       "classification": "native-explicit",
       "routeKey": "home.appendpersonalnote",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -805,7 +805,7 @@
       "classification": "native-explicit",
       "routeKey": "home.archiveinboxthread",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeInboxPage",
       "guarded": false
     },
     {
@@ -814,7 +814,7 @@
       "classification": "native-explicit",
       "routeKey": "home.createinboxnote",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeInboxPage",
       "guarded": false
     },
     {
@@ -823,7 +823,7 @@
       "classification": "native-explicit",
       "routeKey": "home.createinboxtodo",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeInboxPage",
       "guarded": false
     },
     {
@@ -832,7 +832,7 @@
       "classification": "native-explicit",
       "routeKey": "home.deleteinboxthread",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeInboxPage",
       "guarded": false
     },
     {
@@ -841,7 +841,7 @@
       "classification": "native-explicit",
       "routeKey": "home.deletepersonalitem",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -850,7 +850,7 @@
       "classification": "native-explicit",
       "routeKey": "home.deletesavedsearch",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomePage",
       "guarded": false
     },
     {
@@ -877,7 +877,7 @@
       "classification": "native-explicit",
       "routeKey": "home.movepersonalnotetotodo",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -895,7 +895,7 @@
       "classification": "native-explicit",
       "routeKey": "home.postinboxmessage",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeInboxPage",
       "guarded": false
     },
     {
@@ -904,7 +904,7 @@
       "classification": "native-explicit",
       "routeKey": "home.quicksearch",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "LegacyRedirectPage",
       "guarded": false
     },
     {
@@ -913,7 +913,7 @@
       "classification": "native-explicit",
       "routeKey": "home.sendpersonalnote",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -922,7 +922,7 @@
       "classification": "native-explicit",
       "routeKey": "home.setpersonalnotearchived",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -931,7 +931,7 @@
       "classification": "native-explicit",
       "routeKey": "home.setpersonaltodostatus",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -940,7 +940,7 @@
       "classification": "native-explicit",
       "routeKey": "home.submitfeedback",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomePage",
       "guarded": false
     },
     {
@@ -949,7 +949,7 @@
       "classification": "native-explicit",
       "routeKey": "home.togglepersonaltodo",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -958,7 +958,7 @@
       "classification": "native-explicit",
       "routeKey": "home.updatepersonalnote",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -967,7 +967,7 @@
       "classification": "native-explicit",
       "routeKey": "home.updatepersonaltodo",
       "resolution": "native",
-      "component": "HomeActionPage",
+      "component": "HomeMyNotesPage",
       "guarded": false
     },
     {
@@ -1120,7 +1120,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.addactivitychangestatus",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "JobOrdersShowPage",
       "guarded": true
     },
     {
@@ -1147,7 +1147,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.addprofilecomment",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "JobOrdersShowPage",
       "guarded": true
     },
     {
@@ -1156,7 +1156,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.addtopipeline",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "JobOrdersShowPage",
       "guarded": true
     },
     {
@@ -1165,7 +1165,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.administrativehideshow",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "JobOrdersShowPage",
       "guarded": true
     },
     {
@@ -1210,7 +1210,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.deleteattachment",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "JobOrdersShowPage",
       "guarded": true
     },
     {
@@ -1219,7 +1219,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.deletemessagethread",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "JobOrdersShowPage",
       "guarded": true
     },
     {
@@ -1273,7 +1273,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.postmessage",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "JobOrdersShowPage",
       "guarded": true
     },
     {
@@ -1291,7 +1291,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.removefrompipeline",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "JobOrdersShowPage",
       "guarded": true
     },
     {
@@ -1345,7 +1345,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "lists.deletestaticlist",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "ListsDetailPage",
       "guarded": true
     },
     {
@@ -1372,7 +1372,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "lists.removefromlistdatagrid",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "ListsDetailPage",
       "guarded": true
     },
     {
@@ -1381,7 +1381,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "lists.savelistaccess",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "ListsDetailPage",
       "guarded": true
     },
     {
@@ -1489,7 +1489,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.customerdashboarddetails",
       "resolution": "native",
-      "component": "ReportsActionPage",
+      "component": "ReportsCustomerDashboardPage",
       "guarded": false
     },
     {

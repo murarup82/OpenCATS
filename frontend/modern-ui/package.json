@@ -18,6 +18,7 @@
     "verify:shell-noscript-fallback": "node ./scripts/verify-shell-noscript-fallback.mjs",
     "coverage:matrix": "node ./scripts/generate-coverage-matrix.mjs",
     "parity:routes": "node ./scripts/generate-route-parity-checklist.mjs",
+    "modernization:board": "node ./scripts/generate-modernization-board.mjs",
     "smoke:routes": "node ./scripts/smoke-modern-routes.mjs",
     "smoke:endpoints": "node ./scripts/smoke-modern-endpoints.mjs",
     "smoke:playwright": "playwright test --config=playwright.config.mjs",
