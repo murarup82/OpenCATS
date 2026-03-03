@@ -97,6 +97,28 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
   ],
   companies: ['createAttachment', 'delete', 'deleteAttachment', 'internalPostings'],
   contacts: ['addActivityScheduleEvent', 'delete', 'downloadVCard', 'showColdCallList'],
+  home: [
+    'addPersonalItem',
+    'addSavedSearch',
+    'appendPersonalNote',
+    'archiveInboxThread',
+    'createInboxNote',
+    'createInboxTodo',
+    'deleteInboxThread',
+    'deletePersonalItem',
+    'deleteSavedSearch',
+    'movePersonalNoteToTodo',
+    'postInboxMessage',
+    'quickSearch',
+    'sendPersonalNote',
+    'setPersonalNoteArchived',
+    'setPersonalTodoStatus',
+    'submitFeedback',
+    'togglePersonalTodo',
+    'updatePersonalNote',
+    'updatePersonalTodo'
+  ],
+  import: ['commit', 'import', 'importUploadFile'],
   joborders: [
     'addActivityChangeStatus',
     'addJobOrderPopup',
@@ -126,6 +148,15 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'show',
     'showList'
   ],
+  login: [
+    'attemptLogin',
+    'forgotPassword',
+    'googleCallback',
+    'googleStart',
+    'noCookiesModal',
+    'requestAccess',
+    'showLoginForm'
+  ],
   reports: [
     'customerDashboard',
     'customerDashboardDetails',
@@ -137,7 +168,8 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'showHireReport',
     'showPlacementReport',
     'showSubmissionReport'
-  ]
+  ],
+  rss: ['jobOrders']
 }, ActionCompatPage);
 
 const registry: Record<string, ModernRouteComponent> = {
