@@ -1570,6 +1570,64 @@ export type HomeQuickSearchModernDataResponse = {
   }>;
 };
 
+export type ImportLauncherModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    legacyURL: string;
+    selectTypeURL: string;
+    viewPendingURL: string;
+    importBulkResumesURL: string;
+    deleteBulkResumesURL: string;
+    massImportURL: string;
+  };
+  permissions: {
+    canImport: boolean;
+    canManageBulkResumes: boolean;
+  };
+  summary: {
+    pendingImportsCount: number;
+    bulkResumeCount: number;
+    bulkFileSizeKB: number;
+    firstBulkCreatedDate: string;
+    lastBulkCreatedDate: string;
+  };
+  pendingImports: Array<{
+    importID: number;
+    moduleName: string;
+    dateCreated: string;
+    addedLines: number;
+    hasErrors: boolean;
+    revertURL: string;
+    viewErrorsURL: string;
+  }>;
+};
+
+export type RssJobOrdersModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    xmlURL: string;
+    careersURL: string;
+  };
+  summary: {
+    totalJobOrders: number;
+  };
+  rows: Array<{
+    jobOrderID: number;
+    title: string;
+    type: string;
+    location: string;
+    publicURL: string;
+  }>;
+};
+
 export type KpisListModernDataResponse = {
   meta: {
     contractVersion: number;

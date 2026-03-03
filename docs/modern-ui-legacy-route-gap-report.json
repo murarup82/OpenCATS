@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T16:13:50.837Z",
+  "generatedAt": "2026-03-03T16:24:54.818Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 222,
@@ -976,7 +976,7 @@
       "classification": "native-explicit",
       "routeKey": "import.commit",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "ImportLauncherPage",
       "guarded": false
     },
     {
@@ -994,7 +994,7 @@
       "classification": "native-explicit",
       "routeKey": "import.import",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "ImportLauncherPage",
       "guarded": false
     },
     {
@@ -1021,7 +1021,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importuploadfile",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "ImportLauncherPage",
       "guarded": false
     },
     {
@@ -1579,7 +1579,7 @@
       "classification": "native-explicit",
       "routeKey": "rss.joborders",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "RssJobOrdersPage",
       "guarded": false
     },
     {

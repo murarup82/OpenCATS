@@ -412,13 +412,96 @@ class ImportUI extends UserInterface
     /*
     * First page (also used to display errors.)
     */
+    private function renderModernImportLauncherJSON($modernPage, $imports, $bulk)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $canImport = ($this->getUserAccessLevel('import.import') >= ACCESS_LEVEL_EDIT);
+        $canManageBulkResumes = ($this->getUserAccessLevel('import.import') >= ACCESS_LEVEL_SA);
+
+        $pendingImports = array();
+        foreach ($imports as $row)
+        {
+            $importID = isset($row['importID']) ? (int) $row['importID'] : 0;
+            $pendingImports[] = array(
+                'importID' => $importID,
+                'moduleName' => isset($row['moduleName']) ? (string) $row['moduleName'] : '',
+                'dateCreated' => isset($row['dateCreated']) ? (string) $row['dateCreated'] : '',
+                'addedLines' => isset($row['addedLines']) ? (int) $row['addedLines'] : 0,
+                'hasErrors' => (!empty($row['importErrors'])),
+                'revertURL' => sprintf('%s?m=import&a=revert&importID=%d&ui=legacy', $baseURL, $importID),
+                'viewErrorsURL' => sprintf('%s?m=import&a=viewerrors&importID=%d&ui=legacy', $baseURL, $importID)
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'import.launcher.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'legacyURL' => sprintf('%s?m=import&a=import&ui=legacy', $baseURL),
+                'selectTypeURL' => sprintf('%s?m=import&a=importSelectType&ui=legacy', $baseURL),
+                'viewPendingURL' => sprintf('%s?m=import&a=viewpending&ui=legacy', $baseURL),
+                'importBulkResumesURL' => sprintf('%s?m=import&a=importBulkResumes&ui=legacy', $baseURL),
+                'deleteBulkResumesURL' => sprintf('%s?m=import&a=deleteBulkResumes&ui=legacy', $baseURL),
+                'massImportURL' => sprintf('%s?m=import&a=massImport&ui=legacy', $baseURL)
+            ),
+            'permissions' => array(
+                'canImport' => $canImport,
+                'canManageBulkResumes' => $canManageBulkResumes
+            ),
+            'summary' => array(
+                'pendingImportsCount' => count($pendingImports),
+                'bulkResumeCount' => isset($bulk['numBulkAttachments']) ? (int) $bulk['numBulkAttachments'] : 0,
+                'bulkFileSizeKB' => isset($bulk['fileSizeKB']) ? (int) $bulk['fileSizeKB'] : 0,
+                'firstBulkCreatedDate' => isset($bulk['firstAttachmentCreatedDate']) ? (string) $bulk['firstAttachmentCreatedDate'] : '',
+                'lastBulkCreatedDate' => isset($bulk['lastAttachmentCreatedDate']) ? (string) $bulk['lastAttachmentCreatedDate'] : ''
+            ),
+            'pendingImports' => $pendingImports
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
     private function import()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $import = new Import($this->_siteID);
         $data = $import->getAll();
 
         $attachments = new Attachments($this->_siteID);
         $bulk = $attachments->getBulkAttachmentsInfo();
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'import-launcher')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernImportLauncherJSON('import-launcher', $data, $bulk);
+            return;
+        }
 
         if (count($data) > 0) {
             $this->_template->assign('pendingCommits', true);

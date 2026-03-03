@@ -96,8 +96,40 @@ class RssUI extends UserInterface
         );
     }
 
+    private function renderModernRssJobOrdersJSON($modernPage, $rows)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'rss.jobOrders.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'xmlURL' => sprintf('%s?m=rss&a=jobOrders&ui=legacy', $baseURL),
+                'careersURL' => CATSUtility::getAbsoluteURI('careers/')
+            ),
+            'summary' => array(
+                'totalJobOrders' => count($rows)
+            ),
+            'rows' => $rows
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        echo json_encode($payload);
+    }
+
     private function displayPublicJobOrders()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $site = new Site(-1);
 
         $careerPortalSiteID = $site->getFirstSiteID();
@@ -106,6 +138,41 @@ class RssUI extends UserInterface
 
         $jobOrders = new JobOrders($careerPortalSiteID);
         $rs = $jobOrders->getAll(JOBORDERS_STATUS_SHARE, -1, -1, -1, false, true);
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'rss-joborders')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $rows = array();
+            foreach ($rs as $row)
+            {
+                $jobOrderID = (int) $row['jobOrderID'];
+                $rows[] = array(
+                    'jobOrderID' => $jobOrderID,
+                    'title' => (string) $row['title'],
+                    'type' => (string) $jobOrders->typeCodeToString($row['type']),
+                    'location' => (string) StringUtility::makeCityStateString($row['city'], $row['state']),
+                    'publicURL' => sprintf('%scareers/?p=showJob&ID=%d', CATSUtility::getAbsoluteURI(), $jobOrderID)
+                );
+            }
+
+            $this->renderModernRssJobOrdersJSON('rss-joborders', $rows);
+            return;
+        }
 
         /* XML Headers */
         header('Content-type: text/xml');

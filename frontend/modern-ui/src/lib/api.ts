@@ -26,6 +26,7 @@ import type {
   HomeMyNotesModernDataResponse,
   HomeOverviewModernDataResponse,
   HomeQuickSearchModernDataResponse,
+  ImportLauncherModernDataResponse,
   JobOrderAddPopupModernDataResponse,
   JobOrderCompanyContextModernDataResponse,
   JobOrderAssignCandidateModernDataResponse,
@@ -48,6 +49,7 @@ import type {
   ReportsCustomerDashboardModernDataResponse,
   ReportsGraphViewModernDataResponse,
   ReportsLauncherModernDataResponse,
+  RssJobOrdersModernDataResponse,
   SourcingListModernDataResponse,
   SourcingSaveMutationResponse,
   UIModeBootstrap
@@ -86,7 +88,9 @@ import {
   MODERN_HOME_QUICKSEARCH_PAGE,
   MODERN_HOME_INBOX_PAGE,
   MODERN_HOME_MYNOTES_PAGE,
+  MODERN_IMPORT_LAUNCHER_PAGE,
   MODERN_QUEUE_PAGE,
+  MODERN_RSS_JOBORDERS_PAGE,
   MODERN_REPORTS_CUSTOMER_DASHBOARD_PAGE,
   MODERN_REPORTS_GRAPH_VIEW_PAGE,
   MODERN_REPORTS_PAGE,
@@ -239,6 +243,42 @@ export async function fetchHomeQuickSearchModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<HomeQuickSearchModernDataResponse>(url);
   assertModernContract(data.meta, 'home.quickSearch.v1', 'home quick-search data');
+
+  return data;
+}
+
+export async function fetchImportLauncherModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ImportLauncherModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'import',
+    action: 'import',
+    modernPage: MODERN_IMPORT_LAUNCHER_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ImportLauncherModernDataResponse>(url);
+  assertModernContract(data.meta, 'import.launcher.v1', 'import launcher data');
+
+  return data;
+}
+
+export async function fetchRssJobOrdersModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<RssJobOrdersModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'rss',
+    action: 'jobOrders',
+    modernPage: MODERN_RSS_JOBORDERS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<RssJobOrdersModernDataResponse>(url);
+  assertModernContract(data.meta, 'rss.jobOrders.v1', 'rss job orders data');
 
   return data;
 }

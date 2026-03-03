@@ -5,6 +5,7 @@ import { HomePage } from '../pages/HomePage';
 import { HomeInboxPage } from '../pages/HomeInboxPage';
 import { HomeMyNotesPage } from '../pages/HomeMyNotesPage';
 import { HomeQuickSearchPage } from '../pages/HomeQuickSearchPage';
+import { ImportLauncherPage } from '../pages/ImportLauncherPage';
 import { KpisPage } from '../pages/KpisPage';
 import { KpisDetailsPage } from '../pages/KpisDetailsPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
@@ -44,6 +45,7 @@ import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
 import { GraphsActionPage } from '../pages/GraphsActionPage';
 import { LogsPage } from '../pages/LogsPage';
+import { RssJobOrdersPage } from '../pages/RssJobOrdersPage';
 import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
 import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
 import { JobOrderAssignActionPage } from '../pages/JobOrderAssignActionPage';
@@ -163,9 +165,9 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'home.togglepersonaltodo': HomeMyNotesPage,
   'home.updatepersonalnote': HomeMyNotesPage,
   'home.updatepersonaltodo': HomeMyNotesPage,
-  'import.commit': LegacyRedirectPage,
-  'import.import': LegacyRedirectPage,
-  'import.importuploadfile': LegacyRedirectPage,
+  'import.commit': ImportLauncherPage,
+  'import.import': ImportLauncherPage,
+  'import.importuploadfile': ImportLauncherPage,
   'login.attemptlogin': LegacyRedirectPage,
   'login.forgotpassword': LegacyRedirectPage,
   'login.googlecallback': LegacyRedirectPage,
@@ -173,7 +175,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'login.nocookiesmodal': LegacyRedirectPage,
   'login.requestaccess': LegacyRedirectPage,
   'login.showloginform': LegacyRedirectPage,
-  'rss.joborders': LegacyRedirectPage,
+  'rss.joborders': RssJobOrdersPage,
   'attachments.getattachment': EntityUtilityActionPage,
   'export.export': EntityUtilityActionPage,
   'export.exportbydatagrid': EntityUtilityActionPage,

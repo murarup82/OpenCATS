@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-03-03T16:14:46.264Z",
+  "generatedAt": "2026-03-03T16:24:54.785Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 222,
-    "modernNative": 103,
-    "legacyDependent": 119,
+    "modernNative": 107,
+    "legacyDependent": 115,
     "bridge": 0,
     "unresolved": 0
   },
@@ -15,7 +15,7 @@
     },
     {
       "bucket": "legacy-redirect",
-      "count": 11
+      "count": 7
     },
     {
       "bucket": "legacy-reports-wrapper",
@@ -31,7 +31,7 @@
     },
     {
       "bucket": "native-surface",
-      "count": 85
+      "count": 89
     }
   ],
   "moduleSummaries": [
@@ -104,8 +104,8 @@
     {
       "module": "import",
       "totalActions": 15,
-      "modernNative": 0,
-      "legacyDependent": 15
+      "modernNative": 3,
+      "legacyDependent": 12
     },
     {
       "module": "joborders",
@@ -146,8 +146,8 @@
     {
       "module": "rss",
       "totalActions": 1,
-      "modernNative": 0,
-      "legacyDependent": 1
+      "modernNative": 1,
+      "legacyDependent": 0
     },
     {
       "module": "settings",
@@ -177,33 +177,6 @@
   "next50Targets": [
     {
       "order": 1,
-      "module": "import",
-      "action": "commit",
-      "routeKey": "import.commit",
-      "component": "LegacyRedirectPage",
-      "bucket": "legacy-redirect",
-      "guidance": "Build a native page + contract path and retire full legacy redirect."
-    },
-    {
-      "order": 2,
-      "module": "import",
-      "action": "import",
-      "routeKey": "import.import",
-      "component": "LegacyRedirectPage",
-      "bucket": "legacy-redirect",
-      "guidance": "Build a native page + contract path and retire full legacy redirect."
-    },
-    {
-      "order": 3,
-      "module": "import",
-      "action": "importUploadFile",
-      "routeKey": "import.importuploadfile",
-      "component": "LegacyRedirectPage",
-      "bucket": "legacy-redirect",
-      "guidance": "Build a native page + contract path and retire full legacy redirect."
-    },
-    {
-      "order": 4,
       "module": "login",
       "action": "attemptLogin",
       "routeKey": "login.attemptlogin",
@@ -212,7 +185,7 @@
       "guidance": "Build a native page + contract path and retire full legacy redirect."
     },
     {
-      "order": 5,
+      "order": 2,
       "module": "login",
       "action": "forgotPassword",
       "routeKey": "login.forgotpassword",
@@ -221,7 +194,7 @@
       "guidance": "Build a native page + contract path and retire full legacy redirect."
     },
     {
-      "order": 6,
+      "order": 3,
       "module": "login",
       "action": "googleCallback",
       "routeKey": "login.googlecallback",
@@ -230,7 +203,7 @@
       "guidance": "Build a native page + contract path and retire full legacy redirect."
     },
     {
-      "order": 7,
+      "order": 4,
       "module": "login",
       "action": "googleStart",
       "routeKey": "login.googlestart",
@@ -239,7 +212,7 @@
       "guidance": "Build a native page + contract path and retire full legacy redirect."
     },
     {
-      "order": 8,
+      "order": 5,
       "module": "login",
       "action": "noCookiesModal",
       "routeKey": "login.nocookiesmodal",
@@ -248,7 +221,7 @@
       "guidance": "Build a native page + contract path and retire full legacy redirect."
     },
     {
-      "order": 9,
+      "order": 6,
       "module": "login",
       "action": "requestAccess",
       "routeKey": "login.requestaccess",
@@ -257,7 +230,7 @@
       "guidance": "Build a native page + contract path and retire full legacy redirect."
     },
     {
-      "order": 10,
+      "order": 7,
       "module": "login",
       "action": "showLoginForm",
       "routeKey": "login.showloginform",
@@ -266,16 +239,7 @@
       "guidance": "Build a native page + contract path and retire full legacy redirect."
     },
     {
-      "order": 11,
-      "module": "rss",
-      "action": "jobOrders",
-      "routeKey": "rss.joborders",
-      "component": "LegacyRedirectPage",
-      "bucket": "legacy-redirect",
-      "guidance": "Build a native page + contract path and retire full legacy redirect."
-    },
-    {
-      "order": 12,
+      "order": 8,
       "module": "attachments",
       "action": "getAttachment",
       "routeKey": "attachments.getattachment",
@@ -284,7 +248,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 13,
+      "order": 9,
       "module": "calendar",
       "action": "deleteEvent",
       "routeKey": "calendar.deleteevent",
@@ -293,7 +257,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 14,
+      "order": 10,
       "module": "calendar",
       "action": "dynamicData",
       "routeKey": "calendar.dynamicdata",
@@ -302,7 +266,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 15,
+      "order": 11,
       "module": "candidates",
       "action": "addDuplicates",
       "routeKey": "candidates.addduplicates",
@@ -311,7 +275,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 16,
+      "order": 12,
       "module": "candidates",
       "action": "addEditImage",
       "routeKey": "candidates.addeditimage",
@@ -320,7 +284,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 17,
+      "order": 13,
       "module": "candidates",
       "action": "emailCandidates",
       "routeKey": "candidates.emailcandidates",
@@ -329,7 +293,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 18,
+      "order": 14,
       "module": "candidates",
       "action": "linkDuplicate",
       "routeKey": "candidates.linkduplicate",
@@ -338,7 +302,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 19,
+      "order": 15,
       "module": "candidates",
       "action": "merge",
       "routeKey": "candidates.merge",
@@ -347,7 +311,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 20,
+      "order": 16,
       "module": "candidates",
       "action": "mergeInfo",
       "routeKey": "candidates.mergeinfo",
@@ -356,7 +320,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 21,
+      "order": 17,
       "module": "candidates",
       "action": "removeDuplicity",
       "routeKey": "candidates.removeduplicity",
@@ -365,7 +329,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 22,
+      "order": 18,
       "module": "candidates",
       "action": "saveSources",
       "routeKey": "candidates.savesources",
@@ -374,7 +338,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 23,
+      "order": 19,
       "module": "export",
       "action": "export",
       "routeKey": "export.export",
@@ -383,7 +347,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 24,
+      "order": 20,
       "module": "export",
       "action": "exportByDataGrid",
       "routeKey": "export.exportbydatagrid",
@@ -392,7 +356,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 25,
+      "order": 21,
       "module": "gdpr",
       "action": "export",
       "routeKey": "gdpr.export",
@@ -401,7 +365,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 26,
+      "order": 22,
       "module": "gdpr",
       "action": "requests",
       "routeKey": "gdpr.requests",
@@ -410,7 +374,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 27,
+      "order": 23,
       "module": "import",
       "action": "deleteBulkResumes",
       "routeKey": "import.deletebulkresumes",
@@ -419,7 +383,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 28,
+      "order": 24,
       "module": "import",
       "action": "importBulkResumes",
       "routeKey": "import.importbulkresumes",
@@ -428,7 +392,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 29,
+      "order": 25,
       "module": "import",
       "action": "importSelectType",
       "routeKey": "import.importselecttype",
@@ -437,7 +401,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 30,
+      "order": 26,
       "module": "import",
       "action": "importUploadResume",
       "routeKey": "import.importuploadresume",
@@ -446,7 +410,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 31,
+      "order": 27,
       "module": "import",
       "action": "massImport",
       "routeKey": "import.massimport",
@@ -455,7 +419,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 32,
+      "order": 28,
       "module": "import",
       "action": "massImportDocument",
       "routeKey": "import.massimportdocument",
@@ -464,7 +428,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 33,
+      "order": 29,
       "module": "import",
       "action": "massImportEdit",
       "routeKey": "import.massimportedit",
@@ -473,7 +437,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 34,
+      "order": 30,
       "module": "import",
       "action": "revert",
       "routeKey": "import.revert",
@@ -482,7 +446,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 35,
+      "order": 31,
       "module": "import",
       "action": "showMassImport",
       "routeKey": "import.showmassimport",
@@ -491,7 +455,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 36,
+      "order": 32,
       "module": "import",
       "action": "viewerrors",
       "routeKey": "import.viewerrors",
@@ -500,7 +464,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 37,
+      "order": 33,
       "module": "import",
       "action": "viewpending",
       "routeKey": "import.viewpending",
@@ -509,7 +473,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 38,
+      "order": 34,
       "module": "import",
       "action": "whatIsBulkResumes",
       "routeKey": "import.whatisbulkresumes",
@@ -518,7 +482,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 39,
+      "order": 35,
       "module": "joborders",
       "action": "editHiringPlan",
       "routeKey": "joborders.edithiringplan",
@@ -527,7 +491,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 40,
+      "order": 36,
       "module": "settings",
       "action": "addEmailTemplate",
       "routeKey": "settings.addemailtemplate",
@@ -536,7 +500,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 41,
+      "order": 37,
       "module": "settings",
       "action": "addUser",
       "routeKey": "settings.adduser",
@@ -545,7 +509,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 42,
+      "order": 38,
       "module": "settings",
       "action": "administration",
       "routeKey": "settings.administration",
@@ -554,7 +518,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 43,
+      "order": 39,
       "module": "settings",
       "action": "ajax_tags_add",
       "routeKey": "settings.ajax_tags_add",
@@ -563,7 +527,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 44,
+      "order": 40,
       "module": "settings",
       "action": "ajax_tags_del",
       "routeKey": "settings.ajax_tags_del",
@@ -572,7 +536,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 45,
+      "order": 41,
       "module": "settings",
       "action": "ajax_tags_upd",
       "routeKey": "settings.ajax_tags_upd",
@@ -581,7 +545,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 46,
+      "order": 42,
       "module": "settings",
       "action": "ajax_wizardAddUser",
       "routeKey": "settings.ajax_wizardadduser",
@@ -590,7 +554,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 47,
+      "order": 43,
       "module": "settings",
       "action": "ajax_wizardCheckKey",
       "routeKey": "settings.ajax_wizardcheckkey",
@@ -599,7 +563,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 48,
+      "order": 44,
       "module": "settings",
       "action": "ajax_wizardDeleteUser",
       "routeKey": "settings.ajax_wizarddeleteuser",
@@ -608,7 +572,7 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 49,
+      "order": 45,
       "module": "settings",
       "action": "ajax_wizardEmail",
       "routeKey": "settings.ajax_wizardemail",
@@ -617,55 +581,52 @@
       "guidance": "Split this utility action into a dedicated native page/action handler."
     },
     {
-      "order": 50,
+      "order": 46,
       "module": "settings",
       "action": "ajax_wizardFirstTimeSetup",
       "routeKey": "settings.ajax_wizardfirsttimesetup",
       "component": "EntityUtilityActionPage",
       "bucket": "legacy-utility-wrapper",
       "guidance": "Split this utility action into a dedicated native page/action handler."
+    },
+    {
+      "order": 47,
+      "module": "settings",
+      "action": "ajax_wizardImport",
+      "routeKey": "settings.ajax_wizardimport",
+      "component": "EntityUtilityActionPage",
+      "bucket": "legacy-utility-wrapper",
+      "guidance": "Split this utility action into a dedicated native page/action handler."
+    },
+    {
+      "order": 48,
+      "module": "settings",
+      "action": "ajax_wizardLicense",
+      "routeKey": "settings.ajax_wizardlicense",
+      "component": "EntityUtilityActionPage",
+      "bucket": "legacy-utility-wrapper",
+      "guidance": "Split this utility action into a dedicated native page/action handler."
+    },
+    {
+      "order": 49,
+      "module": "settings",
+      "action": "ajax_wizardLocalization",
+      "routeKey": "settings.ajax_wizardlocalization",
+      "component": "EntityUtilityActionPage",
+      "bucket": "legacy-utility-wrapper",
+      "guidance": "Split this utility action into a dedicated native page/action handler."
+    },
+    {
+      "order": 50,
+      "module": "settings",
+      "action": "ajax_wizardPassword",
+      "routeKey": "settings.ajax_wizardpassword",
+      "component": "EntityUtilityActionPage",
+      "bucket": "legacy-utility-wrapper",
+      "guidance": "Split this utility action into a dedicated native page/action handler."
     }
   ],
   "rows": [
-    {
-      "module": "import",
-      "action": "commit",
-      "classification": "native-explicit",
-      "routeKey": "import.commit",
-      "resolution": "native",
-      "component": "LegacyRedirectPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-redirect",
-      "modernizationRank": 1,
-      "legacyDependent": true
-    },
-    {
-      "module": "import",
-      "action": "import",
-      "classification": "native-explicit",
-      "routeKey": "import.import",
-      "resolution": "native",
-      "component": "LegacyRedirectPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-redirect",
-      "modernizationRank": 1,
-      "legacyDependent": true
-    },
-    {
-      "module": "import",
-      "action": "importUploadFile",
-      "classification": "native-explicit",
-      "routeKey": "import.importuploadfile",
-      "resolution": "native",
-      "component": "LegacyRedirectPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-redirect",
-      "modernizationRank": 1,
-      "legacyDependent": true
-    },
     {
       "module": "login",
       "action": "attemptLogin",
@@ -749,19 +710,6 @@
       "action": "showLoginForm",
       "classification": "native-explicit",
       "routeKey": "login.showloginform",
-      "resolution": "native",
-      "component": "LegacyRedirectPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-redirect",
-      "modernizationRank": 1,
-      "legacyDependent": true
-    },
-    {
-      "module": "rss",
-      "action": "jobOrders",
-      "classification": "native-explicit",
-      "routeKey": "rss.joborders",
       "resolution": "native",
       "component": "LegacyRedirectPage",
       "guarded": false,
@@ -3150,6 +3098,45 @@
       "legacyDependent": false
     },
     {
+      "module": "import",
+      "action": "commit",
+      "classification": "native-explicit",
+      "routeKey": "import.commit",
+      "resolution": "native",
+      "component": "ImportLauncherPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "import",
+      "action": "import",
+      "classification": "native-explicit",
+      "routeKey": "import.import",
+      "resolution": "native",
+      "component": "ImportLauncherPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "import",
+      "action": "importUploadFile",
+      "classification": "native-explicit",
+      "routeKey": "import.importuploadfile",
+      "resolution": "native",
+      "component": "ImportLauncherPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
       "module": "joborders",
       "action": "add",
       "classification": "native-explicit",
@@ -3507,6 +3494,19 @@
       "routeKey": "reports.reports",
       "resolution": "native",
       "component": "ReportsLauncherPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "rss",
+      "action": "jobOrders",
+      "classification": "native-explicit",
+      "routeKey": "rss.joborders",
+      "resolution": "native",
+      "component": "RssJobOrdersPage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-surface",

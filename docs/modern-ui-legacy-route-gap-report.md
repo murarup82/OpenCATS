@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T16:13:50.837Z
+Generated: 2026-03-03T16:24:54.818Z
 
 ## Summary
 
@@ -135,12 +135,12 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | home | togglePersonalTodo | native-explicit | home.togglepersonaltodo | HomeMyNotesPage |
 | home | updatePersonalNote | native-explicit | home.updatepersonalnote | HomeMyNotesPage |
 | home | updatePersonalTodo | native-explicit | home.updatepersonaltodo | HomeMyNotesPage |
-| import | commit | native-explicit | import.commit | LegacyRedirectPage |
+| import | commit | native-explicit | import.commit | ImportLauncherPage |
 | import | deleteBulkResumes | native-explicit | import.deletebulkresumes | EntityUtilityActionPage |
-| import | import | native-explicit | import.import | LegacyRedirectPage |
+| import | import | native-explicit | import.import | ImportLauncherPage |
 | import | importBulkResumes | native-explicit | import.importbulkresumes | EntityUtilityActionPage |
 | import | importSelectType | native-explicit | import.importselecttype | EntityUtilityActionPage |
-| import | importUploadFile | native-explicit | import.importuploadfile | LegacyRedirectPage |
+| import | importUploadFile | native-explicit | import.importuploadfile | ImportLauncherPage |
 | import | importUploadResume | native-explicit | import.importuploadresume | EntityUtilityActionPage |
 | import | massImport | native-explicit | import.massimport | EntityUtilityActionPage |
 | import | massImportDocument | native-explicit | import.massimportdocument | EntityUtilityActionPage |
@@ -202,7 +202,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | reports | showHireReport | native-explicit | reports.showhirereport | ReportsActionPage |
 | reports | showPlacementReport | native-explicit | reports.showplacementreport | ReportsActionPage |
 | reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | ReportsActionPage |
-| rss | jobOrders | native-explicit | rss.joborders | LegacyRedirectPage |
+| rss | jobOrders | native-explicit | rss.joborders | RssJobOrdersPage |
 | settings | addEmailTemplate | native-explicit | settings.addemailtemplate | EntityUtilityActionPage |
 | settings | addUser | native-explicit | settings.adduser | EntityUtilityActionPage |
 | settings | administration | native-explicit | settings.administration | EntityUtilityActionPage |
