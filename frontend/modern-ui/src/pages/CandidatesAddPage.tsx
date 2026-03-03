@@ -758,6 +758,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               encType="multipart/form-data"
               action={submitURL}
               onSubmit={async (event) => {
+                const formElement = event.currentTarget;
                 setValidationError('');
                 if (formState.firstName.trim() === '' || formState.lastName.trim() === '') {
                   event.preventDefault();
@@ -803,7 +804,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                   }
 
                   setDuplicateMode('none');
-                  event.currentTarget.submit();
+                  formElement.submit();
                 } catch (duplicateCheckError) {
                   const message = duplicateCheckError instanceof Error ? duplicateCheckError.message : 'Duplicate check failed.';
                   setDuplicateError(message);
