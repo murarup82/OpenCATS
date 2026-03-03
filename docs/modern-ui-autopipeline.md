@@ -467,6 +467,9 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - routed `calendar.deleteEvent`, `calendar.dynamicData`, `companies.deleteAttachment`, `lists.deleteStaticList`, `lists.removeFromListDatagrid`, and `lists.saveListAccess` to native `EntityUtilityActionPage` handling
     - kept behavior parity by using embedded legacy utility workspace for form/modal actions and redirect mode for calendar data/delete endpoints
     - removed `ActionCompatPage` route-registry usage (global `*.* -> ModuleBridgePage` safety fallback remains unchanged).
+160. Removed obsolete compatibility-wrapper page component:
+    - deleted unused `frontend/modern-ui/src/pages/ActionCompatPage.tsx` after complete route retirement
+    - kept migration history in docs while removing dead runtime source.
 
 ## Next Queue (30-Slice Execution)
 
