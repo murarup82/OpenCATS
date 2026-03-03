@@ -1,14 +1,14 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T07:47:48.559Z
+Generated: 2026-03-03T07:52:33.311Z
 
 ## Summary
 
 - Legacy handleRequest actions discovered: 222
-- Native explicit modern coverage: 132
+- Native explicit modern coverage: 137
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 90
-- Bridge explicit route mapping: 90
+- Bridge coverage (explicit + fallback): 85
+- Bridge explicit route mapping: 85
 - Bridge wildcard fallback mapping: 0
 - Legacy unresolved: 0
 
@@ -25,7 +25,7 @@ Generated: 2026-03-03T07:47:48.559Z
 | dashboard | 2 | 2 | 0 | 0 | 0 |
 | export | 2 | 0 | 0 | 2 | 0 |
 | gdpr | 2 | 0 | 0 | 2 | 0 |
-| graphs | 5 | 0 | 0 | 5 | 0 |
+| graphs | 5 | 5 | 0 | 0 | 0 |
 | home | 22 | 22 | 0 | 0 | 0 |
 | import | 15 | 3 | 0 | 12 | 0 |
 | joborders | 24 | 24 | 0 | 0 | 0 |
@@ -108,11 +108,11 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | export | exportByDataGrid | bridge-explicit | export.exportbydatagrid | ModuleBridgePage |
 | gdpr | export | bridge-explicit | gdpr.export | ModuleBridgePage |
 | gdpr | requests | bridge-explicit | gdpr.requests | ModuleBridgePage |
-| graphs | generic | bridge-explicit | graphs.generic | ModuleBridgePage |
-| graphs | genericPie | bridge-explicit | graphs.genericpie | ModuleBridgePage |
-| graphs | jobOrderReportGraph | bridge-explicit | graphs.joborderreportgraph | ModuleBridgePage |
-| graphs | testGraph | bridge-explicit | graphs.testgraph | ModuleBridgePage |
-| graphs | wordVerify | bridge-explicit | graphs.wordverify | ModuleBridgePage |
+| graphs | generic | native-explicit | graphs.generic | GraphsActionPage |
+| graphs | genericPie | native-explicit | graphs.genericpie | GraphsActionPage |
+| graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | GraphsActionPage |
+| graphs | testGraph | native-explicit | graphs.testgraph | GraphsActionPage |
+| graphs | wordVerify | native-explicit | graphs.wordverify | GraphsActionPage |
 | home | addPersonalItem | native-explicit | home.addpersonalitem | HomeActionPage |
 | home | addSavedSearch | native-explicit | home.addsavedsearch | HomeActionPage |
 | home | appendPersonalNote | native-explicit | home.appendpersonalnote | HomeActionPage |

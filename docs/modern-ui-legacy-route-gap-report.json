@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-03-03T07:47:48.559Z",
+  "generatedAt": "2026-03-03T07:52:33.311Z",
   "totals": {
     "actions": 222,
-    "nativeExplicit": 132,
+    "nativeExplicit": 137,
     "nativeDefaultFallback": 0,
-    "bridge": 90,
-    "bridgeExplicit": 90,
+    "bridge": 85,
+    "bridgeExplicit": 85,
     "bridgeFallback": 0,
     "unresolved": 0
   },
@@ -85,9 +85,9 @@
     {
       "module": "graphs",
       "totalActions": 5,
-      "nativeExplicit": 0,
+      "nativeExplicit": 5,
       "nativeFallback": 0,
-      "bridge": 5,
+      "bridge": 0,
       "unresolved": 0
     },
     {
@@ -730,46 +730,46 @@
     {
       "module": "graphs",
       "action": "generic",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "graphs.generic",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "GraphsActionPage",
       "guarded": false
     },
     {
       "module": "graphs",
       "action": "genericPie",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "graphs.genericpie",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "GraphsActionPage",
       "guarded": false
     },
     {
       "module": "graphs",
       "action": "jobOrderReportGraph",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "graphs.joborderreportgraph",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "GraphsActionPage",
       "guarded": false
     },
     {
       "module": "graphs",
       "action": "testGraph",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "graphs.testgraph",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "GraphsActionPage",
       "guarded": false
     },
     {
       "module": "graphs",
       "action": "wordVerify",
-      "classification": "bridge-explicit",
+      "classification": "native-explicit",
       "routeKey": "graphs.wordverify",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
+      "resolution": "native",
+      "component": "GraphsActionPage",
       "guarded": false
     },
     {

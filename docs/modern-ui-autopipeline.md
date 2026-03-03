@@ -485,6 +485,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added explicit `ModuleBridgePage` action routes for all discovered legacy fallback actions in `attachments`, `export`, `gdpr`, `graphs`, `import`, `settings`, `toolbar`, `wizard`, and `xml`
     - preserved runtime behavior while shifting route-comparison classification from `bridge-global-fallback` to `bridge-explicit`
     - reduced comparison totals to `bridgeFallback=0` with `bridgeExplicit=90`, keeping unresolved routes at zero.
+165. Modernized legacy graph action routes into native in-page action workspace:
+    - introduced `frontend/modern-ui/src/pages/GraphsActionPage.tsx` with interactive controls (size, refresh cadence, visual filters, and custom query parameters) for legacy graph image actions
+    - routed `graphs.generic`, `graphs.genericPie`, `graphs.jobOrderReportGraph`, `graphs.testGraph`, and `graphs.wordVerify` to native action handling in `routeRegistry`
+    - improved coverage metrics to `nativeExplicit=137` and reduced bridge-explicit routes to `85` while preserving zero unresolved actions.
 
 ## Next Queue (30-Slice Execution)
 

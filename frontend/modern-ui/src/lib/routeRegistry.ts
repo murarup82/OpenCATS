@@ -42,6 +42,7 @@ import { ReportsActionPage } from '../pages/ReportsActionPage';
 import { SourcingPage } from '../pages/SourcingPage';
 import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
+import { GraphsActionPage } from '../pages/GraphsActionPage';
 import { LogsPage } from '../pages/LogsPage';
 import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
 import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
@@ -178,11 +179,11 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'export.exportbydatagrid': ModuleBridgePage,
   'gdpr.export': ModuleBridgePage,
   'gdpr.requests': ModuleBridgePage,
-  'graphs.generic': ModuleBridgePage,
-  'graphs.genericpie': ModuleBridgePage,
-  'graphs.joborderreportgraph': ModuleBridgePage,
-  'graphs.testgraph': ModuleBridgePage,
-  'graphs.wordverify': ModuleBridgePage,
+  'graphs.generic': GraphsActionPage,
+  'graphs.genericpie': GraphsActionPage,
+  'graphs.joborderreportgraph': GraphsActionPage,
+  'graphs.testgraph': GraphsActionPage,
+  'graphs.wordverify': GraphsActionPage,
   'import.deletebulkresumes': ModuleBridgePage,
   'import.importbulkresumes': ModuleBridgePage,
   'import.importselecttype': ModuleBridgePage,
