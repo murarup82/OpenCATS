@@ -2845,12 +2845,54 @@
 .avel-markdown-field {
   display: grid;
   gap: 6px;
+  position: relative;
 }
 
-.avel-markdown-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.avel-markdown-field .toastui-editor-defaultUI {
+  border-radius: 12px;
+  border-color: #bdd4e5;
+  overflow: hidden;
+}
+
+.avel-markdown-field .toastui-editor-defaultUI-toolbar {
+  border-bottom-color: #d6e6f2;
+  background: linear-gradient(180deg, #fbfdff 0%, #eef6fc 100%);
+}
+
+.avel-markdown-field .toastui-editor-md-tab-container,
+.avel-markdown-field .toastui-editor-default-tab-container {
+  background: #f5fafe;
+  border-top-color: #d6e6f2;
+}
+
+.avel-markdown-field .toastui-editor-defaultUI .tab-item {
+  font: 700 0.68rem/1 'Manrope', 'Segoe UI', sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.avel-markdown-field .toastui-editor-contents {
+  font: 500 0.86rem/1.5 'Inter', 'Segoe UI', sans-serif;
+  color: #14384b;
+}
+
+.avel-markdown-hidden-input {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.avel-markdown-field--source-ai .toastui-editor-defaultUI {
+  border-color: #6dbd97;
+  box-shadow: 0 0 0 1px rgba(109, 189, 151, 0.25) inset;
+}
+
+.avel-markdown-field--source-parse .toastui-editor-defaultUI {
+  border-color: #d7a769;
+  box-shadow: 0 0 0 1px rgba(215, 167, 105, 0.22) inset;
 }
 
 .avel-markdown-hint {

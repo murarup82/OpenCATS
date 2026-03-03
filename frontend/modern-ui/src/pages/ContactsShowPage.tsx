@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { FormattedTextBlock } from '../components/primitives/FormattedTextBlock';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
@@ -126,6 +127,7 @@ export function ContactsShowPage({ bootstrap }: Props) {
 
   const permissions = data.meta.permissions;
   const contact = data.contact;
+  const notesValue = String(contact.notesText || '').trim() !== '' ? contact.notesText : contact.notesHTML;
 
   return (
     <div className="avel-dashboard-page avel-joborder-show-page">
@@ -241,14 +243,7 @@ export function ContactsShowPage({ bootstrap }: Props) {
               </div>
 
               <div className="modern-state modern-state--empty" style={{ marginBottom: '10px', textAlign: 'left' }}>
-                {contact.notesHTML.trim() !== '' ? (
-                  <div
-                    style={{ whiteSpace: 'normal' }}
-                    dangerouslySetInnerHTML={{ __html: contact.notesHTML }}
-                  />
-                ) : (
-                  'No notes.'
-                )}
+                <FormattedTextBlock text={notesValue} emptyMessage="No notes." />
               </div>
 
               <DataTable

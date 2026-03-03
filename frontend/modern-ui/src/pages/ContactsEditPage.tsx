@@ -5,6 +5,7 @@ import type { ContactsEditModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
+import { MarkdownTextarea } from '../components/primitives/MarkdownTextarea';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -525,12 +526,12 @@ export function ContactsEditPage({ bootstrap }: Props) {
 
               <label className="modern-command-field avel-candidate-edit-field--full">
                 <span className="modern-command-label">Misc. Notes</span>
-                <textarea
-                  className="avel-form-control"
+                <MarkdownTextarea
                   name="notes"
                   value={formState.notes}
-                  onChange={(event) => setFormState((current) => (current ? { ...current, notes: event.target.value } : current))}
-                  rows={4}
+                  rows={6}
+                  ariaLabel="Contact notes"
+                  onChange={(nextValue) => setFormState((current) => (current ? { ...current, notes: nextValue } : current))}
                 />
               </label>
 

@@ -11,6 +11,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { MarkdownTextarea } from '../components/primitives/MarkdownTextarea';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { SelectMenu } from '../ui-core';
@@ -922,12 +923,12 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
                 <label className="modern-command-field avel-candidate-edit-field--full">
                   <span className="modern-command-label">Notes</span>
-                  <textarea
-                    className="avel-form-control"
+                  <MarkdownTextarea
                     name="notes"
                     value={formState.notes}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, notes: event.target.value } : current))}
-                    rows={4}
+                    rows={6}
+                    ariaLabel="Candidate notes"
+                    onChange={(nextValue) => setFormState((current) => (current ? { ...current, notes: nextValue } : current))}
                   />
                 </label>
               </div>

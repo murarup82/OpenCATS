@@ -11,6 +11,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
+import { MarkdownTextarea } from '../components/primitives/MarkdownTextarea';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -343,6 +344,17 @@ export function CandidatesAddPage({ bootstrap }: Props) {
       return 'avel-form-control avel-form-control--source-parse';
     }
     return 'avel-form-control';
+  };
+
+  const getEditorClassName = (fieldKey: CandidateTrackedFieldKey): string => {
+    const source = getFieldSource(fieldKey);
+    if (source === 'ai-prefill') {
+      return 'avel-markdown-field--source-ai';
+    }
+    if (source === 'resume-parse') {
+      return 'avel-markdown-field--source-parse';
+    }
+    return '';
   };
 
   const renderFieldLabel = (label: string, fieldKey?: CandidateTrackedFieldKey) => {
@@ -1169,15 +1181,16 @@ export function CandidatesAddPage({ bootstrap }: Props) {
 
                 <label className="modern-command-field avel-candidate-edit-field--full">
                   {renderFieldLabel('Notes', 'notes')}
-                  <textarea
-                    className={getFieldClassName('notes')}
+                  <MarkdownTextarea
                     name="notes"
                     value={formState.notes}
-                    onChange={(event) => {
+                    rows={6}
+                    className={getEditorClassName('notes')}
+                    ariaLabel="Candidate notes"
+                    onChange={(nextValue) => {
                       clearFieldSource('notes');
-                      setFormState((current) => (current ? { ...current, notes: event.target.value } : current));
+                      setFormState((current) => (current ? { ...current, notes: nextValue } : current));
                     }}
-                    rows={4}
                   />
                 </label>
               </div>
