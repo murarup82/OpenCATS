@@ -39,6 +39,7 @@ import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
 import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
 import { JobOrderAssignActionPage } from '../pages/JobOrderAssignActionPage';
 import { PipelineStatusActionPage } from '../pages/PipelineStatusActionPage';
+import { JobOrderCompanyContextActionPage } from '../pages/JobOrderCompanyContextActionPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
@@ -86,6 +87,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'contacts.search': ContactsListPage,
   'candidates.considerforjobsearch': CandidateAssignActionPage,
   'joborders.considercandidatesearch': JobOrderAssignActionPage,
+  'joborders.companycontext': JobOrderCompanyContextActionPage,
   'joborders.pipelinestatusdetails': PipelineStatusActionPage,
   'joborders.pipelinestatuseditdate': PipelineStatusActionPage,
   'lists.quickactionaddtolistmodal': ListsActionPage,
@@ -168,7 +170,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'addProfileComment',
     'addToPipeline',
     'administrativeHideShow',
-    'companyContext',
     'delete',
     'deleteAttachment',
     'deleteMessageThread',
@@ -260,6 +261,7 @@ const guardedRouteParams: Record<string, string[]> = {
   'joborders.edit': ['jobOrderID'],
   'joborders.createattachment': ['jobOrderID'],
   'joborders.addcandidatemodal': ['jobOrderID'],
+  'joborders.companycontext': ['companyID'],
   'joborders.pipelinestatusdetails': ['pipelineID'],
   'joborders.pipelinestatuseditdate': ['pipelineID'],
   'companies.show': ['companyID'],

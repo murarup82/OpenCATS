@@ -416,6 +416,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `PipelineStatusActionPage` for `joborders.pipelineStatusDetails` and `joborders.pipelineStatusEditDate`
     - reused modern pipeline detail contract + inline editor (`fetchPipelineStatusDetailsModernData`, `PipelineDetailsInlineModal`) and native date-save flow
     - removed both actions from `ActionCompatPage` bridge mappings and added guarded `pipelineID` route requirements.
+154. Converted job order company-context action route to native workspace handling:
+    - introduced `JobOrderCompanyContextActionPage` for `joborders.companyContext`
+    - reused existing `joborders.companyContext.v1` contract to render location/contact/department defaults in a native page
+    - removed `joborders.companyContext` from `ActionCompatPage` bridge mappings and added guarded `companyID` route requirement.
 
 ## Next Queue (30-Slice Execution)
 

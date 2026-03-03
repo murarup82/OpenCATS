@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T05:12:56.255Z",
+  "generatedAt": "2026-03-03T05:18:20.122Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -1171,11 +1171,11 @@
     {
       "module": "joborders",
       "action": "companyContext",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.companycontext",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "JobOrderCompanyContextActionPage",
+      "guarded": true
     },
     {
       "module": "joborders",
