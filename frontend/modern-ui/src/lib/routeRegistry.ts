@@ -4,6 +4,7 @@ import { DashboardMyPage } from '../pages/DashboardMyPage';
 import { HomePage } from '../pages/HomePage';
 import { HomeInboxPage } from '../pages/HomeInboxPage';
 import { HomeMyNotesPage } from '../pages/HomeMyNotesPage';
+import { HomeActionPage } from '../pages/HomeActionPage';
 import { KpisPage } from '../pages/KpisPage';
 import { KpisDetailsPage } from '../pages/KpisDetailsPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
@@ -27,6 +28,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { LogsPage } from '../pages/LogsPage';
+import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
@@ -64,7 +66,49 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'candidates.search': CandidatesListPage,
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
-  'contacts.search': ContactsListPage
+  'contacts.search': ContactsListPage,
+  ...buildExplicitBridgeRoutes(
+    {
+      home: [
+        'addPersonalItem',
+        'addSavedSearch',
+        'appendPersonalNote',
+        'archiveInboxThread',
+        'createInboxNote',
+        'createInboxTodo',
+        'deleteInboxThread',
+        'deletePersonalItem',
+        'deleteSavedSearch',
+        'movePersonalNoteToTodo',
+        'postInboxMessage',
+        'quickSearch',
+        'sendPersonalNote',
+        'setPersonalNoteArchived',
+        'setPersonalTodoStatus',
+        'submitFeedback',
+        'togglePersonalTodo',
+        'updatePersonalNote',
+        'updatePersonalTodo'
+      ]
+    },
+    HomeActionPage
+  ),
+  ...buildExplicitBridgeRoutes(
+    {
+      import: ['commit', 'import', 'importUploadFile'],
+      login: [
+        'attemptLogin',
+        'forgotPassword',
+        'googleCallback',
+        'googleStart',
+        'noCookiesModal',
+        'requestAccess',
+        'showLoginForm'
+      ],
+      rss: ['jobOrders']
+    },
+    LegacyRedirectPage
+  )
 };
 
 // Comparison-driven explicit action coverage. Keep behavior legacy-safe while avoiding wildcard fallbacks.
@@ -97,28 +141,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
   ],
   companies: ['createAttachment', 'delete', 'deleteAttachment', 'internalPostings'],
   contacts: ['addActivityScheduleEvent', 'delete', 'downloadVCard', 'showColdCallList'],
-  home: [
-    'addPersonalItem',
-    'addSavedSearch',
-    'appendPersonalNote',
-    'archiveInboxThread',
-    'createInboxNote',
-    'createInboxTodo',
-    'deleteInboxThread',
-    'deletePersonalItem',
-    'deleteSavedSearch',
-    'movePersonalNoteToTodo',
-    'postInboxMessage',
-    'quickSearch',
-    'sendPersonalNote',
-    'setPersonalNoteArchived',
-    'setPersonalTodoStatus',
-    'submitFeedback',
-    'togglePersonalTodo',
-    'updatePersonalNote',
-    'updatePersonalTodo'
-  ],
-  import: ['commit', 'import', 'importUploadFile'],
   joborders: [
     'addActivityChangeStatus',
     'addJobOrderPopup',
@@ -148,15 +170,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'show',
     'showList'
   ],
-  login: [
-    'attemptLogin',
-    'forgotPassword',
-    'googleCallback',
-    'googleStart',
-    'noCookiesModal',
-    'requestAccess',
-    'showLoginForm'
-  ],
   reports: [
     'customerDashboard',
     'customerDashboardDetails',
@@ -168,8 +181,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'showHireReport',
     'showPlacementReport',
     'showSubmissionReport'
-  ],
-  rss: ['jobOrders']
+  ]
 }, ActionCompatPage);
 
 const registry: Record<string, ModernRouteComponent> = {

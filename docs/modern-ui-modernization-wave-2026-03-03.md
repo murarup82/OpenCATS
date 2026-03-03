@@ -3,43 +3,45 @@
 ## Review Snapshot
 
 - Current system has no unresolved routes, but many actions still rely on wildcard `ModuleBridgePage` fallbacks.
-- This wave reduces wildcard dependency by promoting 30 legacy actions to explicit `ActionCompatPage` routes.
-- Result: these routes are now explicitly tracked in the route registry and are ready for targeted native replacement.
+- This wave removes 30 legacy actions from `ActionCompatPage` iframe routing.
+- Result: these routes now resolve through native handler pages:
+- `HomeActionPage` for home actions (redirects to modern home/inbox/myNotes surfaces).
+- `LegacyRedirectPage` for login/import/rss actions (full legacy redirect until native auth/import/feed contracts land).
 
 ## 30-Change Plan And Implementation
 
 Status legend: `done`, `pending`
 
-1. `done` Promote `home.addPersonalItem` to explicit ActionCompat route.
-2. `done` Promote `home.addSavedSearch` to explicit ActionCompat route.
-3. `done` Promote `home.appendPersonalNote` to explicit ActionCompat route.
-4. `done` Promote `home.archiveInboxThread` to explicit ActionCompat route.
-5. `done` Promote `home.createInboxNote` to explicit ActionCompat route.
-6. `done` Promote `home.createInboxTodo` to explicit ActionCompat route.
-7. `done` Promote `home.deleteInboxThread` to explicit ActionCompat route.
-8. `done` Promote `home.deletePersonalItem` to explicit ActionCompat route.
-9. `done` Promote `home.deleteSavedSearch` to explicit ActionCompat route.
-10. `done` Promote `home.movePersonalNoteToTodo` to explicit ActionCompat route.
-11. `done` Promote `home.postInboxMessage` to explicit ActionCompat route.
-12. `done` Promote `home.quickSearch` to explicit ActionCompat route.
-13. `done` Promote `home.sendPersonalNote` to explicit ActionCompat route.
-14. `done` Promote `home.setPersonalNoteArchived` to explicit ActionCompat route.
-15. `done` Promote `home.setPersonalTodoStatus` to explicit ActionCompat route.
-16. `done` Promote `home.submitFeedback` to explicit ActionCompat route.
-17. `done` Promote `home.togglePersonalTodo` to explicit ActionCompat route.
-18. `done` Promote `home.updatePersonalNote` to explicit ActionCompat route.
-19. `done` Promote `home.updatePersonalTodo` to explicit ActionCompat route.
-20. `done` Promote `login.attemptLogin` to explicit ActionCompat route.
-21. `done` Promote `login.forgotPassword` to explicit ActionCompat route.
-22. `done` Promote `login.googleCallback` to explicit ActionCompat route.
-23. `done` Promote `login.googleStart` to explicit ActionCompat route.
-24. `done` Promote `login.noCookiesModal` to explicit ActionCompat route.
-25. `done` Promote `login.requestAccess` to explicit ActionCompat route.
-26. `done` Promote `login.showLoginForm` to explicit ActionCompat route.
-27. `done` Promote `import.commit` to explicit ActionCompat route.
-28. `done` Promote `import.import` to explicit ActionCompat route.
-29. `done` Promote `import.importUploadFile` to explicit ActionCompat route.
-30. `done` Promote `rss.jobOrders` to explicit ActionCompat route.
+1. `done` Route `home.addPersonalItem` through `HomeActionPage` native handler.
+2. `done` Route `home.addSavedSearch` through `HomeActionPage` native handler.
+3. `done` Route `home.appendPersonalNote` through `HomeActionPage` native handler.
+4. `done` Route `home.archiveInboxThread` through `HomeActionPage` native handler.
+5. `done` Route `home.createInboxNote` through `HomeActionPage` native handler.
+6. `done` Route `home.createInboxTodo` through `HomeActionPage` native handler.
+7. `done` Route `home.deleteInboxThread` through `HomeActionPage` native handler.
+8. `done` Route `home.deletePersonalItem` through `HomeActionPage` native handler.
+9. `done` Route `home.deleteSavedSearch` through `HomeActionPage` native handler.
+10. `done` Route `home.movePersonalNoteToTodo` through `HomeActionPage` native handler.
+11. `done` Route `home.postInboxMessage` through `HomeActionPage` native handler.
+12. `done` Route `home.quickSearch` through `HomeActionPage` native handler.
+13. `done` Route `home.sendPersonalNote` through `HomeActionPage` native handler.
+14. `done` Route `home.setPersonalNoteArchived` through `HomeActionPage` native handler.
+15. `done` Route `home.setPersonalTodoStatus` through `HomeActionPage` native handler.
+16. `done` Route `home.submitFeedback` through `HomeActionPage` native handler.
+17. `done` Route `home.togglePersonalTodo` through `HomeActionPage` native handler.
+18. `done` Route `home.updatePersonalNote` through `HomeActionPage` native handler.
+19. `done` Route `home.updatePersonalTodo` through `HomeActionPage` native handler.
+20. `done` Route `login.attemptLogin` through `LegacyRedirectPage` native handler.
+21. `done` Route `login.forgotPassword` through `LegacyRedirectPage` native handler.
+22. `done` Route `login.googleCallback` through `LegacyRedirectPage` native handler.
+23. `done` Route `login.googleStart` through `LegacyRedirectPage` native handler.
+24. `done` Route `login.noCookiesModal` through `LegacyRedirectPage` native handler.
+25. `done` Route `login.requestAccess` through `LegacyRedirectPage` native handler.
+26. `done` Route `login.showLoginForm` through `LegacyRedirectPage` native handler.
+27. `done` Route `import.commit` through `LegacyRedirectPage` native handler.
+28. `done` Route `import.import` through `LegacyRedirectPage` native handler.
+29. `done` Route `import.importUploadFile` through `LegacyRedirectPage` native handler.
+30. `done` Route `rss.jobOrders` through `LegacyRedirectPage` native handler.
 
 ## Follow-Up Native Conversion Queue
 
