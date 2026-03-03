@@ -5,7 +5,6 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
-import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -174,10 +173,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [reloadToken, setReloadToken] = useState(0);
   const [visibleColumns, setVisibleColumns] = useState<ColumnVisibility>(columnPresets.balanced);
   const [columnPreset, setColumnPreset] = useState<ColumnPresetKey | 'custom'>('balanced');
-  const [addJobOrderModal, setAddJobOrderModal] = useState<{
-    url: string;
-    title: string;
-  } | null>(null);
   const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
   const [monitorToggleError, setMonitorToggleError] = useState('');
   const columnStorageKey = useMemo(
@@ -263,16 +258,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     setReloadToken((current) => current + 1);
   }, []);
   usePageRefreshEvents(refreshPageData);
-
-  const closeAddJobOrderModal = useCallback(
-    (refreshOnClose: boolean) => {
-      setAddJobOrderModal(null);
-      if (refreshOnClose) {
-        refreshPageData();
-      }
-    },
-    [refreshPageData]
-  );
 
   const toggleMonitoredState = useCallback(
     async (row: JobOrdersListModernDataResponse['rows'][number]) => {
@@ -466,18 +451,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
         actions={
           <>
             {canAddJobOrder ? (
-              <button
-                type="button"
-                className="modern-btn modern-btn--secondary"
-                onClick={() =>
-                  setAddJobOrderModal({
-                    url: decodeLegacyURL(data.actions.addJobOrderPopupURL),
-                    title: 'Add Job Order'
-                  })
-                }
-              >
+              <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.addJobOrderPopupURL)}>
                 Add Job Order
-              </button>
+              </a>
             ) : null}
             {canManageRecruiterAllocation ? (
               <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.recruiterAllocationURL)}>
@@ -753,14 +729,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
             </div>
           </section>
         </div>
-
-        <LegacyFrameModal
-          isOpen={!!addJobOrderModal}
-          title={addJobOrderModal?.title || 'Add Job Order'}
-          url={addJobOrderModal?.url || ''}
-          onClose={closeAddJobOrderModal}
-          showRefreshClose
-        />
       </PageContainer>
     </div>
   );

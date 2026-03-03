@@ -861,7 +861,7 @@ class JobOrdersUI extends UserInterface
             ),
             'actions' => array(
                 'addJobOrderURL' => sprintf('%s?m=joborders&a=add&ui=modern', $baseURL),
-                'addJobOrderPopupURL' => sprintf('%s?m=joborders&a=addJobOrderPopup&ui=legacy', $baseURL),
+                'addJobOrderPopupURL' => sprintf('%s?m=joborders&a=addJobOrderPopup&ui=modern', $baseURL),
                 'recruiterAllocationURL' => sprintf('%s?m=joborders&a=recruiterAllocation&ui=modern', $baseURL),
                 'legacyURL' => sprintf('%s?m=joborders&a=listByView&ui=legacy', $baseURL)
             ),
@@ -1335,6 +1335,10 @@ class JobOrdersUI extends UserInterface
      */
     private function addJobOrderPopup()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $jobOrders = new JobOrders($this->_siteID);
 
         $rs = $jobOrders->getAll(JOBORDERS_STATUS_ALL);
@@ -1344,7 +1348,137 @@ class JobOrdersUI extends UserInterface
 
         if (!eval(Hooks::get('JO_ADD_MODAL'))) return;
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'joborders-add-popup')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernJobOrderAddPopupJSON($rs, 'joborders-add-popup');
+            return;
+        }
+
         $this->_template->display('./modules/joborders/AddModalPopup.tpl');
+    }
+
+    private function renderModernJobOrderAddPopupJSON($jobOrdersRS, $modernPage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $copySources = array();
+        foreach ($jobOrdersRS as $row)
+        {
+            $jobOrderID = (int) (isset($row['jobOrderID']) ? $row['jobOrderID'] : 0);
+            if ($jobOrderID <= 0)
+            {
+                continue;
+            }
+
+            $title = (isset($row['title']) ? trim((string) $row['title']) : '');
+            if ($title === '')
+            {
+                $title = 'Job Order #' . $jobOrderID;
+            }
+
+            $companyName = (isset($row['companyName']) ? trim((string) $row['companyName']) : '');
+            if ($companyName === '')
+            {
+                $companyName = '--';
+            }
+
+            $status = (isset($row['status']) ? trim((string) $row['status']) : '');
+            if ($status === '')
+            {
+                $status = '--';
+            }
+
+            $copySources[] = array(
+                'jobOrderID' => $jobOrderID,
+                'title' => $title,
+                'companyName' => $companyName,
+                'status' => $status,
+                'label' => $title . ' (' . $companyName . ')'
+            );
+        }
+
+        $selectedJobOrderID = 0;
+        if ($this->isRequiredIDValid('jobOrderID', $_REQUEST))
+        {
+            $selectedJobOrderID = (int) $_REQUEST['jobOrderID'];
+        }
+
+        $typeOfAdd = strtolower($this->getTrimmedInput('typeOfAdd', $_REQUEST));
+        if ($typeOfAdd !== 'existing')
+        {
+            $typeOfAdd = 'new';
+        }
+
+        if ($typeOfAdd === 'existing')
+        {
+            if ($selectedJobOrderID <= 0 && !empty($copySources))
+            {
+                $selectedJobOrderID = (int) $copySources[0]['jobOrderID'];
+            }
+
+            $selectedFound = false;
+            foreach ($copySources as $copySource)
+            {
+                if ((int) $copySource['jobOrderID'] === $selectedJobOrderID)
+                {
+                    $selectedFound = true;
+                    break;
+                }
+            }
+            if (!$selectedFound && !empty($copySources))
+            {
+                $selectedJobOrderID = (int) $copySources[0]['jobOrderID'];
+            }
+            else if (!$selectedFound)
+            {
+                $selectedJobOrderID = 0;
+                $typeOfAdd = 'new';
+            }
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.addPopup.v1',
+                'modernPage' => $modernPage,
+                'permissions' => array(
+                    'canAddJobOrder' => ($this->getUserAccessLevel('joborders.add') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'actions' => array(
+                'startAddURL' => sprintf('%s?m=joborders&a=add&ui=modern', $baseURL),
+                'listURL' => sprintf('%s?m=joborders&a=listByView&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=joborders&a=addJobOrderPopup&ui=legacy', $baseURL)
+            ),
+            'state' => array(
+                'typeOfAdd' => $typeOfAdd,
+                'selectedJobOrderID' => (int) $selectedJobOrderID,
+                'totalCopySources' => count($copySources)
+            ),
+            'copySources' => $copySources
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     /*

@@ -2010,6 +2010,34 @@ export type JobOrderCompanyContextModernDataResponse = {
   };
 };
 
+export type JobOrderAddPopupModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    permissions: {
+      canAddJobOrder: boolean;
+    };
+  };
+  actions: {
+    startAddURL: string;
+    listURL: string;
+    legacyURL: string;
+  };
+  state: {
+    typeOfAdd: 'new' | 'existing';
+    selectedJobOrderID: number;
+    totalCopySources: number;
+  };
+  copySources: Array<{
+    jobOrderID: number;
+    title: string;
+    companyName: string;
+    status: string;
+    label: string;
+  }>;
+};
+
 export type JobOrdersAddModernDataResponse = {
   meta: {
     contractVersion: number;

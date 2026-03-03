@@ -40,6 +40,7 @@ import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
 import { JobOrderAssignActionPage } from '../pages/JobOrderAssignActionPage';
 import { PipelineStatusActionPage } from '../pages/PipelineStatusActionPage';
 import { JobOrderCompanyContextActionPage } from '../pages/JobOrderCompanyContextActionPage';
+import { JobOrderAddActionPage } from '../pages/JobOrderAddActionPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
@@ -88,6 +89,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'candidates.considerforjobsearch': CandidateAssignActionPage,
   'joborders.considercandidatesearch': JobOrderAssignActionPage,
   'joborders.companycontext': JobOrderCompanyContextActionPage,
+  'joborders.addjoborderpopup': JobOrderAddActionPage,
   'joborders.pipelinestatusdetails': PipelineStatusActionPage,
   'joborders.pipelinestatuseditdate': PipelineStatusActionPage,
   'lists.quickactionaddtolistmodal': ListsActionPage,
@@ -166,7 +168,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
   contacts: ['addActivityScheduleEvent', 'delete', 'downloadVCard', 'showColdCallList'],
   joborders: [
     'addActivityChangeStatus',
-    'addJobOrderPopup',
     'addProfileComment',
     'addToPipeline',
     'administrativeHideShow',

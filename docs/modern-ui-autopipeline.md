@@ -258,6 +258,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `useModernKeyboardShortcuts()` with `/` (focus search) and `Shift+R` (in-page refresh event)
     - wired shortcut hook in app shell so all native modern pages can use consistent quick actions
     - added keyboard shortcut reference in `docs/modern-ui-keyboard-shortcuts.md`.
+112. Migrated `joborders.addJobOrderPopup` to a native action workspace:
+    - backend `joborders.addJobOrderPopup` now supports `format=modern-json` contract `joborders.addPopup.v1` (mode defaults + copy-source catalog)
+    - added native `JobOrderAddActionPage` with empty-vs-copy workflow, source search/select, and direct handoff into modern `joborders.add`
+    - switched `joborders.listByView` Add Job Order entry from legacy iframe modal to direct native route navigation.
 112. Added compatibility-route deprecation tracker:
     - introduced `docs/modern-ui-compat-deprecation-tracker.md` with route-pattern status tracking (`Keep/Candidate/Deprecate/Retired`)
     - documented per-module fallback preconditions and a retirement workflow for bridge-route removal

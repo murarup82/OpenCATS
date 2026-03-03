@@ -23,6 +23,7 @@ import type {
   HomeInboxModernDataResponse,
   HomeMyNotesModernDataResponse,
   HomeOverviewModernDataResponse,
+  JobOrderAddPopupModernDataResponse,
   JobOrderCompanyContextModernDataResponse,
   JobOrderAssignCandidateModernDataResponse,
   JobOrdersAddModernDataResponse,
@@ -66,6 +67,7 @@ import {
   MODERN_DASHBOARD_PAGE,
   MODERN_GRAPHS_PAGE,
   MODERN_JOBORDER_ADD_PAGE,
+  MODERN_JOBORDER_ADD_POPUP_PAGE,
   MODERN_JOBORDER_EDIT_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
@@ -1753,6 +1755,24 @@ export async function fetchJobOrdersAddModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<JobOrdersAddModernDataResponse>(url);
   assertModernContract(data.meta, 'joborders.add.v1', 'job order add form');
+
+  return data;
+}
+
+export async function fetchJobOrderAddPopupModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<JobOrderAddPopupModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'joborders',
+    action: 'addJobOrderPopup',
+    modernPage: MODERN_JOBORDER_ADD_POPUP_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<JobOrderAddPopupModernDataResponse>(url);
+  assertModernContract(data.meta, 'joborders.addPopup.v1', 'job order add-popup action');
 
   return data;
 }

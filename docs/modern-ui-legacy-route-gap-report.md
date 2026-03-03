@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T05:18:20.122Z
+Generated: 2026-03-03T05:26:56.153Z
 
 ## Summary
 
@@ -153,7 +153,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | add | native-explicit | joborders.add | JobOrdersAddPage |
 | joborders | addActivityChangeStatus | native-explicit | joborders.addactivitychangestatus | ActionCompatPage |
 | joborders | addCandidateModal | native-explicit-guarded | joborders.addcandidatemodal | CandidatesAddPage |
-| joborders | addJobOrderPopup | native-explicit | joborders.addjoborderpopup | ActionCompatPage |
+| joborders | addJobOrderPopup | native-explicit | joborders.addjoborderpopup | JobOrderAddActionPage |
 | joborders | addProfileComment | native-explicit | joborders.addprofilecomment | ActionCompatPage |
 | joborders | addToPipeline | native-explicit | joborders.addtopipeline | ActionCompatPage |
 | joborders | administrativeHideShow | native-explicit | joborders.administrativehideshow | ActionCompatPage |
