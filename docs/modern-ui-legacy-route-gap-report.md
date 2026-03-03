@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:35:14.258Z
+Generated: 2026-03-03T06:39:59.662Z
 
 ## Summary
 
@@ -67,7 +67,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | administrativeHideShow | native-explicit | candidates.administrativehideshow | ActionCompatPage |
 | candidates | considerForJobSearch | native-explicit | candidates.considerforjobsearch | CandidateAssignActionPage |
 | candidates | createAttachment | native-explicit-guarded | candidates.createattachment | CandidatesShowPage |
-| candidates | delete | native-explicit | candidates.delete | ActionCompatPage |
+| candidates | delete | native-explicit-guarded | candidates.delete | EntityDeleteActionPage |
 | candidates | deleteAttachment | native-explicit | candidates.deleteattachment | ActionCompatPage |
 | candidates | deleteMessageThread | native-explicit | candidates.deletemessagethread | ActionCompatPage |
 | candidates | edit | native-explicit-guarded | candidates.edit | CandidatesEditPage |
@@ -86,7 +86,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | viewResume | native-explicit-guarded | candidates.viewresume | CandidateResumeActionPage |
 | companies | add | native-explicit | companies.add | CompaniesAddPage |
 | companies | createAttachment | native-explicit-guarded | companies.createattachment | CompaniesShowPage |
-| companies | delete | native-explicit | companies.delete | ActionCompatPage |
+| companies | delete | native-explicit-guarded | companies.delete | EntityDeleteActionPage |
 | companies | deleteAttachment | native-explicit | companies.deleteattachment | ActionCompatPage |
 | companies | edit | native-explicit-guarded | companies.edit | CompaniesEditPage |
 | companies | internalPostings | native-explicit | companies.internalpostings | ActionCompatPage |
@@ -95,7 +95,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | companies | show | native-explicit-guarded | companies.show | CompaniesShowPage |
 | contacts | add | native-explicit | contacts.add | ContactsAddPage |
 | contacts | addActivityScheduleEvent | native-explicit-guarded | contacts.addactivityscheduleevent | ContactActivityActionPage |
-| contacts | delete | native-explicit | contacts.delete | ActionCompatPage |
+| contacts | delete | native-explicit-guarded | contacts.delete | EntityDeleteActionPage |
 | contacts | downloadVCard | native-explicit-guarded | contacts.downloadvcard | ContactVCardActionPage |
 | contacts | edit | native-explicit-guarded | contacts.edit | ContactsEditPage |
 | contacts | listByView | native-explicit | contacts.listbyview | ContactsListPage |
@@ -160,7 +160,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | companyContext | native-explicit-guarded | joborders.companycontext | JobOrderCompanyContextActionPage |
 | joborders | considerCandidateSearch | native-explicit | joborders.considercandidatesearch | JobOrderAssignActionPage |
 | joborders | createAttachment | native-explicit-guarded | joborders.createattachment | JobOrdersShowPage |
-| joborders | delete | native-explicit | joborders.delete | ActionCompatPage |
+| joborders | delete | native-explicit-guarded | joborders.delete | EntityDeleteActionPage |
 | joborders | deleteAttachment | native-explicit | joborders.deleteattachment | ActionCompatPage |
 | joborders | deleteMessageThread | native-explicit | joborders.deletemessagethread | ActionCompatPage |
 | joborders | edit | native-explicit-guarded | joborders.edit | JobOrdersEditPage |

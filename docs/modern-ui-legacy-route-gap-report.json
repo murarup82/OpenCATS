@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T06:35:14.258Z",
+  "generatedAt": "2026-03-03T06:39:59.662Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -361,11 +361,11 @@
     {
       "module": "candidates",
       "action": "delete",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.delete",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "EntityDeleteActionPage",
+      "guarded": true
     },
     {
       "module": "candidates",
@@ -532,11 +532,11 @@
     {
       "module": "companies",
       "action": "delete",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "companies.delete",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "EntityDeleteActionPage",
+      "guarded": true
     },
     {
       "module": "companies",
@@ -613,11 +613,11 @@
     {
       "module": "contacts",
       "action": "delete",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "contacts.delete",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "EntityDeleteActionPage",
+      "guarded": true
     },
     {
       "module": "contacts",
@@ -1198,11 +1198,11 @@
     {
       "module": "joborders",
       "action": "delete",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.delete",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "EntityDeleteActionPage",
+      "guarded": true
     },
     {
       "module": "joborders",

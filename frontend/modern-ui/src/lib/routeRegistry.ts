@@ -49,6 +49,7 @@ import { PipelineStatusActionPage } from '../pages/PipelineStatusActionPage';
 import { JobOrderCompanyContextActionPage } from '../pages/JobOrderCompanyContextActionPage';
 import { JobOrderAddActionPage } from '../pages/JobOrderAddActionPage';
 import { JobOrderMonitorActionPage } from '../pages/JobOrderMonitorActionPage';
+import { EntityDeleteActionPage } from '../pages/EntityDeleteActionPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
@@ -109,6 +110,10 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.pipelinestatuseditdate': PipelineStatusActionPage,
   'lists.quickactionaddtolistmodal': ListsActionPage,
   'lists.addtolistfromdatagridmodal': ListsActionPage,
+  'candidates.delete': EntityDeleteActionPage,
+  'companies.delete': EntityDeleteActionPage,
+  'contacts.delete': EntityDeleteActionPage,
+  'joborders.delete': EntityDeleteActionPage,
   'reports.customerdashboarddetails': ReportsActionPage,
   'reports.customizeeeoreport': ReportsActionPage,
   'reports.customizejoborderreport': ReportsActionPage,
@@ -172,7 +177,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'addProfileComment',
     'addToPipeline',
     'administrativeHideShow',
-    'delete',
     'deleteAttachment',
     'deleteMessageThread',
     'emailCandidates',
@@ -185,14 +189,12 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'saveSources',
     'savedLists'
   ],
-  companies: ['delete', 'deleteAttachment', 'internalPostings'],
-  contacts: ['delete'],
+  companies: ['deleteAttachment', 'internalPostings'],
   joborders: [
     'addActivityChangeStatus',
     'addProfileComment',
     'addToPipeline',
     'administrativeHideShow',
-    'delete',
     'deleteAttachment',
     'deleteMessageThread',
     'editHiringPlan',
@@ -266,11 +268,13 @@ const registry: Record<string, ModernRouteComponent> = {
 const guardedRouteParams: Record<string, string[]> = {
   'candidates.show': ['candidateID'],
   'candidates.edit': ['candidateID'],
+  'candidates.delete': ['candidateID'],
   'candidates.createattachment': ['candidateID'],
   'candidates.viewresume': ['attachmentID'],
   'candidates.show_questionnaire': ['candidateID'],
   'joborders.show': ['jobOrderID'],
   'joborders.edit': ['jobOrderID'],
+  'joborders.delete': ['jobOrderID'],
   'joborders.createattachment': ['jobOrderID'],
   'joborders.addcandidatemodal': ['jobOrderID'],
   'joborders.setmonitoredjoborder': ['jobOrderID'],
@@ -279,9 +283,11 @@ const guardedRouteParams: Record<string, string[]> = {
   'joborders.pipelinestatuseditdate': ['pipelineID'],
   'companies.show': ['companyID'],
   'companies.edit': ['companyID'],
+  'companies.delete': ['companyID'],
   'companies.createattachment': ['companyID'],
   'contacts.show': ['contactID'],
   'contacts.edit': ['contactID'],
+  'contacts.delete': ['contactID'],
   'contacts.addactivityscheduleevent': ['contactID'],
   'contacts.downloadvcard': ['contactID'],
   'lists.show': ['savedListID'],

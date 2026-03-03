@@ -451,6 +451,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `ReportsActionPage` for `reports.customerDashboardDetails`, `reports.customizeEEOReport`, `reports.customizeJobOrderReport`, `reports.generateEEOReportPreview`, `reports.generateJobOrderReportPDF`, `reports.showHireReport`, `reports.showPlacementReport`, and `reports.showSubmissionReport`
     - embedded report render/customization routes inside the modern compatibility workspace (`ui_embed=1`) with in-page action switching and reload controls
     - switched PDF export route (`reports.generateJobOrderReportPDF`) to native action handling with explicit legacy endpoint redirect for download behavior parity.
+156. Converted core entity delete actions from compatibility wrapper to native action handling:
+    - introduced `EntityDeleteActionPage` for `candidates.delete`, `companies.delete`, `contacts.delete`, and `joborders.delete`
+    - routed delete actions through guarded modern routes (required entity IDs) with explicit cancel-return targets
+    - preserved backend parity by redirecting to legacy delete endpoints (`ui=legacy`) from native action pages.
 
 ## Next Queue (30-Slice Execution)
 
