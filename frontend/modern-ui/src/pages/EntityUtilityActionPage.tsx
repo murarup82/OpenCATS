@@ -52,6 +52,60 @@ const JOBORDER_NATIVE_REDIRECT_ACTIONS = new Set([
 
 const COMPANY_NATIVE_REDIRECT_ACTIONS = new Set(['deleteattachment']);
 const LISTS_NATIVE_REDIRECT_ACTIONS = new Set(['deletestaticlist', 'removefromlistdatagrid', 'savelistaccess']);
+const SETTINGS_LEGACY_REDIRECT_ACTIONS = new Set([
+  'addemailtemplate',
+  'adduser',
+  'administration',
+  'careerportalquestionnaire',
+  'careerportalquestionnairepreview',
+  'careerportalquestionnaireupdate',
+  'careerportalsettings',
+  'careerportaltemplateedit',
+  'changepassword',
+  'createbackup',
+  'customizecalendar',
+  'customizeextrafields',
+  'deletebackup',
+  'deleteemailtemplate',
+  'deleteuser',
+  'edituser',
+  'eeo',
+  'emailsettings',
+  'emailtemplates',
+  'feedbacksettings',
+  'forceemail',
+  'gdprsettings',
+  'googleoidcsettings',
+  'loginactivity',
+  'manageusers',
+  'myprofile',
+  'oncareerportaltweak',
+  'previewpage',
+  'previewpagetop',
+  'professional',
+  'rejectionreasons',
+  'reports',
+  'rolepagepermissions',
+  'schemamigrations',
+  'showuser',
+  'tags',
+  'talentfitflowsettings',
+  'viewitemhistory'
+]);
+const IMPORT_LEGACY_REDIRECT_ACTIONS = new Set([
+  'deletebulkresumes',
+  'importbulkresumes',
+  'importselecttype',
+  'importuploadresume',
+  'massimport',
+  'massimportdocument',
+  'massimportedit',
+  'revert',
+  'showmassimport',
+  'viewerrors',
+  'viewpending',
+  'whatisbulkresumes'
+]);
 
 const CANDIDATE_ACTION_LABELS: Record<string, string> = {
   addactivitychangestatus: 'Change Pipeline Status',
@@ -273,6 +327,12 @@ function resolveActionMode(moduleKey: ModuleKey, actionKey: string): ActionMode 
   }
   if (moduleKey === 'lists' && LISTS_NATIVE_REDIRECT_ACTIONS.has(actionKey)) {
     return 'modern-redirect';
+  }
+  if (moduleKey === 'settings' && SETTINGS_LEGACY_REDIRECT_ACTIONS.has(actionKey)) {
+    return 'legacy-redirect';
+  }
+  if (moduleKey === 'import' && IMPORT_LEGACY_REDIRECT_ACTIONS.has(actionKey)) {
+    return 'legacy-redirect';
   }
 
   if (moduleKey === 'calendar' && (actionKey === 'deleteevent' || actionKey === 'dynamicdata')) {
