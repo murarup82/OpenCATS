@@ -27,6 +27,7 @@ import { ActivityListPage } from '../pages/ActivityListPage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
 import { ListsDetailPage } from '../pages/ListsDetailPage';
+import { ListsActionPage } from '../pages/ListsActionPage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { ReportsCustomerDashboardPage } from '../pages/ReportsCustomerDashboardPage';
 import { ReportsGraphViewPage } from '../pages/ReportsGraphViewPage';
@@ -80,6 +81,8 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
   'contacts.search': ContactsListPage,
+  'lists.quickactionaddtolistmodal': ListsActionPage,
+  'lists.addtolistfromdatagridmodal': ListsActionPage,
   ...buildExplicitBridgeRoutes(
     {
       home: [
@@ -174,9 +177,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'setMonitoredJobOrder'
   ],
   lists: [
-    'addToListFromDatagridModal',
     'deleteStaticList',
-    'quickActionAddToListModal',
     'removeFromListDatagrid',
     'saveListAccess'
   ],

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T04:58:55.466Z",
+  "generatedAt": "2026-03-03T05:06:02.088Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -1336,7 +1336,7 @@
       "classification": "native-explicit",
       "routeKey": "lists.addtolistfromdatagridmodal",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ListsActionPage",
       "guarded": false
     },
     {
@@ -1363,7 +1363,7 @@
       "classification": "native-explicit",
       "routeKey": "lists.quickactionaddtolistmodal",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ListsActionPage",
       "guarded": false
     },
     {

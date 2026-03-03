@@ -404,6 +404,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - removed module-level `module.*` bridge mappings from route registry and kept only the global `*.*` safety net
     - updated fallback order for unknown action routes so unresolved action requests flow to global compatibility bridge before module default
     - added `verify-bridge-wildcard-retirement.mjs` guard plus deprecation artifacts (`docs/modern-ui-deprecation-signoff.md`, updated tracker) to keep wildcard debt from reappearing.
+151. Converted list add-to-list popup action routes to native action workspace handling:
+    - introduced `ListsActionPage` to execute `lists.quickActionAddToListModal` and `lists.addToListFromDatagridModal` through modern overlay orchestration instead of compatibility iframe
+    - mapped both routes as explicit native routes in registry and kept legacy fallback actions (`saveListAccess`, `removeFromListDatagrid`, `deleteStaticList`) on compatibility path
+    - retained quality gate protections (`verify:in-scope-routes`, wildcard retirement guard) and regenerated coverage/sanity artifacts.
 
 ## Next Queue (30-Slice Execution)
 

@@ -66,5 +66,6 @@ Phase 2A complete:
 Phase 2B backlog (functional deepening):
 - Replace compatibility wrappers with fully native contracts/UI per action family (Reports, Lists, Candidates/JobOrders utility actions).
 - Completed: Calendar action family now has native async mutations (`addEvent`, `editEvent`, `deleteEvent`) plus native modal UI wiring on `CalendarPage`.
+- Completed: Lists add-to-list popup actions (`quickActionAddToListModal`, `addToListFromDatagridModal`) now route to native `ListsActionPage` with modern overlay orchestration.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

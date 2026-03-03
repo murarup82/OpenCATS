@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T04:58:55.466Z
+Generated: 2026-03-03T05:06:02.088Z
 
 ## Summary
 
@@ -175,10 +175,10 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | setMonitoredJobOrder | native-explicit | joborders.setmonitoredjoborder | ActionCompatPage |
 | joborders | show | native-explicit-guarded | joborders.show | JobOrdersShowPage |
 | kpis | details | native-explicit | kpis.details | KpisDetailsPage |
-| lists | addToListFromDatagridModal | native-explicit | lists.addtolistfromdatagridmodal | ActionCompatPage |
+| lists | addToListFromDatagridModal | native-explicit | lists.addtolistfromdatagridmodal | ListsActionPage |
 | lists | deleteStaticList | native-explicit | lists.deletestaticlist | ActionCompatPage |
 | lists | listByView | native-explicit | lists.listbyview | ListsManagePage |
-| lists | quickActionAddToListModal | native-explicit | lists.quickactionaddtolistmodal | ActionCompatPage |
+| lists | quickActionAddToListModal | native-explicit | lists.quickactionaddtolistmodal | ListsActionPage |
 | lists | removeFromListDatagrid | native-explicit | lists.removefromlistdatagrid | ActionCompatPage |
 | lists | saveListAccess | native-explicit | lists.savelistaccess | ActionCompatPage |
 | lists | show | native-explicit-guarded | lists.show | ListsDetailPage |
