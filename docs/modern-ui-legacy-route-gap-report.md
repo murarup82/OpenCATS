@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:39:59.662Z
+Generated: 2026-03-03T06:42:57.677Z
 
 ## Summary
 
@@ -89,7 +89,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | companies | delete | native-explicit-guarded | companies.delete | EntityDeleteActionPage |
 | companies | deleteAttachment | native-explicit | companies.deleteattachment | ActionCompatPage |
 | companies | edit | native-explicit-guarded | companies.edit | CompaniesEditPage |
-| companies | internalPostings | native-explicit | companies.internalpostings | ActionCompatPage |
+| companies | internalPostings | native-explicit | companies.internalpostings | CompaniesInternalPostingsActionPage |
 | companies | listByView | native-explicit | companies.listbyview | CompaniesListPage |
 | companies | search | native-explicit | companies.search | CompaniesListPage |
 | companies | show | native-explicit-guarded | companies.show | CompaniesShowPage |

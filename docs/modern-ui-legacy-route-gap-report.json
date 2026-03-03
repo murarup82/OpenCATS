@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T06:39:59.662Z",
+  "generatedAt": "2026-03-03T06:42:57.677Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -562,7 +562,7 @@
       "classification": "native-explicit",
       "routeKey": "companies.internalpostings",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "CompaniesInternalPostingsActionPage",
       "guarded": false
     },
     {

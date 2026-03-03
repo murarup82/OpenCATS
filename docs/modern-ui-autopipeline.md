@@ -455,6 +455,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `EntityDeleteActionPage` for `candidates.delete`, `companies.delete`, `contacts.delete`, and `joborders.delete`
     - routed delete actions through guarded modern routes (required entity IDs) with explicit cancel-return targets
     - preserved backend parity by redirecting to legacy delete endpoints (`ui=legacy`) from native action pages.
+157. Converted companies internal-postings action route to native handling:
+    - introduced `CompaniesInternalPostingsActionPage` for `companies.internalPostings`
+    - resolves default company by following legacy route redirect and then navigates to modern `companies.show`
+    - removed `companies.internalPostings` from compatibility action routing and added modern list CTA for direct access.
 
 ## Next Queue (30-Slice Execution)
 

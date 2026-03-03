@@ -199,6 +199,9 @@ export function CompaniesListPage({ bootstrap }: Props) {
                 Add Company
               </a>
             ) : null}
+            <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(`${bootstrap.indexName}?m=companies&a=internalPostings`)}>
+              Go To My Company
+            </a>
             <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
               Open Legacy UI
             </a>

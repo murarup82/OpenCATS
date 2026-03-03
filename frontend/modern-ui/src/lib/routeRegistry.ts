@@ -22,6 +22,7 @@ import { CompaniesListPage } from '../pages/CompaniesListPage';
 import { CompaniesShowPage } from '../pages/CompaniesShowPage';
 import { CompaniesAddPage } from '../pages/CompaniesAddPage';
 import { CompaniesEditPage } from '../pages/CompaniesEditPage';
+import { CompaniesInternalPostingsActionPage } from '../pages/CompaniesInternalPostingsActionPage';
 import { ContactsListPage } from '../pages/ContactsListPage';
 import { ContactActivityActionPage } from '../pages/ContactActivityActionPage';
 import { ContactsColdCallListPage } from '../pages/ContactsColdCallListPage';
@@ -96,6 +97,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'candidates.show_questionnaire': CandidateQuestionnaireActionPage,
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
+  'companies.internalpostings': CompaniesInternalPostingsActionPage,
   'contacts.search': ContactsListPage,
   'contacts.addactivityscheduleevent': ContactActivityActionPage,
   'contacts.showcoldcalllist': ContactsColdCallListPage,
@@ -189,7 +191,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'saveSources',
     'savedLists'
   ],
-  companies: ['deleteAttachment', 'internalPostings'],
+  companies: ['deleteAttachment'],
   joborders: [
     'addActivityChangeStatus',
     'addProfileComment',
