@@ -1858,9 +1858,25 @@ class CompaniesUI extends UserInterface
      */
     private function onCreateAttachment()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         /* Bail out if we don't have a valid joborder ID. */
         if (!$this->isRequiredIDValid('companyID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCompany',
+                    'message' => 'Invalid company ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid company ID.');
         }
 
@@ -1875,10 +1891,62 @@ class CompaniesUI extends UserInterface
 
         if ($attachmentCreator->isError())
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'uploadError',
+                    'message' => $attachmentCreator->getError()
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_FILEERROR, $this, $attachmentCreator->getError());
         }
 
+        if ($attachmentCreator->duplicatesOccurred())
+        {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 409 Conflict');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'duplicateAttachment',
+                    'message' => 'This attachment has already been added to this company.'
+                ));
+                return;
+            }
+            CommonErrors::fatalModal(COMMONERROR_RECORDERROR, $this, 'This attachment has already been added to this company.');
+        }
+
         if (!eval(Hooks::get('CLIENTS_ON_CREATE_ATTACHMENT_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'attachmentCreated',
+                'message' => 'Attachment uploaded.',
+                'companyID' => (int) $companyID,
+                'attachmentID' => (int) $attachmentCreator->getAttachmentID()
+            ));
+            return;
+        }
 
         $this->_template->assign('isFinishedMode', true);
         $this->_template->assign('companyID', $companyID);
@@ -1892,20 +1960,66 @@ class CompaniesUI extends UserInterface
      */
     private function onDeleteAttachment()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidMethod',
+                    'message' => 'Invalid request method.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         /* Bail out if we don't have a valid attachment ID. */
         if (!$this->isRequiredIDValid('attachmentID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidAttachment',
+                    'message' => 'Invalid attachment ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid attachment ID.');
         }
 
         /* Bail out if we don't have a valid joborder ID. */
         if (!$this->isRequiredIDValid('companyID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCompany',
+                    'message' => 'Invalid company ID.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_BADINDEX, $this, 'Invalid company ID.');
         }
 
@@ -1915,6 +2029,21 @@ class CompaniesUI extends UserInterface
 
         if (!$this->isCSRFTokenValid('companies.deleteAttachment', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidToken',
+                    'message' => 'Invalid request token.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Invalid request token.');
         }
 
@@ -1926,12 +2055,44 @@ class CompaniesUI extends UserInterface
             (int) $attachmentRS['dataItemType'] !== DATA_ITEM_COMPANY ||
             (int) $attachmentRS['dataItemID'] !== (int) $companyID)
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 403 Forbidden');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'attachmentOwnership',
+                    'message' => 'Attachment does not belong to this company.'
+                ));
+                return;
+            }
             CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, 'Attachment does not belong to this company.');
         }
 
         $attachments->delete($attachmentID);
 
         if (!eval(Hooks::get('CLIENTS_ON_DELETE_ATTACHMENT_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'attachmentDeleted',
+                'message' => 'Attachment removed.',
+                'companyID' => (int) $companyID,
+                'attachmentID' => (int) $attachmentID
+            ));
+            return;
+        }
 
         CATSUtility::transferRelativeURI(
             'm=companies&a=show&companyID=' . $companyID

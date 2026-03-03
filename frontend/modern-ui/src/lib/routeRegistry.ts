@@ -62,7 +62,10 @@ function buildExplicitBridgeRoutes(
 
 const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'dashboard.setpipelinestatus': DashboardMyPage,
+  'candidates.createattachment': CandidatesShowPage,
+  'joborders.createattachment': JobOrdersShowPage,
   'joborders.addcandidatemodal': CandidatesAddPage,
+  'companies.createattachment': CompaniesShowPage,
   'candidates.search': CandidatesListPage,
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
@@ -123,7 +126,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'addToPipeline',
     'administrativeHideShow',
     'considerForJobSearch',
-    'createAttachment',
     'delete',
     'deleteAttachment',
     'deleteMessageThread',
@@ -139,7 +141,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'show_questionnaire',
     'viewResume'
   ],
-  companies: ['createAttachment', 'delete', 'deleteAttachment', 'internalPostings'],
+  companies: ['delete', 'deleteAttachment', 'internalPostings'],
   contacts: ['addActivityScheduleEvent', 'delete', 'downloadVCard', 'showColdCallList'],
   joborders: [
     'addActivityChangeStatus',
@@ -148,7 +150,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'addToPipeline',
     'administrativeHideShow',
     'considerCandidateSearch',
-    'createAttachment',
     'delete',
     'deleteAttachment',
     'deleteMessageThread',
@@ -255,11 +256,14 @@ const registry: Record<string, ModernRouteComponent> = {
 const guardedRouteParams: Record<string, string[]> = {
   'candidates.show': ['candidateID'],
   'candidates.edit': ['candidateID'],
+  'candidates.createattachment': ['candidateID'],
   'joborders.show': ['jobOrderID'],
   'joborders.edit': ['jobOrderID'],
+  'joborders.createattachment': ['jobOrderID'],
   'joborders.addcandidatemodal': ['jobOrderID'],
   'companies.show': ['companyID'],
   'companies.edit': ['companyID'],
+  'companies.createattachment': ['companyID'],
   'contacts.show': ['contactID'],
   'contacts.edit': ['contactID']
 };

@@ -1165,19 +1165,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     >
                       {attachmentUploadPending ? 'Uploading...' : 'Upload'}
                     </button>
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() =>
-                        setAttachmentModal({
-                          url: decodeLegacyURL(data.actions.createAttachmentURL),
-                          title: 'Add Attachment (Legacy)',
-                          showRefreshClose: true
-                        })
-                      }
-                    >
-                      Use Legacy Uploader
-                    </button>
                   </div>
                 </div>
               ) : null}

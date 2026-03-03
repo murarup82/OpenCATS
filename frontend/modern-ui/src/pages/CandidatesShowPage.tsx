@@ -208,6 +208,21 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     };
   }, [bootstrap, serverQueryString, reloadToken]);
 
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+    if (String(bootstrap.targetAction || '').toLowerCase() !== 'createattachment') {
+      return;
+    }
+    if (!data.meta.permissions.canCreateAttachment) {
+      return;
+    }
+
+    setAttachmentUploadOpen(true);
+    setAttachmentUploadError('');
+  }, [bootstrap.targetAction, data]);
+
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
@@ -1511,19 +1526,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                       disabled={attachmentUploadPending}
                     >
                       {attachmentUploadPending ? 'Uploading...' : 'Upload'}
-                    </button>
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() =>
-                        setPipelineModal({
-                          url: decodeLegacyURL(data.actions.createAttachmentURL),
-                          title: 'Add Attachment (Legacy)',
-                          showRefreshClose: true
-                        })
-                      }
-                    >
-                      Use Legacy Uploader
                     </button>
                   </div>
                 </div>

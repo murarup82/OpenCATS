@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fetchCompaniesShowModernData } from '../lib/api';
+import {
+  deleteCompanyAttachment,
+  fetchCompaniesShowModernData,
+  uploadCompanyAttachment
+} from '../lib/api';
 import type { CompaniesShowModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import '../dashboard-avel.css';
@@ -42,6 +47,16 @@ export function CompaniesShowPage({ bootstrap }: Props) {
     title: string;
     showRefreshClose: boolean;
   } | null>(null);
+  const [attachmentUploadOpen, setAttachmentUploadOpen] = useState<boolean>(false);
+  const [attachmentUploadFile, setAttachmentUploadFile] = useState<File | null>(null);
+  const [attachmentUploadPending, setAttachmentUploadPending] = useState<boolean>(false);
+  const [attachmentUploadError, setAttachmentUploadError] = useState<string>('');
+  const [attachmentDeleteModal, setAttachmentDeleteModal] = useState<{
+    attachmentID: number;
+    fileName: string;
+  } | null>(null);
+  const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
+  const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
   const loadRequestRef = useRef(0);
 
   useEffect(() => {
@@ -76,6 +91,21 @@ export function CompaniesShowPage({ bootstrap }: Props) {
     };
   }, [bootstrap, serverQueryString, reloadToken]);
 
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+    if (String(bootstrap.targetAction || '').toLowerCase() !== 'createattachment') {
+      return;
+    }
+    if (!data.meta.permissions.canCreateAttachment) {
+      return;
+    }
+
+    setAttachmentUploadOpen(true);
+    setAttachmentUploadError('');
+  }, [bootstrap.targetAction, data]);
+
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
   }, []);
@@ -89,6 +119,78 @@ export function CompaniesShowPage({ bootstrap }: Props) {
       }
     },
     [refreshPageData]
+  );
+
+  const submitAttachmentUpload = useCallback(async () => {
+    if (!data || attachmentUploadPending) {
+      return;
+    }
+    const submitURL = decodeLegacyURL(data.actions.createAttachmentURL || '');
+    if (submitURL === '') {
+      setAttachmentUploadError('Attachment upload endpoint is not available.');
+      return;
+    }
+    if (!attachmentUploadFile) {
+      setAttachmentUploadError('Select a file to upload.');
+      return;
+    }
+
+    setAttachmentUploadError('');
+    setAttachmentUploadPending(true);
+    try {
+      const result = await uploadCompanyAttachment(submitURL, {
+        companyID: Number(data.meta.companyID || 0),
+        file: attachmentUploadFile
+      });
+      if (!result.success) {
+        setAttachmentUploadError(result.message || 'Unable to upload attachment.');
+        return;
+      }
+
+      setAttachmentUploadFile(null);
+      setAttachmentUploadOpen(false);
+      refreshPageData();
+    } catch (err: unknown) {
+      setAttachmentUploadError(err instanceof Error ? err.message : 'Unable to upload attachment.');
+    } finally {
+      setAttachmentUploadPending(false);
+    }
+  }, [attachmentUploadFile, attachmentUploadPending, data, refreshPageData]);
+
+  const handleDeleteAttachment = useCallback(
+    async (attachmentID: number) => {
+      if (!data || attachmentDeletePending) {
+        return;
+      }
+
+      const deleteURL = decodeLegacyURL(data.actions.deleteAttachmentURL || '');
+      const token = data.actions.deleteAttachmentToken || '';
+      if (deleteURL === '' || token === '') {
+        setAttachmentDeleteError('Attachment delete endpoint is not available in this mode.');
+        return;
+      }
+
+      setAttachmentDeleteError('');
+      setAttachmentDeletePending(true);
+      try {
+        const result = await deleteCompanyAttachment(deleteURL, {
+          companyID: Number(data.meta.companyID || 0),
+          attachmentID: Number(attachmentID || 0),
+          securityToken: token
+        });
+        if (!result.success) {
+          setAttachmentDeleteError(result.message || 'Unable to delete attachment.');
+          return;
+        }
+        setAttachmentDeleteModal(null);
+        refreshPageData();
+      } catch (err: unknown) {
+        setAttachmentDeleteError(err instanceof Error ? err.message : 'Unable to delete attachment.');
+      } finally {
+        setAttachmentDeletePending(false);
+      }
+    },
+    [attachmentDeletePending, data, refreshPageData]
   );
 
   if (loading && !data) {
@@ -211,18 +313,38 @@ export function CompaniesShowPage({ bootstrap }: Props) {
                   <button
                     type="button"
                     className="modern-btn modern-btn--mini modern-btn--secondary"
-                    onClick={() =>
-                      setLegacyModal({
-                        url: decodeLegacyURL(data.actions.createAttachmentURL),
-                        title: 'Add Attachment',
-                        showRefreshClose: true
-                      })
-                    }
+                    onClick={() => {
+                      setAttachmentUploadOpen((current) => !current);
+                      setAttachmentUploadError('');
+                    }}
                   >
-                    Add Attachment
+                    {attachmentUploadOpen ? 'Cancel Upload' : 'Add Attachment'}
                   </button>
                 ) : null}
               </div>
+              {permissions.canCreateAttachment && attachmentUploadOpen ? (
+                <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
+                  <label className="modern-command-field avel-candidate-edit-field--full">
+                    <span className="modern-command-label">Attachment File</span>
+                    <input
+                      className="avel-form-control"
+                      type="file"
+                      onChange={(event) => setAttachmentUploadFile(event.target.files?.[0] || null)}
+                    />
+                  </label>
+                  {attachmentUploadError ? <div className="modern-state modern-state--error">{attachmentUploadError}</div> : null}
+                  <div className="modern-table-actions">
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--emphasis"
+                      onClick={submitAttachmentUpload}
+                      disabled={attachmentUploadPending}
+                    >
+                      {attachmentUploadPending ? 'Uploading...' : 'Upload'}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               <DataTable
                 columns={[
                   { key: 'name', title: 'File' },
@@ -248,16 +370,16 @@ export function CompaniesShowPage({ bootstrap }: Props) {
                         {permissions.canDeleteAttachment ? (
                           <button
                             type="button"
-                            className="modern-btn modern-btn--mini modern-btn--secondary"
-                            onClick={() =>
-                              setLegacyModal({
-                                url: ensureModernUIURL(data.actions.legacyURL),
-                                title: 'Manage Attachments (Legacy)',
-                                showRefreshClose: true
-                              })
-                            }
+                            className="modern-btn modern-btn--mini modern-btn--danger"
+                            onClick={() => {
+                              setAttachmentDeleteError('');
+                              setAttachmentDeleteModal({
+                                attachmentID: attachment.attachmentID,
+                                fileName: toDisplayText(attachment.fileName, 'Attachment')
+                              });
+                            }}
                           >
-                            Manage
+                            Delete
                           </button>
                         ) : null}
                       </div>
@@ -381,6 +503,28 @@ export function CompaniesShowPage({ bootstrap }: Props) {
             <p>{toDisplayText(company.notesText, '') || 'No notes available.'}</p>
           </section>
         </div>
+
+        <ConfirmActionModal
+          isOpen={!!attachmentDeleteModal}
+          title="Delete Attachment"
+          message={`Delete "${attachmentDeleteModal?.fileName || 'this attachment'}"?`}
+          confirmLabel="Delete Attachment"
+          pending={attachmentDeletePending}
+          error={attachmentDeleteError}
+          onCancel={() => {
+            if (attachmentDeletePending) {
+              return;
+            }
+            setAttachmentDeleteError('');
+            setAttachmentDeleteModal(null);
+          }}
+          onConfirm={() => {
+            if (!attachmentDeleteModal) {
+              return;
+            }
+            handleDeleteAttachment(attachmentDeleteModal.attachmentID);
+          }}
+        />
 
         <LegacyFrameModal
           isOpen={!!legacyModal}
