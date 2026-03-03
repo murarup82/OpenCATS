@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T05:06:02.088Z",
+  "generatedAt": "2026-03-03T05:09:44.857Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -346,7 +346,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.considerforjobsearch",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "CandidateAssignActionPage",
       "guarded": false
     },
     {
@@ -1183,7 +1183,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.considercandidatesearch",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "JobOrderAssignActionPage",
       "guarded": false
     },
     {

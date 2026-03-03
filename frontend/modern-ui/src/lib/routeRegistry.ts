@@ -36,6 +36,8 @@ import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
 import { LogsPage } from '../pages/LogsPage';
 import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
+import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
+import { JobOrderAssignActionPage } from '../pages/JobOrderAssignActionPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
@@ -81,6 +83,8 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
   'contacts.search': ContactsListPage,
+  'candidates.considerforjobsearch': CandidateAssignActionPage,
+  'joborders.considercandidatesearch': JobOrderAssignActionPage,
   'lists.quickactionaddtolistmodal': ListsActionPage,
   'lists.addtolistfromdatagridmodal': ListsActionPage,
   ...buildExplicitBridgeRoutes(
@@ -138,7 +142,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'addProfileComment',
     'addToPipeline',
     'administrativeHideShow',
-    'considerForJobSearch',
     'delete',
     'deleteAttachment',
     'deleteMessageThread',
@@ -162,7 +165,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'addProfileComment',
     'addToPipeline',
     'administrativeHideShow',
-    'considerCandidateSearch',
     'companyContext',
     'delete',
     'deleteAttachment',

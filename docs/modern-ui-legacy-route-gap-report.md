@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T05:06:02.088Z
+Generated: 2026-03-03T05:09:44.857Z
 
 ## Summary
 
@@ -65,7 +65,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | addProfileComment | native-explicit | candidates.addprofilecomment | ActionCompatPage |
 | candidates | addToPipeline | native-explicit | candidates.addtopipeline | ActionCompatPage |
 | candidates | administrativeHideShow | native-explicit | candidates.administrativehideshow | ActionCompatPage |
-| candidates | considerForJobSearch | native-explicit | candidates.considerforjobsearch | ActionCompatPage |
+| candidates | considerForJobSearch | native-explicit | candidates.considerforjobsearch | CandidateAssignActionPage |
 | candidates | createAttachment | native-explicit-guarded | candidates.createattachment | CandidatesShowPage |
 | candidates | delete | native-explicit | candidates.delete | ActionCompatPage |
 | candidates | deleteAttachment | native-explicit | candidates.deleteattachment | ActionCompatPage |
@@ -158,7 +158,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | addToPipeline | native-explicit | joborders.addtopipeline | ActionCompatPage |
 | joborders | administrativeHideShow | native-explicit | joborders.administrativehideshow | ActionCompatPage |
 | joborders | companyContext | native-explicit | joborders.companycontext | ActionCompatPage |
-| joborders | considerCandidateSearch | native-explicit | joborders.considercandidatesearch | ActionCompatPage |
+| joborders | considerCandidateSearch | native-explicit | joborders.considercandidatesearch | JobOrderAssignActionPage |
 | joborders | createAttachment | native-explicit-guarded | joborders.createattachment | JobOrdersShowPage |
 | joborders | delete | native-explicit | joborders.delete | ActionCompatPage |
 | joborders | deleteAttachment | native-explicit | joborders.deleteattachment | ActionCompatPage |

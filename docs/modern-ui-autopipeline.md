@@ -408,6 +408,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `ListsActionPage` to execute `lists.quickActionAddToListModal` and `lists.addToListFromDatagridModal` through modern overlay orchestration instead of compatibility iframe
     - mapped both routes as explicit native routes in registry and kept legacy fallback actions (`saveListAccess`, `removeFromListDatagrid`, `deleteStaticList`) on compatibility path
     - retained quality gate protections (`verify:in-scope-routes`, wildcard retirement guard) and regenerated coverage/sanity artifacts.
+152. Converted assignment popup action routes to native action workspace handling:
+    - introduced `CandidateAssignActionPage` and `JobOrderAssignActionPage` for `candidates.considerForJobSearch` and `joborders.considerCandidateSearch`
+    - routed both actions as explicit native mappings while preserving existing modern assignment modal behavior (`CandidateAssignJobOrderModal`, `JobOrderAssignCandidateModal`)
+    - removed these two actions from `ActionCompatPage` bridge mappings and kept quality gate/scope guards green.
 
 ## Next Queue (30-Slice Execution)
 
