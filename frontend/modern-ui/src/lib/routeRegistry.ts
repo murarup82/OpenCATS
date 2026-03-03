@@ -22,6 +22,8 @@ import { CompaniesShowPage } from '../pages/CompaniesShowPage';
 import { CompaniesAddPage } from '../pages/CompaniesAddPage';
 import { CompaniesEditPage } from '../pages/CompaniesEditPage';
 import { ContactsListPage } from '../pages/ContactsListPage';
+import { ContactsColdCallListPage } from '../pages/ContactsColdCallListPage';
+import { ContactVCardActionPage } from '../pages/ContactVCardActionPage';
 import { ContactsShowPage } from '../pages/ContactsShowPage';
 import { ContactsAddPage } from '../pages/ContactsAddPage';
 import { ContactsEditPage } from '../pages/ContactsEditPage';
@@ -90,6 +92,8 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
   'contacts.search': ContactsListPage,
+  'contacts.showcoldcalllist': ContactsColdCallListPage,
+  'contacts.downloadvcard': ContactVCardActionPage,
   'candidates.considerforjobsearch': CandidateAssignActionPage,
   'joborders.considercandidatesearch': JobOrderAssignActionPage,
   'joborders.companycontext': JobOrderCompanyContextActionPage,
@@ -170,7 +174,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'show_questionnaire'
   ],
   companies: ['delete', 'deleteAttachment', 'internalPostings'],
-  contacts: ['addActivityScheduleEvent', 'delete', 'downloadVCard', 'showColdCallList'],
+  contacts: ['addActivityScheduleEvent', 'delete'],
   joborders: [
     'addActivityChangeStatus',
     'addProfileComment',
@@ -275,6 +279,7 @@ const guardedRouteParams: Record<string, string[]> = {
   'companies.createattachment': ['companyID'],
   'contacts.show': ['contactID'],
   'contacts.edit': ['contactID'],
+  'contacts.downloadvcard': ['contactID'],
   'lists.show': ['savedListID'],
   'lists.showlist': ['savedListID']
 };

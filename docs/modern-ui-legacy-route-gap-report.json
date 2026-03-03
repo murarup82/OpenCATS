@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T06:21:00.527Z",
+  "generatedAt": "2026-03-03T06:25:41.077Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -622,11 +622,11 @@
     {
       "module": "contacts",
       "action": "downloadVCard",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "contacts.downloadvcard",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "ContactVCardActionPage",
+      "guarded": true
     },
     {
       "module": "contacts",
@@ -670,7 +670,7 @@
       "classification": "native-explicit",
       "routeKey": "contacts.showcoldcalllist",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ContactsColdCallListPage",
       "guarded": false
     },
     {

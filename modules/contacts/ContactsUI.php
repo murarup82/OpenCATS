@@ -744,7 +744,7 @@ class ContactsUI extends UserInterface
             ),
             'actions' => array(
                 'addContactURL' => sprintf('%s?m=contacts&a=add&ui=legacy', $baseURL),
-                'coldCallListURL' => sprintf('%s?m=contacts&a=showColdCallList&ui=legacy', $baseURL),
+                'coldCallListURL' => sprintf('%s?m=contacts&a=showColdCallList&ui=modern', $baseURL),
                 'legacyURL' => sprintf('%s?m=contacts&a=listByView&ui=legacy', $baseURL)
             ),
             'state' => array(
@@ -955,7 +955,7 @@ class ContactsUI extends UserInterface
                 'editURL' => sprintf('%s?m=contacts&a=edit&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
                 'deleteURL' => sprintf('%s?m=contacts&a=delete&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
                 'historyURL' => sprintf('%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CONTACT, (int) $contactID),
-                'downloadVCardURL' => sprintf('%s?m=contacts&a=downloadVCard&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
+                'downloadVCardURL' => sprintf('%s?m=contacts&a=downloadVCard&contactID=%d&ui=modern', $baseURL, (int) $contactID),
                 'addActivityURL' => sprintf('%s?m=contacts&a=addActivityScheduleEvent&contactID=%d&ui=legacy', $baseURL, (int) $contactID),
                 'scheduleEventURL' => sprintf('%s?m=contacts&a=addActivityScheduleEvent&contactID=%d&onlyScheduleEvent=true&ui=legacy', $baseURL, (int) $contactID),
                 'manageListsURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CONTACT, (int) $contactID),
@@ -2138,9 +2138,87 @@ class ContactsUI extends UserInterface
      */
     private function showColdCallList()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         $contacts = new Contacts($this->_siteID);
 
         $rs = $contacts->getColdCallList();
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'contacts-cold-call-list')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $baseURL = CATSUtility::getIndexName();
+            $rowsPayload = array();
+            foreach ($rs as $row)
+            {
+                $contactID = (int) (isset($row['contactID']) ? $row['contactID'] : 0);
+                $companyID = (int) (isset($row['companyID']) ? $row['companyID'] : 0);
+                $firstName = (isset($row['firstName']) ? trim((string) $row['firstName']) : '');
+                $lastName = (isset($row['lastName']) ? trim((string) $row['lastName']) : '');
+                $fullName = trim($firstName . ' ' . $lastName);
+                if ($fullName === '')
+                {
+                    $fullName = ($contactID > 0 ? 'Contact #' . $contactID : '--');
+                }
+
+                $rowsPayload[] = array(
+                    'contactID' => $contactID,
+                    'companyID' => $companyID,
+                    'firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'fullName' => $fullName,
+                    'title' => (isset($row['title']) ? (string) $row['title'] : ''),
+                    'phoneCell' => (isset($row['phoneCell']) ? (string) $row['phoneCell'] : ''),
+                    'companyName' => (isset($row['companyName']) ? (string) $row['companyName'] : ''),
+                    'showURL' => sprintf('%s?m=contacts&a=show&contactID=%d&ui=modern', $baseURL, $contactID),
+                    'companyURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, $companyID),
+                    'downloadVCardURL' => sprintf('%s?m=contacts&a=downloadVCard&contactID=%d&ui=modern', $baseURL, $contactID)
+                );
+            }
+
+            $payload = array(
+                'meta' => array(
+                    'contractVersion' => 1,
+                    'contractKey' => 'contacts.coldCallList.v1',
+                    'modernPage' => 'contacts-cold-call-list',
+                    'totalRows' => count($rowsPayload),
+                    'permissions' => array(
+                        'canShowColdCallList' => ($this->getUserAccessLevel('contacts.showColdCallList') >= ACCESS_LEVEL_READ),
+                        'canDownloadVCard' => ($this->getUserAccessLevel('contacts.downloadVCard') >= ACCESS_LEVEL_READ)
+                    )
+                ),
+                'actions' => array(
+                    'listURL' => sprintf('%s?m=contacts&a=listByView&ui=modern', $baseURL),
+                    'legacyURL' => sprintf('%s?m=contacts&a=showColdCallList&ui=legacy', $baseURL)
+                ),
+                'rows' => $rowsPayload
+            );
+
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode($payload);
+            return;
+        }
 
         if (!eval(Hooks::get('CONTACTS_COLD_CALL_LIST'))) return;
         $this->_template->assign('active', $this);

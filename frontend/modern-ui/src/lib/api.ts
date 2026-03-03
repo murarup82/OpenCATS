@@ -15,6 +15,7 @@ import type {
   CompaniesListModernDataResponse,
   CompaniesShowModernDataResponse,
   ContactsAddModernDataResponse,
+  ContactsColdCallListModernDataResponse,
   ContactsEditModernDataResponse,
   ContactsListModernDataResponse,
   ContactsShowModernDataResponse,
@@ -65,6 +66,7 @@ import {
   MODERN_COMPANIES_PAGE,
   MODERN_COMPANY_SHOW_PAGE,
   MODERN_CONTACT_ADD_PAGE,
+  MODERN_CONTACT_COLD_CALL_LIST_PAGE,
   MODERN_CONTACT_EDIT_PAGE,
   MODERN_CONTACTS_PAGE,
   MODERN_CONTACT_SHOW_PAGE,
@@ -1027,6 +1029,24 @@ export async function fetchContactsListModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ContactsListModernDataResponse>(url);
   assertModernContract(data.meta, 'contacts.listByView.v1', 'contacts');
+
+  return data;
+}
+
+export async function fetchContactsColdCallListModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ContactsColdCallListModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'contacts',
+    action: 'showColdCallList',
+    modernPage: MODERN_CONTACT_COLD_CALL_LIST_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ContactsColdCallListModernDataResponse>(url);
+  assertModernContract(data.meta, 'contacts.coldCallList.v1', 'contacts cold call list');
 
   return data;
 }

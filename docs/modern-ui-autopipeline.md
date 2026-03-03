@@ -273,6 +273,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
 115. Migrated `joborders.setMonitoredJobOrder` to a native action workspace:
     - added native `JobOrderMonitorActionPage` that executes existing modern-json monitor toggle mutation and handles safe return navigation
     - route mapping now resolves `joborders.setMonitoredJobOrder` directly to native action handling (compat wrapper removed).
+116. Migrated contacts utility actions from compat to native handling:
+    - backend `contacts.showColdCallList` now supports `format=modern-json` contract `contacts.coldCallList.v1`
+    - added native `ContactsColdCallListPage` for in-app cold-call workflow (with direct modern links to contact/company/vCard actions)
+    - added native `ContactVCardActionPage` for `contacts.downloadVCard` route handling with legacy download redirect fallback.
 112. Added compatibility-route deprecation tracker:
     - introduced `docs/modern-ui-compat-deprecation-tracker.md` with route-pattern status tracking (`Keep/Candidate/Deprecate/Retired`)
     - documented per-module fallback preconditions and a retirement workflow for bridge-route removal

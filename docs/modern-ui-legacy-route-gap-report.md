@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:21:00.527Z
+Generated: 2026-03-03T06:25:41.077Z
 
 ## Summary
 
@@ -96,12 +96,12 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | contacts | add | native-explicit | contacts.add | ContactsAddPage |
 | contacts | addActivityScheduleEvent | native-explicit | contacts.addactivityscheduleevent | ActionCompatPage |
 | contacts | delete | native-explicit | contacts.delete | ActionCompatPage |
-| contacts | downloadVCard | native-explicit | contacts.downloadvcard | ActionCompatPage |
+| contacts | downloadVCard | native-explicit-guarded | contacts.downloadvcard | ContactVCardActionPage |
 | contacts | edit | native-explicit-guarded | contacts.edit | ContactsEditPage |
 | contacts | listByView | native-explicit | contacts.listbyview | ContactsListPage |
 | contacts | search | native-explicit | contacts.search | ContactsListPage |
 | contacts | show | native-explicit-guarded | contacts.show | ContactsShowPage |
-| contacts | showColdCallList | native-explicit | contacts.showcoldcalllist | ActionCompatPage |
+| contacts | showColdCallList | native-explicit | contacts.showcoldcalllist | ContactsColdCallListPage |
 | dashboard | my | native-explicit | dashboard.my | DashboardMyPage |
 | dashboard | setPipelineStatus | native-explicit | dashboard.setpipelinestatus | DashboardMyPage |
 | export | export | bridge-global-fallback | *.* | ModuleBridgePage |

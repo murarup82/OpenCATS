@@ -16,6 +16,7 @@ export const MODERN_COMPANY_SHOW_PAGE = 'companies-show';
 export const MODERN_COMPANY_ADD_PAGE = 'companies-add';
 export const MODERN_COMPANY_EDIT_PAGE = 'companies-edit';
 export const MODERN_CONTACTS_PAGE = 'contacts-list';
+export const MODERN_CONTACT_COLD_CALL_LIST_PAGE = 'contacts-cold-call-list';
 export const MODERN_CONTACT_SHOW_PAGE = 'contacts-show';
 export const MODERN_CONTACT_ADD_PAGE = 'contacts-add';
 export const MODERN_CONTACT_EDIT_PAGE = 'contacts-edit';

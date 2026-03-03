@@ -539,6 +539,36 @@ export type ContactsListModernDataResponse = {
   }>;
 };
 
+export type ContactsColdCallListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    totalRows: number;
+    permissions: {
+      canShowColdCallList: boolean;
+      canDownloadVCard: boolean;
+    };
+  };
+  actions: {
+    listURL: string;
+    legacyURL: string;
+  };
+  rows: Array<{
+    contactID: number;
+    companyID: number;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    title: string;
+    phoneCell: string;
+    companyName: string;
+    showURL: string;
+    companyURL: string;
+    downloadVCardURL: string;
+  }>;
+};
+
 export type ContactsShowModernDataResponse = {
   meta: {
     contractVersion: number;
