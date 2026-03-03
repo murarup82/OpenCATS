@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:30:31.675Z
+Generated: 2026-03-03T06:35:14.258Z
 
 ## Summary
 
@@ -192,16 +192,16 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | login | showLoginForm | bridge-global-fallback | *.* | ModuleBridgePage |
 | logs | view | native-explicit | logs.view | LogsPage |
 | reports | customerDashboard | native-explicit | reports.customerdashboard | ReportsCustomerDashboardPage |
-| reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ActionCompatPage |
-| reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | ActionCompatPage |
-| reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | ActionCompatPage |
-| reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | ActionCompatPage |
-| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | ActionCompatPage |
+| reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ReportsActionPage |
+| reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | ReportsActionPage |
+| reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | ReportsActionPage |
+| reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | ReportsActionPage |
+| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | ReportsActionPage |
 | reports | graphView | native-explicit | reports.graphview | ReportsGraphViewPage |
 | reports | reports | native-explicit | reports.reports | ReportsLauncherPage |
-| reports | showHireReport | native-explicit | reports.showhirereport | ActionCompatPage |
-| reports | showPlacementReport | native-explicit | reports.showplacementreport | ActionCompatPage |
-| reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | ActionCompatPage |
+| reports | showHireReport | native-explicit | reports.showhirereport | ReportsActionPage |
+| reports | showPlacementReport | native-explicit | reports.showplacementreport | ReportsActionPage |
+| reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | ReportsActionPage |
 | rss | jobOrders | bridge-global-fallback | *.* | ModuleBridgePage |
 | settings | addEmailTemplate | bridge-global-fallback | *.* | ModuleBridgePage |
 | settings | addUser | bridge-global-fallback | *.* | ModuleBridgePage |

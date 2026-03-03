@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T06:30:31.675Z",
+  "generatedAt": "2026-03-03T06:35:14.258Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -1489,7 +1489,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.customerdashboarddetails",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ReportsActionPage",
       "guarded": false
     },
     {
@@ -1498,7 +1498,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.customizeeeoreport",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ReportsActionPage",
       "guarded": false
     },
     {
@@ -1507,7 +1507,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.customizejoborderreport",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ReportsActionPage",
       "guarded": false
     },
     {
@@ -1516,7 +1516,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.generateeeoreportpreview",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ReportsActionPage",
       "guarded": false
     },
     {
@@ -1525,7 +1525,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.generatejoborderreportpdf",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ReportsActionPage",
       "guarded": false
     },
     {
@@ -1552,7 +1552,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showhirereport",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ReportsActionPage",
       "guarded": false
     },
     {
@@ -1561,7 +1561,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showplacementreport",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ReportsActionPage",
       "guarded": false
     },
     {
@@ -1570,7 +1570,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showsubmissionreport",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "ReportsActionPage",
       "guarded": false
     },
     {

@@ -37,6 +37,7 @@ import { ListsActionPage } from '../pages/ListsActionPage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { ReportsCustomerDashboardPage } from '../pages/ReportsCustomerDashboardPage';
 import { ReportsGraphViewPage } from '../pages/ReportsGraphViewPage';
+import { ReportsActionPage } from '../pages/ReportsActionPage';
 import { SourcingPage } from '../pages/SourcingPage';
 import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
@@ -108,6 +109,14 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.pipelinestatuseditdate': PipelineStatusActionPage,
   'lists.quickactionaddtolistmodal': ListsActionPage,
   'lists.addtolistfromdatagridmodal': ListsActionPage,
+  'reports.customerdashboarddetails': ReportsActionPage,
+  'reports.customizeeeoreport': ReportsActionPage,
+  'reports.customizejoborderreport': ReportsActionPage,
+  'reports.generateeeoreportpreview': ReportsActionPage,
+  'reports.generatejoborderreportpdf': ReportsActionPage,
+  'reports.showhirereport': ReportsActionPage,
+  'reports.showplacementreport': ReportsActionPage,
+  'reports.showsubmissionreport': ReportsActionPage,
   ...buildExplicitBridgeRoutes(
     {
       home: [
@@ -195,16 +204,6 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'deleteStaticList',
     'removeFromListDatagrid',
     'saveListAccess'
-  ],
-  reports: [
-    'customerDashboardDetails',
-    'customizeEEOReport',
-    'customizeJobOrderReport',
-    'generateEEOReportPreview',
-    'generateJobOrderReportPDF',
-    'showHireReport',
-    'showPlacementReport',
-    'showSubmissionReport'
   ]
 }, ActionCompatPage);
 

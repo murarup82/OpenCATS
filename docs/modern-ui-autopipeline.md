@@ -447,6 +447,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `JobOrderCompanyContextActionPage` for `joborders.companyContext`
     - reused existing `joborders.companyContext.v1` contract to render location/contact/department defaults in a native page
     - removed `joborders.companyContext` from `ActionCompatPage` bridge mappings and added guarded `companyID` route requirement.
+155. Converted remaining reports action routes from compatibility wrapper to native workspace handling:
+    - introduced `ReportsActionPage` for `reports.customerDashboardDetails`, `reports.customizeEEOReport`, `reports.customizeJobOrderReport`, `reports.generateEEOReportPreview`, `reports.generateJobOrderReportPDF`, `reports.showHireReport`, `reports.showPlacementReport`, and `reports.showSubmissionReport`
+    - embedded report render/customization routes inside the modern compatibility workspace (`ui_embed=1`) with in-page action switching and reload controls
+    - switched PDF export route (`reports.generateJobOrderReportPDF`) to native action handling with explicit legacy endpoint redirect for download behavior parity.
 
 ## Next Queue (30-Slice Execution)
 
