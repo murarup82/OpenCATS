@@ -1049,6 +1049,15 @@ class KpisUI extends UserInterface
             $trendLabelParam,
             $trendDataParam
         );
+        $candidateTrendPoints = array();
+        $trendPointCount = max(count($candidateTrend['labels']), count($candidateTrend['data']));
+        for ($i = 0; $i < $trendPointCount; ++$i)
+        {
+            $candidateTrendPoints[] = array(
+                'label' => isset($candidateTrend['labels'][$i]) ? (string) $candidateTrend['labels'][$i] : '',
+                'value' => isset($candidateTrend['data'][$i]) ? (int) $candidateTrend['data'][$i] : 0
+            );
+        }
 
         $weekLabel = $this->formatDateLabel($weekStart) . ' - ' . $this->formatDateLabel($weekEnd);
         $dataAsOfLabel = $this->formatDateTimeLabel(new DateTime());
@@ -1081,6 +1090,9 @@ class KpisUI extends UserInterface
                 $candidateSourceRows,
                 $candidateMetricRows,
                 $candidateSourceSnapshot,
+                $candidateTrendPoints,
+                $candidateTrendGraphURL,
+                $candidateSourcePieURL,
                 $officialReports,
                 $showDeadline,
                 $showCompletionRate,
@@ -1139,6 +1151,9 @@ class KpisUI extends UserInterface
         $candidateSourceRows,
         $candidateMetricRows,
         $candidateSourceSnapshot,
+        $candidateTrendPoints,
+        $candidateTrendGraphURL,
+        $candidateSourcePieURL,
         $officialReports,
         $showDeadline,
         $showCompletionRate,
@@ -1154,6 +1169,25 @@ class KpisUI extends UserInterface
     )
     {
         $baseURL = CATSUtility::getIndexName();
+        $normalizedTrendPoints = array();
+        $trendTotal = 0;
+        $trendPeak = 0;
+        $trendLatest = 0;
+        foreach ($candidateTrendPoints as $point)
+        {
+            $value = isset($point['value']) ? (int) $point['value'] : 0;
+            $normalizedTrendPoints[] = array(
+                'label' => isset($point['label']) ? (string) $point['label'] : '',
+                'value' => $value
+            );
+            $trendTotal += $value;
+            if ($value > $trendPeak)
+            {
+                $trendPeak = $value;
+            }
+            $trendLatest = $value;
+        }
+
         $payload = array(
             'meta' => array(
                 'contractVersion' => 1,
@@ -1167,6 +1201,21 @@ class KpisUI extends UserInterface
             'state' => array(
                 'weekLabel' => (string) $weekLabel,
                 'dataAsOfLabel' => (string) $dataAsOfLabel
+            ),
+            'options' => array(
+                'candidateSourceScopes' => array(
+                    array('value' => 'all', 'label' => 'All'),
+                    array('value' => 'internal', 'label' => 'Internal'),
+                    array('value' => 'partner', 'label' => 'Partner')
+                ),
+                'jobOrderScopes' => array(
+                    array('value' => 'all', 'label' => 'All Job Orders (Open + Closed + Cancelled)'),
+                    array('value' => 'open', 'label' => 'Only Open JO')
+                ),
+                'trendViews' => array(
+                    array('value' => 'weekly', 'label' => 'Weekly'),
+                    array('value' => 'monthly', 'label' => 'Monthly')
+                )
             ),
             'filters' => array(
                 'officialReports' => ($officialReports ? true : false),
@@ -1184,6 +1233,21 @@ class KpisUI extends UserInterface
                 'totals' => $totals,
                 'totalsLastWeek' => $totalsLastWeek,
                 'totalsDiff' => $totalsDiff
+            ),
+            'charts' => array(
+                'candidateTrend' => array(
+                    'view' => (string) $trendView,
+                    'start' => (string) $trendStart,
+                    'end' => (string) $trendEnd,
+                    'points' => $normalizedTrendPoints,
+                    'total' => $trendTotal,
+                    'peak' => $trendPeak,
+                    'latest' => $trendLatest,
+                    'graphURL' => (string) $candidateTrendGraphURL
+                ),
+                'candidateSource' => array(
+                    'pieURL' => (string) $candidateSourcePieURL
+                )
             ),
             'rows' => array(
                 'kpiRows' => $kpiRows,

@@ -321,6 +321,285 @@
   font-size: 0.73rem;
 }
 
+.avel-kpi-grid--spaced {
+  margin-top: 12px;
+}
+
+.avel-kpi-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.avel-kpi-filter-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(130px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.avel-kpi-date {
+  width: 100%;
+  min-height: 40px;
+  height: 40px;
+  border: 1px solid #aac5d7;
+  border-radius: 11px;
+  background: #ffffff;
+  color: var(--avel-text);
+  padding: 0 11px;
+  font-size: 0.82rem;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.66) inset;
+}
+
+.avel-kpi-date:focus {
+  outline: none;
+  border-color: var(--avel-500);
+  box-shadow: 0 0 0 3px rgba(0, 151, 189, 0.2);
+}
+
+.avel-kpi-range {
+  width: 100%;
+  accent-color: var(--avel-700);
+}
+
+.avel-kpi-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.avel-chart-card {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-chart-card--wide {
+  grid-column: 1 / -1;
+}
+
+.avel-chart-toolbar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.avel-chart-kpi {
+  border: 1px solid #b5d0df;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f9fdff 0%, #eef7fd 100%);
+  padding: 6px 9px;
+  display: grid;
+  gap: 2px;
+}
+
+.avel-chart-kpi span {
+  color: #5b7988;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.avel-chart-kpi strong {
+  color: var(--avel-900);
+  font: 700 0.88rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-trend-chart {
+  border: 1px solid #bfd7e5;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbfe 100%);
+  padding: 8px;
+}
+
+.avel-trend-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.avel-trend-chart__grid {
+  stroke: #d6e7f1;
+  stroke-width: 1;
+}
+
+.avel-trend-chart__axis {
+  fill: #617f8f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.avel-trend-chart__area {
+  fill: rgba(15, 152, 192, 0.18);
+}
+
+.avel-trend-chart__line {
+  fill: none;
+  stroke: #0f98c0;
+  stroke-width: 2.5;
+}
+
+.avel-trend-chart__point {
+  fill: #ffffff;
+  stroke: #117ea1;
+  stroke-width: 2;
+  cursor: pointer;
+  transition: r 140ms ease, fill 140ms ease, stroke 140ms ease;
+}
+
+.avel-trend-chart__point.is-active {
+  fill: #0f98c0;
+  stroke: #ffffff;
+}
+
+.avel-trend-chart__point:focus-visible {
+  outline: none;
+  stroke: #0b6480;
+  stroke-width: 3;
+}
+
+.avel-trend-chart__bar {
+  fill: #79bdd4;
+  cursor: pointer;
+  transition: fill 140ms ease;
+}
+
+.avel-trend-chart__bar.is-active {
+  fill: #0f98c0;
+}
+
+.avel-trend-chart__bar:focus-visible {
+  outline: none;
+  stroke: #0b6480;
+  stroke-width: 2;
+}
+
+.avel-source-mix {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.avel-source-mix__donut {
+  width: 152px;
+  height: 152px;
+  border-radius: 999px;
+  border: 1px solid #a5c7d8;
+  display: grid;
+  place-items: center;
+}
+
+.avel-source-mix__center {
+  width: 92px;
+  height: 92px;
+  border-radius: 999px;
+  border: 1px solid #c4dcea;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.avel-source-mix__center strong {
+  color: var(--avel-900);
+  font: 700 1.2rem/1 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-source-mix__center span {
+  color: #617f8f;
+  font-size: 0.64rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.avel-source-mix__legend {
+  display: grid;
+  gap: 7px;
+}
+
+.avel-source-chip {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid #a8c6d8;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f8fcff 0%, #edf6fc 100%);
+  color: #255267;
+  text-align: left;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.avel-source-chip.is-active {
+  border-color: #6cabc6;
+  background: linear-gradient(180deg, #d8edf8 0%, #c7e4f2 100%);
+  color: #11465d;
+}
+
+.avel-company-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-company-bars__row {
+  display: grid;
+  gap: 4px;
+}
+
+.avel-company-bars__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  color: #2f5367;
+  font-size: 0.8rem;
+}
+
+.avel-company-bars__meta span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avel-company-bars__meta strong {
+  color: #0f4861;
+  font: 700 0.85rem/1 'Space Grotesk', 'Segoe UI', sans-serif;
+  flex: 0 0 auto;
+}
+
+.avel-company-bars__track {
+  width: 100%;
+  height: 11px;
+  border-radius: 999px;
+  background: #dbeaf3;
+  overflow: hidden;
+}
+
+.avel-company-bars__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #37aac9 0%, #0d7ea2 100%);
+}
+
+.avel-company-bars__track span.is-negative {
+  background: linear-gradient(90deg, #e7a490 0%, #c36f56 100%);
+}
+
+.avel-kpi-table-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .avel-priority-band {
   border: 1px solid #a9c4d6;
   border-radius: 16px;
@@ -3637,6 +3916,18 @@
     grid-template-columns: repeat(2, minmax(160px, 1fr));
   }
 
+  .avel-kpi-controls {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .avel-kpi-filter-grid {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+
+  .avel-kpi-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
   .avel-dashboard-page .modern-command-bar__row--primary {
     grid-template-columns: minmax(220px, auto) minmax(210px, 1fr) auto;
   }
@@ -3701,6 +3992,21 @@
   .avel-dashboard-page .modern-command-bar__row--filters,
   .avel-dashboard-page .modern-command-bar__row--meta {
     grid-template-columns: 1fr;
+  }
+
+  .avel-kpi-controls,
+  .avel-kpi-filter-grid,
+  .avel-chart-toolbar,
+  .avel-kpi-table-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-source-mix {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-source-mix__donut {
+    margin-inline: auto;
   }
 
   .avel-candidates-page .avel-candidate-toolbar__primary,
@@ -3776,6 +4082,10 @@
 @media (max-width: 720px) {
   .avel-kpi-grid {
     grid-template-columns: 1fr;
+  }
+
+  .avel-chart-kpi strong {
+    font-size: 0.78rem;
   }
 
   .avel-candidates-page .avel-candidate-inline-sort {

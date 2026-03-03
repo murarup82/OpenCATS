@@ -1054,6 +1054,20 @@ export type KpisListModernDataResponse = {
     weekLabel: string;
     dataAsOfLabel: string;
   };
+  options: {
+    candidateSourceScopes: Array<{
+      value: 'all' | 'internal' | 'partner' | string;
+      label: string;
+    }>;
+    jobOrderScopes: Array<{
+      value: 'all' | 'open' | string;
+      label: string;
+    }>;
+    trendViews: Array<{
+      value: 'weekly' | 'monthly' | string;
+      label: string;
+    }>;
+  };
   filters: {
     officialReports: boolean;
     showDeadline: boolean;
@@ -1134,6 +1148,24 @@ export type KpisListModernDataResponse = {
       internal: number;
       partner: number;
       total: number;
+    };
+  };
+  charts: {
+    candidateTrend: {
+      view: string;
+      start: string;
+      end: string;
+      points: Array<{
+        label: string;
+        value: number;
+      }>;
+      total: number;
+      peak: number;
+      latest: number;
+      graphURL: string;
+    };
+    candidateSource: {
+      pieURL: string;
     };
   };
 };
