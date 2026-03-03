@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-03T07:32:53.952Z
-Finished: 2026-03-03T07:33:12.177Z
+Started: 2026-03-03T07:36:49.822Z
+Finished: 2026-03-03T07:37:06.228Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -13,6 +13,7 @@ Overall Required Status: **Pass**
 | Route Parity Checklist | Pass | Yes | 0 |
 | Bridge Wildcard Retirement | Pass | Yes | 0 |
 | Legacy Fallback Link Guard | Pass | Yes | 0 |
+| Shell No-JS Fallback Guard | Pass | Yes | 0 |
 | Playwright Workflow Smoke | Pass | Yes | 0 |
 | Route Smoke | Pass | No | 0 |
 | Endpoint Smoke | Pass | No | 0 |
@@ -40,7 +41,7 @@ rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m    0.20 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  134.90 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,040.42 kB[39m[22m[2m │ map: 3,807.45 kB[22m
-[32m✓ built in 7.46s[39m
+[32m✓ built in 6.67s[39m
 ```
 
 **stderr**
@@ -101,6 +102,21 @@ Command: `npm run verify:legacy-fallback-links`
 > node ./scripts/verify-legacy-fallback-links.mjs
 
 [modern-ui] Legacy fallback link coverage passed (33 pages).
+```
+
+**stderr**
+`(no output)`
+
+### Shell No-JS Fallback Guard (Pass)
+
+Command: `npm run verify:shell-noscript-fallback`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:shell-noscript-fallback
+> node ./scripts/verify-shell-noscript-fallback.mjs
+
+[modern-ui] Shell no-JS fallback guard passed.
 ```
 
 **stderr**

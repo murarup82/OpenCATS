@@ -84,5 +84,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Remaining compat-tail actions (`calendar.deleteEvent`, `calendar.dynamicData`, `companies.deleteAttachment`, `lists.deleteStaticList`, `lists.removeFromListDatagrid`, `lists.saveListAccess`) now route via native `EntityUtilityActionPage`, retiring explicit `ActionCompatPage` route usage.
 - Completed: Removed dead `ActionCompatPage` runtime source after explicit compat-route retirement.
 - Completed: Added CI guard for no-JS fallback parity (`verify:legacy-fallback-links`) to enforce `Open Legacy` link presence on core native pages.
+- Completed: Added shell no-JS handoff fallback (`<noscript>` legacy link) plus CI guard (`verify:shell-noscript-fallback`) to prevent regression.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

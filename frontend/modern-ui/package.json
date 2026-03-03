@@ -14,6 +14,7 @@
     "verify:bridge-wildcards": "node ./scripts/verify-bridge-wildcard-retirement.mjs",
     "verify:in-scope-routes": "node ./scripts/verify-no-inscope-wildcard-fallbacks.mjs",
     "verify:legacy-fallback-links": "node ./scripts/verify-legacy-fallback-links.mjs",
+    "verify:shell-noscript-fallback": "node ./scripts/verify-shell-noscript-fallback.mjs",
     "coverage:matrix": "node ./scripts/generate-coverage-matrix.mjs",
     "parity:routes": "node ./scripts/generate-route-parity-checklist.mjs",
     "smoke:routes": "node ./scripts/smoke-modern-routes.mjs",

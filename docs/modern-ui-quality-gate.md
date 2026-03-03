@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-03T07:32:52.137Z
-Finished: 2026-03-03T07:33:22.003Z
+Started: 2026-03-03T07:36:49.101Z
+Finished: 2026-03-03T07:37:16.309Z
 Overall Status: **Pass**
 
 ## Summary
@@ -17,6 +17,7 @@ Overall Status: **Pass**
 | Command: In-Scope Route Fallback Guard | Pass | 0 |
 | Command: Bridge Wildcard Retirement Guard | Pass | 0 |
 | Command: Legacy Fallback Link Guard | Pass | 0 |
+| Command: Shell No-JS Fallback Guard | Pass | 0 |
 | Command: Cutover Evidence Snapshot | Pass | 0 |
 | Command: Deprecation Evidence Validation | Pass | 0 |
 | Command: Ownership Review Reminder | Pass | 0 |
@@ -184,6 +185,21 @@ Command: `npm.cmd run verify:legacy-fallback-links`
 > node ./scripts/verify-legacy-fallback-links.mjs
 
 [modern-ui] Legacy fallback link coverage passed (33 pages).
+```
+
+**stderr**
+`(no output)`
+
+### Shell No-JS Fallback Guard (Pass)
+
+Command: `npm.cmd run verify:shell-noscript-fallback`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:shell-noscript-fallback
+> node ./scripts/verify-shell-noscript-fallback.mjs
+
+[modern-ui] Shell no-JS fallback guard passed.
 ```
 
 **stderr**

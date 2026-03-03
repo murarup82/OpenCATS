@@ -18,6 +18,7 @@ const checks = [
   { id: 'verifyInScopeRoutes', label: 'In-Scope Route Fallback Guard', command: ['run', 'verify:in-scope-routes'], required: true },
   { id: 'verifyBridgeWildcards', label: 'Bridge Wildcard Retirement Guard', command: ['run', 'verify:bridge-wildcards'], required: true },
   { id: 'verifyLegacyFallbackLinks', label: 'Legacy Fallback Link Guard', command: ['run', 'verify:legacy-fallback-links'], required: true },
+  { id: 'verifyShellNoJSSFallback', label: 'Shell No-JS Fallback Guard', command: ['run', 'verify:shell-noscript-fallback'], required: true },
   { id: 'cutoverEvidence', label: 'Cutover Evidence Snapshot', command: ['run', 'cutover:evidence'], required: true },
   { id: 'deprecationEvidence', label: 'Deprecation Evidence Validation', command: ['run', 'deprecation:validate'], required: true },
   { id: 'ownershipReminder', label: 'Ownership Review Reminder', command: ['run', 'ownership:reminder'], required: true }

@@ -33,3 +33,6 @@ This audit identifies critical workflows that rely on JavaScript in modern UI an
 - Added CI/runtime guard script `frontend/modern-ui/scripts/verify-legacy-fallback-links.mjs`.
 - The guard validates `Open Legacy` fallback action labels across core native pages.
 - Wired into both `sanity:modern` and `quality:gate` pipelines as required checks.
+- Added shell-level no-JS fallback in `modules/modernui/Shell.tpl` (`<noscript>` legacy handoff block).
+- Added guard `frontend/modern-ui/scripts/verify-shell-noscript-fallback.mjs` to prevent shell no-JS fallback regressions.
+- Wired shell no-JS fallback guard into both `sanity:modern` and `quality:gate` required checks.

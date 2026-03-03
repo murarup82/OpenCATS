@@ -370,6 +370,35 @@ body.ui2-theme-avel #contents.ui2-page {
     animation: modern-shell-pulse 1.2s ease-in-out infinite;
 }
 
+.modern-shell-noscript {
+    display: grid;
+    gap: 10px;
+    border: 1px solid #e4c8c8;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #fff8f8 0%, #fff2f2 100%);
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.modern-shell-noscript h3 {
+    margin: 0;
+    color: #193c4f;
+    font-size: 19px;
+    line-height: 1.2;
+}
+
+.modern-shell-noscript p {
+    margin: 0;
+    color: #4f6a7a;
+}
+
+.modern-shell-noscript__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .modern-shell-sidebar-header {
     display: flex;
     align-items: center;

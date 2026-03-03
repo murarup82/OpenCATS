@@ -474,6 +474,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `frontend/modern-ui/scripts/verify-legacy-fallback-links.mjs` to assert `Open Legacy` fallback links remain present on core native page headers
     - wired `verify:legacy-fallback-links` into both `sanity:modern` and `quality:gate` required command suites
     - documented guard rollout in `docs/modern-ui-nojs-fallback-audit.md`.
+162. Added shell-level no-JS fallback handoff + guard:
+    - added `<noscript>` legacy handoff panel in `modules/modernui/Shell.tpl` so modern routes stay recoverable when JavaScript is disabled
+    - styled no-JS handoff in `public/modern-ui/modern-shell.css` with explicit `Open Legacy UI` call-to-action
+    - introduced `verify:shell-noscript-fallback` guard and wired it into required `sanity:modern` and `quality:gate` checks.
 
 ## Next Queue (30-Slice Execution)
 

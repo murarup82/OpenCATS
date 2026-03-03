@@ -109,6 +109,17 @@ TemplateUtility::printHeader('Modern UI Preview', array($modernShellStyleVersion
                 data-auto-legacy-fallback-seconds="<?php echo((int) $this->autoLegacyFallbackSeconds); ?>"
                 data-app-shell="1"
             >
+                <noscript>
+                    <section class="modern-shell-noscript">
+                        <h3>JavaScript Is Required For Modern UI</h3>
+                        <p>The modern shell cannot render without JavaScript. Continue in the legacy UI for full functionality.</p>
+                        <div class="modern-shell-noscript__actions">
+                            <a class="button ui2-button ui2-button--secondary" href="<?php $this->_($this->legacyURL); ?>">
+                                Open Legacy UI
+                            </a>
+                        </div>
+                    </section>
+                </noscript>
                 <div class="modern-shell-loading">
                     <span class="modern-shell-loading-dot"></span>
                     <span>Loading modern UI...</span>
