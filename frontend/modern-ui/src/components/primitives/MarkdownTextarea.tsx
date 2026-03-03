@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Editor } from '@toast-ui/editor';
 import type { Editor as ToastEditor } from '@toast-ui/editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
-import { formatRichTextToHTML } from '../../lib/richText';
 
 type Props = {
   name: string;
@@ -17,6 +16,8 @@ type Props = {
 const HTML_TAG_PATTERN = /<\s*\/?\s*[a-z][^>]*>/i;
 const MARKDOWN_HINT_PATTERN =
   /(^|\n)\s{0,3}(#{1,6}\s+|[-*+]\s+|\d+\.\s+|>\s+)|\*\*[^*\n]+\*\*|_[^_\n]+_|`[^`\n]+`/m;
+const BULLET_MARKER_PATTERN = /^\s*[•·▪◦]\s+/;
+const ORDERED_PAREN_PATTERN = /^\s*(\d+)\)\s+/;
 
 function normalizeValue(value: string): string {
   return String(value || '');
@@ -29,31 +30,165 @@ function joinClassNames(...classNames: Array<string | undefined>): string {
     .join(' ');
 }
 
-function maybeInsertMarkdownPaste(event: ClipboardEvent): boolean {
+function normalizePlainTextPaste(input: string): string {
+  return String(input || '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => {
+      if (BULLET_MARKER_PATTERN.test(line)) {
+        return line.replace(BULLET_MARKER_PATTERN, '- ');
+      }
+      if (ORDERED_PAREN_PATTERN.test(line)) {
+        return line.replace(ORDERED_PAREN_PATTERN, '$1. ');
+      }
+      return line;
+    })
+    .join('\n');
+}
+
+function collapseMarkdownSpacing(input: string): string {
+  return String(input || '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function convertHTMLNodeToMarkdown(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return String(node.textContent || '');
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return '';
+  }
+
+  const element = node as HTMLElement;
+  const tagName = element.tagName.toLowerCase();
+  const childrenText = Array.from(element.childNodes).map((child) => convertHTMLNodeToMarkdown(child)).join('');
+
+  if (tagName === 'br') {
+    return '\n';
+  }
+
+  if (tagName === 'strong' || tagName === 'b') {
+    const content = childrenText.trim();
+    return content === '' ? '' : `**${content}**`;
+  }
+
+  if (tagName === 'em' || tagName === 'i') {
+    const content = childrenText.trim();
+    return content === '' ? '' : `_${content}_`;
+  }
+
+  if (tagName === 'code') {
+    const content = childrenText.trim();
+    return content === '' ? '' : `\`${content}\``;
+  }
+
+  if (tagName === 'a') {
+    const text = childrenText.trim();
+    const href = String(element.getAttribute('href') || '').trim();
+    if (href === '') {
+      return text;
+    }
+    const safeText = text === '' ? href : text;
+    return `[${safeText}](${href})`;
+  }
+
+  if (tagName === 'li') {
+    return collapseMarkdownSpacing(childrenText);
+  }
+
+  if (tagName === 'ul') {
+    const items = Array.from(element.children)
+      .filter((child) => child.tagName.toLowerCase() === 'li')
+      .map((child) => `- ${collapseMarkdownSpacing(convertHTMLNodeToMarkdown(child))}`);
+    return items.join('\n') + '\n\n';
+  }
+
+  if (tagName === 'ol') {
+    const items = Array.from(element.children)
+      .filter((child) => child.tagName.toLowerCase() === 'li')
+      .map((child, index) => `${index + 1}. ${collapseMarkdownSpacing(convertHTMLNodeToMarkdown(child))}`);
+    return items.join('\n') + '\n\n';
+  }
+
+  if (tagName.match(/^h[1-6]$/)) {
+    const level = Number(tagName.slice(1));
+    const content = collapseMarkdownSpacing(childrenText);
+    if (content === '') {
+      return '';
+    }
+    return `${'#'.repeat(level)} ${content}\n\n`;
+  }
+
+  if (tagName === 'p' || tagName === 'div' || tagName === 'section' || tagName === 'article' || tagName === 'blockquote') {
+    const content = collapseMarkdownSpacing(childrenText);
+    if (content === '') {
+      return '\n';
+    }
+    if (tagName === 'blockquote') {
+      return content
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n') + '\n\n';
+    }
+    return `${content}\n\n`;
+  }
+
+  return childrenText;
+}
+
+function convertHTMLToMarkdown(input: string): string {
+  const html = String(input || '').trim();
+  if (html === '' || typeof document === 'undefined') {
+    return '';
+  }
+
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const markdown = Array.from(template.content.childNodes)
+    .map((node) => convertHTMLNodeToMarkdown(node))
+    .join('');
+
+  return collapseMarkdownSpacing(
+    markdown
+      .replace(/\u00a0/g, ' ')
+      .replace(/\r\n?/g, '\n')
+  );
+}
+
+function resolvePasteAsMarkdown(event: ClipboardEvent): string | null {
   const clipboard = event.clipboardData;
   if (!clipboard) {
-    return false;
+    return null;
   }
 
-  const plain = String(clipboard.getData('text/plain') || '');
   const html = String(clipboard.getData('text/html') || '');
+  const plain = String(clipboard.getData('text/plain') || '');
+
+  if (html.trim() !== '' && HTML_TAG_PATTERN.test(html)) {
+    const markdownFromHTML = convertHTMLToMarkdown(html);
+    if (markdownFromHTML !== '') {
+      return markdownFromHTML;
+    }
+  }
+
   if (plain.trim() === '') {
-    return false;
+    return null;
   }
 
-  const isLikelyPlainPaste = html.trim() === '' || html.trim() === plain.trim();
-  if (!isLikelyPlainPaste || !MARKDOWN_HINT_PATTERN.test(plain)) {
-    return false;
+  if (MARKDOWN_HINT_PATTERN.test(plain)) {
+    return normalizePlainTextPaste(plain);
   }
 
-  const rendered = formatRichTextToHTML(plain);
-  if (rendered.trim() === '') {
-    return false;
+  const normalizedPlain = normalizePlainTextPaste(plain);
+  if (normalizedPlain !== plain) {
+    return normalizedPlain;
   }
 
-  event.preventDefault();
-  document.execCommand('insertHTML', false, rendered);
-  return true;
+  return null;
 }
 
 export function MarkdownTextarea({
@@ -141,7 +276,10 @@ export function MarkdownTextarea({
     editorRef.current = editor;
     syncValueToEditor(editor, normalizeValue(value), true);
 
-    const proseMirrorHost = hostRef.current.querySelector('.ProseMirror') as HTMLElement | null;
+    const markdownPasteTarget = hostRef.current.querySelector(
+      '.toastui-editor-md-container .CodeMirror textarea, .toastui-editor-md-container textarea'
+    ) as HTMLTextAreaElement | null;
+
     const onPaste = (rawEvent: Event) => {
       if (!(rawEvent instanceof ClipboardEvent)) {
         return;
@@ -149,15 +287,23 @@ export function MarkdownTextarea({
       if (syncGuardRef.current) {
         return;
       }
-      maybeInsertMarkdownPaste(rawEvent);
+
+      const markdown = resolvePasteAsMarkdown(rawEvent);
+      if (!markdown) {
+        return;
+      }
+
+      rawEvent.preventDefault();
+      editor.replaceSelection(markdown);
     };
-    if (proseMirrorHost) {
-      proseMirrorHost.addEventListener('paste', onPaste);
+
+    if (markdownPasteTarget) {
+      markdownPasteTarget.addEventListener('paste', onPaste);
     }
 
     return () => {
-      if (proseMirrorHost) {
-        proseMirrorHost.removeEventListener('paste', onPaste);
+      if (markdownPasteTarget) {
+        markdownPasteTarget.removeEventListener('paste', onPaste);
       }
       editorRef.current = null;
       editor.destroy();
