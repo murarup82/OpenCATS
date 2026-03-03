@@ -95,6 +95,96 @@ function parseTimeDisplayToHHMM(value: unknown): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
+function parseQueryInteger(query: URLSearchParams, key: string, fallback: number): number {
+  const raw = String(query.get(key) || '').trim();
+  if (!/^-?\d+$/.test(raw)) {
+    return fallback;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function parseQueryBoolean(query: URLSearchParams, key: string, fallback: boolean): boolean {
+  const raw = String(query.get(key) || '').trim().toLowerCase();
+  if (raw === '') {
+    return fallback;
+  }
+  if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on') {
+    return true;
+  }
+  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') {
+    return false;
+  }
+  return fallback;
+}
+
+function parseLegacyMDYToISO(value: string): string {
+  const normalized = String(value || '').trim();
+  const match = normalized.match(/^(\d{1,2})-(\d{1,2})-(\d{2}|\d{4})$/);
+  if (!match) {
+    return '';
+  }
+
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  const yearRaw = Number(match[3]);
+  if (!Number.isFinite(month) || !Number.isFinite(day) || !Number.isFinite(yearRaw)) {
+    return '';
+  }
+
+  let year = yearRaw;
+  if (year < 100) {
+    year += year >= 70 ? 1900 : 2000;
+  }
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+    return '';
+  }
+
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function resolveEntryDateISO(query: URLSearchParams, fallbackISO: string): string {
+  const iso = String(query.get('dateISO') || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    return iso;
+  }
+
+  const legacyDate = parseLegacyMDYToISO(query.get('dateAdd') || query.get('dateEdit') || '');
+  if (legacyDate !== '') {
+    return legacyDate;
+  }
+
+  const year = parseQueryInteger(query, 'year', 0);
+  const month = parseQueryInteger(query, 'month', 0);
+  const day = parseQueryInteger(query, 'day', 0);
+  if (year >= 1900 && year <= 2100 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  return fallbackISO;
+}
+
+function resolveEntryTimeHHMM(query: URLSearchParams): string {
+  const direct = normalizeTimeHHMM(query.get('timeHHMM'));
+  if (direct !== DEFAULT_EVENT_TIME || String(query.get('timeHHMM') || '').trim() !== '') {
+    return direct;
+  }
+
+  const hourRaw = String(query.get('hour') || '').trim();
+  const minuteRaw = String(query.get('minute') || '').trim();
+  const meridiem = String(query.get('meridiem') || '').trim().toUpperCase();
+  if (/^\d{1,2}$/.test(hourRaw) && /^\d{1,2}$/.test(minuteRaw) && (meridiem === 'AM' || meridiem === 'PM')) {
+    const hour = Number(hourRaw);
+    const minute = Number(minuteRaw);
+    if (hour >= 1 && hour <= 12 && minute >= 0 && minute <= 59) {
+      const display = `${hour}:${String(minute).padStart(2, '0')} ${meridiem}`;
+      return parseTimeDisplayToHHMM(display);
+    }
+  }
+
+  return DEFAULT_EVENT_TIME;
+}
+
 function buildInitialEditorState(data: CalendarModernDataResponse): CalendarEventEditorState {
   return {
     eventID: 0,
@@ -109,6 +199,30 @@ function buildInitialEditorState(data: CalendarModernDataResponse): CalendarEven
     dataItemID: -1,
     dataItemType: -1,
     jobOrderID: -1
+  };
+}
+
+function buildCreateStateFromQuery(
+  data: CalendarModernDataResponse,
+  query: URLSearchParams
+): CalendarEventEditorState {
+  const initial = buildInitialEditorState(data);
+  const requestedTypeID = parseQueryInteger(query, 'eventTypeID', parseQueryInteger(query, 'type', initial.eventTypeID));
+  const hasType = data.options.eventTypes.some((eventType) => Number(eventType.typeID) === requestedTypeID);
+
+  return {
+    ...initial,
+    eventTypeID: hasType ? requestedTypeID : initial.eventTypeID,
+    title: String(query.get('title') || '').trim(),
+    description: String(query.get('description') || '').trim(),
+    dateISO: resolveEntryDateISO(query, initial.dateISO),
+    timeHHMM: resolveEntryTimeHHMM(query),
+    allDay: parseQueryBoolean(query, 'allDay', false),
+    duration: Math.max(1, Math.min(720, parseQueryInteger(query, 'duration', 30))),
+    isPublic: parseQueryBoolean(query, 'publicEntry', parseQueryBoolean(query, 'isPublic', true)),
+    dataItemID: parseQueryInteger(query, 'dataItemID', -1),
+    dataItemType: parseQueryInteger(query, 'dataItemType', -1),
+    jobOrderID: parseQueryInteger(query, 'jobOrderID', -1)
   };
 }
 
@@ -128,6 +242,7 @@ export function CalendarPage({ bootstrap }: Props) {
   const [toast, setToast] = useState<MutationToastState | null>(null);
   const loadRequestRef = useRef(0);
   const toastIDRef = useRef(0);
+  const actionEntryHandledRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -271,12 +386,16 @@ export function CalendarPage({ bootstrap }: Props) {
     setMutationError('');
   }, [mutationPending]);
 
-  const openCreateModal = useCallback(() => {
+  const openCreateModal = useCallback((seed?: Partial<CalendarEventEditorState>) => {
     if (!data || !data.meta.permissions.canAddEvent) {
       return;
     }
 
-    setEditorState(buildInitialEditorState(data));
+    const nextState = {
+      ...buildInitialEditorState(data),
+      ...(seed || {})
+    };
+    setEditorState(nextState);
     setModalMode('create');
     setMutationError('');
   }, [data]);
@@ -404,6 +523,42 @@ export function CalendarPage({ bootstrap }: Props) {
     }
   }, [data, deleteTarget, refreshPageData, showToast]);
 
+  useEffect(() => {
+    if (!data || actionEntryHandledRef.current) {
+      return;
+    }
+
+    const entryAction = String(bootstrap.targetAction || '').trim().toLowerCase();
+    if (entryAction !== 'addevent' && entryAction !== 'editevent') {
+      actionEntryHandledRef.current = true;
+      return;
+    }
+
+    const query = new URLSearchParams(serverQueryString);
+    if (entryAction === 'addevent') {
+      openCreateModal(buildCreateStateFromQuery(data, query));
+      actionEntryHandledRef.current = true;
+      return;
+    }
+
+    const eventID = parseQueryInteger(query, 'eventID', 0);
+    if (eventID <= 0) {
+      actionEntryHandledRef.current = true;
+      showToast('info', 'Event ID is required to edit a calendar event.');
+      return;
+    }
+
+    const matchedEvent = data.events.find((event) => Number(event.eventID) === eventID);
+    if (matchedEvent) {
+      openEditModal(matchedEvent);
+      actionEntryHandledRef.current = true;
+      return;
+    }
+
+    actionEntryHandledRef.current = true;
+    showToast('info', `Event #${eventID} is outside the current calendar range. Navigate to its date and try again.`);
+  }, [bootstrap.targetAction, data, openCreateModal, openEditModal, serverQueryString, showToast]);
+
   if (loading && !data) {
     return <div className="modern-state">Loading calendar...</div>;
   }
@@ -467,7 +622,7 @@ export function CalendarPage({ bootstrap }: Props) {
               </label>
               <div className="modern-command-actions modern-command-actions--primary">
                 {data.meta.permissions.canAddEvent ? (
-                  <button type="button" className="modern-btn modern-btn--emphasis" onClick={openCreateModal}>
+                  <button type="button" className="modern-btn modern-btn--emphasis" onClick={() => openCreateModal()}>
                     Add Event
                   </button>
                 ) : null}

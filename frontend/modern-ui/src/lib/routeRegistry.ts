@@ -62,6 +62,8 @@ function buildExplicitBridgeRoutes(
 
 const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'dashboard.setpipelinestatus': DashboardMyPage,
+  'calendar.addevent': CalendarPage,
+  'calendar.editevent': CalendarPage,
   'candidates.createattachment': CandidatesShowPage,
   'joborders.createattachment': JobOrdersShowPage,
   'joborders.addcandidatemodal': CandidatesAddPage,
@@ -116,7 +118,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
 
 // Comparison-driven explicit action coverage. Keep behavior legacy-safe while avoiding wildcard fallbacks.
 const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
-  calendar: ['addEvent', 'deleteEvent', 'dynamicData', 'editEvent'],
+  calendar: ['deleteEvent', 'dynamicData'],
   candidates: [
     'addActivityChangeStatus',
     'addCandidateTags',

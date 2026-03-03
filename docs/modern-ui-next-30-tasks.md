@@ -22,7 +22,7 @@ Status legend: `done`, `in_progress`, `pending`
 18. `done` Build native `candidates/createAttachment` drawer/modal and deprecate legacy popup.
 19. `done` Build native `joborders/createAttachment` drawer/modal and deprecate legacy popup.
 20. `done` Build native `companies/createAttachment` drawer/modal and deprecate legacy popup.
-21. `pending` Build native `calendar/addEvent` and `calendar/editEvent` quick form.
+21. `done` Build native `calendar/addEvent` and `calendar/editEvent` quick form.
 22. `pending` Build native `lists/show` and `lists/showList` detail pages.
 23. `pending` Build native `reports/customerDashboard` page contract and UI.
 24. `pending` Build native `reports/graphView` page contract and UI.
