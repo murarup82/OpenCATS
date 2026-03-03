@@ -2601,18 +2601,211 @@ class HomeUI extends UserInterface
         CATSUtility::transferRelativeURI($currentURL);
     }
 
+    private function renderModernHomeQuickSearchJSON(
+        $modernPage,
+        $query,
+        $jobOrdersRS,
+        $activeCandidatesRS,
+        $inactiveCandidatesRS,
+        $companiesRS,
+        $contactsRS
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $jobOrders = array();
+        foreach ($jobOrdersRS as $row)
+        {
+            $jobOrderID = isset($row['jobOrderID']) ? (int) $row['jobOrderID'] : 0;
+            $companyID = isset($row['companyID']) ? (int) $row['companyID'] : 0;
+
+            $jobOrders[] = array(
+                'jobOrderID' => $jobOrderID,
+                'title' => isset($row['title']) ? (string) $row['title'] : '',
+                'companyID' => $companyID,
+                'companyName' => isset($row['companyName']) ? (string) $row['companyName'] : '',
+                'type' => isset($row['type']) ? (string) $row['type'] : '',
+                'status' => isset($row['status']) ? (string) $row['status'] : '',
+                'startDate' => isset($row['startDate']) ? (string) $row['startDate'] : '',
+                'recruiterName' => isset($row['recruiterAbbrName']) ? (string) $row['recruiterAbbrName'] : '',
+                'ownerName' => isset($row['ownerAbbrName']) ? (string) $row['ownerAbbrName'] : '',
+                'dateCreated' => isset($row['dateCreated']) ? (string) $row['dateCreated'] : '',
+                'dateModified' => isset($row['dateModified']) ? (string) $row['dateModified'] : '',
+                'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
+                'companyURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, $companyID)
+            );
+        }
+
+        $buildCandidateRows = function ($rows) use ($baseURL) {
+            $output = array();
+            foreach ($rows as $row)
+            {
+                $candidateID = isset($row['candidateID']) ? (int) $row['candidateID'] : 0;
+                $firstName = isset($row['firstName']) ? (string) $row['firstName'] : '';
+                $lastName = isset($row['lastName']) ? (string) $row['lastName'] : '';
+
+                $output[] = array(
+                    'candidateID' => $candidateID,
+                    'firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'fullName' => trim($firstName . ' ' . $lastName),
+                    'keySkills' => isset($row['keySkills']) ? (string) $row['keySkills'] : '',
+                    'phoneCell' => isset($row['phoneCell']) ? (string) $row['phoneCell'] : '',
+                    'ownerName' => isset($row['ownerAbbrName']) ? (string) $row['ownerAbbrName'] : '',
+                    'dateCreated' => isset($row['dateCreated']) ? (string) $row['dateCreated'] : '',
+                    'dateModified' => isset($row['dateModified']) ? (string) $row['dateModified'] : '',
+                    'showURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID)
+                );
+            }
+
+            return $output;
+        };
+
+        $activeCandidates = $buildCandidateRows($activeCandidatesRS);
+        $inactiveCandidates = $buildCandidateRows($inactiveCandidatesRS);
+
+        $companies = array();
+        foreach ($companiesRS as $row)
+        {
+            $companyID = isset($row['companyID']) ? (int) $row['companyID'] : 0;
+            $companies[] = array(
+                'companyID' => $companyID,
+                'name' => isset($row['name']) ? (string) $row['name'] : '',
+                'phone' => isset($row['phone1']) ? (string) $row['phone1'] : '',
+                'ownerName' => isset($row['ownerAbbrName']) ? (string) $row['ownerAbbrName'] : '',
+                'dateCreated' => isset($row['dateCreated']) ? (string) $row['dateCreated'] : '',
+                'dateModified' => isset($row['dateModified']) ? (string) $row['dateModified'] : '',
+                'showURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, $companyID)
+            );
+        }
+
+        $contacts = array();
+        foreach ($contactsRS as $row)
+        {
+            $contactID = isset($row['contactID']) ? (int) $row['contactID'] : 0;
+            $companyID = isset($row['companyID']) ? (int) $row['companyID'] : 0;
+            $firstName = isset($row['firstName']) ? (string) $row['firstName'] : '';
+            $lastName = isset($row['lastName']) ? (string) $row['lastName'] : '';
+
+            $contacts[] = array(
+                'contactID' => $contactID,
+                'companyID' => $companyID,
+                'firstName' => $firstName,
+                'lastName' => $lastName,
+                'fullName' => trim($firstName . ' ' . $lastName),
+                'title' => isset($row['title']) ? (string) $row['title'] : '',
+                'companyName' => isset($row['companyName']) ? (string) $row['companyName'] : '',
+                'phoneCell' => isset($row['phoneCell']) ? (string) $row['phoneCell'] : '',
+                'ownerName' => isset($row['ownerAbbrName']) ? (string) $row['ownerAbbrName'] : '',
+                'dateCreated' => isset($row['dateCreated']) ? (string) $row['dateCreated'] : '',
+                'dateModified' => isset($row['dateModified']) ? (string) $row['dateModified'] : '',
+                'showURL' => sprintf('%s?m=contacts&a=show&contactID=%d&ui=modern', $baseURL, $contactID),
+                'companyURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, $companyID)
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'home.quickSearch.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'homeURL' => sprintf('%s?m=home&a=home&ui=modern', $baseURL),
+                'inboxURL' => sprintf('%s?m=home&a=inbox&ui=modern', $baseURL),
+                'myNotesURL' => sprintf('%s?m=home&a=myNotes&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=home&a=quickSearch&quickSearchFor=%s&ui=legacy', $baseURL, rawurlencode((string) $query))
+            ),
+            'state' => array(
+                'query' => (string) $query
+            ),
+            'summary' => array(
+                'totalResults' => count($jobOrders) + count($activeCandidates) + count($inactiveCandidates) + count($companies) + count($contacts),
+                'jobOrdersCount' => count($jobOrders),
+                'activeCandidatesCount' => count($activeCandidates),
+                'inactiveCandidatesCount' => count($inactiveCandidates),
+                'companiesCount' => count($companies),
+                'contactsCount' => count($contacts)
+            ),
+            'jobOrders' => $jobOrders,
+            'candidates' => array(
+                'active' => $activeCandidates,
+                'inactive' => $inactiveCandidates
+            ),
+            'companies' => $companies,
+            'contacts' => $contacts
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
     private function quickSearch()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'home-quicksearch')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+        }
+
         /* Bail out to prevent an error if the GET string doesn't even contain
          * a field named 'quickSearchFor' at all.
          */
         if (!isset($_GET['quickSearchFor']))
         {
+            if ($isModernJSON)
+            {
+                $this->renderModernHomeQuickSearchJSON(
+                    'home-quicksearch',
+                    '',
+                    array(),
+                    array(),
+                    array(),
+                    array(),
+                    array()
+                );
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADFIELDS, $this, 'No query string specified.');
         }
 
-        $query = trim($_GET['quickSearchFor']);
+        $query = $this->getTrimmedInput('quickSearchFor', $_GET);
         $wildCardQuickSearch = $query;
+
+        if ($isModernJSON && $query === '')
+        {
+            $this->renderModernHomeQuickSearchJSON(
+                'home-quicksearch',
+                '',
+                array(),
+                array(),
+                array(),
+                array(),
+                array()
+            );
+            return;
+        }
 
         $search = new QuickSearch($this->_siteID);
         $candidatesRS = $search->candidates($query);
@@ -2782,6 +2975,20 @@ class HomeUI extends UserInterface
                     $jobOrdersRS[$rowIndex]['ownerAbbrName'] = 'None';
                 }
             }
+        }
+
+        if ($isModernJSON)
+        {
+            $this->renderModernHomeQuickSearchJSON(
+                'home-quicksearch',
+                $query,
+                $jobOrdersRS,
+                $activeCandidatesRS,
+                $inactiveCandidatesRS,
+                $companiesRS,
+                $contactsRS
+            );
+            return;
         }
 
         $this->_template->assign('active', $this);

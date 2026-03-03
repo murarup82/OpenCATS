@@ -4,6 +4,7 @@ import { DashboardMyPage } from '../pages/DashboardMyPage';
 import { HomePage } from '../pages/HomePage';
 import { HomeInboxPage } from '../pages/HomeInboxPage';
 import { HomeMyNotesPage } from '../pages/HomeMyNotesPage';
+import { HomeQuickSearchPage } from '../pages/HomeQuickSearchPage';
 import { KpisPage } from '../pages/KpisPage';
 import { KpisDetailsPage } from '../pages/KpisDetailsPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
@@ -154,7 +155,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'home.deletesavedsearch': HomePage,
   'home.movepersonalnotetotodo': HomeMyNotesPage,
   'home.postinboxmessage': HomeInboxPage,
-  'home.quicksearch': LegacyRedirectPage,
+  'home.quicksearch': HomeQuickSearchPage,
   'home.sendpersonalnote': HomeMyNotesPage,
   'home.setpersonalnotearchived': HomeMyNotesPage,
   'home.setpersonaltodostatus': HomeMyNotesPage,

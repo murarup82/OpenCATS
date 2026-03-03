@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T16:02:35.083Z
+Generated: 2026-03-03T16:13:50.837Z
 
 ## Summary
 
@@ -127,7 +127,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | home | movePersonalNoteToTodo | native-explicit | home.movepersonalnotetotodo | HomeMyNotesPage |
 | home | myNotes | native-explicit | home.mynotes | HomeMyNotesPage |
 | home | postInboxMessage | native-explicit | home.postinboxmessage | HomeInboxPage |
-| home | quickSearch | native-explicit | home.quicksearch | LegacyRedirectPage |
+| home | quickSearch | native-explicit | home.quicksearch | HomeQuickSearchPage |
 | home | sendPersonalNote | native-explicit | home.sendpersonalnote | HomeMyNotesPage |
 | home | setPersonalNoteArchived | native-explicit | home.setpersonalnotearchived | HomeMyNotesPage |
 | home | setPersonalTodoStatus | native-explicit | home.setpersonaltodostatus | HomeMyNotesPage |

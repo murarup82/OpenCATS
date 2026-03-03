@@ -25,6 +25,7 @@ import type {
   HomeInboxModernDataResponse,
   HomeMyNotesModernDataResponse,
   HomeOverviewModernDataResponse,
+  HomeQuickSearchModernDataResponse,
   JobOrderAddPopupModernDataResponse,
   JobOrderCompanyContextModernDataResponse,
   JobOrderAssignCandidateModernDataResponse,
@@ -82,6 +83,7 @@ import {
   MODERN_LISTS_DETAIL_PAGE,
   MODERN_LISTS_PAGE,
   MODERN_HOME_OVERVIEW_PAGE,
+  MODERN_HOME_QUICKSEARCH_PAGE,
   MODERN_HOME_INBOX_PAGE,
   MODERN_HOME_MYNOTES_PAGE,
   MODERN_QUEUE_PAGE,
@@ -219,6 +221,24 @@ export async function fetchHomeOverviewModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<HomeOverviewModernDataResponse>(url);
   assertModernContract(data.meta, 'home.overview.v1', 'home overview data');
+
+  return data;
+}
+
+export async function fetchHomeQuickSearchModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<HomeQuickSearchModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'home',
+    action: 'quickSearch',
+    modernPage: MODERN_HOME_QUICKSEARCH_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<HomeQuickSearchModernDataResponse>(url);
+  assertModernContract(data.meta, 'home.quickSearch.v1', 'home quick-search data');
 
   return data;
 }

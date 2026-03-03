@@ -1480,6 +1480,96 @@ export type HomeOverviewModernDataResponse = {
   }>;
 };
 
+export type HomeQuickSearchModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    homeURL: string;
+    inboxURL: string;
+    myNotesURL: string;
+    legacyURL: string;
+  };
+  state: {
+    query: string;
+  };
+  summary: {
+    totalResults: number;
+    jobOrdersCount: number;
+    activeCandidatesCount: number;
+    inactiveCandidatesCount: number;
+    companiesCount: number;
+    contactsCount: number;
+  };
+  jobOrders: Array<{
+    jobOrderID: number;
+    title: string;
+    companyID: number;
+    companyName: string;
+    type: string;
+    status: string;
+    startDate: string;
+    recruiterName: string;
+    ownerName: string;
+    dateCreated: string;
+    dateModified: string;
+    showURL: string;
+    companyURL: string;
+  }>;
+  candidates: {
+    active: Array<{
+      candidateID: number;
+      firstName: string;
+      lastName: string;
+      fullName: string;
+      keySkills: string;
+      phoneCell: string;
+      ownerName: string;
+      dateCreated: string;
+      dateModified: string;
+      showURL: string;
+    }>;
+    inactive: Array<{
+      candidateID: number;
+      firstName: string;
+      lastName: string;
+      fullName: string;
+      keySkills: string;
+      phoneCell: string;
+      ownerName: string;
+      dateCreated: string;
+      dateModified: string;
+      showURL: string;
+    }>;
+  };
+  companies: Array<{
+    companyID: number;
+    name: string;
+    phone: string;
+    ownerName: string;
+    dateCreated: string;
+    dateModified: string;
+    showURL: string;
+  }>;
+  contacts: Array<{
+    contactID: number;
+    companyID: number;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    title: string;
+    companyName: string;
+    phoneCell: string;
+    ownerName: string;
+    dateCreated: string;
+    dateModified: string;
+    showURL: string;
+    companyURL: string;
+  }>;
+};
+
 export type KpisListModernDataResponse = {
   meta: {
     contractVersion: number;

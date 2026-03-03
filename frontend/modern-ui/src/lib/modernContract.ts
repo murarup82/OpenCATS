@@ -33,6 +33,7 @@ export const MODERN_GRAPHS_PAGE = 'graphs-workspace';
 export const MODERN_HOME_OVERVIEW_PAGE = 'home-overview';
 export const MODERN_HOME_INBOX_PAGE = 'home-inbox';
 export const MODERN_HOME_MYNOTES_PAGE = 'home-mynotes';
+export const MODERN_HOME_QUICKSEARCH_PAGE = 'home-quicksearch';
 export const MODERN_KPIS_PAGE = 'kpis-list';
 export const MODERN_KPIS_DETAILS_PAGE = 'kpis-details';
 export const MODERN_CONTRACT_VERSION = 1;
