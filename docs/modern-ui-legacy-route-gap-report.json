@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T16:36:53.681Z",
+  "generatedAt": "2026-03-03T16:49:05.267Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 222,
@@ -220,7 +220,7 @@
       "classification": "native-explicit",
       "routeKey": "attachments.getattachment",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -238,7 +238,7 @@
       "classification": "native-explicit",
       "routeKey": "calendar.deleteevent",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -247,7 +247,7 @@
       "classification": "native-explicit",
       "routeKey": "calendar.dynamicdata",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -697,7 +697,7 @@
       "classification": "native-explicit",
       "routeKey": "export.export",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -706,7 +706,7 @@
       "classification": "native-explicit",
       "routeKey": "export.exportbydatagrid",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -715,7 +715,7 @@
       "classification": "native-explicit",
       "routeKey": "gdpr.export",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -724,7 +724,7 @@
       "classification": "native-explicit",
       "routeKey": "gdpr.requests",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -985,7 +985,7 @@
       "classification": "native-explicit",
       "routeKey": "import.deletebulkresumes",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1003,7 +1003,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importbulkresumes",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1012,7 +1012,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importselecttype",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1030,7 +1030,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importuploadresume",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1039,7 +1039,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimport",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1048,7 +1048,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimportdocument",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1057,7 +1057,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimportedit",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1066,7 +1066,7 @@
       "classification": "native-explicit",
       "routeKey": "import.revert",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1075,7 +1075,7 @@
       "classification": "native-explicit",
       "routeKey": "import.showmassimport",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1084,7 +1084,7 @@
       "classification": "native-explicit",
       "routeKey": "import.viewerrors",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1093,7 +1093,7 @@
       "classification": "native-explicit",
       "routeKey": "import.viewpending",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1102,7 +1102,7 @@
       "classification": "native-explicit",
       "routeKey": "import.whatisbulkresumes",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1588,7 +1588,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.addemailtemplate",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1597,7 +1597,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.adduser",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1606,7 +1606,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.administration",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1615,7 +1615,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_tags_add",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1624,7 +1624,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_tags_del",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1633,7 +1633,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_tags_upd",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1642,7 +1642,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardadduser",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1651,7 +1651,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardcheckkey",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1660,7 +1660,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizarddeleteuser",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1669,7 +1669,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardemail",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1678,7 +1678,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardfirsttimesetup",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1687,7 +1687,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardimport",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1696,7 +1696,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardlicense",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1705,7 +1705,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardlocalization",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1714,7 +1714,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardpassword",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1723,7 +1723,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardsitename",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1732,7 +1732,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardwebsite",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1741,7 +1741,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.asplocalization",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1750,7 +1750,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnaire",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1759,7 +1759,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnairepreview",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1768,7 +1768,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnaireupdate",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1777,7 +1777,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalsettings",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1786,7 +1786,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportaltemplateedit",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1795,7 +1795,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.changepassword",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1804,7 +1804,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.createbackup",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1813,7 +1813,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.customizecalendar",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1822,7 +1822,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.customizeextrafields",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1831,7 +1831,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deletebackup",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1840,7 +1840,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deleteemailtemplate",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1849,7 +1849,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deleteuser",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1858,7 +1858,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.edituser",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1867,7 +1867,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.eeo",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1876,7 +1876,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.emailsettings",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1885,7 +1885,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.emailtemplates",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1894,7 +1894,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.feedbacksettings",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1903,7 +1903,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.forceemail",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1912,7 +1912,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.gdprsettings",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1921,7 +1921,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.getfirefoxmodal",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1930,7 +1930,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.googleoidcsettings",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1939,7 +1939,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.loginactivity",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1948,7 +1948,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.manageusers",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1957,7 +1957,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.myprofile",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1966,7 +1966,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newinstallfinished",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1975,7 +1975,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newinstallpassword",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1984,7 +1984,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newsitename",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -1993,7 +1993,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.oncareerportaltweak",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2002,7 +2002,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.previewpage",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2011,7 +2011,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.previewpagetop",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2020,7 +2020,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.professional",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2029,7 +2029,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.rejectionreasons",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2038,7 +2038,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.reports",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2047,7 +2047,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.rolepagepermissions",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2056,7 +2056,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.schemamigrations",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2065,7 +2065,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.showuser",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2074,7 +2074,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.tags",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2083,7 +2083,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.talentfitflowsettings",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2092,7 +2092,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.upgradesitename",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2101,7 +2101,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.viewitemhistory",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2110,7 +2110,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.attemptlogin",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2119,7 +2119,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.authenticate",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2128,7 +2128,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.checkemailisinsystem",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2137,7 +2137,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.getjavascriptlib",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2146,7 +2146,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.getlicensekey",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2155,7 +2155,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.getremoteversion",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2164,7 +2164,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.install",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2173,7 +2173,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.storemonsterresumetext",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2182,7 +2182,7 @@
       "classification": "native-explicit",
       "routeKey": "wizard.ajax_getpage",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     },
     {
@@ -2191,7 +2191,7 @@
       "classification": "native-explicit",
       "routeKey": "xml.joborders",
       "resolution": "native",
-      "component": "EntityUtilityActionPage",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false
     }
   ]
