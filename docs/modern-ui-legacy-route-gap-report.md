@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:25:41.077Z
+Generated: 2026-03-03T06:28:38.312Z
 
 ## Summary
 
@@ -82,7 +82,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | saveSources | native-explicit | candidates.savesources | ActionCompatPage |
 | candidates | search | native-explicit | candidates.search | CandidatesListPage |
 | candidates | show | native-explicit-guarded | candidates.show | CandidatesShowPage |
-| candidates | show_questionnaire | native-explicit | candidates.show_questionnaire | ActionCompatPage |
+| candidates | show_questionnaire | native-explicit-guarded | candidates.show_questionnaire | CandidateQuestionnaireActionPage |
 | candidates | viewResume | native-explicit-guarded | candidates.viewresume | CandidateResumeActionPage |
 | companies | add | native-explicit | companies.add | CompaniesAddPage |
 | companies | createAttachment | native-explicit-guarded | companies.createattachment | CompaniesShowPage |

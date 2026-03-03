@@ -9,6 +9,7 @@ import { KpisPage } from '../pages/KpisPage';
 import { KpisDetailsPage } from '../pages/KpisDetailsPage';
 import { CandidatesListPage } from '../pages/CandidatesListPage';
 import { CandidateResumeActionPage } from '../pages/CandidateResumeActionPage';
+import { CandidateQuestionnaireActionPage } from '../pages/CandidateQuestionnaireActionPage';
 import { CandidatesShowPage } from '../pages/CandidatesShowPage';
 import { CandidatesAddPage } from '../pages/CandidatesAddPage';
 import { CandidatesEditPage } from '../pages/CandidatesEditPage';
@@ -89,6 +90,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'lists.showlist': ListsDetailPage,
   'candidates.search': CandidatesListPage,
   'candidates.viewresume': CandidateResumeActionPage,
+  'candidates.show_questionnaire': CandidateQuestionnaireActionPage,
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
   'contacts.search': ContactsListPage,
@@ -170,8 +172,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'removeDuplicity',
     'removeFromPipeline',
     'saveSources',
-    'savedLists',
-    'show_questionnaire'
+    'savedLists'
   ],
   companies: ['delete', 'deleteAttachment', 'internalPostings'],
   contacts: ['addActivityScheduleEvent', 'delete'],
@@ -266,6 +267,7 @@ const guardedRouteParams: Record<string, string[]> = {
   'candidates.edit': ['candidateID'],
   'candidates.createattachment': ['candidateID'],
   'candidates.viewresume': ['attachmentID'],
+  'candidates.show_questionnaire': ['candidateID'],
   'joborders.show': ['jobOrderID'],
   'joborders.edit': ['jobOrderID'],
   'joborders.createattachment': ['jobOrderID'],

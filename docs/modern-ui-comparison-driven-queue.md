@@ -75,5 +75,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Job order recruiter allocation action (`joborders.recruiterAllocation`) now routes to native `JobOrdersRecruiterAllocationPage` backed by `joborders.recruiterAllocation.v1` contract plus async modern-json assignment mutation responses.
 - Completed: Job order monitor toggle action (`joborders.setMonitoredJobOrder`) now routes to native `JobOrderMonitorActionPage`, reusing the existing modern-json mutation path with in-app safe return navigation.
 - Completed: Contacts utility actions (`contacts.showColdCallList`, `contacts.downloadVCard`) now route to native action/page handling, with `contacts.coldCallList.v1` contract for list data and native vCard action routing for download workflow.
+- Completed: Candidate questionnaire action (`candidates.show_questionnaire`) now routes to native `CandidateQuestionnaireActionPage` with embedded legacy questionnaire rendering and explicit view/print controls.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.
