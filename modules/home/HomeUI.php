@@ -721,40 +721,6 @@ class HomeUI extends UserInterface
             return;
         }
 
-        if ($isModernJSON)
-        {
-            if ($modernPage !== '' && $modernPage !== 'home-mynotes')
-            {
-                if (!headers_sent())
-                {
-                    header('HTTP/1.1 400 Bad Request');
-                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
-                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-                }
-                echo json_encode(array(
-                    'error' => true,
-                    'message' => 'Unsupported modern page contract.',
-                    'requestedPage' => $modernPage
-                ));
-                return;
-            }
-
-            $this->renderModernHomeMyNotesJSON(
-                'home-mynotes',
-                $view,
-                $schemaAvailable,
-                $flashMessage,
-                $flashIsError,
-                $summary,
-                $noteItems,
-                $todoItemsByStatus,
-                $todoStatuses,
-                $noteMode,
-                $noteSearch
-            );
-            return;
-        }
-
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'My Inbox');
         $this->_template->assign('schemaAvailable', $schemaAvailable);
@@ -1492,6 +1458,40 @@ class HomeUI extends UserInterface
                 }
                 $todoItemsByStatus[$todoItems[$index]['taskStatus']][] = $todoItems[$index];
             }
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'home-mynotes')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernHomeMyNotesJSON(
+                'home-mynotes',
+                $view,
+                $schemaAvailable,
+                $flashMessage,
+                $flashIsError,
+                $summary,
+                $noteItems,
+                $todoItemsByStatus,
+                $todoStatuses,
+                $noteMode,
+                $noteSearch
+            );
+            return;
         }
 
         $this->_template->assign('active', $this);
