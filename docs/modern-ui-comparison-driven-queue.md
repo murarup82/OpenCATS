@@ -80,5 +80,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Reports action family (`reports.customerDashboardDetails`, `reports.customizeEEOReport`, `reports.customizeJobOrderReport`, `reports.generateEEOReportPreview`, `reports.generateJobOrderReportPDF`, `reports.showHireReport`, `reports.showPlacementReport`, `reports.showSubmissionReport`) now routes to native `ReportsActionPage` with embedded legacy workspace handling and native export redirect for PDF generation.
 - Completed: Core entity delete actions (`candidates.delete`, `companies.delete`, `contacts.delete`, `joborders.delete`) now route to native `EntityDeleteActionPage` with guarded IDs and explicit legacy delete endpoint redirect handling.
 - Completed: Companies internal-postings route (`companies.internalPostings`) now routes to native `CompaniesInternalPostingsActionPage`, which resolves the default company target and redirects to modern `companies.show`.
+- Completed: Candidate/joborder utility action families (`candidates.*` and `joborders.*` remaining compat actions) now route to native `EntityUtilityActionPage` workspaces with embedded legacy rendering and context-aware return navigation.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

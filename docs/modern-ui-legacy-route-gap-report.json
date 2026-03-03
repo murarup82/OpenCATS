@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T06:42:57.677Z",
+  "generatedAt": "2026-03-03T06:46:47.572Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -283,7 +283,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.addactivitychangestatus",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -292,7 +292,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.addcandidatetags",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -301,7 +301,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.addduplicates",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -310,7 +310,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.addeditimage",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -319,7 +319,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.addprofilecomment",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -328,7 +328,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.addtopipeline",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -337,7 +337,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.administrativehideshow",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -373,7 +373,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.deleteattachment",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -382,7 +382,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.deletemessagethread",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -400,7 +400,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.emailcandidates",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -409,7 +409,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.linkduplicate",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -427,7 +427,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.merge",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -436,7 +436,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.mergeinfo",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -445,7 +445,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.postmessage",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -454,7 +454,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.removeduplicity",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -463,7 +463,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.removefrompipeline",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -472,7 +472,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.savesources",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1120,7 +1120,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.addactivitychangestatus",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1147,7 +1147,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.addprofilecomment",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1156,7 +1156,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.addtopipeline",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1165,7 +1165,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.administrativehideshow",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1210,7 +1210,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.deleteattachment",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1219,7 +1219,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.deletemessagethread",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1237,7 +1237,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.edithiringplan",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1273,7 +1273,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.postmessage",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {
@@ -1291,7 +1291,7 @@
       "classification": "native-explicit",
       "routeKey": "joborders.removefrompipeline",
       "resolution": "native",
-      "component": "ActionCompatPage",
+      "component": "EntityUtilityActionPage",
       "guarded": false
     },
     {

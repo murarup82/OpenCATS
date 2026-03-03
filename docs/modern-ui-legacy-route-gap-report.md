@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:42:57.677Z
+Generated: 2026-03-03T06:46:47.572Z
 
 ## Summary
 
@@ -58,28 +58,28 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | calendar | editEvent | native-explicit | calendar.editevent | CalendarPage |
 | calendar | showCalendar | native-explicit | calendar.showcalendar | CalendarPage |
 | candidates | add | native-explicit | candidates.add | CandidatesAddPage |
-| candidates | addActivityChangeStatus | native-explicit | candidates.addactivitychangestatus | ActionCompatPage |
-| candidates | addCandidateTags | native-explicit | candidates.addcandidatetags | ActionCompatPage |
-| candidates | addDuplicates | native-explicit | candidates.addduplicates | ActionCompatPage |
-| candidates | addEditImage | native-explicit | candidates.addeditimage | ActionCompatPage |
-| candidates | addProfileComment | native-explicit | candidates.addprofilecomment | ActionCompatPage |
-| candidates | addToPipeline | native-explicit | candidates.addtopipeline | ActionCompatPage |
-| candidates | administrativeHideShow | native-explicit | candidates.administrativehideshow | ActionCompatPage |
+| candidates | addActivityChangeStatus | native-explicit | candidates.addactivitychangestatus | EntityUtilityActionPage |
+| candidates | addCandidateTags | native-explicit | candidates.addcandidatetags | EntityUtilityActionPage |
+| candidates | addDuplicates | native-explicit | candidates.addduplicates | EntityUtilityActionPage |
+| candidates | addEditImage | native-explicit | candidates.addeditimage | EntityUtilityActionPage |
+| candidates | addProfileComment | native-explicit | candidates.addprofilecomment | EntityUtilityActionPage |
+| candidates | addToPipeline | native-explicit | candidates.addtopipeline | EntityUtilityActionPage |
+| candidates | administrativeHideShow | native-explicit | candidates.administrativehideshow | EntityUtilityActionPage |
 | candidates | considerForJobSearch | native-explicit | candidates.considerforjobsearch | CandidateAssignActionPage |
 | candidates | createAttachment | native-explicit-guarded | candidates.createattachment | CandidatesShowPage |
 | candidates | delete | native-explicit-guarded | candidates.delete | EntityDeleteActionPage |
-| candidates | deleteAttachment | native-explicit | candidates.deleteattachment | ActionCompatPage |
-| candidates | deleteMessageThread | native-explicit | candidates.deletemessagethread | ActionCompatPage |
+| candidates | deleteAttachment | native-explicit | candidates.deleteattachment | EntityUtilityActionPage |
+| candidates | deleteMessageThread | native-explicit | candidates.deletemessagethread | EntityUtilityActionPage |
 | candidates | edit | native-explicit-guarded | candidates.edit | CandidatesEditPage |
-| candidates | emailCandidates | native-explicit | candidates.emailcandidates | ActionCompatPage |
-| candidates | linkDuplicate | native-explicit | candidates.linkduplicate | ActionCompatPage |
+| candidates | emailCandidates | native-explicit | candidates.emailcandidates | EntityUtilityActionPage |
+| candidates | linkDuplicate | native-explicit | candidates.linkduplicate | EntityUtilityActionPage |
 | candidates | listByView | native-explicit | candidates.listbyview | CandidatesListPage |
-| candidates | merge | native-explicit | candidates.merge | ActionCompatPage |
-| candidates | mergeInfo | native-explicit | candidates.mergeinfo | ActionCompatPage |
-| candidates | postMessage | native-explicit | candidates.postmessage | ActionCompatPage |
-| candidates | removeDuplicity | native-explicit | candidates.removeduplicity | ActionCompatPage |
-| candidates | removeFromPipeline | native-explicit | candidates.removefrompipeline | ActionCompatPage |
-| candidates | saveSources | native-explicit | candidates.savesources | ActionCompatPage |
+| candidates | merge | native-explicit | candidates.merge | EntityUtilityActionPage |
+| candidates | mergeInfo | native-explicit | candidates.mergeinfo | EntityUtilityActionPage |
+| candidates | postMessage | native-explicit | candidates.postmessage | EntityUtilityActionPage |
+| candidates | removeDuplicity | native-explicit | candidates.removeduplicity | EntityUtilityActionPage |
+| candidates | removeFromPipeline | native-explicit | candidates.removefrompipeline | EntityUtilityActionPage |
+| candidates | saveSources | native-explicit | candidates.savesources | EntityUtilityActionPage |
 | candidates | search | native-explicit | candidates.search | CandidatesListPage |
 | candidates | show | native-explicit-guarded | candidates.show | CandidatesShowPage |
 | candidates | show_questionnaire | native-explicit-guarded | candidates.show_questionnaire | CandidateQuestionnaireActionPage |
@@ -151,26 +151,26 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | import | viewpending | bridge-global-fallback | *.* | ModuleBridgePage |
 | import | whatIsBulkResumes | bridge-global-fallback | *.* | ModuleBridgePage |
 | joborders | add | native-explicit | joborders.add | JobOrdersAddPage |
-| joborders | addActivityChangeStatus | native-explicit | joborders.addactivitychangestatus | ActionCompatPage |
+| joborders | addActivityChangeStatus | native-explicit | joborders.addactivitychangestatus | EntityUtilityActionPage |
 | joborders | addCandidateModal | native-explicit-guarded | joborders.addcandidatemodal | CandidatesAddPage |
 | joborders | addJobOrderPopup | native-explicit | joborders.addjoborderpopup | JobOrderAddActionPage |
-| joborders | addProfileComment | native-explicit | joborders.addprofilecomment | ActionCompatPage |
-| joborders | addToPipeline | native-explicit | joborders.addtopipeline | ActionCompatPage |
-| joborders | administrativeHideShow | native-explicit | joborders.administrativehideshow | ActionCompatPage |
+| joborders | addProfileComment | native-explicit | joborders.addprofilecomment | EntityUtilityActionPage |
+| joborders | addToPipeline | native-explicit | joborders.addtopipeline | EntityUtilityActionPage |
+| joborders | administrativeHideShow | native-explicit | joborders.administrativehideshow | EntityUtilityActionPage |
 | joborders | companyContext | native-explicit-guarded | joborders.companycontext | JobOrderCompanyContextActionPage |
 | joborders | considerCandidateSearch | native-explicit | joborders.considercandidatesearch | JobOrderAssignActionPage |
 | joborders | createAttachment | native-explicit-guarded | joborders.createattachment | JobOrdersShowPage |
 | joborders | delete | native-explicit-guarded | joborders.delete | EntityDeleteActionPage |
-| joborders | deleteAttachment | native-explicit | joborders.deleteattachment | ActionCompatPage |
-| joborders | deleteMessageThread | native-explicit | joborders.deletemessagethread | ActionCompatPage |
+| joborders | deleteAttachment | native-explicit | joborders.deleteattachment | EntityUtilityActionPage |
+| joborders | deleteMessageThread | native-explicit | joborders.deletemessagethread | EntityUtilityActionPage |
 | joborders | edit | native-explicit-guarded | joborders.edit | JobOrdersEditPage |
-| joborders | editHiringPlan | native-explicit | joborders.edithiringplan | ActionCompatPage |
+| joborders | editHiringPlan | native-explicit | joborders.edithiringplan | EntityUtilityActionPage |
 | joborders | listByView | native-explicit | joborders.listbyview | JobOrdersListPage |
 | joborders | pipelineStatusDetails | native-explicit-guarded | joborders.pipelinestatusdetails | PipelineStatusActionPage |
 | joborders | pipelineStatusEditDate | native-explicit-guarded | joborders.pipelinestatuseditdate | PipelineStatusActionPage |
-| joborders | postMessage | native-explicit | joborders.postmessage | ActionCompatPage |
+| joborders | postMessage | native-explicit | joborders.postmessage | EntityUtilityActionPage |
 | joborders | recruiterAllocation | native-explicit | joborders.recruiterallocation | JobOrdersRecruiterAllocationPage |
-| joborders | removeFromPipeline | native-explicit | joborders.removefrompipeline | ActionCompatPage |
+| joborders | removeFromPipeline | native-explicit | joborders.removefrompipeline | EntityUtilityActionPage |
 | joborders | search | native-explicit | joborders.search | JobOrdersListPage |
 | joborders | setMonitoredJobOrder | native-explicit-guarded | joborders.setmonitoredjoborder | JobOrderMonitorActionPage |
 | joborders | show | native-explicit-guarded | joborders.show | JobOrdersShowPage |

@@ -459,6 +459,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `CompaniesInternalPostingsActionPage` for `companies.internalPostings`
     - resolves default company by following legacy route redirect and then navigates to modern `companies.show`
     - removed `companies.internalPostings` from compatibility action routing and added modern list CTA for direct access.
+158. Converted candidate/joborder utility compat actions to native action workspaces:
+    - introduced shared `EntityUtilityActionPage` and routed remaining `candidates.*` + `joborders.*` utility actions from `ActionCompatPage` to explicit native mappings
+    - preserves behavioral parity via embedded legacy rendering (`ui_embed=1`) while providing modern context-aware return navigation
+    - reduced compatibility action scope to calendar/lists/company-attachment action tails.
 
 ## Next Queue (30-Slice Execution)
 

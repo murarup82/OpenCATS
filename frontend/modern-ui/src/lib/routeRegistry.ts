@@ -51,6 +51,7 @@ import { JobOrderCompanyContextActionPage } from '../pages/JobOrderCompanyContex
 import { JobOrderAddActionPage } from '../pages/JobOrderAddActionPage';
 import { JobOrderMonitorActionPage } from '../pages/JobOrderMonitorActionPage';
 import { EntityDeleteActionPage } from '../pages/EntityDeleteActionPage';
+import { EntityUtilityActionPage } from '../pages/EntityUtilityActionPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
@@ -113,9 +114,37 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'lists.quickactionaddtolistmodal': ListsActionPage,
   'lists.addtolistfromdatagridmodal': ListsActionPage,
   'candidates.delete': EntityDeleteActionPage,
+  'candidates.addactivitychangestatus': EntityUtilityActionPage,
+  'candidates.addcandidatetags': EntityUtilityActionPage,
+  'candidates.addduplicates': EntityUtilityActionPage,
+  'candidates.addeditimage': EntityUtilityActionPage,
+  'candidates.addprofilecomment': EntityUtilityActionPage,
+  'candidates.addtopipeline': EntityUtilityActionPage,
+  'candidates.administrativehideshow': EntityUtilityActionPage,
+  'candidates.deleteattachment': EntityUtilityActionPage,
+  'candidates.deletemessagethread': EntityUtilityActionPage,
+  'candidates.emailcandidates': EntityUtilityActionPage,
+  'candidates.linkduplicate': EntityUtilityActionPage,
+  'candidates.merge': EntityUtilityActionPage,
+  'candidates.mergeinfo': EntityUtilityActionPage,
+  'candidates.postmessage': EntityUtilityActionPage,
+  'candidates.removeduplicity': EntityUtilityActionPage,
+  'candidates.removefrompipeline': EntityUtilityActionPage,
+  'candidates.savesources': EntityUtilityActionPage,
+  'candidates.savedlists': EntityUtilityActionPage,
   'companies.delete': EntityDeleteActionPage,
   'contacts.delete': EntityDeleteActionPage,
   'joborders.delete': EntityDeleteActionPage,
+  'joborders.addactivitychangestatus': EntityUtilityActionPage,
+  'joborders.addprofilecomment': EntityUtilityActionPage,
+  'joborders.addtopipeline': EntityUtilityActionPage,
+  'joborders.administrativehideshow': EntityUtilityActionPage,
+  'joborders.deleteattachment': EntityUtilityActionPage,
+  'joborders.deletemessagethread': EntityUtilityActionPage,
+  'joborders.edithiringplan': EntityUtilityActionPage,
+  'joborders.postmessage': EntityUtilityActionPage,
+  'joborders.removefrompipeline': EntityUtilityActionPage,
+  'joborders.setcandidatejoborder': EntityUtilityActionPage,
   'reports.customerdashboarddetails': ReportsActionPage,
   'reports.customizeeeoreport': ReportsActionPage,
   'reports.customizejoborderreport': ReportsActionPage,
@@ -171,39 +200,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
 // Comparison-driven explicit action coverage. Keep behavior legacy-safe while avoiding wildcard fallbacks.
 const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
   calendar: ['deleteEvent', 'dynamicData'],
-  candidates: [
-    'addActivityChangeStatus',
-    'addCandidateTags',
-    'addDuplicates',
-    'addEditImage',
-    'addProfileComment',
-    'addToPipeline',
-    'administrativeHideShow',
-    'deleteAttachment',
-    'deleteMessageThread',
-    'emailCandidates',
-    'linkDuplicate',
-    'merge',
-    'mergeInfo',
-    'postMessage',
-    'removeDuplicity',
-    'removeFromPipeline',
-    'saveSources',
-    'savedLists'
-  ],
   companies: ['deleteAttachment'],
-  joborders: [
-    'addActivityChangeStatus',
-    'addProfileComment',
-    'addToPipeline',
-    'administrativeHideShow',
-    'deleteAttachment',
-    'deleteMessageThread',
-    'editHiringPlan',
-    'postMessage',
-    'removeFromPipeline',
-    'setCandidateJobOrder'
-  ],
   lists: [
     'deleteStaticList',
     'removeFromListDatagrid',
