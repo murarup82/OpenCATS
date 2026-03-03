@@ -1,15 +1,15 @@
 # Cutover Evidence Snapshot
 
-Generated: 2026-03-03T13:30:57.987Z
+Generated: 2026-03-03T13:39:50.443Z
 
 | Evidence | Exists | Last Modified |
 | --- | --- | --- |
-| `docs/modern-ui-sanity-report.md` | Yes | 2026-03-03T13:30:49.297Z |
-| `docs/modern-ui-route-coverage.md` | Yes | 2026-03-03T13:30:42.017Z |
+| `docs/modern-ui-sanity-report.md` | Yes | 2026-03-03T13:39:42.834Z |
+| `docs/modern-ui-route-coverage.md` | Yes | 2026-03-03T13:39:36.419Z |
 | `docs/modern-ui-parity-checklist.md` | Yes | 2026-03-03T04:48:45.696Z |
 | `docs/modern-ui-rollout-scorecard.md` | Yes | 2026-03-02T03:36:38.903Z |
-| `docs/modern-ui-rollout-scorecard-prefill.md` | Yes | 2026-03-03T13:30:49.916Z |
+| `docs/modern-ui-rollout-scorecard-prefill.md` | Yes | 2026-03-03T13:39:43.369Z |
 | `docs/modern-ui-release-runbook.md` | Yes | 2026-03-02T03:23:22.903Z |
-| `docs/modern-ui-quality-gate.md` | Yes | 2026-03-03T12:30:58.608Z |
-| `docs/modern-ui-legacy-route-gap-report.md` | Yes | 2026-03-03T13:30:54.441Z |
-| `docs/modern-ui-deprecation-evidence-check.md` | Yes | 2026-03-03T12:30:57.911Z |
+| `docs/modern-ui-quality-gate.md` | Yes | 2026-03-03T13:30:59.279Z |
+| `docs/modern-ui-legacy-route-gap-report.md` | Yes | 2026-03-03T13:39:47.257Z |
+| `docs/modern-ui-deprecation-evidence-check.md` | Yes | 2026-03-03T13:30:58.620Z |

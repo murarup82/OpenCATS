@@ -93,6 +93,97 @@ import {
   buildModernJSONRequestQuery
 } from './modernContract';
 
+function buildModernMutationURL(
+  submitURL: string,
+  backupQueryParams: Record<string, string | number | boolean | undefined> = {}
+): string {
+  const url = new URL(submitURL, window.location.href);
+  url.searchParams.set('format', 'modern-json');
+
+  Object.entries(backupQueryParams).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      return;
+    }
+    const textValue = String(value).trim();
+    if (textValue === '') {
+      return;
+    }
+    url.searchParams.set(key, textValue);
+  });
+
+  return url.toString();
+}
+
+function compactResponsePreview(bodyText: string, maxLength = 220): string {
+  return String(bodyText || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+
+function inferMutationFailureHint(preview: string): string {
+  const text = preview.toLowerCase();
+
+  if (text.includes('invalid joborder id') || text.includes('invalid job order id')) {
+    return 'Invalid job order ID payload. If file is too large, PHP can drop multipart POST fields.';
+  }
+  if (text.includes('invalid candidate id')) {
+    return 'Invalid candidate ID payload. If file is too large, PHP can drop multipart POST fields.';
+  }
+  if (text.includes('invalid company id')) {
+    return 'Invalid company ID payload. If file is too large, PHP can drop multipart POST fields.';
+  }
+  if (
+    text.includes('file size is greater than system-wide size limit') ||
+    text.includes('file size is greater than form size limit') ||
+    text.includes('no file was uploaded') ||
+    text.includes('file was only partially uploaded')
+  ) {
+    return 'Upload rejected by PHP upload limits or partial upload; check upload_max_filesize and post_max_size.';
+  }
+  if (
+    text.includes('error connecting to database') ||
+    text.includes('error selecting database') ||
+    text.includes('mysql query failed')
+  ) {
+    return 'Server-side database error occurred while processing upload.';
+  }
+  if (text.includes('<!doctype') || text.includes('<html') || text.includes('commonerror')) {
+    return 'Server returned an HTML error page instead of JSON.';
+  }
+
+  return 'Server returned a non-JSON response.';
+}
+
+async function parseModernMutationResponse(response: Response, actionLabel: string): Promise<ModernMutationResponse> {
+  const responseBody = await response.text();
+  const trimmed = responseBody.trim();
+
+  if (trimmed !== '') {
+    try {
+      return JSON.parse(trimmed) as ModernMutationResponse;
+    } catch (_error) {
+      // Fall through to richer diagnostics below.
+    }
+  }
+
+  const preview = compactResponsePreview(responseBody);
+  const hint = inferMutationFailureHint(preview);
+
+  if (typeof console !== 'undefined') {
+    console.error('[modern-ui] mutation-response-parse-failed', {
+      actionLabel,
+      status: response.status,
+      contentType: response.headers.get('content-type') || '',
+      preview
+    });
+  }
+
+  throw new Error(
+    `${actionLabel} failed (${response.status}). ${hint}${preview === '' ? '' : ` Response preview: ${preview}`}`
+  );
+}
+
 export async function fetchDashboardModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams
@@ -786,24 +877,16 @@ export async function uploadCandidateAttachment(
   form.set('resume', payload.isResume ? '1' : '0');
   form.set('file', payload.file);
 
-  const response = await fetch(submitURL, {
+  const requestURL = buildModernMutationURL(submitURL, {
+    candidateID: payload.candidateID || 0
+  });
+  const response = await fetch(requestURL, {
     method: 'POST',
     credentials: 'same-origin',
     body: form
   });
 
-  let result: ModernMutationResponse | null = null;
-  try {
-    result = (await response.json()) as ModernMutationResponse;
-  } catch (_error) {
-    result = null;
-  }
-
-  if (!result) {
-    throw new Error(`Candidate attachment upload failed (${response.status}).`);
-  }
-
-  return result;
+  return parseModernMutationResponse(response, 'Candidate attachment upload');
 }
 
 export async function uploadJobOrderAttachment(
@@ -818,24 +901,16 @@ export async function uploadJobOrderAttachment(
   form.set('jobOrderID', String(payload.jobOrderID || 0));
   form.set('file', payload.file);
 
-  const response = await fetch(submitURL, {
+  const requestURL = buildModernMutationURL(submitURL, {
+    jobOrderID: payload.jobOrderID || 0
+  });
+  const response = await fetch(requestURL, {
     method: 'POST',
     credentials: 'same-origin',
     body: form
   });
 
-  let result: ModernMutationResponse | null = null;
-  try {
-    result = (await response.json()) as ModernMutationResponse;
-  } catch (_error) {
-    result = null;
-  }
-
-  if (!result) {
-    throw new Error(`Job order attachment upload failed (${response.status}).`);
-  }
-
-  return result;
+  return parseModernMutationResponse(response, 'Job order attachment upload');
 }
 
 export async function uploadCompanyAttachment(
@@ -850,24 +925,16 @@ export async function uploadCompanyAttachment(
   form.set('companyID', String(payload.companyID || 0));
   form.set('file', payload.file);
 
-  const response = await fetch(submitURL, {
+  const requestURL = buildModernMutationURL(submitURL, {
+    companyID: payload.companyID || 0
+  });
+  const response = await fetch(requestURL, {
     method: 'POST',
     credentials: 'same-origin',
     body: form
   });
 
-  let result: ModernMutationResponse | null = null;
-  try {
-    result = (await response.json()) as ModernMutationResponse;
-  } catch (_error) {
-    result = null;
-  }
-
-  if (!result) {
-    throw new Error(`Company attachment upload failed (${response.status}).`);
-  }
-
-  return result;
+  return parseModernMutationResponse(response, 'Company attachment upload');
 }
 
 export async function deleteCompanyAttachment(
