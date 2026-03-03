@@ -412,6 +412,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `CandidateAssignActionPage` and `JobOrderAssignActionPage` for `candidates.considerForJobSearch` and `joborders.considerCandidateSearch`
     - routed both actions as explicit native mappings while preserving existing modern assignment modal behavior (`CandidateAssignJobOrderModal`, `JobOrderAssignCandidateModal`)
     - removed these two actions from `ActionCompatPage` bridge mappings and kept quality gate/scope guards green.
+153. Converted pipeline status detail/edit action routes to native workspace handling:
+    - introduced `PipelineStatusActionPage` for `joborders.pipelineStatusDetails` and `joborders.pipelineStatusEditDate`
+    - reused modern pipeline detail contract + inline editor (`fetchPipelineStatusDetailsModernData`, `PipelineDetailsInlineModal`) and native date-save flow
+    - removed both actions from `ActionCompatPage` bridge mappings and added guarded `pipelineID` route requirements.
 
 ## Next Queue (30-Slice Execution)
 

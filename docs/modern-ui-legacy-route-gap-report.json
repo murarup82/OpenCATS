@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T05:09:44.857Z",
+  "generatedAt": "2026-03-03T05:12:56.255Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -1252,20 +1252,20 @@
     {
       "module": "joborders",
       "action": "pipelineStatusDetails",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.pipelinestatusdetails",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "PipelineStatusActionPage",
+      "guarded": true
     },
     {
       "module": "joborders",
       "action": "pipelineStatusEditDate",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.pipelinestatuseditdate",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "PipelineStatusActionPage",
+      "guarded": true
     },
     {
       "module": "joborders",

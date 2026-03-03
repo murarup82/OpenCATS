@@ -68,5 +68,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Calendar action family now has native async mutations (`addEvent`, `editEvent`, `deleteEvent`) plus native modal UI wiring on `CalendarPage`.
 - Completed: Lists add-to-list popup actions (`quickActionAddToListModal`, `addToListFromDatagridModal`) now route to native `ListsActionPage` with modern overlay orchestration.
 - Completed: Assignment popup actions (`candidates.considerForJobSearch`, `joborders.considerCandidateSearch`) now route to native action pages backed by modern assignment modals.
+- Completed: Pipeline status action routes (`joborders.pipelineStatusDetails`, `joborders.pipelineStatusEditDate`) now route to native `PipelineStatusActionPage` with inline modern edit support.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.
