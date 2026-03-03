@@ -27,6 +27,7 @@ import type {
   HomeOverviewModernDataResponse,
   HomeQuickSearchModernDataResponse,
   ImportLauncherModernDataResponse,
+  LoginModernDataResponse,
   JobOrderAddPopupModernDataResponse,
   JobOrderCompanyContextModernDataResponse,
   JobOrderAssignCandidateModernDataResponse,
@@ -89,6 +90,7 @@ import {
   MODERN_HOME_INBOX_PAGE,
   MODERN_HOME_MYNOTES_PAGE,
   MODERN_IMPORT_LAUNCHER_PAGE,
+  MODERN_LOGIN_PAGE,
   MODERN_QUEUE_PAGE,
   MODERN_RSS_JOBORDERS_PAGE,
   MODERN_REPORTS_CUSTOMER_DASHBOARD_PAGE,
@@ -262,6 +264,54 @@ export async function fetchImportLauncherModernData(
   const data = await getJSON<ImportLauncherModernDataResponse>(url);
   assertModernContract(data.meta, 'import.launcher.v1', 'import launcher data');
 
+  return data;
+}
+
+export async function fetchLoginModernData(
+  bootstrap: UIModeBootstrap,
+  action: string,
+  query: URLSearchParams
+): Promise<LoginModernDataResponse> {
+  const resolvedAction = String(action || '').trim() || 'showLoginForm';
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'login',
+    action: resolvedAction,
+    modernPage: MODERN_LOGIN_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<LoginModernDataResponse>(url);
+  assertModernContract(data.meta, 'login.workspace.v1', 'login workspace data');
+
+  return data;
+}
+
+export async function submitForgotPasswordModernData(
+  submitURL: string,
+  username: string
+): Promise<LoginModernDataResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'true');
+  body.set('username', username || '');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_LOGIN_PAGE);
+
+  const response = await fetch(submitURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error(`Forgot password submit failed (${response.status}).`);
+  }
+
+  const data = (await response.json()) as LoginModernDataResponse;
+  assertModernContract(data.meta, 'login.workspace.v1', 'forgot password response');
   return data;
 }
 

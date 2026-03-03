@@ -45,8 +45,9 @@ import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
 import { GraphsActionPage } from '../pages/GraphsActionPage';
 import { LogsPage } from '../pages/LogsPage';
+import { LoginLegacyActionPage } from '../pages/LoginLegacyActionPage';
+import { LoginPage } from '../pages/LoginPage';
 import { RssJobOrdersPage } from '../pages/RssJobOrdersPage';
-import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
 import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
 import { JobOrderAssignActionPage } from '../pages/JobOrderAssignActionPage';
 import { PipelineStatusActionPage } from '../pages/PipelineStatusActionPage';
@@ -168,13 +169,13 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'import.commit': ImportLauncherPage,
   'import.import': ImportLauncherPage,
   'import.importuploadfile': ImportLauncherPage,
-  'login.attemptlogin': LegacyRedirectPage,
-  'login.forgotpassword': LegacyRedirectPage,
-  'login.googlecallback': LegacyRedirectPage,
-  'login.googlestart': LegacyRedirectPage,
-  'login.nocookiesmodal': LegacyRedirectPage,
-  'login.requestaccess': LegacyRedirectPage,
-  'login.showloginform': LegacyRedirectPage,
+  'login.attemptlogin': LoginLegacyActionPage,
+  'login.forgotpassword': LoginPage,
+  'login.googlecallback': LoginLegacyActionPage,
+  'login.googlestart': LoginLegacyActionPage,
+  'login.nocookiesmodal': LoginPage,
+  'login.requestaccess': LoginPage,
+  'login.showloginform': LoginPage,
   'rss.joborders': RssJobOrdersPage,
   'attachments.getattachment': EntityUtilityActionPage,
   'export.export': EntityUtilityActionPage,
@@ -313,6 +314,7 @@ const registry: Record<string, ModernRouteComponent> = {
   'home.inbox': HomeInboxPage,
   'home.mynotes': HomeMyNotesPage,
   'home.(default)': HomePage,
+  'login.(default)': LoginPage,
   'kpis.details': KpisDetailsPage,
   'kpis.(default)': KpisPage,
   'logs.view': LogsPage,

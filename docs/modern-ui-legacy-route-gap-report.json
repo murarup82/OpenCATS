@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T16:24:54.818Z",
+  "generatedAt": "2026-03-03T16:36:53.681Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 222,
@@ -1408,7 +1408,7 @@
       "classification": "native-explicit",
       "routeKey": "login.attemptlogin",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "LoginLegacyActionPage",
       "guarded": false
     },
     {
@@ -1417,7 +1417,7 @@
       "classification": "native-explicit",
       "routeKey": "login.forgotpassword",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "LoginPage",
       "guarded": false
     },
     {
@@ -1426,7 +1426,7 @@
       "classification": "native-explicit",
       "routeKey": "login.googlecallback",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "LoginLegacyActionPage",
       "guarded": false
     },
     {
@@ -1435,7 +1435,7 @@
       "classification": "native-explicit",
       "routeKey": "login.googlestart",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "LoginLegacyActionPage",
       "guarded": false
     },
     {
@@ -1444,7 +1444,7 @@
       "classification": "native-explicit",
       "routeKey": "login.nocookiesmodal",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "LoginPage",
       "guarded": false
     },
     {
@@ -1453,7 +1453,7 @@
       "classification": "native-explicit",
       "routeKey": "login.requestaccess",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "LoginPage",
       "guarded": false
     },
     {
@@ -1462,7 +1462,7 @@
       "classification": "native-explicit",
       "routeKey": "login.showloginform",
       "resolution": "native",
-      "component": "LegacyRedirectPage",
+      "component": "LoginPage",
       "guarded": false
     },
     {

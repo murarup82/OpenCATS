@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T16:24:54.818Z
+Generated: 2026-03-03T16:36:53.681Z
 
 ## Summary
 
@@ -183,13 +183,13 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | lists | saveListAccess | native-explicit-guarded | lists.savelistaccess | ListsDetailPage |
 | lists | show | native-explicit-guarded | lists.show | ListsDetailPage |
 | lists | showList | native-explicit-guarded | lists.showlist | ListsDetailPage |
-| login | attemptLogin | native-explicit | login.attemptlogin | LegacyRedirectPage |
-| login | forgotPassword | native-explicit | login.forgotpassword | LegacyRedirectPage |
-| login | googleCallback | native-explicit | login.googlecallback | LegacyRedirectPage |
-| login | googleStart | native-explicit | login.googlestart | LegacyRedirectPage |
-| login | noCookiesModal | native-explicit | login.nocookiesmodal | LegacyRedirectPage |
-| login | requestAccess | native-explicit | login.requestaccess | LegacyRedirectPage |
-| login | showLoginForm | native-explicit | login.showloginform | LegacyRedirectPage |
+| login | attemptLogin | native-explicit | login.attemptlogin | LoginLegacyActionPage |
+| login | forgotPassword | native-explicit | login.forgotpassword | LoginPage |
+| login | googleCallback | native-explicit | login.googlecallback | LoginLegacyActionPage |
+| login | googleStart | native-explicit | login.googlestart | LoginLegacyActionPage |
+| login | noCookiesModal | native-explicit | login.nocookiesmodal | LoginPage |
+| login | requestAccess | native-explicit | login.requestaccess | LoginPage |
+| login | showLoginForm | native-explicit | login.showloginform | LoginPage |
 | logs | view | native-explicit | logs.view | LogsPage |
 | reports | customerDashboard | native-explicit | reports.customerdashboard | ReportsCustomerDashboardPage |
 | reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ReportsCustomerDashboardPage |

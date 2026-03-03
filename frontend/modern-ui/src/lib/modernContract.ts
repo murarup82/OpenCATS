@@ -35,6 +35,7 @@ export const MODERN_HOME_INBOX_PAGE = 'home-inbox';
 export const MODERN_HOME_MYNOTES_PAGE = 'home-mynotes';
 export const MODERN_HOME_QUICKSEARCH_PAGE = 'home-quicksearch';
 export const MODERN_IMPORT_LAUNCHER_PAGE = 'import-launcher';
+export const MODERN_LOGIN_PAGE = 'login-workspace';
 export const MODERN_RSS_JOBORDERS_PAGE = 'rss-joborders';
 export const MODERN_KPIS_PAGE = 'kpis-list';
 export const MODERN_KPIS_DETAILS_PAGE = 'kpis-details';

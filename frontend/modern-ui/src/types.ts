@@ -1606,6 +1606,45 @@ export type ImportLauncherModernDataResponse = {
   }>;
 };
 
+export type LoginModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    action: string;
+  };
+  actions: {
+    showLoginURL: string;
+    forgotPasswordURL: string;
+    requestAccessURL: string;
+    noCookiesURL: string;
+    legacyURL: string;
+    loginSubmitURL?: string;
+    forgotPasswordSubmitURL?: string;
+    requestAccessSubmitURL?: string;
+    retryURL?: string;
+  };
+  state: {
+    view: 'login-form' | 'forgot-password' | 'request-access' | 'no-cookies';
+    message?: string;
+    messageSuccess?: boolean;
+    username?: string;
+    reloginVars?: string;
+    siteName?: string;
+    siteNameFull?: string;
+    siteNameError?: boolean;
+    googleAuthEnabled?: boolean;
+    googleLoginURL?: string;
+    complete?: boolean;
+    status?: string;
+    statusMessage?: string;
+    fullName?: string;
+    email?: string;
+    reason?: string;
+    title?: string;
+  };
+};
+
 export type RssJobOrdersModernDataResponse = {
   meta: {
     contractVersion: number;

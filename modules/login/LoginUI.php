@@ -104,12 +104,113 @@ class LoginUI extends UserInterface
         }
     }
 
+    private function isModernJSONRequest()
+    {
+        $responseFormat = '';
+        if (isset($_POST['format']))
+        {
+            $responseFormat = strtolower(trim((string) $_POST['format']));
+        }
+        if ($responseFormat === '' && isset($_GET['format']))
+        {
+            $responseFormat = strtolower(trim((string) $_GET['format']));
+        }
+
+        return ($responseFormat === 'modern-json');
+    }
+
+    private function getModernPageRequestValue()
+    {
+        if (isset($_POST['modernPage']))
+        {
+            return strtolower(trim((string) $_POST['modernPage']));
+        }
+        if (isset($_GET['modernPage']))
+        {
+            return strtolower(trim((string) $_GET['modernPage']));
+        }
+
+        return '';
+    }
+
+    private function sendModernJSONPayload($payload, $statusCode = 200)
+    {
+        if (!headers_sent())
+        {
+            if ((int) $statusCode !== 200)
+            {
+                header('HTTP/1.1 ' . (int) $statusCode . ' Bad Request');
+            }
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        echo json_encode($payload);
+    }
+
+    private function renderModernLoginJSON($modernPage, $action, $state = array(), $actions = array())
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $currentAction = trim((string) $action);
+        if ($currentAction === '')
+        {
+            $currentAction = 'showLoginForm';
+        }
+
+        $defaultActions = array(
+            'showLoginURL' => sprintf('%s?m=login&a=showLoginForm&ui=modern', $baseURL),
+            'forgotPasswordURL' => sprintf('%s?m=login&a=forgotPassword&ui=modern', $baseURL),
+            'requestAccessURL' => sprintf('%s?m=login&a=requestAccess&ui=modern', $baseURL),
+            'noCookiesURL' => sprintf('%s?m=login&a=noCookiesModal&ui=modern', $baseURL),
+            'legacyURL' => sprintf('%s?m=login&a=%s&ui=legacy', $baseURL, urlencode($currentAction))
+        );
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'login.workspace.v1',
+                'modernPage' => $modernPage,
+                'action' => $currentAction
+            ),
+            'actions' => array_merge($defaultActions, $actions),
+            'state' => $state
+        );
+
+        $this->sendModernJSONPayload($payload);
+    }
+
+    private function validateModernLoginPage($modernPage)
+    {
+        if ($modernPage !== '' && $modernPage !== 'login-workspace')
+        {
+            $this->sendModernJSONPayload(
+                array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ),
+                400
+            );
+            return false;
+        }
+
+        return true;
+    }
+
 
     /*
      * Called by handleRequest() to handle displaying the initial login form.
      */
     private function showLoginForm()
     {
+        $isModernJSON = $this->isModernJSONRequest();
+        $modernPage = $this->getModernPageRequestValue();
+
+        if ($isModernJSON && !$this->validateModernLoginPage($modernPage))
+        {
+            return;
+        }
+
         /* The username can be pre-filled in the input box by specifing
          * "&loginusername=Username" in the URL.
          */
@@ -126,13 +227,16 @@ class LoginUI extends UserInterface
          * "&messageSuccess=false" in the URL.
          */
         $message = $this->getTrimmedInput('message', $_GET);
+        $messageSuccess = false;
         if (isset($_GET['messageSuccess']) &&
             $_GET['messageSuccess'] == 'true')
         {
+            $messageSuccess = true;
             $this->_template->assign('messageSuccess', true);
         }
         else
         {
+            $messageSuccess = false;
             $this->_template->assign('messageSuccess', false);
         }
 
@@ -188,7 +292,37 @@ class LoginUI extends UserInterface
         $this->_template->assign('siteName', $siteName);
         $this->_template->assign('siteNameFull', $siteNameFull);
         $this->_template->assign('dateString', date('l, F jS, Y'));
+        $googleLoginContext = $this->getGoogleLoginTemplateVars($reloginVars, $siteName);
         $this->assignGoogleLoginTemplateVars($reloginVars, $siteName);
+
+        if ($isModernJSON)
+        {
+            $submitURL = sprintf('%s?m=login&a=attemptLogin', CATSUtility::getIndexName());
+            if ($reloginVars !== '')
+            {
+                $submitURL .= '&reloginVars=' . urlencode($reloginVars);
+            }
+            $this->renderModernLoginJSON(
+                'login-workspace',
+                'showLoginForm',
+                array(
+                    'view' => 'login-form',
+                    'message' => $message,
+                    'messageSuccess' => $messageSuccess,
+                    'username' => $username,
+                    'reloginVars' => $reloginVars,
+                    'siteName' => $siteName,
+                    'siteNameFull' => $siteNameFull,
+                    'siteNameError' => ($siteNameFull === 'error'),
+                    'googleAuthEnabled' => $googleLoginContext['enabled'],
+                    'googleLoginURL' => $googleLoginContext['loginURL']
+                ),
+                array(
+                    'loginSubmitURL' => $submitURL
+                )
+            );
+            return;
+        }
 
         if (!eval(Hooks::get('SHOW_LOGIN_FORM_POST_2'))) return;
 
@@ -197,7 +331,32 @@ class LoginUI extends UserInterface
 
     private function noCookiesModal()
     {
+        $isModernJSON = $this->isModernJSONRequest();
+        $modernPage = $this->getModernPageRequestValue();
+
+        if ($isModernJSON && !$this->validateModernLoginPage($modernPage))
+        {
+            return;
+        }
+
         if (!eval(Hooks::get('NO_COOKIES_MODAL'))) return;
+
+        if ($isModernJSON)
+        {
+            $this->renderModernLoginJSON(
+                'login-workspace',
+                'noCookiesModal',
+                array(
+                    'view' => 'no-cookies',
+                    'title' => 'Cookies Required',
+                    'message' => 'Cookies are not enabled in your browser. Login requires cookies to stay signed in.'
+                ),
+                array(
+                    'retryURL' => CATSUtility::getIndexName() . '?m=login&a=showLoginForm&ui=modern'
+                )
+            );
+            return;
+        }
 
         $this->_template->display('./modules/login/NoCookiesModal.tpl');
     }
@@ -483,7 +642,34 @@ class LoginUI extends UserInterface
      */
     private function forgotPassword()
     {
+        $isModernJSON = $this->isModernJSONRequest();
+        $modernPage = $this->getModernPageRequestValue();
+
+        if ($isModernJSON && !$this->validateModernLoginPage($modernPage))
+        {
+            return;
+        }
+
         if (!eval(Hooks::get('FORGOT_PASSWORD'))) return;
+
+        if ($isModernJSON)
+        {
+            $this->renderModernLoginJSON(
+                'login-workspace',
+                'forgotPassword',
+                array(
+                    'view' => 'forgot-password',
+                    'message' => '',
+                    'messageSuccess' => false,
+                    'complete' => false,
+                    'username' => ''
+                ),
+                array(
+                    'forgotPasswordSubmitURL' => CATSUtility::getIndexName() . '?m=login&a=forgotPassword'
+                )
+            );
+            return;
+        }
 
         $this->_template->display('./modules/login/ForgotPassword.tpl');
     }
@@ -494,7 +680,18 @@ class LoginUI extends UserInterface
      */
     private function onForgotPassword()
     {
+        $isModernJSON = $this->isModernJSONRequest();
+        $modernPage = $this->getModernPageRequestValue();
+
+        if ($isModernJSON && !$this->validateModernLoginPage($modernPage))
+        {
+            return;
+        }
+
         $username = $this->getTrimmedInput('username', $_POST);
+        $message = '';
+        $messageSuccess = false;
+        $complete = false;
 
         if (!eval(Hooks::get('ON_FORGOT_PASSWORD'))) return;
 
@@ -520,8 +717,31 @@ class LoginUI extends UserInterface
 
             if (!$user->resetPassword((int) $userID, $temporaryPassword))
             {
-                $this->_template->assign('message', 'Unable to process password reset at this time.');
-                $this->_template->assign('complete', false);
+                $message = 'Unable to process password reset at this time.';
+                $messageSuccess = false;
+                $complete = false;
+
+                if ($isModernJSON)
+                {
+                    $this->renderModernLoginJSON(
+                        'login-workspace',
+                        'forgotPassword',
+                        array(
+                            'view' => 'forgot-password',
+                            'message' => $message,
+                            'messageSuccess' => $messageSuccess,
+                            'complete' => $complete,
+                            'username' => $username
+                        ),
+                        array(
+                            'forgotPasswordSubmitURL' => CATSUtility::getIndexName() . '?m=login&a=forgotPassword'
+                        )
+                    );
+                    return;
+                }
+
+                $this->_template->assign('message', $message);
+                $this->_template->assign('complete', $complete);
                 $this->_template->display('./modules/login/ForgotPassword.tpl');
                 return;
             }
@@ -538,17 +758,45 @@ class LoginUI extends UserInterface
             {
                 $this->_template->assign('username', $username);
                 $this->_template->assign('complete', true);
+                $message = 'Password reset e-mail sent successfully.';
+                $messageSuccess = true;
+                $complete = true;
             }
             else
             {
-                $this->_template->assign('message',' Unable to send password to address specified.');
-                $this->_template->assign('complete', false);
+                $message = 'Unable to send password to address specified.';
+                $messageSuccess = false;
+                $complete = false;
+                $this->_template->assign('message', $message);
+                $this->_template->assign('complete', $complete);
             }
         }
         else
         {
-            $this->_template->assign('message', 'No such username found.');
-            $this->_template->assign('complete', false);
+            $message = 'No such username found.';
+            $messageSuccess = false;
+            $complete = false;
+            $this->_template->assign('message', $message);
+            $this->_template->assign('complete', $complete);
+        }
+
+        if ($isModernJSON)
+        {
+            $this->renderModernLoginJSON(
+                'login-workspace',
+                'forgotPassword',
+                array(
+                    'view' => 'forgot-password',
+                    'message' => $message,
+                    'messageSuccess' => $messageSuccess,
+                    'complete' => $complete,
+                    'username' => $username
+                ),
+                array(
+                    'forgotPasswordSubmitURL' => CATSUtility::getIndexName() . '?m=login&a=forgotPassword'
+                )
+            );
+            return;
         }
 
         $this->_template->display('./modules/login/ForgotPassword.tpl');
@@ -735,9 +983,42 @@ class LoginUI extends UserInterface
 
     private function requestAccess()
     {
+        $isModernJSON = $this->isModernJSONRequest();
+        $modernPage = $this->getModernPageRequestValue();
+
+        if ($isModernJSON && !$this->validateModernLoginPage($modernPage))
+        {
+            return;
+        }
+
         if (!isset($_SESSION[self::GOOGLE_PROFILE_SESSION_KEY]) ||
             !is_array($_SESSION[self::GOOGLE_PROFILE_SESSION_KEY]))
         {
+            if ($isModernJSON)
+            {
+                $googleLoginContext = $this->getGoogleLoginTemplateVars('', '');
+                $this->renderModernLoginJSON(
+                    'login-workspace',
+                    'showLoginForm',
+                    array(
+                        'view' => 'login-form',
+                        'message' => 'Please sign in with Google before requesting access.',
+                        'messageSuccess' => false,
+                        'username' => '',
+                        'reloginVars' => '',
+                        'siteName' => '',
+                        'siteNameFull' => '',
+                        'siteNameError' => false,
+                        'googleAuthEnabled' => $googleLoginContext['enabled'],
+                        'googleLoginURL' => $googleLoginContext['loginURL']
+                    ),
+                    array(
+                        'loginSubmitURL' => CATSUtility::getIndexName() . '?m=login&a=attemptLogin'
+                    )
+                );
+                return;
+            }
+
             $this->displayLoginMessage('Please sign in with Google before requesting access.');
             return;
         }
@@ -768,6 +1049,27 @@ class LoginUI extends UserInterface
         $this->_template->assign('fullName', $fullName);
         $this->_template->assign('email', $profile['email']);
         $this->_template->assign('reason', '');
+
+        if ($isModernJSON)
+        {
+            $this->renderModernLoginJSON(
+                'login-workspace',
+                'requestAccess',
+                array(
+                    'view' => 'request-access',
+                    'status' => $status,
+                    'statusMessage' => $statusMessage,
+                    'fullName' => $fullName,
+                    'email' => $profile['email'],
+                    'reason' => ''
+                ),
+                array(
+                    'requestAccessSubmitURL' => CATSUtility::getIndexName() . '?m=login&a=requestAccess'
+                )
+            );
+            return;
+        }
+
         $this->_template->display('./modules/login/GoogleAccessRequest.tpl');
     }
 
@@ -879,6 +1181,13 @@ class LoginUI extends UserInterface
 
     private function assignGoogleLoginTemplateVars($reloginVars, $siteName)
     {
+        $context = $this->getGoogleLoginTemplateVars($reloginVars, $siteName);
+        $this->_template->assign('googleAuthEnabled', $context['enabled']);
+        $this->_template->assign('googleLoginURL', $context['loginURL']);
+    }
+
+    private function getGoogleLoginTemplateVars($reloginVars, $siteName)
+    {
         $siteID = $this->resolveGoogleSiteID($siteName);
         $googleSettings = $this->getGoogleSettingsForSite($siteID);
 
@@ -892,10 +1201,9 @@ class LoginUI extends UserInterface
             }
         }
 
-        $this->_template->assign('googleAuthEnabled', $this->isGoogleOIDCConfigured($googleSettings));
-        $this->_template->assign(
-            'googleLoginURL',
-            $this->buildGoogleStartURL($reloginVars, $siteName)
+        return array(
+            'enabled' => $this->isGoogleOIDCConfigured($googleSettings),
+            'loginURL' => $this->buildGoogleStartURL($reloginVars, $siteName)
         );
     }
 
