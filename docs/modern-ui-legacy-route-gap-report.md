@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:46:47.572Z
+Generated: 2026-03-03T06:50:09.230Z
 
 ## Summary
 
@@ -53,8 +53,8 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | activity | viewByDate | native-explicit | activity.viewbydate | ActivityListPage |
 | attachments | getAttachment | bridge-global-fallback | *.* | ModuleBridgePage |
 | calendar | addEvent | native-explicit | calendar.addevent | CalendarPage |
-| calendar | deleteEvent | native-explicit | calendar.deleteevent | ActionCompatPage |
-| calendar | dynamicData | native-explicit | calendar.dynamicdata | ActionCompatPage |
+| calendar | deleteEvent | native-explicit | calendar.deleteevent | EntityUtilityActionPage |
+| calendar | dynamicData | native-explicit | calendar.dynamicdata | EntityUtilityActionPage |
 | calendar | editEvent | native-explicit | calendar.editevent | CalendarPage |
 | calendar | showCalendar | native-explicit | calendar.showcalendar | CalendarPage |
 | candidates | add | native-explicit | candidates.add | CandidatesAddPage |
@@ -87,7 +87,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | companies | add | native-explicit | companies.add | CompaniesAddPage |
 | companies | createAttachment | native-explicit-guarded | companies.createattachment | CompaniesShowPage |
 | companies | delete | native-explicit-guarded | companies.delete | EntityDeleteActionPage |
-| companies | deleteAttachment | native-explicit | companies.deleteattachment | ActionCompatPage |
+| companies | deleteAttachment | native-explicit | companies.deleteattachment | EntityUtilityActionPage |
 | companies | edit | native-explicit-guarded | companies.edit | CompaniesEditPage |
 | companies | internalPostings | native-explicit | companies.internalpostings | CompaniesInternalPostingsActionPage |
 | companies | listByView | native-explicit | companies.listbyview | CompaniesListPage |
@@ -176,11 +176,11 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | show | native-explicit-guarded | joborders.show | JobOrdersShowPage |
 | kpis | details | native-explicit | kpis.details | KpisDetailsPage |
 | lists | addToListFromDatagridModal | native-explicit | lists.addtolistfromdatagridmodal | ListsActionPage |
-| lists | deleteStaticList | native-explicit | lists.deletestaticlist | ActionCompatPage |
+| lists | deleteStaticList | native-explicit | lists.deletestaticlist | EntityUtilityActionPage |
 | lists | listByView | native-explicit | lists.listbyview | ListsManagePage |
 | lists | quickActionAddToListModal | native-explicit | lists.quickactionaddtolistmodal | ListsActionPage |
-| lists | removeFromListDatagrid | native-explicit | lists.removefromlistdatagrid | ActionCompatPage |
-| lists | saveListAccess | native-explicit | lists.savelistaccess | ActionCompatPage |
+| lists | removeFromListDatagrid | native-explicit | lists.removefromlistdatagrid | EntityUtilityActionPage |
+| lists | saveListAccess | native-explicit | lists.savelistaccess | EntityUtilityActionPage |
 | lists | show | native-explicit-guarded | lists.show | ListsDetailPage |
 | lists | showList | native-explicit-guarded | lists.showlist | ListsDetailPage |
 | login | attemptLogin | bridge-global-fallback | *.* | ModuleBridgePage |

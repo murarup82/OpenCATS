@@ -463,6 +463,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced shared `EntityUtilityActionPage` and routed remaining `candidates.*` + `joborders.*` utility actions from `ActionCompatPage` to explicit native mappings
     - preserves behavioral parity via embedded legacy rendering (`ui_embed=1`) while providing modern context-aware return navigation
     - reduced compatibility action scope to calendar/lists/company-attachment action tails.
+159. Retired explicit compatibility action-route wrapper usage for remaining tail actions:
+    - routed `calendar.deleteEvent`, `calendar.dynamicData`, `companies.deleteAttachment`, `lists.deleteStaticList`, `lists.removeFromListDatagrid`, and `lists.saveListAccess` to native `EntityUtilityActionPage` handling
+    - kept behavior parity by using embedded legacy utility workspace for form/modal actions and redirect mode for calendar data/delete endpoints
+    - removed `ActionCompatPage` route-registry usage (global `*.* -> ModuleBridgePage` safety fallback remains unchanged).
 
 ## Next Queue (30-Slice Execution)
 

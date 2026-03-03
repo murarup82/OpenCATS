@@ -53,7 +53,6 @@ import { JobOrderMonitorActionPage } from '../pages/JobOrderMonitorActionPage';
 import { EntityDeleteActionPage } from '../pages/EntityDeleteActionPage';
 import { EntityUtilityActionPage } from '../pages/EntityUtilityActionPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
-import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
 
 export type ModernRouteComponentProps = {
@@ -87,6 +86,8 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'dashboard.setpipelinestatus': DashboardMyPage,
   'calendar.addevent': CalendarPage,
   'calendar.editevent': CalendarPage,
+  'calendar.deleteevent': EntityUtilityActionPage,
+  'calendar.dynamicdata': EntityUtilityActionPage,
   'candidates.createattachment': CandidatesShowPage,
   'joborders.createattachment': JobOrdersShowPage,
   'joborders.addcandidatemodal': CandidatesAddPage,
@@ -133,6 +134,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'candidates.savesources': EntityUtilityActionPage,
   'candidates.savedlists': EntityUtilityActionPage,
   'companies.delete': EntityDeleteActionPage,
+  'companies.deleteattachment': EntityUtilityActionPage,
   'contacts.delete': EntityDeleteActionPage,
   'joborders.delete': EntityDeleteActionPage,
   'joborders.addactivitychangestatus': EntityUtilityActionPage,
@@ -145,6 +147,9 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.postmessage': EntityUtilityActionPage,
   'joborders.removefrompipeline': EntityUtilityActionPage,
   'joborders.setcandidatejoborder': EntityUtilityActionPage,
+  'lists.deletestaticlist': EntityUtilityActionPage,
+  'lists.removefromlistdatagrid': EntityUtilityActionPage,
+  'lists.savelistaccess': EntityUtilityActionPage,
   'reports.customerdashboarddetails': ReportsActionPage,
   'reports.customizeeeoreport': ReportsActionPage,
   'reports.customizejoborderreport': ReportsActionPage,
@@ -197,17 +202,6 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   )
 };
 
-// Comparison-driven explicit action coverage. Keep behavior legacy-safe while avoiding wildcard fallbacks.
-const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
-  calendar: ['deleteEvent', 'dynamicData'],
-  companies: ['deleteAttachment'],
-  lists: [
-    'deleteStaticList',
-    'removeFromListDatagrid',
-    'saveListAccess'
-  ]
-}, ActionCompatPage);
-
 const registry: Record<string, ModernRouteComponent> = {
   'dashboard.my': DashboardMyPage,
   'dashboard.(default)': DashboardMyPage,
@@ -258,7 +252,6 @@ const registry: Record<string, ModernRouteComponent> = {
   'logs.view': LogsPage,
   'logs.(default)': LogsPage,
   ...explicitNativeActionRoutes,
-  ...explicitActionCompatRoutes,
   'logs.*': LogsPage,
   '*.*': ModuleBridgePage,
   'candidates.(default)': CandidatesListPage
