@@ -1306,6 +1306,52 @@ export type SourcingSaveMutationResponse = {
   code?: string;
 };
 
+export type QueueOverviewModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  state: {
+    queueTableAvailable: boolean;
+  };
+  summary: {
+    totalCount: number;
+    pendingCount: number;
+    lockedCount: number;
+    errorCount: number;
+    completedCount: number;
+    staleLockedCount: number;
+    processorActive: boolean;
+    lastRunEpoch: number;
+    lastRunLabel: string;
+  };
+  charts: {
+    priorityBuckets: Array<{
+      priority: number;
+      count: number;
+    }>;
+  };
+  actions: {
+    legacyURL: string;
+    refreshURL: string;
+  };
+  rows: Array<{
+    queueID: number;
+    siteID: number;
+    task: string;
+    argsPreview: string;
+    priority: number;
+    dateCreated: string;
+    dateTimeout: string;
+    dateCompleted: string;
+    locked: boolean;
+    error: number;
+    state: 'pending' | 'locked' | 'error' | 'completed' | string;
+    responsePreview: string;
+  }>;
+};
+
 export type HomeOverviewModernDataResponse = {
   meta: {
     contractVersion: number;

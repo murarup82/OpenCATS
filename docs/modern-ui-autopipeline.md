@@ -384,6 +384,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - extended `modules/sourcing/SourcingUI.php` with `sourcing.list.v1` modern-json payload and modern-json save mutation handling
     - introduced `SourcingPage` with in-page editable weekly rows, interactive windowed trend chart, and draft-save workflow
     - routed `sourcing.(default)` to native React page while keeping `sourcing.*` fallback routing for legacy safety.
+146. Added native `queue/(default)` modernization contract and page:
+    - extended `modules/queue/QueueUI.php` with `queue.overview.v1` modern-json payload containing processor health, queue summaries, priority buckets, and recent task rows
+    - introduced `QueuePage` with in-page interactive filters (state/search/row-limit) and interactive priority distribution modes
+    - routed `queue.(default)` to native React page while preserving `queue.*` compatibility fallback behavior.
 
 ## Next Queue (30-Slice Execution)
 

@@ -36,6 +36,7 @@ import type {
   PipelineStatusDetailsModernDataResponse,
   PipelineStatusHistoryUpdateResponse,
   PipelineRemoveModernResponse,
+  QueueOverviewModernDataResponse,
   QuickActionAddToListModernDataResponse,
   ReportsCustomerDashboardModernDataResponse,
   ReportsGraphViewModernDataResponse,
@@ -72,6 +73,7 @@ import {
   MODERN_HOME_OVERVIEW_PAGE,
   MODERN_HOME_INBOX_PAGE,
   MODERN_HOME_MYNOTES_PAGE,
+  MODERN_QUEUE_PAGE,
   MODERN_REPORTS_CUSTOMER_DASHBOARD_PAGE,
   MODERN_REPORTS_GRAPH_VIEW_PAGE,
   MODERN_REPORTS_PAGE,
@@ -1381,6 +1383,25 @@ export async function saveSourcingListModernData(
   }
 
   return result;
+}
+
+export async function fetchQueueOverviewModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<QueueOverviewModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'queue',
+    action: '',
+    modernPage: MODERN_QUEUE_PAGE,
+    query
+  });
+  apiQuery.delete('a');
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<QueueOverviewModernDataResponse>(url);
+  assertModernContract(data.meta, 'queue.overview.v1', 'queue workspace');
+
+  return data;
 }
 
 export async function fetchCandidatesShowModernData(
