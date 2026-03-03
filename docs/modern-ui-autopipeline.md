@@ -493,6 +493,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - expanded `EntityUtilityActionPage` with module-aware handling for `settings`, `import`, `gdpr`, `attachments`, `export`, `toolbar`, `wizard`, and `xml` action families
     - switched remaining explicit bridge mappings from `ModuleBridgePage` to native explicit `EntityUtilityActionPage` routes while preserving legacy-safe behavior through embed/redirect mode rules
     - comparison coverage now reports `nativeExplicit=222`, `bridge=0`, and `unresolved=0` for discovered legacy `handleRequest` actions.
+167. Added zero-bridge regression guard for full explicit coverage baseline:
+    - introduced `frontend/modern-ui/scripts/verify-no-bridge-actions.mjs` and npm script `verify:no-bridge-actions`
+    - wired no-bridge guard into required sanity and quality workflows to fail CI if route comparison reintroduces any bridge-classified action
+    - added generated evidence artifact `docs/modern-ui-no-bridge-actions-check.md` to quality gate evidence validation.
 
 ## Next Queue (30-Slice Execution)
 

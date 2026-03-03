@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-03T08:03:10.199Z
-Finished: 2026-03-03T08:03:38.334Z
+Started: 2026-03-03T08:37:24.045Z
+Finished: 2026-03-03T08:38:02.249Z
 Overall Status: **Pass**
 
 ## Summary
@@ -16,6 +16,7 @@ Overall Status: **Pass**
 | Command: Legacy Route Comparison | Pass | 0 |
 | Command: In-Scope Route Fallback Guard | Pass | 0 |
 | Command: Bridge Wildcard Retirement Guard | Pass | 0 |
+| Command: No-Bridge Action Guard | Pass | 0 |
 | Command: Legacy Fallback Link Guard | Pass | 0 |
 | Command: Shell No-JS Fallback Guard | Pass | 0 |
 | Command: Cutover Evidence Snapshot | Pass | 0 |
@@ -24,6 +25,7 @@ Overall Status: **Pass**
 | Evidence: `docs/modern-ui-route-coverage.md` | Pass | present |
 | Evidence: `docs/modern-ui-route-parity-checklist.md` | Pass | present |
 | Evidence: `docs/modern-ui-bridge-wildcard-retirement.md` | Pass | present |
+| Evidence: `docs/modern-ui-no-bridge-actions-check.md` | Pass | present |
 | Evidence: `docs/modern-ui-sanity-report.md` | Pass | present |
 | Evidence: `docs/modern-ui-parity-checklist.md` | Pass | present |
 | Evidence: `docs/modern-ui-rollout-scorecard.md` | Pass | present |
@@ -170,6 +172,21 @@ Command: `npm.cmd run verify:bridge-wildcards`
 > node ./scripts/verify-bridge-wildcard-retirement.mjs
 
 [modern-ui] Wrote bridge wildcard retirement check: D:\Work\opencats\OpenCATS\docs\modern-ui-bridge-wildcard-retirement.md
+```
+
+**stderr**
+`(no output)`
+
+### No-Bridge Action Guard (Pass)
+
+Command: `npm.cmd run verify:no-bridge-actions`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:no-bridge-actions
+> node ./scripts/verify-no-bridge-actions.mjs
+
+[modern-ui] Wrote no-bridge-action guard report: D:\Work\opencats\OpenCATS\docs\modern-ui-no-bridge-actions-check.md
 ```
 
 **stderr**

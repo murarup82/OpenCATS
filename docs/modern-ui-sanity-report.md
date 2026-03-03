@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-03T08:03:10.863Z
-Finished: 2026-03-03T08:03:26.631Z
+Started: 2026-03-03T08:37:24.828Z
+Finished: 2026-03-03T08:37:50.184Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -12,6 +12,7 @@ Overall Required Status: **Pass**
 | Coverage Matrix | Pass | Yes | 0 |
 | Route Parity Checklist | Pass | Yes | 0 |
 | Bridge Wildcard Retirement | Pass | Yes | 0 |
+| No-Bridge Action Guard | Pass | Yes | 0 |
 | Legacy Fallback Link Guard | Pass | Yes | 0 |
 | Shell No-JS Fallback Guard | Pass | Yes | 0 |
 | Playwright Workflow Smoke | Pass | Yes | 0 |
@@ -40,8 +41,8 @@ transforming...
 rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m    0.20 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  134.90 kB[22m[1m[22m
-[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,051.28 kB[39m[22m[2m │ map: 3,836.75 kB[22m
-[32m✓ built in 5.83s[39m
+[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,051.29 kB[39m[22m[2m │ map: 3,836.83 kB[22m
+[32m✓ built in 9.32s[39m
 ```
 
 **stderr**
@@ -87,6 +88,21 @@ Command: `npm run verify:bridge-wildcards`
 > node ./scripts/verify-bridge-wildcard-retirement.mjs
 
 [modern-ui] Wrote bridge wildcard retirement check: D:\Work\opencats\OpenCATS\docs\modern-ui-bridge-wildcard-retirement.md
+```
+
+**stderr**
+`(no output)`
+
+### No-Bridge Action Guard (Pass)
+
+Command: `npm run verify:no-bridge-actions`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:no-bridge-actions
+> node ./scripts/verify-no-bridge-actions.mjs
+
+[modern-ui] Wrote no-bridge-action guard report: D:\Work\opencats\OpenCATS\docs\modern-ui-no-bridge-actions-check.md
 ```
 
 **stderr**

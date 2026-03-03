@@ -1,7 +1,7 @@
 ﻿# Modern UI Comparison-Driven Queue
 
 Source: `docs/modern-ui-legacy-route-gap-report.md`  
-Generated from latest comparison snapshot: `2026-03-03T08:03:33.646Z`
+Generated from latest comparison snapshot: `2026-03-03T08:21:09.315Z`
 
 ## Snapshot
 
@@ -89,5 +89,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Converted all remaining known wildcard bridge actions (`attachments/export/gdpr/graphs/import/settings/toolbar/wizard/xml`) to explicit `ModuleBridgePage` route entries, retiring `bridge-global-fallback` usage for discovered legacy actions.
 - Completed: Converted legacy graphs action routes (`graphs.generic`, `graphs.genericPie`, `graphs.jobOrderReportGraph`, `graphs.testGraph`, `graphs.wordVerify`) to native `GraphsActionPage` workspace with in-page interactive rendering controls and custom query tuning.
 - Completed: Migrated remaining non-core legacy action families (`attachments/export/gdpr/import/settings/toolbar/wizard/xml`) from `ModuleBridgePage` to native explicit `EntityUtilityActionPage` handling with module-aware embed/redirect behavior.
+- Completed: Added CI no-bridge route guard (`verify:no-bridge-actions`) and wired it into sanity and quality gates to prevent bridge regression after full explicit route coverage.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.
