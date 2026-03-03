@@ -563,6 +563,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   type="button"
                   className={`avel-candidate-focus-chip${localFocus === 'all' ? ' is-active' : ''}`}
                   onClick={() => setLocalFocus('all')}
+                  aria-pressed={localFocus === 'all'}
                 >
                   All <strong>{data.rows.length}</strong>
                 </button>
@@ -570,6 +571,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   type="button"
                   className={`avel-candidate-focus-chip${localFocus === 'hot' ? ' is-active' : ''}`}
                   onClick={() => setLocalFocus('hot')}
+                  aria-pressed={localFocus === 'hot'}
                 >
                   Hot <strong>{visibleHotCount}</strong>
                 </button>
@@ -577,6 +579,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   type="button"
                   className={`avel-candidate-focus-chip${localFocus === 'submitted' ? ' is-active' : ''}`}
                   onClick={() => setLocalFocus('submitted')}
+                  aria-pressed={localFocus === 'submitted'}
                 >
                   Submitted <strong>{visibleSubmittedCount}</strong>
                 </button>
@@ -584,6 +587,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   type="button"
                   className={`avel-candidate-focus-chip${localFocus === 'duplicates' ? ' is-active' : ''}`}
                   onClick={() => setLocalFocus('duplicates')}
+                  aria-pressed={localFocus === 'duplicates'}
                 >
                   Duplicates <strong>{visibleDuplicateCount}</strong>
                 </button>
@@ -591,6 +595,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   type="button"
                   className={`avel-candidate-focus-chip${localFocus === 'resume' ? ' is-active' : ''}`}
                   onClick={() => setLocalFocus('resume')}
+                  aria-pressed={localFocus === 'resume'}
                 >
                   Resume <strong>{visibleResumeCount}</strong>
                 </button>
@@ -598,7 +603,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
 
               {hasActiveFilters ? (
                 <div className="avel-candidate-toolbar__active">
-                  <div className="modern-command-active__count is-active">
+                  <div className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
                     {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
                   </div>
                   <div className="modern-command-active__list">

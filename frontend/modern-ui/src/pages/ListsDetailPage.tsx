@@ -178,7 +178,11 @@ export function ListsDetailPage({ bootstrap }: Props) {
 
             <div className="modern-command-bar__row modern-command-bar__row--meta">
               <div className="modern-command-active">
-                <div className={`modern-command-active__count${data.filters.quickSearch.trim() !== '' ? ' is-active' : ''}`}>
+                <div
+                  className={`modern-command-active__count${data.filters.quickSearch.trim() !== '' ? ' is-active' : ''}`}
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
                   {data.filters.quickSearch.trim() === '' ? 'No active filters' : `Search: "${data.filters.quickSearch.trim()}"`}
                 </div>
                 <div className="modern-command-active__list">

@@ -513,6 +513,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added explicit route guard parameter requirements for candidate/joborder/company/list utility action routes in `routeRegistry`
     - mapped list utility actions (`lists.deletestaticlist`, `lists.removefromlistdatagrid`, `lists.savelistaccess`) to `modern-redirect` behavior in `EntityUtilityActionPage`
     - reduced invalid utility-action entry points and kept fallback behavior deterministic by routing incomplete utility URLs to guarded module defaults.
+172. Expanded live-region and toggle-state accessibility semantics on dynamic filter surfaces:
+    - added `aria-live="polite"` and `aria-atomic="true"` to dynamic filter/status summary counters across candidates, companies, contacts, activity, lists, queue, sourcing, and reports dashboard pages
+    - added explicit `aria-pressed` state semantics to candidate quick-focus chips to reflect active focus mode for assistive technologies
+    - kept existing visual behavior unchanged while improving screen-reader announcements for filter/scope transitions.
 
 ## Next Queue (30-Slice Execution)
 

@@ -338,7 +338,9 @@ export function ReportsCustomerDashboardPage({ bootstrap }: Props) {
               </button>
             </div>
             <div className="modern-command-bar__row modern-command-bar__row--meta">
-              <div className="modern-command-active__count is-active">{toText(data.dashboard.insightLine, 'No insight available yet.')}</div>
+              <div className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
+                {toText(data.dashboard.insightLine, 'No insight available yet.')}
+              </div>
             </div>
           </section>
 

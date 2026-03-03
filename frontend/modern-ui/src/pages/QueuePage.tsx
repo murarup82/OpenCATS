@@ -279,7 +279,9 @@ export function QueuePage({ bootstrap }: Props) {
               </form>
             </div>
             <div className="modern-command-bar__row modern-command-bar__row--meta">
-              <div className="modern-command-active__count is-active">Showing {filteredRows.length} rows from latest {data.rows.length} queue entries.</div>
+              <div className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
+                Showing {filteredRows.length} rows from latest {data.rows.length} queue entries.
+              </div>
             </div>
           </section>
 

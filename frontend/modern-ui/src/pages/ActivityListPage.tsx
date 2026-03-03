@@ -387,7 +387,11 @@ export function ActivityListPage({ bootstrap }: Props) {
 
             <div className="modern-command-bar__row modern-command-bar__row--meta">
               <div className="modern-command-active">
-                <div className={`modern-command-active__count${activeFilterLabels.length > 0 ? ' is-active' : ''}`}>
+                <div
+                  className={`modern-command-active__count${activeFilterLabels.length > 0 ? ' is-active' : ''}`}
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
                   {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
                 </div>
                 {activeFilterLabels.length > 0 ? (

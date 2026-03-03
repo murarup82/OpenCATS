@@ -94,5 +94,6 @@ Phase 2B backlog (functional deepening):
 - Completed: Expanded replay fixture framework with query-aware GET probes and filled all remaining endpoint-check fixture gaps (16/16 covered) using non-mutating invalid-modern-page contract checks.
 - Completed: Reclassified modernized entity utility routes in `EntityUtilityActionPage` to native workspace redirects (candidate/joborder show-action families and company attachment delete), reducing legacy-embedded action page entry points.
 - Completed: Added guarded-route parameter requirements for utility actions and reclassified lists utility actions (`deletestaticlist`, `removefromlistdatagrid`, `savelistaccess`) to native workspace redirects, reducing invalid compat-route entry surfaces.
+- Completed: Added polite live-region announcements for dynamic filter/status counters across modern list/report pages and explicit `aria-pressed` semantics for candidate quick-focus chips.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.

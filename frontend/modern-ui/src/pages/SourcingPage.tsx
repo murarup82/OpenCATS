@@ -231,7 +231,7 @@ export function SourcingPage({ bootstrap }: Props) {
             </div>
             <div className="modern-command-bar__row modern-command-bar__row--meta">
               <div className="modern-command-active">
-                <div className="modern-command-active__count is-active">
+                <div className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
                   Visible weeks: {visibleRows.length} | Total sourced: {totalVisible} | Avg/week: {avgVisible}
                 </div>
                 {saveStatus !== '' ? <div className="modern-command-active__list">{saveStatus}</div> : null}
