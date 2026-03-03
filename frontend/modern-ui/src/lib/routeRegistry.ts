@@ -26,6 +26,7 @@ import { ContactsEditPage } from '../pages/ContactsEditPage';
 import { ActivityListPage } from '../pages/ActivityListPage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { ListsManagePage } from '../pages/ListsManagePage';
+import { ListsDetailPage } from '../pages/ListsDetailPage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { LogsPage } from '../pages/LogsPage';
 import { LegacyRedirectPage } from '../pages/LegacyRedirectPage';
@@ -68,6 +69,8 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.createattachment': JobOrdersShowPage,
   'joborders.addcandidatemodal': CandidatesAddPage,
   'companies.createattachment': CompaniesShowPage,
+  'lists.show': ListsDetailPage,
+  'lists.showlist': ListsDetailPage,
   'candidates.search': CandidatesListPage,
   'joborders.search': JobOrdersListPage,
   'companies.search': CompaniesListPage,
@@ -169,9 +172,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'deleteStaticList',
     'quickActionAddToListModal',
     'removeFromListDatagrid',
-    'saveListAccess',
-    'show',
-    'showList'
+    'saveListAccess'
   ],
   reports: [
     'customerDashboard',
@@ -218,6 +219,8 @@ const registry: Record<string, ModernRouteComponent> = {
   'calendar.showcalendar': CalendarPage,
   'calendar.(default)': CalendarPage,
   'lists.listbyview': ListsManagePage,
+  'lists.show': ListsDetailPage,
+  'lists.showlist': ListsDetailPage,
   'lists.(default)': ListsManagePage,
   'reports.reports': ReportsLauncherPage,
   'reports.(default)': ReportsLauncherPage,
@@ -267,7 +270,9 @@ const guardedRouteParams: Record<string, string[]> = {
   'companies.edit': ['companyID'],
   'companies.createattachment': ['companyID'],
   'contacts.show': ['contactID'],
-  'contacts.edit': ['contactID']
+  'contacts.edit': ['contactID'],
+  'lists.show': ['savedListID'],
+  'lists.showlist': ['savedListID']
 };
 
 function routeGuardPasses(routeKey: string, requestURI: string): boolean {

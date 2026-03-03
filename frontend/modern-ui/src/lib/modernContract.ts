@@ -19,6 +19,7 @@ export const MODERN_CONTACT_EDIT_PAGE = 'contacts-edit';
 export const MODERN_ACTIVITY_PAGE = 'activity-list';
 export const MODERN_CALENDAR_PAGE = 'calendar-workspace';
 export const MODERN_LISTS_PAGE = 'lists-manage';
+export const MODERN_LISTS_DETAIL_PAGE = 'lists-detail';
 export const MODERN_REPORTS_PAGE = 'reports-launcher';
 export const MODERN_HOME_OVERVIEW_PAGE = 'home-overview';
 export const MODERN_HOME_INBOX_PAGE = 'home-inbox';

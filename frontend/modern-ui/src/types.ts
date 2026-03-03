@@ -974,6 +974,57 @@ export type ListsManageModernDataResponse = {
   }>;
 };
 
+export type ListsDetailModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+  };
+  list: {
+    savedListID: number;
+    description: string;
+    dataItemType: number;
+    dataItemTypeLabel: string;
+    isDynamic: boolean;
+    numberEntries: number;
+    ownerName: string;
+    listTypeLabel: string;
+  };
+  filters: {
+    quickSearch: string;
+  };
+  permissions: {
+    canEditList: boolean;
+    canManageListAccess: boolean;
+    canDeleteList: boolean;
+    listAccessRestricted: boolean;
+    hasListAccessSchema: boolean;
+  };
+  state: {
+    dynamicListUnsupported: boolean;
+    message: string;
+  };
+  actions: {
+    listsURL: string;
+    legacyURL: string;
+    deleteLegacyURL: string;
+  };
+  rows: Array<{
+    savedListEntryID: number;
+    dataItemID: number;
+    primaryLabel: string;
+    secondaryLabel: string;
+    dateAdded: string;
+    itemURL: string;
+    itemLegacyURL: string;
+    isMissing: boolean;
+  }>;
+};
+
 export type ReportsLauncherModernDataResponse = {
   meta: {
     contractVersion: number;

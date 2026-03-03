@@ -30,6 +30,7 @@ import type {
   JobOrdersListModernDataResponse,
   KpisDetailsModernDataResponse,
   KpisListModernDataResponse,
+  ListsDetailModernDataResponse,
   ListsManageModernDataResponse,
   ModernMutationResponse,
   PipelineStatusDetailsModernDataResponse,
@@ -62,6 +63,7 @@ import {
   MODERN_JOBORDER_SHOW_PAGE,
   MODERN_JOBORDERS_PAGE,
   MODERN_KPIS_PAGE,
+  MODERN_LISTS_DETAIL_PAGE,
   MODERN_LISTS_PAGE,
   MODERN_HOME_OVERVIEW_PAGE,
   MODERN_HOME_INBOX_PAGE,
@@ -1237,6 +1239,29 @@ export async function fetchListsManageModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ListsManageModernDataResponse>(url);
   assertModernContract(data.meta, 'lists.listByView.v1', 'lists');
+
+  return data;
+}
+
+export async function fetchListsDetailModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<ListsDetailModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'lists',
+    action: 'showList',
+    modernPage: MODERN_LISTS_DETAIL_PAGE,
+    query
+  });
+
+  const actionName = String(query.get('a') || '').toLowerCase();
+  if (actionName === 'show') {
+    apiQuery.set('a', 'show');
+  }
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ListsDetailModernDataResponse>(url);
+  assertModernContract(data.meta, 'lists.detail.v1', 'list details');
 
   return data;
 }
