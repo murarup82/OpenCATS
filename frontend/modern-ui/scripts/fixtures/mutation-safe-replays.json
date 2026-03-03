@@ -96,5 +96,137 @@
       "pipelineID": "0"
     },
     "expectsBooleanField": "success"
+  },
+  {
+    "id": "activity.listByViewDataGrid.invalidModernPage",
+    "sourceCheckID": "activity.listByViewDataGrid",
+    "method": "GET",
+    "endpointPath": "actions.legacyURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "candidates.add.invalidModernPage",
+    "sourceCheckID": "candidates.add",
+    "method": "GET",
+    "endpointPath": "actions.submitURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "candidates.edit.deleteAttachment.safeInvalid",
+    "sourceCheckID": "candidates.edit",
+    "method": "POST",
+    "endpointPath": "actions.deleteAttachmentURL",
+    "body": {
+      "format": "modern-json",
+      "attachmentID": "0",
+      "candidateID": "0"
+    },
+    "expectsBooleanField": "success"
+  },
+  {
+    "id": "candidates.listByView.invalidModernPage",
+    "sourceCheckID": "candidates.listByView",
+    "method": "GET",
+    "endpointPath": "rows.0.candidateURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "companies.listByView.invalidModernPage",
+    "sourceCheckID": "companies.listByView",
+    "method": "GET",
+    "endpointPath": "actions.legacyURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "companies.show.invalidModernPage",
+    "sourceCheckID": "companies.show",
+    "method": "GET",
+    "endpointPath": "actions.legacyURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "contacts.listByView.invalidModernPage",
+    "sourceCheckID": "contacts.listByView",
+    "method": "GET",
+    "endpointPath": "actions.legacyURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "contacts.show.invalidModernPage",
+    "sourceCheckID": "contacts.show",
+    "method": "GET",
+    "endpointPath": "actions.legacyURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "joborders.listByView.invalidModernPage",
+    "sourceCheckID": "joborders.listByView",
+    "method": "GET",
+    "endpointPath": "actions.legacyURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "lists.listByView.invalidModernPage",
+    "sourceCheckID": "lists.listByView",
+    "method": "GET",
+    "endpointPath": "actions.legacyURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
+  },
+  {
+    "id": "reports.reports.invalidModernPage",
+    "sourceCheckID": "reports.reports",
+    "method": "GET",
+    "endpointPath": "actions.legacyURL",
+    "query": {
+      "format": "modern-json",
+      "modernPage": "fixture-invalid-page"
+    },
+    "body": {},
+    "expectsBooleanField": "error"
   }
 ]

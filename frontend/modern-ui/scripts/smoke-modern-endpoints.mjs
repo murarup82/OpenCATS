@@ -233,8 +233,13 @@ async function runMutationFixture(fixture, payloadByCheckID) {
     };
   }
 
-  const endpointURL = new URL(endpointURLRaw.replace(/&amp;/g, '&'), joinURL(baseURL, indexPath)).toString();
-
+  const endpointURL = new URL(endpointURLRaw.replace(/&amp;/g, '&'), joinURL(baseURL, indexPath));
+  const fixtureQuery = fixture.query && typeof fixture.query === 'object' ? fixture.query : {};
+  Object.keys(fixtureQuery).forEach((key) => {
+    endpointURL.searchParams.set(key, String(fixtureQuery[key]));
+  });
+  const method = String(fixture.method || 'POST').toUpperCase();
+  const includeBody = method !== 'GET' && method !== 'HEAD';
   const bodyData = new URLSearchParams();
   const templateBody = fixture.body || {};
   Object.keys(templateBody).forEach((key) => {
@@ -249,14 +254,17 @@ async function runMutationFixture(fixture, payloadByCheckID) {
         message: `token path ${fixture.tokenPath} missing`
       };
     }
-    bodyData.set(String(fixture.tokenField), token);
+    if (includeBody) {
+      bodyData.set(String(fixture.tokenField), token);
+    } else {
+      endpointURL.searchParams.set(String(fixture.tokenField), token);
+    }
   }
 
-  const method = String(fixture.method || 'POST').toUpperCase();
-  const response = await fetchWithTimeout(endpointURL, {
+  const response = await fetchWithTimeout(endpointURL.toString(), {
     method,
-    headers: createHeaders('application/x-www-form-urlencoded'),
-    body: bodyData.toString(),
+    headers: includeBody ? createHeaders('application/x-www-form-urlencoded') : createHeaders(),
+    ...(includeBody ? { body: bodyData.toString() } : {}),
     redirect: 'follow'
   });
 

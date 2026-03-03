@@ -47,6 +47,12 @@ function validateFixture(fixture, index, seenIDs) {
   if (!fixture.body || typeof fixture.body !== 'object' || Array.isArray(fixture.body)) {
     errors.push(`${prefix}.body must be an object`);
   }
+  if (
+    fixture.query !== undefined &&
+    (!fixture.query || typeof fixture.query !== 'object' || Array.isArray(fixture.query))
+  ) {
+    errors.push(`${prefix}.query must be an object when provided`);
+  }
 
   if (fixture.tokenPath || fixture.tokenField) {
     if (!isNonEmptyString(fixture.tokenPath)) {

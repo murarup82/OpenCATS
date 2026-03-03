@@ -501,6 +501,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added fixture `calendar.deleteEvent.safeInvalid` sourced from `calendar.showCalendar` using contract tokenized delete endpoint with invalid event ID
     - added fixture `joborders.pipelineStatusEditDate.safeInvalid` sourced from `joborders.pipelineStatusDetails` using modern-json invalid pipeline probe
     - improved fixture coverage baseline from 3/16 to 5/16 endpoint checks while keeping lint, sanity, and quality gates green.
+169. Completed endpoint replay-fixture coverage for all modern smoke endpoint checks:
+    - extended replay runner to support fixture-level query params and safe GET/HEAD execution without request bodies
+    - added non-mutating invalid-modern-page probes for uncovered list/show/add/report endpoints, plus a safe invalid candidate attachment delete probe for `candidates.edit`
+    - raised fixture coverage from 5/16 to 16/16 endpoint checks with lint/sanity/quality gates passing.
 
 ## Next Queue (30-Slice Execution)
 

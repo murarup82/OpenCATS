@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-03T08:45:24.603Z
-Finished: 2026-03-03T08:45:52.374Z
+Started: 2026-03-03T09:02:37.482Z
+Finished: 2026-03-03T09:03:04.336Z
 Overall Status: **Pass**
 
 ## Summary
@@ -83,7 +83,7 @@ Command: `npm.cmd run fixtures:lint`
 > opencats-modern-ui@0.1.0 fixtures:lint
 > node ./scripts/lint-smoke-fixtures.mjs
 
-[fixtures:lint] OK (7 fixtures validated)
+[fixtures:lint] OK (18 fixtures validated)
 ```
 
 **stderr**
