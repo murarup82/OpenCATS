@@ -1,14 +1,14 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T07:52:33.311Z
+Generated: 2026-03-03T08:03:33.646Z
 
 ## Summary
 
 - Legacy handleRequest actions discovered: 222
-- Native explicit modern coverage: 137
+- Native explicit modern coverage: 222
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 85
-- Bridge explicit route mapping: 85
+- Bridge coverage (explicit + fallback): 0
+- Bridge explicit route mapping: 0
 - Bridge wildcard fallback mapping: 0
 - Legacy unresolved: 0
 
@@ -17,17 +17,17 @@ Generated: 2026-03-03T07:52:33.311Z
 | Module | Legacy Actions | Native Explicit | Native Default Fallback | Bridge | Unresolved |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | activity | 2 | 2 | 0 | 0 | 0 |
-| attachments | 1 | 0 | 0 | 1 | 0 |
+| attachments | 1 | 1 | 0 | 0 | 0 |
 | calendar | 5 | 5 | 0 | 0 | 0 |
 | candidates | 27 | 27 | 0 | 0 | 0 |
 | companies | 9 | 9 | 0 | 0 | 0 |
 | contacts | 9 | 9 | 0 | 0 | 0 |
 | dashboard | 2 | 2 | 0 | 0 | 0 |
-| export | 2 | 0 | 0 | 2 | 0 |
-| gdpr | 2 | 0 | 0 | 2 | 0 |
+| export | 2 | 2 | 0 | 0 | 0 |
+| gdpr | 2 | 2 | 0 | 0 | 0 |
 | graphs | 5 | 5 | 0 | 0 | 0 |
 | home | 22 | 22 | 0 | 0 | 0 |
-| import | 15 | 3 | 0 | 12 | 0 |
+| import | 15 | 15 | 0 | 0 | 0 |
 | joborders | 24 | 24 | 0 | 0 | 0 |
 | kpis | 1 | 1 | 0 | 0 | 0 |
 | lists | 8 | 8 | 0 | 0 | 0 |
@@ -35,10 +35,10 @@ Generated: 2026-03-03T07:52:33.311Z
 | logs | 1 | 1 | 0 | 0 | 0 |
 | reports | 11 | 11 | 0 | 0 | 0 |
 | rss | 1 | 1 | 0 | 0 | 0 |
-| settings | 58 | 0 | 0 | 58 | 0 |
-| toolbar | 8 | 0 | 0 | 8 | 0 |
-| wizard | 1 | 0 | 0 | 1 | 0 |
-| xml | 1 | 0 | 0 | 1 | 0 |
+| settings | 58 | 58 | 0 | 0 | 0 |
+| toolbar | 8 | 8 | 0 | 0 | 0 |
+| wizard | 1 | 1 | 0 | 0 | 0 |
+| xml | 1 | 1 | 0 | 0 | 0 |
 
 ## In-Scope Missing or Fallback Actions
 
@@ -51,7 +51,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | --- | --- | --- | --- | --- |
 | activity | listByViewDataGrid | native-explicit | activity.listbyviewdatagrid | ActivityListPage |
 | activity | viewByDate | native-explicit | activity.viewbydate | ActivityListPage |
-| attachments | getAttachment | bridge-explicit | attachments.getattachment | ModuleBridgePage |
+| attachments | getAttachment | native-explicit | attachments.getattachment | EntityUtilityActionPage |
 | calendar | addEvent | native-explicit | calendar.addevent | CalendarPage |
 | calendar | deleteEvent | native-explicit | calendar.deleteevent | EntityUtilityActionPage |
 | calendar | dynamicData | native-explicit | calendar.dynamicdata | EntityUtilityActionPage |
@@ -104,10 +104,10 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | contacts | showColdCallList | native-explicit | contacts.showcoldcalllist | ContactsColdCallListPage |
 | dashboard | my | native-explicit | dashboard.my | DashboardMyPage |
 | dashboard | setPipelineStatus | native-explicit | dashboard.setpipelinestatus | DashboardMyPage |
-| export | export | bridge-explicit | export.export | ModuleBridgePage |
-| export | exportByDataGrid | bridge-explicit | export.exportbydatagrid | ModuleBridgePage |
-| gdpr | export | bridge-explicit | gdpr.export | ModuleBridgePage |
-| gdpr | requests | bridge-explicit | gdpr.requests | ModuleBridgePage |
+| export | export | native-explicit | export.export | EntityUtilityActionPage |
+| export | exportByDataGrid | native-explicit | export.exportbydatagrid | EntityUtilityActionPage |
+| gdpr | export | native-explicit | gdpr.export | EntityUtilityActionPage |
+| gdpr | requests | native-explicit | gdpr.requests | EntityUtilityActionPage |
 | graphs | generic | native-explicit | graphs.generic | GraphsActionPage |
 | graphs | genericPie | native-explicit | graphs.genericpie | GraphsActionPage |
 | graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | GraphsActionPage |
@@ -136,20 +136,20 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | home | updatePersonalNote | native-explicit | home.updatepersonalnote | HomeActionPage |
 | home | updatePersonalTodo | native-explicit | home.updatepersonaltodo | HomeActionPage |
 | import | commit | native-explicit | import.commit | LegacyRedirectPage |
-| import | deleteBulkResumes | bridge-explicit | import.deletebulkresumes | ModuleBridgePage |
+| import | deleteBulkResumes | native-explicit | import.deletebulkresumes | EntityUtilityActionPage |
 | import | import | native-explicit | import.import | LegacyRedirectPage |
-| import | importBulkResumes | bridge-explicit | import.importbulkresumes | ModuleBridgePage |
-| import | importSelectType | bridge-explicit | import.importselecttype | ModuleBridgePage |
+| import | importBulkResumes | native-explicit | import.importbulkresumes | EntityUtilityActionPage |
+| import | importSelectType | native-explicit | import.importselecttype | EntityUtilityActionPage |
 | import | importUploadFile | native-explicit | import.importuploadfile | LegacyRedirectPage |
-| import | importUploadResume | bridge-explicit | import.importuploadresume | ModuleBridgePage |
-| import | massImport | bridge-explicit | import.massimport | ModuleBridgePage |
-| import | massImportDocument | bridge-explicit | import.massimportdocument | ModuleBridgePage |
-| import | massImportEdit | bridge-explicit | import.massimportedit | ModuleBridgePage |
-| import | revert | bridge-explicit | import.revert | ModuleBridgePage |
-| import | showMassImport | bridge-explicit | import.showmassimport | ModuleBridgePage |
-| import | viewerrors | bridge-explicit | import.viewerrors | ModuleBridgePage |
-| import | viewpending | bridge-explicit | import.viewpending | ModuleBridgePage |
-| import | whatIsBulkResumes | bridge-explicit | import.whatisbulkresumes | ModuleBridgePage |
+| import | importUploadResume | native-explicit | import.importuploadresume | EntityUtilityActionPage |
+| import | massImport | native-explicit | import.massimport | EntityUtilityActionPage |
+| import | massImportDocument | native-explicit | import.massimportdocument | EntityUtilityActionPage |
+| import | massImportEdit | native-explicit | import.massimportedit | EntityUtilityActionPage |
+| import | revert | native-explicit | import.revert | EntityUtilityActionPage |
+| import | showMassImport | native-explicit | import.showmassimport | EntityUtilityActionPage |
+| import | viewerrors | native-explicit | import.viewerrors | EntityUtilityActionPage |
+| import | viewpending | native-explicit | import.viewpending | EntityUtilityActionPage |
+| import | whatIsBulkResumes | native-explicit | import.whatisbulkresumes | EntityUtilityActionPage |
 | joborders | add | native-explicit | joborders.add | JobOrdersAddPage |
 | joborders | addActivityChangeStatus | native-explicit | joborders.addactivitychangestatus | EntityUtilityActionPage |
 | joborders | addCandidateModal | native-explicit-guarded | joborders.addcandidatemodal | CandidatesAddPage |
@@ -203,71 +203,71 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | reports | showPlacementReport | native-explicit | reports.showplacementreport | ReportsActionPage |
 | reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | ReportsActionPage |
 | rss | jobOrders | native-explicit | rss.joborders | LegacyRedirectPage |
-| settings | addEmailTemplate | bridge-explicit | settings.addemailtemplate | ModuleBridgePage |
-| settings | addUser | bridge-explicit | settings.adduser | ModuleBridgePage |
-| settings | administration | bridge-explicit | settings.administration | ModuleBridgePage |
-| settings | ajax_tags_add | bridge-explicit | settings.ajax_tags_add | ModuleBridgePage |
-| settings | ajax_tags_del | bridge-explicit | settings.ajax_tags_del | ModuleBridgePage |
-| settings | ajax_tags_upd | bridge-explicit | settings.ajax_tags_upd | ModuleBridgePage |
-| settings | ajax_wizardAddUser | bridge-explicit | settings.ajax_wizardadduser | ModuleBridgePage |
-| settings | ajax_wizardCheckKey | bridge-explicit | settings.ajax_wizardcheckkey | ModuleBridgePage |
-| settings | ajax_wizardDeleteUser | bridge-explicit | settings.ajax_wizarddeleteuser | ModuleBridgePage |
-| settings | ajax_wizardEmail | bridge-explicit | settings.ajax_wizardemail | ModuleBridgePage |
-| settings | ajax_wizardFirstTimeSetup | bridge-explicit | settings.ajax_wizardfirsttimesetup | ModuleBridgePage |
-| settings | ajax_wizardImport | bridge-explicit | settings.ajax_wizardimport | ModuleBridgePage |
-| settings | ajax_wizardLicense | bridge-explicit | settings.ajax_wizardlicense | ModuleBridgePage |
-| settings | ajax_wizardLocalization | bridge-explicit | settings.ajax_wizardlocalization | ModuleBridgePage |
-| settings | ajax_wizardPassword | bridge-explicit | settings.ajax_wizardpassword | ModuleBridgePage |
-| settings | ajax_wizardSiteName | bridge-explicit | settings.ajax_wizardsitename | ModuleBridgePage |
-| settings | ajax_wizardWebsite | bridge-explicit | settings.ajax_wizardwebsite | ModuleBridgePage |
-| settings | aspLocalization | bridge-explicit | settings.asplocalization | ModuleBridgePage |
-| settings | careerPortalQuestionnaire | bridge-explicit | settings.careerportalquestionnaire | ModuleBridgePage |
-| settings | careerPortalQuestionnairePreview | bridge-explicit | settings.careerportalquestionnairepreview | ModuleBridgePage |
-| settings | careerPortalQuestionnaireUpdate | bridge-explicit | settings.careerportalquestionnaireupdate | ModuleBridgePage |
-| settings | careerPortalSettings | bridge-explicit | settings.careerportalsettings | ModuleBridgePage |
-| settings | careerPortalTemplateEdit | bridge-explicit | settings.careerportaltemplateedit | ModuleBridgePage |
-| settings | changePassword | bridge-explicit | settings.changepassword | ModuleBridgePage |
-| settings | createBackup | bridge-explicit | settings.createbackup | ModuleBridgePage |
-| settings | customizeCalendar | bridge-explicit | settings.customizecalendar | ModuleBridgePage |
-| settings | customizeExtraFields | bridge-explicit | settings.customizeextrafields | ModuleBridgePage |
-| settings | deleteBackup | bridge-explicit | settings.deletebackup | ModuleBridgePage |
-| settings | deleteEmailTemplate | bridge-explicit | settings.deleteemailtemplate | ModuleBridgePage |
-| settings | deleteUser | bridge-explicit | settings.deleteuser | ModuleBridgePage |
-| settings | editUser | bridge-explicit | settings.edituser | ModuleBridgePage |
-| settings | eeo | bridge-explicit | settings.eeo | ModuleBridgePage |
-| settings | emailSettings | bridge-explicit | settings.emailsettings | ModuleBridgePage |
-| settings | emailTemplates | bridge-explicit | settings.emailtemplates | ModuleBridgePage |
-| settings | feedbackSettings | bridge-explicit | settings.feedbacksettings | ModuleBridgePage |
-| settings | forceEmail | bridge-explicit | settings.forceemail | ModuleBridgePage |
-| settings | gdprSettings | bridge-explicit | settings.gdprsettings | ModuleBridgePage |
-| settings | getFirefoxModal | bridge-explicit | settings.getfirefoxmodal | ModuleBridgePage |
-| settings | googleOIDCSettings | bridge-explicit | settings.googleoidcsettings | ModuleBridgePage |
-| settings | loginActivity | bridge-explicit | settings.loginactivity | ModuleBridgePage |
-| settings | manageUsers | bridge-explicit | settings.manageusers | ModuleBridgePage |
-| settings | myProfile | bridge-explicit | settings.myprofile | ModuleBridgePage |
-| settings | newInstallFinished | bridge-explicit | settings.newinstallfinished | ModuleBridgePage |
-| settings | newInstallPassword | bridge-explicit | settings.newinstallpassword | ModuleBridgePage |
-| settings | newSiteName | bridge-explicit | settings.newsitename | ModuleBridgePage |
-| settings | onCareerPortalTweak | bridge-explicit | settings.oncareerportaltweak | ModuleBridgePage |
-| settings | previewPage | bridge-explicit | settings.previewpage | ModuleBridgePage |
-| settings | previewPageTop | bridge-explicit | settings.previewpagetop | ModuleBridgePage |
-| settings | professional | bridge-explicit | settings.professional | ModuleBridgePage |
-| settings | rejectionReasons | bridge-explicit | settings.rejectionreasons | ModuleBridgePage |
-| settings | reports | bridge-explicit | settings.reports | ModuleBridgePage |
-| settings | rolePagePermissions | bridge-explicit | settings.rolepagepermissions | ModuleBridgePage |
-| settings | schemaMigrations | bridge-explicit | settings.schemamigrations | ModuleBridgePage |
-| settings | showUser | bridge-explicit | settings.showuser | ModuleBridgePage |
-| settings | tags | bridge-explicit | settings.tags | ModuleBridgePage |
-| settings | talentFitFlowSettings | bridge-explicit | settings.talentfitflowsettings | ModuleBridgePage |
-| settings | upgradeSiteName | bridge-explicit | settings.upgradesitename | ModuleBridgePage |
-| settings | viewItemHistory | bridge-explicit | settings.viewitemhistory | ModuleBridgePage |
-| toolbar | attemptLogin | bridge-explicit | toolbar.attemptlogin | ModuleBridgePage |
-| toolbar | authenticate | bridge-explicit | toolbar.authenticate | ModuleBridgePage |
-| toolbar | checkEmailIsInSystem | bridge-explicit | toolbar.checkemailisinsystem | ModuleBridgePage |
-| toolbar | getJavaScriptLib | bridge-explicit | toolbar.getjavascriptlib | ModuleBridgePage |
-| toolbar | getLicenseKey | bridge-explicit | toolbar.getlicensekey | ModuleBridgePage |
-| toolbar | getRemoteVersion | bridge-explicit | toolbar.getremoteversion | ModuleBridgePage |
-| toolbar | install | bridge-explicit | toolbar.install | ModuleBridgePage |
-| toolbar | storeMonsterResumeText | bridge-explicit | toolbar.storemonsterresumetext | ModuleBridgePage |
-| wizard | ajax_getPage | bridge-explicit | wizard.ajax_getpage | ModuleBridgePage |
-| xml | jobOrders | bridge-explicit | xml.joborders | ModuleBridgePage |
+| settings | addEmailTemplate | native-explicit | settings.addemailtemplate | EntityUtilityActionPage |
+| settings | addUser | native-explicit | settings.adduser | EntityUtilityActionPage |
+| settings | administration | native-explicit | settings.administration | EntityUtilityActionPage |
+| settings | ajax_tags_add | native-explicit | settings.ajax_tags_add | EntityUtilityActionPage |
+| settings | ajax_tags_del | native-explicit | settings.ajax_tags_del | EntityUtilityActionPage |
+| settings | ajax_tags_upd | native-explicit | settings.ajax_tags_upd | EntityUtilityActionPage |
+| settings | ajax_wizardAddUser | native-explicit | settings.ajax_wizardadduser | EntityUtilityActionPage |
+| settings | ajax_wizardCheckKey | native-explicit | settings.ajax_wizardcheckkey | EntityUtilityActionPage |
+| settings | ajax_wizardDeleteUser | native-explicit | settings.ajax_wizarddeleteuser | EntityUtilityActionPage |
+| settings | ajax_wizardEmail | native-explicit | settings.ajax_wizardemail | EntityUtilityActionPage |
+| settings | ajax_wizardFirstTimeSetup | native-explicit | settings.ajax_wizardfirsttimesetup | EntityUtilityActionPage |
+| settings | ajax_wizardImport | native-explicit | settings.ajax_wizardimport | EntityUtilityActionPage |
+| settings | ajax_wizardLicense | native-explicit | settings.ajax_wizardlicense | EntityUtilityActionPage |
+| settings | ajax_wizardLocalization | native-explicit | settings.ajax_wizardlocalization | EntityUtilityActionPage |
+| settings | ajax_wizardPassword | native-explicit | settings.ajax_wizardpassword | EntityUtilityActionPage |
+| settings | ajax_wizardSiteName | native-explicit | settings.ajax_wizardsitename | EntityUtilityActionPage |
+| settings | ajax_wizardWebsite | native-explicit | settings.ajax_wizardwebsite | EntityUtilityActionPage |
+| settings | aspLocalization | native-explicit | settings.asplocalization | EntityUtilityActionPage |
+| settings | careerPortalQuestionnaire | native-explicit | settings.careerportalquestionnaire | EntityUtilityActionPage |
+| settings | careerPortalQuestionnairePreview | native-explicit | settings.careerportalquestionnairepreview | EntityUtilityActionPage |
+| settings | careerPortalQuestionnaireUpdate | native-explicit | settings.careerportalquestionnaireupdate | EntityUtilityActionPage |
+| settings | careerPortalSettings | native-explicit | settings.careerportalsettings | EntityUtilityActionPage |
+| settings | careerPortalTemplateEdit | native-explicit | settings.careerportaltemplateedit | EntityUtilityActionPage |
+| settings | changePassword | native-explicit | settings.changepassword | EntityUtilityActionPage |
+| settings | createBackup | native-explicit | settings.createbackup | EntityUtilityActionPage |
+| settings | customizeCalendar | native-explicit | settings.customizecalendar | EntityUtilityActionPage |
+| settings | customizeExtraFields | native-explicit | settings.customizeextrafields | EntityUtilityActionPage |
+| settings | deleteBackup | native-explicit | settings.deletebackup | EntityUtilityActionPage |
+| settings | deleteEmailTemplate | native-explicit | settings.deleteemailtemplate | EntityUtilityActionPage |
+| settings | deleteUser | native-explicit | settings.deleteuser | EntityUtilityActionPage |
+| settings | editUser | native-explicit | settings.edituser | EntityUtilityActionPage |
+| settings | eeo | native-explicit | settings.eeo | EntityUtilityActionPage |
+| settings | emailSettings | native-explicit | settings.emailsettings | EntityUtilityActionPage |
+| settings | emailTemplates | native-explicit | settings.emailtemplates | EntityUtilityActionPage |
+| settings | feedbackSettings | native-explicit | settings.feedbacksettings | EntityUtilityActionPage |
+| settings | forceEmail | native-explicit | settings.forceemail | EntityUtilityActionPage |
+| settings | gdprSettings | native-explicit | settings.gdprsettings | EntityUtilityActionPage |
+| settings | getFirefoxModal | native-explicit | settings.getfirefoxmodal | EntityUtilityActionPage |
+| settings | googleOIDCSettings | native-explicit | settings.googleoidcsettings | EntityUtilityActionPage |
+| settings | loginActivity | native-explicit | settings.loginactivity | EntityUtilityActionPage |
+| settings | manageUsers | native-explicit | settings.manageusers | EntityUtilityActionPage |
+| settings | myProfile | native-explicit | settings.myprofile | EntityUtilityActionPage |
+| settings | newInstallFinished | native-explicit | settings.newinstallfinished | EntityUtilityActionPage |
+| settings | newInstallPassword | native-explicit | settings.newinstallpassword | EntityUtilityActionPage |
+| settings | newSiteName | native-explicit | settings.newsitename | EntityUtilityActionPage |
+| settings | onCareerPortalTweak | native-explicit | settings.oncareerportaltweak | EntityUtilityActionPage |
+| settings | previewPage | native-explicit | settings.previewpage | EntityUtilityActionPage |
+| settings | previewPageTop | native-explicit | settings.previewpagetop | EntityUtilityActionPage |
+| settings | professional | native-explicit | settings.professional | EntityUtilityActionPage |
+| settings | rejectionReasons | native-explicit | settings.rejectionreasons | EntityUtilityActionPage |
+| settings | reports | native-explicit | settings.reports | EntityUtilityActionPage |
+| settings | rolePagePermissions | native-explicit | settings.rolepagepermissions | EntityUtilityActionPage |
+| settings | schemaMigrations | native-explicit | settings.schemamigrations | EntityUtilityActionPage |
+| settings | showUser | native-explicit | settings.showuser | EntityUtilityActionPage |
+| settings | tags | native-explicit | settings.tags | EntityUtilityActionPage |
+| settings | talentFitFlowSettings | native-explicit | settings.talentfitflowsettings | EntityUtilityActionPage |
+| settings | upgradeSiteName | native-explicit | settings.upgradesitename | EntityUtilityActionPage |
+| settings | viewItemHistory | native-explicit | settings.viewitemhistory | EntityUtilityActionPage |
+| toolbar | attemptLogin | native-explicit | toolbar.attemptlogin | EntityUtilityActionPage |
+| toolbar | authenticate | native-explicit | toolbar.authenticate | EntityUtilityActionPage |
+| toolbar | checkEmailIsInSystem | native-explicit | toolbar.checkemailisinsystem | EntityUtilityActionPage |
+| toolbar | getJavaScriptLib | native-explicit | toolbar.getjavascriptlib | EntityUtilityActionPage |
+| toolbar | getLicenseKey | native-explicit | toolbar.getlicensekey | EntityUtilityActionPage |
+| toolbar | getRemoteVersion | native-explicit | toolbar.getremoteversion | EntityUtilityActionPage |
+| toolbar | install | native-explicit | toolbar.install | EntityUtilityActionPage |
+| toolbar | storeMonsterResumeText | native-explicit | toolbar.storemonsterresumetext | EntityUtilityActionPage |
+| wizard | ajax_getPage | native-explicit | wizard.ajax_getpage | EntityUtilityActionPage |
+| xml | jobOrders | native-explicit | xml.joborders | EntityUtilityActionPage |

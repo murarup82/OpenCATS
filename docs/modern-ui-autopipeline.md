@@ -489,6 +489,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - introduced `frontend/modern-ui/src/pages/GraphsActionPage.tsx` with interactive controls (size, refresh cadence, visual filters, and custom query parameters) for legacy graph image actions
     - routed `graphs.generic`, `graphs.genericPie`, `graphs.jobOrderReportGraph`, `graphs.testGraph`, and `graphs.wordVerify` to native action handling in `routeRegistry`
     - improved coverage metrics to `nativeExplicit=137` and reduced bridge-explicit routes to `85` while preserving zero unresolved actions.
+166. Completed explicit native action coverage for all discovered legacy routes:
+    - expanded `EntityUtilityActionPage` with module-aware handling for `settings`, `import`, `gdpr`, `attachments`, `export`, `toolbar`, `wizard`, and `xml` action families
+    - switched remaining explicit bridge mappings from `ModuleBridgePage` to native explicit `EntityUtilityActionPage` routes while preserving legacy-safe behavior through embed/redirect mode rules
+    - comparison coverage now reports `nativeExplicit=222`, `bridge=0`, and `unresolved=0` for discovered legacy `handleRequest` actions.
 
 ## Next Queue (30-Slice Execution)
 

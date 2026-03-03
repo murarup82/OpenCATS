@@ -11,7 +11,20 @@ type Props = {
   bootstrap: UIModeBootstrap;
 };
 
-type ModuleKey = 'candidates' | 'joborders' | 'companies' | 'lists' | 'calendar';
+type ModuleKey =
+  | 'candidates'
+  | 'joborders'
+  | 'companies'
+  | 'lists'
+  | 'calendar'
+  | 'settings'
+  | 'import'
+  | 'gdpr'
+  | 'attachments'
+  | 'export'
+  | 'toolbar'
+  | 'wizard'
+  | 'xml';
 type ActionMode = 'embed' | 'redirect';
 
 const CANDIDATE_ACTION_LABELS: Record<string, string> = {
@@ -63,6 +76,79 @@ const CALENDAR_ACTION_LABELS: Record<string, string> = {
   dynamicdata: 'Calendar Dynamic Data'
 };
 
+const SETTINGS_ACTION_LABELS: Record<string, string> = {
+  administration: 'Settings Administration',
+  myprofile: 'My Profile',
+  manageusers: 'Manage Users',
+  changepassword: 'Change Password'
+};
+
+const IMPORT_ACTION_LABELS: Record<string, string> = {
+  import: 'Import Workspace',
+  importselecttype: 'Import Select Type',
+  importuploadfile: 'Import Upload File',
+  importuploadresume: 'Import Upload Resume',
+  showmassimport: 'Mass Import',
+  massimport: 'Mass Import',
+  massimportdocument: 'Mass Import Document',
+  massimportedit: 'Mass Import Edit',
+  importbulkresumes: 'Import Bulk Resumes',
+  deletebulkresumes: 'Delete Bulk Resumes',
+  viewerrors: 'Import Errors',
+  viewpending: 'Import Pending',
+  revert: 'Import Revert',
+  whatisbulkresumes: 'What Is Bulk Resumes'
+};
+
+const GDPR_ACTION_LABELS: Record<string, string> = {
+  requests: 'GDPR Requests',
+  export: 'GDPR Export'
+};
+
+const ATTACHMENTS_ACTION_LABELS: Record<string, string> = {
+  getattachment: 'Attachment Download'
+};
+
+const EXPORT_ACTION_LABELS: Record<string, string> = {
+  export: 'Export CSV',
+  exportbydatagrid: 'Export Data Grid'
+};
+
+const TOOLBAR_ACTION_LABELS: Record<string, string> = {
+  attemptlogin: 'Toolbar Attempt Login',
+  authenticate: 'Toolbar Authenticate',
+  checkemailisinsystem: 'Toolbar Check Email',
+  getjavascriptlib: 'Toolbar Script Library',
+  getlicensekey: 'Toolbar License Key',
+  getremoteversion: 'Toolbar Remote Version',
+  install: 'Toolbar Install',
+  storemonsterresumetext: 'Toolbar Resume Text Storage'
+};
+
+const WIZARD_ACTION_LABELS: Record<string, string> = {
+  ajax_getpage: 'Wizard Ajax Page'
+};
+
+const XML_ACTION_LABELS: Record<string, string> = {
+  joborders: 'Public Job Orders XML'
+};
+
+const MODULE_LABELS: Record<ModuleKey, string> = {
+  candidates: 'Candidate',
+  joborders: 'Job Order',
+  companies: 'Company',
+  lists: 'List',
+  calendar: 'Calendar',
+  settings: 'Settings',
+  import: 'Import',
+  gdpr: 'GDPR',
+  attachments: 'Attachment',
+  export: 'Export',
+  toolbar: 'Toolbar',
+  wizard: 'Wizard',
+  xml: 'XML'
+};
+
 function parsePositiveInt(value: string | null): number {
   const parsed = Number(value || 0);
   return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : 0;
@@ -75,7 +161,15 @@ function resolveModule(value: string): ModuleKey | null {
     normalized === 'joborders' ||
     normalized === 'companies' ||
     normalized === 'lists' ||
-    normalized === 'calendar'
+    normalized === 'calendar' ||
+    normalized === 'settings' ||
+    normalized === 'import' ||
+    normalized === 'gdpr' ||
+    normalized === 'attachments' ||
+    normalized === 'export' ||
+    normalized === 'toolbar' ||
+    normalized === 'wizard' ||
+    normalized === 'xml'
   ) {
     return normalized;
   }
@@ -111,11 +205,47 @@ function resolveActionLabel(moduleKey: ModuleKey, actionKey: string): string {
   if (moduleKey === 'lists') {
     return LISTS_ACTION_LABELS[actionKey] || 'List Utility Action';
   }
-  return CALENDAR_ACTION_LABELS[actionKey] || 'Calendar Utility Action';
+  if (moduleKey === 'calendar') {
+    return CALENDAR_ACTION_LABELS[actionKey] || 'Calendar Utility Action';
+  }
+  if (moduleKey === 'settings') {
+    return SETTINGS_ACTION_LABELS[actionKey] || 'Settings Action';
+  }
+  if (moduleKey === 'import') {
+    return IMPORT_ACTION_LABELS[actionKey] || 'Import Action';
+  }
+  if (moduleKey === 'gdpr') {
+    return GDPR_ACTION_LABELS[actionKey] || 'GDPR Action';
+  }
+  if (moduleKey === 'attachments') {
+    return ATTACHMENTS_ACTION_LABELS[actionKey] || 'Attachment Action';
+  }
+  if (moduleKey === 'export') {
+    return EXPORT_ACTION_LABELS[actionKey] || 'Export Action';
+  }
+  if (moduleKey === 'toolbar') {
+    return TOOLBAR_ACTION_LABELS[actionKey] || 'Toolbar Action';
+  }
+  if (moduleKey === 'wizard') {
+    return WIZARD_ACTION_LABELS[actionKey] || 'Wizard Action';
+  }
+  if (moduleKey === 'xml') {
+    return XML_ACTION_LABELS[actionKey] || 'XML Action';
+  }
+  return `${MODULE_LABELS[moduleKey]} Action`;
 }
 
 function resolveActionMode(moduleKey: ModuleKey, actionKey: string): ActionMode {
   if (moduleKey === 'calendar' && (actionKey === 'deleteevent' || actionKey === 'dynamicdata')) {
+    return 'redirect';
+  }
+  if (moduleKey === 'attachments' || moduleKey === 'export' || moduleKey === 'toolbar' || moduleKey === 'xml') {
+    return 'redirect';
+  }
+  if (moduleKey === 'gdpr' && actionKey === 'export') {
+    return 'redirect';
+  }
+  if (moduleKey === 'wizard' && actionKey === 'ajax_getpage') {
     return 'redirect';
   }
   return 'embed';
@@ -154,7 +284,23 @@ function buildReturnURL(indexName: string, moduleKey: ModuleKey, search: URLSear
     return ensureModernUIURL(`${indexName}?m=lists&a=listByView`);
   }
 
-  return ensureModernUIURL(`${indexName}?m=calendar&a=showCalendar`);
+  if (moduleKey === 'settings') {
+    return ensureModernUIURL(`${indexName}?m=settings&a=administration`);
+  }
+
+  if (moduleKey === 'import') {
+    return ensureModernUIURL(`${indexName}?m=import&a=import`);
+  }
+
+  if (moduleKey === 'gdpr') {
+    return ensureModernUIURL(`${indexName}?m=gdpr&a=requests`);
+  }
+
+  if (moduleKey === 'calendar') {
+    return ensureModernUIURL(`${indexName}?m=calendar&a=showCalendar`);
+  }
+
+  return ensureModernUIURL(`${indexName}?m=dashboard&a=my`);
 }
 
 export function EntityUtilityActionPage({ bootstrap }: Props) {
