@@ -478,6 +478,13 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added `<noscript>` legacy handoff panel in `modules/modernui/Shell.tpl` so modern routes stay recoverable when JavaScript is disabled
     - styled no-JS handoff in `public/modern-ui/modern-shell.css` with explicit `Open Legacy UI` call-to-action
     - introduced `verify:shell-noscript-fallback` guard and wired it into required `sanity:modern` and `quality:gate` checks.
+163. Normalized helper-generated action mappings to explicit static route keys for coverage fidelity:
+    - replaced dynamic helper-spread mappings for `home.*`, `login.*`, `import.*`, and `rss.jobOrders` with explicit entries in `frontend/modern-ui/src/lib/routeRegistry.ts`
+    - keeps runtime behavior unchanged while ensuring route-comparison tooling classifies these actions as native-explicit instead of wildcard fallback.
+164. Retired discovered wildcard bridge fallback usage via explicit action mappings:
+    - added explicit `ModuleBridgePage` action routes for all discovered legacy fallback actions in `attachments`, `export`, `gdpr`, `graphs`, `import`, `settings`, `toolbar`, `wizard`, and `xml`
+    - preserved runtime behavior while shifting route-comparison classification from `bridge-global-fallback` to `bridge-explicit`
+    - reduced comparison totals to `bridgeFallback=0` with `bridgeExplicit=90`, keeping unresolved routes at zero.
 
 ## Next Queue (30-Slice Execution)
 

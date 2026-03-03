@@ -1,15 +1,15 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T07:37:11.814Z
+Generated: 2026-03-03T07:47:48.559Z
 
 ## Summary
 
 - Legacy handleRequest actions discovered: 222
-- Native explicit modern coverage: 102
+- Native explicit modern coverage: 132
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 120
-- Bridge explicit route mapping: 0
-- Bridge wildcard fallback mapping: 120
+- Bridge coverage (explicit + fallback): 90
+- Bridge explicit route mapping: 90
+- Bridge wildcard fallback mapping: 0
 - Legacy unresolved: 0
 
 ## Module Coverage
@@ -26,15 +26,15 @@ Generated: 2026-03-03T07:37:11.814Z
 | export | 2 | 0 | 0 | 2 | 0 |
 | gdpr | 2 | 0 | 0 | 2 | 0 |
 | graphs | 5 | 0 | 0 | 5 | 0 |
-| home | 22 | 3 | 0 | 19 | 0 |
-| import | 15 | 0 | 0 | 15 | 0 |
+| home | 22 | 22 | 0 | 0 | 0 |
+| import | 15 | 3 | 0 | 12 | 0 |
 | joborders | 24 | 24 | 0 | 0 | 0 |
 | kpis | 1 | 1 | 0 | 0 | 0 |
 | lists | 8 | 8 | 0 | 0 | 0 |
-| login | 7 | 0 | 0 | 7 | 0 |
+| login | 7 | 7 | 0 | 0 | 0 |
 | logs | 1 | 1 | 0 | 0 | 0 |
 | reports | 11 | 11 | 0 | 0 | 0 |
-| rss | 1 | 0 | 0 | 1 | 0 |
+| rss | 1 | 1 | 0 | 0 | 0 |
 | settings | 58 | 0 | 0 | 58 | 0 |
 | toolbar | 8 | 0 | 0 | 8 | 0 |
 | wizard | 1 | 0 | 0 | 1 | 0 |
@@ -51,7 +51,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | --- | --- | --- | --- | --- |
 | activity | listByViewDataGrid | native-explicit | activity.listbyviewdatagrid | ActivityListPage |
 | activity | viewByDate | native-explicit | activity.viewbydate | ActivityListPage |
-| attachments | getAttachment | bridge-global-fallback | *.* | ModuleBridgePage |
+| attachments | getAttachment | bridge-explicit | attachments.getattachment | ModuleBridgePage |
 | calendar | addEvent | native-explicit | calendar.addevent | CalendarPage |
 | calendar | deleteEvent | native-explicit | calendar.deleteevent | EntityUtilityActionPage |
 | calendar | dynamicData | native-explicit | calendar.dynamicdata | EntityUtilityActionPage |
@@ -104,52 +104,52 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | contacts | showColdCallList | native-explicit | contacts.showcoldcalllist | ContactsColdCallListPage |
 | dashboard | my | native-explicit | dashboard.my | DashboardMyPage |
 | dashboard | setPipelineStatus | native-explicit | dashboard.setpipelinestatus | DashboardMyPage |
-| export | export | bridge-global-fallback | *.* | ModuleBridgePage |
-| export | exportByDataGrid | bridge-global-fallback | *.* | ModuleBridgePage |
-| gdpr | export | bridge-global-fallback | *.* | ModuleBridgePage |
-| gdpr | requests | bridge-global-fallback | *.* | ModuleBridgePage |
-| graphs | generic | bridge-global-fallback | *.* | ModuleBridgePage |
-| graphs | genericPie | bridge-global-fallback | *.* | ModuleBridgePage |
-| graphs | jobOrderReportGraph | bridge-global-fallback | *.* | ModuleBridgePage |
-| graphs | testGraph | bridge-global-fallback | *.* | ModuleBridgePage |
-| graphs | wordVerify | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | addPersonalItem | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | addSavedSearch | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | appendPersonalNote | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | archiveInboxThread | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | createInboxNote | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | createInboxTodo | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | deleteInboxThread | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | deletePersonalItem | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | deleteSavedSearch | bridge-global-fallback | *.* | ModuleBridgePage |
+| export | export | bridge-explicit | export.export | ModuleBridgePage |
+| export | exportByDataGrid | bridge-explicit | export.exportbydatagrid | ModuleBridgePage |
+| gdpr | export | bridge-explicit | gdpr.export | ModuleBridgePage |
+| gdpr | requests | bridge-explicit | gdpr.requests | ModuleBridgePage |
+| graphs | generic | bridge-explicit | graphs.generic | ModuleBridgePage |
+| graphs | genericPie | bridge-explicit | graphs.genericpie | ModuleBridgePage |
+| graphs | jobOrderReportGraph | bridge-explicit | graphs.joborderreportgraph | ModuleBridgePage |
+| graphs | testGraph | bridge-explicit | graphs.testgraph | ModuleBridgePage |
+| graphs | wordVerify | bridge-explicit | graphs.wordverify | ModuleBridgePage |
+| home | addPersonalItem | native-explicit | home.addpersonalitem | HomeActionPage |
+| home | addSavedSearch | native-explicit | home.addsavedsearch | HomeActionPage |
+| home | appendPersonalNote | native-explicit | home.appendpersonalnote | HomeActionPage |
+| home | archiveInboxThread | native-explicit | home.archiveinboxthread | HomeActionPage |
+| home | createInboxNote | native-explicit | home.createinboxnote | HomeActionPage |
+| home | createInboxTodo | native-explicit | home.createinboxtodo | HomeActionPage |
+| home | deleteInboxThread | native-explicit | home.deleteinboxthread | HomeActionPage |
+| home | deletePersonalItem | native-explicit | home.deletepersonalitem | HomeActionPage |
+| home | deleteSavedSearch | native-explicit | home.deletesavedsearch | HomeActionPage |
 | home | home | native-explicit | home.home | HomePage |
 | home | inbox | native-explicit | home.inbox | HomeInboxPage |
-| home | movePersonalNoteToTodo | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | movePersonalNoteToTodo | native-explicit | home.movepersonalnotetotodo | HomeActionPage |
 | home | myNotes | native-explicit | home.mynotes | HomeMyNotesPage |
-| home | postInboxMessage | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | quickSearch | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | sendPersonalNote | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | setPersonalNoteArchived | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | setPersonalTodoStatus | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | submitFeedback | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | togglePersonalTodo | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | updatePersonalNote | bridge-global-fallback | *.* | ModuleBridgePage |
-| home | updatePersonalTodo | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | commit | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | deleteBulkResumes | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | import | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | importBulkResumes | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | importSelectType | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | importUploadFile | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | importUploadResume | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | massImport | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | massImportDocument | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | massImportEdit | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | revert | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | showMassImport | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | viewerrors | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | viewpending | bridge-global-fallback | *.* | ModuleBridgePage |
-| import | whatIsBulkResumes | bridge-global-fallback | *.* | ModuleBridgePage |
+| home | postInboxMessage | native-explicit | home.postinboxmessage | HomeActionPage |
+| home | quickSearch | native-explicit | home.quicksearch | HomeActionPage |
+| home | sendPersonalNote | native-explicit | home.sendpersonalnote | HomeActionPage |
+| home | setPersonalNoteArchived | native-explicit | home.setpersonalnotearchived | HomeActionPage |
+| home | setPersonalTodoStatus | native-explicit | home.setpersonaltodostatus | HomeActionPage |
+| home | submitFeedback | native-explicit | home.submitfeedback | HomeActionPage |
+| home | togglePersonalTodo | native-explicit | home.togglepersonaltodo | HomeActionPage |
+| home | updatePersonalNote | native-explicit | home.updatepersonalnote | HomeActionPage |
+| home | updatePersonalTodo | native-explicit | home.updatepersonaltodo | HomeActionPage |
+| import | commit | native-explicit | import.commit | LegacyRedirectPage |
+| import | deleteBulkResumes | bridge-explicit | import.deletebulkresumes | ModuleBridgePage |
+| import | import | native-explicit | import.import | LegacyRedirectPage |
+| import | importBulkResumes | bridge-explicit | import.importbulkresumes | ModuleBridgePage |
+| import | importSelectType | bridge-explicit | import.importselecttype | ModuleBridgePage |
+| import | importUploadFile | native-explicit | import.importuploadfile | LegacyRedirectPage |
+| import | importUploadResume | bridge-explicit | import.importuploadresume | ModuleBridgePage |
+| import | massImport | bridge-explicit | import.massimport | ModuleBridgePage |
+| import | massImportDocument | bridge-explicit | import.massimportdocument | ModuleBridgePage |
+| import | massImportEdit | bridge-explicit | import.massimportedit | ModuleBridgePage |
+| import | revert | bridge-explicit | import.revert | ModuleBridgePage |
+| import | showMassImport | bridge-explicit | import.showmassimport | ModuleBridgePage |
+| import | viewerrors | bridge-explicit | import.viewerrors | ModuleBridgePage |
+| import | viewpending | bridge-explicit | import.viewpending | ModuleBridgePage |
+| import | whatIsBulkResumes | bridge-explicit | import.whatisbulkresumes | ModuleBridgePage |
 | joborders | add | native-explicit | joborders.add | JobOrdersAddPage |
 | joborders | addActivityChangeStatus | native-explicit | joborders.addactivitychangestatus | EntityUtilityActionPage |
 | joborders | addCandidateModal | native-explicit-guarded | joborders.addcandidatemodal | CandidatesAddPage |
@@ -183,13 +183,13 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | lists | saveListAccess | native-explicit | lists.savelistaccess | EntityUtilityActionPage |
 | lists | show | native-explicit-guarded | lists.show | ListsDetailPage |
 | lists | showList | native-explicit-guarded | lists.showlist | ListsDetailPage |
-| login | attemptLogin | bridge-global-fallback | *.* | ModuleBridgePage |
-| login | forgotPassword | bridge-global-fallback | *.* | ModuleBridgePage |
-| login | googleCallback | bridge-global-fallback | *.* | ModuleBridgePage |
-| login | googleStart | bridge-global-fallback | *.* | ModuleBridgePage |
-| login | noCookiesModal | bridge-global-fallback | *.* | ModuleBridgePage |
-| login | requestAccess | bridge-global-fallback | *.* | ModuleBridgePage |
-| login | showLoginForm | bridge-global-fallback | *.* | ModuleBridgePage |
+| login | attemptLogin | native-explicit | login.attemptlogin | LegacyRedirectPage |
+| login | forgotPassword | native-explicit | login.forgotpassword | LegacyRedirectPage |
+| login | googleCallback | native-explicit | login.googlecallback | LegacyRedirectPage |
+| login | googleStart | native-explicit | login.googlestart | LegacyRedirectPage |
+| login | noCookiesModal | native-explicit | login.nocookiesmodal | LegacyRedirectPage |
+| login | requestAccess | native-explicit | login.requestaccess | LegacyRedirectPage |
+| login | showLoginForm | native-explicit | login.showloginform | LegacyRedirectPage |
 | logs | view | native-explicit | logs.view | LogsPage |
 | reports | customerDashboard | native-explicit | reports.customerdashboard | ReportsCustomerDashboardPage |
 | reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ReportsActionPage |
@@ -202,72 +202,72 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | reports | showHireReport | native-explicit | reports.showhirereport | ReportsActionPage |
 | reports | showPlacementReport | native-explicit | reports.showplacementreport | ReportsActionPage |
 | reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | ReportsActionPage |
-| rss | jobOrders | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | addEmailTemplate | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | addUser | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | administration | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_tags_add | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_tags_del | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_tags_upd | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardAddUser | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardCheckKey | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardDeleteUser | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardEmail | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardFirstTimeSetup | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardImport | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardLicense | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardLocalization | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardPassword | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardSiteName | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | ajax_wizardWebsite | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | aspLocalization | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | careerPortalQuestionnaire | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | careerPortalQuestionnairePreview | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | careerPortalQuestionnaireUpdate | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | careerPortalSettings | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | careerPortalTemplateEdit | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | changePassword | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | createBackup | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | customizeCalendar | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | customizeExtraFields | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | deleteBackup | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | deleteEmailTemplate | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | deleteUser | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | editUser | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | eeo | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | emailSettings | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | emailTemplates | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | feedbackSettings | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | forceEmail | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | gdprSettings | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | getFirefoxModal | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | googleOIDCSettings | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | loginActivity | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | manageUsers | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | myProfile | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | newInstallFinished | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | newInstallPassword | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | newSiteName | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | onCareerPortalTweak | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | previewPage | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | previewPageTop | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | professional | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | rejectionReasons | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | reports | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | rolePagePermissions | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | schemaMigrations | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | showUser | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | tags | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | talentFitFlowSettings | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | upgradeSiteName | bridge-global-fallback | *.* | ModuleBridgePage |
-| settings | viewItemHistory | bridge-global-fallback | *.* | ModuleBridgePage |
-| toolbar | attemptLogin | bridge-global-fallback | *.* | ModuleBridgePage |
-| toolbar | authenticate | bridge-global-fallback | *.* | ModuleBridgePage |
-| toolbar | checkEmailIsInSystem | bridge-global-fallback | *.* | ModuleBridgePage |
-| toolbar | getJavaScriptLib | bridge-global-fallback | *.* | ModuleBridgePage |
-| toolbar | getLicenseKey | bridge-global-fallback | *.* | ModuleBridgePage |
-| toolbar | getRemoteVersion | bridge-global-fallback | *.* | ModuleBridgePage |
-| toolbar | install | bridge-global-fallback | *.* | ModuleBridgePage |
-| toolbar | storeMonsterResumeText | bridge-global-fallback | *.* | ModuleBridgePage |
-| wizard | ajax_getPage | bridge-global-fallback | *.* | ModuleBridgePage |
-| xml | jobOrders | bridge-global-fallback | *.* | ModuleBridgePage |
+| rss | jobOrders | native-explicit | rss.joborders | LegacyRedirectPage |
+| settings | addEmailTemplate | bridge-explicit | settings.addemailtemplate | ModuleBridgePage |
+| settings | addUser | bridge-explicit | settings.adduser | ModuleBridgePage |
+| settings | administration | bridge-explicit | settings.administration | ModuleBridgePage |
+| settings | ajax_tags_add | bridge-explicit | settings.ajax_tags_add | ModuleBridgePage |
+| settings | ajax_tags_del | bridge-explicit | settings.ajax_tags_del | ModuleBridgePage |
+| settings | ajax_tags_upd | bridge-explicit | settings.ajax_tags_upd | ModuleBridgePage |
+| settings | ajax_wizardAddUser | bridge-explicit | settings.ajax_wizardadduser | ModuleBridgePage |
+| settings | ajax_wizardCheckKey | bridge-explicit | settings.ajax_wizardcheckkey | ModuleBridgePage |
+| settings | ajax_wizardDeleteUser | bridge-explicit | settings.ajax_wizarddeleteuser | ModuleBridgePage |
+| settings | ajax_wizardEmail | bridge-explicit | settings.ajax_wizardemail | ModuleBridgePage |
+| settings | ajax_wizardFirstTimeSetup | bridge-explicit | settings.ajax_wizardfirsttimesetup | ModuleBridgePage |
+| settings | ajax_wizardImport | bridge-explicit | settings.ajax_wizardimport | ModuleBridgePage |
+| settings | ajax_wizardLicense | bridge-explicit | settings.ajax_wizardlicense | ModuleBridgePage |
+| settings | ajax_wizardLocalization | bridge-explicit | settings.ajax_wizardlocalization | ModuleBridgePage |
+| settings | ajax_wizardPassword | bridge-explicit | settings.ajax_wizardpassword | ModuleBridgePage |
+| settings | ajax_wizardSiteName | bridge-explicit | settings.ajax_wizardsitename | ModuleBridgePage |
+| settings | ajax_wizardWebsite | bridge-explicit | settings.ajax_wizardwebsite | ModuleBridgePage |
+| settings | aspLocalization | bridge-explicit | settings.asplocalization | ModuleBridgePage |
+| settings | careerPortalQuestionnaire | bridge-explicit | settings.careerportalquestionnaire | ModuleBridgePage |
+| settings | careerPortalQuestionnairePreview | bridge-explicit | settings.careerportalquestionnairepreview | ModuleBridgePage |
+| settings | careerPortalQuestionnaireUpdate | bridge-explicit | settings.careerportalquestionnaireupdate | ModuleBridgePage |
+| settings | careerPortalSettings | bridge-explicit | settings.careerportalsettings | ModuleBridgePage |
+| settings | careerPortalTemplateEdit | bridge-explicit | settings.careerportaltemplateedit | ModuleBridgePage |
+| settings | changePassword | bridge-explicit | settings.changepassword | ModuleBridgePage |
+| settings | createBackup | bridge-explicit | settings.createbackup | ModuleBridgePage |
+| settings | customizeCalendar | bridge-explicit | settings.customizecalendar | ModuleBridgePage |
+| settings | customizeExtraFields | bridge-explicit | settings.customizeextrafields | ModuleBridgePage |
+| settings | deleteBackup | bridge-explicit | settings.deletebackup | ModuleBridgePage |
+| settings | deleteEmailTemplate | bridge-explicit | settings.deleteemailtemplate | ModuleBridgePage |
+| settings | deleteUser | bridge-explicit | settings.deleteuser | ModuleBridgePage |
+| settings | editUser | bridge-explicit | settings.edituser | ModuleBridgePage |
+| settings | eeo | bridge-explicit | settings.eeo | ModuleBridgePage |
+| settings | emailSettings | bridge-explicit | settings.emailsettings | ModuleBridgePage |
+| settings | emailTemplates | bridge-explicit | settings.emailtemplates | ModuleBridgePage |
+| settings | feedbackSettings | bridge-explicit | settings.feedbacksettings | ModuleBridgePage |
+| settings | forceEmail | bridge-explicit | settings.forceemail | ModuleBridgePage |
+| settings | gdprSettings | bridge-explicit | settings.gdprsettings | ModuleBridgePage |
+| settings | getFirefoxModal | bridge-explicit | settings.getfirefoxmodal | ModuleBridgePage |
+| settings | googleOIDCSettings | bridge-explicit | settings.googleoidcsettings | ModuleBridgePage |
+| settings | loginActivity | bridge-explicit | settings.loginactivity | ModuleBridgePage |
+| settings | manageUsers | bridge-explicit | settings.manageusers | ModuleBridgePage |
+| settings | myProfile | bridge-explicit | settings.myprofile | ModuleBridgePage |
+| settings | newInstallFinished | bridge-explicit | settings.newinstallfinished | ModuleBridgePage |
+| settings | newInstallPassword | bridge-explicit | settings.newinstallpassword | ModuleBridgePage |
+| settings | newSiteName | bridge-explicit | settings.newsitename | ModuleBridgePage |
+| settings | onCareerPortalTweak | bridge-explicit | settings.oncareerportaltweak | ModuleBridgePage |
+| settings | previewPage | bridge-explicit | settings.previewpage | ModuleBridgePage |
+| settings | previewPageTop | bridge-explicit | settings.previewpagetop | ModuleBridgePage |
+| settings | professional | bridge-explicit | settings.professional | ModuleBridgePage |
+| settings | rejectionReasons | bridge-explicit | settings.rejectionreasons | ModuleBridgePage |
+| settings | reports | bridge-explicit | settings.reports | ModuleBridgePage |
+| settings | rolePagePermissions | bridge-explicit | settings.rolepagepermissions | ModuleBridgePage |
+| settings | schemaMigrations | bridge-explicit | settings.schemamigrations | ModuleBridgePage |
+| settings | showUser | bridge-explicit | settings.showuser | ModuleBridgePage |
+| settings | tags | bridge-explicit | settings.tags | ModuleBridgePage |
+| settings | talentFitFlowSettings | bridge-explicit | settings.talentfitflowsettings | ModuleBridgePage |
+| settings | upgradeSiteName | bridge-explicit | settings.upgradesitename | ModuleBridgePage |
+| settings | viewItemHistory | bridge-explicit | settings.viewitemhistory | ModuleBridgePage |
+| toolbar | attemptLogin | bridge-explicit | toolbar.attemptlogin | ModuleBridgePage |
+| toolbar | authenticate | bridge-explicit | toolbar.authenticate | ModuleBridgePage |
+| toolbar | checkEmailIsInSystem | bridge-explicit | toolbar.checkemailisinsystem | ModuleBridgePage |
+| toolbar | getJavaScriptLib | bridge-explicit | toolbar.getjavascriptlib | ModuleBridgePage |
+| toolbar | getLicenseKey | bridge-explicit | toolbar.getlicensekey | ModuleBridgePage |
+| toolbar | getRemoteVersion | bridge-explicit | toolbar.getremoteversion | ModuleBridgePage |
+| toolbar | install | bridge-explicit | toolbar.install | ModuleBridgePage |
+| toolbar | storeMonsterResumeText | bridge-explicit | toolbar.storemonsterresumetext | ModuleBridgePage |
+| wizard | ajax_getPage | bridge-explicit | wizard.ajax_getpage | ModuleBridgePage |
+| xml | jobOrders | bridge-explicit | xml.joborders | ModuleBridgePage |

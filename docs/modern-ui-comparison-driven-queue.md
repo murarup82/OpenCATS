@@ -1,16 +1,16 @@
 ﻿# Modern UI Comparison-Driven Queue
 
 Source: `docs/modern-ui-legacy-route-gap-report.md`  
-Generated from latest comparison snapshot: `2026-03-02T04:25:25.245Z`
+Generated from latest comparison snapshot: `2026-03-03T07:46:01.061Z`
 
 ## Snapshot
 
-- Legacy `handleRequest` actions discovered: `219`
-- Native explicit route coverage: `95`
+- Legacy `handleRequest` actions discovered: `222`
+- Native explicit route coverage: `132`
 - Native default fallback: `0`
-- Bridge coverage: `124`
-- Bridge explicit mapping: `0`
-- Bridge wildcard fallback mapping: `124`
+- Bridge coverage: `90`
+- Bridge explicit mapping: `90`
+- Bridge wildcard fallback mapping: `0`
 - In-scope wildcard/default fallbacks (core modules): `0`
 - In-scope non-native routes (core modules): `0`
 
@@ -85,5 +85,7 @@ Phase 2B backlog (functional deepening):
 - Completed: Removed dead `ActionCompatPage` runtime source after explicit compat-route retirement.
 - Completed: Added CI guard for no-JS fallback parity (`verify:legacy-fallback-links`) to enforce `Open Legacy` link presence on core native pages.
 - Completed: Added shell no-JS handoff fallback (`<noscript>` legacy link) plus CI guard (`verify:shell-noscript-fallback`) to prevent regression.
+- Completed: Converted helper-generated `home/login/import/rss` action mappings to explicit static route entries in `routeRegistry`, restoring accurate comparison classification (native-explicit vs global fallback).
+- Completed: Converted all remaining known wildcard bridge actions (`attachments/export/gdpr/graphs/import/settings/toolbar/wizard/xml`) to explicit `ModuleBridgePage` route entries, retiring `bridge-global-fallback` usage for discovered legacy actions.
 - Keep `verify:in-scope-routes` green while converting wrapper-based actions to fully native behavior.
 - Expand smoke fixtures for action families as wrappers are replaced by native endpoint contracts.
