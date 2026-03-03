@@ -106,8 +106,8 @@ export function MarkdownTextarea({
     const editor = new Editor({
       el: hostRef.current,
       height: editorHeight,
-      initialEditType: 'wysiwyg',
-      previewStyle: 'tab',
+      initialEditType: 'markdown',
+      previewStyle: 'vertical',
       usageStatistics: false,
       hideModeSwitch: true,
       initialValue: '',
@@ -183,7 +183,7 @@ export function MarkdownTextarea({
     <div className={joinClassNames('avel-markdown-field', className)}>
       <div ref={hostRef} className="avel-markdown-editor-shell" aria-label={ariaLabel} />
       <textarea className="avel-markdown-hidden-input" name={name} value={value} readOnly tabIndex={-1} aria-hidden="true" />
-      <p className="avel-markdown-hint">Rich editor enabled. Markdown pasted from plain text is auto-converted.</p>
+      <p className="avel-markdown-hint">Markdown editor with live preview. Backspace and empty-line behavior match plain text editing.</p>
     </div>
   );
 }
