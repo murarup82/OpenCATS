@@ -43,6 +43,7 @@ import { JobOrderAssignActionPage } from '../pages/JobOrderAssignActionPage';
 import { PipelineStatusActionPage } from '../pages/PipelineStatusActionPage';
 import { JobOrderCompanyContextActionPage } from '../pages/JobOrderCompanyContextActionPage';
 import { JobOrderAddActionPage } from '../pages/JobOrderAddActionPage';
+import { JobOrderMonitorActionPage } from '../pages/JobOrderMonitorActionPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { ActionCompatPage } from '../pages/ActionCompatPage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
@@ -94,6 +95,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.companycontext': JobOrderCompanyContextActionPage,
   'joborders.addjoborderpopup': JobOrderAddActionPage,
   'joborders.recruiterallocation': JobOrdersRecruiterAllocationPage,
+  'joborders.setmonitoredjoborder': JobOrderMonitorActionPage,
   'joborders.pipelinestatusdetails': PipelineStatusActionPage,
   'joborders.pipelinestatuseditdate': PipelineStatusActionPage,
   'lists.quickactionaddtolistmodal': ListsActionPage,
@@ -180,8 +182,7 @@ const explicitActionCompatRoutes = buildExplicitBridgeRoutes({
     'editHiringPlan',
     'postMessage',
     'removeFromPipeline',
-    'setCandidateJobOrder',
-    'setMonitoredJobOrder'
+    'setCandidateJobOrder'
   ],
   lists: [
     'deleteStaticList',
@@ -265,6 +266,7 @@ const guardedRouteParams: Record<string, string[]> = {
   'joborders.edit': ['jobOrderID'],
   'joborders.createattachment': ['jobOrderID'],
   'joborders.addcandidatemodal': ['jobOrderID'],
+  'joborders.setmonitoredjoborder': ['jobOrderID'],
   'joborders.companycontext': ['companyID'],
   'joborders.pipelinestatusdetails': ['pipelineID'],
   'joborders.pipelinestatuseditdate': ['pipelineID'],

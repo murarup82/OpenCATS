@@ -270,6 +270,9 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - backend `joborders.recruiterAllocation` now supports `format=modern-json` contract `joborders.recruiterAllocation.v1` (filters/options/rows/paging)
     - backend mutation path for recruiter allocation now supports `format=modern-json` for async assignment save responses
     - added native `JobOrdersRecruiterAllocationPage` with filter controls, in-table assignment editing, async save, and pagination.
+115. Migrated `joborders.setMonitoredJobOrder` to a native action workspace:
+    - added native `JobOrderMonitorActionPage` that executes existing modern-json monitor toggle mutation and handles safe return navigation
+    - route mapping now resolves `joborders.setMonitoredJobOrder` directly to native action handling (compat wrapper removed).
 112. Added compatibility-route deprecation tracker:
     - introduced `docs/modern-ui-compat-deprecation-tracker.md` with route-pattern status tracking (`Keep/Candidate/Deprecate/Retired`)
     - documented per-module fallback preconditions and a retirement workflow for bridge-route removal

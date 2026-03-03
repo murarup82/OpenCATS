@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:17:56.211Z
+Generated: 2026-03-03T06:21:00.527Z
 
 ## Summary
 
@@ -172,7 +172,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | recruiterAllocation | native-explicit | joborders.recruiterallocation | JobOrdersRecruiterAllocationPage |
 | joborders | removeFromPipeline | native-explicit | joborders.removefrompipeline | ActionCompatPage |
 | joborders | search | native-explicit | joborders.search | JobOrdersListPage |
-| joborders | setMonitoredJobOrder | native-explicit | joborders.setmonitoredjoborder | ActionCompatPage |
+| joborders | setMonitoredJobOrder | native-explicit-guarded | joborders.setmonitoredjoborder | JobOrderMonitorActionPage |
 | joborders | show | native-explicit-guarded | joborders.show | JobOrdersShowPage |
 | kpis | details | native-explicit | kpis.details | KpisDetailsPage |
 | lists | addToListFromDatagridModal | native-explicit | lists.addtolistfromdatagridmodal | ListsActionPage |

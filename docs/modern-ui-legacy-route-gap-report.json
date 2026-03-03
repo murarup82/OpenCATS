@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T06:17:56.211Z",
+  "generatedAt": "2026-03-03T06:21:00.527Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -1306,11 +1306,11 @@
     {
       "module": "joborders",
       "action": "setMonitoredJobOrder",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "joborders.setmonitoredjoborder",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "JobOrderMonitorActionPage",
+      "guarded": true
     },
     {
       "module": "joborders",
