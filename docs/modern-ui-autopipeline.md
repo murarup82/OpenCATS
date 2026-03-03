@@ -281,6 +281,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - added native `CandidateQuestionnaireActionPage` with embedded legacy questionnaire rendering (`ui_embed=1`)
     - added explicit view/print mode controls and candidate-context navigation
     - route mapping now resolves `candidates.show_questionnaire` directly to native action handling (compat wrapper removed).
+118. Migrated `contacts.addActivityScheduleEvent` to a dedicated native action workspace:
+    - added native `ContactActivityActionPage` with embedded legacy activity/event form rendering (`ui_embed=1`)
+    - added explicit full-mode vs schedule-only mode controls and contact-context navigation
+    - route mapping now resolves `contacts.addActivityScheduleEvent` directly to native action handling (compat wrapper removed).
 112. Added compatibility-route deprecation tracker:
     - introduced `docs/modern-ui-compat-deprecation-tracker.md` with route-pattern status tracking (`Keep/Candidate/Deprecate/Retired`)
     - documented per-module fallback preconditions and a retirement workflow for bridge-route removal

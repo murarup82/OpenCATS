@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T06:28:38.312Z",
+  "generatedAt": "2026-03-03T06:30:31.675Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -604,11 +604,11 @@
     {
       "module": "contacts",
       "action": "addActivityScheduleEvent",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "contacts.addactivityscheduleevent",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "ContactActivityActionPage",
+      "guarded": true
     },
     {
       "module": "contacts",

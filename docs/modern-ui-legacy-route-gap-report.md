@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T06:28:38.312Z
+Generated: 2026-03-03T06:30:31.675Z
 
 ## Summary
 
@@ -94,7 +94,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | companies | search | native-explicit | companies.search | CompaniesListPage |
 | companies | show | native-explicit-guarded | companies.show | CompaniesShowPage |
 | contacts | add | native-explicit | contacts.add | ContactsAddPage |
-| contacts | addActivityScheduleEvent | native-explicit | contacts.addactivityscheduleevent | ActionCompatPage |
+| contacts | addActivityScheduleEvent | native-explicit-guarded | contacts.addactivityscheduleevent | ContactActivityActionPage |
 | contacts | delete | native-explicit | contacts.delete | ActionCompatPage |
 | contacts | downloadVCard | native-explicit-guarded | contacts.downloadvcard | ContactVCardActionPage |
 | contacts | edit | native-explicit-guarded | contacts.edit | ContactsEditPage |
