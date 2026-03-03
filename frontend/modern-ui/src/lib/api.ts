@@ -878,6 +878,8 @@ export async function uploadCandidateAttachment(
   form.set('file', payload.file);
 
   const requestURL = buildModernMutationURL(submitURL, {
+    m: 'candidates',
+    a: 'createAttachment',
     candidateID: payload.candidateID || 0
   });
   const response = await fetch(requestURL, {
@@ -902,6 +904,8 @@ export async function uploadJobOrderAttachment(
   form.set('file', payload.file);
 
   const requestURL = buildModernMutationURL(submitURL, {
+    m: 'joborders',
+    a: 'createAttachment',
     jobOrderID: payload.jobOrderID || 0
   });
   const response = await fetch(requestURL, {
@@ -926,6 +930,8 @@ export async function uploadCompanyAttachment(
   form.set('file', payload.file);
 
   const requestURL = buildModernMutationURL(submitURL, {
+    m: 'companies',
+    a: 'createAttachment',
     companyID: payload.companyID || 0
   });
   const response = await fetch(requestURL, {
