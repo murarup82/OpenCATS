@@ -1269,6 +1269,43 @@ export type ReportsGraphViewModernDataResponse = {
   };
 };
 
+export type SourcingListModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  state: {
+    startYear: number;
+    startWeek: number;
+    currentWeekYear: number;
+    currentWeekNumber: number;
+    weeksTotal: number;
+  };
+  summary: {
+    totalSourced: number;
+    averagePerWeek: number;
+  };
+  actions: {
+    saveURL: string;
+    legacyURL: string;
+  };
+  rows: Array<{
+    weekYear: number;
+    weekNumber: number;
+    weekLabel: string;
+    count: number;
+    isCurrent: boolean;
+  }>;
+};
+
+export type SourcingSaveMutationResponse = {
+  success: boolean;
+  savedCount?: number;
+  message?: string;
+  code?: string;
+};
+
 export type HomeOverviewModernDataResponse = {
   meta: {
     contractVersion: number;

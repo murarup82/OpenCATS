@@ -40,6 +40,8 @@ import type {
   ReportsCustomerDashboardModernDataResponse,
   ReportsGraphViewModernDataResponse,
   ReportsLauncherModernDataResponse,
+  SourcingListModernDataResponse,
+  SourcingSaveMutationResponse,
   UIModeBootstrap
 } from '../types';
 import { getJSON } from './httpClient';
@@ -73,6 +75,7 @@ import {
   MODERN_REPORTS_CUSTOMER_DASHBOARD_PAGE,
   MODERN_REPORTS_GRAPH_VIEW_PAGE,
   MODERN_REPORTS_PAGE,
+  MODERN_SOURCING_PAGE,
   MODERN_KPIS_DETAILS_PAGE,
   buildModernJSONRequestQuery
 } from './modernContract';
@@ -1322,6 +1325,62 @@ export async function fetchReportsGraphViewModernData(
   assertModernContract(data.meta, 'reports.graphView.v1', 'reports graph view');
 
   return data;
+}
+
+export async function fetchSourcingListModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SourcingListModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'sourcing',
+    action: '',
+    modernPage: MODERN_SOURCING_PAGE,
+    query
+  });
+  apiQuery.delete('a');
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SourcingListModernDataResponse>(url);
+  assertModernContract(data.meta, 'sourcing.list.v1', 'sourcing workspace');
+
+  return data;
+}
+
+export async function saveSourcingListModernData(
+  saveURL: string,
+  rows: Array<{ weekYear: number; weekNumber: number; count: number }>
+): Promise<SourcingSaveMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SOURCING_PAGE);
+
+  rows.forEach((row) => {
+    body.append('weekYear[]', String(row.weekYear));
+    body.append('weekNumber[]', String(row.weekNumber));
+    body.append('sourcedCount[]', String(Math.max(0, Math.round(Number(row.count) || 0))));
+  });
+
+  const response = await fetch(saveURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: SourcingSaveMutationResponse | null = null;
+  try {
+    result = (await response.json()) as SourcingSaveMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Sourcing save failed (${response.status}).`);
+  }
+
+  return result;
 }
 
 export async function fetchCandidatesShowModernData(

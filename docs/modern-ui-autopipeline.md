@@ -380,6 +380,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - extended `modules/reports/ReportsUI.php` with `reports.graphView.v1` modern-json payload for fullscreen graph mode metadata
     - introduced `ReportsGraphViewPage` with auto-refresh controls, fullscreen toggle, and in-page visual customization sliders
     - routed `reports.graphView` away from compatibility iframe to native React page resolution.
+145. Added native `sourcing/(default)` modernization contract and page:
+    - extended `modules/sourcing/SourcingUI.php` with `sourcing.list.v1` modern-json payload and modern-json save mutation handling
+    - introduced `SourcingPage` with in-page editable weekly rows, interactive windowed trend chart, and draft-save workflow
+    - routed `sourcing.(default)` to native React page while keeping `sourcing.*` fallback routing for legacy safety.
 
 ## Next Queue (30-Slice Execution)
 

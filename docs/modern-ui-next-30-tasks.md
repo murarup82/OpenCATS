@@ -26,7 +26,7 @@ Status legend: `done`, `in_progress`, `pending`
 22. `done` Build native `lists/show` and `lists/showList` detail pages.
 23. `done` Build native `reports/customerDashboard` page contract and UI.
 24. `done` Build native `reports/graphView` page contract and UI.
-25. `pending` Build native `sourcing/(default)` compatibility-to-native migration page.
+25. `done` Build native `sourcing/(default)` compatibility-to-native migration page.
 26. `pending` Build native `queue/(default)` compatibility-to-native migration page.
 27. `pending` Build native `graphs/(default)` compatibility-to-native migration page.
 28. `pending` Add per-route parity checklist automation for all newly modernized pages.
