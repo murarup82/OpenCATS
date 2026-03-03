@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T05:26:56.153Z",
+  "generatedAt": "2026-03-03T05:35:32.464Z",
   "totals": {
     "actions": 222,
     "nativeExplicit": 102,
@@ -505,11 +505,11 @@
     {
       "module": "candidates",
       "action": "viewResume",
-      "classification": "native-explicit",
+      "classification": "native-explicit-guarded",
       "routeKey": "candidates.viewresume",
       "resolution": "native",
-      "component": "ActionCompatPage",
-      "guarded": false
+      "component": "CandidateResumeActionPage",
+      "guarded": true
     },
     {
       "module": "companies",

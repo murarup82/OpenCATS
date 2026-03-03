@@ -2,6 +2,7 @@ import type {
   ActivityListModernDataResponse,
   CalendarEventMutationResponse,
   CalendarModernDataResponse,
+  CandidateResumeModernDataResponse,
   CandidateAssignToJobOrderModernDataResponse,
   CandidateAssignToJobOrderMutationResponse,
   CandidateDuplicateCheckResponse,
@@ -52,6 +53,7 @@ import { assertModernContract } from './contractGuards';
 import {
   MODERN_ACTIVITY_PAGE,
   MODERN_CALENDAR_PAGE,
+  MODERN_CANDIDATE_RESUME_PAGE,
   MODERN_CANDIDATES_PAGE,
   MODERN_CANDIDATE_ADD_PAGE,
   MODERN_CANDIDATE_EDIT_PAGE,
@@ -914,6 +916,24 @@ export async function fetchCandidatesListModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<CandidatesListModernDataResponse>(url);
   assertModernContract(data.meta, 'candidates.listByView.v1', 'candidates data');
+
+  return data;
+}
+
+export async function fetchCandidateResumeModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<CandidateResumeModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'candidates',
+    action: 'viewResume',
+    modernPage: MODERN_CANDIDATE_RESUME_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<CandidateResumeModernDataResponse>(url);
+  assertModernContract(data.meta, 'candidates.viewResume.v1', 'candidate resume preview');
 
   return data;
 }

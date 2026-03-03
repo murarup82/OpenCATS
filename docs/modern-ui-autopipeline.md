@@ -262,6 +262,10 @@ This queue is used for autonomous modernization runs while keeping legacy behavi
     - backend `joborders.addJobOrderPopup` now supports `format=modern-json` contract `joborders.addPopup.v1` (mode defaults + copy-source catalog)
     - added native `JobOrderAddActionPage` with empty-vs-copy workflow, source search/select, and direct handoff into modern `joborders.add`
     - switched `joborders.listByView` Add Job Order entry from legacy iframe modal to direct native route navigation.
+113. Migrated `candidates.viewResume` to a native action workspace:
+    - backend `candidates.viewResume` now supports `format=modern-json` contract `candidates.viewResume.v1` with resume text/query payload
+    - added native `CandidateResumeActionPage` with in-page highlight support and modern fallback navigation
+    - route mapping now resolves `candidates.viewResume` directly to native action page (compat wrapper removed).
 112. Added compatibility-route deprecation tracker:
     - introduced `docs/modern-ui-compat-deprecation-tracker.md` with route-pattern status tracking (`Keep/Candidate/Deprecate/Retired`)
     - documented per-module fallback preconditions and a retirement workflow for bridge-route removal

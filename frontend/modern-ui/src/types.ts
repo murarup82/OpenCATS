@@ -222,6 +222,32 @@ export type CandidatesListModernDataResponse = {
   }>;
 };
 
+export type CandidateResumeModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    listURL: string;
+    candidateURL: string;
+    legacyURL: string;
+  };
+  state: {
+    query: string;
+    hasData: boolean;
+  };
+  resume: {
+    attachmentID: number;
+    candidateID: number;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    title: string;
+    text: string;
+  };
+};
+
 export type CompaniesListModernDataResponse = {
   meta: {
     contractVersion: number;

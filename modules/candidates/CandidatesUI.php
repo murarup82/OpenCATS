@@ -4861,12 +4861,30 @@ class CandidatesUI extends UserInterface
      */
     private function viewResume()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         /* Bail out if we don't have a valid candidate ID. */
         if (!$this->isRequiredIDValid('attachmentID', $_GET)) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Invalid attachment ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid attachment ID.');
         }
 
-        $attachmentID = $_GET['attachmentID'];
+        $attachmentID = (int) $_GET['attachmentID'];
 
         /* Get the search string. */
         $query = $this->getTrimmedInput('wildCardString', $_GET);
@@ -4874,6 +4892,78 @@ class CandidatesUI extends UserInterface
         /* Get resume text. */
         $candidates = new Candidates($this->_siteID);
         $data = $candidates->getResume($attachmentID);
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'candidates-view-resume')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $baseURL = CATSUtility::getIndexName();
+            $candidateID = (int) (isset($data['candidateID']) ? $data['candidateID'] : 0);
+            $firstName = (isset($data['firstName']) ? trim((string) $data['firstName']) : '');
+            $lastName = (isset($data['lastName']) ? trim((string) $data['lastName']) : '');
+            $fullName = trim($firstName . ' ' . $lastName);
+            if ($fullName === '')
+            {
+                $fullName = '--';
+            }
+
+            $payload = array(
+                'meta' => array(
+                    'contractVersion' => 1,
+                    'contractKey' => 'candidates.viewResume.v1',
+                    'modernPage' => 'candidates-view-resume'
+                ),
+                'actions' => array(
+                    'listURL' => sprintf('%s?m=candidates&a=listByView&ui=modern', $baseURL),
+                    'candidateURL' => (
+                        $candidateID > 0
+                            ? sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID)
+                            : ''
+                    ),
+                    'legacyURL' => sprintf(
+                        '%s?m=candidates&a=viewResume&attachmentID=%d&wildCardString=%s&ui=legacy',
+                        $baseURL,
+                        $attachmentID,
+                        urlencode((string) $query)
+                    )
+                ),
+                'state' => array(
+                    'query' => (string) $query,
+                    'hasData' => !empty($data)
+                ),
+                'resume' => array(
+                    'attachmentID' => $attachmentID,
+                    'candidateID' => $candidateID,
+                    'firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'fullName' => $fullName,
+                    'title' => (isset($data['title']) ? (string) $data['title'] : ''),
+                    'text' => (isset($data['text']) ? (string) $data['text'] : '')
+                )
+            );
+
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode($payload);
+            return;
+        }
 
         if (!empty($data)) {
             /* Keyword highlighting. */

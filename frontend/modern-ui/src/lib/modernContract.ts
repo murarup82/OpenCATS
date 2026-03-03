@@ -1,6 +1,7 @@
 export const MODERN_JSON_FORMAT = 'modern-json';
 export const MODERN_DASHBOARD_PAGE = 'dashboard-my';
 export const MODERN_CANDIDATES_PAGE = 'candidates-list';
+export const MODERN_CANDIDATE_RESUME_PAGE = 'candidates-view-resume';
 export const MODERN_CANDIDATE_SHOW_PAGE = 'candidates-show';
 export const MODERN_CANDIDATE_EDIT_PAGE = 'candidates-edit';
 export const MODERN_CANDIDATE_ADD_PAGE = 'candidates-add';
