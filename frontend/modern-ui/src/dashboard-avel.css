@@ -2859,6 +2859,94 @@
   background: linear-gradient(180deg, #fbfdff 0%, #eef6fc 100%);
 }
 
+.avel-markdown-field .toastui-editor-toolbar-group {
+  margin: 0 2px;
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons {
+  width: auto;
+  min-width: 44px;
+  height: 28px;
+  border: 1px solid #c6dceb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #13455d !important;
+  font: 700 0.67rem/1 'Manrope', 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
+  text-indent: 0;
+  box-shadow: none;
+  padding: 0 7px;
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons:hover {
+  background: #eaf5fc;
+  border-color: #8db9d1;
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons:disabled {
+  color: #7f9aaa !important;
+  background: #f4f9fd;
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.active {
+  color: #ffffff !important;
+  border-color: #0d6f8d;
+  background: linear-gradient(180deg, #118fbb 0%, #0d6f8d 100%);
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons::after {
+  display: block;
+  content: '';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.bold::after {
+  content: 'Bold';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.italic::after {
+  content: 'Italic';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.strike::after {
+  content: 'Strike';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.hrline::after {
+  content: 'Rule';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.quote::after {
+  content: 'Quote';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.bullet-list::after {
+  content: 'Bullets';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.ordered-list::after {
+  content: 'Numbered';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.task-list::after {
+  content: 'Tasks';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.table::after {
+  content: 'Table';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.link::after {
+  content: 'Link';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.code::after {
+  content: 'Inline';
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.codeblock::after {
+  content: 'Code';
+}
+
 .avel-markdown-field .toastui-editor-md-tab-container,
 .avel-markdown-field .toastui-editor-default-tab-container {
   background: #f5fafe;

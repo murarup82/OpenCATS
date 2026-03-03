@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Editor } from '@toast-ui/editor';
 import type { Editor as ToastEditor } from '@toast-ui/editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
+import { formatRichTextToHTML } from '../../lib/richText';
 
 type Props = {
   name: string;
@@ -14,6 +15,8 @@ type Props = {
 };
 
 const HTML_TAG_PATTERN = /<\s*\/?\s*[a-z][^>]*>/i;
+const MARKDOWN_HINT_PATTERN =
+  /(^|\n)\s{0,3}(#{1,6}\s+|[-*+]\s+|\d+\.\s+|>\s+)|\*\*[^*\n]+\*\*|_[^_\n]+_|`[^`\n]+`/m;
 
 function normalizeValue(value: string): string {
   return String(value || '');
@@ -24,6 +27,33 @@ function joinClassNames(...classNames: Array<string | undefined>): string {
     .map((className) => String(className || '').trim())
     .filter((className) => className !== '')
     .join(' ');
+}
+
+function maybeInsertMarkdownPaste(event: ClipboardEvent): boolean {
+  const clipboard = event.clipboardData;
+  if (!clipboard) {
+    return false;
+  }
+
+  const plain = String(clipboard.getData('text/plain') || '');
+  const html = String(clipboard.getData('text/html') || '');
+  if (plain.trim() === '') {
+    return false;
+  }
+
+  const isLikelyPlainPaste = html.trim() === '' || html.trim() === plain.trim();
+  if (!isLikelyPlainPaste || !MARKDOWN_HINT_PATTERN.test(plain)) {
+    return false;
+  }
+
+  const rendered = formatRichTextToHTML(plain);
+  if (rendered.trim() === '') {
+    return false;
+  }
+
+  event.preventDefault();
+  document.execCommand('insertHTML', false, rendered);
+  return true;
 }
 
 export function MarkdownTextarea({
@@ -77,13 +107,13 @@ export function MarkdownTextarea({
       el: hostRef.current,
       height: editorHeight,
       initialEditType: 'wysiwyg',
-      previewStyle: 'vertical',
+      previewStyle: 'tab',
       usageStatistics: false,
-      hideModeSwitch: false,
+      hideModeSwitch: true,
       initialValue: '',
       placeholder,
       toolbarItems: [
-        ['heading', 'bold', 'italic', 'strike'],
+        ['bold', 'italic', 'strike'],
         ['hr', 'quote'],
         ['ul', 'ol', 'task'],
         ['table', 'link'],
@@ -111,7 +141,24 @@ export function MarkdownTextarea({
     editorRef.current = editor;
     syncValueToEditor(editor, normalizeValue(value), true);
 
+    const proseMirrorHost = hostRef.current.querySelector('.ProseMirror') as HTMLElement | null;
+    const onPaste = (rawEvent: Event) => {
+      if (!(rawEvent instanceof ClipboardEvent)) {
+        return;
+      }
+      if (syncGuardRef.current) {
+        return;
+      }
+      maybeInsertMarkdownPaste(rawEvent);
+    };
+    if (proseMirrorHost) {
+      proseMirrorHost.addEventListener('paste', onPaste);
+    }
+
     return () => {
+      if (proseMirrorHost) {
+        proseMirrorHost.removeEventListener('paste', onPaste);
+      }
       editorRef.current = null;
       editor.destroy();
     };
@@ -136,7 +183,7 @@ export function MarkdownTextarea({
     <div className={joinClassNames('avel-markdown-field', className)}>
       <div ref={hostRef} className="avel-markdown-editor-shell" aria-label={ariaLabel} />
       <textarea className="avel-markdown-hidden-input" name={name} value={value} readOnly tabIndex={-1} aria-hidden="true" />
-      <p className="avel-markdown-hint">WYSIWYG + Markdown supported. You can switch modes from the editor tabs.</p>
+      <p className="avel-markdown-hint">Rich editor enabled. Markdown pasted from plain text is auto-converted.</p>
     </div>
   );
 }
