@@ -1,25 +1,17 @@
 {
-  "generatedAt": "2026-03-03T16:54:55.550Z",
+  "generatedAt": "2026-03-03T16:56:58.460Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 222,
-    "modernNative": 210,
-    "legacyDependent": 12,
+    "modernNative": 222,
+    "legacyDependent": 0,
     "bridge": 0,
     "unresolved": 0
   },
   "bucketSummaries": [
     {
-      "bucket": "legacy-graphs-wrapper",
-      "count": 5
-    },
-    {
-      "bucket": "legacy-reports-wrapper",
-      "count": 7
-    },
-    {
       "bucket": "native-action",
-      "count": 117
+      "count": 129
     },
     {
       "bucket": "native-surface",
@@ -84,8 +76,8 @@
     {
       "module": "graphs",
       "totalActions": 5,
-      "modernNative": 0,
-      "legacyDependent": 5
+      "modernNative": 5,
+      "legacyDependent": 0
     },
     {
       "module": "home",
@@ -132,8 +124,8 @@
     {
       "module": "reports",
       "totalActions": 11,
-      "modernNative": 4,
-      "legacyDependent": 7
+      "modernNative": 11,
+      "legacyDependent": 0
     },
     {
       "module": "rss",
@@ -166,273 +158,8 @@
       "legacyDependent": 0
     }
   ],
-  "next50Targets": [
-    {
-      "order": 1,
-      "module": "graphs",
-      "action": "generic",
-      "routeKey": "graphs.generic",
-      "component": "GraphsActionPage",
-      "bucket": "legacy-graphs-wrapper",
-      "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
-    },
-    {
-      "order": 2,
-      "module": "graphs",
-      "action": "genericPie",
-      "routeKey": "graphs.genericpie",
-      "component": "GraphsActionPage",
-      "bucket": "legacy-graphs-wrapper",
-      "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
-    },
-    {
-      "order": 3,
-      "module": "graphs",
-      "action": "jobOrderReportGraph",
-      "routeKey": "graphs.joborderreportgraph",
-      "component": "GraphsActionPage",
-      "bucket": "legacy-graphs-wrapper",
-      "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
-    },
-    {
-      "order": 4,
-      "module": "graphs",
-      "action": "testGraph",
-      "routeKey": "graphs.testgraph",
-      "component": "GraphsActionPage",
-      "bucket": "legacy-graphs-wrapper",
-      "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
-    },
-    {
-      "order": 5,
-      "module": "graphs",
-      "action": "wordVerify",
-      "routeKey": "graphs.wordverify",
-      "component": "GraphsActionPage",
-      "bucket": "legacy-graphs-wrapper",
-      "guidance": "Replace legacy graph action endpoint dependency with native chart rendering."
-    },
-    {
-      "order": 6,
-      "module": "reports",
-      "action": "customizeEEOReport",
-      "routeKey": "reports.customizeeeoreport",
-      "component": "ReportsActionPage",
-      "bucket": "legacy-reports-wrapper",
-      "guidance": "Replace embedded legacy report action with native report workflow."
-    },
-    {
-      "order": 7,
-      "module": "reports",
-      "action": "customizeJobOrderReport",
-      "routeKey": "reports.customizejoborderreport",
-      "component": "ReportsActionPage",
-      "bucket": "legacy-reports-wrapper",
-      "guidance": "Replace embedded legacy report action with native report workflow."
-    },
-    {
-      "order": 8,
-      "module": "reports",
-      "action": "generateEEOReportPreview",
-      "routeKey": "reports.generateeeoreportpreview",
-      "component": "ReportsActionPage",
-      "bucket": "legacy-reports-wrapper",
-      "guidance": "Replace embedded legacy report action with native report workflow."
-    },
-    {
-      "order": 9,
-      "module": "reports",
-      "action": "generateJobOrderReportPDF",
-      "routeKey": "reports.generatejoborderreportpdf",
-      "component": "ReportsActionPage",
-      "bucket": "legacy-reports-wrapper",
-      "guidance": "Replace embedded legacy report action with native report workflow."
-    },
-    {
-      "order": 10,
-      "module": "reports",
-      "action": "showHireReport",
-      "routeKey": "reports.showhirereport",
-      "component": "ReportsActionPage",
-      "bucket": "legacy-reports-wrapper",
-      "guidance": "Replace embedded legacy report action with native report workflow."
-    },
-    {
-      "order": 11,
-      "module": "reports",
-      "action": "showPlacementReport",
-      "routeKey": "reports.showplacementreport",
-      "component": "ReportsActionPage",
-      "bucket": "legacy-reports-wrapper",
-      "guidance": "Replace embedded legacy report action with native report workflow."
-    },
-    {
-      "order": 12,
-      "module": "reports",
-      "action": "showSubmissionReport",
-      "routeKey": "reports.showsubmissionreport",
-      "component": "ReportsActionPage",
-      "bucket": "legacy-reports-wrapper",
-      "guidance": "Replace embedded legacy report action with native report workflow."
-    }
-  ],
+  "next50Targets": [],
   "rows": [
-    {
-      "module": "graphs",
-      "action": "generic",
-      "classification": "native-explicit",
-      "routeKey": "graphs.generic",
-      "resolution": "native",
-      "component": "GraphsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-graphs-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "graphs",
-      "action": "genericPie",
-      "classification": "native-explicit",
-      "routeKey": "graphs.genericpie",
-      "resolution": "native",
-      "component": "GraphsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-graphs-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "graphs",
-      "action": "jobOrderReportGraph",
-      "classification": "native-explicit",
-      "routeKey": "graphs.joborderreportgraph",
-      "resolution": "native",
-      "component": "GraphsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-graphs-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "graphs",
-      "action": "testGraph",
-      "classification": "native-explicit",
-      "routeKey": "graphs.testgraph",
-      "resolution": "native",
-      "component": "GraphsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-graphs-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "graphs",
-      "action": "wordVerify",
-      "classification": "native-explicit",
-      "routeKey": "graphs.wordverify",
-      "resolution": "native",
-      "component": "GraphsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-graphs-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "reports",
-      "action": "customizeEEOReport",
-      "classification": "native-explicit",
-      "routeKey": "reports.customizeeeoreport",
-      "resolution": "native",
-      "component": "ReportsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-reports-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "reports",
-      "action": "customizeJobOrderReport",
-      "classification": "native-explicit",
-      "routeKey": "reports.customizejoborderreport",
-      "resolution": "native",
-      "component": "ReportsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-reports-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "reports",
-      "action": "generateEEOReportPreview",
-      "classification": "native-explicit",
-      "routeKey": "reports.generateeeoreportpreview",
-      "resolution": "native",
-      "component": "ReportsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-reports-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "reports",
-      "action": "generateJobOrderReportPDF",
-      "classification": "native-explicit",
-      "routeKey": "reports.generatejoborderreportpdf",
-      "resolution": "native",
-      "component": "ReportsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-reports-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "reports",
-      "action": "showHireReport",
-      "classification": "native-explicit",
-      "routeKey": "reports.showhirereport",
-      "resolution": "native",
-      "component": "ReportsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-reports-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "reports",
-      "action": "showPlacementReport",
-      "classification": "native-explicit",
-      "routeKey": "reports.showplacementreport",
-      "resolution": "native",
-      "component": "ReportsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-reports-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
-    {
-      "module": "reports",
-      "action": "showSubmissionReport",
-      "classification": "native-explicit",
-      "routeKey": "reports.showsubmissionreport",
-      "resolution": "native",
-      "component": "ReportsActionPage",
-      "guarded": false,
-      "modernizationStatus": "legacy-dependent",
-      "modernizationBucket": "legacy-reports-wrapper",
-      "modernizationRank": 3,
-      "legacyDependent": true
-    },
     {
       "module": "attachments",
       "action": "getAttachment",
@@ -737,6 +464,71 @@
       "action": "requests",
       "classification": "native-explicit",
       "routeKey": "gdpr.requests",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "graphs",
+      "action": "generic",
+      "classification": "native-explicit",
+      "routeKey": "graphs.generic",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "graphs",
+      "action": "genericPie",
+      "classification": "native-explicit",
+      "routeKey": "graphs.genericpie",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "graphs",
+      "action": "jobOrderReportGraph",
+      "classification": "native-explicit",
+      "routeKey": "graphs.joborderreportgraph",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "graphs",
+      "action": "testGraph",
+      "classification": "native-explicit",
+      "routeKey": "graphs.testgraph",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "graphs",
+      "action": "wordVerify",
+      "classification": "native-explicit",
+      "routeKey": "graphs.wordverify",
       "resolution": "native",
       "component": "LegacyUtilityForwardActionPage",
       "guarded": false,
@@ -1064,6 +856,97 @@
       "routeKey": "login.googlestart",
       "resolution": "native",
       "component": "LoginLegacyActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "reports",
+      "action": "customizeEEOReport",
+      "classification": "native-explicit",
+      "routeKey": "reports.customizeeeoreport",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "reports",
+      "action": "customizeJobOrderReport",
+      "classification": "native-explicit",
+      "routeKey": "reports.customizejoborderreport",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "reports",
+      "action": "generateEEOReportPreview",
+      "classification": "native-explicit",
+      "routeKey": "reports.generateeeoreportpreview",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "reports",
+      "action": "generateJobOrderReportPDF",
+      "classification": "native-explicit",
+      "routeKey": "reports.generatejoborderreportpdf",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "reports",
+      "action": "showHireReport",
+      "classification": "native-explicit",
+      "routeKey": "reports.showhirereport",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "reports",
+      "action": "showPlacementReport",
+      "classification": "native-explicit",
+      "routeKey": "reports.showplacementreport",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "reports",
+      "action": "showSubmissionReport",
+      "classification": "native-explicit",
+      "routeKey": "reports.showsubmissionreport",
+      "resolution": "native",
+      "component": "LegacyUtilityForwardActionPage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-action",

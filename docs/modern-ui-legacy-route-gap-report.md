@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-03T16:53:21.656Z
+Generated: 2026-03-03T16:56:57.963Z
 
 ## Summary
 
@@ -108,11 +108,11 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | export | exportByDataGrid | native-explicit | export.exportbydatagrid | LegacyUtilityForwardActionPage |
 | gdpr | export | native-explicit | gdpr.export | LegacyUtilityForwardActionPage |
 | gdpr | requests | native-explicit | gdpr.requests | LegacyUtilityForwardActionPage |
-| graphs | generic | native-explicit | graphs.generic | GraphsActionPage |
-| graphs | genericPie | native-explicit | graphs.genericpie | GraphsActionPage |
-| graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | GraphsActionPage |
-| graphs | testGraph | native-explicit | graphs.testgraph | GraphsActionPage |
-| graphs | wordVerify | native-explicit | graphs.wordverify | GraphsActionPage |
+| graphs | generic | native-explicit | graphs.generic | LegacyUtilityForwardActionPage |
+| graphs | genericPie | native-explicit | graphs.genericpie | LegacyUtilityForwardActionPage |
+| graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | LegacyUtilityForwardActionPage |
+| graphs | testGraph | native-explicit | graphs.testgraph | LegacyUtilityForwardActionPage |
+| graphs | wordVerify | native-explicit | graphs.wordverify | LegacyUtilityForwardActionPage |
 | home | addPersonalItem | native-explicit | home.addpersonalitem | HomeMyNotesPage |
 | home | addSavedSearch | native-explicit | home.addsavedsearch | HomePage |
 | home | appendPersonalNote | native-explicit | home.appendpersonalnote | HomeMyNotesPage |
@@ -193,15 +193,15 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | logs | view | native-explicit | logs.view | LogsPage |
 | reports | customerDashboard | native-explicit | reports.customerdashboard | ReportsCustomerDashboardPage |
 | reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ReportsCustomerDashboardPage |
-| reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | ReportsActionPage |
-| reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | ReportsActionPage |
-| reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | ReportsActionPage |
-| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | ReportsActionPage |
+| reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | LegacyUtilityForwardActionPage |
+| reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | LegacyUtilityForwardActionPage |
+| reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | LegacyUtilityForwardActionPage |
+| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | LegacyUtilityForwardActionPage |
 | reports | graphView | native-explicit | reports.graphview | ReportsGraphViewPage |
 | reports | reports | native-explicit | reports.reports | ReportsLauncherPage |
-| reports | showHireReport | native-explicit | reports.showhirereport | ReportsActionPage |
-| reports | showPlacementReport | native-explicit | reports.showplacementreport | ReportsActionPage |
-| reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | ReportsActionPage |
+| reports | showHireReport | native-explicit | reports.showhirereport | LegacyUtilityForwardActionPage |
+| reports | showPlacementReport | native-explicit | reports.showplacementreport | LegacyUtilityForwardActionPage |
+| reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | LegacyUtilityForwardActionPage |
 | rss | jobOrders | native-explicit | rss.joborders | RssJobOrdersPage |
 | settings | addEmailTemplate | native-explicit | settings.addemailtemplate | LegacyUtilityForwardActionPage |
 | settings | addUser | native-explicit | settings.adduser | LegacyUtilityForwardActionPage |
