@@ -2854,6 +2854,11 @@
   overflow: hidden;
 }
 
+.avel-markdown-field .toastui-editor-md-container,
+.avel-markdown-field .toastui-editor-ww-container {
+  background: #f9fdff;
+}
+
 .avel-markdown-field .toastui-editor-defaultUI-toolbar {
   border-bottom-color: #d6e6f2;
   background: linear-gradient(180deg, #fbfdff 0%, #eef6fc 100%);
@@ -2960,8 +2965,16 @@
 }
 
 .avel-markdown-field .toastui-editor-contents {
-  font: 500 0.86rem/1.5 'Inter', 'Segoe UI', sans-serif;
-  color: #14384b;
+  font: 500 0.8rem/1.45 'Manrope', 'Segoe UI', sans-serif;
+  color: #1f4253;
+}
+
+.avel-markdown-field .CodeMirror,
+.avel-markdown-field .CodeMirror pre,
+.avel-markdown-field .CodeMirror-line,
+.avel-markdown-field .CodeMirror-lines {
+  font: 500 0.8rem/1.45 'Manrope', 'Segoe UI', sans-serif;
+  color: #1f4253;
 }
 
 .avel-markdown-hidden-input {
