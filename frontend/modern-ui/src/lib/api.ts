@@ -872,6 +872,7 @@ export async function uploadCandidateAttachment(
   }
 ): Promise<ModernMutationResponse> {
   const form = new FormData();
+  form.set('postback', 'postback');
   form.set('format', 'modern-json');
   form.set('candidateID', String(payload.candidateID || 0));
   form.set('resume', payload.isResume ? '1' : '0');
@@ -899,6 +900,7 @@ export async function uploadJobOrderAttachment(
   }
 ): Promise<ModernMutationResponse> {
   const form = new FormData();
+  form.set('postback', 'postback');
   form.set('format', 'modern-json');
   form.set('jobOrderID', String(payload.jobOrderID || 0));
   form.set('file', payload.file);
@@ -925,6 +927,7 @@ export async function uploadCompanyAttachment(
   }
 ): Promise<ModernMutationResponse> {
   const form = new FormData();
+  form.set('postback', 'postback');
   form.set('format', 'modern-json');
   form.set('companyID', String(payload.companyID || 0));
   form.set('file', payload.file);
