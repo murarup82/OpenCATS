@@ -585,6 +585,26 @@ Current status is enforced by:
     - new filter mode for `All`, `Overdue`, and `Reminder Due` to speed operational triage.
 192. Added filter-reset and live results telemetry in `home.myNotes`:
     - added `Clear Filters` command and aria-live results summary line reporting active note/to-do result counts.
+193. Persisted local KPI visualization preferences:
+    - `KpisPage` now restores/saves chart style, source-focus mode, company metric/limit, and candidate metric mode using browser-local preferences.
+194. Added company snapshot search filter on KPI page:
+    - introduced client-side company-name filtering that applies to top-company chart input and company KPI table.
+195. Added candidate metric search filter on KPI page:
+    - introduced client-side metric-label filtering for candidate metrics table.
+196. Added job order throughput search filter on KPI page:
+    - introduced client-side filtering by job order title/company for throughput table analysis.
+197. Added KPI page local-filter clear command + live row summary:
+    - added local filter clear action and aria-live count summary covering company/candidate/job-order visible rows.
+198. Added top-company limit quick presets on KPI page:
+    - introduced one-click `Top 5 / Top 8 / Top 12` controls with pressed-state semantics.
+199. Added keyboard trend navigation on KPI chart:
+    - trend points/bars now support arrow-key stepping (wrap-around) in addition to Enter/Space activation.
+200. Added explicit chart point labeling on KPI trend chart:
+    - trend points/bars now expose explicit aria labels (`Trend {label}: {value}`) for assistive clarity.
+201. Added keyboard-accessible trend navigation in customer dashboard chart:
+    - `ReportsCustomerDashboardPage` trend chart now supports focus + arrow-step navigation and Enter/Space activation in both line and bar modes.
+202. Persisted local customer dashboard chart preferences:
+    - dashboard now restores/saves trend mode, activity metric, and source sort mode in browser-local preferences.
 
 ## Next Queue (30-Slice Execution)
 

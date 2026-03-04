@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { KeyboardEvent, useEffect, useMemo, useState } from 'react';
 import { fetchReportsCustomerDashboardModernData } from '../lib/api';
 import type { ReportsCustomerDashboardModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -18,6 +18,7 @@ type ActivityMetricKey = 'submissions' | 'interviews' | 'offers' | 'hires';
 type SourceSortMode = 'hireRate' | 'hires' | 'interviews';
 type TrendPoint = { label: string; value: number };
 type DetailRow = Record<string, unknown>;
+const CUSTOMER_DASHBOARD_PREFS_KEY = 'opencats:modern:reports:customer-dashboard:prefs:v1';
 type DetailShape = {
   key: string;
   title: string;
@@ -64,9 +65,10 @@ type TrendChartProps = {
   mode: TrendChartMode;
   activeIndex: number;
   onActivate: (index: number) => void;
+  onStep: (direction: -1 | 1) => void;
 };
 
-function TrendChart({ points, mode, activeIndex, onActivate }: TrendChartProps) {
+function TrendChart({ points, mode, activeIndex, onActivate, onStep }: TrendChartProps) {
   if (points.length === 0) {
     return <div className="modern-state">No trend data available.</div>;
   }
@@ -97,6 +99,22 @@ function TrendChart({ points, mode, activeIndex, onActivate }: TrendChartProps) 
 
   const segmentWidth = plotWidth / Math.max(points.length, 1);
   const barWidth = points.length <= 1 ? Math.min(80, plotWidth * 0.6) : Math.max(12, segmentWidth * 0.66);
+  const handlePointKeyDown = (event: KeyboardEvent<SVGElement>, index: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onActivate(index);
+      return;
+    }
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      onStep(-1);
+      return;
+    }
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      onStep(1);
+    }
+  };
 
   return (
     <div className="avel-trend-chart">
@@ -115,6 +133,8 @@ function TrendChart({ points, mode, activeIndex, onActivate }: TrendChartProps) 
                 tabIndex={0}
                 onMouseEnter={() => onActivate(index)}
                 onFocus={() => onActivate(index)}
+                onKeyDown={(event) => handlePointKeyDown(event, index)}
+                aria-label={`Trend ${points[index].label}: ${points[index].value}`}
               />
             ))}
           </>
@@ -133,7 +153,11 @@ function TrendChart({ points, mode, activeIndex, onActivate }: TrendChartProps) 
                 width={barWidth}
                 height={barHeight}
                 rx={4}
+                tabIndex={0}
                 onMouseEnter={() => onActivate(index)}
+                onFocus={() => onActivate(index)}
+                onKeyDown={(event) => handlePointKeyDown(event, index)}
+                aria-label={`Trend ${point.label}: ${point.value}`}
               />
             );
           })
@@ -148,13 +172,52 @@ function detailLink(moduleName: string, idKey: string, idValue: unknown): string
   return id > 0 ? `?m=${moduleName}&a=show&${idKey}=${id}` : '';
 }
 
+type DashboardPrefs = {
+  trendMode: TrendChartMode;
+  activityMetric: ActivityMetricKey;
+  sourceSort: SourceSortMode;
+};
+
+function readDashboardPrefs(): Partial<DashboardPrefs> {
+  try {
+    const raw = window.localStorage.getItem(CUSTOMER_DASHBOARD_PREFS_KEY);
+    if (!raw) {
+      return {};
+    }
+    const parsed = JSON.parse(raw) as Partial<DashboardPrefs>;
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeDashboardPrefs(prefs: DashboardPrefs): void {
+  try {
+    window.localStorage.setItem(CUSTOMER_DASHBOARD_PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    // Best effort only.
+  }
+}
+
 export function ReportsCustomerDashboardPage({ bootstrap }: Props) {
   const [data, setData] = useState<ReportsCustomerDashboardModernDataResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [trendMode, setTrendMode] = useState<TrendChartMode>('line');
-  const [activityMetric, setActivityMetric] = useState<ActivityMetricKey>('submissions');
-  const [sourceSort, setSourceSort] = useState<SourceSortMode>('hireRate');
+  const [trendMode, setTrendMode] = useState<TrendChartMode>(() => {
+    const prefs = readDashboardPrefs();
+    return prefs.trendMode === 'bars' ? 'bars' : 'line';
+  });
+  const [activityMetric, setActivityMetric] = useState<ActivityMetricKey>(() => {
+    const prefs = readDashboardPrefs();
+    if (prefs.activityMetric === 'interviews' || prefs.activityMetric === 'offers' || prefs.activityMetric === 'hires') {
+      return prefs.activityMetric;
+    }
+    return 'submissions';
+  });
+  const [sourceSort, setSourceSort] = useState<SourceSortMode>(() => {
+    const prefs = readDashboardPrefs();
+    return prefs.sourceSort === 'hires' || prefs.sourceSort === 'interviews' ? prefs.sourceSort : 'hireRate';
+  });
   const [activeTrendIndex, setActiveTrendIndex] = useState(0);
   const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
 
@@ -227,6 +290,30 @@ export function ReportsCustomerDashboardPage({ bootstrap }: Props) {
   useEffect(() => {
     setActiveTrendIndex((current) => (trendPoints.length === 0 ? 0 : Math.max(0, Math.min(current, trendPoints.length - 1))));
   }, [trendPoints.length]);
+
+  useEffect(() => {
+    writeDashboardPrefs({
+      trendMode,
+      activityMetric,
+      sourceSort
+    });
+  }, [trendMode, activityMetric, sourceSort]);
+
+  const stepTrendPoint = (direction: -1 | 1) => {
+    if (trendPoints.length === 0) {
+      return;
+    }
+    setActiveTrendIndex((current) => {
+      const next = current + direction;
+      if (next < 0) {
+        return trendPoints.length - 1;
+      }
+      if (next >= trendPoints.length) {
+        return 0;
+      }
+      return next;
+    });
+  };
 
   const sourceRows = useMemo(() => {
     if (!data) {
@@ -398,7 +485,13 @@ export function ReportsCustomerDashboardPage({ bootstrap }: Props) {
                   <strong>{selectedPoint ? `${selectedPoint.label}: ${selectedPoint.value}` : '--'}</strong>
                 </div>
               </div>
-              <TrendChart points={trendPoints} mode={trendMode} activeIndex={activeTrendIndex} onActivate={setActiveTrendIndex} />
+              <TrendChart
+                points={trendPoints}
+                mode={trendMode}
+                activeIndex={activeTrendIndex}
+                onActivate={setActiveTrendIndex}
+                onStep={stepTrendPoint}
+              />
             </article>
 
             <article className="avel-list-panel avel-chart-card">

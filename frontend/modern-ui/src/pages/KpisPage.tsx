@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { KeyboardEvent, useEffect, useMemo, useState } from 'react';
 import { fetchKpisListModernData } from '../lib/api';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -16,6 +16,7 @@ type SourceFocusMode = 'all' | 'internal' | 'partner';
 type CompanyMetricKey = 'newPositions' | 'totalOpenPositions' | 'filledPositions' | 'expectedFilled';
 type CandidateMetricMode = 'thisWeek' | 'lastWeek' | 'delta';
 type TrendPoint = { label: string; value: number };
+const KPI_PREFS_STORAGE_KEY = 'opencats:modern:kpis:prefs:v1';
 
 function toNumber(value: unknown): number {
   const cast = Number(value);
@@ -33,14 +34,48 @@ function toPercent(part: number, total: number): string {
   return `${Math.round((part / total) * 100)}%`;
 }
 
+function normalizeSearchValue(value: string): string {
+  return String(value || '').trim().toLowerCase();
+}
+
+type KpiPrefs = {
+  trendChartMode: TrendChartMode;
+  sourceFocusMode: SourceFocusMode;
+  companyMetric: CompanyMetricKey;
+  companyLimit: number;
+  candidateMetricMode: CandidateMetricMode;
+};
+
+function readKpiPrefs(): Partial<KpiPrefs> {
+  try {
+    const raw = window.localStorage.getItem(KPI_PREFS_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+    const parsed = JSON.parse(raw) as Partial<KpiPrefs>;
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeKpiPrefs(prefs: KpiPrefs): void {
+  try {
+    window.localStorage.setItem(KPI_PREFS_STORAGE_KEY, JSON.stringify(prefs));
+  } catch {
+    // Best effort only.
+  }
+}
+
 type TrendChartProps = {
   points: TrendPoint[];
   mode: TrendChartMode;
   activeIndex: number;
   onActivate: (index: number) => void;
+  onStep: (direction: -1 | 1) => void;
 };
 
-function TrendChart({ points, mode, activeIndex, onActivate }: TrendChartProps) {
+function TrendChart({ points, mode, activeIndex, onActivate, onStep }: TrendChartProps) {
   if (points.length === 0) {
     return <div className="modern-state">No trend data available for the selected range.</div>;
   }
@@ -77,6 +112,22 @@ function TrendChart({ points, mode, activeIndex, onActivate }: TrendChartProps) 
 
   const segmentWidth = plotWidth / Math.max(points.length, 1);
   const barWidth = points.length <= 1 ? Math.min(80, plotWidth * 0.6) : Math.max(12, segmentWidth * 0.66);
+  const handlePointKeyDown = (event: KeyboardEvent<SVGElement>, index: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onActivate(index);
+      return;
+    }
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      onStep(-1);
+      return;
+    }
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      onStep(1);
+    }
+  };
 
   return (
     <div className="avel-trend-chart">
@@ -108,12 +159,8 @@ function TrendChart({ points, mode, activeIndex, onActivate }: TrendChartProps) 
                 tabIndex={0}
                 onMouseEnter={() => onActivate(index)}
                 onFocus={() => onActivate(index)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    onActivate(index);
-                  }
-                }}
+                aria-label={`Trend ${points[index].label}: ${points[index].value}`}
+                onKeyDown={(event) => handlePointKeyDown(event, index)}
               >
                 <title>{`${points[index].label}: ${points[index].value}`}</title>
               </circle>
@@ -139,12 +186,8 @@ function TrendChart({ points, mode, activeIndex, onActivate }: TrendChartProps) 
                   tabIndex={0}
                   onMouseEnter={() => onActivate(index)}
                   onFocus={() => onActivate(index)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      onActivate(index);
-                    }
-                  }}
+                  aria-label={`Trend ${point.label}: ${point.value}`}
+                  onKeyDown={(event) => handlePointKeyDown(event, index)}
                 >
                   <title>{`${point.label}: ${point.value}`}</title>
                 </rect>
@@ -178,12 +221,36 @@ export function KpisPage({ bootstrap }: Props) {
   const [data, setData] = useState<KpisListModernDataResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [trendChartMode, setTrendChartMode] = useState<TrendChartMode>('line');
-  const [sourceFocusMode, setSourceFocusMode] = useState<SourceFocusMode>('all');
-  const [companyMetric, setCompanyMetric] = useState<CompanyMetricKey>('totalOpenPositions');
-  const [companyLimit, setCompanyLimit] = useState<number>(8);
-  const [candidateMetricMode, setCandidateMetricMode] = useState<CandidateMetricMode>('thisWeek');
+  const [trendChartMode, setTrendChartMode] = useState<TrendChartMode>(() => {
+    const prefs = readKpiPrefs();
+    return prefs.trendChartMode === 'bars' ? 'bars' : 'line';
+  });
+  const [sourceFocusMode, setSourceFocusMode] = useState<SourceFocusMode>(() => {
+    const prefs = readKpiPrefs();
+    return prefs.sourceFocusMode === 'internal' || prefs.sourceFocusMode === 'partner' ? prefs.sourceFocusMode : 'all';
+  });
+  const [companyMetric, setCompanyMetric] = useState<CompanyMetricKey>(() => {
+    const prefs = readKpiPrefs();
+    return prefs.companyMetric === 'newPositions' ||
+      prefs.companyMetric === 'filledPositions' ||
+      prefs.companyMetric === 'expectedFilled'
+      ? prefs.companyMetric
+      : 'totalOpenPositions';
+  });
+  const [companyLimit, setCompanyLimit] = useState<number>(() => {
+    const prefs = readKpiPrefs();
+    return Math.max(3, Math.min(20, toNumber(prefs.companyLimit || 8)));
+  });
+  const [candidateMetricMode, setCandidateMetricMode] = useState<CandidateMetricMode>(() => {
+    const prefs = readKpiPrefs();
+    return prefs.candidateMetricMode === 'lastWeek' || prefs.candidateMetricMode === 'delta'
+      ? prefs.candidateMetricMode
+      : 'thisWeek';
+  });
   const [activeTrendIndex, setActiveTrendIndex] = useState<number>(0);
+  const [companySearch, setCompanySearch] = useState<string>('');
+  const [candidateMetricSearch, setCandidateMetricSearch] = useState<string>('');
+  const [jobOrderSearch, setJobOrderSearch] = useState<string>('');
   const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
 
   useEffect(() => {
@@ -238,6 +305,32 @@ export function KpisPage({ bootstrap }: Props) {
     });
   }, [trendPoints.length]);
 
+  useEffect(() => {
+    writeKpiPrefs({
+      trendChartMode,
+      sourceFocusMode,
+      companyMetric,
+      companyLimit,
+      candidateMetricMode
+    });
+  }, [trendChartMode, sourceFocusMode, companyMetric, companyLimit, candidateMetricMode]);
+
+  const stepTrendPoint = (direction: -1 | 1) => {
+    if (trendPoints.length === 0) {
+      return;
+    }
+    setActiveTrendIndex((current) => {
+      const next = current + direction;
+      if (next < 0) {
+        return trendPoints.length - 1;
+      }
+      if (next >= trendPoints.length) {
+        return 0;
+      }
+      return next;
+    });
+  };
+
   const updateFilter = (key: string, value: string | boolean) => {
     const next = new URLSearchParams(serverQueryString);
     next.set('m', 'kpis');
@@ -277,12 +370,21 @@ export function KpisPage({ bootstrap }: Props) {
     filledPositions: 'Filled Positions',
     expectedFilled: 'Expected Filled'
   };
+  const companySearchNeedle = normalizeSearchValue(companySearch);
+  const candidateMetricSearchNeedle = normalizeSearchValue(candidateMetricSearch);
+  const jobOrderSearchNeedle = normalizeSearchValue(jobOrderSearch);
 
   const companyRows = useMemo(() => {
     if (!data) {
       return [];
     }
     return [...data.rows.kpiRows]
+      .filter((row) => {
+        if (companySearchNeedle === '') {
+          return true;
+        }
+        return String(row.companyName || '').toLowerCase().includes(companySearchNeedle);
+      })
       .map((row) => ({
         companyID: row.companyID,
         companyName: row.companyName,
@@ -290,7 +392,7 @@ export function KpisPage({ bootstrap }: Props) {
       }))
       .sort((left, right) => right.value - left.value)
       .slice(0, Math.max(3, Math.min(20, companyLimit)));
-  }, [data, companyMetric, companyLimit]);
+  }, [data, companyMetric, companyLimit, companySearchNeedle]);
 
   const candidateMetricRows = useMemo(() => {
     if (!data) {
@@ -311,6 +413,34 @@ export function KpisPage({ bootstrap }: Props) {
       };
     });
   }, [data, candidateMetricMode]);
+
+  const companySnapshotRows = useMemo(
+    () =>
+      (data?.rows.kpiRows || []).filter((row) =>
+        companySearchNeedle === '' ? true : String(row.companyName || '').toLowerCase().includes(companySearchNeedle)
+      ),
+    [data, companySearchNeedle]
+  );
+
+  const candidateTableRows = useMemo(
+    () =>
+      (data?.rows.candidateMetricRows || []).filter((row) =>
+        candidateMetricSearchNeedle === '' ? true : String(row.label || '').toLowerCase().includes(candidateMetricSearchNeedle)
+      ),
+    [data, candidateMetricSearchNeedle]
+  );
+
+  const jobOrderRows = useMemo(
+    () =>
+      (data?.rows.jobOrderKpiRows || []).filter((row) => {
+        if (jobOrderSearchNeedle === '') {
+          return true;
+        }
+        const haystack = `${String(row.title || '')} ${String(row.companyName || '')}`.toLowerCase();
+        return haystack.includes(jobOrderSearchNeedle);
+      }),
+    [data, jobOrderSearchNeedle]
+  );
 
   if (loading && !data) {
     return <div className="modern-state">Loading KPIs...</div>;
@@ -342,6 +472,7 @@ export function KpisPage({ bootstrap }: Props) {
   };
   const companyMax = Math.max(1, ...companyRows.map((row) => row.value));
   const candidateMetricMax = Math.max(1, ...candidateMetricRows.map((row) => Math.abs(row.value)));
+  const kpiResultsSummary = `Rows visible: ${companySnapshotRows.length} companies, ${candidateTableRows.length} candidate metrics, ${jobOrderRows.length} job orders.`;
 
   return (
     <div className="avel-dashboard-page">
@@ -458,6 +589,52 @@ export function KpisPage({ bootstrap }: Props) {
                 Reset Filters
               </button>
             </div>
+            <p className="avel-kpi-results-summary" role="status" aria-live="polite">
+              {kpiResultsSummary}
+            </p>
+            <div className="avel-kpi-filter-grid">
+              <label className="modern-command-field">
+                <span className="modern-command-label">Search Companies</span>
+                <input
+                  type="search"
+                  className="avel-form-control"
+                  value={companySearch}
+                  onChange={(event) => setCompanySearch(event.target.value)}
+                  placeholder="Filter by company name"
+                />
+              </label>
+              <label className="modern-command-field">
+                <span className="modern-command-label">Search Candidate Metrics</span>
+                <input
+                  type="search"
+                  className="avel-form-control"
+                  value={candidateMetricSearch}
+                  onChange={(event) => setCandidateMetricSearch(event.target.value)}
+                  placeholder="Filter by metric label"
+                />
+              </label>
+              <label className="modern-command-field">
+                <span className="modern-command-label">Search Job Orders</span>
+                <input
+                  type="search"
+                  className="avel-form-control"
+                  value={jobOrderSearch}
+                  onChange={(event) => setJobOrderSearch(event.target.value)}
+                  placeholder="Filter by title or company"
+                />
+              </label>
+              <button
+                type="button"
+                className="modern-btn modern-btn--secondary modern-btn--mini"
+                onClick={() => {
+                  setCompanySearch('');
+                  setCandidateMetricSearch('');
+                  setJobOrderSearch('');
+                }}
+              >
+                Clear Local Filters
+              </button>
+            </div>
 
             <div className="avel-kpi-grid avel-kpi-grid--spaced">
               {metricCards.map((metric) => (
@@ -499,7 +676,13 @@ export function KpisPage({ bootstrap }: Props) {
                   <strong>{selectedTrendPoint ? `${selectedTrendPoint.label}: ${selectedTrendPoint.value}` : '--'}</strong>
                 </div>
               </div>
-              <TrendChart points={trendPoints} mode={trendChartMode} activeIndex={Math.max(0, safeTrendIndex)} onActivate={setActiveTrendIndex} />
+              <TrendChart
+                points={trendPoints}
+                mode={trendChartMode}
+                activeIndex={Math.max(0, safeTrendIndex)}
+                onActivate={setActiveTrendIndex}
+                onStep={stepTrendPoint}
+              />
             </article>
 
             <article className="avel-list-panel avel-chart-card">
@@ -571,6 +754,19 @@ export function KpisPage({ bootstrap }: Props) {
                     onChange={(event) => setCompanyLimit(toNumber(event.target.value))}
                   />
                 </label>
+                <div className="avel-kpi-limit-presets" role="group" aria-label="Top companies preset limit">
+                  {[5, 8, 12].map((preset) => (
+                    <button
+                      key={`company-limit-${preset}`}
+                      type="button"
+                      className={`modern-btn modern-btn--mini ${companyLimit === preset ? 'modern-btn--emphasis' : 'modern-btn--secondary'}`}
+                      aria-pressed={companyLimit === preset}
+                      onClick={() => setCompanyLimit(preset)}
+                    >
+                      Top {preset}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="avel-company-bars">
                 {companyRows.length === 0 ? (
@@ -640,7 +836,7 @@ export function KpisPage({ bootstrap }: Props) {
               <div className="avel-list-panel__header">
                 <h3 className="avel-list-panel__title">Company KPI Snapshot</h3>
               </div>
-              {data.rows.kpiRows.length === 0 ? (
+              {companySnapshotRows.length === 0 ? (
                 <div className="modern-state">No KPI rows.</div>
               ) : (
                 <table className="modern-table">
@@ -653,7 +849,7 @@ export function KpisPage({ bootstrap }: Props) {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.rows.kpiRows.slice(0, 20).map((row) => (
+                    {companySnapshotRows.slice(0, 20).map((row) => (
                       <tr key={`company-kpi-${row.companyID}`}>
                         <td>{row.companyName}</td>
                         <td>{row.totalOpenPositions}</td>
@@ -680,7 +876,7 @@ export function KpisPage({ bootstrap }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.rows.candidateMetricRows.map((row) => (
+                  {candidateTableRows.map((row) => (
                     <tr key={`metric-${row.label}`}>
                       <td>{row.label}</td>
                       <td>{row.thisWeek}</td>
@@ -697,7 +893,7 @@ export function KpisPage({ bootstrap }: Props) {
             <div className="avel-list-panel__header">
               <h3 className="avel-list-panel__title">Job Order Throughput</h3>
             </div>
-            {data.rows.jobOrderKpiRows.length === 0 ? (
+            {jobOrderRows.length === 0 ? (
               <div className="modern-state">No job order KPI rows.</div>
             ) : (
               <table className="modern-table">
@@ -712,7 +908,7 @@ export function KpisPage({ bootstrap }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.rows.jobOrderKpiRows.slice(0, 25).map((row) => (
+                  {jobOrderRows.slice(0, 25).map((row) => (
                     <tr key={`job-kpi-${row.jobOrderID}`}>
                       <td>{row.title}</td>
                       <td>{row.companyName}</td>

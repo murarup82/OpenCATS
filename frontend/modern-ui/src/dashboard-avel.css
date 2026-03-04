@@ -339,6 +339,12 @@
   align-items: end;
 }
 
+.avel-kpi-results-summary {
+  margin: 8px 0 0;
+  color: #4d6d7f;
+  font: 600 0.73rem/1.35 'Manrope', 'Segoe UI', sans-serif;
+}
+
 .avel-kpi-date {
   width: 100%;
   min-height: 40px;
@@ -383,6 +389,13 @@
   grid-template-columns: repeat(4, minmax(120px, 1fr));
   gap: 8px;
   align-items: end;
+}
+
+.avel-kpi-limit-presets {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
 }
 
 .avel-chart-kpi {
