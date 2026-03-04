@@ -259,7 +259,12 @@ class CandidatesUI extends UserInterface
 
                 include_once(LEGACY_ROOT . '/lib/DocumentToText.php');
 
-                if ($this->isPostBack()) {
+                $isModernJSONUploadRequest = (
+                    strtoupper($this->getTrimmedInput('REQUEST_METHOD', $_SERVER)) === 'POST' &&
+                    strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json'
+                );
+
+                if ($this->isPostBack() || $isModernJSONUploadRequest) {
                     $this->onCreateAttachment();
                 } else {
                     $this->createAttachment();
@@ -5068,6 +5073,34 @@ class CandidatesUI extends UserInterface
     private function onCreateAttachment()
     {
         $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $contentLength = 0;
+        if (isset($_SERVER['CONTENT_LENGTH']))
+        {
+            $contentLength = (int) $_SERVER['CONTENT_LENGTH'];
+        }
+
+        if (
+            $isModernJSON &&
+            strtoupper($this->getTrimmedInput('REQUEST_METHOD', $_SERVER)) === 'POST' &&
+            empty($_POST) &&
+            empty($_FILES) &&
+            $contentLength > 0
+        )
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 413 Payload Too Large');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'payloadDropped',
+                'message' => 'Attachment upload payload was dropped before PHP parsed form fields. Check upload_max_filesize and post_max_size.'
+            ));
+            return;
+        }
+
         /* Bail out if we don't have a valid candidate ID. */
         if (!$this->isRequiredIDValid('candidateID', $_POST)) {
             if ($isModernJSON)

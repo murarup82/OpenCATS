@@ -533,6 +533,14 @@ Current status is enforced by:
     - added explicit guarded query requirements for `candidates.considerForJobSearch`, `joborders.considerCandidateSearch`, and lists add-to-list modal routes (`quickActionAddToListModal`, `addToListFromDatagridModal`)
     - added duplicate-workflow guard requirements for candidate utility routes requiring pair IDs (`candidates.addDuplicates`, `candidates.merge`, `candidates.removeDuplicity`)
     - tightened fallback behavior for malformed utility action URLs by forcing guarded module defaults when required IDs are missing.
+175. Hardened modern attachment upload mutation reliability for oversized multipart payloads:
+    - updated `joborders.createAttachment`, `candidates.createAttachment`, and `companies.createAttachment` routing to invoke mutation handlers for modern JSON POST requests even when legacy `postback` is absent
+    - added explicit `payloadDropped` JSON responses (`HTTP 413`) when PHP receives non-empty payload length but empty `$_POST`/`$_FILES` (common `post_max_size` / `upload_max_filesize` failure mode)
+    - removed silent HTML-modal fallthrough for modern upload callers, so frontend receives deterministic machine-readable failure diagnostics.
+176. Stabilized rich-text authoring UX for modern forms:
+    - simplified Toast UI toolbar theming to preserve native icon rendering and eliminate blank/white toolbar-button regressions
+    - enabled heading controls in the editor toolbar and removed brittle pseudo-label overrides
+    - improved HTML-to-markdown paste conversion to preserve inline bold/italic styling from span-level style attributes and normalize broader bullet symbol variants.
 
 ## Next Queue (30-Slice Execution)
 

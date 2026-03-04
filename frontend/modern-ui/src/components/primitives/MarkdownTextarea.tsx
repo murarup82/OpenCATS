@@ -18,6 +18,9 @@ const MARKDOWN_HINT_PATTERN =
   /(^|\n)\s{0,3}(#{1,6}\s+|[-*+]\s+|\d+\.\s+|>\s+)|\*\*[^*\n]+\*\*|_[^_\n]+_|`[^`\n]+`/m;
 const BULLET_MARKER_PATTERN = /^\s*[•·▪◦]\s+/;
 const ORDERED_PAREN_PATTERN = /^\s*(\d+)\)\s+/;
+const EXTENDED_BULLET_MARKER_PATTERN = /^\s*[\u2022\u00b7\u25aa\u25e6\u25cf\u25cb\u2023]\s+/;
+const BOLD_STYLE_PATTERN = /font-weight\s*:\s*(bold|[6-9]00)/i;
+const ITALIC_STYLE_PATTERN = /font-style\s*:\s*italic/i;
 
 function normalizeValue(value: string): string {
   return String(value || '');
@@ -36,8 +39,8 @@ function normalizePlainTextPaste(input: string): string {
     .replace(/\r\n?/g, '\n')
     .split('\n')
     .map((line) => {
-      if (BULLET_MARKER_PATTERN.test(line)) {
-        return line.replace(BULLET_MARKER_PATTERN, '- ');
+      if (BULLET_MARKER_PATTERN.test(line) || EXTENDED_BULLET_MARKER_PATTERN.test(line)) {
+        return line.replace(BULLET_MARKER_PATTERN, '- ').replace(EXTENDED_BULLET_MARKER_PATTERN, '- ');
       }
       if (ORDERED_PAREN_PATTERN.test(line)) {
         return line.replace(ORDERED_PAREN_PATTERN, '$1. ');
@@ -50,8 +53,22 @@ function normalizePlainTextPaste(input: string): string {
 function collapseMarkdownSpacing(input: string): string {
   return String(input || '')
     .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .replace(/\n{3,}/g, '\n\n');
+}
+
+function wrapWithMarkersPreservingWhitespace(input: string, marker: string): string {
+  const value = String(input || '');
+  const leadingMatch = value.match(/^\s*/);
+  const trailingMatch = value.match(/\s*$/);
+  const leading = leadingMatch ? leadingMatch[0] : '';
+  const trailing = trailingMatch ? trailingMatch[0] : '';
+  const core = value.slice(leading.length, Math.max(leading.length, value.length - trailing.length));
+
+  if (core === '') {
+    return value;
+  }
+
+  return `${leading}${marker}${core}${marker}${trailing}`;
 }
 
 function convertHTMLNodeToMarkdown(node: Node): string {
@@ -137,7 +154,18 @@ function convertHTMLNodeToMarkdown(node: Node): string {
     return `${content}\n\n`;
   }
 
-  return childrenText;
+  const inlineStyle = String(element.getAttribute('style') || '');
+  let inlineText = childrenText;
+
+  if (BOLD_STYLE_PATTERN.test(inlineStyle) && tagName !== 'strong' && tagName !== 'b') {
+    inlineText = wrapWithMarkersPreservingWhitespace(inlineText, '**');
+  }
+
+  if (ITALIC_STYLE_PATTERN.test(inlineStyle) && tagName !== 'em' && tagName !== 'i') {
+    inlineText = wrapWithMarkersPreservingWhitespace(inlineText, '_');
+  }
+
+  return inlineText;
 }
 
 function convertHTMLToMarkdown(input: string): string {
@@ -248,8 +276,8 @@ export function MarkdownTextarea({
       initialValue: '',
       placeholder,
       toolbarItems: [
-        ['bold', 'italic', 'strike'],
-        ['hr', 'quote'],
+        ['heading', 'bold', 'italic', 'strike'],
+        ['quote'],
         ['ul', 'ol', 'task'],
         ['table', 'link'],
         ['code', 'codeblock']

@@ -1,13 +1,13 @@
 # Modern UI Route Coverage Matrix
 
-Generated: 2026-03-03T13:49:18.100Z
+Generated: 2026-03-04T03:59:41.453Z
 
 ## Summary
 
-- Total route mappings: **51**
-- Native mappings: **50**
+- Total route mappings: **52**
+- Native mappings: **51**
 - Bridge mappings: **1**
-- Native coverage (mapping-level): **98.0%**
+- Native coverage (mapping-level): **98.1%**
 
 ## Module Summary
 
@@ -23,6 +23,7 @@ Generated: 2026-03-03T13:49:18.100Z
 - `joborders`: native=6, bridge=0
 - `kpis`: native=2, bridge=0
 - `lists`: native=4, bridge=0
+- `login`: native=1, bridge=0
 - `logs`: native=3, bridge=0
 - `queue`: native=1, bridge=0
 - `reports`: native=4, bridge=0
@@ -74,6 +75,7 @@ Generated: 2026-03-03T13:49:18.100Z
 | `lists.listbyview` | `ListsManagePage` | native | - |
 | `lists.show` | `ListsDetailPage` | native | savedListID |
 | `lists.showlist` | `ListsDetailPage` | native | savedListID |
+| `login.(default)` | `LoginPage` | native | - |
 | `logs.(default)` | `LogsPage` | native | - |
 | `logs.*` | `LogsPage` | native | - |
 | `logs.view` | `LogsPage` | native | - |

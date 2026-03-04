@@ -156,6 +156,12 @@ function inferMutationFailureHint(preview: string): string {
   ) {
     return 'Server-side database error occurred while processing upload.';
   }
+  if (text.includes('invalid start date')) {
+    return 'Server handled this request as a job order form submit instead of attachment JSON. Check request URL and missing POST form fields.';
+  }
+  if (text.includes('required fields are missing')) {
+    return 'Server rejected required form fields. Verify this call is hitting the intended modern-json mutation endpoint.';
+  }
   if (text.includes('<!doctype') || text.includes('<html') || text.includes('commonerror')) {
     return 'Server returned an HTML error page instead of JSON.';
   }
@@ -182,6 +188,7 @@ async function parseModernMutationResponse(response: Response, actionLabel: stri
     console.error('[modern-ui] mutation-response-parse-failed', {
       actionLabel,
       status: response.status,
+      url: response.url || '',
       contentType: response.headers.get('content-type') || '',
       preview
     });
