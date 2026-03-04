@@ -541,6 +541,10 @@ Current status is enforced by:
     - simplified Toast UI toolbar theming to preserve native icon rendering and eliminate blank/white toolbar-button regressions
     - enabled heading controls in the editor toolbar and removed brittle pseudo-label overrides
     - improved HTML-to-markdown paste conversion to preserve inline bold/italic styling from span-level style attributes and normalize broader bullet symbol variants.
+177. Expanded rich-text display fidelity for legacy/plain markdown-like content:
+    - upgraded shared formatter (`frontend/modern-ui/src/lib/richText.ts`) to recognize markdown links and render secure external anchors (`target="_blank"`, `rel="noreferrer noopener"`)
+    - expanded unordered list parsing to include common unicode bullet characters (`•`, `·`, `▪`, `◦`, `●`, `○`, `‣`) and ordered list parsing for both `1.` and `1)` markers
+    - added conservative plain-heading detection for short title-like lines so pasted job profile sections (for example `Main Responsibilities`) render with clearer structure.
 
 ## Next Queue (30-Slice Execution)
 

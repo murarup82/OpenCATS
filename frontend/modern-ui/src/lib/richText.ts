@@ -38,9 +38,14 @@ function escapeHTML(value: string): string {
 function renderInlineMarkdown(rawLine: string): string {
   let rendered = escapeHTML(rawLine);
 
+  rendered = rendered.replace(
+    /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noreferrer noopener">$1</a>'
+  );
   rendered = rendered.replace(/`([^`\n]+)`/g, '<code>$1</code>');
   rendered = rendered.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
   rendered = rendered.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
+  rendered = rendered.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
   rendered = rendered.replace(/_([^_\n]+)_/g, '<em>$1</em>');
 
   return rendered;
@@ -56,21 +61,23 @@ function toMarkdownHTML(input: string): string {
   const renderedBlocks = blocks.map((block) => {
     const lines = block.split('\n');
     const contentLines = lines.filter((line) => line.trim() !== '');
+    const bulletLinePattern = /^\s*([-*+]|[•·▪◦●○‣])\s+/;
+    const orderedLinePattern = /^\s*(\d+)[\.\)]\s+/;
     const isBulletList =
-      contentLines.length > 0 && contentLines.every((line) => /^\s*[-*+]\s+/.test(line));
+      contentLines.length > 0 && contentLines.every((line) => bulletLinePattern.test(line));
     if (isBulletList) {
       const items = contentLines
-        .map((line) => line.replace(/^\s*[-*+]\s+/, ''))
+        .map((line) => line.replace(bulletLinePattern, ''))
         .map((line) => `<li>${renderInlineMarkdown(line)}</li>`)
         .join('');
       return `<ul>${items}</ul>`;
     }
 
     const isNumberedList =
-      contentLines.length > 0 && contentLines.every((line) => /^\s*\d+\.\s+/.test(line));
+      contentLines.length > 0 && contentLines.every((line) => orderedLinePattern.test(line));
     if (isNumberedList) {
       const items = contentLines
-        .map((line) => line.replace(/^\s*\d+\.\s+/, ''))
+        .map((line) => line.replace(orderedLinePattern, ''))
         .map((line) => `<li>${renderInlineMarkdown(line)}</li>`)
         .join('');
       return `<ol>${items}</ol>`;
@@ -81,6 +88,17 @@ function toMarkdownHTML(input: string): string {
       if (headingMatch) {
         const level = Math.min(6, Math.max(1, headingMatch[1].length));
         return `<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`;
+      }
+
+      const plainHeading = contentLines[0].trim();
+      const looksLikePlainHeading =
+        plainHeading !== '' &&
+        plainHeading.length <= 64 &&
+        plainHeading.split(/\s+/).length <= 8 &&
+        /^[A-Z][A-Za-z0-9/&(),+\- ]+$/.test(plainHeading) &&
+        !/[.!?]/.test(plainHeading);
+      if (looksLikePlainHeading) {
+        return `<h4>${renderInlineMarkdown(plainHeading)}</h4>`;
       }
     }
 
