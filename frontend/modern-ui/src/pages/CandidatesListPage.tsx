@@ -415,9 +415,9 @@ export function CandidatesListPage({ bootstrap }: Props) {
           <section className="avel-candidate-hero" aria-label="Candidates overview">
             <div className="avel-candidate-hero__intro">
               <p className="avel-candidate-hero__eyebrow">Candidate Intelligence</p>
-              <h2 className="avel-candidate-hero__title">Move from search to action without friction</h2>
+              <h2 className="avel-candidate-hero__title">Move from search to action faster</h2>
               <p className="avel-candidate-hero__subtitle">
-                Filter quickly, inspect meaningful candidate signals, and trigger next-step actions directly from each profile card.
+                Filter quickly, inspect key signals, and trigger next steps directly from each profile card.
               </p>
             </div>
             <div className="avel-candidate-hero__stats">
@@ -467,6 +467,13 @@ export function CandidatesListPage({ bootstrap }: Props) {
               </form>
 
               <SelectMenu
+                label="Source"
+                value={filters.sourceFilter}
+                options={sourceOptions}
+                onChange={(value) => navigateWithFilters({ sourceFilter: value, page: 1 })}
+              />
+
+              <SelectMenu
                 label="Rows"
                 value={String(data.meta.entriesPerPage)}
                 options={rowsPerPageOptions}
@@ -499,53 +506,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
             </div>
 
             <div className="avel-candidate-toolbar__filters">
-              <SelectMenu
-                label="Source"
-                value={filters.sourceFilter}
-                options={sourceOptions}
-                onChange={(value) => navigateWithFilters({ sourceFilter: value, page: 1 })}
-              />
-
-              <label className="modern-command-toggle">
-                <input
-                  type="checkbox"
-                  checked={filters.onlyMyCandidates}
-                  onChange={(event) => navigateWithFilters({ onlyMyCandidates: event.target.checked, page: 1 })}
-                />
-                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>Only My Candidates</span>
-              </label>
-
-              <label className="modern-command-toggle">
-                <input
-                  type="checkbox"
-                  checked={filters.onlyHotCandidates}
-                  onChange={(event) => navigateWithFilters({ onlyHotCandidates: event.target.checked, page: 1 })}
-                />
-                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>Only Hot Candidates</span>
-              </label>
-
-              <label className="modern-command-toggle">
-                <input
-                  type="checkbox"
-                  checked={filters.onlyGdprUnsigned}
-                  onChange={(event) => navigateWithFilters({ onlyGdprUnsigned: event.target.checked, page: 1 })}
-                />
-                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>GDPR Not Signed</span>
-              </label>
-
-              <label className="modern-command-toggle">
-                <input
-                  type="checkbox"
-                  checked={filters.onlyInternalCandidates}
-                  onChange={(event) => navigateWithFilters({ onlyInternalCandidates: event.target.checked, page: 1 })}
-                />
-                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>Internal Candidates</span>
-              </label>
-
               <label className="modern-command-toggle">
                 <input
                   type="checkbox"
@@ -555,6 +515,51 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 <span className="modern-command-toggle__switch" aria-hidden="true"></span>
                 <span>Only Active</span>
               </label>
+
+              <label className="modern-command-toggle">
+                <input
+                  type="checkbox"
+                  checked={filters.onlyMyCandidates}
+                  onChange={(event) => navigateWithFilters({ onlyMyCandidates: event.target.checked, page: 1 })}
+                />
+                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                <span>My Candidates Only</span>
+              </label>
+
+              <details className="avel-candidate-more-filters">
+                <summary className="avel-candidate-more-filters__summary">More Filters</summary>
+                <div className="avel-candidate-more-filters__panel">
+                  <label className="modern-command-toggle">
+                    <input
+                      type="checkbox"
+                      checked={filters.onlyHotCandidates}
+                      onChange={(event) => navigateWithFilters({ onlyHotCandidates: event.target.checked, page: 1 })}
+                    />
+                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                    <span>Hot Candidates</span>
+                  </label>
+
+                  <label className="modern-command-toggle">
+                    <input
+                      type="checkbox"
+                      checked={filters.onlyGdprUnsigned}
+                      onChange={(event) => navigateWithFilters({ onlyGdprUnsigned: event.target.checked, page: 1 })}
+                    />
+                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                    <span>GDPR Not Signed</span>
+                  </label>
+
+                  <label className="modern-command-toggle">
+                    <input
+                      type="checkbox"
+                      checked={filters.onlyInternalCandidates}
+                      onChange={(event) => navigateWithFilters({ onlyInternalCandidates: event.target.checked, page: 1 })}
+                    />
+                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                    <span>Internal Candidates</span>
+                  </label>
+                </div>
+              </details>
             </div>
 
             <div className="avel-candidate-toolbar__compact-meta">
