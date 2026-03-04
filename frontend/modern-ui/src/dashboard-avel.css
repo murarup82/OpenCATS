@@ -2536,6 +2536,33 @@
   padding: 12px;
 }
 
+.avel-candidates-page .avel-candidate-results .modern-table th,
+.avel-candidates-page .avel-candidate-results .modern-table td {
+  vertical-align: top;
+}
+
+.avel-candidates-page .avel-candidate-table__candidate {
+  min-width: 220px;
+}
+
+.avel-candidates-page .avel-candidate-table__name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.avel-candidates-page .avel-candidate-table__meta {
+  margin-top: 4px;
+  color: #5b7b8f;
+  font-size: 0.72rem;
+}
+
+.avel-candidates-page .avel-candidate-table__skills {
+  min-width: 280px;
+  max-width: 520px;
+  line-height: 1.4;
+}
+
 .avel-candidates-page .avel-candidate-card-list {
   display: grid;
   gap: 9px;

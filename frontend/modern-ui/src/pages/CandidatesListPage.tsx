@@ -4,6 +4,7 @@ import type { CandidatesListModernDataResponse, UIModeBootstrap } from '../types
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
+import { DataTable } from '../components/primitives/DataTable';
 import { CandidateAssignJobOrderModal } from '../components/primitives/CandidateAssignJobOrderModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
@@ -68,19 +69,6 @@ function toBooleanString(value: boolean): string {
 
 function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
-}
-
-function toInitials(name: string): string {
-  const parts = String(name || '')
-    .trim()
-    .split(/\s+/)
-    .filter((part) => part !== '');
-  if (parts.length === 0) {
-    return 'NA';
-  }
-  const first = parts[0]?.charAt(0) || '';
-  const second = parts.length > 1 ? parts[parts.length - 1]?.charAt(0) || '' : '';
-  return `${first}${second}`.toUpperCase();
 }
 
 function getSourceChipClass(source: string): string {
@@ -368,7 +356,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
     activeFilterLabels.push('Only Active');
   }
 
-  const hasRows = data.rows.length > 0;
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
   const hasActiveFilters = activeFilterLabels.length > 0;
@@ -392,6 +379,16 @@ export function CandidatesListPage({ bootstrap }: Props) {
     }
   });
   const hasVisibleRows = visibleRows.length > 0;
+  const candidateTableColumns = [
+    { key: 'candidate', title: 'Candidate' },
+    { key: 'source', title: 'Source' },
+    { key: 'skills', title: 'Key Skills' },
+    { key: 'signals', title: 'Signals' },
+    { key: 'owner', title: 'Owner' },
+    { key: 'created', title: 'Added' },
+    { key: 'updated', title: 'Updated' },
+    { key: 'actions', title: 'Actions' }
+  ];
 
   return (
     <div className="avel-dashboard-page avel-candidates-page">
@@ -701,7 +698,11 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 }
               />
             ) : (
-              <div className="avel-candidate-card-list" role="list" aria-label="Candidate results">
+              <DataTable
+                columns={candidateTableColumns}
+                hasRows={hasVisibleRows}
+                emptyMessage="No candidates match current filters."
+              >
                 {visibleRows.map((row) => {
                   const locationParts = [row.city, row.country]
                     .map((value) => String(value || '').trim())
@@ -709,48 +710,30 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   const locationText = locationParts.length > 0 ? locationParts.join(', ') : '--';
 
                   return (
-                    <article className="avel-candidate-card" key={row.candidateID} role="listitem">
-                      <header className="avel-candidate-card__header">
-                        <div className="avel-candidate-card__identity">
-                          <span className="avel-candidate-card__avatar" aria-hidden="true">
-                            {toInitials(row.fullName)}
-                          </span>
-                          <div className="avel-candidate-card__identity-text">
-                            <a className="modern-link avel-candidate-card__name" href={ensureModernUIURL(row.candidateURL)}>
-                              {toDisplayText(row.fullName)}
-                            </a>
-                            <div className="avel-candidate-card__meta">
-                              <span>{locationText}</span>
-                              <span aria-hidden="true">|</span>
-                              <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
-                            </div>
-                          </div>
+                    <tr key={row.candidateID}>
+                      <td className="avel-candidate-table__candidate">
+                        <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
+                          {toDisplayText(row.fullName)}
+                        </a>
+                        <div className="avel-candidate-table__meta">{locationText}</div>
+                      </td>
+                      <td>
+                        <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
+                      </td>
+                      <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
+                      <td>
+                        <div className="avel-candidate-flags">
+                          {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
+                          {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
+                          {row.isSubmitted ? <span className="modern-chip modern-chip--info">Submitted</span> : null}
+                          {row.hasAttachment ? <span className="modern-chip">Resume</span> : null}
+                          {row.commentCount > 0 ? <span className="modern-chip modern-chip--success">{row.commentCount} comments</span> : null}
                         </div>
-                        <div className="avel-candidate-card__signals">
-                          <span className="avel-candidate-card__modified">Updated {toDisplayText(row.modifiedDate)}</span>
-                          <div className="avel-candidate-flags">
-                            {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                            {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
-                            {row.isSubmitted ? <span className="modern-chip modern-chip--info">Submitted</span> : null}
-                            {row.hasAttachment ? <span className="modern-chip">Resume</span> : null}
-                            {row.commentCount > 0 ? (
-                              <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
-                            ) : null}
-                          </div>
-                        </div>
-                      </header>
-
-                      <p className="avel-candidate-card__skills">{toDisplayText(row.keySkills)}</p>
-
-                      <footer className="avel-candidate-card__footer">
-                        <div className="avel-candidate-card__ownership">
-                          <span className="avel-candidate-card__ownership-item">
-                            Owner <strong>{toDisplayText(row.ownerName)}</strong>
-                          </span>
-                          <span className="avel-candidate-card__ownership-item">
-                            Added <strong>{toDisplayText(row.createdDate)}</strong>
-                          </span>
-                        </div>
+                      </td>
+                      <td>{toDisplayText(row.ownerName)}</td>
+                      <td>{toDisplayText(row.createdDate)}</td>
+                      <td>{toDisplayText(row.modifiedDate)}</td>
+                      <td>
                         <div className="modern-table-actions">
                           <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateURL)}>
                             View
@@ -784,11 +767,11 @@ export function CandidatesListPage({ bootstrap }: Props) {
                             </button>
                           ) : null}
                         </div>
-                      </footer>
-                    </article>
+                      </td>
+                    </tr>
                   );
                 })}
-              </div>
+              </DataTable>
             )}
           </section>
         </div>
