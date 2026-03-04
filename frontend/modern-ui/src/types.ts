@@ -1920,6 +1920,10 @@ export type HomeMyNotesModernDataResponse = {
     homeURL: string;
     inboxURL: string;
     legacyURL: string;
+    mutations?: {
+      setTodoStatusURL: string;
+      setTodoStatusToken: string;
+    };
   };
   state: {
     view: string;
@@ -1957,6 +1961,7 @@ export type HomeMyNotesModernDataResponse = {
       itemID: number;
       title: string;
       bodyHTML: string;
+      taskStatus?: string;
       priorityLabel: string;
       dueDate: string;
       isOverdue: boolean;
@@ -1966,6 +1971,7 @@ export type HomeMyNotesModernDataResponse = {
       itemID: number;
       title: string;
       bodyHTML: string;
+      taskStatus?: string;
       priorityLabel: string;
       dueDate: string;
       isOverdue: boolean;
@@ -1975,6 +1981,7 @@ export type HomeMyNotesModernDataResponse = {
       itemID: number;
       title: string;
       bodyHTML: string;
+      taskStatus?: string;
       priorityLabel: string;
       dueDate: string;
       isOverdue: boolean;
@@ -1984,6 +1991,7 @@ export type HomeMyNotesModernDataResponse = {
       itemID: number;
       title: string;
       bodyHTML: string;
+      taskStatus?: string;
       priorityLabel: string;
       dueDate: string;
       isOverdue: boolean;

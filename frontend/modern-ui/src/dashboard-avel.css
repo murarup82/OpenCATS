@@ -2897,6 +2897,14 @@
   font: 600 0.74rem/1.35 'Manrope', 'Segoe UI', sans-serif;
 }
 
+.avel-dashboard-page .avel-my-notes-results--error {
+  color: #8a3c46;
+}
+
+.avel-dashboard-page .avel-my-notes-results--success {
+  color: #256748;
+}
+
 .avel-dashboard-page .avel-my-notes-toggle-group {
   display: inline-flex;
   flex-wrap: wrap;
@@ -2918,6 +2926,93 @@
 
 .avel-dashboard-page .avel-my-notes-card--todo {
   background: #fbfdff;
+}
+
+.avel-dashboard-page .avel-my-notes-kanban-shell .modern-kanban-column {
+  flex: 0 0 302px;
+  width: 302px;
+  min-width: 302px;
+}
+
+.avel-dashboard-page .avel-my-notes-kanban-shell .modern-kanban-column__body {
+  min-height: min(60vh, 560px);
+}
+
+.avel-dashboard-page .modern-kanban-column--todo-open {
+  --lane-accent: #0f95bf;
+  --lane-accent-strong: #0a6f90;
+  --lane-head-top: #e8f5fb;
+  --lane-head-bottom: #d4e8f4;
+  --lane-head-border: #a7c8da;
+  --lane-count-border: #8ebad1;
+}
+
+.avel-dashboard-page .modern-kanban-column--todo-in_progress {
+  --lane-accent: #6377dd;
+  --lane-accent-strong: #4c5fc3;
+  --lane-head-top: #eceffd;
+  --lane-head-bottom: #dde4fa;
+  --lane-head-border: #bcc8f0;
+  --lane-count-border: #a6b4e6;
+}
+
+.avel-dashboard-page .modern-kanban-column--todo-blocked {
+  --lane-accent: #cf7a32;
+  --lane-accent-strong: #aa5e1f;
+  --lane-head-top: #faefe5;
+  --lane-head-bottom: #f2deca;
+  --lane-head-border: #debc9a;
+  --lane-count-border: #cfa67f;
+}
+
+.avel-dashboard-page .modern-kanban-column--todo-done {
+  --lane-accent: #3d9f67;
+  --lane-accent-strong: #2f8152;
+  --lane-head-top: #e8f7ee;
+  --lane-head-bottom: #d8efdf;
+  --lane-head-border: #abd7ba;
+  --lane-count-border: #8dc3a0;
+}
+
+.avel-dashboard-page .avel-my-notes-kanban-card {
+  border: 1px solid #c5dae8;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbfe 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 4px 10px rgba(7, 58, 83, 0.08);
+  padding: 9px;
+  display: grid;
+  gap: 7px;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  cursor: grab;
+}
+
+.avel-dashboard-page .avel-my-notes-kanban-card:hover {
+  border-color: #9bc3d8;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.76) inset,
+    0 8px 15px rgba(8, 74, 107, 0.13);
+}
+
+.avel-dashboard-page .avel-my-notes-kanban-card:active {
+  cursor: grabbing;
+}
+
+.avel-dashboard-page .avel-my-notes-kanban-card.is-dragging {
+  opacity: 0.64;
+  transform: rotate(-1deg);
+}
+
+.avel-dashboard-page .avel-my-notes-kanban-card.is-pending {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.avel-dashboard-page .avel-my-notes-kanban-card__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .avel-dashboard-page .avel-my-notes-meta {

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { fetchHomeMyNotesModernData } from '../lib/api';
+import { DragEvent, useEffect, useRef, useState } from 'react';
+import { fetchHomeMyNotesModernData, setHomeMyNotesTodoStatus } from '../lib/api';
 import { useServerQueryState } from '../lib/useServerQueryState';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -12,10 +12,13 @@ type Props = {
   bootstrap: UIModeBootstrap;
 };
 
-const TODO_SECTIONS: Array<keyof HomeMyNotesModernDataResponse['todosByStatus']> = ['open', 'in_progress', 'blocked', 'done'];
+type TodoStatusKey = keyof HomeMyNotesModernDataResponse['todosByStatus'];
+type TodoRow = HomeMyNotesModernDataResponse['todosByStatus']['open'][number];
+
+const TODO_SECTIONS: TodoStatusKey[] = ['open', 'in_progress', 'blocked', 'done'];
 type MyNotesPane = 'both' | 'notes' | 'todos';
 type NoteScope = 'all' | 'active' | 'archived';
-type TodoFocus = 'all' | keyof HomeMyNotesModernDataResponse['todosByStatus'];
+type TodoFocus = 'all' | TodoStatusKey;
 type NoteSort = 'updated-desc' | 'updated-asc' | 'title-asc';
 type TodoSort = 'due-soonest' | 'priority-desc' | 'title-asc';
 type TodoFlagFilter = 'all' | 'overdue' | 'reminder-due';
@@ -64,6 +67,68 @@ function parseDueDateWeight(value: string): number {
   return parsed;
 }
 
+function moveTodoInData(
+  payload: HomeMyNotesModernDataResponse | null,
+  itemID: number,
+  fromStatus: TodoStatusKey,
+  toStatus: TodoStatusKey
+): HomeMyNotesModernDataResponse | null {
+  if (!payload || fromStatus === toStatus) {
+    return payload;
+  }
+
+  const nextTodosByStatus: HomeMyNotesModernDataResponse['todosByStatus'] = {
+    open: [...payload.todosByStatus.open],
+    in_progress: [...payload.todosByStatus.in_progress],
+    blocked: [...payload.todosByStatus.blocked],
+    done: [...payload.todosByStatus.done]
+  };
+
+  let movedItem: TodoRow | null = null;
+  nextTodosByStatus[fromStatus] = nextTodosByStatus[fromStatus].filter((todo) => {
+    if (movedItem || Number(todo.itemID || 0) !== itemID) {
+      return true;
+    }
+    movedItem = todo;
+    return false;
+  });
+
+  if (!movedItem) {
+    return payload;
+  }
+
+  nextTodosByStatus[toStatus] = [{ ...movedItem, taskStatus: toStatus }, ...nextTodosByStatus[toStatus]];
+
+  const openCount = nextTodosByStatus.open.length + nextTodosByStatus.in_progress.length + nextTodosByStatus.blocked.length;
+  const doneCount = nextTodosByStatus.done.length;
+
+  return {
+    ...payload,
+    todosByStatus: nextTodosByStatus,
+    summary: {
+      ...payload.summary,
+      todoOpenCount: openCount,
+      todoDoneCount: doneCount,
+      todoStatusOpenCount: nextTodosByStatus.open.length,
+      todoStatusInProgressCount: nextTodosByStatus.in_progress.length,
+      todoStatusBlockedCount: nextTodosByStatus.blocked.length,
+      todoStatusDoneCount: nextTodosByStatus.done.length
+    }
+  };
+}
+
+function getAdjacentStatus(statusKey: TodoStatusKey, direction: -1 | 1): TodoStatusKey | null {
+  const index = TODO_SECTIONS.indexOf(statusKey);
+  if (index < 0) {
+    return null;
+  }
+  const nextIndex = index + direction;
+  if (nextIndex < 0 || nextIndex >= TODO_SECTIONS.length) {
+    return null;
+  }
+  return TODO_SECTIONS[nextIndex];
+}
+
 export function HomeMyNotesPage({ bootstrap }: Props) {
   const [data, setData] = useState<HomeMyNotesModernDataResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -75,6 +140,12 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
   const [noteSort, setNoteSort] = useState<NoteSort>('updated-desc');
   const [todoSort, setTodoSort] = useState<TodoSort>('due-soonest');
   const [todoFlagFilter, setTodoFlagFilter] = useState<TodoFlagFilter>('all');
+  const [draggedTodo, setDraggedTodo] = useState<{ itemID: number; fromStatus: TodoStatusKey } | null>(null);
+  const [dropStatus, setDropStatus] = useState<TodoStatusKey | null>(null);
+  const [movePendingItemID, setMovePendingItemID] = useState<number>(0);
+  const [todoMoveError, setTodoMoveError] = useState<string>('');
+  const [todoMoveNotice, setTodoMoveNotice] = useState<string>('');
+  const todoBoardRef = useRef<HTMLDivElement | null>(null);
   const { serverQueryString } = useServerQueryState(bootstrap.indexName);
 
   const clearAllFilters = () => {
@@ -116,6 +187,108 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
       mounted = false;
     };
   }, [bootstrap, serverQueryString]);
+
+  const moveTodoToStatus = async (itemID: number, fromStatus: TodoStatusKey, toStatus: TodoStatusKey): Promise<void> => {
+    if (!data || fromStatus === toStatus || movePendingItemID > 0) {
+      return;
+    }
+
+    const mutationURL = String(data.actions.mutations?.setTodoStatusURL || '').trim();
+    const mutationToken = String(data.actions.mutations?.setTodoStatusToken || '').trim();
+    if (mutationURL === '' || mutationToken === '') {
+      setTodoMoveError('To-do move is unavailable in this session. Refresh the page or open Legacy UI.');
+      return;
+    }
+
+    setMovePendingItemID(itemID);
+    setTodoMoveError('');
+    setTodoMoveNotice('');
+
+    try {
+      const result = await setHomeMyNotesTodoStatus(mutationURL, {
+        itemID,
+        taskStatus: toStatus,
+        securityToken: mutationToken
+      });
+      if (!result || result.success !== true) {
+        throw new Error(result?.message || 'Unable to update to-do status.');
+      }
+
+      setData((previous) => moveTodoInData(previous, itemID, fromStatus, toStatus));
+      const toLabel = toStatus
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+      setTodoMoveNotice(`Moved item #${itemID} to ${toLabel}.`);
+    } catch (moveError) {
+      const message =
+        moveError instanceof Error && moveError.message.trim() !== ''
+          ? moveError.message
+          : 'Unable to update to-do status.';
+      setTodoMoveError(message);
+    } finally {
+      setMovePendingItemID(0);
+      setDraggedTodo(null);
+      setDropStatus(null);
+    }
+  };
+
+  const scrollTodoBoardBy = (offset: number) => {
+    const board = todoBoardRef.current;
+    if (!board) {
+      return;
+    }
+    board.scrollBy({ left: offset, behavior: 'smooth' });
+  };
+
+  const handleTodoCardDragStart = (event: DragEvent<HTMLElement>, itemID: number, fromStatus: TodoStatusKey) => {
+    if (movePendingItemID > 0) {
+      event.preventDefault();
+      return;
+    }
+    setTodoMoveError('');
+    setDraggedTodo({ itemID, fromStatus });
+    setDropStatus(null);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', `${itemID}:${fromStatus}`);
+    }
+  };
+
+  const handleTodoCardDragEnd = () => {
+    setDraggedTodo(null);
+    setDropStatus(null);
+  };
+
+  const handleTodoColumnDragOver = (event: DragEvent<HTMLDivElement>, statusKey: TodoStatusKey) => {
+    if (!draggedTodo || draggedTodo.fromStatus === statusKey || movePendingItemID > 0) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    setDropStatus(statusKey);
+  };
+
+  const handleTodoColumnDragLeave = (statusKey: TodoStatusKey) => {
+    if (dropStatus === statusKey) {
+      setDropStatus(null);
+    }
+  };
+
+  const handleTodoColumnDrop = async (event: DragEvent<HTMLDivElement>, toStatus: TodoStatusKey) => {
+    if (!draggedTodo || movePendingItemID > 0) {
+      return;
+    }
+    event.preventDefault();
+    if (draggedTodo.fromStatus === toStatus) {
+      setDraggedTodo(null);
+      setDropStatus(null);
+      return;
+    }
+    await moveTodoToStatus(draggedTodo.itemID, draggedTodo.fromStatus, toStatus);
+  };
 
   if (loading && !data) {
     return <div className="modern-state">Loading my notes...</div>;
@@ -205,14 +378,15 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
         return parseDueDateWeight(left.dueDate) - parseDueDateWeight(right.dueDate);
       });
   });
-  const filteredTodoCount = TODO_SECTIONS.reduce((total, statusKey) => total + filteredTodosByStatus[statusKey].length, 0);
   const showNotesPane = pane === 'both' || pane === 'notes';
   const showTodosPane = pane === 'both' || pane === 'todos';
-  const hasAnyFilteredTodos = filteredTodoCount > 0;
+  const visibleTodoSections = TODO_SECTIONS.filter((statusKey) => todoFocus === 'all' || todoFocus === statusKey);
+  const visibleTodoCount = visibleTodoSections.reduce((total, statusKey) => total + filteredTodosByStatus[statusKey].length, 0);
+  const hasAnyFilteredTodos = visibleTodoCount > 0;
   const notesSubtitle =
     noteScope === 'all' ? 'All notes' : noteScope === 'active' ? 'Active notes only' : 'Archived notes only';
   const resultsSummary = `Showing ${showNotesPane ? filteredNotes.length : 0} notes and ${
-    showTodosPane ? filteredTodoCount : 0
+    showTodosPane ? visibleTodoCount : 0
   } to-do items.`;
 
   return (
@@ -362,6 +536,16 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
                 <p className="avel-my-notes-results" role="status" aria-live="polite">
                   {resultsSummary}
                 </p>
+                {showTodosPane && todoMoveError ? (
+                  <p className="avel-my-notes-results avel-my-notes-results--error" role="alert">
+                    {todoMoveError}
+                  </p>
+                ) : null}
+                {showTodosPane && todoMoveNotice ? (
+                  <p className="avel-my-notes-results avel-my-notes-results--success" role="status" aria-live="polite">
+                    {todoMoveNotice}
+                  </p>
+                ) : null}
               </section>
 
               <section className="modern-command-grid modern-command-grid--dual">
@@ -395,46 +579,137 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
                   <article className="avel-list-panel avel-my-notes-panel">
                     <div className="avel-list-panel__header">
                       <h3 className="avel-list-panel__title">To-do Boards</h3>
-                      <span className="modern-chip modern-chip--info">{filteredTodoCount}</span>
+                      <span className="modern-chip modern-chip--info">{visibleTodoCount}</span>
                     </div>
                     {!hasAnyFilteredTodos ? (
                       <div className="modern-state">No to-do items for the current filter.</div>
                     ) : (
-                      <div className="avel-my-notes-stack">
-                        {TODO_SECTIONS.map((statusKey) => {
-                          const rows = filteredTodosByStatus[statusKey];
-                          if (todoFocus !== 'all' && todoFocus !== statusKey) {
-                            return null;
-                          }
-                          return (
-                            <section key={`todo-${statusKey}`} className="avel-list-panel avel-my-notes-card">
-                              <div className="avel-list-panel__header">
-                                <h4 className="avel-list-panel__title">{toTodoSectionLabel(statusKey)}</h4>
-                                <span className="modern-chip modern-chip--info">{rows.length}</span>
-                              </div>
-                              {rows.length === 0 ? (
-                                <div className="modern-state">No items.</div>
-                              ) : (
-                                <div className="avel-my-notes-stack avel-my-notes-stack--compact">
-                                  {rows.slice(0, 12).map((todo) => (
-                                    <article key={`todo-item-${statusKey}-${todo.itemID}`} className="avel-list-panel avel-my-notes-card avel-my-notes-card--todo">
-                                      <div className="avel-list-panel__header">
-                                        <h5 className="avel-list-panel__title">{todo.title || `To-do #${todo.itemID}`}</h5>
-                                        <div className="avel-my-notes-chip-row">
-                                          <span className="modern-chip modern-chip--info">{todo.priorityLabel || 'Priority'}</span>
-                                          {todo.isOverdue ? <span className="modern-chip modern-chip--warn">Overdue</span> : null}
-                                          {todo.isReminderDue ? <span className="modern-chip modern-chip--warn">Reminder Due</span> : null}
-                                        </div>
+                      <div className="modern-kanban-board-wrap avel-my-notes-kanban-shell">
+                        <div className="modern-kanban-board__header">
+                          <span className="modern-kanban-board__title">To-do Workflow</span>
+                          <div className="modern-kanban-board__header-actions">
+                            <span className="modern-kanban-board__hint">Drag a card to move status. Use arrow buttons for keyboard/mouse fallback.</span>
+                            <button
+                              type="button"
+                              className="modern-kanban-board__scroll-btn"
+                              onClick={() => scrollTodoBoardBy(-320)}
+                              aria-label="Scroll board left"
+                            >
+                              <span aria-hidden="true">&lt;</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="modern-kanban-board__scroll-btn"
+                              onClick={() => scrollTodoBoardBy(320)}
+                              aria-label="Scroll board right"
+                            >
+                              <span aria-hidden="true">&gt;</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div ref={todoBoardRef} className="modern-kanban-board__viewport" aria-label="To-do kanban board">
+                          <div className="modern-kanban-board">
+                            {visibleTodoSections.map((statusKey) => {
+                              const rows = filteredTodosByStatus[statusKey];
+                              const share = visibleTodoCount > 0 ? Math.round((rows.length / visibleTodoCount) * 100) : 0;
+                              const progressWidth = Math.min(100, Math.max(0, share));
+                              const canDropHere = !!draggedTodo && draggedTodo.fromStatus !== statusKey && movePendingItemID === 0;
+                              return (
+                                <section key={`todo-${statusKey}`} className={`modern-kanban-column modern-kanban-column--todo-${statusKey}`}>
+                                  <header className="modern-kanban-column__header">
+                                    <div className="modern-kanban-column__title-wrap">
+                                      <h4 className="modern-kanban-column__title">
+                                        <span className="modern-kanban-column__stage-dot" aria-hidden="true"></span>
+                                        {toTodoSectionLabel(statusKey)}
+                                      </h4>
+                                      <span className="modern-kanban-column__subtitle">{share}% of visible tasks</span>
+                                    </div>
+                                    <div className="modern-kanban-column__count-wrap">
+                                      <span className="modern-kanban-column__count">{rows.length}</span>
+                                      <span className="modern-kanban-column__count-label">tasks</span>
+                                    </div>
+                                  </header>
+                                  <div className="modern-kanban-column__progress" aria-hidden="true">
+                                    <span className="modern-kanban-column__progress-fill" style={{ width: `${progressWidth}%` }} />
+                                  </div>
+                                  <div
+                                    className={`modern-kanban-column__body${canDropHere ? ' is-drop-enabled' : ''}${dropStatus === statusKey ? ' is-drop-target' : ''}`}
+                                    onDragOver={(event) => handleTodoColumnDragOver(event, statusKey)}
+                                    onDragLeave={() => handleTodoColumnDragLeave(statusKey)}
+                                    onDrop={(event) => {
+                                      void handleTodoColumnDrop(event, statusKey);
+                                    }}
+                                  >
+                                    {rows.length === 0 ? (
+                                      <div className="modern-kanban-column__empty">
+                                        <span className="modern-kanban-column__empty-icon" aria-hidden="true">
+                                          0
+                                        </span>
+                                        <span>No tasks in this stage.</span>
                                       </div>
-                                      {todo.dueDate ? <div className="avel-my-notes-meta">Due {todo.dueDate}</div> : null}
-                                      <FormattedTextBlock text={todo.bodyHTML || ''} emptyMessage="No details provided." />
-                                    </article>
-                                  ))}
-                                </div>
-                              )}
-                            </section>
-                          );
-                        })}
+                                    ) : (
+                                      <div className="modern-kanban-column__cards">
+                                        {rows.slice(0, 40).map((todo) => {
+                                          const isDragging = !!draggedTodo && draggedTodo.itemID === todo.itemID && draggedTodo.fromStatus === statusKey;
+                                          const isPending = movePendingItemID === todo.itemID;
+                                          const previousStatus = getAdjacentStatus(statusKey, -1);
+                                          const nextStatus = getAdjacentStatus(statusKey, 1);
+                                          return (
+                                            <article
+                                              key={`todo-item-${statusKey}-${todo.itemID}`}
+                                              className={`avel-my-notes-kanban-card${isDragging ? ' is-dragging' : ''}${isPending ? ' is-pending' : ''}`}
+                                              draggable={!isPending}
+                                              onDragStart={(event) => handleTodoCardDragStart(event, todo.itemID, statusKey)}
+                                              onDragEnd={handleTodoCardDragEnd}
+                                            >
+                                              <div className="avel-list-panel__header">
+                                                <h5 className="avel-list-panel__title">{todo.title || `To-do #${todo.itemID}`}</h5>
+                                                <div className="avel-my-notes-chip-row">
+                                                  <span className="modern-chip modern-chip--info">{todo.priorityLabel || 'Priority'}</span>
+                                                  {todo.isOverdue ? <span className="modern-chip modern-chip--warn">Overdue</span> : null}
+                                                  {todo.isReminderDue ? <span className="modern-chip modern-chip--warn">Reminder Due</span> : null}
+                                                </div>
+                                              </div>
+                                              {todo.dueDate ? <div className="avel-my-notes-meta">Due {todo.dueDate}</div> : null}
+                                              <FormattedTextBlock text={todo.bodyHTML || ''} emptyMessage="No details provided." />
+                                              <div className="avel-my-notes-kanban-card__actions">
+                                                <button
+                                                  type="button"
+                                                  className="modern-btn modern-btn--mini modern-btn--secondary"
+                                                  disabled={isPending || !previousStatus}
+                                                  onClick={() => {
+                                                    if (previousStatus) {
+                                                      void moveTodoToStatus(todo.itemID, statusKey, previousStatus);
+                                                    }
+                                                  }}
+                                                >
+                                                  Move Left
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  className="modern-btn modern-btn--mini modern-btn--secondary"
+                                                  disabled={isPending || !nextStatus}
+                                                  onClick={() => {
+                                                    if (nextStatus) {
+                                                      void moveTodoToStatus(todo.itemID, statusKey, nextStatus);
+                                                    }
+                                                  }}
+                                                >
+                                                  Move Right
+                                                </button>
+                                              </div>
+                                            </article>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                </section>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </article>

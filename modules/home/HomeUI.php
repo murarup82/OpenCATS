@@ -1743,6 +1743,7 @@ class HomeUI extends UserInterface
                     'itemID' => (isset($todo['itemID']) ? (int) $todo['itemID'] : 0),
                     'title' => (isset($todo['title']) ? (string) $todo['title'] : ''),
                     'bodyHTML' => (isset($todo['bodyHTML']) ? (string) $todo['bodyHTML'] : ''),
+                    'taskStatus' => (string) $statusKey,
                     'priorityLabel' => (isset($todo['priorityLabel']) ? (string) $todo['priorityLabel'] : ''),
                     'dueDate' => (isset($todo['dueDate']) ? (string) $todo['dueDate'] : ''),
                     'isOverdue' => (!empty($todo['isOverdue'])),
@@ -1760,7 +1761,11 @@ class HomeUI extends UserInterface
             'actions' => array(
                 'homeURL' => sprintf('%s?m=home&a=home&ui=modern', $baseURL),
                 'inboxURL' => sprintf('%s?m=home&a=inbox&ui=modern', $baseURL),
-                'legacyURL' => sprintf('%s?m=home&a=myNotes&ui=legacy', $baseURL)
+                'legacyURL' => sprintf('%s?m=home&a=myNotes&ui=legacy', $baseURL),
+                'mutations' => array(
+                    'setTodoStatusURL' => sprintf('%s?m=home&a=setPersonalTodoStatus', $baseURL),
+                    'setTodoStatusToken' => $this->getCSRFToken('home.setPersonalTodoStatus')
+                )
             ),
             'state' => array(
                 'view' => (string) $view,
@@ -1778,6 +1783,39 @@ class HomeUI extends UserInterface
 
         if (!headers_sent())
         {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
+    private function respondModernMutationJSON($statusCode, $success, $code, $message, $extra = array())
+    {
+        $statusCode = (int) $statusCode;
+        if ($statusCode <= 0)
+        {
+            $statusCode = 200;
+        }
+
+        $payload = array_merge(
+            array(
+                'success' => ($success ? true : false),
+                'code' => (string) $code,
+                'message' => (string) $message
+            ),
+            (is_array($extra) ? $extra : array())
+        );
+
+        if (!headers_sent())
+        {
+            if (function_exists('http_response_code'))
+            {
+                http_response_code($statusCode);
+            }
+            else
+            {
+                header(sprintf('HTTP/1.1 %d', $statusCode));
+            }
             header('Content-Type: application/json; charset=' . AJAX_ENCODING);
             header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         }
@@ -1934,19 +1972,36 @@ class HomeUI extends UserInterface
 
     private function onSetPersonalTodoStatus()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(405, false, 'invalidMethod', 'Invalid request method.');
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         if (!$this->isRequiredIDValid('itemID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(400, false, 'invalid', 'Invalid to-do item ID.');
+                return;
+            }
             $this->redirectToMyNotes('todos', 'invalid');
         }
 
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.setPersonalTodoStatus', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(403, false, 'token', 'Invalid request token.');
+                return;
+            }
             $this->redirectToMyNotes('todos', 'token');
         }
 
@@ -1960,6 +2015,11 @@ class HomeUI extends UserInterface
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(503, false, 'schema', 'My Notes / To-do table is missing.');
+                return;
+            }
             $this->redirectToMyNotes('todos', 'schema');
         }
 
@@ -1971,7 +2031,36 @@ class HomeUI extends UserInterface
             {
                 $error = 'invalid';
             }
+            if ($isModernJSON)
+            {
+                $message = 'Unable to update to-do status.';
+                if ($error === 'badStatus')
+                {
+                    $message = 'Invalid to-do status.';
+                }
+                else if ($error === 'notfound')
+                {
+                    $message = 'To-do item was not found.';
+                }
+                $this->respondModernMutationJSON(400, false, $error, $message);
+                return;
+            }
             $this->redirectToMyNotes('todos', $error);
+        }
+
+        if ($isModernJSON)
+        {
+            $this->respondModernMutationJSON(
+                200,
+                true,
+                'todoStatusChanged',
+                'To-do status updated.',
+                array(
+                    'itemID' => $itemID,
+                    'taskStatus' => $taskStatus
+                )
+            );
+            return;
         }
 
         $this->redirectToMyNotes('todos', 'todoStatusChanged');

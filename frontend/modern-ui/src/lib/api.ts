@@ -413,6 +413,38 @@ export async function fetchHomeMyNotesModernData(
   return data;
 }
 
+export async function setHomeMyNotesTodoStatus(
+  submitURL: string,
+  payload: {
+    itemID: number;
+    taskStatus: string;
+    securityToken: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('itemID', String(payload.itemID || 0));
+  body.set('taskStatus', String(payload.taskStatus || '').trim() || 'open');
+  body.set('securityToken', payload.securityToken || '');
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'home',
+    a: 'setPersonalTodoStatus',
+    modernPage: MODERN_HOME_MYNOTES_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  return parseModernMutationResponse(response, 'To-do status update');
+}
+
 export async function setDashboardPipelineStatus(
   bootstrap: UIModeBootstrap,
   payload: {
