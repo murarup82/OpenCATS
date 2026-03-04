@@ -518,7 +518,7 @@ export function JobOrdersEditPage({ bootstrap }: Props) {
                 </label>
               </div>
 
-              <div className="avel-candidate-edit-toggles">
+              <div className="avel-candidate-edit-toggles" role="group" aria-label="Job order publication and ownership options">
                 <label className="modern-command-toggle">
                   <input type="checkbox" name="isHot" checked={formState.isHot} onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))} />
                   <span className="modern-command-toggle__switch" aria-hidden="true"></span>
@@ -602,8 +602,8 @@ export function JobOrdersEditPage({ bootstrap }: Props) {
               ) : null}
 
               {companyContextLoading ? <div className="modern-state">Refreshing company contacts and departments...</div> : null}
-              {companyContextError !== '' ? <div className="modern-state modern-state--error">{companyContextError}</div> : null}
-              {validationError !== '' ? <div className="modern-state modern-state--error">{validationError}</div> : null}
+              {companyContextError !== '' ? <div className="modern-state modern-state--error" role="alert">{companyContextError}</div> : null}
+              {validationError !== '' ? <div className="modern-state modern-state--error" role="alert">{validationError}</div> : null}
 
               <div className="modern-table-actions avel-candidate-edit-actions">
                 <button type="submit" className="modern-btn modern-btn--emphasis">Save Job Order</button>

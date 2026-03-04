@@ -727,7 +727,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
               <div className="avel-candidate-edit-grid">
                 {validationError !== '' ? (
-                  <div className="modern-state modern-state--error avel-candidate-edit-field--full">{validationError}</div>
+                  <div className="modern-state modern-state--error avel-candidate-edit-field--full" role="alert">{validationError}</div>
                 ) : null}
                 <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
                   <strong>Identity & Contact</strong>
@@ -937,7 +937,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 <strong>Status, Mobility & Compliance Attributes</strong>
                 <span>State toggles used in operations and reporting.</span>
               </div>
-              <div className="avel-candidate-edit-toggles">
+              <div className="avel-candidate-edit-toggles" role="group" aria-label="Candidate status and mobility options">
                 <label className="modern-command-toggle">
                   <input
                     type="checkbox"
@@ -1135,7 +1135,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   ) : null}
                 </div>
                 {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
-                {aiPrefillError !== '' ? <div className="modern-state modern-state--error">{aiPrefillError}</div> : null}
+                {aiPrefillError !== '' ? <div className="modern-state modern-state--error" role="alert">{aiPrefillError}</div> : null}
               </div>
               {data.meta.permissions.canCreateAttachment && attachmentUploadOpen ? (
                 <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
@@ -1156,7 +1156,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     <span className="modern-command-toggle__switch" aria-hidden="true"></span>
                     <span>Treat as resume (enable parsing/indexing)</span>
                   </label>
-                  {attachmentUploadError ? <div className="modern-state modern-state--error">{attachmentUploadError}</div> : null}
+                  {attachmentUploadError ? <div className="modern-state modern-state--error" role="alert">{attachmentUploadError}</div> : null}
                   <div className="modern-table-actions">
                     <button
                       type="button"

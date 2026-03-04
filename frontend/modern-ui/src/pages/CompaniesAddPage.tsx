@@ -354,7 +354,7 @@ export function CompaniesAddPage({ bootstrap }: Props) {
                 </label>
               </div>
 
-              <div className="avel-candidate-edit-toggles">
+              <div className="avel-candidate-edit-toggles" role="group" aria-label="Company visibility options">
                 <label className="modern-command-toggle">
                   <input
                     type="checkbox"
@@ -392,7 +392,7 @@ export function CompaniesAddPage({ bootstrap }: Props) {
                 </div>
               ) : null}
 
-              {validationError !== '' ? <div className="modern-state modern-state--error">{validationError}</div> : null}
+              {validationError !== '' ? <div className="modern-state modern-state--error" role="alert">{validationError}</div> : null}
 
               <div className="modern-table-actions avel-candidate-edit-actions">
                 <button type="submit" className="modern-btn modern-btn--emphasis">

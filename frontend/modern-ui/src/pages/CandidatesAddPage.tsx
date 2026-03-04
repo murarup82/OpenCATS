@@ -962,8 +962,8 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                     </div>
                   ) : null}
                   {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
-                  {resumeActionError !== '' ? <div className="modern-state modern-state--error">{resumeActionError}</div> : null}
-                  {aiPrefillError !== '' ? <div className="modern-state modern-state--error">{aiPrefillError}</div> : null}
+                  {resumeActionError !== '' ? <div className="modern-state modern-state--error" role="alert">{resumeActionError}</div> : null}
+                  {aiPrefillError !== '' ? <div className="modern-state modern-state--error" role="alert">{aiPrefillError}</div> : null}
                 </div>
               ) : null}
 
@@ -1199,7 +1199,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 <strong>Mobility & Compliance Attributes</strong>
                 <span>Controls used for relocation and compliance reporting.</span>
               </div>
-              <div className="avel-candidate-edit-toggles">
+              <div className="avel-candidate-edit-toggles" role="group" aria-label="Candidate mobility and compliance options">
                 <label className="modern-command-toggle">
                   <input
                     type="checkbox"
@@ -1293,8 +1293,8 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               ) : null}
 
               {duplicateChecking ? <div className="modern-state">Checking for potential duplicates...</div> : null}
-              {validationError !== '' ? <div className="modern-state modern-state--error">{validationError}</div> : null}
-              {duplicateError !== '' ? <div className="modern-state modern-state--error">{duplicateError}</div> : null}
+              {validationError !== '' ? <div className="modern-state modern-state--error" role="alert">{validationError}</div> : null}
+              {duplicateError !== '' ? <div className="modern-state modern-state--error" role="alert">{duplicateError}</div> : null}
 
               {duplicateMode !== 'none' ? (
                 <div className={`avel-candidate-duplicates avel-candidate-duplicates--${duplicateMode}`}>

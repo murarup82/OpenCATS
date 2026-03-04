@@ -1125,6 +1125,16 @@
   transform: translateX(16px);
 }
 
+.avel-dashboard-page .modern-command-toggle:focus-within {
+  border-color: #4da8c8;
+  box-shadow: 0 0 0 3px rgba(0, 151, 189, 0.18);
+}
+
+.avel-dashboard-page .modern-command-toggle input:focus-visible + .modern-command-toggle__switch {
+  outline: 2px solid rgba(0, 151, 189, 0.45);
+  outline-offset: 2px;
+}
+
 .avel-dashboard-page .modern-command-active {
   display: grid;
   gap: 8px;

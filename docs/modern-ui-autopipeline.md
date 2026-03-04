@@ -545,6 +545,10 @@ Current status is enforced by:
     - upgraded shared formatter (`frontend/modern-ui/src/lib/richText.ts`) to recognize markdown links and render secure external anchors (`target="_blank"`, `rel="noreferrer noopener"`)
     - expanded unordered list parsing to include common unicode bullet characters (`•`, `·`, `▪`, `◦`, `●`, `○`, `‣`) and ordered list parsing for both `1.` and `1)` markers
     - added conservative plain-heading detection for short title-like lines so pasted job profile sections (for example `Main Responsibilities`) render with clearer structure.
+178. Completed accessibility semantics pass for core add/edit form toggles and inline errors:
+    - added explicit group semantics (`role="group"` + descriptive `aria-label`) for toggle clusters on candidate/company/contact/job-order add/edit pages
+    - added keyboard-visible focus affordances for toggle controls in shared Avel styles (`:focus-within` container ring and `input:focus-visible` switch outline)
+    - upgraded inline error notices to `role="alert"` across core add/edit pages so validation and mutation failures are announced immediately by assistive technologies.
 
 ## Next Queue (30-Slice Execution)
 
