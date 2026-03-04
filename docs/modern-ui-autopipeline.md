@@ -557,6 +557,10 @@ Current status is enforced by:
     - replaced direct `dangerouslySetInnerHTML` note/todo rendering with shared `FormattedTextBlock` to keep sanitization + markdown/plain text formatting behavior consistent with other modern pages
     - improved note/todo card metadata and status chip presentation (priority, overdue/reminder, due date) for faster triage in the modern workspace
     - added status/alert semantics for flash messages and aligned empty-state copy/style with shared modern rich-text patterns (`No notes provided.`).
+181. Added native in-page triage controls for `home.myNotes`:
+    - added client-side search across note/todo title and content text, plus metadata fields
+    - added view pane toggles (`Both`, `Notes`, `To-do`) and local note-scope filters (`All`, `Active`, `Archived`)
+    - added to-do status focus controls (`All`, `Open`, `In Progress`, `Blocked`, `Done`) with live filtered counts and zero-result states.
 
 ## Next Queue (30-Slice Execution)
 

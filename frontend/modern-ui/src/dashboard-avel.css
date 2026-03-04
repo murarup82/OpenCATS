@@ -2852,6 +2852,27 @@
   gap: 10px;
 }
 
+.avel-dashboard-page .avel-my-notes-toolbar {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-dashboard-page .avel-my-notes-search {
+  min-width: min(420px, 100%);
+  max-width: 640px;
+}
+
+.avel-dashboard-page .avel-my-notes-filter-groups {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-dashboard-page .avel-my-notes-toggle-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .avel-dashboard-page .avel-my-notes-stack {
   display: grid;
   gap: 8px;
