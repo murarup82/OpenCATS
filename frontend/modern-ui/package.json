@@ -14,6 +14,7 @@
     "verify:bridge-wildcards": "node ./scripts/verify-bridge-wildcard-retirement.mjs",
     "verify:no-bridge-actions": "node ./scripts/verify-no-bridge-actions.mjs",
     "verify:no-legacy-wrapper-routes": "node ./scripts/verify-no-legacy-wrapper-routes.mjs",
+    "verify:modernization-consistency": "node ./scripts/verify-modernization-consistency.mjs",
     "verify:zero-legacy-dependent": "node ./scripts/verify-modernization-zero-legacy-dependent.mjs",
     "verify:in-scope-routes": "node ./scripts/verify-no-inscope-wildcard-fallbacks.mjs",
     "verify:legacy-fallback-links": "node ./scripts/verify-legacy-fallback-links.mjs",
