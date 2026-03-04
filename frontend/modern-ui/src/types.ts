@@ -2069,7 +2069,7 @@ export type JobOrdersListModernDataResponse = {
     companyID: number;
     companyName: string;
     onlyMyJobOrders: boolean;
-    onlyHotJobOrders: boolean;
+    showInactive: boolean;
   };
   options: {
     statuses: Array<{
@@ -2104,6 +2104,7 @@ export type JobOrdersListModernDataResponse = {
     commentCount: number;
     daysOld: number;
     dateCreated: string;
+    openings: number;
     submitted: number;
     pipeline: number;
     ownerName: string;

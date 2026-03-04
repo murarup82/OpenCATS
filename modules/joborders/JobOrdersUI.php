@@ -435,14 +435,15 @@ class JobOrdersUI extends UserInterface
 
         if ($isModernJSON)
         {
+            $defaultStatusFilter = $this->getModernDefaultStatusFilter();
             $dataGridProperties = array('rangeStart'    => 0,
                                         'maxResults'    => 50,
-                                        'filter'        => 'Status=='.$jobOrderFilters[0],
+                                        'filter'        => '',
                                         'filterVisible' => false);
             $this->applyModernListRequestToDataGridProperties(
                 $dataGridProperties,
                 $jobOrderFilters,
-                $jobOrderFilters[0]
+                $defaultStatusFilter
             );
         }
         else
@@ -508,6 +509,7 @@ class JobOrdersUI extends UserInterface
                 $dataGrid,
                 $totalJobOrders,
                 $jobOrderFilters,
+                $defaultStatusFilter,
                 $companiesRS,
                 $selectedCompanyFilterID,
                 $selectedCompanyFilterName,
@@ -597,7 +599,20 @@ class JobOrdersUI extends UserInterface
         {
             $statusFilter = '';
         }
-        if ($statusFilter !== '' && !in_array($statusFilter, $jobOrderFilters, true))
+        $allowedStatusFilters = $jobOrderFilters;
+        if ($defaultStatus !== '' && !in_array($defaultStatus, $allowedStatusFilters, true))
+        {
+            $allowedStatusFilters[] = $defaultStatus;
+        }
+
+        $showInactive = $this->getRequestBooleanFlag('showInactive', false);
+
+        if ($statusFilter !== '' && !in_array($statusFilter, $allowedStatusFilters, true))
+        {
+            $statusFilter = ($showInactive ? '' : $defaultStatus);
+        }
+
+        if ($statusFilter === '' && !$showInactive)
         {
             $statusFilter = $defaultStatus;
         }
@@ -613,12 +628,35 @@ class JobOrdersUI extends UserInterface
         }
 
         $onlyMyJobOrders = $this->getRequestBooleanFlag('onlyMyJobOrders', false);
-        $onlyHotJobOrders = $this->getRequestBooleanFlag('onlyHotJobOrders', false);
 
         $this->setDataGridFilter($dataGridProperties, 'Status', '==', $statusFilter, ($statusFilter !== ''));
         $this->setDataGridFilter($dataGridProperties, 'OwnerID', '==', (string) $this->_userID, $onlyMyJobOrders);
-        $this->setDataGridFilter($dataGridProperties, 'IsHot', '==', '1', $onlyHotJobOrders);
+        $this->setDataGridFilter($dataGridProperties, 'IsHot', '==', '1', false);
         $this->setDataGridFilter($dataGridProperties, 'CompanyID', '==', (string) $companyID, ($companyID > 0));
+    }
+
+    private function getModernDefaultStatusFilter()
+    {
+        $groups = JobOrderStatuses::getAll();
+        $statusList = array();
+
+        if (isset($groups['Open']) && is_array($groups['Open']))
+        {
+            $statusList = array_merge($statusList, $groups['Open']);
+        }
+        if (isset($groups['Pre-Open']) && is_array($groups['Pre-Open']))
+        {
+            $statusList = array_merge($statusList, $groups['Pre-Open']);
+        }
+
+        $statusList = array_values(array_unique(array_filter($statusList, 'strlen')));
+
+        if (empty($statusList))
+        {
+            return 'Active / On Hold / Full / Upcoming / Lead';
+        }
+
+        return implode(' / ', $statusList);
     }
 
     private function getRequestBooleanFlag($key, $defaultValue = false)
@@ -702,6 +740,7 @@ class JobOrdersUI extends UserInterface
         $dataGrid,
         $totalJobOrders,
         $jobOrderFilters,
+        $defaultStatusFilter,
         $companiesRS,
         $selectedCompanyFilterID,
         $selectedCompanyFilterName,
@@ -739,8 +778,21 @@ class JobOrdersUI extends UserInterface
                 'tone' => 'all-statuses'
             )
         );
+        if (is_string($defaultStatusFilter) && trim($defaultStatusFilter) !== '')
+        {
+            $statusOptions[] = array(
+                'value' => $defaultStatusFilter,
+                'label' => 'Open + Lead',
+                'tone' => 'open-lead'
+            );
+        }
         foreach ($jobOrderFilters as $statusLabel)
         {
+            if ((string) $statusLabel === (string) $defaultStatusFilter)
+            {
+                continue;
+            }
+
             $statusSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string) $statusLabel), '-'));
             if ($statusSlug === '')
             {
@@ -814,6 +866,9 @@ class JobOrdersUI extends UserInterface
                 'commentCount' => (isset($row['profileCommentCount']) ? (int) $row['profileCommentCount'] : 0),
                 'daysOld' => (isset($row['daysOld']) ? (int) $row['daysOld'] : 0),
                 'dateCreated' => (isset($row['dateCreated']) ? $row['dateCreated'] : '--'),
+                'openings' => (isset($row['openingsAvailable'])
+                    ? (int) $row['openingsAvailable']
+                    : (isset($row['openings']) ? (int) $row['openings'] : 0)),
                 'submitted' => (isset($row['submitted']) ? (int) $row['submitted'] : 0),
                 'pipeline' => (isset($row['pipeline']) ? (int) $row['pipeline'] : 0),
                 'ownerName' => $ownerName,
@@ -858,7 +913,7 @@ class JobOrdersUI extends UserInterface
                 'companyID' => (int) $selectedCompanyFilterID,
                 'companyName' => (string) $selectedCompanyFilterName,
                 'onlyMyJobOrders' => ((int) $dataGrid->getFilterValue('OwnerID') === (int) $this->_userID),
-                'onlyHotJobOrders' => ($dataGrid->getFilterValue('IsHot') === '1')
+                'showInactive' => $this->getRequestBooleanFlag('showInactive', false)
             ),
             'options' => array(
                 'statuses' => $statusOptions,

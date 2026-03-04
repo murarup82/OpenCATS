@@ -21,9 +21,7 @@ type NavigationFilters = {
   status?: string;
   companyID?: number;
   onlyMyJobOrders?: boolean;
-  onlyHotJobOrders?: boolean;
-  sortBy?: string;
-  sortDirection?: 'ASC' | 'DESC';
+  showInactive?: boolean;
   page?: number;
   maxResults?: number;
 };
@@ -31,6 +29,7 @@ type NavigationFilters = {
 type ColumnVisibility = {
   company: boolean;
   status: boolean;
+  openings: boolean;
   pipeline: boolean;
   proposed: boolean;
   age: boolean;
@@ -45,6 +44,7 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
   full: {
     company: true,
     status: true,
+    openings: true,
     pipeline: true,
     proposed: true,
     age: true,
@@ -55,6 +55,7 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
   balanced: {
     company: true,
     status: true,
+    openings: true,
     pipeline: true,
     proposed: true,
     age: true,
@@ -65,6 +66,7 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
   compact: {
     company: false,
     status: true,
+    openings: true,
     pipeline: true,
     proposed: true,
     age: true,
@@ -89,6 +91,7 @@ function isColumnVisibility(value: unknown): value is ColumnVisibility {
   return (
     typeof candidate.company === 'boolean' &&
     typeof candidate.status === 'boolean' &&
+    typeof candidate.openings === 'boolean' &&
     typeof candidate.pipeline === 'boolean' &&
     typeof candidate.proposed === 'boolean' &&
     typeof candidate.age === 'boolean' &&
@@ -105,6 +108,7 @@ function detectPreset(visibility: ColumnVisibility): ColumnPresetKey | 'custom' 
     if (
       preset.company === visibility.company &&
       preset.status === visibility.status &&
+      preset.openings === visibility.openings &&
       preset.pipeline === visibility.pipeline &&
       preset.proposed === visibility.proposed &&
       preset.age === visibility.age &&
@@ -147,23 +151,6 @@ function buildStatusTone(tone: string): string {
     .replace(/^-+|-+$/g, '');
   return normalized === '' ? 'status' : normalized;
 }
-
-const sortOptions: SelectMenuOption[] = [
-  { value: 'dateCreatedSort', label: 'Created Date' },
-  { value: 'title', label: 'Job Title' },
-  { value: 'companyName', label: 'Company' },
-  { value: 'status', label: 'Status' },
-  { value: 'daysOld', label: 'Age (Days)' },
-  { value: 'pipeline', label: 'Pipeline Size' },
-  { value: 'submitted', label: 'Proposed Count' },
-  { value: 'ownerSort', label: 'Owner' },
-  { value: 'recruiterSort', label: 'Recruiter' }
-];
-
-const sortDirectionOptions: SelectMenuOption[] = [
-  { value: 'DESC', label: 'Descending' },
-  { value: 'ASC', label: 'Ascending' }
-];
 
 export function JobOrdersListPage({ bootstrap }: Props) {
   const [data, setData] = useState<JobOrdersListModernDataResponse | null>(null);
@@ -315,23 +302,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     }
 
     const onlyMyJobOrders = typeof next.onlyMyJobOrders === 'boolean' ? next.onlyMyJobOrders : data.filters.onlyMyJobOrders;
-    const onlyHotJobOrders = typeof next.onlyHotJobOrders === 'boolean' ? next.onlyHotJobOrders : data.filters.onlyHotJobOrders;
+    const showInactive = typeof next.showInactive === 'boolean' ? next.showInactive : data.filters.showInactive;
     nextQuery.set('onlyMyJobOrders', toBooleanString(onlyMyJobOrders));
-    nextQuery.set('onlyHotJobOrders', toBooleanString(onlyHotJobOrders));
-
-    const sortBy = String(next.sortBy ?? data.meta.sortBy ?? '').trim();
-    if (sortBy === '') {
-      nextQuery.delete('sortBy');
-    } else {
-      nextQuery.set('sortBy', sortBy);
-    }
-
-    const sortDirection = String(next.sortDirection ?? data.meta.sortDirection ?? '').trim().toUpperCase();
-    if (sortDirection === 'ASC' || sortDirection === 'DESC') {
-      nextQuery.set('sortDirection', sortDirection);
-    } else {
-      nextQuery.delete('sortDirection');
-    }
+    nextQuery.set('showInactive', toBooleanString(showInactive));
 
     const entriesPerPage =
       typeof next.maxResults === 'number' && next.maxResults > 0
@@ -379,13 +352,11 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     { value: '100', label: '100 rows' }
   ];
 
-  const selectedSortBy =
-    data && sortOptions.some((option) => option.value === data.meta.sortBy) ? data.meta.sortBy : 'dateCreatedSort';
-  const selectedSortDirection = data?.meta.sortDirection === 'ASC' ? 'ASC' : 'DESC';
   const tableColumns = [
     { key: 'title', title: 'Job Order' },
     ...(visibleColumns.company ? [{ key: 'company', title: 'Company' }] : []),
     ...(visibleColumns.status ? [{ key: 'status', title: 'Status' }] : []),
+    ...(visibleColumns.openings ? [{ key: 'openings', title: 'Openings' }] : []),
     ...(visibleColumns.pipeline ? [{ key: 'pipeline', title: 'Pipeline' }] : []),
     ...(visibleColumns.proposed ? [{ key: 'proposed', title: 'Proposed' }] : []),
     ...(visibleColumns.age ? [{ key: 'age', title: 'Age' }] : []),
@@ -396,6 +367,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const columnToggleItems: Array<{ key: keyof ColumnVisibility; label: string }> = [
     { key: 'company', label: 'Company' },
     { key: 'status', label: 'Status' },
+    { key: 'openings', label: 'Openings' },
     { key: 'pipeline', label: 'Pipeline' },
     { key: 'proposed', label: 'Proposed' },
     { key: 'age', label: 'Age' },
@@ -437,10 +409,10 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     activeFilterLabels.push(`Company: ${data.filters.companyName}`);
   }
   if (data.filters.onlyMyJobOrders) {
-    activeFilterLabels.push('Only My Job Orders');
+    activeFilterLabels.push('My jobs only');
   }
-  if (data.filters.onlyHotJobOrders) {
-    activeFilterLabels.push('Only Hot Job Orders');
+  if (data.filters.showInactive) {
+    activeFilterLabels.push('Including inactive');
   }
 
   return (
@@ -491,52 +463,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
           </section>
 
           <section className="modern-command-bar modern-command-bar--sticky" aria-label="Job order controls">
-            <div className="modern-command-bar__row modern-command-bar__row--primary modern-command-bar__row--primary-noscope avel-joborders-primary-row">
-              <SelectMenu
-                label="Sort By"
-                value={selectedSortBy}
-                options={sortOptions}
-                onChange={(value) => navigateWithFilters({ sortBy: value, page: 1 })}
-                className="modern-command-field modern-command-field--compact"
-              />
-
-              <SelectMenu
-                label="Direction"
-                value={selectedSortDirection}
-                options={sortDirectionOptions}
-                onChange={(value) => navigateWithFilters({ sortDirection: value as 'ASC' | 'DESC', page: 1 })}
-                className="modern-command-field modern-command-field--compact"
-              />
-
-              <SelectMenu
-                label="Rows"
-                value={String(data.meta.entriesPerPage)}
-                options={rowsPerPageOptions}
-                onChange={(value) => navigateWithFilters({ maxResults: Number(value), page: 1 })}
-                className="modern-command-field modern-command-field--compact"
-              />
-
-              <div className="modern-command-actions modern-command-actions--primary">
-                <button
-                  type="button"
-                  className="modern-btn modern-btn--secondary"
-                  onClick={() =>
-                    navigateWithFilters({
-                      status: '',
-                      companyID: 0,
-                      onlyMyJobOrders: false,
-                      onlyHotJobOrders: false,
-                      sortBy: 'dateCreatedSort',
-                      sortDirection: 'DESC',
-                      page: 1
-                    })
-                  }
-                >
-                  Reset Filters
-                </button>
-              </div>
-            </div>
-
             <div className="modern-command-bar__row modern-command-bar__row--filters avel-joborders-filters-row">
               <SelectMenu
                 label="Status"
@@ -554,6 +480,32 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                 className="modern-command-field"
               />
 
+              <SelectMenu
+                label="Rows"
+                value={String(data.meta.entriesPerPage)}
+                options={rowsPerPageOptions}
+                onChange={(value) => navigateWithFilters({ maxResults: Number(value), page: 1 })}
+                className="modern-command-field modern-command-field--compact avel-joborders-rows-control"
+              />
+
+              <div className="modern-command-actions modern-command-actions--primary avel-joborders-filters-actions">
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--secondary"
+                  onClick={() =>
+                    navigateWithFilters({
+                      status: '',
+                      companyID: 0,
+                      onlyMyJobOrders: false,
+                      showInactive: false,
+                      page: 1
+                    })
+                  }
+                >
+                  Reset Filters
+                </button>
+              </div>
+
               <label className="modern-command-toggle">
                 <input
                   type="checkbox"
@@ -561,24 +513,24 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                   onChange={(event) => navigateWithFilters({ onlyMyJobOrders: event.target.checked, page: 1 })}
                 />
                 <span className="modern-command-toggle__switch" aria-hidden="true" />
-                <span>Only My Job Orders</span>
+                <span>My Jobs Only</span>
               </label>
 
               <label className="modern-command-toggle">
                 <input
                   type="checkbox"
-                  checked={data.filters.onlyHotJobOrders}
-                  onChange={(event) => navigateWithFilters({ onlyHotJobOrders: event.target.checked, page: 1 })}
+                  checked={data.filters.showInactive}
+                  onChange={(event) => navigateWithFilters({ showInactive: event.target.checked, page: 1 })}
                 />
                 <span className="modern-command-toggle__switch" aria-hidden="true" />
-                <span>Only Hot Job Orders</span>
+                <span>Show Inactive</span>
               </label>
             </div>
 
             <div className="modern-command-bar__row modern-command-bar__row--meta">
-              <div className="modern-chip-strip">
+              <div className="modern-chip-strip avel-joborders-active-strip">
                 {activeFilterLabels.length === 0 ? (
-                  <span className="modern-chip modern-chip--info">No active filters</span>
+                  <span className="modern-chip modern-chip--info">No filters</span>
                 ) : (
                   activeFilterLabels.map((label) => (
                     <span key={label} className="modern-chip modern-chip--info">
@@ -587,7 +539,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                   ))
                 )}
               </div>
-              <div className="modern-chip-strip">
+              <div className="modern-chip-strip avel-joborders-presets-strip">
                 <span className="modern-chip modern-chip--info">Presets</span>
                 {columnPresetOrder.map((preset) => (
                   <button
@@ -606,30 +558,33 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                 ))}
                 {columnPreset === 'custom' ? <span className="modern-chip modern-chip--warning">Custom</span> : null}
               </div>
-              <div className="modern-chip-strip">
-                {columnToggleItems.map((columnItem) => (
-                  <button
-                    key={columnItem.key}
-                    type="button"
-                    className={`modern-chip modern-chip--column-toggle ${visibleColumns[columnItem.key] ? 'is-active' : ''}`}
-                    aria-pressed={visibleColumns[columnItem.key]}
-                    aria-label={`${visibleColumns[columnItem.key] ? 'Hide' : 'Show'} ${columnItem.label} column`}
-                    onClick={() => {
-                      setVisibleColumns((current) => {
-                        const next = {
-                          ...current,
-                          [columnItem.key]: !current[columnItem.key]
-                        };
-                        setColumnPreset(detectPreset(next));
-                        return next;
-                      });
-                    }}
-                  >
-                    {columnItem.label}
-                  </button>
-                ))}
-                <span className="modern-chip modern-chip--info">Saved per user</span>
-              </div>
+              <details className="avel-joborders-columns-menu">
+                <summary className="modern-chip modern-chip--column-toggle">Columns</summary>
+                <div className="modern-chip-strip avel-joborders-columns-menu__panel">
+                  {columnToggleItems.map((columnItem) => (
+                    <button
+                      key={columnItem.key}
+                      type="button"
+                      className={`modern-chip modern-chip--column-toggle ${visibleColumns[columnItem.key] ? 'is-active' : ''}`}
+                      aria-pressed={visibleColumns[columnItem.key]}
+                      aria-label={`${visibleColumns[columnItem.key] ? 'Hide' : 'Show'} ${columnItem.label} column`}
+                      onClick={() => {
+                        setVisibleColumns((current) => {
+                          const next = {
+                            ...current,
+                            [columnItem.key]: !current[columnItem.key]
+                          };
+                          setColumnPreset(detectPreset(next));
+                          return next;
+                        });
+                      }}
+                    >
+                      {columnItem.label}
+                    </button>
+                  ))}
+                  <span className="modern-chip modern-chip--info">Saved per user</span>
+                </div>
+              </details>
               {data.state.errorMessage ? (
                 <span className="modern-chip modern-chip--critical">{data.state.errorMessage}</span>
               ) : null}
@@ -659,7 +614,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                     <div className="avel-joborders-flags">
                       {row.isMonitored ? <span className="modern-chip modern-chip--success">Monitored</span> : null}
                       {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                      {row.hasAttachment ? <span className="modern-chip modern-chip--info">Attachment</span> : null}
                       {row.commentCount > 0 ? <span className="modern-chip modern-chip--info">{row.commentCount} comments</span> : null}
                     </div>
                   </td>
@@ -675,6 +629,13 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                       <span className={`modern-chip modern-chip--status-${row.statusSlug}`}>{toDisplayText(row.status)}</span>
                     </td>
                   ) : null}
+                  {visibleColumns.openings ? (
+                    <td>
+                      <span className={`modern-chip ${row.openings > 0 ? 'modern-chip--openings' : 'modern-chip--openings-zero'}`}>
+                        {row.openings}
+                      </span>
+                    </td>
+                  ) : null}
                   {visibleColumns.pipeline ? <td>{row.pipeline}</td> : null}
                   {visibleColumns.proposed ? <td>{row.submitted}</td> : null}
                   {visibleColumns.age ? <td>{row.daysOld}d</td> : null}
@@ -683,22 +644,22 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                   {visibleColumns.monitor ? (
                     <td>
                       {canToggleMonitored ? (
-                        <div className="modern-table-actions">
-                          <button
-                            type="button"
-                            className="modern-btn modern-btn--secondary modern-btn--mini"
-                            onClick={() => void toggleMonitoredState(row)}
-                            disabled={monitorTogglePendingIDs.includes(Number(row.jobOrderID || 0))}
-                          >
-                            {monitorTogglePendingIDs.includes(Number(row.jobOrderID || 0))
-                              ? 'Updating...'
-                              : row.isMonitored
-                                ? 'Disable'
-                                : 'Enable'}
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className={`modern-chip modern-chip--monitor ${row.isMonitored ? 'modern-chip--monitor-on' : 'modern-chip--monitor-off'}`}
+                          onClick={() => void toggleMonitoredState(row)}
+                          disabled={monitorTogglePendingIDs.includes(Number(row.jobOrderID || 0))}
+                        >
+                          {monitorTogglePendingIDs.includes(Number(row.jobOrderID || 0))
+                            ? 'Updating...'
+                            : row.isMonitored
+                              ? 'Monitored'
+                              : 'Not Monitored'}
+                        </button>
                       ) : (
-                        <span className="modern-chip modern-chip--info">{row.isMonitored ? 'On' : 'Off'}</span>
+                        <span className={`modern-chip modern-chip--monitor ${row.isMonitored ? 'modern-chip--monitor-on' : 'modern-chip--monitor-off'}`}>
+                          {row.isMonitored ? 'Monitored' : 'Not Monitored'}
+                        </span>
                       )}
                     </td>
                   ) : null}
