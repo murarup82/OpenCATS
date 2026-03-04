@@ -553,6 +553,10 @@ Current status is enforced by:
     - added structured plain-text paste heuristics in `MarkdownTextarea` to auto-normalize wrapped paragraphs, convert common section headers into markdown headings, and preserve bullet/numbered list intent
     - added explicit toolbar accessibility labeling (`aria-label`/`title`) for toast-ui editor actions to improve assistive support and tooltip clarity
     - switched toolbar controls to text-labeled button presentation in Avel CSS to remove icon-sprite dependency and keep controls readable across environments.
+180. Modernized `home.myNotes` presentation fidelity and rich-text consistency:
+    - replaced direct `dangerouslySetInnerHTML` note/todo rendering with shared `FormattedTextBlock` to keep sanitization + markdown/plain text formatting behavior consistent with other modern pages
+    - improved note/todo card metadata and status chip presentation (priority, overdue/reminder, due date) for faster triage in the modern workspace
+    - added status/alert semantics for flash messages and aligned empty-state copy/style with shared modern rich-text patterns (`No notes provided.`).
 
 ## Next Queue (30-Slice Execution)
 

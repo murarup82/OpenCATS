@@ -2848,6 +2848,39 @@
   text-decoration: underline;
 }
 
+.avel-dashboard-page .avel-my-notes-panel {
+  gap: 10px;
+}
+
+.avel-dashboard-page .avel-my-notes-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-dashboard-page .avel-my-notes-stack--compact {
+  gap: 6px;
+}
+
+.avel-dashboard-page .avel-my-notes-card {
+  background: #f9fcff;
+}
+
+.avel-dashboard-page .avel-my-notes-card--todo {
+  background: #fbfdff;
+}
+
+.avel-dashboard-page .avel-my-notes-meta {
+  color: #537286;
+  font: 600 0.68rem/1.35 'Manrope', 'Segoe UI', sans-serif;
+  margin-bottom: 4px;
+}
+
+.avel-dashboard-page .avel-my-notes-chip-row {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .avel-joborder-show-page .avel-joborder-richtext .avel-richtext-block {
   white-space: pre-wrap;
 }

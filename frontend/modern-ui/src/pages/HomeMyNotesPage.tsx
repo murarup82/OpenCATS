@@ -4,6 +4,7 @@ import { useServerQueryState } from '../lib/useServerQueryState';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
+import { FormattedTextBlock } from '../components/primitives/FormattedTextBlock';
 import type { HomeMyNotesModernDataResponse, UIModeBootstrap } from '../types';
 import '../dashboard-avel.css';
 
@@ -61,6 +62,22 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
     return <EmptyState message="My Notes data is unavailable." />;
   }
 
+  const todoLabelByStatus = data.todoStatuses.reduce<Record<string, string>>((labels, option) => {
+    labels[String(option.value || '')] = String(option.label || '').trim();
+    return labels;
+  }, {});
+
+  const toTodoSectionLabel = (statusKey: keyof HomeMyNotesModernDataResponse['todosByStatus']) => {
+    const mapped = String(todoLabelByStatus[statusKey] || '').trim();
+    if (mapped !== '') {
+      return mapped;
+    }
+    return statusKey
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  };
+
   return (
     <div className="avel-dashboard-page">
       <PageContainer
@@ -82,7 +99,11 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
       >
         <div className="modern-dashboard avel-dashboard-shell">
           {data.state.flashMessage ? (
-            <div className={`modern-state${data.state.flashIsError ? ' modern-state--error' : ''}`} style={{ marginBottom: '10px' }}>
+            <div
+              className={`modern-state${data.state.flashIsError ? ' modern-state--error' : ''}`}
+              style={{ marginBottom: '10px' }}
+              role={data.state.flashIsError ? 'alert' : 'status'}
+            >
               {data.state.flashMessage}
             </div>
           ) : null}
@@ -110,51 +131,57 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
               </section>
 
               <section className="modern-command-grid modern-command-grid--dual">
-                <article className="avel-list-panel">
+                <article className="avel-list-panel avel-my-notes-panel">
                   <div className="avel-list-panel__header">
                     <h3 className="avel-list-panel__title">Notes</h3>
                   </div>
                   {data.notes.length === 0 ? (
-                    <div className="modern-state">No notes available.</div>
+                    <div className="avel-richtext-block">No notes provided.</div>
                   ) : (
-                    <div style={{ display: 'grid', gap: '8px' }}>
+                    <div className="avel-my-notes-stack">
                       {data.notes.slice(0, 40).map((note) => (
-                        <article key={`note-${note.itemID}`} className="avel-list-panel" style={{ background: '#f9fcff' }}>
+                        <article key={`note-${note.itemID}`} className="avel-list-panel avel-my-notes-card">
                           <div className="avel-list-panel__header">
                             <h4 className="avel-list-panel__title">{note.title || `Note #${note.itemID}`}</h4>
                             {note.isArchived ? <span className="modern-chip modern-chip--warn">Archived</span> : null}
                           </div>
-                          <div dangerouslySetInnerHTML={{ __html: note.bodyHTML || '' }} />
+                          <div className="avel-my-notes-meta">Updated {note.dateModified || note.dateCreated || '--'}</div>
+                          <FormattedTextBlock text={note.bodyHTML || ''} emptyMessage="No content provided." />
                         </article>
                       ))}
                     </div>
                   )}
                 </article>
 
-                <article className="avel-list-panel">
+                <article className="avel-list-panel avel-my-notes-panel">
                   <div className="avel-list-panel__header">
                     <h3 className="avel-list-panel__title">To-do Boards</h3>
                   </div>
-                  <div style={{ display: 'grid', gap: '10px' }}>
+                  <div className="avel-my-notes-stack">
                     {TODO_SECTIONS.map((statusKey) => {
                       const rows = data.todosByStatus[statusKey];
                       return (
-                        <section key={`todo-${statusKey}`} className="avel-list-panel" style={{ background: '#f9fcff' }}>
+                        <section key={`todo-${statusKey}`} className="avel-list-panel avel-my-notes-card">
                           <div className="avel-list-panel__header">
-                            <h4 className="avel-list-panel__title">{statusKey.replace('_', ' ')}</h4>
+                            <h4 className="avel-list-panel__title">{toTodoSectionLabel(statusKey)}</h4>
                             <span className="modern-chip modern-chip--info">{rows.length}</span>
                           </div>
                           {rows.length === 0 ? (
                             <div className="modern-state">No items.</div>
                           ) : (
-                            <div style={{ display: 'grid', gap: '6px' }}>
+                            <div className="avel-my-notes-stack avel-my-notes-stack--compact">
                               {rows.slice(0, 12).map((todo) => (
-                                <article key={`todo-item-${statusKey}-${todo.itemID}`} className="avel-list-panel">
+                                <article key={`todo-item-${statusKey}-${todo.itemID}`} className="avel-list-panel avel-my-notes-card avel-my-notes-card--todo">
                                   <div className="avel-list-panel__header">
                                     <h5 className="avel-list-panel__title">{todo.title || `To-do #${todo.itemID}`}</h5>
-                                    <span className="modern-chip modern-chip--info">{todo.priorityLabel || 'Priority'}</span>
+                                    <div className="avel-my-notes-chip-row">
+                                      <span className="modern-chip modern-chip--info">{todo.priorityLabel || 'Priority'}</span>
+                                      {todo.isOverdue ? <span className="modern-chip modern-chip--warn">Overdue</span> : null}
+                                      {todo.isReminderDue ? <span className="modern-chip modern-chip--warn">Reminder Due</span> : null}
+                                    </div>
                                   </div>
-                                  <div dangerouslySetInnerHTML={{ __html: todo.bodyHTML || '' }} />
+                                  {todo.dueDate ? <div className="avel-my-notes-meta">Due {todo.dueDate}</div> : null}
+                                  <FormattedTextBlock text={todo.bodyHTML || ''} emptyMessage="No details provided." />
                                 </article>
                               ))}
                             </div>
