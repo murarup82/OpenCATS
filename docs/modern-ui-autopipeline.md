@@ -561,6 +561,10 @@ Current status is enforced by:
     - added client-side search across note/todo title and content text, plus metadata fields
     - added view pane toggles (`Both`, `Notes`, `To-do`) and local note-scope filters (`All`, `Active`, `Archived`)
     - added to-do status focus controls (`All`, `Open`, `In Progress`, `Blocked`, `Done`) with live filtered counts and zero-result states.
+182. Polished login workspace modernization and accessibility behavior:
+    - improved `LoginPage` message semantics with explicit status/alert roles for success/warning states
+    - added request-access navigation affordances directly in login workspace actions and login-form command row
+    - hardened login/forgot/request forms with required + autocomplete hints and relogin context preservation via hidden `reloginVars` input.
 
 ## Next Queue (30-Slice Execution)
 

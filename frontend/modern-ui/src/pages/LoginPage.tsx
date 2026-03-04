@@ -41,7 +41,11 @@ function renderMessage(data: LoginModernDataResponse) {
     return null;
   }
   const isSuccess = toBoolValue(data.state.messageSuccess) || toStringValue(data.state.status) === 'submitted';
-  return <p className={`modern-state${isSuccess ? '' : ' modern-state--warning'}`}>{text}</p>;
+  return (
+    <p className={`modern-state${isSuccess ? '' : ' modern-state--warning'}`} role={isSuccess ? 'status' : 'alert'}>
+      {text}
+    </p>
+  );
 }
 
 export function LoginPage({ bootstrap }: Props) {
@@ -99,6 +103,10 @@ export function LoginPage({ bootstrap }: Props) {
     if (!data) {
       return;
     }
+    if (forgotUsername.trim() === '') {
+      setError('Username is required.');
+      return;
+    }
     const submitURL = toStringValue(data.actions.forgotPasswordSubmitURL || `${bootstrap.indexName}?m=login&a=forgotPassword`);
     setSubmittingForgot(true);
     setError('');
@@ -130,6 +138,7 @@ export function LoginPage({ bootstrap }: Props) {
   const requestAccessSubmitURL = toStringValue(
     data.actions.requestAccessSubmitURL || `${bootstrap.indexName}?m=login&a=requestAccess&ui=modern`
   );
+  const requestAccessURL = toStringValue(data.actions.requestAccessURL || `${bootstrap.indexName}?m=login&a=requestAccess&ui=modern`);
   const showLoginURL = toStringValue(data.actions.showLoginURL || `${bootstrap.indexName}?m=login&a=showLoginForm&ui=modern`);
   const forgotPasswordURL = toStringValue(
     data.actions.forgotPasswordURL || `${bootstrap.indexName}?m=login&a=forgotPassword&ui=modern`
@@ -146,6 +155,9 @@ export function LoginPage({ bootstrap }: Props) {
             <a className="modern-btn modern-btn--secondary" href={showLoginURL}>
               Sign In
             </a>
+            <a className="modern-btn modern-btn--secondary" href={requestAccessURL}>
+              Request Access
+            </a>
             <a className="modern-btn modern-btn--secondary" href={legacyURL}>
               Open Legacy UI
             </a>
@@ -161,8 +173,11 @@ export function LoginPage({ bootstrap }: Props) {
                 {toStringValue(data.state.siteName) !== '' ? (
                   <input type="hidden" name="siteName" value={toStringValue(data.state.siteName)} />
                 ) : null}
+                {toStringValue(data.state.reloginVars) !== '' ? (
+                  <input type="hidden" name="reloginVars" value={toStringValue(data.state.reloginVars)} />
+                ) : null}
                 {toBoolValue(data.state.siteNameError) ? (
-                  <p className="modern-state modern-state--warning">
+                  <p className="modern-state modern-state--warning" role="alert">
                     This site does not exist. Check the URL or sign in with a different site context.
                   </p>
                 ) : null}
@@ -174,11 +189,13 @@ export function LoginPage({ bootstrap }: Props) {
                       name="username"
                       className="avel-form-control"
                       defaultValue={toStringValue(data.state.username)}
+                      autoComplete="username"
+                      required
                     />
                   </label>
                   <label className="modern-command-field">
                     <span className="modern-command-label">Password</span>
-                    <input type="password" name="password" className="avel-form-control" />
+                    <input type="password" name="password" className="avel-form-control" autoComplete="current-password" required />
                   </label>
                 </div>
                 <div className="modern-table-actions" style={{ marginTop: '12px' }}>
@@ -195,6 +212,9 @@ export function LoginPage({ bootstrap }: Props) {
                   ) : null}
                   <a className="modern-btn modern-btn--secondary" href={forgotPasswordURL}>
                     Forgot Password
+                  </a>
+                  <a className="modern-btn modern-btn--secondary" href={requestAccessURL}>
+                    Request Access
                   </a>
                 </div>
               </form>
@@ -216,6 +236,8 @@ export function LoginPage({ bootstrap }: Props) {
                           className="avel-form-control"
                           value={forgotUsername}
                           onChange={(event) => setForgotUsername(event.target.value)}
+                          autoComplete="username"
+                          required
                         />
                       </label>
                     </div>
@@ -258,6 +280,7 @@ export function LoginPage({ bootstrap }: Props) {
                           name="reason"
                           value={requestReason}
                           onChange={(event) => setRequestReason(event.target.value)}
+                          maxLength={2000}
                         />
                       </label>
                     </div>
@@ -276,7 +299,9 @@ export function LoginPage({ bootstrap }: Props) {
 
             {data.state.view === 'no-cookies' ? (
               <div>
-                <p className="modern-state modern-state--warning">{toStringValue(data.state.message || data.state.title)}</p>
+                <p className="modern-state modern-state--warning" role="alert">
+                  {toStringValue(data.state.message || data.state.title)}
+                </p>
                 <div className="modern-table-actions" style={{ marginTop: '12px' }}>
                   <a className="modern-btn modern-btn--emphasis" href={toStringValue(data.actions.retryURL || showLoginURL)}>
                     Retry
