@@ -2867,6 +2867,23 @@
   gap: 8px;
 }
 
+.avel-dashboard-page .avel-my-notes-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+}
+
+.avel-dashboard-page .avel-my-notes-toolbar-row .modern-command-field {
+  min-width: 170px;
+}
+
+.avel-dashboard-page .avel-my-notes-results {
+  margin: 0;
+  color: #355e75;
+  font: 600 0.74rem/1.35 'Manrope', 'Segoe UI', sans-serif;
+}
+
 .avel-dashboard-page .avel-my-notes-toggle-group {
   display: inline-flex;
   flex-wrap: wrap;
@@ -2900,6 +2917,36 @@
   display: inline-flex;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.avel-dashboard-page .avel-login-password-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.avel-dashboard-page .avel-login-password-row .avel-form-control {
+  flex: 1 1 auto;
+}
+
+.avel-dashboard-page .avel-login-password-toggle {
+  min-width: 64px;
+}
+
+.avel-dashboard-page .avel-login-options {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.avel-dashboard-page .avel-login-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #264a5d;
+  font: 600 0.76rem/1.35 'Manrope', 'Segoe UI', sans-serif;
 }
 
 .avel-joborder-show-page .avel-joborder-richtext .avel-richtext-block {

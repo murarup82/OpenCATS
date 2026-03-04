@@ -565,6 +565,26 @@ Current status is enforced by:
     - improved `LoginPage` message semantics with explicit status/alert roles for success/warning states
     - added request-access navigation affordances directly in login workspace actions and login-form command row
     - hardened login/forgot/request forms with required + autocomplete hints and relogin context preservation via hidden `reloginVars` input.
+183. Login workspace now separates transport/runtime failures from inline validation feedback:
+    - introduced page-level vs form-level error handling so client validation no longer drops users into full-page `ErrorState`.
+184. Added controlled credential fields to login form:
+    - `username` and `password` now use controlled state for safer client-side checks and deterministic reset behavior.
+185. Added pre-submit login validation guard:
+    - login submit is blocked client-side when username/password are blank and an inline warning is shown.
+186. Added remembered username option for login UX continuity:
+    - optional local username persistence via localStorage (`opencats:modern:login:last-username:v1`) with explicit opt-in checkbox.
+187. Added password visibility toggle on login form:
+    - modern mini-button toggles password masking/unmasking with explicit aria-label updates.
+188. Added caps-lock warning behavior on password entry:
+    - login password field now surfaces a live warning when Caps Lock is active.
+189. Added note sorting controls in `home.myNotes`:
+    - supports `Recently Updated`, `Oldest Updated`, and `Title A-Z` ordering for filtered notes.
+190. Added to-do sorting controls in `home.myNotes`:
+    - supports `Due Soonest`, `Priority (High First)`, and `Title A-Z` ordering for filtered to-do items.
+191. Added to-do flag filtering in `home.myNotes`:
+    - new filter mode for `All`, `Overdue`, and `Reminder Due` to speed operational triage.
+192. Added filter-reset and live results telemetry in `home.myNotes`:
+    - added `Clear Filters` command and aria-live results summary line reporting active note/to-do result counts.
 
 ## Next Queue (30-Slice Execution)
 

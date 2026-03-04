@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from 'react';
 import { fetchLoginModernData, submitForgotPasswordModernData } from '../lib/api';
 import { useServerQueryState } from '../lib/useServerQueryState';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -10,6 +10,8 @@ import '../dashboard-avel.css';
 type Props = {
   bootstrap: UIModeBootstrap;
 };
+
+const LOGIN_USERNAME_STORAGE_KEY = 'opencats:modern:login:last-username:v1';
 
 function toStringValue(value: unknown): string {
   if (typeof value !== 'string') {
@@ -48,13 +50,39 @@ function renderMessage(data: LoginModernDataResponse) {
   );
 }
 
+function readStoredLoginUsername(): string {
+  try {
+    return String(window.localStorage.getItem(LOGIN_USERNAME_STORAGE_KEY) || '');
+  } catch {
+    return '';
+  }
+}
+
+function writeStoredLoginUsername(value: string): void {
+  try {
+    if (String(value || '').trim() === '') {
+      window.localStorage.removeItem(LOGIN_USERNAME_STORAGE_KEY);
+      return;
+    }
+    window.localStorage.setItem(LOGIN_USERNAME_STORAGE_KEY, String(value));
+  } catch {
+    // Best effort only.
+  }
+}
+
 export function LoginPage({ bootstrap }: Props) {
   const [data, setData] = useState<LoginModernDataResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submittingForgot, setSubmittingForgot] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [pageError, setPageError] = useState<string>('');
+  const [formError, setFormError] = useState<string>('');
   const [forgotUsername, setForgotUsername] = useState<string>('');
   const [requestReason, setRequestReason] = useState<string>('');
+  const [loginUsername, setLoginUsername] = useState<string>('');
+  const [loginPassword, setLoginPassword] = useState<string>('');
+  const [rememberUsername, setRememberUsername] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [capsLockOn, setCapsLockOn] = useState<boolean>(false);
   const { serverQueryString } = useServerQueryState(bootstrap.indexName);
 
   const requestedAction = useMemo(() => {
@@ -65,7 +93,8 @@ export function LoginPage({ bootstrap }: Props) {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    setError('');
+    setPageError('');
+    setFormError('');
 
     const query = new URLSearchParams(serverQueryString);
     fetchLoginModernData(bootstrap, requestedAction, query)
@@ -74,6 +103,14 @@ export function LoginPage({ bootstrap }: Props) {
           return;
         }
         setData(result);
+        if (result.state.view === 'login-form') {
+          const initialUsername = toStringValue(result.state.username) || readStoredLoginUsername();
+          setLoginUsername(initialUsername);
+          setLoginPassword('');
+          setRememberUsername(initialUsername.trim() !== '');
+          setShowPassword(false);
+          setCapsLockOn(false);
+        }
         if (result.state.view === 'forgot-password') {
           setForgotUsername(toStringValue(result.state.username));
         }
@@ -85,7 +122,7 @@ export function LoginPage({ bootstrap }: Props) {
         if (!mounted) {
           return;
         }
-        setError(err.message || 'Unable to load login workspace.');
+        setPageError(err.message || 'Unable to load login workspace.');
       })
       .finally(() => {
         if (mounted) {
@@ -104,21 +141,46 @@ export function LoginPage({ bootstrap }: Props) {
       return;
     }
     if (forgotUsername.trim() === '') {
-      setError('Username is required.');
+      setFormError('Username is required.');
       return;
     }
     const submitURL = toStringValue(data.actions.forgotPasswordSubmitURL || `${bootstrap.indexName}?m=login&a=forgotPassword`);
     setSubmittingForgot(true);
-    setError('');
+    setFormError('');
     try {
       const result = await submitForgotPasswordModernData(submitURL, forgotUsername);
       setData(result);
       setForgotUsername(toStringValue(result.state.username || forgotUsername));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Forgot password submit failed.';
-      setError(message);
+      setFormError(message);
     } finally {
       setSubmittingForgot(false);
+    }
+  };
+
+  const handleLoginSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (loginUsername.trim() === '' || loginPassword.trim() === '') {
+      event.preventDefault();
+      setFormError('Username and password are required.');
+      return;
+    }
+    setFormError('');
+    writeStoredLoginUsername(rememberUsername ? loginUsername.trim() : '');
+  };
+
+  const handleLoginReset = () => {
+    setLoginPassword('');
+    setCapsLockOn(false);
+    if (!rememberUsername) {
+      setLoginUsername('');
+    }
+    setFormError('');
+  };
+
+  const handlePasswordKeyEvent = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (typeof event.getModifierState === 'function') {
+      setCapsLockOn(event.getModifierState('CapsLock'));
     }
   };
 
@@ -126,8 +188,8 @@ export function LoginPage({ bootstrap }: Props) {
     return <div className="modern-state">Loading login workspace...</div>;
   }
 
-  if (error) {
-    return <ErrorState message={error} actionLabel="Open Legacy UI" actionURL={bootstrap.legacyURL} />;
+  if (pageError) {
+    return <ErrorState message={pageError} actionLabel="Open Legacy UI" actionURL={bootstrap.legacyURL} />;
   }
 
   if (!data) {
@@ -167,9 +229,10 @@ export function LoginPage({ bootstrap }: Props) {
         <div className="modern-dashboard avel-dashboard-shell">
           <section className="avel-list-panel">
             {renderMessage(data)}
+            {formError !== '' ? <p className="modern-state modern-state--warning" role="alert">{formError}</p> : null}
 
             {data.state.view === 'login-form' ? (
-              <form action={loginSubmitURL} method="post" autoComplete="off">
+              <form action={loginSubmitURL} method="post" autoComplete="off" onSubmit={handleLoginSubmit}>
                 {toStringValue(data.state.siteName) !== '' ? (
                   <input type="hidden" name="siteName" value={toStringValue(data.state.siteName)} />
                 ) : null}
@@ -188,21 +251,68 @@ export function LoginPage({ bootstrap }: Props) {
                       type="text"
                       name="username"
                       className="avel-form-control"
-                      defaultValue={toStringValue(data.state.username)}
+                      value={loginUsername}
+                      onChange={(event) => {
+                        setLoginUsername(event.target.value);
+                        if (formError !== '') {
+                          setFormError('');
+                        }
+                      }}
                       autoComplete="username"
                       required
                     />
                   </label>
                   <label className="modern-command-field">
                     <span className="modern-command-label">Password</span>
-                    <input type="password" name="password" className="avel-form-control" autoComplete="current-password" required />
+                    <div className="avel-login-password-row">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        className="avel-form-control"
+                        autoComplete="current-password"
+                        value={loginPassword}
+                        onChange={(event) => {
+                          setLoginPassword(event.target.value);
+                          if (formError !== '') {
+                            setFormError('');
+                          }
+                        }}
+                        onKeyDown={handlePasswordKeyEvent}
+                        onKeyUp={handlePasswordKeyEvent}
+                        onBlur={() => setCapsLockOn(false)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--secondary modern-btn--mini avel-login-password-toggle"
+                        onClick={() => setShowPassword((current) => !current)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
                   </label>
                 </div>
+                <div className="avel-login-options" role="group" aria-label="Login options">
+                  <label className="avel-login-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={rememberUsername}
+                      onChange={(event) => setRememberUsername(event.target.checked)}
+                    />
+                    <span>Remember username on this browser</span>
+                  </label>
+                  {capsLockOn ? (
+                    <span className="modern-state modern-state--warning" role="status">
+                      Caps Lock appears to be on.
+                    </span>
+                  ) : null}
+                </div>
                 <div className="modern-table-actions" style={{ marginTop: '12px' }}>
-                  <button type="submit" className="modern-btn modern-btn--emphasis">
+                  <button type="submit" className="modern-btn modern-btn--emphasis" disabled={loginUsername.trim() === '' || loginPassword.trim() === ''}>
                     Login
                   </button>
-                  <button type="reset" className="modern-btn modern-btn--secondary">
+                  <button type="button" className="modern-btn modern-btn--secondary" onClick={handleLoginReset}>
                     Reset
                   </button>
                   {toBoolValue(data.state.googleAuthEnabled) && toStringValue(data.state.googleLoginURL) !== '' ? (
@@ -235,7 +345,12 @@ export function LoginPage({ bootstrap }: Props) {
                           type="text"
                           className="avel-form-control"
                           value={forgotUsername}
-                          onChange={(event) => setForgotUsername(event.target.value)}
+                          onChange={(event) => {
+                            setForgotUsername(event.target.value);
+                            if (formError !== '') {
+                              setFormError('');
+                            }
+                          }}
                           autoComplete="username"
                           required
                         />

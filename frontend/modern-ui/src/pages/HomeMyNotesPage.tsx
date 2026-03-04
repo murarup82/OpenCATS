@@ -16,6 +16,9 @@ const TODO_SECTIONS: Array<keyof HomeMyNotesModernDataResponse['todosByStatus']>
 type MyNotesPane = 'both' | 'notes' | 'todos';
 type NoteScope = 'all' | 'active' | 'archived';
 type TodoFocus = 'all' | keyof HomeMyNotesModernDataResponse['todosByStatus'];
+type NoteSort = 'updated-desc' | 'updated-asc' | 'title-asc';
+type TodoSort = 'due-soonest' | 'priority-desc' | 'title-asc';
+type TodoFlagFilter = 'all' | 'overdue' | 'reminder-due';
 
 function normalizeSearchValue(value: string): string {
   return String(value || '').trim().toLowerCase();
@@ -34,6 +37,33 @@ function stripHTML(value: string): string {
   return String(template.content.textContent || '').replace(/\s+/g, ' ').trim();
 }
 
+function parseTimestamp(value: string): number {
+  const parsed = Date.parse(String(value || '').trim());
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function priorityWeight(label: string): number {
+  const normalized = String(label || '').trim().toLowerCase();
+  if (normalized.includes('high')) {
+    return 3;
+  }
+  if (normalized.includes('medium')) {
+    return 2;
+  }
+  if (normalized.includes('low')) {
+    return 1;
+  }
+  return 0;
+}
+
+function parseDueDateWeight(value: string): number {
+  const parsed = Date.parse(String(value || '').trim());
+  if (Number.isNaN(parsed)) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+  return parsed;
+}
+
 export function HomeMyNotesPage({ bootstrap }: Props) {
   const [data, setData] = useState<HomeMyNotesModernDataResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -42,7 +72,20 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
   const [pane, setPane] = useState<MyNotesPane>('both');
   const [noteScope, setNoteScope] = useState<NoteScope>('all');
   const [todoFocus, setTodoFocus] = useState<TodoFocus>('all');
+  const [noteSort, setNoteSort] = useState<NoteSort>('updated-desc');
+  const [todoSort, setTodoSort] = useState<TodoSort>('due-soonest');
+  const [todoFlagFilter, setTodoFlagFilter] = useState<TodoFlagFilter>('all');
   const { serverQueryString } = useServerQueryState(bootstrap.indexName);
+
+  const clearAllFilters = () => {
+    setSearchValue('');
+    setPane('both');
+    setNoteScope('all');
+    setTodoFocus('all');
+    setNoteSort('updated-desc');
+    setTodoSort('due-soonest');
+    setTodoFlagFilter('all');
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -104,15 +147,24 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
   };
   const matchesSearch = (parts: Array<string>) =>
     searchNeedle === '' || parts.some((part) => String(part || '').toLowerCase().includes(searchNeedle));
-  const filteredNotes = data.notes.filter((note) => {
-    if (noteScope === 'active' && note.isArchived) {
-      return false;
-    }
-    if (noteScope === 'archived' && !note.isArchived) {
-      return false;
-    }
-    return matchesSearch([note.title, stripHTML(note.bodyHTML), note.dateCreated, note.dateModified]);
-  });
+  const filteredNotes = data.notes
+    .filter((note) => {
+      if (noteScope === 'active' && note.isArchived) {
+        return false;
+      }
+      if (noteScope === 'archived' && !note.isArchived) {
+        return false;
+      }
+      return matchesSearch([note.title, stripHTML(note.bodyHTML), note.dateCreated, note.dateModified]);
+    })
+    .sort((left, right) => {
+      if (noteSort === 'title-asc') {
+        return String(left.title || '').localeCompare(String(right.title || ''));
+      }
+      const leftTime = parseTimestamp(left.dateModified || left.dateCreated);
+      const rightTime = parseTimestamp(right.dateModified || right.dateCreated);
+      return noteSort === 'updated-asc' ? leftTime - rightTime : rightTime - leftTime;
+    });
   const filteredTodosByStatus: HomeMyNotesModernDataResponse['todosByStatus'] = {
     open: [],
     in_progress: [],
@@ -125,9 +177,33 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
       filteredTodosByStatus[statusKey] = [];
       return;
     }
-    filteredTodosByStatus[statusKey] = data.todosByStatus[statusKey].filter((todo) =>
-      matchesSearch([todo.title, stripHTML(todo.bodyHTML), todo.priorityLabel, todo.dueDate])
-    );
+    filteredTodosByStatus[statusKey] = data.todosByStatus[statusKey]
+      .filter((todo) => {
+        if (!matchesSearch([todo.title, stripHTML(todo.bodyHTML), todo.priorityLabel, todo.dueDate])) {
+          return false;
+        }
+        if (todoFlagFilter === 'overdue') {
+          return todo.isOverdue;
+        }
+        if (todoFlagFilter === 'reminder-due') {
+          return todo.isReminderDue;
+        }
+        return true;
+      })
+      .sort((left, right) => {
+        if (todoSort === 'title-asc') {
+          return String(left.title || '').localeCompare(String(right.title || ''));
+        }
+        if (todoSort === 'priority-desc') {
+          const leftPriority = priorityWeight(left.priorityLabel);
+          const rightPriority = priorityWeight(right.priorityLabel);
+          if (rightPriority !== leftPriority) {
+            return rightPriority - leftPriority;
+          }
+          return parseDueDateWeight(left.dueDate) - parseDueDateWeight(right.dueDate);
+        }
+        return parseDueDateWeight(left.dueDate) - parseDueDateWeight(right.dueDate);
+      });
   });
   const filteredTodoCount = TODO_SECTIONS.reduce((total, statusKey) => total + filteredTodosByStatus[statusKey].length, 0);
   const showNotesPane = pane === 'both' || pane === 'notes';
@@ -135,6 +211,9 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
   const hasAnyFilteredTodos = filteredTodoCount > 0;
   const notesSubtitle =
     noteScope === 'all' ? 'All notes' : noteScope === 'active' ? 'Active notes only' : 'Archived notes only';
+  const resultsSummary = `Showing ${showNotesPane ? filteredNotes.length : 0} notes and ${
+    showTodosPane ? filteredTodoCount : 0
+  } to-do items.`;
 
   return (
     <div className="avel-dashboard-page">
@@ -200,6 +279,47 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
                     placeholder="Search title, body, date, or priority"
                   />
                 </label>
+                <div className="avel-my-notes-toolbar-row">
+                  <label className="modern-command-field">
+                    <span className="modern-command-label">Note Sort</span>
+                    <select
+                      className="avel-form-control"
+                      value={noteSort}
+                      onChange={(event) => setNoteSort(event.target.value as NoteSort)}
+                    >
+                      <option value="updated-desc">Recently Updated</option>
+                      <option value="updated-asc">Oldest Updated</option>
+                      <option value="title-asc">Title A-Z</option>
+                    </select>
+                  </label>
+                  <label className="modern-command-field">
+                    <span className="modern-command-label">To-do Sort</span>
+                    <select
+                      className="avel-form-control"
+                      value={todoSort}
+                      onChange={(event) => setTodoSort(event.target.value as TodoSort)}
+                    >
+                      <option value="due-soonest">Due Soonest</option>
+                      <option value="priority-desc">Priority (High First)</option>
+                      <option value="title-asc">Title A-Z</option>
+                    </select>
+                  </label>
+                  <label className="modern-command-field">
+                    <span className="modern-command-label">To-do Flag</span>
+                    <select
+                      className="avel-form-control"
+                      value={todoFlagFilter}
+                      onChange={(event) => setTodoFlagFilter(event.target.value as TodoFlagFilter)}
+                    >
+                      <option value="all">All</option>
+                      <option value="overdue">Overdue</option>
+                      <option value="reminder-due">Reminder Due</option>
+                    </select>
+                  </label>
+                  <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={clearAllFilters}>
+                    Clear Filters
+                  </button>
+                </div>
                 <div className="avel-my-notes-filter-groups">
                   <div className="avel-my-notes-toggle-group" role="group" aria-label="Workspace pane">
                     <button type="button" className={`modern-btn modern-btn--mini ${pane === 'both' ? 'modern-btn--emphasis' : 'modern-btn--secondary'}`} onClick={() => setPane('both')}>
@@ -239,6 +359,9 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
                     ))}
                   </div>
                 </div>
+                <p className="avel-my-notes-results" role="status" aria-live="polite">
+                  {resultsSummary}
+                </p>
               </section>
 
               <section className="modern-command-grid modern-command-grid--dual">
