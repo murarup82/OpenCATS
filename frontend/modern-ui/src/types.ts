@@ -1464,6 +1464,42 @@ export type HomeOverviewModernDataResponse = {
     funnelSnapshotURL: string;
     seniorityDistributionURL: string;
   };
+  chartsModern?: {
+    hiringOverview: {
+      view: string;
+      points: Array<{
+        label: string;
+        submitted: number;
+        interviewing: number;
+        hired: number;
+        total: number;
+      }>;
+    };
+    funnelSnapshot: {
+      mode: string;
+      total: number;
+      stages: Array<{
+        label: string;
+        count: number;
+        percentOfTotal: number;
+        retentionPercent: number | null;
+      }>;
+    };
+    seniorityDistribution: {
+      activeOnlyTotal: number;
+      activeOnly: Array<{
+        label: string;
+        count: number;
+        percentOfTotal: number;
+      }>;
+      includingInactiveTotal: number;
+      includingInactive: Array<{
+        label: string;
+        count: number;
+        percentOfTotal: number;
+      }>;
+    };
+  };
   jobOrderOptions: Array<{
     id: number;
     title: string;

@@ -303,13 +303,22 @@ class HomeUI extends UserInterface
                 return;
             }
 
+            $hiringOverviewRows = $dashboard->getPipelineData(DASHBOARD_GRAPH_WEEKLY);
+            $funnelSnapshotRows = $dashboard->getPipelineSnapshot(0, NULL);
+            $seniorityActiveRows = $dashboard->getSeniorityDistribution(false);
+            $seniorityIncludingInactiveRows = $dashboard->getSeniorityDistribution(true);
+
             $this->renderModernHomeOverviewJSON(
                 'home-overview',
                 $hiredRS,
                 $upcomingEventsHTML,
                 $upcomingEventsFupHTML,
                 $jobOrderOptions,
-                $dataGrid->getNumberOfRows()
+                $dataGrid->getNumberOfRows(),
+                $hiringOverviewRows,
+                $funnelSnapshotRows,
+                $seniorityActiveRows,
+                $seniorityIncludingInactiveRows
             );
             return;
         }
@@ -331,7 +340,11 @@ class HomeUI extends UserInterface
         $upcomingEventsHTML,
         $upcomingEventsFupHTML,
         $jobOrderOptions,
-        $importantCandidatesCount
+        $importantCandidatesCount,
+        $hiringOverviewRows,
+        $funnelSnapshotRows,
+        $seniorityActiveRows,
+        $seniorityIncludingInactiveRows
     )
     {
         $baseURL = CATSUtility::getIndexName();
@@ -349,6 +362,114 @@ class HomeUI extends UserInterface
                 'companyURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, $companyID),
                 'recruiterName' => trim((string) $row['userFirstName'] . ' ' . (string) $row['userLastName']),
                 'date' => (string) $row['date']
+            );
+        }
+
+        $hiringOverviewPoints = array();
+        foreach ($hiringOverviewRows as $row)
+        {
+            $submitted = isset($row['submitted']) ? max(0, (int) $row['submitted']) : 0;
+            $interviewing = isset($row['interviewing']) ? max(0, (int) $row['interviewing']) : 0;
+            $hired = isset($row['placed']) ? max(0, (int) $row['placed']) : 0;
+
+            $hiringOverviewPoints[] = array(
+                'label' => isset($row['label']) ? (string) $row['label'] : '',
+                'submitted' => $submitted,
+                'interviewing' => $interviewing,
+                'hired' => $hired,
+                'total' => $submitted + $interviewing + $hired
+            );
+        }
+
+        $funnelTotal = 0;
+        foreach ($funnelSnapshotRows as $row)
+        {
+            $funnelTotal += isset($row['count']) ? max(0, (int) $row['count']) : 0;
+        }
+
+        $funnelStages = array();
+        $funnelPreviousCount = NULL;
+        foreach ($funnelSnapshotRows as $row)
+        {
+            $count = isset($row['count']) ? max(0, (int) $row['count']) : 0;
+            if ($funnelTotal > 0)
+            {
+                $percentOfTotal = round(($count / $funnelTotal) * 100, 1);
+            }
+            else
+            {
+                $percentOfTotal = 0;
+            }
+
+            $retentionPercent = NULL;
+            if ($funnelPreviousCount !== NULL)
+            {
+                if ($funnelPreviousCount > 0)
+                {
+                    $retentionPercent = round(($count / $funnelPreviousCount) * 100, 1);
+                }
+                else
+                {
+                    $retentionPercent = 0;
+                }
+            }
+
+            $funnelStages[] = array(
+                'label' => isset($row['label']) ? (string) $row['label'] : '',
+                'count' => $count,
+                'percentOfTotal' => $percentOfTotal,
+                'retentionPercent' => $retentionPercent
+            );
+            $funnelPreviousCount = $count;
+        }
+
+        $seniorityActiveTotal = 0;
+        foreach ($seniorityActiveRows as $row)
+        {
+            $seniorityActiveTotal += isset($row['count']) ? max(0, (int) $row['count']) : 0;
+        }
+        $seniorityActive = array();
+        foreach ($seniorityActiveRows as $row)
+        {
+            $count = isset($row['count']) ? max(0, (int) $row['count']) : 0;
+            if ($seniorityActiveTotal > 0)
+            {
+                $percentOfTotal = round(($count / $seniorityActiveTotal) * 100, 1);
+            }
+            else
+            {
+                $percentOfTotal = 0;
+            }
+
+            $seniorityActive[] = array(
+                'label' => isset($row['label']) ? (string) $row['label'] : '',
+                'count' => $count,
+                'percentOfTotal' => $percentOfTotal
+            );
+        }
+
+        $seniorityIncludingInactiveTotal = 0;
+        foreach ($seniorityIncludingInactiveRows as $row)
+        {
+            $seniorityIncludingInactiveTotal += isset($row['count']) ? max(0, (int) $row['count']) : 0;
+        }
+        $seniorityIncludingInactive = array();
+        foreach ($seniorityIncludingInactiveRows as $row)
+        {
+            $count = isset($row['count']) ? max(0, (int) $row['count']) : 0;
+            if ($seniorityIncludingInactiveTotal > 0)
+            {
+                $percentOfTotal = round(($count / $seniorityIncludingInactiveTotal) * 100, 1);
+            }
+            else
+            {
+                $percentOfTotal = 0;
+            }
+
+            $seniorityIncludingInactive[] = array(
+                'label' => isset($row['label']) ? (string) $row['label'] : '',
+                'count' => $count,
+                'percentOfTotal' => $percentOfTotal
             );
         }
 
@@ -376,6 +497,23 @@ class HomeUI extends UserInterface
                 'hiringOverviewURL' => sprintf('%s?m=graphs&a=miniHireStatistics&width=495&height=230', $baseURL),
                 'funnelSnapshotURL' => sprintf('%s?m=graphs&a=pipelineFunnelSnapshot&width=495&height=230', $baseURL),
                 'seniorityDistributionURL' => sprintf('%s?m=graphs&a=seniorityDistribution&width=495&height=230', $baseURL)
+            ),
+            'chartsModern' => array(
+                'hiringOverview' => array(
+                    'view' => 'weekly',
+                    'points' => $hiringOverviewPoints
+                ),
+                'funnelSnapshot' => array(
+                    'mode' => 'all-time',
+                    'total' => $funnelTotal,
+                    'stages' => $funnelStages
+                ),
+                'seniorityDistribution' => array(
+                    'activeOnlyTotal' => $seniorityActiveTotal,
+                    'activeOnly' => $seniorityActive,
+                    'includingInactiveTotal' => $seniorityIncludingInactiveTotal,
+                    'includingInactive' => $seniorityIncludingInactive
+                )
             ),
             'jobOrderOptions' => $jobOrderOptions,
             'recentHires' => $recentHires
