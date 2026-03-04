@@ -3027,6 +3027,27 @@
   flex-wrap: wrap;
 }
 
+.avel-dashboard-page .avel-my-notes-todo-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-dashboard-page .avel-my-notes-todo-editor__field--full {
+  grid-column: 1 / -1;
+}
+
+.avel-dashboard-page .avel-my-notes-todo-editor__row {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .avel-dashboard-page .avel-my-notes-todo-editor__row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .avel-dashboard-page .avel-login-password-row {
   display: flex;
   gap: 8px;

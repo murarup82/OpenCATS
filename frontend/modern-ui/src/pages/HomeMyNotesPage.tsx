@@ -1,11 +1,12 @@
 import { DragEvent, useEffect, useRef, useState } from 'react';
-import { fetchHomeMyNotesModernData, setHomeMyNotesTodoStatus } from '../lib/api';
+import { addHomeMyNotesTodo, fetchHomeMyNotesModernData, setHomeMyNotesTodoStatus, updateHomeMyNotesTodo } from '../lib/api';
 import { useServerQueryState } from '../lib/useServerQueryState';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { FormattedTextBlock } from '../components/primitives/FormattedTextBlock';
 import type { HomeMyNotesModernDataResponse, UIModeBootstrap } from '../types';
+import { InlineModal } from '../ui-core';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -22,6 +23,19 @@ type TodoFocus = 'all' | TodoStatusKey;
 type NoteSort = 'updated-desc' | 'updated-asc' | 'title-asc';
 type TodoSort = 'due-soonest' | 'priority-desc' | 'title-asc';
 type TodoFlagFilter = 'all' | 'overdue' | 'reminder-due';
+type TodoEditorMode = 'create' | 'edit';
+type TodoEditorState = {
+  mode: TodoEditorMode;
+  itemID: number;
+};
+type TodoEditorForm = {
+  title: string;
+  body: string;
+  dueDate: string;
+  priority: string;
+  reminderAt: string;
+  taskStatus: TodoStatusKey;
+};
 
 function normalizeSearchValue(value: string): string {
   return String(value || '').trim().toLowerCase();
@@ -65,6 +79,43 @@ function parseDueDateWeight(value: string): number {
     return Number.MAX_SAFE_INTEGER;
   }
   return parsed;
+}
+
+function normalizeReminderForInput(value: string): string {
+  const raw = String(value || '').trim();
+  if (raw === '') {
+    return '';
+  }
+  const normalized = raw.replace(' ', 'T');
+  return normalized.replace(/:\d{2}$/, '');
+}
+
+function htmlToPlainText(value: string): string {
+  const raw = String(value || '');
+  if (raw === '') {
+    return '';
+  }
+
+  const withLineBreaks = raw
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n')
+    .replace(/<\/div>\s*<div[^>]*>/gi, '\n');
+
+  if (typeof document === 'undefined') {
+    return withLineBreaks.replace(/<[^>]+>/g, ' ').replace(/\s+\n/g, '\n').trim();
+  }
+
+  const template = document.createElement('template');
+  template.innerHTML = withLineBreaks;
+  return String(template.content.textContent || '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\r\n/g, '\n')
+    .trim();
+}
+
+function toTodoStatusKey(value: string): TodoStatusKey {
+  const normalized = String(value || '').trim().toLowerCase();
+  return TODO_SECTIONS.includes(normalized as TodoStatusKey) ? (normalized as TodoStatusKey) : 'open';
 }
 
 function moveTodoInData(
@@ -145,8 +196,38 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
   const [movePendingItemID, setMovePendingItemID] = useState<number>(0);
   const [todoMoveError, setTodoMoveError] = useState<string>('');
   const [todoMoveNotice, setTodoMoveNotice] = useState<string>('');
+  const [todoEditor, setTodoEditor] = useState<TodoEditorState | null>(null);
+  const [todoEditorForm, setTodoEditorForm] = useState<TodoEditorForm>({
+    title: '',
+    body: '',
+    dueDate: '',
+    priority: 'medium',
+    reminderAt: '',
+    taskStatus: 'open'
+  });
+  const [todoSavePending, setTodoSavePending] = useState<boolean>(false);
+  const [todoSaveError, setTodoSaveError] = useState<string>('');
   const todoBoardRef = useRef<HTMLDivElement | null>(null);
   const { serverQueryString } = useServerQueryState(bootstrap.indexName);
+
+  const getDefaultTodoPriority = (): string => {
+    const options = Array.isArray(data?.todoPriorities) ? data.todoPriorities : [];
+    const preferred = options.find((option) => String(option.value || '').trim() === 'medium');
+    if (preferred) {
+      return 'medium';
+    }
+    const first = options.find((option) => String(option.value || '').trim() !== '');
+    return first ? String(first.value || '').trim() : 'medium';
+  };
+
+  const createEmptyTodoEditorForm = (): TodoEditorForm => ({
+    title: '',
+    body: '',
+    dueDate: '',
+    priority: getDefaultTodoPriority(),
+    reminderAt: '',
+    taskStatus: 'open'
+  });
 
   const clearAllFilters = () => {
     setSearchValue('');
@@ -158,13 +239,45 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
     setTodoFlagFilter('all');
   };
 
+  const loadMyNotes = async (): Promise<HomeMyNotesModernDataResponse> => {
+    const query = new URLSearchParams(serverQueryString);
+    return fetchHomeMyNotesModernData(bootstrap, query);
+  };
+
+  const closeTodoEditor = () => {
+    if (todoSavePending) {
+      return;
+    }
+    setTodoEditor(null);
+    setTodoSaveError('');
+  };
+
+  const openCreateTodoEditor = () => {
+    setTodoSaveError('');
+    setTodoEditorForm(createEmptyTodoEditorForm());
+    setTodoEditor({ mode: 'create', itemID: 0 });
+  };
+
+  const openEditTodoEditor = (todo: TodoRow, fallbackStatus: TodoStatusKey) => {
+    const normalizedStatus = toTodoStatusKey(todo.taskStatus || fallbackStatus);
+    setTodoSaveError('');
+    setTodoEditorForm({
+      title: String(todo.title || '').trim(),
+      body: String(todo.body || '').trim() || htmlToPlainText(todo.bodyHTML || ''),
+      dueDate: String(todo.dueDateISO || '').trim(),
+      priority: String(todo.priority || '').trim() || getDefaultTodoPriority(),
+      reminderAt: normalizeReminderForInput(todo.reminderAtRaw || ''),
+      taskStatus: normalizedStatus
+    });
+    setTodoEditor({ mode: 'edit', itemID: Number(todo.itemID || 0) });
+  };
+
   useEffect(() => {
     let mounted = true;
     setLoading(true);
     setError('');
 
-    const query = new URLSearchParams(serverQueryString);
-    fetchHomeMyNotesModernData(bootstrap, query)
+    loadMyNotes()
       .then((result) => {
         if (!mounted) {
           return;
@@ -230,6 +343,76 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
       setMovePendingItemID(0);
       setDraggedTodo(null);
       setDropStatus(null);
+    }
+  };
+
+  const submitTodoEditor = async () => {
+    if (!data || !todoEditor) {
+      return;
+    }
+
+    const isCreateMode = todoEditor.mode === 'create';
+    const mutationURL = String(
+      isCreateMode ? data.actions.mutations?.addTodoURL || '' : data.actions.mutations?.updateTodoURL || ''
+    ).trim();
+    const mutationToken = String(
+      isCreateMode ? data.actions.mutations?.addTodoToken || '' : data.actions.mutations?.updateTodoToken || ''
+    ).trim();
+
+    if (mutationURL === '' || mutationToken === '') {
+      setTodoSaveError('This action is unavailable in current session. Refresh the page or use Legacy UI.');
+      return;
+    }
+
+    const statusValue = toTodoStatusKey(todoEditorForm.taskStatus);
+    const dueDateValue = String(todoEditorForm.dueDate || '').trim();
+    const reminderValue = String(todoEditorForm.reminderAt || '').trim();
+
+    setTodoSavePending(true);
+    setTodoSaveError('');
+    setTodoMoveError('');
+
+    try {
+      const result = isCreateMode
+        ? await addHomeMyNotesTodo(mutationURL, {
+            title: todoEditorForm.title,
+            body: todoEditorForm.body,
+            dueDate: dueDateValue,
+            priority: String(todoEditorForm.priority || '').trim() || getDefaultTodoPriority(),
+            reminderAt: reminderValue,
+            taskStatus: statusValue,
+            securityToken: mutationToken
+          })
+        : await updateHomeMyNotesTodo(mutationURL, {
+            itemID: todoEditor.itemID,
+            title: todoEditorForm.title,
+            body: todoEditorForm.body,
+            dueDate: dueDateValue,
+            priority: String(todoEditorForm.priority || '').trim() || getDefaultTodoPriority(),
+            reminderAt: reminderValue,
+            taskStatus: statusValue,
+            securityToken: mutationToken
+          });
+
+      if (!result || result.success !== true) {
+        throw new Error(result?.message || (isCreateMode ? 'Unable to add to-do.' : 'Unable to update to-do.'));
+      }
+
+      const refreshed = await loadMyNotes();
+      setData(refreshed);
+      setTodoEditor(null);
+      setTodoSaveError('');
+      setTodoMoveNotice(String(result.message || '').trim() || (isCreateMode ? 'To-do added.' : 'To-do updated.'));
+    } catch (mutationError) {
+      const message =
+        mutationError instanceof Error && mutationError.message.trim() !== ''
+          ? mutationError.message
+          : isCreateMode
+            ? 'Unable to add to-do.'
+            : 'Unable to update to-do.';
+      setTodoSaveError(message);
+    } finally {
+      setTodoSavePending(false);
     }
   };
 
@@ -303,8 +486,38 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
   }
 
   const searchNeedle = normalizeSearchValue(searchValue);
+  const todoPriorityOptions = data.todoPriorities
+    .map((option) => ({
+      value: String(option.value || '').trim(),
+      label: String(option.label || '').trim()
+    }))
+    .filter((option) => option.value !== '');
+  const normalizedTodoPriorityOptions =
+    todoPriorityOptions.length > 0
+      ? todoPriorityOptions
+      : [
+          { value: 'low', label: 'Low' },
+          { value: 'medium', label: 'Medium' },
+          { value: 'high', label: 'High' }
+        ];
+  const todoStatusOptions = data.todoStatuses
+    .map((option) => ({
+      value: toTodoStatusKey(option.value),
+      label: String(option.label || '').trim()
+    }))
+    .filter((option, index, all) => option.label !== '' && all.findIndex((entry) => entry.value === option.value) === index);
+  const normalizedTodoStatusOptions =
+    todoStatusOptions.length > 0
+      ? todoStatusOptions
+      : TODO_SECTIONS.map((statusKey) => ({
+          value: statusKey,
+          label: statusKey
+            .split('_')
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ')
+        }));
   const todoLabelByStatus = data.todoStatuses.reduce<Record<string, string>>((labels, option) => {
-    labels[String(option.value || '')] = String(option.label || '').trim();
+    labels[String(option.value || '').trim().toLowerCase()] = String(option.label || '').trim();
     return labels;
   }, {});
 
@@ -493,6 +706,9 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
                   <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={clearAllFilters}>
                     Clear Filters
                   </button>
+                  <button type="button" className="modern-btn modern-btn--mini modern-btn--emphasis" onClick={openCreateTodoEditor}>
+                    New To-do
+                  </button>
                 </div>
                 <div className="avel-my-notes-filter-groups">
                   <div className="avel-my-notes-toggle-group" role="group" aria-label="Workspace pane">
@@ -677,6 +893,14 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
                                                 <button
                                                   type="button"
                                                   className="modern-btn modern-btn--mini modern-btn--secondary"
+                                                  disabled={isPending || todoSavePending}
+                                                  onClick={() => openEditTodoEditor(todo, statusKey)}
+                                                >
+                                                  Edit
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  className="modern-btn modern-btn--mini modern-btn--secondary"
                                                   disabled={isPending || !previousStatus}
                                                   onClick={() => {
                                                     if (previousStatus) {
@@ -719,6 +943,114 @@ export function HomeMyNotesPage({ bootstrap }: Props) {
           )}
         </div>
       </PageContainer>
+      {todoEditor ? (
+        <InlineModal
+          isOpen={!!todoEditor}
+          ariaLabel={todoEditor.mode === 'create' ? 'Create To-do' : 'Edit To-do'}
+          dialogClassName="modern-inline-modal__dialog--compact"
+          closeOnBackdrop={!todoSavePending}
+          closeOnEscape={!todoSavePending}
+          onClose={closeTodoEditor}
+        >
+          <div className="modern-inline-modal__header">
+            <h3>{todoEditor.mode === 'create' ? 'Create To-do' : `Edit To-do #${todoEditor.itemID}`}</h3>
+            <p>Update title, details, priority, due date, reminder, and workflow status.</p>
+          </div>
+          <div className="modern-inline-modal__body modern-inline-modal__body--form avel-my-notes-todo-editor">
+            <label className="modern-command-field avel-my-notes-todo-editor__field--full">
+              <span className="modern-command-label">Title</span>
+              <input
+                type="text"
+                className="avel-form-control"
+                value={todoEditorForm.title}
+                onChange={(event) => setTodoEditorForm((previous) => ({ ...previous, title: event.target.value }))}
+                maxLength={100}
+                placeholder="Short task title"
+              />
+            </label>
+            <label className="modern-command-field avel-my-notes-todo-editor__field--full">
+              <span className="modern-command-label">Details</span>
+              <textarea
+                className="avel-form-control"
+                value={todoEditorForm.body}
+                onChange={(event) => setTodoEditorForm((previous) => ({ ...previous, body: event.target.value }))}
+                placeholder="Task details, notes, or checklist."
+                maxLength={5000}
+              />
+            </label>
+            <div className="avel-my-notes-todo-editor__row">
+              <label className="modern-command-field">
+                <span className="modern-command-label">Priority</span>
+                <select
+                  className="avel-form-control"
+                  value={todoEditorForm.priority}
+                  onChange={(event) => setTodoEditorForm((previous) => ({ ...previous, priority: event.target.value }))}
+                >
+                  {normalizedTodoPriorityOptions.map((option) => (
+                    <option key={`todo-priority-${option.value}`} value={option.value}>
+                      {option.label || option.value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="modern-command-field">
+                <span className="modern-command-label">Status</span>
+                <select
+                  className="avel-form-control"
+                  value={todoEditorForm.taskStatus}
+                  onChange={(event) =>
+                    setTodoEditorForm((previous) => ({ ...previous, taskStatus: toTodoStatusKey(event.target.value) }))
+                  }
+                >
+                  {normalizedTodoStatusOptions.map((option) => (
+                    <option key={`todo-status-${option.value}`} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="avel-my-notes-todo-editor__row">
+              <label className="modern-command-field">
+                <span className="modern-command-label">Due Date</span>
+                <input
+                  type="date"
+                  className="avel-form-control"
+                  value={todoEditorForm.dueDate}
+                  onChange={(event) => setTodoEditorForm((previous) => ({ ...previous, dueDate: event.target.value }))}
+                />
+              </label>
+              <label className="modern-command-field">
+                <span className="modern-command-label">Reminder</span>
+                <input
+                  type="datetime-local"
+                  className="avel-form-control"
+                  value={todoEditorForm.reminderAt}
+                  onChange={(event) =>
+                    setTodoEditorForm((previous) => ({ ...previous, reminderAt: event.target.value }))
+                  }
+                />
+              </label>
+            </div>
+            {todoSaveError ? <div className="modern-state modern-state--error">{todoSaveError}</div> : null}
+          </div>
+          <div className="modern-inline-modal__actions">
+            <button
+              type="button"
+              className="modern-btn modern-btn--emphasis"
+              onClick={() => {
+                void submitTodoEditor();
+              }}
+              disabled={todoSavePending}
+            >
+              {todoSavePending ? 'Saving...' : todoEditor.mode === 'create' ? 'Create To-do' : 'Save Changes'}
+            </button>
+            <button type="button" className="modern-btn modern-btn--secondary" onClick={closeTodoEditor} disabled={todoSavePending}>
+              Cancel
+            </button>
+          </div>
+        </InlineModal>
+      ) : null}
     </div>
   );
 }

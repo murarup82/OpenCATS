@@ -1625,6 +1625,7 @@ class HomeUI extends UserInterface
                 $summary,
                 $noteItems,
                 $todoItemsByStatus,
+                $todoPriorities,
                 $todoStatuses,
                 $noteMode,
                 $noteSearch
@@ -1704,6 +1705,7 @@ class HomeUI extends UserInterface
         $summary,
         $noteItems,
         $todoItemsByStatus,
+        $todoPriorities,
         $todoStatuses,
         $noteMode,
         $noteSearch
@@ -1742,12 +1744,69 @@ class HomeUI extends UserInterface
                 $todosPayload[$statusKey][] = array(
                     'itemID' => (isset($todo['itemID']) ? (int) $todo['itemID'] : 0),
                     'title' => (isset($todo['title']) ? (string) $todo['title'] : ''),
+                    'body' => (isset($todo['body']) ? (string) $todo['body'] : ''),
                     'bodyHTML' => (isset($todo['bodyHTML']) ? (string) $todo['bodyHTML'] : ''),
                     'taskStatus' => (string) $statusKey,
+                    'priority' => (isset($todo['priority']) ? (string) $todo['priority'] : ''),
                     'priorityLabel' => (isset($todo['priorityLabel']) ? (string) $todo['priorityLabel'] : ''),
+                    'dueDateISO' => (isset($todo['dueDateISO']) ? (string) $todo['dueDateISO'] : ''),
                     'dueDate' => (isset($todo['dueDate']) ? (string) $todo['dueDate'] : ''),
+                    'reminderAtRaw' => (isset($todo['reminderAtRaw']) ? (string) $todo['reminderAtRaw'] : ''),
+                    'dateCreated' => (isset($todo['dateCreated']) ? (string) $todo['dateCreated'] : ''),
+                    'dateModified' => (isset($todo['dateModified']) ? (string) $todo['dateModified'] : ''),
                     'isOverdue' => (!empty($todo['isOverdue'])),
                     'isReminderDue' => (!empty($todo['isReminderDue']))
+                );
+            }
+        }
+
+        $todoPriorityOptions = array();
+        if (is_array($todoPriorities))
+        {
+            foreach ($todoPriorities as $priorityValue)
+            {
+                $priorityValue = strtolower(trim((string) $priorityValue));
+                if ($priorityValue === '')
+                {
+                    continue;
+                }
+
+                $todoPriorityOptions[] = array(
+                    'value' => $priorityValue,
+                    'label' => ucfirst(str_replace('_', ' ', $priorityValue))
+                );
+            }
+        }
+
+        $todoStatusOptions = array();
+        if (is_array($todoStatuses))
+        {
+            foreach ($todoStatuses as $statusValue)
+            {
+                if (is_array($statusValue))
+                {
+                    $value = strtolower(trim((string) (isset($statusValue['value']) ? $statusValue['value'] : '')));
+                    $label = trim((string) (isset($statusValue['label']) ? $statusValue['label'] : ''));
+                }
+                else
+                {
+                    $value = strtolower(trim((string) $statusValue));
+                    $label = '';
+                }
+
+                if ($value === '')
+                {
+                    continue;
+                }
+
+                if ($label === '')
+                {
+                    $label = ucfirst(str_replace('_', ' ', $value));
+                }
+
+                $todoStatusOptions[] = array(
+                    'value' => $value,
+                    'label' => $label
                 );
             }
         }
@@ -1763,6 +1822,10 @@ class HomeUI extends UserInterface
                 'inboxURL' => sprintf('%s?m=home&a=inbox&ui=modern', $baseURL),
                 'legacyURL' => sprintf('%s?m=home&a=myNotes&ui=legacy', $baseURL),
                 'mutations' => array(
+                    'addTodoURL' => sprintf('%s?m=home&a=addPersonalItem', $baseURL),
+                    'addTodoToken' => $this->getCSRFToken('home.addPersonalItem'),
+                    'updateTodoURL' => sprintf('%s?m=home&a=updatePersonalTodo', $baseURL),
+                    'updateTodoToken' => $this->getCSRFToken('home.updatePersonalTodo'),
                     'setTodoStatusURL' => sprintf('%s?m=home&a=setPersonalTodoStatus', $baseURL),
                     'setTodoStatusToken' => $this->getCSRFToken('home.setPersonalTodoStatus')
                 )
@@ -1776,7 +1839,8 @@ class HomeUI extends UserInterface
                 'noteSearch' => (string) $noteSearch
             ),
             'summary' => $summary,
-            'todoStatuses' => $todoStatuses,
+            'todoPriorities' => $todoPriorityOptions,
+            'todoStatuses' => $todoStatusOptions,
             'notes' => $notesPayload,
             'todosByStatus' => $todosPayload
         );
@@ -1824,8 +1888,15 @@ class HomeUI extends UserInterface
 
     private function onAddPersonalItem()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(405, false, 'invalidMethod', 'Invalid request method.');
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
@@ -1838,12 +1909,22 @@ class HomeUI extends UserInterface
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.addPersonalItem', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(403, false, 'token', 'Invalid request token.');
+                return;
+            }
             $this->redirectToMyNotes($view, 'token', $redirectFilters);
         }
 
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(503, false, 'schema', 'My Notes / To-do table is missing.');
+                return;
+            }
             $this->redirectToMyNotes($view, 'schema', $redirectFilters);
         }
 
@@ -1876,7 +1957,58 @@ class HomeUI extends UserInterface
             {
                 $error = 'invalid';
             }
+            if ($isModernJSON)
+            {
+                $message = 'Unable to add item.';
+                if ($error === 'empty')
+                {
+                    $message = 'Details are required.';
+                }
+                else if ($error === 'titleTooLong')
+                {
+                    $message = 'Title is too long.';
+                }
+                else if ($error === 'tooLong')
+                {
+                    $message = 'Details are too long.';
+                }
+                else if ($error === 'badDate')
+                {
+                    $message = 'Invalid due date.';
+                }
+                else if ($error === 'badPriority')
+                {
+                    $message = 'Invalid priority.';
+                }
+                else if ($error === 'badReminder')
+                {
+                    $message = 'Invalid reminder date/time.';
+                }
+                else if ($error === 'badStatus')
+                {
+                    $message = 'Invalid to-do status.';
+                }
+                $this->respondModernMutationJSON(400, false, $error, $message);
+                return;
+            }
             $this->redirectToMyNotes($view, $error, $redirectFilters);
+        }
+
+        if ($isModernJSON)
+        {
+            $itemID = isset($result['itemID']) ? (int) $result['itemID'] : 0;
+            $this->respondModernMutationJSON(
+                200,
+                true,
+                ($itemType === 'todo') ? 'todoAdded' : 'noteAdded',
+                ($itemType === 'todo') ? 'To-do added.' : 'Note added.',
+                array(
+                    'itemType' => $itemType,
+                    'itemID' => $itemID,
+                    'taskStatus' => $taskStatus
+                )
+            );
+            return;
         }
 
         if ($itemType === 'todo')
@@ -2068,19 +2200,36 @@ class HomeUI extends UserInterface
 
     private function onUpdatePersonalTodo()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST')
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(405, false, 'invalidMethod', 'Invalid request method.');
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid request method.');
         }
 
         if (!$this->isRequiredIDValid('itemID', $_POST))
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(400, false, 'invalid', 'Invalid to-do item ID.');
+                return;
+            }
             $this->redirectToMyNotes('todos', 'invalid');
         }
 
         $securityToken = $this->getTrimmedInput('securityToken', $_POST);
         if (!$this->isCSRFTokenValid('home.updatePersonalTodo', $securityToken))
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(403, false, 'token', 'Invalid request token.');
+                return;
+            }
             $this->redirectToMyNotes('todos', 'token');
         }
 
@@ -2099,6 +2248,11 @@ class HomeUI extends UserInterface
         $personalDashboard = new PersonalDashboard($this->_siteID);
         if (!$personalDashboard->isSchemaAvailable())
         {
+            if ($isModernJSON)
+            {
+                $this->respondModernMutationJSON(503, false, 'schema', 'My Notes / To-do table is missing.');
+                return;
+            }
             $this->redirectToMyNotes('todos', 'schema');
         }
 
@@ -2120,7 +2274,60 @@ class HomeUI extends UserInterface
             {
                 $error = 'invalid';
             }
+            if ($isModernJSON)
+            {
+                $message = 'Unable to update to-do.';
+                if ($error === 'empty')
+                {
+                    $message = 'Details are required.';
+                }
+                else if ($error === 'titleTooLong')
+                {
+                    $message = 'Title is too long.';
+                }
+                else if ($error === 'tooLong')
+                {
+                    $message = 'Details are too long.';
+                }
+                else if ($error === 'badDate')
+                {
+                    $message = 'Invalid due date.';
+                }
+                else if ($error === 'badPriority')
+                {
+                    $message = 'Invalid priority.';
+                }
+                else if ($error === 'badReminder')
+                {
+                    $message = 'Invalid reminder date/time.';
+                }
+                else if ($error === 'badStatus')
+                {
+                    $message = 'Invalid to-do status.';
+                }
+                else if ($error === 'notfound')
+                {
+                    $message = 'To-do item was not found.';
+                }
+                $this->respondModernMutationJSON(400, false, $error, $message);
+                return;
+            }
             $this->redirectToMyNotes('todos', $error);
+        }
+
+        if ($isModernJSON)
+        {
+            $this->respondModernMutationJSON(
+                200,
+                true,
+                'todoUpdated',
+                'To-do updated.',
+                array(
+                    'itemID' => $itemID,
+                    'taskStatus' => $taskStatus
+                )
+            );
+            return;
         }
 
         $this->redirectToMyNotes('todos', 'todoUpdated');

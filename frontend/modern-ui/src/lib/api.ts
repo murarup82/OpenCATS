@@ -445,6 +445,89 @@ export async function setHomeMyNotesTodoStatus(
   return parseModernMutationResponse(response, 'To-do status update');
 }
 
+export async function addHomeMyNotesTodo(
+  submitURL: string,
+  payload: {
+    title: string;
+    body: string;
+    dueDate: string;
+    priority: string;
+    reminderAt: string;
+    taskStatus: string;
+    securityToken: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('itemType', 'todo');
+  body.set('title', String(payload.title || '').trim());
+  body.set('body', String(payload.body || '').trim());
+  body.set('dueDate', String(payload.dueDate || '').trim());
+  body.set('priority', String(payload.priority || '').trim());
+  body.set('reminderAt', String(payload.reminderAt || '').trim());
+  body.set('taskStatus', String(payload.taskStatus || '').trim() || 'open');
+  body.set('securityToken', payload.securityToken || '');
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'home',
+    a: 'addPersonalItem',
+    modernPage: MODERN_HOME_MYNOTES_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  return parseModernMutationResponse(response, 'Add to-do');
+}
+
+export async function updateHomeMyNotesTodo(
+  submitURL: string,
+  payload: {
+    itemID: number;
+    title: string;
+    body: string;
+    dueDate: string;
+    priority: string;
+    reminderAt: string;
+    taskStatus: string;
+    securityToken: string;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('itemID', String(payload.itemID || 0));
+  body.set('title', String(payload.title || '').trim());
+  body.set('body', String(payload.body || '').trim());
+  body.set('dueDate', String(payload.dueDate || '').trim());
+  body.set('priority', String(payload.priority || '').trim());
+  body.set('reminderAt', String(payload.reminderAt || '').trim());
+  body.set('taskStatus', String(payload.taskStatus || '').trim() || 'open');
+  body.set('securityToken', payload.securityToken || '');
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'home',
+    a: 'updatePersonalTodo',
+    modernPage: MODERN_HOME_MYNOTES_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  return parseModernMutationResponse(response, 'Update to-do');
+}
+
 export async function setDashboardPipelineStatus(
   bootstrap: UIModeBootstrap,
   payload: {

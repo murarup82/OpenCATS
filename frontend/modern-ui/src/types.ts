@@ -1921,6 +1921,10 @@ export type HomeMyNotesModernDataResponse = {
     inboxURL: string;
     legacyURL: string;
     mutations?: {
+      addTodoURL?: string;
+      addTodoToken?: string;
+      updateTodoURL?: string;
+      updateTodoToken?: string;
       setTodoStatusURL: string;
       setTodoStatusToken: string;
     };
@@ -1944,6 +1948,10 @@ export type HomeMyNotesModernDataResponse = {
     todoStatusBlockedCount: number;
     todoStatusDoneCount: number;
   };
+  todoPriorities: Array<{
+    value: string;
+    label: string;
+  }>;
   todoStatuses: Array<{
     value: string;
     label: string;
@@ -1960,40 +1968,64 @@ export type HomeMyNotesModernDataResponse = {
     open: Array<{
       itemID: number;
       title: string;
+      body: string;
       bodyHTML: string;
       taskStatus?: string;
+      priority?: string;
       priorityLabel: string;
+      dueDateISO?: string;
       dueDate: string;
+      reminderAtRaw?: string;
+      dateCreated?: string;
+      dateModified?: string;
       isOverdue: boolean;
       isReminderDue: boolean;
     }>;
     in_progress: Array<{
       itemID: number;
       title: string;
+      body: string;
       bodyHTML: string;
       taskStatus?: string;
+      priority?: string;
       priorityLabel: string;
+      dueDateISO?: string;
       dueDate: string;
+      reminderAtRaw?: string;
+      dateCreated?: string;
+      dateModified?: string;
       isOverdue: boolean;
       isReminderDue: boolean;
     }>;
     blocked: Array<{
       itemID: number;
       title: string;
+      body: string;
       bodyHTML: string;
       taskStatus?: string;
+      priority?: string;
       priorityLabel: string;
+      dueDateISO?: string;
       dueDate: string;
+      reminderAtRaw?: string;
+      dateCreated?: string;
+      dateModified?: string;
       isOverdue: boolean;
       isReminderDue: boolean;
     }>;
     done: Array<{
       itemID: number;
       title: string;
+      body: string;
       bodyHTML: string;
       taskStatus?: string;
+      priority?: string;
       priorityLabel: string;
+      dueDateISO?: string;
       dueDate: string;
+      reminderAtRaw?: string;
+      dateCreated?: string;
+      dateModified?: string;
       isOverdue: boolean;
       isReminderDue: boolean;
     }>;
