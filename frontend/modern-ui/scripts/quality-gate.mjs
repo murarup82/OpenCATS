@@ -45,6 +45,7 @@ const evidenceFiles = [
   'docs/modern-ui-legacy-route-gap-report.md',
   'docs/modern-ui-modernization-board.md',
   'docs/modern-ui-modernization-board.json',
+  'docs/modern-ui-finalization-2026-03-04.md',
   'docs/modern-ui-zero-legacy-dependent-check.md',
   'docs/modern-ui-next-50-change-plan.md',
   'docs/modern-ui-smoke-fixture-coverage.md',

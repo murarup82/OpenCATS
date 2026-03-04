@@ -1,5 +1,11 @@
 # Modern UI Legacy Modernization Wave (2026-03-03)
 
+Historical note (2026-03-04): This wave log describes an intermediate milestone.
+References to `LegacyRedirectPage` reflect the state on 2026-03-03 only.
+Login/import/rss routes were subsequently modernized with native handlers
+(`LoginPage`, `LoginLegacyActionPage`, `ImportLauncherPage`, `RssJobOrdersPage`),
+and legacy wrapper pages were fully removed in commit `caa70f0`.
+
 ## Review Snapshot
 
 - Current system has no unresolved routes, but many actions still rely on wildcard `ModuleBridgePage` fallbacks.

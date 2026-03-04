@@ -2,6 +2,14 @@
 
 This queue is used for autonomous modernization runs while keeping legacy behavior available as fallback.
 
+Historical note (2026-03-04): This log preserves intermediate migration steps.
+Entries that mention intermediary wrappers (`LegacyRedirectPage`,
+`EntityUtilityActionPage`, `ReportsActionPage`, `GraphsActionPage`) are historical.
+Those wrappers were retired and removed in commit `caa70f0`.
+Current status is enforced by:
+- `docs/modern-ui-zero-legacy-dependent-check.md`
+- `docs/modern-ui-no-legacy-wrapper-routes-check.md`
+
 ## Completed
 
 1. Dashboard and candidate list/show modern pages.

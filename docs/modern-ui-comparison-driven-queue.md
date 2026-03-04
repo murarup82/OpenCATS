@@ -3,6 +3,14 @@
 Source: `docs/modern-ui-legacy-route-gap-report.md`  
 Generated from latest comparison snapshot: `2026-03-03T09:02:59.738Z`
 
+Historical note (2026-03-04): This document contains milestone-by-milestone references
+to intermediary wrapper pages used during migration (`LegacyRedirectPage`,
+`EntityUtilityActionPage`, `ReportsActionPage`, `GraphsActionPage`).
+Those wrappers were fully retired and removed in commit `caa70f0`.
+Current routing is guarded by:
+- `docs/modern-ui-zero-legacy-dependent-check.md`
+- `docs/modern-ui-no-legacy-wrapper-routes-check.md`
+
 ## Snapshot
 
 - Legacy `handleRequest` actions discovered: `222`
