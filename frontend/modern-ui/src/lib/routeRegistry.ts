@@ -39,11 +39,9 @@ import { ListsActionPage } from '../pages/ListsActionPage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { ReportsCustomerDashboardPage } from '../pages/ReportsCustomerDashboardPage';
 import { ReportsGraphViewPage } from '../pages/ReportsGraphViewPage';
-import { ReportsActionPage } from '../pages/ReportsActionPage';
 import { SourcingPage } from '../pages/SourcingPage';
 import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
-import { GraphsActionPage } from '../pages/GraphsActionPage';
 import { LogsPage } from '../pages/LogsPage';
 import { LoginLegacyActionPage } from '../pages/LoginLegacyActionPage';
 import { LegacyUtilityForwardActionPage } from '../pages/LegacyUtilityForwardActionPage';
@@ -55,7 +53,6 @@ import { JobOrderCompanyContextActionPage } from '../pages/JobOrderCompanyContex
 import { JobOrderAddActionPage } from '../pages/JobOrderAddActionPage';
 import { JobOrderMonitorActionPage } from '../pages/JobOrderMonitorActionPage';
 import { EntityDeleteActionPage } from '../pages/EntityDeleteActionPage';
-import { EntityUtilityActionPage } from '../pages/EntityUtilityActionPage';
 import { ModuleBridgePage } from '../pages/ModuleBridgePage';
 import { hasPositiveIntegerQueryParam, parseRequestQueryParams } from './routeGuards';
 
@@ -121,7 +118,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'candidates.removeduplicity': LegacyUtilityForwardActionPage,
   'candidates.removefrompipeline': CandidatesShowPage,
   'candidates.savesources': LegacyUtilityForwardActionPage,
-  'candidates.savedlists': EntityUtilityActionPage,
+  'candidates.savedlists': LegacyUtilityForwardActionPage,
   'companies.delete': EntityDeleteActionPage,
   'companies.deleteattachment': CompaniesShowPage,
   'contacts.delete': EntityDeleteActionPage,
@@ -135,7 +132,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.edithiringplan': LegacyUtilityForwardActionPage,
   'joborders.postmessage': JobOrdersShowPage,
   'joborders.removefrompipeline': JobOrdersShowPage,
-  'joborders.setcandidatejoborder': EntityUtilityActionPage,
+  'joborders.setcandidatejoborder': LegacyUtilityForwardActionPage,
   'lists.deletestaticlist': ListsDetailPage,
   'lists.removefromlistdatagrid': ListsDetailPage,
   'lists.savelistaccess': ListsDetailPage,
