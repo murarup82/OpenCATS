@@ -2887,6 +2887,35 @@
   background-color: #ffffff;
   box-shadow: none;
   overflow: hidden;
+  color: #0b4f69;
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons:focus-visible {
+  outline: 2px solid rgba(0, 151, 189, 0.42);
+  outline-offset: 1px;
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.avel-markdown-toolbar-button {
+  width: auto;
+  min-width: 56px;
+  padding: 0 8px;
+  background-image: none;
+  text-indent: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.avel-markdown-toolbar-button::before {
+  display: none;
+}
+
+.avel-markdown-field .toastui-editor-toolbar-icons.avel-markdown-toolbar-button::after {
+  content: attr(data-avel-label);
+  color: #0b4f69;
+  font: 700 0.68rem/1 'Manrope', 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
 }
 
 .avel-markdown-field .toastui-editor-toolbar-icons:hover {

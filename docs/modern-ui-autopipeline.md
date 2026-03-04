@@ -549,6 +549,10 @@ Current status is enforced by:
     - added explicit group semantics (`role="group"` + descriptive `aria-label`) for toggle clusters on candidate/company/contact/job-order add/edit pages
     - added keyboard-visible focus affordances for toggle controls in shared Avel styles (`:focus-within` container ring and `input:focus-visible` switch outline)
     - upgraded inline error notices to `role="alert"` across core add/edit pages so validation and mutation failures are announced immediately by assistive technologies.
+179. Enhanced shared markdown editor with smarter paste normalization and visible toolbar labels:
+    - added structured plain-text paste heuristics in `MarkdownTextarea` to auto-normalize wrapped paragraphs, convert common section headers into markdown headings, and preserve bullet/numbered list intent
+    - added explicit toolbar accessibility labeling (`aria-label`/`title`) for toast-ui editor actions to improve assistive support and tooltip clarity
+    - switched toolbar controls to text-labeled button presentation in Avel CSS to remove icon-sprite dependency and keep controls readable across environments.
 
 ## Next Queue (30-Slice Execution)
 

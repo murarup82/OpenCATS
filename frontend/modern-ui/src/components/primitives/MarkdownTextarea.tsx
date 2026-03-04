@@ -21,6 +21,22 @@ const ORDERED_PAREN_PATTERN = /^\s*(\d+)\)\s+/;
 const EXTENDED_BULLET_MARKER_PATTERN = /^\s*[\u2022\u00b7\u25aa\u25e6\u25cf\u25cb\u2023]\s+/;
 const BOLD_STYLE_PATTERN = /font-weight\s*:\s*(bold|[6-9]00)/i;
 const ITALIC_STYLE_PATTERN = /font-style\s*:\s*italic/i;
+const ORDERED_LIST_PATTERN = /^\s*(\d+)[\.\)]\s+/;
+const LIST_CONTINUATION_PATTERN = /^\s{2,}\S/;
+const TOOLBAR_CLASS_LABELS: Array<{ pattern: RegExp; label: string }> = [
+  { pattern: /\bheading\b/i, label: 'Heading' },
+  { pattern: /\bbold\b/i, label: 'Bold' },
+  { pattern: /\bitalic\b/i, label: 'Italic' },
+  { pattern: /\bstrike\b/i, label: 'Strike' },
+  { pattern: /\bquote\b/i, label: 'Quote' },
+  { pattern: /\bul\b/i, label: 'Bullets' },
+  { pattern: /\bol\b/i, label: 'Numbered' },
+  { pattern: /\btask\b/i, label: 'Checklist' },
+  { pattern: /\btable\b/i, label: 'Table' },
+  { pattern: /\blink\b/i, label: 'Link' },
+  { pattern: /\bcodeblock\b/i, label: 'Code Block' },
+  { pattern: /\bcode\b/i, label: 'Code' }
+];
 
 function normalizeValue(value: string): string {
   return String(value || '');
@@ -33,14 +49,22 @@ function joinClassNames(...classNames: Array<string | undefined>): string {
     .join(' ');
 }
 
-function normalizePlainTextPaste(input: string): string {
+function normalizeClipboardText(input: string): string {
   return String(input || '')
     .replace(/\u00a0/g, ' ')
     .replace(/\r\n?/g, '\n')
+    .replace(/\t/g, '  ');
+}
+
+function normalizePlainTextMarkers(input: string): string {
+  return normalizeClipboardText(input)
     .split('\n')
     .map((line) => {
       if (BULLET_MARKER_PATTERN.test(line) || EXTENDED_BULLET_MARKER_PATTERN.test(line)) {
         return line.replace(BULLET_MARKER_PATTERN, '- ').replace(EXTENDED_BULLET_MARKER_PATTERN, '- ');
+      }
+      if (ORDERED_LIST_PATTERN.test(line)) {
+        return line.replace(ORDERED_LIST_PATTERN, '$1. ');
       }
       if (ORDERED_PAREN_PATTERN.test(line)) {
         return line.replace(ORDERED_PAREN_PATTERN, '$1. ');
@@ -48,6 +72,125 @@ function normalizePlainTextPaste(input: string): string {
       return line;
     })
     .join('\n');
+}
+
+function nextNonEmptyLine(lines: string[], startIndex: number): string {
+  for (let index = startIndex; index < lines.length; index += 1) {
+    const trimmed = lines[index].trim();
+    if (trimmed !== '') {
+      return trimmed;
+    }
+  }
+  return '';
+}
+
+function looksLikeSectionHeading(line: string, upcomingLine: string): boolean {
+  const compact = line.trim();
+  if (compact === '' || compact.length > 72) {
+    return false;
+  }
+  if (/^\d+[\.\)]\s+/.test(compact) || /^[-*+]\s+/.test(compact) || EXTENDED_BULLET_MARKER_PATTERN.test(compact)) {
+    return false;
+  }
+  if (/[.!?]$/.test(compact)) {
+    return false;
+  }
+  if (compact.endsWith(':')) {
+    return true;
+  }
+
+  const wordCount = compact.split(/\s+/).length;
+  if (wordCount > 8) {
+    return false;
+  }
+  if (upcomingLine === '') {
+    return false;
+  }
+  return BULLET_MARKER_PATTERN.test(upcomingLine) || EXTENDED_BULLET_MARKER_PATTERN.test(upcomingLine) || ORDERED_LIST_PATTERN.test(upcomingLine);
+}
+
+function normalizeStructuredPlainTextPaste(input: string): string {
+  const normalized = normalizePlainTextMarkers(input);
+  const lines = normalized.split('\n');
+  const hasListLikeLines = lines.some((line) => BULLET_MARKER_PATTERN.test(line.trim()) || ORDERED_LIST_PATTERN.test(line.trim()));
+  const hasHeadingCandidate = lines.some((line, index) => looksLikeSectionHeading(line.trim(), nextNonEmptyLine(lines, index + 1)));
+  const hasLikelyWrappedParagraph = lines.some((line, index) => {
+    const trimmed = line.trim();
+    if (trimmed === '' || trimmed.length < 70) {
+      return false;
+    }
+    if (BULLET_MARKER_PATTERN.test(trimmed) || ORDERED_LIST_PATTERN.test(trimmed)) {
+      return false;
+    }
+    const upcoming = nextNonEmptyLine(lines, index + 1);
+    return upcoming !== '' && !BULLET_MARKER_PATTERN.test(upcoming) && !ORDERED_LIST_PATTERN.test(upcoming);
+  });
+
+  if (!hasListLikeLines && !hasHeadingCandidate && !hasLikelyWrappedParagraph) {
+    return normalized.trim();
+  }
+
+  const output: string[] = [];
+  const paragraphParts: string[] = [];
+
+  const flushParagraph = () => {
+    if (paragraphParts.length === 0) {
+      return;
+    }
+    const paragraph = paragraphParts.join(' ').replace(/\s+/g, ' ').trim();
+    paragraphParts.length = 0;
+    if (paragraph !== '') {
+      output.push(paragraph);
+    }
+  };
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const rawLine = lines[index].replace(/\s+$/g, '');
+    const trimmed = rawLine.trim();
+    const upcoming = nextNonEmptyLine(lines, index + 1);
+
+    if (trimmed === '') {
+      flushParagraph();
+      if (output.length > 0 && output[output.length - 1] !== '') {
+        output.push('');
+      }
+      continue;
+    }
+
+    if (LIST_CONTINUATION_PATTERN.test(rawLine) && output.length > 0) {
+      const previousLine = output[output.length - 1];
+      if (BULLET_MARKER_PATTERN.test(previousLine) || ORDERED_LIST_PATTERN.test(previousLine)) {
+        output[output.length - 1] = `${previousLine} ${trimmed}`.replace(/\s+/g, ' ');
+        continue;
+      }
+    }
+
+    if (BULLET_MARKER_PATTERN.test(trimmed)) {
+      flushParagraph();
+      output.push(`- ${trimmed.replace(BULLET_MARKER_PATTERN, '').trim()}`);
+      continue;
+    }
+
+    if (ORDERED_LIST_PATTERN.test(trimmed)) {
+      flushParagraph();
+      output.push(trimmed.replace(ORDERED_LIST_PATTERN, '$1. ').trim());
+      continue;
+    }
+
+    if (looksLikeSectionHeading(trimmed, upcoming)) {
+      flushParagraph();
+      output.push(`## ${trimmed.replace(/:\s*$/, '').trim()}`);
+      if (output[output.length - 1] !== '') {
+        output.push('');
+      }
+      continue;
+    }
+
+    paragraphParts.push(trimmed);
+  }
+
+  flushParagraph();
+  return output.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 function collapseMarkdownSpacing(input: string): string {
@@ -187,6 +330,36 @@ function convertHTMLToMarkdown(input: string): string {
   );
 }
 
+function resolveToolbarLabel(button: HTMLButtonElement): string {
+  const explicitLabel = String(button.getAttribute('aria-label') || button.getAttribute('title') || '').trim();
+  if (explicitLabel !== '') {
+    return explicitLabel;
+  }
+
+  const className = String(button.className || '');
+  for (let index = 0; index < TOOLBAR_CLASS_LABELS.length; index += 1) {
+    if (TOOLBAR_CLASS_LABELS[index].pattern.test(className)) {
+      return TOOLBAR_CLASS_LABELS[index].label;
+    }
+  }
+
+  return 'Editor Action';
+}
+
+function applyToolbarAccessibilityLabels(hostElement: HTMLElement): void {
+  const toolbarButtons = hostElement.querySelectorAll('.toastui-editor-toolbar-icons');
+  toolbarButtons.forEach((node) => {
+    if (!(node instanceof HTMLButtonElement)) {
+      return;
+    }
+    const label = resolveToolbarLabel(node);
+    node.setAttribute('aria-label', label);
+    node.setAttribute('title', label);
+    node.setAttribute('data-avel-label', label);
+    node.classList.add('avel-markdown-toolbar-button');
+  });
+}
+
 function resolvePasteAsMarkdown(event: ClipboardEvent): string | null {
   const clipboard = event.clipboardData;
   if (!clipboard) {
@@ -208,12 +381,18 @@ function resolvePasteAsMarkdown(event: ClipboardEvent): string | null {
   }
 
   if (MARKDOWN_HINT_PATTERN.test(plain)) {
-    return normalizePlainTextPaste(plain);
+    return normalizePlainTextMarkers(plain);
   }
 
-  const normalizedPlain = normalizePlainTextPaste(plain);
-  if (normalizedPlain !== plain) {
-    return normalizedPlain;
+  const normalizedPlain = normalizeClipboardText(plain);
+  const smartNormalizedPlain = normalizeStructuredPlainTextPaste(plain);
+  if (smartNormalizedPlain !== normalizedPlain.trim()) {
+    return smartNormalizedPlain;
+  }
+
+  const markerNormalizedPlain = normalizePlainTextMarkers(plain);
+  if (markerNormalizedPlain !== normalizedPlain) {
+    return markerNormalizedPlain;
   }
 
   return null;
@@ -303,6 +482,7 @@ export function MarkdownTextarea({
 
     editorRef.current = editor;
     syncValueToEditor(editor, normalizeValue(value), true);
+    applyToolbarAccessibilityLabels(hostRef.current);
 
     const markdownPasteTarget = hostRef.current.querySelector(
       '.toastui-editor-md-container .CodeMirror textarea, .toastui-editor-md-container textarea'
@@ -357,7 +537,7 @@ export function MarkdownTextarea({
     <div className={joinClassNames('avel-markdown-field', className)}>
       <div ref={hostRef} className="avel-markdown-editor-shell" aria-label={ariaLabel} />
       <textarea className="avel-markdown-hidden-input" name={name} value={value} readOnly tabIndex={-1} aria-hidden="true" />
-      <p className="avel-markdown-hint">Markdown editor with live preview. Backspace and empty-line behavior match plain text editing.</p>
+      <p className="avel-markdown-hint">Markdown editor with live preview. Smart paste normalizes common heading/list patterns automatically.</p>
     </div>
   );
 }
