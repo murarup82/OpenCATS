@@ -866,9 +866,9 @@ class JobOrdersUI extends UserInterface
                 'commentCount' => (isset($row['profileCommentCount']) ? (int) $row['profileCommentCount'] : 0),
                 'daysOld' => (isset($row['daysOld']) ? (int) $row['daysOld'] : 0),
                 'dateCreated' => (isset($row['dateCreated']) ? $row['dateCreated'] : '--'),
-                'openings' => (isset($row['openingsAvailable'])
-                    ? (int) $row['openingsAvailable']
-                    : (isset($row['openings']) ? (int) $row['openings'] : 0)),
+                'openings' => (isset($row['openings'])
+                    ? (int) $row['openings']
+                    : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : 0)),
                 'submitted' => (isset($row['submitted']) ? (int) $row['submitted'] : 0),
                 'pipeline' => (isset($row['pipeline']) ? (int) $row['pipeline'] : 0),
                 'ownerName' => $ownerName,

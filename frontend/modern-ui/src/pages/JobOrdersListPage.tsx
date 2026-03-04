@@ -32,7 +32,6 @@ type ColumnVisibility = {
   openings: boolean;
   pipeline: boolean;
   proposed: boolean;
-  age: boolean;
   owner: boolean;
   recruiter: boolean;
   monitor: boolean;
@@ -47,7 +46,6 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
     openings: true,
     pipeline: true,
     proposed: true,
-    age: true,
     owner: true,
     recruiter: true,
     monitor: true
@@ -58,10 +56,9 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
     openings: true,
     pipeline: true,
     proposed: true,
-    age: true,
     owner: true,
     recruiter: false,
-    monitor: false
+    monitor: true
   },
   compact: {
     company: false,
@@ -69,7 +66,6 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
     openings: true,
     pipeline: true,
     proposed: true,
-    age: true,
     owner: false,
     recruiter: false,
     monitor: false
@@ -94,7 +90,6 @@ function isColumnVisibility(value: unknown): value is ColumnVisibility {
     typeof candidate.openings === 'boolean' &&
     typeof candidate.pipeline === 'boolean' &&
     typeof candidate.proposed === 'boolean' &&
-    typeof candidate.age === 'boolean' &&
     typeof candidate.owner === 'boolean' &&
     typeof candidate.recruiter === 'boolean' &&
     typeof candidate.monitor === 'boolean'
@@ -111,7 +106,6 @@ function detectPreset(visibility: ColumnVisibility): ColumnPresetKey | 'custom' 
       preset.openings === visibility.openings &&
       preset.pipeline === visibility.pipeline &&
       preset.proposed === visibility.proposed &&
-      preset.age === visibility.age &&
       preset.owner === visibility.owner &&
       preset.recruiter === visibility.recruiter &&
       preset.monitor === visibility.monitor
@@ -152,6 +146,31 @@ function buildStatusTone(tone: string): string {
   return normalized === '' ? 'status' : normalized;
 }
 
+function buildJobOrderStatusTone(status: string, statusSlug: string): string {
+  const normalized = `${String(status || '').toLowerCase()} ${String(statusSlug || '').toLowerCase()}`;
+
+  if (normalized.includes('cancel')) {
+    return 'cancelled';
+  }
+  if (normalized.includes('closed')) {
+    return 'closed';
+  }
+  if (normalized.includes('lead') || normalized.includes('upcoming') || normalized.includes('pre-open')) {
+    return 'lead';
+  }
+  if (normalized.includes('on hold') || normalized.includes('on-hold')) {
+    return 'on-hold';
+  }
+  if (normalized.includes('full')) {
+    return 'full';
+  }
+  if (normalized.includes('active')) {
+    return 'active';
+  }
+
+  return 'default';
+}
+
 export function JobOrdersListPage({ bootstrap }: Props) {
   const [data, setData] = useState<JobOrdersListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -163,7 +182,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
   const [monitorToggleError, setMonitorToggleError] = useState('');
   const columnStorageKey = useMemo(
-    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:columns:v1`,
+    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:columns:v3`,
     [bootstrap.siteID, bootstrap.userID]
   );
 
@@ -359,7 +378,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     ...(visibleColumns.openings ? [{ key: 'openings', title: 'Openings' }] : []),
     ...(visibleColumns.pipeline ? [{ key: 'pipeline', title: 'Pipeline' }] : []),
     ...(visibleColumns.proposed ? [{ key: 'proposed', title: 'Proposed' }] : []),
-    ...(visibleColumns.age ? [{ key: 'age', title: 'Age' }] : []),
     ...(visibleColumns.owner ? [{ key: 'owner', title: 'Owner' }] : []),
     ...(visibleColumns.recruiter ? [{ key: 'recruiter', title: 'Recruiter' }] : []),
     ...(visibleColumns.monitor ? [{ key: 'monitor', title: 'Monitor' }] : [])
@@ -370,7 +388,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     { key: 'openings', label: 'Openings' },
     { key: 'pipeline', label: 'Pipeline' },
     { key: 'proposed', label: 'Proposed' },
-    { key: 'age', label: 'Age' },
     { key: 'owner', label: 'Owner' },
     { key: 'recruiter', label: 'Recruiter' },
     { key: 'monitor', label: 'Monitor' }
@@ -423,12 +440,12 @@ export function JobOrdersListPage({ bootstrap }: Props) {
         actions={
           <>
             {canAddJobOrder ? (
-              <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.addJobOrderPopupURL)}>
+              <a className="modern-btn avel-joborders-action avel-joborders-action--add" href={ensureModernUIURL(data.actions.addJobOrderPopupURL)}>
                 Add Job Order
               </a>
             ) : null}
             {canManageRecruiterAllocation ? (
-              <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.recruiterAllocationURL)}>
+              <a className="modern-btn avel-joborders-action avel-joborders-action--allocation" href={ensureModernUIURL(data.actions.recruiterAllocationURL)}>
                 Recruiter Allocation
               </a>
             ) : null}
@@ -520,7 +537,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                 <input
                   type="checkbox"
                   checked={data.filters.showInactive}
-                  onChange={(event) => navigateWithFilters({ showInactive: event.target.checked, page: 1 })}
+                  onChange={(event) => navigateWithFilters({ showInactive: event.target.checked, status: '', page: 1 })}
                 />
                 <span className="modern-command-toggle__switch" aria-hidden="true" />
                 <span>Show Inactive</span>
@@ -597,7 +614,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
           <section className="avel-list-panel">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Active Job Orders</h2>
-              <p className="avel-list-panel__hint">Phase 4 native list view with per-user column presets.</p>
             </div>
 
             <DataTable
@@ -626,19 +642,22 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                   ) : null}
                   {visibleColumns.status ? (
                     <td>
-                      <span className={`modern-chip modern-chip--status-${row.statusSlug}`}>{toDisplayText(row.status)}</span>
+                      <span className={`modern-chip modern-chip--jo-status-${buildJobOrderStatusTone(row.status, row.statusSlug)}`}>
+                        {toDisplayText(row.status)}
+                      </span>
                     </td>
                   ) : null}
                   {visibleColumns.openings ? (
                     <td>
-                      <span className={`modern-chip ${row.openings > 0 ? 'modern-chip--openings' : 'modern-chip--openings-zero'}`}>
+                      <span
+                        className={`modern-chip ${row.openings > 0 ? 'modern-chip--openings modern-chip--success' : 'modern-chip--openings-zero'}`}
+                      >
                         {row.openings}
                       </span>
                     </td>
                   ) : null}
                   {visibleColumns.pipeline ? <td>{row.pipeline}</td> : null}
                   {visibleColumns.proposed ? <td>{row.submitted}</td> : null}
-                  {visibleColumns.age ? <td>{row.daysOld}d</td> : null}
                   {visibleColumns.owner ? <td>{toDisplayText(row.ownerName)}</td> : null}
                   {visibleColumns.recruiter ? <td>{toDisplayText(row.recruiterName)}</td> : null}
                   {visibleColumns.monitor ? (

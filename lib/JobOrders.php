@@ -1280,7 +1280,8 @@ class JobOrdersDataGrid extends DataGrid
                                       'filterHaving'   => 'profileCommentCount',
                                       'filterTypes'    => '===>=<'),
 
-            'Status' =>         array('select'         => 'joborder.status AS status',
+            'Status' =>         array('select'         => 'joborder.status AS status,
+                                                          joborder.openings AS openings',
                                       'pagerRender'    => 'return $rsData[\'status\'];',
                                       'exportRender'   => 'return $rsData[\'status\'];',
                                       'sortableColumn' => 'status',

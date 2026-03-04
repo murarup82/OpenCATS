@@ -2139,9 +2139,9 @@
 }
 
 .avel-joborders-page .modern-chip--openings {
-  border-color: #b8dfc8;
-  background: #edf9f1;
-  color: #1f7145;
+  border-color: #8fc8a7;
+  background: linear-gradient(180deg, #ddf4e7 0%, #c9ecd9 100%);
+  color: #185e37;
 }
 
 .avel-joborders-page .modern-chip--openings-zero {
@@ -2180,6 +2180,48 @@
   border-color: #e2c9c9;
   background: linear-gradient(180deg, #fff3f3 0%, #fce7e7 100%);
   color: #8f3535;
+}
+
+.avel-joborders-page .modern-chip--jo-status-active {
+  border-color: #9ecfb0;
+  background: linear-gradient(180deg, #e8f8ee 0%, #d9f0e3 100%);
+  color: #1c6b3f;
+}
+
+.avel-joborders-page .modern-chip--jo-status-on-hold {
+  border-color: #e4c88e;
+  background: linear-gradient(180deg, #fff6e5 0%, #feeecb 100%);
+  color: #8f5a09;
+}
+
+.avel-joborders-page .modern-chip--jo-status-full {
+  border-color: #b8cee3;
+  background: linear-gradient(180deg, #edf4fb 0%, #ddeaf7 100%);
+  color: #1f567e;
+}
+
+.avel-joborders-page .modern-chip--jo-status-lead {
+  border-color: #c9b7e8;
+  background: linear-gradient(180deg, #f4eeff 0%, #e8defd 100%);
+  color: #5c3f94;
+}
+
+.avel-joborders-page .modern-chip--jo-status-closed {
+  border-color: #cdd8e1;
+  background: linear-gradient(180deg, #f4f8fb 0%, #eaf1f6 100%);
+  color: #4a6271;
+}
+
+.avel-joborders-page .modern-chip--jo-status-cancelled {
+  border-color: #e2c4c4;
+  background: linear-gradient(180deg, #fff2f2 0%, #f9e4e4 100%);
+  color: #8c3535;
+}
+
+.avel-joborders-page .modern-chip--jo-status-default {
+  border-color: #b5d8e8;
+  background: #eef8ff;
+  color: #1f5f7b;
 }
 
 .avel-candidates-page .modern-chip--success {
@@ -2923,6 +2965,24 @@
   border-color: #7eaec8;
   background: #d8ebf7;
   color: #124c67;
+}
+
+.avel-joborders-page .avel-joborders-action {
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(0, 66, 91, 0.26);
+}
+
+.avel-joborders-page .avel-joborders-action:hover {
+  box-shadow: 0 11px 22px rgba(0, 66, 91, 0.32);
+}
+
+.avel-joborders-page .avel-joborders-action--add {
+  background: linear-gradient(145deg, #0f9a64 0%, #0b7c51 100%);
+}
+
+.avel-joborders-page .avel-joborders-action--allocation {
+  background: linear-gradient(145deg, #1765d9 0%, #0f4fb1 100%);
 }
 
 .avel-joborder-show-page .avel-joborder-hero {
