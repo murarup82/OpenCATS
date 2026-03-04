@@ -43,6 +43,7 @@ import { SourcingPage } from '../pages/SourcingPage';
 import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
 import { LogsPage } from '../pages/LogsPage';
+import { LoginPage } from '../pages/LoginPage';
 import { LoginLegacyActionPage } from '../pages/LoginLegacyActionPage';
 import { LegacyUtilityForwardActionPage } from '../pages/LegacyUtilityForwardActionPage';
 import { RssJobOrdersPage } from '../pages/RssJobOrdersPage';
