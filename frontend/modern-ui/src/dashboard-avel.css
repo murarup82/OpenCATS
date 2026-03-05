@@ -353,6 +353,167 @@
   display: none;
 }
 
+.avel-kpi--proposed {
+  border-color: #d8c8a6;
+  background: linear-gradient(180deg, #fff9ef 0%, #fff4dd 100%);
+}
+
+.avel-kpi--interviews {
+  border-color: #aad3db;
+  background: linear-gradient(180deg, #f0fbff 0%, #e4f5fb 100%);
+}
+
+.avel-kpi--validated {
+  border-color: #a9cbe3;
+  background: linear-gradient(180deg, #f1f8ff 0%, #e4f1ff 100%);
+}
+
+.avel-kpi--hired {
+  border-color: #afd5bb;
+  background: linear-gradient(180deg, #f0fbf3 0%, #e4f6e8 100%);
+}
+
+.avel-kpi--positions {
+  border-color: #c6c5e6;
+  background: linear-gradient(180deg, #f7f6ff 0%, #eceafe 100%);
+}
+
+.avel-delta {
+  display: inline-flex;
+  min-width: 62px;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 1px 8px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.avel-delta--up {
+  border-color: #b9dec6;
+  background: #eaf8ef;
+  color: #1b7644;
+}
+
+.avel-delta--down {
+  border-color: #e4c0c0;
+  background: #fff1f1;
+  color: #a03f3f;
+}
+
+.avel-delta--flat {
+  border-color: #ced9e3;
+  background: #f2f6fa;
+  color: #5c7384;
+}
+
+.avel-rate-heat {
+  font-weight: 700;
+}
+
+.avel-rate-heat--high {
+  background: #e8f8ef;
+  color: #1c7244;
+}
+
+.avel-rate-heat--mid {
+  background: #fff7e9;
+  color: #885e16;
+}
+
+.avel-rate-heat--low {
+  background: #fff0f0;
+  color: #973f3f;
+}
+
+.avel-rate-heat--na {
+  background: #eef3f7;
+  color: #556d7c;
+}
+
+.avel-kpi-status-legend {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.avel-empty-state {
+  border: 1px dashed #b8cfdd;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fdff 0%, #eef6fb 100%);
+  color: #4d6c7e;
+  padding: 12px;
+  display: grid;
+  gap: 3px;
+}
+
+.avel-empty-state strong {
+  color: #1d5066;
+  font-size: 0.86rem;
+}
+
+.avel-spotlight-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.avel-spotlight-card__main,
+.avel-spotlight-card__side {
+  border: 1px solid #b8d1df;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fafdff 0%, #edf6fc 100%);
+  padding: 10px 12px;
+  display: grid;
+  gap: 5px;
+}
+
+.avel-spotlight-card__label {
+  margin: 0;
+  color: #5d7c8e;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.avel-spotlight-card__value {
+  margin: 0;
+  color: #0c4a64;
+  font: 700 2rem/1 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-spotlight-card__meta {
+  margin: 0;
+  color: #46697c;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.avel-spotlight-card__delta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: #547385;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.avel-list-panel--spotlight.avel-spotlight-card--high {
+  border-color: #9bcab3;
+}
+
+.avel-list-panel--spotlight.avel-spotlight-card--mid {
+  border-color: #d4bf97;
+}
+
+.avel-list-panel--spotlight.avel-spotlight-card--low {
+  border-color: #d6b3b3;
+}
+
 .avel-kpi-controls {
   display: grid;
   grid-template-columns: repeat(4, minmax(150px, 1fr));
@@ -530,6 +691,16 @@
   font: 700 0.88rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
 }
 
+.avel-chart-card--trend {
+  border-color: #9ec3d9;
+  background: linear-gradient(180deg, #e8f4fb 0%, #dfedf6 100%);
+}
+
+.avel-chart-card--source {
+  border-color: #afc7d8;
+  background: linear-gradient(180deg, #eaf4f9 0%, #e2edf3 100%);
+}
+
 .avel-trend-chart {
   border: 1px solid #bfd7e5;
   border-radius: 12px;
@@ -555,13 +726,8 @@
   font-weight: 700;
 }
 
-.avel-trend-chart__area {
-  fill: rgba(15, 152, 192, 0.18);
-}
-
 .avel-trend-chart__line {
   fill: none;
-  stroke: #0f98c0;
   stroke-width: 2.5;
 }
 
@@ -585,13 +751,12 @@
 }
 
 .avel-trend-chart__bar {
-  fill: #79bdd4;
   cursor: pointer;
-  transition: fill 140ms ease;
+  transition: fill 140ms ease, transform 120ms ease;
 }
 
 .avel-trend-chart__bar.is-active {
-  fill: #0f98c0;
+  transform: translateY(-1px);
 }
 
 .avel-trend-chart__bar:focus-visible {
@@ -1991,6 +2156,9 @@
 }
 
 .avel-list-panel {
+  --avel-panel-accent: linear-gradient(90deg, #5ea9c9 0%, #2f89b2 100%);
+  position: relative;
+  overflow: hidden;
   border: 1px solid #9fbfd3;
   border-radius: 16px;
   background: linear-gradient(180deg, #dcecf7 0%, #d2e5f2 100%);
@@ -1998,6 +2166,44 @@
     0 1px 0 rgba(255, 255, 255, 0.72) inset,
     0 12px 24px rgba(0, 66, 91, 0.1);
   padding: 13px;
+}
+
+.avel-list-panel::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--avel-panel-accent);
+}
+
+.avel-list-panel--spotlight {
+  --avel-panel-accent: linear-gradient(90deg, #2e8fad 0%, #1aa680 100%);
+}
+
+.avel-list-panel--positions {
+  --avel-panel-accent: linear-gradient(90deg, #2f8eb8 0%, #246e9f 100%);
+}
+
+.avel-list-panel--pipeline {
+  --avel-panel-accent: linear-gradient(90deg, #aa7e2e 0%, #d19a3c 100%);
+}
+
+.avel-list-panel--speed {
+  --avel-panel-accent: linear-gradient(90deg, #c5775f 0%, #a85353 100%);
+}
+
+.avel-list-panel--candidates {
+  --avel-panel-accent: linear-gradient(90deg, #2e9ab2 0%, #1d8a9c 100%);
+}
+
+.avel-list-panel--trend {
+  --avel-panel-accent: linear-gradient(90deg, #4987b8 0%, #3c68af 100%);
+}
+
+.avel-list-panel--executive {
+  --avel-panel-accent: linear-gradient(90deg, #6a7bb8 0%, #4f5fa4 100%);
 }
 
 .avel-list-panel__header {

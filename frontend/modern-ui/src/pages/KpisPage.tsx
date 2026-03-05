@@ -24,6 +24,43 @@ function formatSigned(value: number): string {
   return value > 0 ? `+${value}` : `${value}`;
 }
 
+function toDeltaClass(value: number): string {
+  if (value > 0) {
+    return 'avel-delta avel-delta--up';
+  }
+  if (value < 0) {
+    return 'avel-delta avel-delta--down';
+  }
+  return 'avel-delta avel-delta--flat';
+}
+
+function parsePercentFromLabel(value: string): number | null {
+  const match = String(value || '').match(/(-?\d+(?:\.\d+)?)\s*%/);
+  if (!match) {
+    return null;
+  }
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toRateHeatClass(percent: number | null): string {
+  if (percent === null) {
+    return 'avel-rate-heat avel-rate-heat--na';
+  }
+  if (percent >= 70) {
+    return 'avel-rate-heat avel-rate-heat--high';
+  }
+  if (percent >= 40) {
+    return 'avel-rate-heat avel-rate-heat--mid';
+  }
+  return 'avel-rate-heat avel-rate-heat--low';
+}
+
+function joinClasses(...classes: Array<string | null | undefined>): string | undefined {
+  const normalized = classes.filter((value) => typeof value === 'string' && value.trim() !== '') as string[];
+  return normalized.length > 0 ? normalized.join(' ') : undefined;
+}
+
 function toPercent(part: number, total: number): string {
   if (!Number.isFinite(part) || !Number.isFinite(total) || total <= 0) {
     return '0%';
@@ -102,7 +139,12 @@ type TrendChartProps = {
 
 function TrendChart({ points, mode, activeIndex, onActivate, onStep }: TrendChartProps) {
   if (points.length === 0) {
-    return <div className="modern-state">No trend data available for the selected range.</div>;
+    return (
+      <div className="modern-state avel-empty-state">
+        <strong>No trend data available for the selected range.</strong>
+        <span>Adjust trend dates or source scope to populate the timeline.</span>
+      </div>
+    );
   }
 
   const width = 760;
@@ -137,6 +179,9 @@ function TrendChart({ points, mode, activeIndex, onActivate, onStep }: TrendChar
 
   const segmentWidth = plotWidth / Math.max(points.length, 1);
   const barWidth = points.length <= 1 ? Math.min(80, plotWidth * 0.6) : Math.max(12, segmentWidth * 0.66);
+  const lineGradientID = 'avel-kpi-line-gradient';
+  const areaGradientID = 'avel-kpi-area-gradient';
+  const barGradientID = 'avel-kpi-bar-gradient';
   const handlePointKeyDown = (event: KeyboardEvent<SVGElement>, index: number) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -157,6 +202,21 @@ function TrendChart({ points, mode, activeIndex, onActivate, onStep }: TrendChar
   return (
     <div className="avel-trend-chart">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="New candidates trend chart">
+        <defs>
+          <linearGradient id={lineGradientID} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#2f8eb8" />
+            <stop offset="52%" stopColor="#1fa4bf" />
+            <stop offset="100%" stopColor="#1db38b" />
+          </linearGradient>
+          <linearGradient id={areaGradientID} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(31, 164, 191, 0.35)" />
+            <stop offset="100%" stopColor="rgba(31, 164, 191, 0.04)" />
+          </linearGradient>
+          <linearGradient id={barGradientID} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#4ea9cb" />
+            <stop offset="100%" stopColor="#24779f" />
+          </linearGradient>
+        </defs>
         {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
           const y = padTop + ratio * plotHeight;
           const value = Math.round(maxValue * (1 - ratio));
@@ -172,8 +232,8 @@ function TrendChart({ points, mode, activeIndex, onActivate, onStep }: TrendChar
 
         {mode === 'line' ? (
           <>
-            <path className="avel-trend-chart__area" d={areaPath} />
-            <path className="avel-trend-chart__line" d={linePath} />
+            <path className="avel-trend-chart__area" d={areaPath} fill={`url(#${areaGradientID})`} />
+            <path className="avel-trend-chart__line" d={linePath} stroke={`url(#${lineGradientID})`} />
             {coords.map((coord, index) => (
               <circle
                 key={`point-${points[index].label}-${index}`}
@@ -213,6 +273,7 @@ function TrendChart({ points, mode, activeIndex, onActivate, onStep }: TrendChar
                   onFocus={() => onActivate(index)}
                   aria-label={`Trend ${point.label}: ${point.value}`}
                   onKeyDown={(event) => handlePointKeyDown(event, index)}
+                  fill={index === activeIndex ? '#0e7fa8' : `url(#${barGradientID})`}
                 >
                   <title>{`${point.label}: ${point.value}`}</title>
                 </rect>
@@ -447,6 +508,16 @@ export function KpisPage({ bootstrap }: Props) {
     (total, row) => total + toNumber(row.totalOpenPositions),
     0
   );
+  const hiringRatePercent = totalProposedToCustomer > 0 ? Math.round((totalHired / totalProposedToCustomer) * 100) : 0;
+  const acceptanceRatePercent =
+    totalProposedToCustomer > 0 ? Math.round((totalAcceptedByCustomer / totalProposedToCustomer) * 100) : 0;
+  const spotlightDelta = toNumber(data.summary.totalsDiff.filledPositions);
+  const spotlightTone =
+    hiringRatePercent >= 45
+      ? 'avel-spotlight-card--high'
+      : hiringRatePercent >= 20
+        ? 'avel-spotlight-card--mid'
+        : 'avel-spotlight-card--low';
 
   return (
     <div className="avel-dashboard-page">
@@ -611,7 +682,30 @@ export function KpisPage({ bootstrap }: Props) {
             </button>
           </section>
 
-          <section className="avel-list-panel">
+          <section className={`avel-list-panel avel-list-panel--spotlight ${spotlightTone}`}>
+            <div className="avel-spotlight-card">
+              <div className="avel-spotlight-card__main">
+                <p className="avel-spotlight-card__label">Hiring Rate (Selected Filters)</p>
+                <p className="avel-spotlight-card__value">{hiringRatePercent}%</p>
+                <p className="avel-spotlight-card__meta">
+                  {totalHired} hired / {totalProposedToCustomer} submitted
+                </p>
+              </div>
+              <div className="avel-spotlight-card__side">
+                <div className="avel-spotlight-card__delta">
+                  <span>Filled positions delta</span>
+                  <strong className={toDeltaClass(spotlightDelta)}>{formatSigned(spotlightDelta)}</strong>
+                </div>
+                <div className="avel-my-notes-chip-row">
+                  <span className="modern-chip modern-chip--info">Acceptance: {acceptanceRatePercent}%</span>
+                  <span className="modern-chip modern-chip--info">Customer: {selectedCustomerLabel}</span>
+                  <span className="modern-chip modern-chip--info">JO Scope: {jobOrderScopeLabel}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="avel-list-panel avel-list-panel--positions">
               <div className="avel-list-panel__header">
                 <h3 className="avel-list-panel__title">Positions Open</h3>
                 <div className="avel-my-notes-chip-row">
@@ -621,7 +715,10 @@ export function KpisPage({ bootstrap }: Props) {
                 </div>
               </div>
             {data.rows.kpiRows.length === 0 ? (
-              <div className="modern-state">No KPI data found.</div>
+              <div className="modern-state avel-empty-state">
+                <strong>No position KPIs for the selected filters.</strong>
+                <span>Try switching customer, job-order scope, or official report mode.</span>
+              </div>
             ) : (
               <table className="modern-table">
                 <thead>
@@ -666,20 +763,41 @@ export function KpisPage({ bootstrap }: Props) {
                   </tr>
                   <tr>
                     <td>vs Last week</td>
-                    <td>{formatSigned(toNumber(data.summary.totalsDiff.newPositions))}</td>
-                    <td>{formatSigned(toNumber(data.summary.totalsDiff.totalOpenPositions))}</td>
-                    <td>{formatSigned(toNumber(data.summary.totalsDiff.filledPositions))}</td>
+                    <td>
+                      <span className={toDeltaClass(toNumber(data.summary.totalsDiff.newPositions))}>
+                        {formatSigned(toNumber(data.summary.totalsDiff.newPositions))}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={toDeltaClass(toNumber(data.summary.totalsDiff.totalOpenPositions))}>
+                        {formatSigned(toNumber(data.summary.totalsDiff.totalOpenPositions))}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={toDeltaClass(toNumber(data.summary.totalsDiff.filledPositions))}>
+                        {formatSigned(toNumber(data.summary.totalsDiff.filledPositions))}
+                      </span>
+                    </td>
                     <td></td>
-                    {data.filters.showExpectedFilled ? <td>{formatSigned(toNumber(data.summary.totalsDiff.expectedFilled))}</td> : null}
-                    <td>{formatSigned(toNumber(data.summary.totalsDiff.expectedInFullPlan))}</td>
+                    {data.filters.showExpectedFilled ? (
+                      <td>
+                        <span className={toDeltaClass(toNumber(data.summary.totalsDiff.expectedFilled))}>
+                          {formatSigned(toNumber(data.summary.totalsDiff.expectedFilled))}
+                        </span>
+                      </td>
+                    ) : null}
+                    <td>
+                      <span className={toDeltaClass(toNumber(data.summary.totalsDiff.expectedInFullPlan))}>
+                        {formatSigned(toNumber(data.summary.totalsDiff.expectedInFullPlan))}
+                      </span>
+                    </td>
                   </tr>
                 </tfoot>
               </table>
             )}
           </section>
 
-          {data.rows.jobOrderKpiRows.length > 0 ? (
-            <section className="avel-list-panel">
+          <section className="avel-list-panel avel-list-panel--pipeline">
               <div className="avel-list-panel__header">
                 <h3 className="avel-list-panel__title">Client Interview : Acceptance</h3>
                 <div className="avel-my-notes-chip-row">
@@ -690,77 +808,99 @@ export function KpisPage({ bootstrap }: Props) {
                 </div>
               </div>
               <div className="avel-kpi-grid avel-kpi-grid--acceptance">
-                <article className="avel-kpi avel-kpi--compact">
+                <article className="avel-kpi avel-kpi--compact avel-kpi--proposed">
                   <p className="avel-kpi__label">Proposed to customer</p>
                   <p className="avel-kpi__value">{totalProposedToCustomer}</p>
                 </article>
-                <article className="avel-kpi avel-kpi--compact">
+                <article className="avel-kpi avel-kpi--compact avel-kpi--interviews">
                   <p className="avel-kpi__label">Interviews</p>
                   <p className="avel-kpi__value">{totalInterviews}</p>
                 </article>
-                <article className="avel-kpi avel-kpi--compact">
+                <article className="avel-kpi avel-kpi--compact avel-kpi--validated">
                   <p className="avel-kpi__label">Validated by customer</p>
                   <p className="avel-kpi__value">{totalAcceptedByCustomer}</p>
                 </article>
-                <article className="avel-kpi avel-kpi--compact">
+                <article className="avel-kpi avel-kpi--compact avel-kpi--hired">
                   <p className="avel-kpi__label">Hired candidates</p>
                   <p className="avel-kpi__value">{totalHired}</p>
                 </article>
-                <article className="avel-kpi avel-kpi--compact">
+                <article className="avel-kpi avel-kpi--compact avel-kpi--positions">
                   <p className="avel-kpi__label">Total open positions</p>
                   <p className="avel-kpi__value">{totalOpenPositionsForSelection}</p>
                 </article>
               </div>
-              <table className="modern-table">
-                <thead>
-                  <tr>
-                    <th>Role</th>
-                    <th>Status</th>
-                    {data.filters.showDeadline ? <th>Time to deadline</th> : null}
-                    <th>Client</th>
-                    <th>Total open positions</th>
-                    <th>Submitted to customer</th>
-                    <th>Acceptance Rate</th>
-                    <th>Hiring Rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.rows.jobOrderKpiRows.map((row) => (
-                    <tr key={`joborder-kpi-${row.jobOrderID}`}>
-                      <td>
-                        <a className="modern-link" href={`${bootstrap.indexName}?m=joborders&a=show&jobOrderID=${row.jobOrderID}&ui=modern`}>
-                          {row.title}
-                        </a>
-                      </td>
-                      <td>
-                        <span className={`modern-chip avel-kpi-status-chip avel-kpi-status-chip--${toStatusTokenSlug(row.status)}`}>
-                          {row.status}
-                        </span>
-                      </td>
-                      {data.filters.showDeadline ? (
-                        <td className={toSemanticCellClass(row.timeToDeadlineClass) || undefined}>{row.timeToDeadline}</td>
-                      ) : null}
-                      <td>
-                        <span className={`modern-chip avel-kpi-customer-chip avel-kpi-customer-chip--tone-${toCustomerTone(row.companyName)}`}>
-                          {row.companyName}
-                        </span>
-                      </td>
-                      <td>{row.totalOpenPositions}</td>
-                      <td>{row.submittedCount}</td>
-                      <td className={toSemanticCellClass(row.acceptanceRateClass) || undefined}>{row.acceptanceRate}</td>
-                      <td>{row.hiringRate}</td>
+              <div className="avel-kpi-status-legend" aria-label="Status color legend">
+                <span className="modern-chip avel-kpi-status-chip avel-kpi-status-chip--active">Active</span>
+                <span className="modern-chip avel-kpi-status-chip avel-kpi-status-chip--on-hold">On Hold</span>
+                <span className="modern-chip avel-kpi-status-chip avel-kpi-status-chip--closed">Closed</span>
+                <span className="modern-chip avel-kpi-status-chip avel-kpi-status-chip--cancelled">Cancelled</span>
+              </div>
+              {data.rows.jobOrderKpiRows.length === 0 ? (
+                <div className="modern-state avel-empty-state">
+                  <strong>No interview/acceptance rows for the selected filters.</strong>
+                  <span>Try broadening job-order scope or switching customer.</span>
+                </div>
+              ) : (
+                <table className="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Role</th>
+                      <th>Status</th>
+                      {data.filters.showDeadline ? <th>Time to deadline</th> : null}
+                      <th>Client</th>
+                      <th>Total open positions</th>
+                      <th>Submitted to customer</th>
+                      <th>Acceptance Rate</th>
+                      <th>Hiring Rate</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.rows.jobOrderKpiRows.map((row) => {
+                      const acceptanceRatePercentValue = parsePercentFromLabel(row.acceptanceRate);
+                      const hiringRatePercentValue = parsePercentFromLabel(row.hiringRate);
+                      return (
+                        <tr key={`joborder-kpi-${row.jobOrderID}`}>
+                          <td>
+                            <a className="modern-link" href={`${bootstrap.indexName}?m=joborders&a=show&jobOrderID=${row.jobOrderID}&ui=modern`}>
+                              {row.title}
+                            </a>
+                          </td>
+                          <td>
+                            <span className={`modern-chip avel-kpi-status-chip avel-kpi-status-chip--${toStatusTokenSlug(row.status)}`}>
+                              {row.status}
+                            </span>
+                          </td>
+                          {data.filters.showDeadline ? (
+                            <td className={toSemanticCellClass(row.timeToDeadlineClass) || undefined}>{row.timeToDeadline}</td>
+                          ) : null}
+                          <td>
+                            <span className={`modern-chip avel-kpi-customer-chip avel-kpi-customer-chip--tone-${toCustomerTone(row.companyName)}`}>
+                              {row.companyName}
+                            </span>
+                          </td>
+                          <td>{row.totalOpenPositions}</td>
+                          <td>{row.submittedCount}</td>
+                          <td
+                            className={joinClasses(
+                              toSemanticCellClass(row.acceptanceRateClass),
+                              toRateHeatClass(acceptanceRatePercentValue)
+                            )}
+                          >
+                            {row.acceptanceRate}
+                          </td>
+                          <td className={toRateHeatClass(hiringRatePercentValue)}>{row.hiringRate}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
               {data.filters.showDeadline ? (
                 <p className="avel-kpi-results-summary">Time to deadline uses Expected Completion Date (date - today).</p>
               ) : null}
-            </section>
-          ) : null}
+          </section>
 
-          {data.rows.requestQualifiedRows.length > 0 ? (
-            <section className="avel-list-panel">
+          <section className="avel-list-panel avel-list-panel--speed">
               <div className="avel-list-panel__header">
                 <h3 className="avel-list-panel__title">Request to qualified candidate</h3>
                 <div className="avel-my-notes-chip-row">
@@ -770,40 +910,46 @@ export function KpisPage({ bootstrap }: Props) {
                   <span className="modern-chip modern-chip--info">Hide Closed JO: {hideClosedJobOrders ? 'On' : 'Off'}</span>
                 </div>
               </div>
-              <table className="modern-table">
-                <thead>
-                  <tr>
-                    <th>Role</th>
-                    <th>Client</th>
-                    <th>Date demand received</th>
-                    <th>Date first qualified candidate submitted</th>
-                    <th>Days</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.rows.requestQualifiedRows.map((row) => (
-                    <tr key={`request-qualified-${row.jobOrderID}`}>
-                      <td>
-                        <a className="modern-link" href={`${bootstrap.indexName}?m=joborders&a=show&jobOrderID=${row.jobOrderID}&ui=modern`}>
-                          {row.title}
-                        </a>
-                      </td>
-                      <td>
-                        <span className={`modern-chip avel-kpi-customer-chip avel-kpi-customer-chip--tone-${toCustomerTone(row.companyName)}`}>
-                          {row.companyName}
-                        </span>
-                      </td>
-                      <td>{row.receivedDate}</td>
-                      <td>{row.submittedDate}</td>
-                      <td className={toSemanticCellClass(row.daysClass) || undefined}>{row.daysValue}</td>
+              {data.rows.requestQualifiedRows.length === 0 ? (
+                <div className="modern-state avel-empty-state">
+                  <strong>No request-to-qualified entries for this selection.</strong>
+                  <span>Check wider date windows or include closed job orders.</span>
+                </div>
+              ) : (
+                <table className="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Role</th>
+                      <th>Client</th>
+                      <th>Date demand received</th>
+                      <th>Date first qualified candidate submitted</th>
+                      <th>Days</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
-          ) : null}
+                  </thead>
+                  <tbody>
+                    {data.rows.requestQualifiedRows.map((row) => (
+                      <tr key={`request-qualified-${row.jobOrderID}`}>
+                        <td>
+                          <a className="modern-link" href={`${bootstrap.indexName}?m=joborders&a=show&jobOrderID=${row.jobOrderID}&ui=modern`}>
+                            {row.title}
+                          </a>
+                        </td>
+                        <td>
+                          <span className={`modern-chip avel-kpi-customer-chip avel-kpi-customer-chip--tone-${toCustomerTone(row.companyName)}`}>
+                            {row.companyName}
+                          </span>
+                        </td>
+                        <td>{row.receivedDate}</td>
+                        <td>{row.submittedDate}</td>
+                        <td className={toSemanticCellClass(row.daysClass) || undefined}>{row.daysValue}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+          </section>
 
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-list-panel--candidates">
             <div className="avel-list-panel__header">
               <h3 className="avel-list-panel__title">New Candidates</h3>
               <div className="avel-my-notes-chip-row">
@@ -811,7 +957,10 @@ export function KpisPage({ bootstrap }: Props) {
               </div>
             </div>
             {data.rows.candidateSourceRows.length === 0 && data.rows.candidateMetricRows.length === 0 ? (
-              <div className="modern-state">No candidate KPI data found.</div>
+              <div className="modern-state avel-empty-state">
+                <strong>No candidate metrics for this filter set.</strong>
+                <span>Try setting source scope to All or changing customer scope.</span>
+              </div>
             ) : (
               <table className="modern-table">
                 <thead>
@@ -844,7 +993,9 @@ export function KpisPage({ bootstrap }: Props) {
                           row.lastWeek
                         )}
                       </td>
-                      <td>{formatSigned(toNumber(row.delta))}</td>
+                      <td>
+                        <span className={toDeltaClass(toNumber(row.delta))}>{formatSigned(toNumber(row.delta))}</span>
+                      </td>
                     </tr>
                   ))}
                   {data.rows.candidateMetricRows.map((row) => (
@@ -868,7 +1019,9 @@ export function KpisPage({ bootstrap }: Props) {
                           row.lastWeek
                         )}
                       </td>
-                      <td>{formatSigned(toNumber(row.delta))}</td>
+                      <td>
+                        <span className={toDeltaClass(toNumber(row.delta))}>{formatSigned(toNumber(row.delta))}</span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -876,7 +1029,7 @@ export function KpisPage({ bootstrap }: Props) {
             )}
           </section>
 
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-list-panel--trend">
             <div className="avel-list-panel__header">
               <h3 className="avel-list-panel__title">New Candidates Trend</h3>
               <div className="avel-my-notes-chip-row">
@@ -918,7 +1071,7 @@ export function KpisPage({ bootstrap }: Props) {
               </label>
             </div>
             <div className="avel-kpi-chart-grid">
-              <article className="avel-list-panel avel-chart-card">
+              <article className="avel-list-panel avel-chart-card avel-chart-card--trend">
                 <div className="avel-chart-toolbar">
                   <label className="modern-command-field">
                     <span className="modern-command-label">Chart Style</span>
@@ -948,7 +1101,7 @@ export function KpisPage({ bootstrap }: Props) {
                   onStep={stepTrendPoint}
                 />
               </article>
-              <article className="avel-list-panel avel-chart-card">
+              <article className="avel-list-panel avel-chart-card avel-chart-card--source">
                 <div className="avel-list-panel__header">
                   <h3 className="avel-list-panel__title">Candidate Source Distribution</h3>
                 </div>
@@ -968,7 +1121,7 @@ export function KpisPage({ bootstrap }: Props) {
             </div>
           </section>
 
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-list-panel--executive">
             <div className="avel-list-panel__header">
               <h3 className="avel-list-panel__title">Executive Scorecard</h3>
               <div className="avel-my-notes-chip-row">
@@ -984,7 +1137,10 @@ export function KpisPage({ bootstrap }: Props) {
             </div>
             {showExecutiveScorecard ? (
               data.summary.executiveScorecard.metrics.length === 0 ? (
-                <div className="modern-state">No executive scorecard data available.</div>
+                <div className="modern-state avel-empty-state">
+                  <strong>No executive scorecard data available.</strong>
+                  <span>Try enabling official reports or broadening the customer scope.</span>
+                </div>
               ) : (
                 <div className="avel-kpi-grid avel-kpi-grid--exec">
                   {data.summary.executiveScorecard.metrics.map((metric) => (
@@ -997,7 +1153,10 @@ export function KpisPage({ bootstrap }: Props) {
                 </div>
               )
             ) : (
-              <div className="modern-state">Executive scorecard is hidden. Toggle to display all KPI leadership metrics.</div>
+              <div className="modern-state avel-empty-state">
+                <strong>Executive scorecard is hidden.</strong>
+                <span>Use the toggle above to display leadership KPI metrics.</span>
+              </div>
             )}
           </section>
         </div>
