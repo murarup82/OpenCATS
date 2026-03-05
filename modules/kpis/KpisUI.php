@@ -393,7 +393,8 @@ class KpisUI extends UserInterface
             $officialReports,
             $monitoredJobOrders,
             $jobOrderScope,
-            true
+            true,
+            $customerID
         );
         $filledDisplayByCompanyLastWeek = $this->getCompanyFilledCounts(
             $db,
@@ -401,7 +402,9 @@ class KpisUI extends UserInterface
             $lastWeekEndPrev,
             $officialReports,
             $monitoredJobOrders,
-            $jobOrderScope
+            $jobOrderScope,
+            false,
+            $customerID
         );
 
         if (!empty($jobOrders))
@@ -1327,7 +1330,7 @@ class KpisUI extends UserInterface
             false,
             array(),
             $candidateSourceScope,
-            $candidateScopedJobOrderIDs
+            null
         );
         $trendTitle = 'New Candidates (' . ucfirst($trendView) . ' - ' . $this->getCandidateSourceScopeLabel($candidateSourceScope) . ')';
         $trendLabels = array_map('rawurlencode', $candidateTrend['labels']);
@@ -2587,7 +2590,16 @@ class KpisUI extends UserInterface
         return $jobOrders;
     }
 
-    private function getCompanyFilledCounts($db, $siteID, DateTime $asOf, $officialReports, $monitoredJobOrders, $jobOrderScope, $includeFutureStatuses = false)
+    private function getCompanyFilledCounts(
+        $db,
+        $siteID,
+        DateTime $asOf,
+        $officialReports,
+        $monitoredJobOrders,
+        $jobOrderScope,
+        $includeFutureStatuses = false,
+        $customerID = 0
+    )
     {
         if ($officialReports && empty($monitoredJobOrders))
         {
@@ -2614,6 +2626,15 @@ class KpisUI extends UserInterface
         if (!$includeFutureStatuses)
         {
             $dateFilter = 'AND cjh.date <= ' . $db->makeQueryString($asOf->format('Y-m-d H:i:s'));
+        }
+        $customerFilter = '';
+        $customerID = (int) $customerID;
+        if ($customerID > 0)
+        {
+            $customerFilter = sprintf(
+                'AND jo.company_id = %s',
+                $db->makeQueryInteger($customerID)
+            );
         }
 
         $rows = $db->getAllAssoc(sprintf(
@@ -2657,6 +2678,7 @@ class KpisUI extends UserInterface
             $dateFilter,
             $scopeFilter,
             $monitoredFilter,
+            $customerFilter,
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger(PIPELINE_STATUS_HIRED)
@@ -2835,6 +2857,7 @@ class KpisUI extends UserInterface
                         cjh.site_id = %s
                     AND
                         candidate.is_admin_hidden = 0
+                    %s
                     %s
                     %s
                     %s
