@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createTalentFitFlowCandidateParseJob,
   fetchCandidateDuplicateCheck,
@@ -301,6 +301,31 @@ function toLegacyShortDate(isoDate: string): string {
   return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-${String(year % 100).padStart(2, '0')}`;
 }
 
+function parseSourceCSV(csv: string): string[] {
+  return String(csv || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '');
+}
+
+function serializeSourceCSV(values: string[]): string {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  values.forEach((value) => {
+    const trimmed = String(value || '').trim();
+    if (trimmed === '') {
+      return;
+    }
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    normalized.push(trimmed);
+  });
+  return normalized.join(',');
+}
+
 export function CandidatesAddPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesAddModernDataResponse | null>(null);
   const [formState, setFormState] = useState<CandidateAddFormState | null>(null);
@@ -326,6 +351,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [aiPrefillError, setAiPrefillError] = useState('');
   const [aiUndoSnapshot, setAiUndoSnapshot] = useState<CandidateAddFormState | null>(null);
   const [fieldSources, setFieldSources] = useState<Partial<Record<CandidateTrackedFieldKey, CandidateFieldSource>>>({});
+  const [editableSourceOptions, setEditableSourceOptions] = useState<SelectMenuOption[]>([]);
+  const [sourceCSV, setSourceCSV] = useState<string>('');
+  const [newSourceDraft, setNewSourceDraft] = useState<string>('');
+  const [sourceNotice, setSourceNotice] = useState<string>('');
   const formStateRef = useRef<CandidateAddFormState | null>(null);
   const targetModule = String(bootstrap.targetModule || '').toLowerCase();
   const targetAction = String(bootstrap.targetAction || '').toLowerCase();
@@ -345,7 +374,20 @@ export function CandidatesAddPage({ bootstrap }: Props) {
           return;
         }
         setData(result);
-        setFormState(toFormState(result));
+        const nextFormState = toFormState(result);
+        setFormState(nextFormState);
+        const sourceOptions = result.options.sources.map((option) => ({ value: option.value, label: option.label }));
+        const selectedSource = String(nextFormState.source || '').trim();
+        if (
+          selectedSource !== '' &&
+          !sourceOptions.some((option) => option.value.trim().toLowerCase() === selectedSource.toLowerCase())
+        ) {
+          sourceOptions.push({ value: selectedSource, label: selectedSource });
+        }
+        setEditableSourceOptions(sourceOptions);
+        setSourceCSV(serializeSourceCSV([...parseSourceCSV(result.options.sourceCSV || ''), selectedSource]));
+        setNewSourceDraft('');
+        setSourceNotice('');
         setFieldSources({});
         setResumeText(result.resumeImport.documentText || '');
         setResumeTempFile(result.resumeImport.documentTempFile || '');
@@ -374,21 +416,43 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const getFieldSource = (fieldKey: CandidateTrackedFieldKey): CandidateFieldSource | null =>
     fieldSources[fieldKey] || null;
 
-  const getFieldClassName = (fieldKey: CandidateTrackedFieldKey): string => {
-    const source = getFieldSource(fieldKey);
-    if (source === 'ai-prefill') {
-      return 'avel-form-control avel-form-control--source-ai';
+  const isBlankValue = (value: string, treatNoneAsBlank = false): boolean => {
+    const normalized = String(value || '').trim();
+    if (normalized === '') {
+      return true;
     }
-    return 'avel-form-control';
+    if (treatNoneAsBlank && normalized.toLowerCase() === '(none)') {
+      return true;
+    }
+    return false;
   };
 
-  const getEditorClassName = (fieldKey: CandidateTrackedFieldKey): string => {
+  const getFieldClassName = (fieldKey: CandidateTrackedFieldKey, value: string): string => {
+    const classNames = ['avel-form-control'];
     const source = getFieldSource(fieldKey);
     if (source === 'ai-prefill') {
-      return 'avel-markdown-field--source-ai';
+      classNames.push('avel-form-control--source-ai');
     }
-    return '';
+    if (isBlankValue(value)) {
+      classNames.push('avel-form-control--missing');
+    }
+    return classNames.join(' ');
   };
+
+  const getEditorClassName = (fieldKey: CandidateTrackedFieldKey, value: string): string => {
+    const classNames: string[] = [];
+    const source = getFieldSource(fieldKey);
+    if (source === 'ai-prefill') {
+      classNames.push('avel-markdown-field--source-ai');
+    }
+    if (isBlankValue(value)) {
+      classNames.push('avel-markdown-field--missing');
+    }
+    return classNames.join(' ');
+  };
+
+  const getFieldContainerClassName = (baseClassName: string, value: string, treatNoneAsBlank = false): string =>
+    isBlankValue(value, treatNoneAsBlank) ? `${baseClassName} avel-candidate-field--missing` : baseClassName;
 
   const renderFieldLabel = (label: string, fieldKey?: CandidateTrackedFieldKey) => {
     const source = fieldKey ? getFieldSource(fieldKey) : null;
@@ -415,6 +479,29 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     });
   };
 
+  const addSourceOption = useCallback(() => {
+    const candidateSource = newSourceDraft.trim();
+    if (candidateSource === '') {
+      setSourceNotice('Enter a source label first.');
+      return;
+    }
+
+    const duplicate = editableSourceOptions.some((option) => option.value.trim().toLowerCase() === candidateSource.toLowerCase());
+    if (duplicate) {
+      setFormState((current) => (current ? { ...current, source: candidateSource } : current));
+      setSourceNotice('Source already exists. Selected existing value.');
+      setNewSourceDraft('');
+      return;
+    }
+
+    const nextOptions = [...editableSourceOptions, { value: candidateSource, label: candidateSource }];
+    setEditableSourceOptions(nextOptions);
+    setFormState((current) => (current ? { ...current, source: candidateSource } : current));
+    setSourceCSV(serializeSourceCSV([...parseSourceCSV(sourceCSV), candidateSource]));
+    setSourceNotice('Source added and selected.');
+    setNewSourceDraft('');
+  }, [editableSourceOptions, newSourceDraft, sourceCSV]);
+
   const updateExtraFieldValue = (postKey: string, value: string) => {
     setFormState((current) => {
       if (!current) {
@@ -437,7 +524,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     if (field.inputType === 'textarea') {
       return (
         <textarea
-          className="avel-form-control"
+          className={`avel-form-control${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
           name={field.postKey}
           value={value}
           onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
@@ -449,7 +536,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     if (field.inputType === 'dropdown') {
       return (
         <select
-          className="avel-form-control"
+          className={`avel-form-control${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
           name={field.postKey}
           value={value}
           onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
@@ -504,7 +591,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
 
     return (
       <input
-        className="avel-form-control"
+        className={`avel-form-control${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
         type="text"
         name={field.postKey}
         value={value}
@@ -535,7 +622,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
 
     const formData = new FormData();
     formData.set('postback', 'postback');
-    formData.set('sourceCSV', data.options.sourceCSV || '');
+    formData.set('sourceCSV', sourceCSV);
     formData.set('firstName', formState.firstName);
     formData.set('lastName', formState.lastName);
     formData.set('email1', formState.email1);
@@ -700,10 +787,12 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     ? `Create a new candidate and assign directly to job order #${jobOrderID}.`
     : 'Modern candidate creation form. Save action uses the proven legacy backend.';
   const backLabel = isJobOrderQuickAddMode ? 'Back To Candidate Search' : 'Back To Candidates';
-  const sourceOptions: SelectMenuOption[] = data.options.sources.map((option) => ({
-    value: option.value,
-    label: option.label
-  }));
+  const sourceOptions: SelectMenuOption[] = editableSourceOptions.length > 0
+    ? editableSourceOptions
+    : data.options.sources.map((option) => ({
+        value: option.value,
+        label: option.label
+      }));
   const gdprOptions: SelectMenuOption[] = [
     { value: '0', label: 'No' },
     { value: '1', label: 'Yes' }
@@ -822,7 +911,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               {isJobOrderQuickAddMode && hasValidJobOrderID ? (
                 <input type="hidden" name="jobOrderID" value={String(jobOrderID)} />
               ) : null}
-              <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
+              <input type="hidden" name="sourceCSV" value={sourceCSV} />
               <input type="hidden" name="dup_soft_override" value={softOverrideAccepted ? '1' : '0'} />
               <input type="hidden" name="documentTempFile" id="documentTempFile" value={resumeTempFile} />
               <input type="hidden" name="gender" value={formState.gender} />
@@ -969,11 +1058,11 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
                     />
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.gdprExpirationDate)}>
                       <span className="modern-command-label">GDPR Expiration</span>
                       <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
                       <input
-                        className="avel-form-control"
+                        className={`avel-form-control${isBlankValue(formState.gdprExpirationDate) ? ' avel-form-control--missing' : ''}`}
                         type="date"
                         value={toISODateInput(formState.gdprExpirationDate)}
                         onChange={(event) =>
@@ -992,10 +1081,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                     <span>Identity, contact channels, and candidate availability details.</span>
                   </div>
                   <div className="avel-candidate-edit-grid">
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.firstName)}>
                       {renderFieldLabel('First Name *', 'firstName')}
                       <input
-                        className={getFieldClassName('firstName')}
+                        className={getFieldClassName('firstName', formState.firstName)}
                         type="text"
                         name="firstName"
                         value={formState.firstName}
@@ -1007,10 +1096,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.lastName)}>
                       {renderFieldLabel('Last Name *', 'lastName')}
                       <input
-                        className={getFieldClassName('lastName')}
+                        className={getFieldClassName('lastName', formState.lastName)}
                         type="text"
                         name="lastName"
                         value={formState.lastName}
@@ -1022,10 +1111,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.email1)}>
                       {renderFieldLabel('Email', 'email1')}
                       <input
-                        className={getFieldClassName('email1')}
+                        className={getFieldClassName('email1', formState.email1)}
                         type="email"
                         name="email1"
                         value={formState.email1}
@@ -1036,10 +1125,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.phoneCell)}>
                       {renderFieldLabel('Cell Phone', 'phoneCell')}
                       <input
-                        className={getFieldClassName('phoneCell')}
+                        className={getFieldClassName('phoneCell', formState.phoneCell)}
                         type="text"
                         name="phoneCell"
                         value={formState.phoneCell}
@@ -1050,10 +1139,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.city)}>
                       {renderFieldLabel('City', 'city')}
                       <input
-                        className={getFieldClassName('city')}
+                        className={getFieldClassName('city', formState.city)}
                         type="text"
                         name="city"
                         value={formState.city}
@@ -1064,10 +1153,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.country)}>
                       {renderFieldLabel('Country', 'country')}
                       <input
-                        className={getFieldClassName('country')}
+                        className={getFieldClassName('country', formState.country)}
                         type="text"
                         name="country"
                         value={formState.country}
@@ -1078,10 +1167,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.bestTimeToCall)}>
                       <span className="modern-command-label">Best Time To Call</span>
                       <input
-                        className="avel-form-control"
+                        className={`avel-form-control${isBlankValue(formState.bestTimeToCall) ? ' avel-form-control--missing' : ''}`}
                         type="text"
                         name="bestTimeToCall"
                         value={formState.bestTimeToCall}
@@ -1089,11 +1178,11 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.dateAvailable)}>
                       <span className="modern-command-label">Date Available</span>
                       <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
                       <input
-                        className="avel-form-control"
+                        className={`avel-form-control${isBlankValue(formState.dateAvailable) ? ' avel-form-control--missing' : ''}`}
                         type="date"
                         value={toISODateInput(formState.dateAvailable)}
                         onChange={(event) =>
@@ -1102,21 +1191,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-toggle">
-                      <input
-                        type="checkbox"
-                        name="canRelocate"
-                        checked={formState.canRelocate}
-                        onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
-                      />
-                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                      <span>Open To Relocation</span>
-                    </label>
-
-                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                    <label className={getFieldContainerClassName('modern-command-field avel-candidate-edit-field--span-3', formState.address)}>
                       {renderFieldLabel('Address', 'address')}
                       <textarea
-                        className={getFieldClassName('address')}
+                        className={getFieldClassName('address', formState.address)}
                         name="address"
                         value={formState.address}
                         onChange={(event) => {
@@ -1140,14 +1218,34 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       label="Source"
                       value={formState.source}
                       options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
-                      className="modern-command-field avel-candidate-edit-field--span-2"
-                      onChange={(value) => setFormState((current) => (current ? { ...current, source: value } : current))}
+                      className={getFieldContainerClassName('modern-command-field avel-candidate-edit-field--span-2', formState.source, true)}
+                      onChange={(value) => {
+                        setSourceNotice('');
+                        setFormState((current) => (current ? { ...current, source: value } : current));
+                      }}
                     />
 
-                    <label className="modern-command-field">
+                    <div className="modern-command-field avel-candidate-source-add">
+                      <span className="modern-command-label">Add New Source</span>
+                      <div className="avel-candidate-source-add__row">
+                        <input
+                          className={`avel-form-control${isBlankValue(newSourceDraft) ? ' avel-form-control--missing' : ''}`}
+                          type="text"
+                          value={newSourceDraft}
+                          placeholder="Type source name"
+                          onChange={(event) => setNewSourceDraft(event.target.value)}
+                        />
+                        <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={addSourceOption}>
+                          Add
+                        </button>
+                      </div>
+                      {sourceNotice !== '' ? <span className="avel-field-source-help">{sourceNotice}</span> : null}
+                    </div>
+
+                    <label className={getFieldContainerClassName('modern-command-field', formState.currentEmployer)}>
                       {renderFieldLabel('Current Employer', 'currentEmployer')}
                       <input
-                        className={getFieldClassName('currentEmployer')}
+                        className={getFieldClassName('currentEmployer', formState.currentEmployer)}
                         type="text"
                         name="currentEmployer"
                         value={formState.currentEmployer}
@@ -1166,10 +1264,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                     <span>Comp package expectations and recruiter context.</span>
                   </div>
                   <div className="avel-candidate-edit-grid">
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.currentPay)}>
                       <span className="modern-command-label">Current Pay</span>
                       <input
-                        className="avel-form-control"
+                        className={`avel-form-control${isBlankValue(formState.currentPay) ? ' avel-form-control--missing' : ''}`}
                         type="text"
                         name="currentPay"
                         value={formState.currentPay}
@@ -1177,10 +1275,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
+                    <label className={getFieldContainerClassName('modern-command-field', formState.desiredPay)}>
                       <span className="modern-command-label">Desired Pay</span>
                       <input
-                        className="avel-form-control"
+                        className={`avel-form-control${isBlankValue(formState.desiredPay) ? ' avel-form-control--missing' : ''}`}
                         type="text"
                         name="desiredPay"
                         value={formState.desiredPay}
@@ -1188,10 +1286,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                    <label className={getFieldContainerClassName('modern-command-field avel-candidate-edit-field--span-3', formState.keySkills)}>
                       {renderFieldLabel('Key Skills', 'keySkills')}
                       <textarea
-                        className={getFieldClassName('keySkills')}
+                        className={getFieldClassName('keySkills', formState.keySkills)}
                         name="keySkills"
                         value={formState.keySkills}
                         onChange={(event) => {
@@ -1202,13 +1300,13 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                    <label className={getFieldContainerClassName('modern-command-field avel-candidate-edit-field--span-3', formState.notes)}>
                       {renderFieldLabel('Notes', 'notes')}
                       <MarkdownTextarea
                         name="notes"
                         value={formState.notes}
                         rows={6}
-                        className={getEditorClassName('notes')}
+                        className={getEditorClassName('notes', formState.notes)}
                         ariaLabel="Candidate notes"
                         onChange={(nextValue) => {
                           clearFieldSource('notes');
@@ -1218,53 +1316,69 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                     </label>
                   </div>
                 </section>
-              </div>
-
-              {data.extraFields.length > 0 ? (
-                <div className="avel-candidate-edit-extra avel-candidate-edit-extra--custom">
-                  <div className="avel-list-panel__header">
-                    <h3 className="avel-list-panel__title">Custom Fields</h3>
-                    <p className="avel-list-panel__hint">Configured per tenant in legacy settings.</p>
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--custom">
+                  <div className="avel-candidate-form-divider avel-candidate-form-divider--custom">
+                    <strong>Additional Profile Details</strong>
+                    <span>Relocation preferences and optional fields configured in legacy settings.</span>
                   </div>
                   <div className="avel-candidate-edit-grid">
-                    {data.extraFields.map((field) => {
-                      const fieldClassName = `modern-command-field${
-                        field.inputType === 'textarea' || field.inputType === 'radio'
-                          ? ' avel-candidate-edit-field--full'
-                          : ''
-                      }`;
-                      if (field.inputType === 'dropdown') {
-                        const value = formState.extraFields[field.postKey] || '';
-                        const extraFieldOptions: SelectMenuOption[] = [
-                          { value: '', label: '- Select from List -' },
-                          ...field.options.map((option) => ({
-                            value: option,
-                            label: option
-                          }))
-                        ];
-                        return (
-                          <div key={field.postKey}>
-                            <input type="hidden" name={field.postKey} value={value} />
-                            <SelectMenu
-                              label={field.fieldName}
-                              value={value}
-                              options={extraFieldOptions}
-                              onChange={(nextValue) => updateExtraFieldValue(field.postKey, nextValue)}
-                            />
-                          </div>
-                        );
-                      }
+                    <label className="modern-command-toggle avel-candidate-edit-field--span-2">
+                      <input
+                        type="checkbox"
+                        name="canRelocate"
+                        checked={formState.canRelocate}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Open To Relocation</span>
+                    </label>
 
-                      return (
-                        <label key={field.postKey} className={fieldClassName}>
-                          <span className="modern-command-label">{field.fieldName}</span>
-                          {renderExtraFieldControl(field)}
-                        </label>
-                      );
-                    })}
+                    {data.extraFields.length > 0 ? (
+                      data.extraFields.map((field) => {
+                        const fieldClassName = getFieldContainerClassName(
+                          `modern-command-field${
+                            field.inputType === 'textarea' || field.inputType === 'radio'
+                              ? ' avel-candidate-edit-field--full'
+                              : ''
+                          }`,
+                          formState.extraFields[field.postKey] || ''
+                        );
+                        if (field.inputType === 'dropdown') {
+                          const value = formState.extraFields[field.postKey] || '';
+                          const extraFieldOptions: SelectMenuOption[] = [
+                            { value: '', label: '- Select from List -' },
+                            ...field.options.map((option) => ({
+                              value: option,
+                              label: option
+                            }))
+                          ];
+                          return (
+                            <div key={field.postKey}>
+                              <input type="hidden" name={field.postKey} value={value} />
+                              <SelectMenu
+                                label={field.fieldName}
+                                value={value}
+                                options={extraFieldOptions}
+                                className={fieldClassName}
+                                onChange={(nextValue) => updateExtraFieldValue(field.postKey, nextValue)}
+                              />
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <label key={field.postKey} className={fieldClassName}>
+                            <span className="modern-command-label">{field.fieldName}</span>
+                            {renderExtraFieldControl(field)}
+                          </label>
+                        );
+                      })
+                    ) : (
+                      <div className="modern-state">No additional legacy fields are configured for this tenant.</div>
+                    )}
                   </div>
-                </div>
-              ) : null}
+                </section>
+              </div>
 
               {duplicateChecking ? <div className="modern-state">Checking for potential duplicates...</div> : null}
               {validationError !== '' ? <div className="modern-state modern-state--error" role="alert">{validationError}</div> : null}
