@@ -61,7 +61,7 @@ type CandidateTrackedFieldKey =
   | 'currentEmployer'
   | 'notes';
 
-type CandidateFieldSource = 'resume-parse' | 'ai-prefill';
+type CandidateFieldSource = 'ai-prefill';
 
 const TRACKED_FIELD_KEYS: CandidateTrackedFieldKey[] = [
   'firstName',
@@ -319,7 +319,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [resumeText, setResumeText] = useState('');
   const [resumeTempFile, setResumeTempFile] = useState('');
   const [resumeUploadFile, setResumeUploadFile] = useState<File | null>(null);
-  const [resumeActionPending, setResumeActionPending] = useState<'none' | 'upload' | 'parse'>('none');
+  const [resumeActionPending, setResumeActionPending] = useState<'none' | 'upload'>('none');
   const [resumeActionError, setResumeActionError] = useState('');
   const [aiPrefillPending, setAiPrefillPending] = useState(false);
   const [aiPrefillStatus, setAiPrefillStatus] = useState('');
@@ -379,9 +379,6 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     if (source === 'ai-prefill') {
       return 'avel-form-control avel-form-control--source-ai';
     }
-    if (source === 'resume-parse') {
-      return 'avel-form-control avel-form-control--source-parse';
-    }
     return 'avel-form-control';
   };
 
@@ -389,9 +386,6 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     const source = getFieldSource(fieldKey);
     if (source === 'ai-prefill') {
       return 'avel-markdown-field--source-ai';
-    }
-    if (source === 'resume-parse') {
-      return 'avel-markdown-field--source-parse';
     }
     return '';
   };
@@ -403,7 +397,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         {label}
         {source ? (
           <span className={`avel-field-source-badge avel-field-source-badge--${source}`}>
-            {source === 'ai-prefill' ? 'AI' : 'Parsed'}
+            AI
           </span>
         ) : null}
       </span>
@@ -529,18 +523,13 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     setValidationError('');
   }, [formState?.firstName, formState?.lastName, formState?.email1, formState?.phoneCell, formState?.city, formState?.country]);
 
-  const runResumeAction = async (mode: 'upload' | 'parse') => {
+  const runResumeAction = async (mode: 'upload') => {
     if (!data || !formState || resumeActionPending !== 'none') {
       return;
     }
 
     if (mode === 'upload' && !resumeUploadFile) {
       setResumeActionError('Select a CV file first.');
-      return;
-    }
-
-    if (mode === 'parse' && !resumeUploadFile && resumeText.trim() === '' && resumeTempFile.trim() === '') {
-      setResumeActionError('Provide resume text or upload a CV file first.');
       return;
     }
 
@@ -585,10 +574,6 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         formData.set('documentFile', resumeUploadFile);
       }
     }
-    if (mode === 'parse') {
-      formData.set('parseDocument', 'true');
-    }
-
     setResumeActionPending(mode);
     setResumeActionError('');
     setAiPrefillStatus('');
@@ -596,31 +581,6 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     try {
       const response = await submitCandidatesAddResumeAction(bootstrap, formData);
       setData(response);
-      const parsedFormState = toFormState(response);
-      const currentState = formStateRef.current;
-      const mergedState = currentState
-        ? {
-            ...currentState,
-            ...parsedFormState,
-            extraFields: {
-              ...currentState.extraFields,
-              ...parsedFormState.extraFields
-            }
-          }
-        : parsedFormState;
-      setFormState(mergedState);
-      formStateRef.current = mergedState;
-      const changedByParse =
-        mode === 'parse' && currentState ? getChangedTrackedFields(currentState, mergedState) : [];
-      if (mode === 'parse' && changedByParse.length > 0) {
-        setFieldSources((current) => {
-          const next = { ...current };
-          changedByParse.forEach((fieldKey) => {
-            next[fieldKey] = 'resume-parse';
-          });
-          return next;
-        });
-      }
       setResumeText(response.resumeImport.documentText || '');
       setResumeTempFile(response.resumeImport.documentTempFile || '');
       setResumeUploadFile(null);
@@ -750,18 +710,17 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   ];
   const parseLimitRaw = data.resumeImport.parsingStatus?.['parseLimit'];
   const parseLimitText =
-    typeof parseLimitRaw === 'number' && Number.isFinite(parseLimitRaw) ? `Remaining parses: ${parseLimitRaw}` : '';
+    typeof parseLimitRaw === 'number' && Number.isFinite(parseLimitRaw) ? `Remaining AI parses: ${parseLimitRaw}` : '';
   const aiCanRunPrefillTopAction =
     data.resumeImport.isParsingEnabled && resumeTempFile.trim() !== '' && !aiPrefillPending && resumeActionPending === 'none';
   const aiTopActionDisabledReason = !data.resumeImport.isParsingEnabled
     ? 'AI parsing is disabled in server configuration.'
     : resumeTempFile.trim() === ''
-      ? 'Upload and parse a CV first to prepare AI source content.'
+      ? 'Upload a CV first to prepare AI source content.'
       : resumeActionPending !== 'none'
-        ? 'Wait for resume upload/parse to complete.'
+        ? 'Wait for CV upload to complete.'
         : '';
   const aiFieldCount = Object.values(fieldSources).filter((source) => source === 'ai-prefill').length;
-  const parsedFieldCount = Object.values(fieldSources).filter((source) => source === 'resume-parse').length;
 
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page">
@@ -882,14 +841,11 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 <div className="avel-candidate-edit-extra">
                   <div className="avel-list-panel__header">
                     <h3 className="avel-list-panel__title">Resume Import & AI Prefill</h3>
-                    <p className="avel-list-panel__hint">Upload CV content, parse core fields, then run AI prefill (TalentFitFlow).</p>
+                    <p className="avel-list-panel__hint">Upload CV content, then run AI prefill (TalentFitFlow).</p>
                   </div>
 
                   <div className="avel-candidate-provenance">
-                    <span className="modern-chip modern-chip--info">Parsed fields: {parsedFieldCount}</span>
                     <span className="modern-chip modern-chip--success">AI-prefilled fields: {aiFieldCount}</span>
-                    <span className="avel-field-source-badge avel-field-source-badge--resume-parse">Parsed</span>
-                    <span className="avel-field-source-help">Values extracted by legacy resume parser.</span>
                     <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span>
                     <span className="avel-field-source-help">Values generated by TalentFitFlow prefill.</span>
                   </div>
@@ -914,14 +870,6 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                         disabled={resumeActionPending !== 'none' || aiPrefillPending}
                       >
                         {resumeActionPending === 'upload' ? 'Uploading...' : 'Upload CV'}
-                      </button>
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--secondary"
-                        onClick={() => runResumeAction('parse')}
-                        disabled={resumeActionPending !== 'none' || aiPrefillPending}
-                      >
-                        {resumeActionPending === 'parse' ? 'Parsing...' : 'Parse Resume'}
                       </button>
                       <button
                         type="button"
