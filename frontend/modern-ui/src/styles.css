@@ -1568,6 +1568,61 @@ body {
   }
 }
 
+.modern-app-shell {
+  display: grid;
+  gap: 10px;
+}
+
+.modern-global-feedback {
+  margin: 0 clamp(12px, 1.4vw, 22px) clamp(12px, 1.6vw, 18px);
+  border: 1px solid #1b6f8a;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(135deg, #0b4f67 0%, #0a5f7b 52%, #0c6f8f 100%);
+  color: #eef9ff;
+  box-shadow: 0 12px 24px rgba(0, 40, 56, 0.24);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.modern-global-feedback__copy {
+  display: grid;
+  gap: 2px;
+}
+
+.modern-global-feedback__copy strong {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.modern-global-feedback__copy span {
+  font-size: 0.8rem;
+  color: #d5ebf7;
+}
+
+.modern-global-feedback__cta {
+  min-height: 34px;
+  border-color: #a8cde1;
+  background: linear-gradient(180deg, #ffffff 0%, #e9f4fb 100%);
+  color: #0b4f67;
+  font-weight: 800;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 720px) {
+  .modern-global-feedback {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+}
+
 /* Final override: Flowbite-inspired recruiter workspace.
    Keep this block at the end so it wins over legacy/previous experiments. */
 

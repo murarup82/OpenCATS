@@ -5,6 +5,7 @@ import { recordRouteResolutionTelemetry } from './lib/routeResolutionTelemetry';
 import { useModernKeyboardShortcuts } from './lib/useModernKeyboardShortcuts';
 import { ModernOverlayHost } from './components/modals/ModernOverlayHost';
 import { LegacyCompatPage } from './components/states/LegacyCompatPage';
+import { GlobalFeedbackFooter } from './components/layout/GlobalFeedbackFooter';
 
 type AppProps = {
   bootstrap: UIModeBootstrap;
@@ -49,7 +50,10 @@ export function App({ bootstrap }: AppProps) {
 
   return (
     <>
-      {content}
+      <div className="modern-app-shell">
+        {content}
+        <GlobalFeedbackFooter bootstrap={bootstrap} />
+      </div>
       <ModernOverlayHost bootstrap={bootstrap} />
     </>
   );
