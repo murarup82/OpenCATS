@@ -360,6 +360,39 @@ function applyToolbarAccessibilityLabels(hostElement: HTMLElement): void {
   });
 }
 
+function isElementTarget(target: EventTarget | null): target is Element {
+  return target instanceof Element;
+}
+
+function isInsideEditorPopup(target: EventTarget | null): boolean {
+  if (!isElementTarget(target)) {
+    return false;
+  }
+  return target.closest('.toastui-editor-popup') !== null;
+}
+
+function isEditorSurfaceTarget(target: EventTarget | null): boolean {
+  if (!isElementTarget(target)) {
+    return false;
+  }
+  return (
+    target.closest('.toastui-editor-md-container') !== null ||
+    target.closest('.toastui-editor-ww-container') !== null ||
+    target.closest('.toastui-editor-md-preview') !== null
+  );
+}
+
+function closeEditorPopups(editor: ToastEditor): void {
+  const editorWithEmitter = editor as unknown as {
+    eventEmitter?: {
+      emit?: (eventName: string) => void;
+    };
+  };
+  if (editorWithEmitter.eventEmitter && typeof editorWithEmitter.eventEmitter.emit === 'function') {
+    editorWithEmitter.eventEmitter.emit('closePopup');
+  }
+}
+
 function resolvePasteAsMarkdown(event: ClipboardEvent): string | null {
   const clipboard = event.clipboardData;
   if (!clipboard) {
@@ -444,9 +477,10 @@ export function MarkdownTextarea({
     if (!hostRef.current || editorRef.current) {
       return;
     }
+    const hostElement = hostRef.current;
 
     const editor = new Editor({
-      el: hostRef.current,
+      el: hostElement,
       height: editorHeight,
       initialEditType: 'markdown',
       previewStyle: 'vertical',
@@ -482,9 +516,27 @@ export function MarkdownTextarea({
 
     editorRef.current = editor;
     syncValueToEditor(editor, normalizeValue(value), true);
-    applyToolbarAccessibilityLabels(hostRef.current);
+    applyToolbarAccessibilityLabels(hostElement);
 
-    const markdownPasteTarget = hostRef.current.querySelector(
+    const onHostMouseDownCapture = (rawEvent: Event) => {
+      if (!isEditorSurfaceTarget(rawEvent.target) || isInsideEditorPopup(rawEvent.target)) {
+        return;
+      }
+      window.requestAnimationFrame(() => {
+        closeEditorPopups(editor);
+      });
+    };
+    hostElement.addEventListener('mousedown', onHostMouseDownCapture, true);
+
+    const onHostFocusIn = (rawEvent: Event) => {
+      if (!isEditorSurfaceTarget(rawEvent.target) || isInsideEditorPopup(rawEvent.target)) {
+        return;
+      }
+      closeEditorPopups(editor);
+    };
+    hostElement.addEventListener('focusin', onHostFocusIn);
+
+    const markdownPasteTarget = hostElement.querySelector(
       '.toastui-editor-md-container .CodeMirror textarea, .toastui-editor-md-container textarea'
     ) as HTMLTextAreaElement | null;
 
@@ -510,6 +562,8 @@ export function MarkdownTextarea({
     }
 
     return () => {
+      hostElement.removeEventListener('mousedown', onHostMouseDownCapture, true);
+      hostElement.removeEventListener('focusin', onHostFocusIn);
       if (markdownPasteTarget) {
         markdownPasteTarget.removeEventListener('paste', onPaste);
       }
