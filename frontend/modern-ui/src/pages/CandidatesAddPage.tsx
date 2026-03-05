@@ -775,9 +775,9 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               className="modern-btn modern-btn--emphasis avel-candidate-edit-ai-top"
               onClick={runAIPrefill}
               disabled={!aiCanRunPrefillTopAction}
-              title={aiTopActionDisabledReason || 'Load CV details with AI'}
+              title={aiTopActionDisabledReason || 'Run AI prefill from CV content'}
             >
-              {aiPrefillPending ? 'AI Running...' : 'Load CV Details With AI'}
+              {aiPrefillPending ? 'AI Prefill Running...' : 'AI Prefill From CV'}
             </button>
             <a className="modern-btn modern-btn--secondary" href={backURL}>
               {backLabel}
