@@ -1726,6 +1726,10 @@ export type KpisListModernDataResponse = {
       value: 'all' | 'open' | string;
       label: string;
     }>;
+    customers: Array<{
+      value: number;
+      label: string;
+    }>;
     trendViews: Array<{
       value: 'weekly' | 'monthly' | string;
       label: string;
@@ -1737,6 +1741,7 @@ export type KpisListModernDataResponse = {
     showCompletionRate: boolean;
     showExpectedFilled: boolean;
     hideZeroOpenPositions: boolean;
+    customerID: number;
     candidateSourceScope: string;
     jobOrderScope: string;
     trendView: string;
@@ -1794,6 +1799,8 @@ export type KpisListModernDataResponse = {
       timeToDeadlineClass: string;
       totalOpenPositions: number;
       submittedCount: number;
+      approvedCount: number;
+      hiredCount: number;
       acceptanceRate: string;
       acceptanceRateClass: string;
       hiringRate: string;

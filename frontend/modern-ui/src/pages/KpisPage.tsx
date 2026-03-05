@@ -35,6 +35,21 @@ function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&').trim();
 }
 
+function toStatusTokenSlug(value: string): string {
+  const slug = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (slug === 'onhold') {
+    return 'on-hold';
+  }
+  if (slug === 'canceled') {
+    return 'cancelled';
+  }
+  return slug || 'default';
+}
+
 function readExecutiveScorecardVisibility(): boolean {
   try {
     return window.localStorage.getItem(KPI_EXECUTIVE_SCORECARD_PREF_KEY) === '1';
@@ -353,6 +368,9 @@ export function KpisPage({ bootstrap }: Props) {
     data.filters.jobOrderScope;
   const trendViewLabel =
     data.options.trendViews.find((option) => option.value === data.filters.trendView)?.label || data.filters.trendView;
+  const selectedCustomerLabel =
+    data.options.customers.find((option) => toNumber(option.value) === toNumber(data.filters.customerID))?.label ||
+    (toNumber(data.filters.customerID) > 0 ? `Customer #${data.filters.customerID}` : 'All customers');
 
   const sourceTotal = Math.max(
     0,
@@ -395,6 +413,13 @@ export function KpisPage({ bootstrap }: Props) {
       onClear: () => updateFilter('jobOrderScope', 'all')
     });
   }
+  if (toNumber(data.filters.customerID) > 0) {
+    activeFilterChips.push({
+      key: 'customer',
+      label: `Customer: ${selectedCustomerLabel}`,
+      onClear: () => updateFilter('customerID', '0')
+    });
+  }
   if (data.filters.candidateSourceScope !== 'all') {
     activeFilterChips.push({
       key: 'source-scope',
@@ -413,6 +438,11 @@ export function KpisPage({ bootstrap }: Props) {
     key: 'trend-range',
     label: `${data.filters.trendStart} to ${data.filters.trendEnd}`
   });
+  const totalAcceptedByCustomer = data.rows.jobOrderKpiRows.reduce(
+    (total, row) => total + toNumber(row.approvedCount),
+    0
+  );
+  const totalHired = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.hiredCount), 0);
 
   return (
     <div className="avel-dashboard-page">
@@ -523,6 +553,19 @@ export function KpisPage({ bootstrap }: Props) {
                 </select>
               </label>
               <label className="modern-command-field">
+                <span className="modern-command-label">Customer</span>
+                <select
+                  value={String(data.filters.customerID)}
+                  onChange={(event) => updateFilter('customerID', event.target.value)}
+                >
+                  {data.options.customers.map((option) => (
+                    <option key={`customer-${option.value}`} value={String(option.value)}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="modern-command-field">
                 <span className="modern-command-label">Candidate Source</span>
                 <select
                   value={data.filters.candidateSourceScope}
@@ -593,13 +636,14 @@ export function KpisPage({ bootstrap }: Props) {
           </section>
 
           <section className="avel-list-panel">
-            <div className="avel-list-panel__header">
-              <h3 className="avel-list-panel__title">Positions Open</h3>
-              <div className="avel-my-notes-chip-row">
-                <span className="modern-chip modern-chip--info">Official Reports: {data.filters.officialReports ? 'On' : 'Off'}</span>
-                <span className="modern-chip modern-chip--info">JO Scope: {jobOrderScopeLabel}</span>
+              <div className="avel-list-panel__header">
+                <h3 className="avel-list-panel__title">Positions Open</h3>
+                <div className="avel-my-notes-chip-row">
+                  <span className="modern-chip modern-chip--info">Official Reports: {data.filters.officialReports ? 'On' : 'Off'}</span>
+                  <span className="modern-chip modern-chip--info">JO Scope: {jobOrderScopeLabel}</span>
+                  <span className="modern-chip modern-chip--info">Customer: {selectedCustomerLabel}</span>
+                </div>
               </div>
-            </div>
             {data.rows.kpiRows.length === 0 ? (
               <div className="modern-state">No KPI data found.</div>
             ) : (
@@ -662,9 +706,22 @@ export function KpisPage({ bootstrap }: Props) {
                 <h3 className="avel-list-panel__title">Client Interview : Acceptance</h3>
                 <div className="avel-my-notes-chip-row">
                   <span className="modern-chip modern-chip--info">JO Scope: {jobOrderScopeLabel}</span>
+                  <span className="modern-chip modern-chip--info">Customer: {selectedCustomerLabel}</span>
                   <span className="modern-chip modern-chip--info">Deadline: {data.filters.showDeadline ? 'On' : 'Off'}</span>
                   <span className="modern-chip modern-chip--info">Hide Closed JO: {hideClosedJobOrders ? 'On' : 'Off'}</span>
                 </div>
+              </div>
+              <div className="avel-kpi-grid avel-kpi-grid--acceptance">
+                <article className="avel-kpi">
+                  <p className="avel-kpi__label">Validated by customer</p>
+                  <p className="avel-kpi__value">{totalAcceptedByCustomer}</p>
+                  <p className="avel-kpi__hint">Total candidates in acceptance count.</p>
+                </article>
+                <article className="avel-kpi">
+                  <p className="avel-kpi__label">Hired candidates</p>
+                  <p className="avel-kpi__value">{totalHired}</p>
+                  <p className="avel-kpi__hint">Total candidates in hiring count.</p>
+                </article>
               </div>
               <table className="modern-table">
                 <thead>
@@ -687,7 +744,11 @@ export function KpisPage({ bootstrap }: Props) {
                           {row.title}
                         </a>
                       </td>
-                      <td>{row.status}</td>
+                      <td>
+                        <span className={`modern-chip avel-kpi-status-chip avel-kpi-status-chip--${toStatusTokenSlug(row.status)}`}>
+                          {row.status}
+                        </span>
+                      </td>
                       {data.filters.showDeadline ? (
                         <td className={toSemanticCellClass(row.timeToDeadlineClass) || undefined}>{row.timeToDeadline}</td>
                       ) : null}

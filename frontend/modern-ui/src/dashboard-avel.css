@@ -329,6 +329,11 @@
   margin-top: 10px;
 }
 
+.avel-kpi-grid--acceptance {
+  margin: 8px 0 12px;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+}
+
 .avel-kpi-controls {
   display: grid;
   grid-template-columns: repeat(4, minmax(150px, 1fr));
@@ -338,7 +343,7 @@
 .avel-kpi-filter-grid {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: repeat(6, minmax(130px, 1fr));
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
   gap: 8px;
   align-items: end;
 }
@@ -704,6 +709,44 @@
 .avel-kpi-cell--neutral {
   background: #edf2f6;
   color: #536979;
+}
+
+.avel-dashboard-page .avel-kpi-status-chip {
+  border-color: #b5d8e8;
+  background: #eef8ff;
+  color: #1f5f7b;
+}
+
+.avel-dashboard-page .avel-kpi-status-chip--active {
+  border-color: #b8dfc8;
+  background: #edf9f1;
+  color: #1f7145;
+}
+
+.avel-dashboard-page .avel-kpi-status-chip--on-hold,
+.avel-dashboard-page .avel-kpi-status-chip--onhold {
+  border-color: #edd3a6;
+  background: #fff7e8;
+  color: #95600d;
+}
+
+.avel-dashboard-page .avel-kpi-status-chip--full {
+  border-color: #c6d7ea;
+  background: #edf4fc;
+  color: #1f5d93;
+}
+
+.avel-dashboard-page .avel-kpi-status-chip--closed {
+  border-color: #d0dae3;
+  background: #f2f6f9;
+  color: #4f6878;
+}
+
+.avel-dashboard-page .avel-kpi-status-chip--cancelled,
+.avel-dashboard-page .avel-kpi-status-chip--canceled {
+  border-color: #e2c9c9;
+  background: #fff3f3;
+  color: #8f3535;
 }
 
 .avel-priority-band {

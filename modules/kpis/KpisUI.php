@@ -76,6 +76,9 @@ class KpisUI extends UserInterface
         $hideZeroOpenPositionsRaw = isset($_GET['hideZeroOpenPositions']) ?
             $_GET['hideZeroOpenPositions'] :
             $kpiStoredPrefs['hideZeroOpenPositions'];
+        $customerIDRaw = isset($_GET['customerID']) ?
+            $_GET['customerID'] :
+            (isset($kpiStoredPrefs['customerID']) ? $kpiStoredPrefs['customerID'] : 0);
         $candidateSourceScopeRaw = isset($_GET['candidateSourceScope']) ?
             $_GET['candidateSourceScope'] :
             $kpiStoredPrefs['candidateSourceScope'];
@@ -98,6 +101,7 @@ class KpisUI extends UserInterface
             $showCompletionRateRaw = $kpiDefaultPrefs['showCompletionRate'];
             $showExpectedFilledRaw = $kpiDefaultPrefs['showExpectedFilled'];
             $hideZeroOpenPositionsRaw = $kpiDefaultPrefs['hideZeroOpenPositions'];
+            $customerIDRaw = (isset($kpiDefaultPrefs['customerID']) ? $kpiDefaultPrefs['customerID'] : 0);
             $candidateSourceScopeRaw = $kpiDefaultPrefs['candidateSourceScope'];
             $jobOrderScopeRaw = $kpiDefaultPrefs['jobOrderScope'];
             $trendViewRaw = $kpiDefaultPrefs['trendView'];
@@ -110,6 +114,11 @@ class KpisUI extends UserInterface
         $showCompletionRate = $this->normalizeBooleanFlag($showCompletionRateRaw, false);
         $showExpectedFilled = $this->normalizeBooleanFlag($showExpectedFilledRaw, false);
         $hideZeroOpenPositions = $this->normalizeBooleanFlag($hideZeroOpenPositionsRaw, false);
+        $customerID = (int) $customerIDRaw;
+        if ($customerID < 0)
+        {
+            $customerID = 0;
+        }
         $candidateSourceScope = $this->normalizeCandidateSourceScope($candidateSourceScopeRaw);
         $jobOrderScope = $this->normalizeJobOrderScope($jobOrderScopeRaw);
 
@@ -145,6 +154,24 @@ class KpisUI extends UserInterface
                 'expectedFilled' => 0.0,
                 'expectedFilledLastWeek' => 0.0,
                 'hasData' => false
+            );
+        }
+        if ($customerID > 0 && !isset($companyData[$customerID]))
+        {
+            $customerID = 0;
+        }
+
+        $customerOptions = array(
+            array(
+                'value' => 0,
+                'label' => 'All customers'
+            )
+        );
+        foreach ($companiesRS as $company)
+        {
+            $customerOptions[] = array(
+                'value' => (int) $company['companyID'],
+                'label' => (string) $company['name']
             );
         }
 
@@ -228,7 +255,7 @@ class KpisUI extends UserInterface
         }
 
         $openOnly = ($jobOrderScope === 'open');
-        $jobOrders = $this->getJobOrders($db, $siteID, $openOnly);
+        $jobOrders = $this->getJobOrders($db, $siteID, $openOnly, $customerID);
         $jobOrdersForInterview = $jobOrders;
 
         $filledByJobOrder = array();
@@ -788,6 +815,8 @@ class KpisUI extends UserInterface
                 'timeToDeadlineClass' => $deadlineDisplay['class'],
                 'totalOpenPositions' => $openPositions,
                 'submittedCount' => $submittedCount,
+                'approvedCount' => $approvedEverCount,
+                'hiredCount' => $hiredCount,
                 'acceptanceRate' => $acceptanceRate['display'],
                 'acceptanceRateClass' => $this->getAcceptanceRateClass($acceptanceRate['percent']),
                 'hiringRate' => $hiringRate
@@ -880,6 +909,11 @@ class KpisUI extends UserInterface
                 );
             }
         }
+        $candidateScopedJobOrderIDs = null;
+        if ($customerID > 0)
+        {
+            $candidateScopedJobOrderIDs = $eligibleJobOrderIDs;
+        }
 
         $candidateSourceThisWeek = $this->getCandidateSourceCounts(
             $db,
@@ -888,7 +922,8 @@ class KpisUI extends UserInterface
             $weekEnd,
             false,
             array(),
-            $candidateSourceScope
+            $candidateSourceScope,
+            $candidateScopedJobOrderIDs
         );
         $candidateSourceLastWeek = $this->getCandidateSourceCounts(
             $db,
@@ -897,7 +932,8 @@ class KpisUI extends UserInterface
             $weekEndPrev,
             false,
             array(),
-            $candidateSourceScope
+            $candidateSourceScope,
+            $candidateScopedJobOrderIDs
         );
         $candidateSourceRows = $this->buildCandidateSourceRows(
             $candidateSourceThisWeek,
@@ -911,7 +947,8 @@ class KpisUI extends UserInterface
             $weekEnd,
             false,
             array(),
-            $candidateSourceScope
+            $candidateSourceScope,
+            $candidateScopedJobOrderIDs
         );
         $totalCandidatesLastWeek = $this->getCandidateTotalCount(
             $db,
@@ -920,7 +957,8 @@ class KpisUI extends UserInterface
             $weekEndPrev,
             false,
             array(),
-            $candidateSourceScope
+            $candidateSourceScope,
+            $candidateScopedJobOrderIDs
         );
 
         $statusCountsThisWeek = $this->getCandidateStatusCounts(
@@ -930,7 +968,8 @@ class KpisUI extends UserInterface
             $weekEnd,
             $officialReports,
             $monitoredJobOrders,
-            $candidateSourceScope
+            $candidateSourceScope,
+            $candidateScopedJobOrderIDs
         );
         $statusCountsLastWeek = $this->getCandidateStatusCounts(
             $db,
@@ -939,14 +978,31 @@ class KpisUI extends UserInterface
             $weekEndPrev,
             $officialReports,
             $monitoredJobOrders,
-            $candidateSourceScope
+            $candidateSourceScope,
+            $candidateScopedJobOrderIDs
         );
 
         $candidateMetricRows = array();
         $candidateMetricRows[] = $this->buildCandidateMetricRow(
             'Sourced Candidates',
-            $this->getSourcedCandidatesCount($db, $siteID, $weekStart),
-            $this->getSourcedCandidatesCount($db, $siteID, $weekStartPrev)
+            $this->getSourcedCandidatesCount(
+                $db,
+                $siteID,
+                $weekStart,
+                $officialReports,
+                $monitoredJobOrders,
+                $candidateSourceScope,
+                $candidateScopedJobOrderIDs
+            ),
+            $this->getSourcedCandidatesCount(
+                $db,
+                $siteID,
+                $weekStartPrev,
+                $officialReports,
+                $monitoredJobOrders,
+                $candidateSourceScope,
+                $candidateScopedJobOrderIDs
+            )
         );
         $candidateMetricRows[] = $this->buildCandidateMetricRow(
             'Qualified Candidates',
@@ -1246,6 +1302,7 @@ class KpisUI extends UserInterface
             'showCompletionRate' => ($showCompletionRate ? 1 : 0),
             'showExpectedFilled' => ($showExpectedFilled ? 1 : 0),
             'hideZeroOpenPositions' => ($hideZeroOpenPositions ? 1 : 0),
+            'customerID' => (int) $customerID,
             'candidateSourceScope' => $candidateSourceScope,
             'trendView' => $trendView,
             'trendStart' => $trendStart->format('Y-m-d'),
@@ -1261,7 +1318,8 @@ class KpisUI extends UserInterface
             $trendView,
             false,
             array(),
-            $candidateSourceScope
+            $candidateSourceScope,
+            $candidateScopedJobOrderIDs
         );
         $trendTitle = 'New Candidates (' . ucfirst($trendView) . ' - ' . $this->getCandidateSourceScopeLabel($candidateSourceScope) . ')';
         $trendLabels = array_map('rawurlencode', $candidateTrend['labels']);
@@ -1320,11 +1378,13 @@ class KpisUI extends UserInterface
                 $candidateTrendPoints,
                 $candidateTrendGraphURL,
                 $candidateSourcePieURL,
+                $customerOptions,
                 $officialReports,
                 $showDeadline,
                 $showCompletionRate,
                 $showExpectedFilled,
                 $hideZeroOpenPositions,
+                $customerID,
                 $candidateSourceScope,
                 $jobOrderScope,
                 $trendView,
@@ -1383,11 +1443,13 @@ class KpisUI extends UserInterface
         $candidateTrendPoints,
         $candidateTrendGraphURL,
         $candidateSourcePieURL,
+        $customerOptions,
         $officialReports,
         $showDeadline,
         $showCompletionRate,
         $showExpectedFilled,
         $hideZeroOpenPositions,
+        $customerID,
         $candidateSourceScope,
         $jobOrderScope,
         $trendView,
@@ -1441,6 +1503,7 @@ class KpisUI extends UserInterface
                     array('value' => 'all', 'label' => 'All Job Orders (Open + Closed + Cancelled)'),
                     array('value' => 'open', 'label' => 'Only Open JO')
                 ),
+                'customers' => $customerOptions,
                 'trendViews' => array(
                     array('value' => 'weekly', 'label' => 'Weekly'),
                     array('value' => 'monthly', 'label' => 'Monthly')
@@ -1452,6 +1515,7 @@ class KpisUI extends UserInterface
                 'showCompletionRate' => ($showCompletionRate ? true : false),
                 'showExpectedFilled' => ($showExpectedFilled ? true : false),
                 'hideZeroOpenPositions' => ($hideZeroOpenPositions ? true : false),
+                'customerID' => (int) $customerID,
                 'candidateSourceScope' => (string) $candidateSourceScope,
                 'jobOrderScope' => (string) $jobOrderScope,
                 'trendView' => (string) $trendView,
@@ -1528,6 +1592,40 @@ class KpisUI extends UserInterface
         $jobOrderScope = $this->normalizeJobOrderScope(
             isset($_GET['jobOrderScope']) ? $_GET['jobOrderScope'] : 'all'
         );
+        $customerID = isset($_GET['customerID']) ? (int) $_GET['customerID'] : 0;
+        if ($customerID < 0)
+        {
+            $customerID = 0;
+        }
+        $customerCandidateFilter = '';
+        $customerStatusFilter = '';
+        if ($customerID > 0)
+        {
+            $customerCandidateFilter = sprintf(
+                "AND EXISTS (
+                    SELECT 1
+                    FROM candidate_joborder AS cjo_customer
+                    INNER JOIN joborder AS jo_customer
+                        ON jo_customer.joborder_id = cjo_customer.joborder_id
+                        AND jo_customer.site_id = cjo_customer.site_id
+                    WHERE cjo_customer.site_id = %s
+                    AND cjo_customer.candidate_id = candidate.candidate_id
+                    AND jo_customer.company_id = %s
+                )",
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryInteger($customerID)
+            );
+            $customerStatusFilter = sprintf(
+                "AND joborder_id IN (
+                    SELECT joborder_id
+                    FROM joborder
+                    WHERE site_id = %s
+                    AND company_id = %s
+                )",
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryInteger($customerID)
+            );
+        }
 
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         if ($page < 1)
@@ -1574,12 +1672,14 @@ class KpisUI extends UserInterface
                 AND date_created <= %s
                 AND is_admin_hidden = 0
                 %s
+                %s
                 %s",
                 $db->makeQueryInteger($siteID),
                 $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
                 $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s')),
                 $sourceFilter,
-                $candidateSourceFilter
+                $candidateSourceFilter,
+                $customerCandidateFilter
             );
             $countRow = $db->getAssoc($countSQL);
             $totalRows = isset($countRow['totalCount']) ? (int) $countRow['totalCount'] : 0;
@@ -1607,6 +1707,7 @@ class KpisUI extends UserInterface
                     is_admin_hidden = 0
                 %s
                 %s
+                %s
                 ORDER BY
                     date_created DESC,
                     candidate_id DESC
@@ -1616,6 +1717,7 @@ class KpisUI extends UserInterface
                 $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s')),
                 $sourceFilter,
                 $candidateSourceFilter,
+                $customerCandidateFilter,
                 $db->makeQueryInteger($pager->getThisPageStartRow()),
                 $db->makeQueryInteger($rowsPerPage)
             );
@@ -1639,11 +1741,13 @@ class KpisUI extends UserInterface
                 AND date_created >= %s
                 AND date_created <= %s
                 AND is_admin_hidden = 0
+                %s
                 %s",
                 $db->makeQueryInteger($siteID),
                 $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
                 $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s')),
-                $candidateSourceFilter
+                $candidateSourceFilter,
+                $customerCandidateFilter
             );
             $countRow = $db->getAssoc($countSQL);
             $totalRows = isset($countRow['totalCount']) ? (int) $countRow['totalCount'] : 0;
@@ -1670,6 +1774,7 @@ class KpisUI extends UserInterface
                 AND
                     is_admin_hidden = 0
                 %s
+                %s
                 ORDER BY
                     date_created DESC,
                     candidate_id DESC
@@ -1678,6 +1783,7 @@ class KpisUI extends UserInterface
                 $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
                 $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s')),
                 $candidateSourceFilter,
+                $customerCandidateFilter,
                 $db->makeQueryInteger($pager->getThisPageStartRow()),
                 $db->makeQueryInteger($rowsPerPage)
             );
@@ -1752,7 +1858,8 @@ class KpisUI extends UserInterface
                         'm' => 'kpis',
                         'officialReports' => ($officialReports ? 1 : 0),
                         'candidateSourceScope' => $candidateSourceScope,
-                        'jobOrderScope' => $jobOrderScope
+                        'jobOrderScope' => $jobOrderScope,
+                        'customerID' => $customerID
                     );
                     $backURL = CATSUtility::getIndexName() . '?' . http_build_query($backURLParams);
                     if ($isModernJSON)
@@ -1820,13 +1927,15 @@ class KpisUI extends UserInterface
                         date <= %s
                     %s
                     %s
+                    %s
                 ) AS status_rows",
                 $db->makeQueryInteger($siteID),
                 $db->makeQueryInteger($statusRaw),
                 $db->makeQueryString($rangeStart->format('Y-m-d H:i:s')),
                 $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s')),
                 $monitoredFilter,
-                $candidateSourceFilter
+                $candidateSourceFilter,
+                $customerStatusFilter
             );
             $countRow = $db->getAssoc($countSQL);
             $totalRows = isset($countRow['totalCount']) ? (int) $countRow['totalCount'] : 0;
@@ -1861,6 +1970,7 @@ class KpisUI extends UserInterface
                             date <= %s
                         %s
                         %s
+                        %s
                         GROUP BY
                             candidate_id,
                             joborder_id
@@ -1884,6 +1994,7 @@ class KpisUI extends UserInterface
                 $db->makeQueryString($rangeEnd->format('Y-m-d H:i:s')),
                 $monitoredFilter,
                 $candidateSourceFilter,
+                $customerStatusFilter,
                 $db->makeQueryInteger($siteID),
                 $db->makeQueryInteger($siteID),
                 $db->makeQueryInteger($pager->getThisPageStartRow()),
@@ -1901,7 +2012,8 @@ class KpisUI extends UserInterface
             'm' => 'kpis',
             'officialReports' => ($officialReports ? 1 : 0),
             'candidateSourceScope' => $candidateSourceScope,
-            'jobOrderScope' => $jobOrderScope
+            'jobOrderScope' => $jobOrderScope,
+            'customerID' => $customerID
         );
         $backURL = CATSUtility::getIndexName() . '?' . http_build_query($backURLParams);
 
@@ -2321,6 +2433,7 @@ class KpisUI extends UserInterface
             'showCompletionRate' => 0,
             'showExpectedFilled' => 0,
             'hideZeroOpenPositions' => 0,
+            'customerID' => 0,
             'candidateSourceScope' => 'all',
             'trendView' => 'weekly',
             'trendStart' => '',
@@ -2411,7 +2524,7 @@ class KpisUI extends UserInterface
         return 'All Job Orders (Open + Closed + Cancelled)';
     }
 
-    private function getJobOrders($db, $siteID, $openOnly)
+    private function getJobOrders($db, $siteID, $openOnly, $customerID = 0)
     {
         $statusFilter = '';
         if ($openOnly)
@@ -2419,6 +2532,15 @@ class KpisUI extends UserInterface
             $statusFilter = sprintf(
                 'AND status IN %s',
                 JobOrderStatuses::getOpenStatusSQL()
+            );
+        }
+        $companyFilter = '';
+        $customerID = (int) $customerID;
+        if ($customerID > 0)
+        {
+            $companyFilter = sprintf(
+                'AND company_id = %s',
+                $db->makeQueryInteger($customerID)
             );
         }
 
@@ -2437,7 +2559,7 @@ class KpisUI extends UserInterface
                 site_id = %s
             %s",
             $db->makeQueryInteger($siteID),
-            $statusFilter
+            $statusFilter . "\n            " . $companyFilter
         ));
 
         $jobOrders = array();
@@ -2967,9 +3089,22 @@ class KpisUI extends UserInterface
         );
     }
 
-    private function getCandidateSourceCounts($db, $siteID, DateTime $start, DateTime $end, $officialReports, $monitoredJobOrders, $candidateSourceScope)
+    private function getCandidateSourceCounts(
+        $db,
+        $siteID,
+        DateTime $start,
+        DateTime $end,
+        $officialReports,
+        $monitoredJobOrders,
+        $candidateSourceScope,
+        $jobOrderIDsFilter = null
+    )
     {
         if ($officialReports && empty($monitoredJobOrders))
+        {
+            return array();
+        }
+        if (is_array($jobOrderIDsFilter) && empty($jobOrderIDsFilter))
         {
             return array();
         }
@@ -2988,6 +3123,20 @@ class KpisUI extends UserInterface
                 )",
                 $db->makeQueryInteger($siteID),
                 $monitoredIDs
+            );
+        }
+        if (is_array($jobOrderIDsFilter))
+        {
+            $joinFilter .= sprintf(
+                "AND EXISTS (
+                    SELECT 1
+                    FROM candidate_joborder AS cjo_filter
+                    WHERE cjo_filter.candidate_id = candidate.candidate_id
+                    AND cjo_filter.site_id = %s
+                    AND cjo_filter.joborder_id IN (%s)
+                )",
+                $db->makeQueryInteger($siteID),
+                $this->formatIntegerList($jobOrderIDsFilter)
             );
         }
         $sourceScopeFilter = $this->buildCandidateSourceScopeFilter($db, $candidateSourceScope, 'candidate');
@@ -3030,9 +3179,22 @@ class KpisUI extends UserInterface
         return $counts;
     }
 
-    private function getCandidateTotalCount($db, $siteID, DateTime $start, DateTime $end, $officialReports, $monitoredJobOrders, $candidateSourceScope)
+    private function getCandidateTotalCount(
+        $db,
+        $siteID,
+        DateTime $start,
+        DateTime $end,
+        $officialReports,
+        $monitoredJobOrders,
+        $candidateSourceScope,
+        $jobOrderIDsFilter = null
+    )
     {
         if ($officialReports && empty($monitoredJobOrders))
+        {
+            return 0;
+        }
+        if (is_array($jobOrderIDsFilter) && empty($jobOrderIDsFilter))
         {
             return 0;
         }
@@ -3051,6 +3213,20 @@ class KpisUI extends UserInterface
                 )",
                 $db->makeQueryInteger($siteID),
                 $monitoredIDs
+            );
+        }
+        if (is_array($jobOrderIDsFilter))
+        {
+            $joinFilter .= sprintf(
+                "AND EXISTS (
+                    SELECT 1
+                    FROM candidate_joborder AS cjo_filter
+                    WHERE cjo_filter.candidate_id = candidate.candidate_id
+                    AND cjo_filter.site_id = %s
+                    AND cjo_filter.joborder_id IN (%s)
+                )",
+                $db->makeQueryInteger($siteID),
+                $this->formatIntegerList($jobOrderIDsFilter)
             );
         }
         $sourceScopeFilter = $this->buildCandidateSourceScopeFilter($db, $candidateSourceScope, 'candidate');
@@ -3084,8 +3260,100 @@ class KpisUI extends UserInterface
         return (int) $row['candidateCount'];
     }
 
-    private function getSourcedCandidatesCount($db, $siteID, DateTime $weekStart)
+    private function getSourcedCandidatesCount(
+        $db,
+        $siteID,
+        DateTime $weekStart,
+        $officialReports = false,
+        $monitoredJobOrders = array(),
+        $candidateSourceScope = 'all',
+        $jobOrderIDsFilter = null
+    )
     {
+        if (is_array($jobOrderIDsFilter) || $officialReports || $candidateSourceScope !== 'all')
+        {
+            if ($officialReports && empty($monitoredJobOrders))
+            {
+                return 0;
+            }
+            if (is_array($jobOrderIDsFilter) && empty($jobOrderIDsFilter))
+            {
+                return 0;
+            }
+
+            $weekStartDate = clone $weekStart;
+            $weekStartDate->setTime(0, 0, 0);
+            $weekEndDate = clone $weekStartDate;
+            $weekEndDate->modify('+6 days');
+            $weekEndDate->setTime(23, 59, 59);
+
+            $joinFilter = '';
+            if ($officialReports)
+            {
+                $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+                $joinFilter = sprintf(
+                    "AND EXISTS (
+                        SELECT 1
+                        FROM candidate_joborder AS cjo
+                        WHERE cjo.candidate_id = candidate.candidate_id
+                        AND cjo.site_id = %s
+                        AND cjo.joborder_id IN (%s)
+                    )",
+                    $db->makeQueryInteger($siteID),
+                    $monitoredIDs
+                );
+            }
+            if (is_array($jobOrderIDsFilter))
+            {
+                $joinFilter .= sprintf(
+                    "AND EXISTS (
+                        SELECT 1
+                        FROM candidate_joborder AS cjo_filter
+                        WHERE cjo_filter.candidate_id = candidate.candidate_id
+                        AND cjo_filter.site_id = %s
+                        AND cjo_filter.joborder_id IN (%s)
+                    )",
+                    $db->makeQueryInteger($siteID),
+                    $this->formatIntegerList($jobOrderIDsFilter)
+                );
+            }
+            $sourceScopeFilter = $this->buildCandidateSourceScopeFilter($db, $candidateSourceScope, 'candidate');
+
+            $row = $db->getAssoc(sprintf(
+                "SELECT
+                    COUNT(DISTINCT candidate.candidate_id) AS sourcedCount
+                FROM
+                    candidate
+                WHERE
+                    candidate.site_id = %s
+                AND
+                    candidate.date_created >= %s
+                AND
+                    candidate.date_created <= %s
+                AND
+                    candidate.is_admin_hidden = 0
+                AND
+                    candidate.source IS NOT NULL
+                AND
+                    TRIM(candidate.source) <> ''
+                AND
+                    LOWER(TRIM(candidate.source)) <> '(none)'
+                %s
+                %s",
+                $db->makeQueryInteger($siteID),
+                $db->makeQueryString($weekStartDate->format('Y-m-d H:i:s')),
+                $db->makeQueryString($weekEndDate->format('Y-m-d H:i:s')),
+                $joinFilter,
+                $sourceScopeFilter
+            ));
+
+            if (empty($row))
+            {
+                return 0;
+            }
+            return (int) $row['sourcedCount'];
+        }
+
         $weekYear = (int) $weekStart->format('o');
         $weekNumber = (int) $weekStart->format('W');
 
@@ -3140,9 +3408,22 @@ class KpisUI extends UserInterface
         );
     }
 
-    private function getCandidateStatusCounts($db, $siteID, DateTime $start, DateTime $end, $officialReports, $monitoredJobOrders, $candidateSourceScope)
+    private function getCandidateStatusCounts(
+        $db,
+        $siteID,
+        DateTime $start,
+        DateTime $end,
+        $officialReports,
+        $monitoredJobOrders,
+        $candidateSourceScope,
+        $jobOrderIDsFilter = null
+    )
     {
         if ($officialReports && empty($monitoredJobOrders))
+        {
+            return array();
+        }
+        if (is_array($jobOrderIDsFilter) && empty($jobOrderIDsFilter))
         {
             return array();
         }
@@ -3161,6 +3442,13 @@ class KpisUI extends UserInterface
             $joinFilter = sprintf(
                 "AND joborder_id IN (%s)",
                 $monitoredIDs
+            );
+        }
+        if (is_array($jobOrderIDsFilter))
+        {
+            $joinFilter .= sprintf(
+                " AND joborder_id IN (%s)",
+                $this->formatIntegerList($jobOrderIDsFilter)
             );
         }
         $sourceScopeFilter = $this->buildCandidateSourceScopeExistsFilter(
@@ -3213,9 +3501,23 @@ class KpisUI extends UserInterface
         return $counts;
     }
 
-    private function getCandidateTrendData($db, $siteID, DateTime $start, DateTime $end, $view, $officialReports, $monitoredJobOrders, $candidateSourceScope)
+    private function getCandidateTrendData(
+        $db,
+        $siteID,
+        DateTime $start,
+        DateTime $end,
+        $view,
+        $officialReports,
+        $monitoredJobOrders,
+        $candidateSourceScope,
+        $jobOrderIDsFilter = null
+    )
     {
         if ($officialReports && empty($monitoredJobOrders))
+        {
+            return array('labels' => array(), 'data' => array());
+        }
+        if (is_array($jobOrderIDsFilter) && empty($jobOrderIDsFilter))
         {
             return array('labels' => array(), 'data' => array());
         }
@@ -3234,6 +3536,20 @@ class KpisUI extends UserInterface
                 )",
                 $db->makeQueryInteger($siteID),
                 $monitoredIDs
+            );
+        }
+        if (is_array($jobOrderIDsFilter))
+        {
+            $joinFilter .= sprintf(
+                "AND EXISTS (
+                    SELECT 1
+                    FROM candidate_joborder AS cjo_filter
+                    WHERE cjo_filter.candidate_id = candidate.candidate_id
+                    AND cjo_filter.site_id = %s
+                    AND cjo_filter.joborder_id IN (%s)
+                )",
+                $db->makeQueryInteger($siteID),
+                $this->formatIntegerList($jobOrderIDsFilter)
             );
         }
         $sourceScopeFilter = $this->buildCandidateSourceScopeFilter($db, $candidateSourceScope, 'candidate');
@@ -3543,6 +3859,11 @@ class KpisUI extends UserInterface
         $jobOrderScope = $this->normalizeJobOrderScope(
             isset($_GET['jobOrderScope']) ? $_GET['jobOrderScope'] : 'all'
         );
+        $customerID = isset($_GET['customerID']) ? (int) $_GET['customerID'] : 0;
+        if ($customerID < 0)
+        {
+            $customerID = 0;
+        }
         $queryParams = array(
             'm' => 'kpis',
             'a' => 'details',
@@ -3552,6 +3873,10 @@ class KpisUI extends UserInterface
             'candidateSourceScope' => $candidateSourceScope,
             'jobOrderScope' => $jobOrderScope
         );
+        if ($customerID > 0)
+        {
+            $queryParams['customerID'] = $customerID;
+        }
 
         foreach ($params as $key => $value)
         {
