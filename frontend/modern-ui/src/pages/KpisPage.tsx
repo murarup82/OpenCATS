@@ -427,17 +427,6 @@ export function KpisPage({ bootstrap }: Props) {
       onClear: () => updateFilter('candidateSourceScope', 'all')
     });
   }
-  if (data.filters.trendView !== 'weekly') {
-    activeFilterChips.push({
-      key: 'trend-view',
-      label: `Trend: ${trendViewLabel}`,
-      onClear: () => updateFilter('trendView', 'weekly')
-    });
-  }
-  activeFilterChips.push({
-    key: 'trend-range',
-    label: `${data.filters.trendStart} to ${data.filters.trendEnd}`
-  });
   const totalProposedToCustomer = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.submittedCount), 0);
   const totalInterviews = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.interviewCount), 0);
   const totalAcceptedByCustomer = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.approvedCount), 0);
@@ -459,7 +448,7 @@ export function KpisPage({ bootstrap }: Props) {
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-list-panel">
+          <section className="avel-list-panel avel-kpi-filters-panel">
             <div className="avel-list-panel__header">
               <h3 className="avel-list-panel__title">KPI Filters</h3>
               <p className="avel-list-panel__hint">Matches legacy KPI filter behavior.</p>
@@ -580,34 +569,6 @@ export function KpisPage({ bootstrap }: Props) {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label className="modern-command-field">
-                <span className="modern-command-label">Trend View</span>
-                <select value={data.filters.trendView} onChange={(event) => updateFilter('trendView', event.target.value)}>
-                  {data.options.trendViews.map((option) => (
-                    <option key={`trend-view-${option.value}`} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="modern-command-field">
-                <span className="modern-command-label">Trend Start</span>
-                <input
-                  className="avel-kpi-date"
-                  type="date"
-                  value={data.filters.trendStart || ''}
-                  onChange={(event) => updateFilter('trendStart', event.target.value)}
-                />
-              </label>
-              <label className="modern-command-field">
-                <span className="modern-command-label">Trend End</span>
-                <input
-                  className="avel-kpi-date"
-                  type="date"
-                  value={data.filters.trendEnd || ''}
-                  onChange={(event) => updateFilter('trendEnd', event.target.value)}
-                />
               </label>
               <button type="button" className="modern-btn modern-btn--secondary modern-btn--mini" onClick={resetFilters}>
                 Reset Filters
@@ -903,6 +864,36 @@ export function KpisPage({ bootstrap }: Props) {
                   {data.filters.trendStart} to {data.filters.trendEnd}
                 </span>
               </div>
+            </div>
+            <div className="avel-kpi-trend-filters">
+              <label className="modern-command-field">
+                <span className="modern-command-label">Trend View</span>
+                <select value={data.filters.trendView} onChange={(event) => updateFilter('trendView', event.target.value)}>
+                  {data.options.trendViews.map((option) => (
+                    <option key={`trend-view-${option.value}`} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="modern-command-field">
+                <span className="modern-command-label">Trend Start</span>
+                <input
+                  className="avel-kpi-date"
+                  type="date"
+                  value={data.filters.trendStart || ''}
+                  onChange={(event) => updateFilter('trendStart', event.target.value)}
+                />
+              </label>
+              <label className="modern-command-field">
+                <span className="modern-command-label">Trend End</span>
+                <input
+                  className="avel-kpi-date"
+                  type="date"
+                  value={data.filters.trendEnd || ''}
+                  onChange={(event) => updateFilter('trendEnd', event.target.value)}
+                />
+              </label>
             </div>
             <div className="avel-kpi-chart-grid">
               <article className="avel-list-panel avel-chart-card">
