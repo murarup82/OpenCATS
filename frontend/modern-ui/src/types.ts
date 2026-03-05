@@ -215,6 +215,9 @@ export type CandidatesListModernDataResponse = {
     hasAttachment: boolean;
     hasDuplicate: boolean;
     isSubmitted: boolean;
+    gdprSigned: boolean;
+    pipelineActiveCount: number;
+    isInPipeline: boolean;
     candidateURL: string;
     candidateEditURL: string;
     addToListURL: string;

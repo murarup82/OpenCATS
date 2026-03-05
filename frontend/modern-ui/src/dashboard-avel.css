@@ -2545,6 +2545,36 @@
   color: #1f5f7b;
 }
 
+.avel-candidates-page .modern-chip--resume {
+  border-color: #c5d7e8;
+  background: #f3f8fd;
+  color: #365b75;
+}
+
+.avel-candidates-page .modern-chip--pipeline {
+  border-color: #a7d3b7;
+  background: #e9f8ef;
+  color: #1f6b42;
+}
+
+.avel-candidates-page .modern-chip--pipeline-idle {
+  border-color: #c8d5df;
+  background: #f3f7fa;
+  color: #4f6676;
+}
+
+.avel-candidates-page .modern-chip--gdpr-signed {
+  border-color: #9fd0b1;
+  background: #e5f5ec;
+  color: #1f6a41;
+}
+
+.avel-candidates-page .modern-chip--gdpr-unsigned {
+  border-color: #e1bf96;
+  background: #fff4e6;
+  color: #8b5416;
+}
+
 .avel-joborders-page .modern-chip--info {
   border-color: #b5d8e8;
   background: #eef8ff;
@@ -2954,8 +2984,13 @@
   vertical-align: top;
 }
 
+.avel-candidates-page .avel-candidate-results .modern-table td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
 .avel-candidates-page .avel-candidate-table__candidate {
-  min-width: 220px;
+  min-width: 240px;
 }
 
 .avel-candidates-page .avel-candidate-table__name {
@@ -2964,8 +2999,22 @@
   letter-spacing: -0.01em;
 }
 
+.avel-candidates-page .avel-candidate-table__title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.avel-candidates-page .avel-candidate-table__quick-tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
 .avel-candidates-page .avel-candidate-table__meta {
-  margin-top: 4px;
+  margin-top: 3px;
   color: #5b7b8f;
   font-size: 0.72rem;
 }
@@ -2974,6 +3023,33 @@
   min-width: 280px;
   max-width: 520px;
   line-height: 1.4;
+}
+
+.avel-candidates-page .modern-table-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.avel-candidates-page .avel-candidate-action {
+  white-space: nowrap;
+}
+
+.avel-candidates-page .avel-candidate-action--primary {
+  border-color: #0c6b8c;
+  box-shadow: 0 4px 10px rgba(0, 109, 144, 0.18);
+}
+
+.avel-candidates-page .avel-candidate-action--edit {
+  border-color: #8cbad1;
+  background: linear-gradient(180deg, #f7fbff 0%, #e8f3fb 100%);
+  color: #185774;
+}
+
+.avel-candidates-page .avel-candidate-action--tertiary {
+  border-color: #c5d6e2;
+  background: #f7fbff;
+  color: #446174;
 }
 
 .avel-candidates-page .avel-candidate-card-list {

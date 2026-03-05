@@ -634,6 +634,7 @@ class CandidatesUI extends UserInterface
         $baseURL = CATSUtility::getIndexName();
         $rows = $dataGrid->getRows();
         $parameters = $dataGrid->getParameters();
+        $db = DatabaseConnection::getInstance();
 
         $entriesPerPage = (isset($parameters['maxResults']) ? (int) $parameters['maxResults'] : 15);
         if ($entriesPerPage <= 0)
@@ -652,6 +653,86 @@ class CandidatesUI extends UserInterface
         if ($page <= 0)
         {
             $page = 1;
+        }
+
+        $candidateIDs = array();
+        foreach ($rows as $row)
+        {
+            $candidateID = (isset($row['candidateID']) ? (int) $row['candidateID'] : 0);
+            if ($candidateID > 0)
+            {
+                $candidateIDs[$candidateID] = true;
+            }
+        }
+        $candidateIDs = array_keys($candidateIDs);
+
+        $gdprSignedByCandidateID = array();
+        $activePipelineCountByCandidateID = array();
+        if (!empty($candidateIDs))
+        {
+            $candidateIDSQLParts = array();
+            foreach ($candidateIDs as $candidateIDValue)
+            {
+                $candidateIDSQLParts[] = $db->makeQueryInteger($candidateIDValue);
+            }
+
+            if (!empty($candidateIDSQLParts))
+            {
+                $candidateIDSQLList = implode(',', $candidateIDSQLParts);
+
+                $gdprRows = $db->getAllAssoc(sprintf(
+                    "SELECT
+                        candidate.candidate_id AS candidateID,
+                        candidate.gdpr_signed AS gdprSigned
+                     FROM
+                        candidate
+                     WHERE
+                        candidate.site_id = %s
+                        AND candidate.candidate_id IN (%s)",
+                    $db->makeQueryInteger($this->_siteID),
+                    $candidateIDSQLList
+                ));
+                if (!empty($gdprRows))
+                {
+                    foreach ($gdprRows as $gdprRow)
+                    {
+                        $candidateIDValue = (int) $gdprRow['candidateID'];
+                        if ($candidateIDValue <= 0)
+                        {
+                            continue;
+                        }
+                        $gdprSignedByCandidateID[$candidateIDValue] = ((int) $gdprRow['gdprSigned'] === 1);
+                    }
+                }
+
+                $pipelineRows = $db->getAllAssoc(sprintf(
+                    "SELECT
+                        candidate_joborder.candidate_id AS candidateID,
+                        COUNT(*) AS activePipelineCount
+                     FROM
+                        candidate_joborder
+                     WHERE
+                        candidate_joborder.site_id = %s
+                        AND candidate_joborder.is_active = 1
+                        AND candidate_joborder.candidate_id IN (%s)
+                     GROUP BY
+                        candidate_joborder.candidate_id",
+                    $db->makeQueryInteger($this->_siteID),
+                    $candidateIDSQLList
+                ));
+                if (!empty($pipelineRows))
+                {
+                    foreach ($pipelineRows as $pipelineRow)
+                    {
+                        $candidateIDValue = (int) $pipelineRow['candidateID'];
+                        if ($candidateIDValue <= 0)
+                        {
+                            continue;
+                        }
+                        $activePipelineCountByCandidateID[$candidateIDValue] = (int) $pipelineRow['activePipelineCount'];
+                    }
+                }
+            }
         }
 
         $responseRows = array();
@@ -676,6 +757,13 @@ class CandidatesUI extends UserInterface
                 $ownerName = '--';
             }
 
+            $gdprSigned = (isset($gdprSignedByCandidateID[$candidateID]) ? (bool) $gdprSignedByCandidateID[$candidateID] : false);
+            $pipelineActiveCount = (isset($activePipelineCountByCandidateID[$candidateID]) ? (int) $activePipelineCountByCandidateID[$candidateID] : 0);
+            if ($pipelineActiveCount < 0)
+            {
+                $pipelineActiveCount = 0;
+            }
+
             $responseRows[] = array(
                 'candidateID' => $candidateID,
                 'firstName' => ($firstName !== '' ? $firstName : '--'),
@@ -693,6 +781,9 @@ class CandidatesUI extends UserInterface
                 'hasAttachment' => (isset($row['attachmentPresent']) ? ((int) $row['attachmentPresent'] === 1) : false),
                 'hasDuplicate' => (isset($row['duplicatePresent']) ? ((int) $row['duplicatePresent'] === 1) : false),
                 'isSubmitted' => (isset($row['submitted']) ? ((int) $row['submitted'] === 1) : false),
+                'gdprSigned' => $gdprSigned,
+                'pipelineActiveCount' => $pipelineActiveCount,
+                'isInPipeline' => ($pipelineActiveCount > 0),
                 'candidateURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
                 'candidateEditURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addToListURL' => sprintf(

@@ -383,7 +383,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
     { key: 'candidate', title: 'Candidate' },
     { key: 'source', title: 'Source' },
     { key: 'skills', title: 'Key Skills' },
-    { key: 'signals', title: 'Signals' },
+    { key: 'pipeline', title: 'Pipeline' },
+    { key: 'gdpr', title: 'GDPR' },
     { key: 'owner', title: 'Owner' },
     { key: 'created', title: 'Added' },
     { key: 'updated', title: 'Updated' },
@@ -712,9 +713,19 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   return (
                     <tr key={row.candidateID}>
                       <td className="avel-candidate-table__candidate">
-                        <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
-                          {toDisplayText(row.fullName)}
-                        </a>
+                        <div className="avel-candidate-table__title-row">
+                          <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
+                            {toDisplayText(row.fullName)}
+                          </a>
+                          <div className="avel-candidate-table__quick-tags">
+                            {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
+                            {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
+                            {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
+                            {row.commentCount > 0 ? (
+                              <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
+                            ) : null}
+                          </div>
+                        </div>
                         <div className="avel-candidate-table__meta">{locationText}</div>
                       </td>
                       <td>
@@ -722,40 +733,30 @@ export function CandidatesListPage({ bootstrap }: Props) {
                       </td>
                       <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
                       <td>
-                        <div className="avel-candidate-flags">
-                          {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                          {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
-                          {row.isSubmitted ? <span className="modern-chip modern-chip--info">Submitted</span> : null}
-                          {row.hasAttachment ? <span className="modern-chip">Resume</span> : null}
-                          {row.commentCount > 0 ? <span className="modern-chip modern-chip--success">{row.commentCount} comments</span> : null}
-                        </div>
+                        {row.isInPipeline ? (
+                          <span className="modern-chip modern-chip--pipeline">
+                            Allocated ({row.pipelineActiveCount})
+                          </span>
+                        ) : (
+                          <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
+                        )}
+                      </td>
+                      <td>
+                        {row.gdprSigned ? (
+                          <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
+                        ) : (
+                          <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
+                        )}
                       </td>
                       <td>{toDisplayText(row.ownerName)}</td>
                       <td>{toDisplayText(row.createdDate)}</td>
                       <td>{toDisplayText(row.modifiedDate)}</td>
                       <td>
                         <div className="modern-table-actions">
-                          <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateURL)}>
-                            View
-                          </a>
-                          {canEditCandidate ? (
-                            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={ensureModernUIURL(row.candidateEditURL)}>
-                              Edit
-                            </a>
-                          ) : null}
-                          {canAddToList ? (
-                            <button
-                              type="button"
-                              className="modern-btn modern-btn--mini modern-btn--secondary"
-                              onClick={() => openAddToListOverlay(row.addToListURL)}
-                            >
-                              Add To List
-                            </button>
-                          ) : null}
                           {canAddToJobOrder ? (
                             <button
                               type="button"
-                              className="modern-btn modern-btn--mini modern-btn--secondary"
+                              className="modern-btn modern-btn--mini modern-btn--emphasis avel-candidate-action avel-candidate-action--primary"
                               onClick={() =>
                                 setAssignJobModal({
                                   url: decodeLegacyURL(row.addToJobOrderURL),
@@ -764,6 +765,23 @@ export function CandidatesListPage({ bootstrap }: Props) {
                               }
                             >
                               Add To Job
+                            </button>
+                          ) : null}
+                          {canEditCandidate ? (
+                            <a
+                              className="modern-btn modern-btn--mini modern-btn--secondary avel-candidate-action avel-candidate-action--edit"
+                              href={ensureModernUIURL(row.candidateEditURL)}
+                            >
+                              Edit
+                            </a>
+                          ) : null}
+                          {canAddToList ? (
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--ghost avel-candidate-action avel-candidate-action--tertiary"
+                              onClick={() => openAddToListOverlay(row.addToListURL)}
+                            >
+                              Add To List
                             </button>
                           ) : null}
                         </div>
