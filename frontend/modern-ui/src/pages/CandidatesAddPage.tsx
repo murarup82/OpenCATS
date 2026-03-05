@@ -736,6 +736,18 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     { value: 'No', label: 'No' },
     { value: 'Yes', label: 'Yes' }
   ];
+  const parseLimitRaw = data.resumeImport.parsingStatus?.['parseLimit'];
+  const parseLimitText =
+    typeof parseLimitRaw === 'number' && Number.isFinite(parseLimitRaw) ? `Remaining parses: ${parseLimitRaw}` : '';
+  const aiCanRunPrefillTopAction =
+    data.resumeImport.isParsingEnabled && resumeTempFile.trim() !== '' && !aiPrefillPending && resumeActionPending === 'none';
+  const aiTopActionDisabledReason = !data.resumeImport.isParsingEnabled
+    ? 'AI parsing is disabled in server configuration.'
+    : resumeTempFile.trim() === ''
+      ? 'Upload and parse a CV first to prepare AI source content.'
+      : resumeActionPending !== 'none'
+        ? 'Wait for resume upload/parse to complete.'
+        : '';
   const aiFieldCount = Object.values(fieldSources).filter((source) => source === 'ai-prefill').length;
   const parsedFieldCount = Object.values(fieldSources).filter((source) => source === 'resume-parse').length;
 
@@ -746,6 +758,15 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         subtitle={pageSubtitle}
         actions={(
           <>
+            <button
+              type="button"
+              className="modern-btn modern-btn--emphasis avel-candidate-edit-ai-top"
+              onClick={runAIPrefill}
+              disabled={!aiCanRunPrefillTopAction}
+              title={aiTopActionDisabledReason || 'Load CV details with AI'}
+            >
+              {aiPrefillPending ? 'AI Running...' : 'Load CV Details With AI'}
+            </button>
             <a className="modern-btn modern-btn--secondary" href={backURL}>
               {backLabel}
             </a>
@@ -838,6 +859,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 <span className="modern-chip modern-chip--info">Required: First Name, Last Name</span>
                 <span className="modern-chip modern-chip--warning">Duplicate Protection: Enabled</span>
                 <span className="modern-chip">Flow: Add + Validate + Save</span>
+                {parseLimitText !== '' ? <span className="modern-chip modern-chip--source-other">{parseLimitText}</span> : null}
               </div>
 
               {data.resumeImport.isParsingEnabled ? (
