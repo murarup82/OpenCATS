@@ -2657,6 +2657,7 @@ class KpisUI extends UserInterface
                     %s
                     %s
                     %s
+                    %s
                     GROUP BY
                         cjh.candidate_id,
                         cjh.joborder_id
@@ -2857,7 +2858,6 @@ class KpisUI extends UserInterface
                         cjh.site_id = %s
                     AND
                         candidate.is_admin_hidden = 0
-                    %s
                     %s
                     %s
                     %s
