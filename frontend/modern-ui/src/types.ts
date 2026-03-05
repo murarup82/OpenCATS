@@ -1790,6 +1790,15 @@ export type KpisListModernDataResponse = {
       acceptanceRateClass: string;
       hiringRate: string;
     }>;
+    requestQualifiedRows: Array<{
+      jobOrderID: number;
+      title: string;
+      companyName: string;
+      receivedDate: string;
+      submittedDate: string;
+      daysValue: string;
+      daysClass: string;
+    }>;
     candidateSourceRows: Array<{
       label: string;
       thisWeek: number;

@@ -613,6 +613,25 @@
   gap: 12px;
 }
 
+.avel-kpi-cell {
+  font-weight: 700;
+}
+
+.avel-kpi-cell--good {
+  background: #e6f6ec;
+  color: #1c6d3f;
+}
+
+.avel-kpi-cell--bad {
+  background: #fdebea;
+  color: #9d3a3a;
+}
+
+.avel-kpi-cell--neutral {
+  background: #edf2f6;
+  color: #536979;
+}
+
 .avel-priority-band {
   border: 1px solid #a9c4d6;
   border-radius: 16px;

@@ -1087,6 +1087,7 @@ class KpisUI extends UserInterface
                 $totalsLastWeek,
                 $totalsDiff,
                 $jobOrderKpiRows,
+                $requestQualifiedRows,
                 $candidateSourceRows,
                 $candidateMetricRows,
                 $candidateSourceSnapshot,
@@ -1148,6 +1149,7 @@ class KpisUI extends UserInterface
         $totalsLastWeek,
         $totalsDiff,
         $jobOrderKpiRows,
+        $requestQualifiedRows,
         $candidateSourceRows,
         $candidateMetricRows,
         $candidateSourceSnapshot,
@@ -1252,6 +1254,7 @@ class KpisUI extends UserInterface
             'rows' => array(
                 'kpiRows' => $kpiRows,
                 'jobOrderKpiRows' => $jobOrderKpiRows,
+                'requestQualifiedRows' => $requestQualifiedRows,
                 'candidateSourceRows' => $candidateSourceRows,
                 'candidateMetricRows' => $candidateMetricRows,
                 'candidateSourceSnapshot' => $candidateSourceSnapshot
