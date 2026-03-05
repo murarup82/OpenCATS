@@ -4337,9 +4337,79 @@
     0 12px 24px rgba(9, 44, 66, 0.08);
 }
 
+.avel-candidate-edit-page .avel-candidate-edit-panel--workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 370px);
+  gap: 12px;
+  align-items: start;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-panel--workbench > .avel-list-panel__header {
+  grid-column: 1 / -1;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-panel--workbench > .avel-candidate-edit-form {
+  grid-column: 1;
+  min-width: 0;
+}
+
 .avel-candidate-edit-page .avel-candidate-edit-form {
   display: grid;
   gap: 10px;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-sections {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-section {
+  --avel-section-border: #bad2e2;
+  --avel-section-surface: linear-gradient(180deg, #f6fbff 0%, #eef6fd 100%);
+  --avel-section-field-surface: linear-gradient(180deg, #fbfeff 0%, #f2f8fd 100%);
+  border: 1px solid var(--avel-section-border);
+  border-radius: 12px;
+  background: var(--avel-section-surface);
+  padding: 7px;
+  display: grid;
+  gap: 7px;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-section .modern-command-field,
+.avel-candidate-edit-page .avel-candidate-edit-section .modern-command-toggle {
+  border-color: var(--avel-section-border);
+  background: var(--avel-section-field-surface);
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-section .modern-command-toggle {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 12px;
+  padding: 6px 9px;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-section--status {
+  --avel-section-border: #9fcfb7;
+  --avel-section-surface: linear-gradient(180deg, #f3fbf6 0%, #eaf7f0 100%);
+  --avel-section-field-surface: linear-gradient(180deg, #fbfffd 0%, #f1fbf5 100%);
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-section--identity {
+  --avel-section-border: #a9cfe3;
+  --avel-section-surface: linear-gradient(180deg, #f4fbff 0%, #eaf5fc 100%);
+  --avel-section-field-surface: linear-gradient(180deg, #fcfeff 0%, #f2f9fe 100%);
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-section--source {
+  --avel-section-border: #c8b4de;
+  --avel-section-surface: linear-gradient(180deg, #faf7ff 0%, #f3eefc 100%);
+  --avel-section-field-surface: linear-gradient(180deg, #fefcff 0%, #f8f3ff 100%);
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-section--narrative {
+  --avel-section-border: #d8c6a9;
+  --avel-section-surface: linear-gradient(180deg, #fffaf2 0%, #fbf3e7 100%);
+  --avel-section-field-surface: linear-gradient(180deg, #fffdf8 0%, #fdf6ea 100%);
 }
 
 .avel-candidate-edit-page .avel-candidate-edit-grid {
@@ -4348,7 +4418,20 @@
   gap: 8px;
 }
 
+.avel-candidate-edit-page .avel-candidate-edit-section .avel-candidate-edit-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
 .avel-candidate-edit-page .avel-candidate-edit-field--full {
+  grid-column: 1 / -1;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-field--span-2 {
+  grid-column: span 2;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-field--span-3 {
   grid-column: 1 / -1;
 }
 
@@ -4485,6 +4568,15 @@
   gap: 10px;
 }
 
+.avel-candidate-edit-page .avel-candidate-edit-panel--workbench > .avel-candidate-edit-attachments {
+  grid-column: 2;
+  position: sticky;
+  top: 10px;
+  margin-top: 0;
+  border-top: none;
+  padding-top: 0;
+}
+
 .avel-candidate-edit-page .avel-candidate-edit-attachments--panel {
   border: 1px solid #bfd5e4;
   border-radius: 12px;
@@ -4509,6 +4601,17 @@
 .avel-candidate-edit-page .avel-candidate-edit-actions {
   border-top: 1px solid #c5dae8;
   padding-top: 10px;
+}
+
+.avel-candidate-edit-page .avel-candidate-edit-actions--sticky {
+  position: sticky;
+  top: 6px;
+  z-index: 4;
+  justify-content: flex-end;
+  border: 1px solid #b8cfdf;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #f9fdff 0%, #eef7fd 100%);
+  padding: 6px;
 }
 
 .avel-candidate-edit-page .avel-candidate-edit-actions--footer {
@@ -5396,6 +5499,15 @@
   .avel-candidate-show-page .avel-candidate-grid,
   .avel-candidate-show-page .avel-candidate-details {
     grid-template-columns: 1fr;
+  }
+
+  .avel-candidate-edit-page .avel-candidate-edit-panel--workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-candidate-edit-page .avel-candidate-edit-panel--workbench > .avel-candidate-edit-attachments {
+    grid-column: 1;
+    position: static;
   }
 
   .avel-candidate-edit-page .avel-candidate-edit-grid {

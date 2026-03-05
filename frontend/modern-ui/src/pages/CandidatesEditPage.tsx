@@ -777,7 +777,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
         )}
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--edit">
+          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--edit avel-candidate-edit-panel--workbench">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Candidate Details</h2>
               <p className="avel-list-panel__hint">Required fields: First Name, Last Name, Owner.</p>
@@ -820,275 +820,302 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 {parseLimitText !== '' ? <span className="modern-chip modern-chip--source-other">{parseLimitText}</span> : null}
               </div>
 
+              <div className="modern-table-actions avel-candidate-edit-actions avel-candidate-edit-actions--sticky">
+                <button type="submit" className="modern-btn modern-btn--emphasis">
+                  Save Candidate
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={showURL}>
+                  Cancel
+                </a>
+              </div>
+
               {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
               {aiPrefillError !== '' ? <div className="modern-state modern-state--error" role="alert">{aiPrefillError}</div> : null}
 
-              <div className="avel-candidate-edit-grid">
+              <div className="avel-candidate-edit-sections">
                 {validationError !== '' ? (
-                  <div className="modern-state modern-state--error avel-candidate-edit-field--full" role="alert">{validationError}</div>
+                  <div className="modern-state modern-state--error" role="alert">{validationError}</div>
                 ) : null}
-                <div className="avel-candidate-form-divider avel-candidate-form-divider--status avel-candidate-edit-field--full">
-                  <strong>Profile Status & Compliance</strong>
-                  <span>Operational state and GDPR settings used in day-to-day reporting.</span>
-                </div>
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={formState.isActive}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, isActive: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Active Candidate</span>
-                </label>
-
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="isHot"
-                    checked={formState.isHot}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Hot Candidate</span>
-                </label>
-
-                <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
-                <SelectMenu
-                  label="GDPR Signed"
-                  value={formState.gdprSigned}
-                  options={gdprOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
-                />
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">GDPR Expiration</span>
-                  <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
-                  <input
-                    className="avel-form-control"
-                    type="date"
-                    value={toISODateInput(formState.gdprExpirationDate)}
-                    onChange={(event) =>
-                      setFormState((current) => (current ? { ...current, gdprExpirationDate: toLegacyShortDate(event.target.value) } : current))
-                    }
-                  />
-                </label>
-
-                <div className="avel-candidate-form-divider avel-candidate-form-divider--identity avel-candidate-edit-field--full">
-                  <strong>Profile & Reachability</strong>
-                  <span>Identity, contact channels, and candidate availability details.</span>
-                </div>
-                <label className="modern-command-field">
-                  <span className="modern-command-label">First Name *</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="firstName"
-                    value={formState.firstName}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, firstName: event.target.value } : current))}
-                    required
-                  />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Last Name *</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="lastName"
-                    value={formState.lastName}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, lastName: event.target.value } : current))}
-                    required
-                  />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Email</span>
-                  <input
-                    className="avel-form-control"
-                    type="email"
-                    name="email1"
-                    value={formState.email1}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, email1: event.target.value } : current))}
-                  />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Cell Phone</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="phoneCell"
-                    value={formState.phoneCell}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, phoneCell: event.target.value } : current))}
-                  />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">City</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="city"
-                    value={formState.city}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, city: event.target.value } : current))}
-                  />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Country</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="country"
-                    value={formState.country}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, country: event.target.value } : current))}
-                  />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Best Time To Call</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="bestTimeToCall"
-                    value={formState.bestTimeToCall}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
-                  />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Date Available</span>
-                  <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
-                  <input
-                    className="avel-form-control"
-                    type="date"
-                    value={toISODateInput(formState.dateAvailable)}
-                    onChange={(event) =>
-                      setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
-                    }
-                  />
-                </label>
-
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="canRelocate"
-                    checked={formState.canRelocate}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Open To Relocation</span>
-                </label>
-
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Address</span>
-                  <textarea
-                    className="avel-form-control"
-                    name="address"
-                    value={formState.address}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, address: event.target.value } : current))}
-                    rows={2}
-                  />
-                </label>
-
-                <div className="avel-candidate-form-divider avel-candidate-form-divider--source avel-candidate-edit-field--full">
-                  <strong>Sourcing & Ownership</strong>
-                  <span>Assign ownership and keep source taxonomy up to date.</span>
-                </div>
-                <input type="hidden" name="source" value={formState.source} />
-                <SelectMenu
-                  label="Source"
-                  value={formState.source}
-                  options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
-                  onChange={(value) => {
-                    setSourceNotice('');
-                    setFormState((current) => (current ? { ...current, source: value } : current));
-                  }}
-                />
-                <div className="modern-command-field avel-candidate-source-add">
-                  <span className="modern-command-label">Add New Source</span>
-                  <div className="avel-candidate-source-add__row">
-                    <input
-                      className="avel-form-control"
-                      type="text"
-                      value={newSourceDraft}
-                      placeholder="Type source name"
-                      onChange={(event) => setNewSourceDraft(event.target.value)}
-                    />
-                    <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={addSourceOption}>
-                      Add
-                    </button>
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--status">
+                  <div className="avel-candidate-form-divider avel-candidate-form-divider--status">
+                    <strong>Profile Status & GDPR</strong>
+                    <span>Operational state and GDPR settings used in day-to-day reporting.</span>
                   </div>
-                  {sourceNotice !== '' ? <span className="avel-field-source-help">{sourceNotice}</span> : null}
-                </div>
+                  <div className="avel-candidate-edit-grid">
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        name="isActive"
+                        checked={formState.isActive}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, isActive: event.target.checked } : current))}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Active Candidate</span>
+                    </label>
 
-                <input type="hidden" name="owner" value={formState.owner} />
-                <SelectMenu
-                  label="Owner *"
-                  value={formState.owner}
-                  options={ownerOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, owner: value } : current))}
-                />
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        name="isHot"
+                        checked={formState.isHot}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Hot Candidate</span>
+                    </label>
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Current Employer</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="currentEmployer"
-                    value={formState.currentEmployer}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, currentEmployer: event.target.value } : current))}
-                  />
-                </label>
+                    <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
+                    <SelectMenu
+                      label="GDPR Signed"
+                      value={formState.gdprSigned}
+                      options={gdprOptions}
+                      className="modern-command-field avel-candidate-edit-field--span-2"
+                      onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
+                    />
 
-                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
-                  <strong>Compensation & Narrative</strong>
-                  <span>Comp package and recruiter context for submissions.</span>
-                </div>
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Current Pay</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="currentPay"
-                    value={formState.currentPay}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, currentPay: event.target.value } : current))}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">GDPR Expiration</span>
+                      <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
+                      <input
+                        className="avel-form-control"
+                        type="date"
+                        value={toISODateInput(formState.gdprExpirationDate)}
+                        onChange={(event) =>
+                          setFormState((current) => (current ? { ...current, gdprExpirationDate: toLegacyShortDate(event.target.value) } : current))
+                        }
+                      />
+                    </label>
+                  </div>
+                </section>
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Desired Pay</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="desiredPay"
-                    value={formState.desiredPay}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, desiredPay: event.target.value } : current))}
-                  />
-                </label>
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--identity">
+                  <div className="avel-candidate-form-divider avel-candidate-form-divider--identity">
+                    <strong>Profile & Reachability</strong>
+                    <span>Identity, contact channels, and candidate availability details.</span>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">First Name *</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="firstName"
+                        value={formState.firstName}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, firstName: event.target.value } : current))}
+                        required
+                      />
+                    </label>
 
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Key Skills</span>
-                  <textarea
-                    className="avel-form-control"
-                    name="keySkills"
-                    value={formState.keySkills}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current))}
-                    rows={2}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Last Name *</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="lastName"
+                        value={formState.lastName}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, lastName: event.target.value } : current))}
+                        required
+                      />
+                    </label>
 
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Notes</span>
-                  <MarkdownTextarea
-                    name="notes"
-                    value={formState.notes}
-                    rows={6}
-                    ariaLabel="Candidate notes"
-                    onChange={(nextValue) => setFormState((current) => (current ? { ...current, notes: nextValue } : current))}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Email</span>
+                      <input
+                        className="avel-form-control"
+                        type="email"
+                        name="email1"
+                        value={formState.email1}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, email1: event.target.value } : current))}
+                      />
+                    </label>
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Cell Phone</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="phoneCell"
+                        value={formState.phoneCell}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, phoneCell: event.target.value } : current))}
+                      />
+                    </label>
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">City</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="city"
+                        value={formState.city}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, city: event.target.value } : current))}
+                      />
+                    </label>
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Country</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="country"
+                        value={formState.country}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, country: event.target.value } : current))}
+                      />
+                    </label>
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Best Time To Call</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="bestTimeToCall"
+                        value={formState.bestTimeToCall}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
+                      />
+                    </label>
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Date Available</span>
+                      <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
+                      <input
+                        className="avel-form-control"
+                        type="date"
+                        value={toISODateInput(formState.dateAvailable)}
+                        onChange={(event) =>
+                          setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
+                        }
+                      />
+                    </label>
+
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        name="canRelocate"
+                        checked={formState.canRelocate}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Open To Relocation</span>
+                    </label>
+
+                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                      <span className="modern-command-label">Address</span>
+                      <textarea
+                        className="avel-form-control"
+                        name="address"
+                        value={formState.address}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, address: event.target.value } : current))}
+                        rows={2}
+                      />
+                    </label>
+                  </div>
+                </section>
+
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--source">
+                  <div className="avel-candidate-form-divider avel-candidate-form-divider--source">
+                    <strong>Sourcing & Ownership</strong>
+                    <span>Assign ownership and keep source taxonomy up to date.</span>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    <input type="hidden" name="source" value={formState.source} />
+                    <SelectMenu
+                      label="Source"
+                      value={formState.source}
+                      options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
+                      className="modern-command-field avel-candidate-edit-field--span-2"
+                      onChange={(value) => {
+                        setSourceNotice('');
+                        setFormState((current) => (current ? { ...current, source: value } : current));
+                      }}
+                    />
+                    <div className="modern-command-field avel-candidate-source-add">
+                      <span className="modern-command-label">Add New Source</span>
+                      <div className="avel-candidate-source-add__row">
+                        <input
+                          className="avel-form-control"
+                          type="text"
+                          value={newSourceDraft}
+                          placeholder="Type source name"
+                          onChange={(event) => setNewSourceDraft(event.target.value)}
+                        />
+                        <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={addSourceOption}>
+                          Add
+                        </button>
+                      </div>
+                      {sourceNotice !== '' ? <span className="avel-field-source-help">{sourceNotice}</span> : null}
+                    </div>
+
+                    <input type="hidden" name="owner" value={formState.owner} />
+                    <SelectMenu
+                      label="Owner *"
+                      value={formState.owner}
+                      options={ownerOptions}
+                      onChange={(value) => setFormState((current) => (current ? { ...current, owner: value } : current))}
+                    />
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Current Employer</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="currentEmployer"
+                        value={formState.currentEmployer}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, currentEmployer: event.target.value } : current))}
+                      />
+                    </label>
+                  </div>
+                </section>
+
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--narrative">
+                  <div className="avel-candidate-form-divider">
+                    <strong>Compensation & Narrative</strong>
+                    <span>Comp package and recruiter context for submissions.</span>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Current Pay</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="currentPay"
+                        value={formState.currentPay}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, currentPay: event.target.value } : current))}
+                      />
+                    </label>
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Desired Pay</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="desiredPay"
+                        value={formState.desiredPay}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, desiredPay: event.target.value } : current))}
+                      />
+                    </label>
+
+                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                      <span className="modern-command-label">Key Skills</span>
+                      <textarea
+                        className="avel-form-control"
+                        name="keySkills"
+                        value={formState.keySkills}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current))}
+                        rows={2}
+                      />
+                    </label>
+
+                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                      <span className="modern-command-label">Notes</span>
+                      <MarkdownTextarea
+                        name="notes"
+                        value={formState.notes}
+                        rows={6}
+                        ariaLabel="Candidate notes"
+                        onChange={(nextValue) => setFormState((current) => (current ? { ...current, notes: nextValue } : current))}
+                      />
+                    </label>
+                  </div>
+                </section>
               </div>
 
               {data.extraFields.length > 0 ? (
@@ -1305,14 +1332,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               </DataTable>
             </section>
 
-            <div className="modern-table-actions avel-candidate-edit-actions avel-candidate-edit-actions--footer">
-              <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
-                Save Candidate
-              </button>
-              <a className="modern-btn modern-btn--secondary" href={showURL}>
-                Cancel
-              </a>
-            </div>
           </section>
         </div>
 
