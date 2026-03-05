@@ -780,6 +780,46 @@
   color: #8f3535;
 }
 
+.avel-dashboard-page .avel-kpi-customer-chip {
+  font-weight: 700;
+}
+
+.avel-dashboard-page .avel-kpi-customer-chip--tone-1 {
+  border-color: #b8d8e8;
+  background: #eef7ff;
+  color: #1f5f7b;
+}
+
+.avel-dashboard-page .avel-kpi-customer-chip--tone-2 {
+  border-color: #bcdcbf;
+  background: #eef9ef;
+  color: #1f6b3a;
+}
+
+.avel-dashboard-page .avel-kpi-customer-chip--tone-3 {
+  border-color: #e8d6b8;
+  background: #fff8eb;
+  color: #8a5b12;
+}
+
+.avel-dashboard-page .avel-kpi-customer-chip--tone-4 {
+  border-color: #d8c7ea;
+  background: #f7f1ff;
+  color: #64409b;
+}
+
+.avel-dashboard-page .avel-kpi-customer-chip--tone-5 {
+  border-color: #e7c6cf;
+  background: #fff2f5;
+  color: #92354f;
+}
+
+.avel-dashboard-page .avel-kpi-customer-chip--tone-6 {
+  border-color: #c8d8d2;
+  background: #eff8f5;
+  color: #285d4f;
+}
+
 .avel-priority-band {
   border: 1px solid #a9c4d6;
   border-radius: 16px;

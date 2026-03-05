@@ -50,6 +50,18 @@ function toStatusTokenSlug(value: string): string {
   return slug || 'default';
 }
 
+function toCustomerTone(value: string): number {
+  const text = String(value || '').trim().toLowerCase();
+  if (!text) {
+    return 1;
+  }
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  }
+  return (hash % 6) + 1;
+}
+
 function readExecutiveScorecardVisibility(): boolean {
   try {
     return window.localStorage.getItem(KPI_EXECUTIVE_SCORECARD_PREF_KEY) === '1';
@@ -628,7 +640,9 @@ export function KpisPage({ bootstrap }: Props) {
                     <tr key={`kpi-company-${row.companyID}`}>
                       <td>
                         <a className="modern-link" href={`${bootstrap.indexName}?m=companies&a=show&companyID=${row.companyID}&ui=modern`}>
-                          {row.companyName}
+                          <span className={`modern-chip avel-kpi-customer-chip avel-kpi-customer-chip--tone-${toCustomerTone(row.companyName)}`}>
+                            {row.companyName}
+                          </span>
                         </a>
                       </td>
                       <td>{row.newPositions}</td>
@@ -726,7 +740,11 @@ export function KpisPage({ bootstrap }: Props) {
                       {data.filters.showDeadline ? (
                         <td className={toSemanticCellClass(row.timeToDeadlineClass) || undefined}>{row.timeToDeadline}</td>
                       ) : null}
-                      <td>{row.companyName}</td>
+                      <td>
+                        <span className={`modern-chip avel-kpi-customer-chip avel-kpi-customer-chip--tone-${toCustomerTone(row.companyName)}`}>
+                          {row.companyName}
+                        </span>
+                      </td>
                       <td>{row.totalOpenPositions}</td>
                       <td>{row.submittedCount}</td>
                       <td className={toSemanticCellClass(row.acceptanceRateClass) || undefined}>{row.acceptanceRate}</td>
@@ -770,7 +788,11 @@ export function KpisPage({ bootstrap }: Props) {
                           {row.title}
                         </a>
                       </td>
-                      <td>{row.companyName}</td>
+                      <td>
+                        <span className={`modern-chip avel-kpi-customer-chip avel-kpi-customer-chip--tone-${toCustomerTone(row.companyName)}`}>
+                          {row.companyName}
+                        </span>
+                      </td>
                       <td>{row.receivedDate}</td>
                       <td>{row.submittedDate}</td>
                       <td className={toSemanticCellClass(row.daysClass) || undefined}>{row.daysValue}</td>
