@@ -3243,83 +3243,252 @@
   color: #84501b;
 }
 
-.avel-dashboard-page .avel-assign-job-modal {
+.avel-assign-job-modal {
   display: grid;
+  gap: 12px;
+}
+
+.avel-assign-job-modal__intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 10px;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__hint {
+.avel-assign-job-modal__hint {
   margin: 0;
   color: #4d6f82;
-  font-size: 0.78rem;
+  font-size: 0.79rem;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__search {
+.avel-assign-job-modal__result-count {
+  flex-shrink: 0;
+  border: 1px solid #c8dceb;
+  background: #f2f8fc;
+  color: #345e75;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.avel-assign-job-modal__toolbar {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+  align-items: end;
+}
+
+.avel-assign-job-modal__search {
   margin: 0;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__list {
+.avel-assign-job-modal__status-field {
+  margin: 0;
+}
+
+.avel-assign-job-modal__quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.avel-assign-job-modal__chip {
+  border: 1px solid #bfd6e5;
+  background: #f6fbff;
+  color: #2a556d;
+  border-radius: 999px;
+  min-height: 30px;
+  padding: 0 11px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.avel-assign-job-modal__chip:hover {
+  border-color: #94bed6;
+  background: #ecf7ff;
+}
+
+.avel-assign-job-modal__chip.is-active {
+  border-color: #4b95bb;
+  background: #e1f1fb;
+  color: #0f506f;
+}
+
+.avel-assign-job-modal__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #c8dceb;
+  background: #f8fcff;
+  color: #436579;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.71rem;
+  font-weight: 600;
+}
+
+.avel-assign-job-modal__toggle input {
+  width: 14px;
+  height: 14px;
+}
+
+.avel-assign-job-modal__selection {
+  border: 1px solid #bbd6e7;
+  border-radius: 10px;
+  background: #edf7fd;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.avel-assign-job-modal__selection-text {
+  color: #113f57;
+  font-size: 0.8rem;
+}
+
+.avel-assign-job-modal__selection-meta {
+  color: #4a6f84;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.avel-assign-job-modal__list {
   border: 1px solid #bfd6e5;
   border-radius: 12px;
   background: linear-gradient(180deg, #fafdff 0%, #f2f8fc 100%);
-  max-height: 320px;
+  max-height: 360px;
   overflow: auto;
   padding: 8px;
   display: grid;
-  gap: 6px;
+  gap: 7px;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__item {
+.avel-assign-job-modal__item {
   width: 100%;
   border: 1px solid #c6dbe8;
   border-radius: 10px;
   background: #ffffff;
   color: #184a63;
   text-align: left;
-  padding: 8px 10px;
+  padding: 9px 10px;
   display: grid;
-  gap: 3px;
+  gap: 6px;
   cursor: pointer;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__item:hover {
+.avel-assign-job-modal__item:hover {
   border-color: #9ec4d9;
   background: #f5fbff;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__item.is-selected {
+.avel-assign-job-modal__item.is-selected {
   border-color: #5fa3c2;
   box-shadow: 0 0 0 3px rgba(0, 151, 189, 0.14);
   background: #eff8fd;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__item:disabled {
-  opacity: 0.6;
+.avel-assign-job-modal__item:disabled {
+  opacity: 0.66;
   cursor: not-allowed;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__item-title {
-  font-size: 0.82rem;
-  font-weight: 700;
+.avel-assign-job-modal__item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__item-meta {
-  font-size: 0.72rem;
+.avel-assign-job-modal__item-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #133f57;
+}
+
+.avel-assign-job-modal__item-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.avel-assign-job-modal__item-meta {
+  font-size: 0.74rem;
   color: #5b7b8f;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__badge {
-  justify-self: start;
-  border: 1px solid #e3c49a;
-  background: #fff3de;
-  color: #94561b;
+.avel-assign-job-modal__status,
+.avel-assign-job-modal__badge {
   border-radius: 999px;
-  padding: 1px 8px;
-  font-size: 0.65rem;
+  padding: 2px 8px;
+  font-size: 0.66rem;
   font-weight: 700;
+  line-height: 1.25;
 }
 
-.avel-dashboard-page .avel-assign-job-modal__empty {
+.avel-assign-job-modal__status {
+  border: 1px solid #c8dceb;
+  background: #f4f9fd;
+  color: #3f6277;
+}
+
+.avel-assign-job-modal__status--active {
+  border-color: #9fd7b8;
+  background: #e7f8ef;
+  color: #1d6a45;
+}
+
+.avel-assign-job-modal__status--onhold {
+  border-color: #e4c896;
+  background: #fff5e6;
+  color: #7f5318;
+}
+
+.avel-assign-job-modal__status--full,
+.avel-assign-job-modal__status--closed,
+.avel-assign-job-modal__status--cancelled {
+  border-color: #d2c8d8;
+  background: #f3eef6;
+  color: #654f76;
+}
+
+.avel-assign-job-modal__status--default {
+  border-color: #c8dceb;
+  background: #f4f9fd;
+  color: #3f6277;
+}
+
+.avel-assign-job-modal__badge {
+  border: 1px solid #d1dce4;
+  background: #f8fbfe;
+  color: #4d6c7f;
+}
+
+.avel-assign-job-modal__badge--open {
+  border-color: #9fd7b8;
+  background: #eaf9f0;
+  color: #226a47;
+}
+
+.avel-assign-job-modal__badge--no-openings {
+  border-color: #d4c7d9;
+  background: #f5eff8;
+  color: #6a5378;
+}
+
+.avel-assign-job-modal__badge--assigned {
+  border-color: #e3c49a;
+  background: #fff3de;
+  color: #94561b;
+}
+
+.avel-assign-job-modal__empty {
   border: 1px dashed #c8dceb;
   border-radius: 10px;
   background: #f9fdff;
@@ -3327,6 +3496,35 @@
   padding: 14px 12px;
   font-size: 0.78rem;
   text-align: center;
+}
+
+.avel-assign-job-modal__assignable-note {
+  margin: 0;
+  color: #5d7b8f;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 900px) {
+  .avel-assign-job-modal__intro,
+  .avel-assign-job-modal__selection {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .avel-assign-job-modal__toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .avel-assign-job-modal__item-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .avel-assign-job-modal__item-badges {
+    justify-content: flex-start;
+  }
 }
 
 .avel-dashboard-page .avel-calendar-event-actions {
