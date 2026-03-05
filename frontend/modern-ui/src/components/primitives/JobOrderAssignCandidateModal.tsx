@@ -14,6 +14,7 @@ type Props = {
   bootstrap: UIModeBootstrap;
   sourceURL: string;
   subtitle?: string;
+  initialSearchTerm?: string;
   onClose: () => void;
   onAssigned: (message: string) => void;
 };
@@ -23,6 +24,7 @@ export function JobOrderAssignCandidateModal({
   bootstrap,
   sourceURL,
   subtitle,
+  initialSearchTerm,
   onClose,
   onAssigned
 }: Props) {
@@ -44,8 +46,9 @@ export function JobOrderAssignCandidateModal({
 
     let isMounted = true;
     setData(null);
-    setSearchTerm('');
-    setAppliedSearchTerm('');
+    const initialQuery = String(initialSearchTerm || '').trim();
+    setSearchTerm(initialQuery);
+    setAppliedSearchTerm(initialQuery);
     setSelectedCandidateID(0);
     setSelectedStatusID(0);
     setLoading(true);
@@ -54,7 +57,7 @@ export function JobOrderAssignCandidateModal({
     setConfirmRequired(false);
     setConfirmMessage('');
 
-    fetchJobOrderAssignCandidateData(bootstrap, sourceURL, '')
+    fetchJobOrderAssignCandidateData(bootstrap, sourceURL, initialQuery)
       .then((payload) => {
         if (!isMounted) {
           return;
@@ -78,7 +81,7 @@ export function JobOrderAssignCandidateModal({
     return () => {
       isMounted = false;
     };
-  }, [bootstrap, isOpen, sourceURL]);
+  }, [bootstrap, initialSearchTerm, isOpen, sourceURL]);
 
   const refreshSearch = async (query: string) => {
     setLoading(true);

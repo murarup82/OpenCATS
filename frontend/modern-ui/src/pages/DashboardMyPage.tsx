@@ -15,6 +15,7 @@ import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
+import { DashboardAssignCandidateLauncherModal } from '../components/primitives/DashboardAssignCandidateLauncherModal';
 import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
@@ -133,7 +134,9 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const [assignModal, setAssignModal] = useState<{
     url: string;
     jobOrderName: string;
+    initialCandidateQuery: string;
   } | null>(null);
+  const [assignLauncherOpen, setAssignLauncherOpen] = useState<boolean>(false);
   const [detailsModal, setDetailsModal] = useState<{
     url: string;
     title: string;
@@ -403,21 +406,14 @@ export function DashboardMyPage({ bootstrap }: Props) {
   );
 
   const openAssignWorkspace = useCallback(() => {
-    const jobOrderID = Number(data?.filters.jobOrderID || 0);
-    if (jobOrderID <= 0) {
-      setInteractionError('Please select a Job Order first, then click Assign Candidate.');
+    const availableJobOrders = data?.options.jobOrders || [];
+    if (availableJobOrders.length === 0) {
+      setInteractionError('No job orders are available for assignment in this filter scope.');
       return;
     }
-
-    const url = `${bootstrap.indexName}?m=joborders&a=considerCandidateSearch&jobOrderID=${encodeURIComponent(String(jobOrderID))}`;
-    const jobOrderTitle =
-      data?.options.jobOrders.find((jobOrder) => Number(jobOrder.jobOrderID) === jobOrderID)?.title || '';
-    setAssignModal({
-      url,
-      jobOrderName: toDisplayText(jobOrderTitle, `Job Order #${jobOrderID}`)
-    });
+    setAssignLauncherOpen(true);
     setInteractionError('');
-  }, [bootstrap.indexName, data?.filters.jobOrderID, data?.options.jobOrders]);
+  }, [data?.options.jobOrders]);
 
   const byStatusID = new Map<number, StatusCatalogEntry>();
   (data?.options.statuses ?? []).forEach((statusOption) => {
@@ -1144,10 +1140,32 @@ export function DashboardMyPage({ bootstrap }: Props) {
           bootstrap={bootstrap}
           sourceURL={assignModal?.url || ''}
           subtitle={assignModal?.jobOrderName}
+          initialSearchTerm={assignModal?.initialCandidateQuery || ''}
           onClose={() => setAssignModal(null)}
           onAssigned={() => {
             refreshDashboard();
             showToast('Candidate assigned to job order.');
+          }}
+        />
+
+        <DashboardAssignCandidateLauncherModal
+          isOpen={assignLauncherOpen}
+          jobOrders={data?.options.jobOrders || []}
+          initialJobOrderID={Number(data?.filters.jobOrderID || 0)}
+          initialCandidateQuery={searchTerm}
+          onClose={() => setAssignLauncherOpen(false)}
+          onStart={({ jobOrderID, candidateQuery }) => {
+            const selectedJobOrder = (data?.options.jobOrders || []).find(
+              (jobOrder) => Number(jobOrder.jobOrderID) === Number(jobOrderID)
+            );
+            setAssignModal({
+              url: `${bootstrap.indexName}?m=joborders&a=considerCandidateSearch&jobOrderID=${encodeURIComponent(
+                String(jobOrderID)
+              )}`,
+              jobOrderName: toDisplayText(selectedJobOrder?.title, `Job Order #${jobOrderID}`),
+              initialCandidateQuery: candidateQuery
+            });
+            setAssignLauncherOpen(false);
           }}
         />
 

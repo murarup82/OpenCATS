@@ -3504,6 +3504,84 @@
   font-size: 0.72rem;
 }
 
+.avel-assign-launcher-modal {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-assign-launcher-modal__hint {
+  margin: 0;
+  color: #4d6f82;
+  font-size: 0.79rem;
+}
+
+.avel-assign-launcher-modal__search,
+.avel-assign-launcher-modal__candidate-query {
+  margin: 0;
+}
+
+.avel-assign-launcher-modal__meta {
+  color: #5d7b8f;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.avel-assign-launcher-modal__list {
+  border: 1px solid #bfd6e5;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fafdff 0%, #f2f8fc 100%);
+  max-height: 340px;
+  overflow: auto;
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-assign-launcher-modal__item {
+  width: 100%;
+  border: 1px solid #c6dbe8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #184a63;
+  text-align: left;
+  padding: 8px 10px;
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.avel-assign-launcher-modal__item:hover {
+  border-color: #9ec4d9;
+  background: #f5fbff;
+}
+
+.avel-assign-launcher-modal__item.is-selected {
+  border-color: #5fa3c2;
+  box-shadow: 0 0 0 3px rgba(0, 151, 189, 0.14);
+  background: #eff8fd;
+}
+
+.avel-assign-launcher-modal__item-title {
+  color: #133f57;
+  font-size: 0.81rem;
+  font-weight: 700;
+}
+
+.avel-assign-launcher-modal__item-meta {
+  color: #5b7b8f;
+  font-size: 0.73rem;
+}
+
+.avel-assign-launcher-modal__empty {
+  border: 1px dashed #c8dceb;
+  border-radius: 10px;
+  background: #f9fdff;
+  color: #678595;
+  padding: 14px 12px;
+  font-size: 0.78rem;
+  text-align: center;
+}
+
 @media (max-width: 900px) {
   .avel-assign-job-modal__intro,
   .avel-assign-job-modal__selection {
