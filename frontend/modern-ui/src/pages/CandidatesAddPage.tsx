@@ -267,6 +267,40 @@ function getChangedTrackedFields(
   return TRACKED_FIELD_KEYS.filter((fieldKey) => before[fieldKey] !== after[fieldKey]);
 }
 
+function toISODateInput(value: string): string {
+  const raw = String(value || '').trim();
+  const match = /^(\d{2})-(\d{2})-(\d{2})$/.exec(raw);
+  if (!match) {
+    return '';
+  }
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  const shortYear = Number(match[3]);
+  if (!Number.isFinite(month) || !Number.isFinite(day) || !Number.isFinite(shortYear)) {
+    return '';
+  }
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return '';
+  }
+  const year = shortYear >= 70 ? 1900 + shortYear : 2000 + shortYear;
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function toLegacyShortDate(isoDate: string): string {
+  const raw = String(isoDate || '').trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (!match) {
+    return '';
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return '';
+  }
+  return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-${String(year % 100).padStart(2, '0')}`;
+}
+
 export function CandidatesAddPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesAddModernDataResponse | null>(null);
   const [formState, setFormState] = useState<CandidateAddFormState | null>(null);
@@ -292,6 +326,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [aiPrefillError, setAiPrefillError] = useState('');
   const [aiUndoSnapshot, setAiUndoSnapshot] = useState<CandidateAddFormState | null>(null);
   const [fieldSources, setFieldSources] = useState<Partial<Record<CandidateTrackedFieldKey, CandidateFieldSource>>>({});
+  const formStateRef = useRef<CandidateAddFormState | null>(null);
   const targetModule = String(bootstrap.targetModule || '').toLowerCase();
   const targetAction = String(bootstrap.targetAction || '').toLowerCase();
   const isJobOrderQuickAddMode = targetModule === 'joborders' && targetAction === 'addcandidatemodal';
@@ -331,6 +366,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
       isMounted = false;
     };
   }, [bootstrap, serverQueryString]);
+
+  useEffect(() => {
+    formStateRef.current = formState;
+  }, [formState]);
 
   const getFieldSource = (fieldKey: CandidateTrackedFieldKey): CandidateFieldSource | null =>
     fieldSources[fieldKey] || null;
@@ -557,24 +596,22 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     try {
       const response = await submitCandidatesAddResumeAction(bootstrap, formData);
       setData(response);
-      let changedByParse: CandidateTrackedFieldKey[] = [];
       const parsedFormState = toFormState(response);
-      setFormState((current) => {
-        if (!current) {
-          return parsedFormState;
-        }
-        const merged = {
-          ...parsedFormState,
-          extraFields: {
-            ...current.extraFields,
-            ...parsedFormState.extraFields
+      const currentState = formStateRef.current;
+      const mergedState = currentState
+        ? {
+            ...currentState,
+            ...parsedFormState,
+            extraFields: {
+              ...currentState.extraFields,
+              ...parsedFormState.extraFields
+            }
           }
-        };
-        if (mode === 'parse') {
-          changedByParse = getChangedTrackedFields(current, merged);
-        }
-        return merged;
-      });
+        : parsedFormState;
+      setFormState(mergedState);
+      formStateRef.current = mergedState;
+      const changedByParse =
+        mode === 'parse' && currentState ? getChangedTrackedFields(currentState, mergedState) : [];
       if (mode === 'parse' && changedByParse.length > 0) {
         setFieldSources((current) => {
           const next = { ...current };
@@ -600,7 +637,11 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   };
 
   const runAIPrefill = async () => {
-    if (!formState || aiPrefillPending) {
+    if (aiPrefillPending) {
+      return;
+    }
+    const currentState = formStateRef.current;
+    if (!currentState) {
       return;
     }
     if (resumeTempFile.trim() === '') {
@@ -611,7 +652,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     setAiPrefillPending(true);
     setAiPrefillError('');
     setAiPrefillStatus('Submitting AI prefill request...');
-    setAiUndoSnapshot({ ...formState, extraFields: { ...formState.extraFields } });
+    setAiUndoSnapshot({ ...currentState, extraFields: { ...currentState.extraFields } });
 
     try {
       const createResult = await createTalentFitFlowCandidateParseJob({
@@ -635,15 +676,11 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         throw new Error(statusResult.errorMessage || `AI prefill failed with status "${status || 'UNKNOWN'}".`);
       }
 
-      let changedByAI: CandidateTrackedFieldKey[] = [];
-      setFormState((current) => {
-        if (!current) {
-          return current;
-        }
-        const merged = mergeAIPrefillIntoFormState(current, statusResult.candidate);
-        changedByAI = getChangedTrackedFields(current, merged);
-        return merged;
-      });
+      const baseState = formStateRef.current || currentState;
+      const mergedState = mergeAIPrefillIntoFormState(baseState, statusResult.candidate);
+      const changedByAI = getChangedTrackedFields(baseState, mergedState);
+      setFormState(mergedState);
+      formStateRef.current = mergedState;
       if (changedByAI.length > 0) {
         setFieldSources((current) => {
           const next = { ...current };
@@ -711,31 +748,6 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     { value: '0', label: 'No' },
     { value: '1', label: 'Yes' }
   ];
-  const genderOptions: SelectMenuOption[] = [
-    { value: '', label: '----' },
-    { value: 'm', label: 'Male' },
-    { value: 'f', label: 'Female' }
-  ];
-  const ethnicityOptions: SelectMenuOption[] = [
-    { value: '', label: '----' },
-    { value: '1', label: 'American Indian' },
-    { value: '2', label: 'Asian or Pacific Islander' },
-    { value: '3', label: 'Hispanic or Latino' },
-    { value: '4', label: 'Non-Hispanic Black' },
-    { value: '5', label: 'Non-Hispanic White' }
-  ];
-  const veteranOptions: SelectMenuOption[] = [
-    { value: '', label: '----' },
-    { value: '1', label: 'No' },
-    { value: '2', label: 'Eligible Veteran' },
-    { value: '3', label: 'Disabled Veteran' },
-    { value: '4', label: 'Eligible and Disabled' }
-  ];
-  const disabilityOptions: SelectMenuOption[] = [
-    { value: '', label: '----' },
-    { value: 'No', label: 'No' },
-    { value: 'Yes', label: 'Yes' }
-  ];
   const parseLimitRaw = data.resumeImport.parsingStatus?.['parseLimit'];
   const parseLimitText =
     typeof parseLimitRaw === 'number' && Number.isFinite(parseLimitRaw) ? `Remaining parses: ${parseLimitRaw}` : '';
@@ -777,7 +789,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         )}
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--add avel-candidate-edit-panel--compact">
+          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--add avel-candidate-edit-panel--compact avel-candidate-edit-panel--workbench">
             <div className="avel-list-panel__header">
               <h2 className="avel-list-panel__title">Candidate Details</h2>
               <p className="avel-list-panel__hint">Required fields: First Name, Last Name.</p>
@@ -854,6 +866,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
               <input type="hidden" name="dup_soft_override" value={softOverrideAccepted ? '1' : '0'} />
               <input type="hidden" name="documentTempFile" id="documentTempFile" value={resumeTempFile} />
+              <input type="hidden" name="gender" value={formState.gender} />
+              <input type="hidden" name="race" value={formState.race} />
+              <input type="hidden" name="veteran" value={formState.veteran} />
+              <input type="hidden" name="disability" value={formState.disability} />
 
               <div className="avel-candidate-form-strip">
                 <span className="modern-chip modern-chip--info">Required: First Name, Last Name</span>
@@ -989,283 +1005,271 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </div>
               ) : null}
 
-              <div className="avel-candidate-edit-grid">
-                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
-                  <strong>Identity & Contact</strong>
-                  <span>Core profile identity and communication data.</span>
-                </div>
-                <label className="modern-command-field">
-                  {renderFieldLabel('First Name *', 'firstName')}
-                  <input
-                    className={getFieldClassName('firstName')}
-                    type="text"
-                    name="firstName"
-                    value={formState.firstName}
-                    onChange={(event) => {
-                      clearFieldSource('firstName');
-                      setFormState((current) => (current ? { ...current, firstName: event.target.value } : current));
-                    }}
-                    required
-                  />
-                </label>
+              <div className="avel-candidate-edit-sections">
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--status">
+                  <div className="avel-candidate-form-divider avel-candidate-form-divider--status">
+                    <strong>Profile Status & GDPR</strong>
+                    <span>GDPR controls used by legacy validation and reporting.</span>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
+                    <SelectMenu
+                      label="GDPR Signed"
+                      value={formState.gdprSigned}
+                      options={gdprOptions}
+                      className="modern-command-field avel-candidate-edit-field--span-2"
+                      onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
+                    />
 
-                <label className="modern-command-field">
-                  {renderFieldLabel('Last Name *', 'lastName')}
-                  <input
-                    className={getFieldClassName('lastName')}
-                    type="text"
-                    name="lastName"
-                    value={formState.lastName}
-                    onChange={(event) => {
-                      clearFieldSource('lastName');
-                      setFormState((current) => (current ? { ...current, lastName: event.target.value } : current));
-                    }}
-                    required
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">GDPR Expiration</span>
+                      <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
+                      <input
+                        className="avel-form-control"
+                        type="date"
+                        value={toISODateInput(formState.gdprExpirationDate)}
+                        onChange={(event) =>
+                          setFormState((current) =>
+                            current ? { ...current, gdprExpirationDate: toLegacyShortDate(event.target.value) } : current
+                          )
+                        }
+                      />
+                    </label>
+                  </div>
+                </section>
 
-                <label className="modern-command-field">
-                  {renderFieldLabel('Email', 'email1')}
-                  <input
-                    className={getFieldClassName('email1')}
-                    type="email"
-                    name="email1"
-                    value={formState.email1}
-                    onChange={(event) => {
-                      clearFieldSource('email1');
-                      setFormState((current) => (current ? { ...current, email1: event.target.value } : current));
-                    }}
-                  />
-                </label>
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--identity">
+                  <div className="avel-candidate-form-divider avel-candidate-form-divider--identity">
+                    <strong>Profile & Reachability</strong>
+                    <span>Identity, contact channels, and candidate availability details.</span>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    <label className="modern-command-field">
+                      {renderFieldLabel('First Name *', 'firstName')}
+                      <input
+                        className={getFieldClassName('firstName')}
+                        type="text"
+                        name="firstName"
+                        value={formState.firstName}
+                        onChange={(event) => {
+                          clearFieldSource('firstName');
+                          setFormState((current) => (current ? { ...current, firstName: event.target.value } : current));
+                        }}
+                        required
+                      />
+                    </label>
 
-                <label className="modern-command-field">
-                  {renderFieldLabel('Cell Phone', 'phoneCell')}
-                  <input
-                    className={getFieldClassName('phoneCell')}
-                    type="text"
-                    name="phoneCell"
-                    value={formState.phoneCell}
-                    onChange={(event) => {
-                      clearFieldSource('phoneCell');
-                      setFormState((current) => (current ? { ...current, phoneCell: event.target.value } : current));
-                    }}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      {renderFieldLabel('Last Name *', 'lastName')}
+                      <input
+                        className={getFieldClassName('lastName')}
+                        type="text"
+                        name="lastName"
+                        value={formState.lastName}
+                        onChange={(event) => {
+                          clearFieldSource('lastName');
+                          setFormState((current) => (current ? { ...current, lastName: event.target.value } : current));
+                        }}
+                        required
+                      />
+                    </label>
 
-                <label className="modern-command-field">
-                  {renderFieldLabel('City', 'city')}
-                  <input
-                    className={getFieldClassName('city')}
-                    type="text"
-                    name="city"
-                    value={formState.city}
-                    onChange={(event) => {
-                      clearFieldSource('city');
-                      setFormState((current) => (current ? { ...current, city: event.target.value } : current));
-                    }}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      {renderFieldLabel('Email', 'email1')}
+                      <input
+                        className={getFieldClassName('email1')}
+                        type="email"
+                        name="email1"
+                        value={formState.email1}
+                        onChange={(event) => {
+                          clearFieldSource('email1');
+                          setFormState((current) => (current ? { ...current, email1: event.target.value } : current));
+                        }}
+                      />
+                    </label>
 
-                <label className="modern-command-field">
-                  {renderFieldLabel('Country', 'country')}
-                  <input
-                    className={getFieldClassName('country')}
-                    type="text"
-                    name="country"
-                    value={formState.country}
-                    onChange={(event) => {
-                      clearFieldSource('country');
-                      setFormState((current) => (current ? { ...current, country: event.target.value } : current));
-                    }}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      {renderFieldLabel('Cell Phone', 'phoneCell')}
+                      <input
+                        className={getFieldClassName('phoneCell')}
+                        type="text"
+                        name="phoneCell"
+                        value={formState.phoneCell}
+                        onChange={(event) => {
+                          clearFieldSource('phoneCell');
+                          setFormState((current) => (current ? { ...current, phoneCell: event.target.value } : current));
+                        }}
+                      />
+                    </label>
 
-                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
-                  <strong>Availability & Source</strong>
-                  <span>When candidate is reachable and where profile originates.</span>
-                </div>
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Best Time To Call</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="bestTimeToCall"
-                    value={formState.bestTimeToCall}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      {renderFieldLabel('City', 'city')}
+                      <input
+                        className={getFieldClassName('city')}
+                        type="text"
+                        name="city"
+                        value={formState.city}
+                        onChange={(event) => {
+                          clearFieldSource('city');
+                          setFormState((current) => (current ? { ...current, city: event.target.value } : current));
+                        }}
+                      />
+                    </label>
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Date Available (MM-DD-YY)</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="dateAvailable"
-                    value={formState.dateAvailable}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, dateAvailable: event.target.value } : current))}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      {renderFieldLabel('Country', 'country')}
+                      <input
+                        className={getFieldClassName('country')}
+                        type="text"
+                        name="country"
+                        value={formState.country}
+                        onChange={(event) => {
+                          clearFieldSource('country');
+                          setFormState((current) => (current ? { ...current, country: event.target.value } : current));
+                        }}
+                      />
+                    </label>
 
-                <input type="hidden" name="source" value={formState.source} />
-                <SelectMenu
-                  label="Source"
-                  value={formState.source}
-                  options={sourceOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, source: value } : current))}
-                />
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Best Time To Call</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="bestTimeToCall"
+                        value={formState.bestTimeToCall}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
+                      />
+                    </label>
 
-                <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
-                <SelectMenu
-                  label="GDPR Signed"
-                  value={formState.gdprSigned}
-                  options={gdprOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
-                />
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Date Available</span>
+                      <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
+                      <input
+                        className="avel-form-control"
+                        type="date"
+                        value={toISODateInput(formState.dateAvailable)}
+                        onChange={(event) =>
+                          setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
+                        }
+                      />
+                    </label>
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">GDPR Expiration (MM-DD-YY)</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="gdprExpirationDate"
-                    value={formState.gdprExpirationDate}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, gdprExpirationDate: event.target.value } : current))}
-                  />
-                </label>
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        name="canRelocate"
+                        checked={formState.canRelocate}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Open To Relocation</span>
+                    </label>
 
-                <label className="modern-command-field">
-                  {renderFieldLabel('Current Employer', 'currentEmployer')}
-                  <input
-                    className={getFieldClassName('currentEmployer')}
-                    type="text"
-                    name="currentEmployer"
-                    value={formState.currentEmployer}
-                    onChange={(event) => {
-                      clearFieldSource('currentEmployer');
-                      setFormState((current) => (current ? { ...current, currentEmployer: event.target.value } : current));
-                    }}
-                  />
-                </label>
+                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                      {renderFieldLabel('Address', 'address')}
+                      <textarea
+                        className={getFieldClassName('address')}
+                        name="address"
+                        value={formState.address}
+                        onChange={(event) => {
+                          clearFieldSource('address');
+                          setFormState((current) => (current ? { ...current, address: event.target.value } : current));
+                        }}
+                        rows={2}
+                      />
+                    </label>
+                  </div>
+                </section>
 
-                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
-                  <strong>Compensation & Narrative</strong>
-                  <span>Comp package expectations plus role-fit context for recruiters.</span>
-                </div>
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Current Pay</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="currentPay"
-                    value={formState.currentPay}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, currentPay: event.target.value } : current))}
-                  />
-                </label>
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--source">
+                  <div className="avel-candidate-form-divider avel-candidate-form-divider--source">
+                    <strong>Sourcing</strong>
+                    <span>Track profile origin and current company context.</span>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    <input type="hidden" name="source" value={formState.source} />
+                    <SelectMenu
+                      label="Source"
+                      value={formState.source}
+                      options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
+                      className="modern-command-field avel-candidate-edit-field--span-2"
+                      onChange={(value) => setFormState((current) => (current ? { ...current, source: value } : current))}
+                    />
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Desired Pay</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="desiredPay"
-                    value={formState.desiredPay}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, desiredPay: event.target.value } : current))}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      {renderFieldLabel('Current Employer', 'currentEmployer')}
+                      <input
+                        className={getFieldClassName('currentEmployer')}
+                        type="text"
+                        name="currentEmployer"
+                        value={formState.currentEmployer}
+                        onChange={(event) => {
+                          clearFieldSource('currentEmployer');
+                          setFormState((current) => (current ? { ...current, currentEmployer: event.target.value } : current));
+                        }}
+                      />
+                    </label>
+                  </div>
+                </section>
 
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  {renderFieldLabel('Address', 'address')}
-                  <textarea
-                    className={getFieldClassName('address')}
-                    name="address"
-                    value={formState.address}
-                    onChange={(event) => {
-                      clearFieldSource('address');
-                      setFormState((current) => (current ? { ...current, address: event.target.value } : current));
-                    }}
-                    rows={2}
-                  />
-                </label>
+                <section className="avel-candidate-edit-section avel-candidate-edit-section--narrative">
+                  <div className="avel-candidate-form-divider">
+                    <strong>Compensation & Narrative</strong>
+                    <span>Comp package expectations and recruiter context.</span>
+                  </div>
+                  <div className="avel-candidate-edit-grid">
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Current Pay</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="currentPay"
+                        value={formState.currentPay}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, currentPay: event.target.value } : current))}
+                      />
+                    </label>
 
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  {renderFieldLabel('Key Skills', 'keySkills')}
-                  <textarea
-                    className={getFieldClassName('keySkills')}
-                    name="keySkills"
-                    value={formState.keySkills}
-                    onChange={(event) => {
-                      clearFieldSource('keySkills');
-                      setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current));
-                    }}
-                    rows={2}
-                  />
-                </label>
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Desired Pay</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="desiredPay"
+                        value={formState.desiredPay}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, desiredPay: event.target.value } : current))}
+                      />
+                    </label>
 
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  {renderFieldLabel('Notes', 'notes')}
-                  <MarkdownTextarea
-                    name="notes"
-                    value={formState.notes}
-                    rows={6}
-                    className={getEditorClassName('notes')}
-                    ariaLabel="Candidate notes"
-                    onChange={(nextValue) => {
-                      clearFieldSource('notes');
-                      setFormState((current) => (current ? { ...current, notes: nextValue } : current));
-                    }}
-                  />
-                </label>
-              </div>
+                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                      {renderFieldLabel('Key Skills', 'keySkills')}
+                      <textarea
+                        className={getFieldClassName('keySkills')}
+                        name="keySkills"
+                        value={formState.keySkills}
+                        onChange={(event) => {
+                          clearFieldSource('keySkills');
+                          setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current));
+                        }}
+                        rows={2}
+                      />
+                    </label>
 
-              <div className="avel-candidate-form-divider">
-                <strong>Mobility & Compliance Attributes</strong>
-                <span>Controls used for relocation and compliance reporting.</span>
-              </div>
-              <div className="avel-candidate-edit-toggles" role="group" aria-label="Candidate mobility and compliance options">
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="canRelocate"
-                    checked={formState.canRelocate}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Can Relocate</span>
-                </label>
-              </div>
-
-              <div className="avel-candidate-edit-grid">
-                <input type="hidden" name="gender" value={formState.gender} />
-                <SelectMenu
-                  label="Gender"
-                  value={formState.gender}
-                  options={genderOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, gender: value } : current))}
-                />
-
-                <input type="hidden" name="race" value={formState.race} />
-                <SelectMenu
-                  label="Ethnicity"
-                  value={formState.race}
-                  options={ethnicityOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, race: value } : current))}
-                />
-
-                <input type="hidden" name="veteran" value={formState.veteran} />
-                <SelectMenu
-                  label="Veteran Status"
-                  value={formState.veteran}
-                  options={veteranOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, veteran: value } : current))}
-                />
-
-                <input type="hidden" name="disability" value={formState.disability} />
-                <SelectMenu
-                  label="Disability Status"
-                  value={formState.disability}
-                  options={disabilityOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, disability: value } : current))}
-                />
+                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                      {renderFieldLabel('Notes', 'notes')}
+                      <MarkdownTextarea
+                        name="notes"
+                        value={formState.notes}
+                        rows={6}
+                        className={getEditorClassName('notes')}
+                        ariaLabel="Candidate notes"
+                        onChange={(nextValue) => {
+                          clearFieldSource('notes');
+                          setFormState((current) => (current ? { ...current, notes: nextValue } : current));
+                        }}
+                      />
+                    </label>
+                  </div>
+                </section>
               </div>
 
               {data.extraFields.length > 0 ? (
