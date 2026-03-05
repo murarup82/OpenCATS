@@ -207,6 +207,18 @@ export function KpisPage({ bootstrap }: Props) {
   const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
 
   useEffect(() => {
+    const query = new URLSearchParams(serverQueryString);
+    if (query.has('jobOrderScope')) {
+      return;
+    }
+    query.set('m', 'kpis');
+    query.delete('a');
+    query.delete('resetKpiFilters');
+    query.set('jobOrderScope', 'open');
+    applyServerQuery(query);
+  }, [serverQueryString, applyServerQuery]);
+
+  useEffect(() => {
     let mounted = true;
     setLoading(true);
     setError('');
@@ -331,6 +343,54 @@ export function KpisPage({ bootstrap }: Props) {
   const sourceMixStyle = {
     background: `conic-gradient(#0f98c0 0deg ${sourceInternalAngle}deg, #d18b32 ${sourceInternalAngle}deg 360deg)`
   };
+  const hideClosedJobOrders = data.filters.jobOrderScope === 'open';
+  const activeFilterChips: Array<{ key: string; label: string; onClear?: () => void }> = [];
+  if (data.filters.officialReports) {
+    activeFilterChips.push({
+      key: 'official-reports',
+      label: 'Official Reports',
+      onClear: () => updateFilter('officialReports', false)
+    });
+  }
+  if (data.filters.showDeadline) {
+    activeFilterChips.push({
+      key: 'show-deadline',
+      label: 'Show Deadline',
+      onClear: () => updateFilter('showDeadline', false)
+    });
+  }
+  if (data.filters.showExpectedFilled) {
+    activeFilterChips.push({
+      key: 'show-expected-filled',
+      label: 'Show Expected Filled',
+      onClear: () => updateFilter('showExpectedFilled', false)
+    });
+  }
+  if (hideClosedJobOrders) {
+    activeFilterChips.push({
+      key: 'hide-closed-jo',
+      label: 'Hide Closed JO',
+      onClear: () => updateFilter('jobOrderScope', 'all')
+    });
+  }
+  if (data.filters.candidateSourceScope !== 'all') {
+    activeFilterChips.push({
+      key: 'source-scope',
+      label: `Source: ${candidateSourceScopeLabel}`,
+      onClear: () => updateFilter('candidateSourceScope', 'all')
+    });
+  }
+  if (data.filters.trendView !== 'weekly') {
+    activeFilterChips.push({
+      key: 'trend-view',
+      label: `Trend: ${trendViewLabel}`,
+      onClear: () => updateFilter('trendView', 'weekly')
+    });
+  }
+  activeFilterChips.push({
+    key: 'trend-range',
+    label: `${data.filters.trendStart} to ${data.filters.trendEnd}`
+  });
 
   return (
     <div className="avel-dashboard-page">
@@ -358,7 +418,17 @@ export function KpisPage({ bootstrap }: Props) {
                   onChange={(event) => updateFilter('officialReports', event.target.checked)}
                 />
                 <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>Official Reports</span>
+                <span className="avel-kpi-toggle-label">
+                  Official Reports
+                  <span
+                    className="avel-kpi-hint-icon"
+                    title="Limits KPIs to job orders marked for official reporting."
+                    aria-label="Official Reports help"
+                    tabIndex={0}
+                  >
+                    ?
+                  </span>
+                </span>
               </label>
               <label className="modern-command-toggle">
                 <input
@@ -367,7 +437,17 @@ export function KpisPage({ bootstrap }: Props) {
                   onChange={(event) => updateFilter('showDeadline', event.target.checked)}
                 />
                 <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>Show Deadline</span>
+                <span className="avel-kpi-toggle-label">
+                  Show Deadline
+                  <span
+                    className="avel-kpi-hint-icon"
+                    title="Shows time-to-deadline based on Expected Completion Date."
+                    aria-label="Show Deadline help"
+                    tabIndex={0}
+                  >
+                    ?
+                  </span>
+                </span>
               </label>
               <label className="modern-command-toggle">
                 <input
@@ -376,16 +456,36 @@ export function KpisPage({ bootstrap }: Props) {
                   onChange={(event) => updateFilter('showExpectedFilled', event.target.checked)}
                 />
                 <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>Show Expected Filled</span>
+                <span className="avel-kpi-toggle-label">
+                  Show Expected Filled
+                  <span
+                    className="avel-kpi-hint-icon"
+                    title="Displays expected filled positions using conversion assumptions."
+                    aria-label="Show Expected Filled help"
+                    tabIndex={0}
+                  >
+                    ?
+                  </span>
+                </span>
               </label>
               <label className="modern-command-toggle">
                 <input
                   type="checkbox"
-                  checked={data.filters.hideZeroOpenPositions}
-                  onChange={(event) => updateFilter('hideZeroOpenPositions', event.target.checked)}
+                  checked={hideClosedJobOrders}
+                  onChange={(event) => updateFilter('jobOrderScope', event.target.checked ? 'open' : 'all')}
                 />
                 <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>Hide Open=0</span>
+                <span className="avel-kpi-toggle-label">
+                  Hide Closed JO
+                  <span
+                    className="avel-kpi-hint-icon"
+                    title="When enabled, KPIs include only open job orders."
+                    aria-label="Hide Closed JO help"
+                    tabIndex={0}
+                  >
+                    ?
+                  </span>
+                </span>
               </label>
             </div>
 
@@ -445,6 +545,29 @@ export function KpisPage({ bootstrap }: Props) {
                 Reset Filters
               </button>
             </div>
+          </section>
+
+          <section className="avel-kpi-active-bar" role="region" aria-label="Active KPI filters">
+            <div className="avel-kpi-active-bar__chips">
+              {activeFilterChips.map((chip) => (
+                <span key={chip.key} className="avel-kpi-active-chip">
+                  <span>{chip.label}</span>
+                  {chip.onClear ? (
+                    <button
+                      type="button"
+                      className="avel-kpi-active-chip__clear"
+                      aria-label={`Remove ${chip.label}`}
+                      onClick={chip.onClear}
+                    >
+                      x
+                    </button>
+                  ) : null}
+                </span>
+              ))}
+            </div>
+            <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={resetFilters}>
+              Clear All
+            </button>
           </section>
 
           <section className="avel-list-panel">
@@ -518,7 +641,7 @@ export function KpisPage({ bootstrap }: Props) {
                 <div className="avel-my-notes-chip-row">
                   <span className="modern-chip modern-chip--info">JO Scope: {jobOrderScopeLabel}</span>
                   <span className="modern-chip modern-chip--info">Deadline: {data.filters.showDeadline ? 'On' : 'Off'}</span>
-                  <span className="modern-chip modern-chip--info">Hide Open=0: {data.filters.hideZeroOpenPositions ? 'On' : 'Off'}</span>
+                  <span className="modern-chip modern-chip--info">Hide Closed JO: {hideClosedJobOrders ? 'On' : 'Off'}</span>
                 </div>
               </div>
               <table className="modern-table">
@@ -569,6 +692,7 @@ export function KpisPage({ bootstrap }: Props) {
                   <span className="modern-chip modern-chip--info">Target: {'< 3 days'}</span>
                   <span className="modern-chip modern-chip--info">JO Scope: {jobOrderScopeLabel}</span>
                   <span className="modern-chip modern-chip--info">Official Reports: {data.filters.officialReports ? 'On' : 'Off'}</span>
+                  <span className="modern-chip modern-chip--info">Hide Closed JO: {hideClosedJobOrders ? 'On' : 'Off'}</span>
                 </div>
               </div>
               <table className="modern-table">

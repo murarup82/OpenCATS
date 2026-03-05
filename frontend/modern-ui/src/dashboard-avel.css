@@ -345,6 +345,76 @@
   font: 600 0.73rem/1.35 'Manrope', 'Segoe UI', sans-serif;
 }
 
+.avel-kpi-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.avel-kpi-hint-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid #a9c6d8;
+  align-items: center;
+  justify-content: center;
+  font: 700 0.62rem/1 'Space Grotesk', 'Segoe UI', sans-serif;
+  color: #1f5a74;
+  background: #eef7fc;
+  cursor: help;
+}
+
+.avel-kpi-active-bar {
+  position: sticky;
+  top: 8px;
+  z-index: 16;
+  margin-top: 10px;
+  border: 1px solid #bcd4e2;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f9fdff 0%, #eef7fc 100%);
+  box-shadow: 0 6px 18px rgba(11, 61, 84, 0.1);
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.avel-kpi-active-bar__chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.avel-kpi-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  border: 1px solid #abc8d9;
+  background: #ffffff;
+  color: #234f64;
+  font: 700 0.68rem/1.25 'Manrope', 'Segoe UI', sans-serif;
+  padding: 3px 7px;
+}
+
+.avel-kpi-active-chip__clear {
+  border: 0;
+  background: transparent;
+  color: #3f6f85;
+  font-weight: 800;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.avel-kpi-active-chip__clear:hover,
+.avel-kpi-active-chip__clear:focus-visible {
+  color: #0b546f;
+}
+
 .avel-kpi-date {
   width: 100%;
   min-height: 40px;
@@ -4707,6 +4777,11 @@
 
   .avel-kpi-chart-grid {
     grid-template-columns: 1fr;
+  }
+
+  .avel-kpi-active-bar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .avel-dashboard-page .modern-command-bar__row--primary {
