@@ -456,6 +456,7 @@ class KpisUI extends UserInterface
         }
 
         $submittedByJobOrder = array();
+        $interviewByJobOrder = array();
         $hiredByJobOrder = array();
         $approvedEverByJobOrder = array();
         $eligibleJobOrderIDs = array();
@@ -482,13 +483,14 @@ class KpisUI extends UserInterface
                 AND
                     joborder_id IN (%s)
                 AND
-                    status_to IN (%s, %s)
+                    status_to IN (%s, %s, %s)
                 GROUP BY
                     joborder_id,
                     status_to",
                 $db->makeQueryInteger($siteID),
                 $this->formatIntegerList($eligibleJobOrderIDs),
                 $db->makeQueryInteger(PIPELINE_STATUS_PROPOSED_TO_CUSTOMER),
+                $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_INTERVIEW),
                 $db->makeQueryInteger(PIPELINE_STATUS_HIRED)
             ));
 
@@ -500,6 +502,10 @@ class KpisUI extends UserInterface
                 if ($statusTo === PIPELINE_STATUS_PROPOSED_TO_CUSTOMER)
                 {
                     $submittedByJobOrder[$jobOrderID] = $count;
+                }
+                else if ($statusTo === PIPELINE_STATUS_CUSTOMER_INTERVIEW)
+                {
+                    $interviewByJobOrder[$jobOrderID] = $count;
                 }
                 else if ($statusTo === PIPELINE_STATUS_HIRED)
                 {
@@ -790,6 +796,7 @@ class KpisUI extends UserInterface
                 continue;
             }
             $submittedCount = isset($submittedByJobOrder[$jobOrderID]) ? $submittedByJobOrder[$jobOrderID] : 0;
+            $interviewCount = isset($interviewByJobOrder[$jobOrderID]) ? $interviewByJobOrder[$jobOrderID] : 0;
             $hiredCount = isset($hiredByJobOrder[$jobOrderID]) ? $hiredByJobOrder[$jobOrderID] : 0;
             $approvedEverCount = isset($approvedEverByJobOrder[$jobOrderID]) ? $approvedEverByJobOrder[$jobOrderID] : 0;
 
@@ -815,6 +822,7 @@ class KpisUI extends UserInterface
                 'timeToDeadlineClass' => $deadlineDisplay['class'],
                 'totalOpenPositions' => $openPositions,
                 'submittedCount' => $submittedCount,
+                'interviewCount' => $interviewCount,
                 'approvedCount' => $approvedEverCount,
                 'hiredCount' => $hiredCount,
                 'acceptanceRate' => $acceptanceRate['display'],

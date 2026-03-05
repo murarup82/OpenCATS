@@ -1799,6 +1799,7 @@ export type KpisListModernDataResponse = {
       timeToDeadlineClass: string;
       totalOpenPositions: number;
       submittedCount: number;
+      interviewCount: number;
       approvedCount: number;
       hiredCount: number;
       acceptanceRate: string;

@@ -438,11 +438,14 @@ export function KpisPage({ bootstrap }: Props) {
     key: 'trend-range',
     label: `${data.filters.trendStart} to ${data.filters.trendEnd}`
   });
-  const totalAcceptedByCustomer = data.rows.jobOrderKpiRows.reduce(
-    (total, row) => total + toNumber(row.approvedCount),
+  const totalProposedToCustomer = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.submittedCount), 0);
+  const totalInterviews = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.interviewCount), 0);
+  const totalAcceptedByCustomer = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.approvedCount), 0);
+  const totalHired = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.hiredCount), 0);
+  const totalOpenPositionsForSelection = data.rows.jobOrderKpiRows.reduce(
+    (total, row) => total + toNumber(row.totalOpenPositions),
     0
   );
-  const totalHired = data.rows.jobOrderKpiRows.reduce((total, row) => total + toNumber(row.hiredCount), 0);
 
   return (
     <div className="avel-dashboard-page">
@@ -712,15 +715,25 @@ export function KpisPage({ bootstrap }: Props) {
                 </div>
               </div>
               <div className="avel-kpi-grid avel-kpi-grid--acceptance">
-                <article className="avel-kpi">
+                <article className="avel-kpi avel-kpi--compact">
+                  <p className="avel-kpi__label">Proposed to customer</p>
+                  <p className="avel-kpi__value">{totalProposedToCustomer}</p>
+                </article>
+                <article className="avel-kpi avel-kpi--compact">
+                  <p className="avel-kpi__label">Interviews</p>
+                  <p className="avel-kpi__value">{totalInterviews}</p>
+                </article>
+                <article className="avel-kpi avel-kpi--compact">
                   <p className="avel-kpi__label">Validated by customer</p>
                   <p className="avel-kpi__value">{totalAcceptedByCustomer}</p>
-                  <p className="avel-kpi__hint">Total candidates in acceptance count.</p>
                 </article>
-                <article className="avel-kpi">
+                <article className="avel-kpi avel-kpi--compact">
                   <p className="avel-kpi__label">Hired candidates</p>
                   <p className="avel-kpi__value">{totalHired}</p>
-                  <p className="avel-kpi__hint">Total candidates in hiring count.</p>
+                </article>
+                <article className="avel-kpi avel-kpi--compact">
+                  <p className="avel-kpi__label">Total open positions</p>
+                  <p className="avel-kpi__value">{totalOpenPositionsForSelection}</p>
                 </article>
               </div>
               <table className="modern-table">

@@ -330,8 +330,27 @@
 }
 
 .avel-kpi-grid--acceptance {
-  margin: 8px 0 12px;
-  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  margin: 6px 0 10px;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.avel-kpi--compact {
+  padding: 9px 10px;
+  gap: 2px;
+  min-height: 0;
+}
+
+.avel-kpi--compact .avel-kpi__label {
+  font-size: 0.58rem;
+}
+
+.avel-kpi--compact .avel-kpi__value {
+  font-size: 1.32rem;
+}
+
+.avel-kpi--compact .avel-kpi__hint {
+  display: none;
 }
 
 .avel-kpi-controls {
