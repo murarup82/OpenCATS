@@ -325,6 +325,10 @@
   margin-top: 12px;
 }
 
+.avel-kpi-grid--exec {
+  margin-top: 10px;
+}
+
 .avel-kpi-controls {
   display: grid;
   grid-template-columns: repeat(4, minmax(150px, 1fr));

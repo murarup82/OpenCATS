@@ -975,6 +975,231 @@ class KpisUI extends UserInterface
         );
         $this->addCandidateDetailLinks($candidateSourceRows, $candidateMetricRows, $officialReports);
 
+        $submittedThisWeek = $this->getStatusCount($statusCountsThisWeek, PIPELINE_STATUS_PROPOSED_TO_CUSTOMER);
+        $interviewThisWeek = $this->getStatusCount($statusCountsThisWeek, PIPELINE_STATUS_CUSTOMER_INTERVIEW);
+        $offerStageThisWeek = $this->countDistinctCandidateJoborderTransitions(
+            $db,
+            $siteID,
+            $weekStart,
+            $weekEnd,
+            array(PIPELINE_STATUS_OFFER_NEGOTIATION, PIPELINE_STATUS_OFFER_ACCEPTED),
+            $officialReports,
+            $monitoredJobOrders,
+            $candidateSourceScope,
+            $jobOrderScope
+        );
+        $offerAcceptedThisWeek = $this->countDistinctCandidateJoborderTransitions(
+            $db,
+            $siteID,
+            $weekStart,
+            $weekEnd,
+            array(PIPELINE_STATUS_OFFER_ACCEPTED),
+            $officialReports,
+            $monitoredJobOrders,
+            $candidateSourceScope,
+            $jobOrderScope
+        );
+
+        $medianFillSnapshot = $this->getMedianTimeToFillSnapshot(
+            $db,
+            $siteID,
+            $officialReports,
+            $monitoredJobOrders,
+            $candidateSourceScope,
+            $jobOrderScope
+        );
+
+        $coverageNumerator = $this->getStatusCount($statusCountsThisWeek, PIPELINE_STATUS_ALLOCATED);
+        $coverageDenominator = max(0, (int) $totals['totalOpenPositions']);
+        $coverageRatio = ($coverageDenominator > 0) ? ($coverageNumerator / $coverageDenominator) : 0.0;
+
+        $openJobOrdersForRisk = $this->getJobOrders($db, $siteID, true);
+        $riskWeightedTotal = 0;
+        $riskWeightedOver30 = 0;
+        $riskWeightedOver60 = 0;
+        $riskOpenJobOrders = 0;
+        $riskOpenJobOrdersOver30 = 0;
+        $riskOpenJobOrdersOver60 = 0;
+        foreach ($openJobOrdersForRisk as $riskJobOrder)
+        {
+            if ($officialReports && !isset($monitoredJobOrders[$riskJobOrder['jobOrderID']]))
+            {
+                continue;
+            }
+
+            $jobOrderID = (int) $riskJobOrder['jobOrderID'];
+            $weight = isset($openPositionsByJobOrder[$jobOrderID]) ? (int) $openPositionsByJobOrder[$jobOrderID] : 0;
+            if ($weight <= 0)
+            {
+                $weight = max(1, (int) $riskJobOrder['openingsAvailable']);
+            }
+            if ($weight <= 0)
+            {
+                $weight = 1;
+            }
+
+            $createdAt = $this->parseDateTime($riskJobOrder['dateCreated']);
+            if ($createdAt === null)
+            {
+                continue;
+            }
+
+            $riskOpenJobOrders++;
+            $ageDays = (int) $createdAt->diff($today)->format('%r%a');
+            if ($ageDays < 0)
+            {
+                $ageDays = 0;
+            }
+
+            $riskWeightedTotal += $weight;
+            if ($ageDays > 30)
+            {
+                $riskWeightedOver30 += $weight;
+                $riskOpenJobOrdersOver30++;
+            }
+            if ($ageDays > 60)
+            {
+                $riskWeightedOver60 += $weight;
+                $riskOpenJobOrdersOver60++;
+            }
+        }
+        $agingRiskPercent = 0;
+        $agingAtRiskPercent = 0;
+        if ($riskWeightedTotal > 0)
+        {
+            $agingRiskPercent = (int) round((($riskWeightedOver30 + (2 * $riskWeightedOver60)) / (2 * $riskWeightedTotal)) * 100);
+            $agingAtRiskPercent = (int) round(($riskWeightedOver30 / $riskWeightedTotal) * 100);
+        }
+        if ($agingRiskPercent < 0)
+        {
+            $agingRiskPercent = 0;
+        }
+        if ($agingRiskPercent > 100)
+        {
+            $agingRiskPercent = 100;
+        }
+
+        $sourceQualityStart = new DateTime('today');
+        $sourceQualityStart->modify('-89 days');
+        $sourceQualityStart->setTime(0, 0, 0);
+        $sourceQualitySnapshot = $this->getSourcePipelineQualitySnapshot(
+            $db,
+            $siteID,
+            $sourceQualityStart,
+            $officialReports,
+            $monitoredJobOrders,
+            $jobOrderScope
+        );
+        $internalSourceQuality = isset($sourceQualitySnapshot['internal']) ? $sourceQualitySnapshot['internal'] : array(
+            'submittedCount' => 0,
+            'approvedCount' => 0,
+            'hiredCount' => 0
+        );
+        $partnerSourceQuality = isset($sourceQualitySnapshot['partner']) ? $sourceQualitySnapshot['partner'] : array(
+            'submittedCount' => 0,
+            'approvedCount' => 0,
+            'hiredCount' => 0
+        );
+        $internalAcceptancePercent = $this->buildRatePercent($internalSourceQuality['approvedCount'], $internalSourceQuality['submittedCount']);
+        $internalHiringPercent = $this->buildRatePercent($internalSourceQuality['hiredCount'], $internalSourceQuality['submittedCount']);
+        $partnerAcceptancePercent = $this->buildRatePercent($partnerSourceQuality['approvedCount'], $partnerSourceQuality['submittedCount']);
+        $partnerHiringPercent = $this->buildRatePercent($partnerSourceQuality['hiredCount'], $partnerSourceQuality['submittedCount']);
+        $internalQualityIndex = (int) round(($internalAcceptancePercent + $internalHiringPercent) / 2);
+        $partnerQualityIndex = (int) round(($partnerAcceptancePercent + $partnerHiringPercent) / 2);
+
+        $forecastBaseline = (int) $totalsLastWeek['filledPositions'] + (int) $totalsLastWeek['expectedFilled'];
+        $forecastActual = (int) $totals['filledPositions'];
+        if ($forecastBaseline <= 0)
+        {
+            $forecastAccuracyPercent = ($forecastActual <= 0) ? 100 : 0;
+        }
+        else
+        {
+            $forecastAccuracyPercent = (int) round(
+                100 - ((abs($forecastActual - $forecastBaseline) / max(1, $forecastBaseline)) * 100)
+            );
+        }
+        if ($forecastAccuracyPercent < 0)
+        {
+            $forecastAccuracyPercent = 0;
+        }
+        if ($forecastAccuracyPercent > 100)
+        {
+            $forecastAccuracyPercent = 100;
+        }
+        $forecastDelta = $forecastActual - $forecastBaseline;
+
+        $executiveScorecard = array(
+            'metrics' => array(
+                array(
+                    'key' => 'median_time_to_fill',
+                    'label' => 'Median Time to Fill',
+                    'value' => ($medianFillSnapshot['medianDays'] === null ? 'n/a' : ((int) $medianFillSnapshot['medianDays'] . ' d')),
+                    'hint' => sprintf('%d hired placements in current scope.', (int) $medianFillSnapshot['sampleSize'])
+                ),
+                array(
+                    'key' => 'submission_to_interview_rate',
+                    'label' => 'Submission -> Interview Rate',
+                    'value' => ((int) $this->buildRatePercent($interviewThisWeek, $submittedThisWeek) . '%'),
+                    'hint' => sprintf('%d interview / %d submitted this week.', (int) $interviewThisWeek, (int) $submittedThisWeek)
+                ),
+                array(
+                    'key' => 'interview_to_offer_rate',
+                    'label' => 'Interview -> Offer Rate',
+                    'value' => ((int) $this->buildRatePercent($offerStageThisWeek, $interviewThisWeek) . '%'),
+                    'hint' => sprintf('%d offer-stage / %d interview this week.', (int) $offerStageThisWeek, (int) $interviewThisWeek)
+                ),
+                array(
+                    'key' => 'offer_acceptance_rate',
+                    'label' => 'Offer Acceptance Rate',
+                    'value' => ((int) $this->buildRatePercent($offerAcceptedThisWeek, $offerStageThisWeek) . '%'),
+                    'hint' => sprintf('%d accepted / %d offer-stage this week.', (int) $offerAcceptedThisWeek, (int) $offerStageThisWeek)
+                ),
+                array(
+                    'key' => 'pipeline_coverage_ratio',
+                    'label' => 'Pipeline Coverage Ratio',
+                    'value' => number_format($coverageRatio, 2, '.', '') . 'x',
+                    'hint' => sprintf('%d allocated / %d open positions.', (int) $coverageNumerator, (int) $coverageDenominator)
+                ),
+                array(
+                    'key' => 'aging_risk',
+                    'label' => 'Aging Risk',
+                    'value' => ((int) $agingRiskPercent . '%'),
+                    'hint' => sprintf(
+                        '%d%% weighted at-risk. JO >30d: %d, >60d: %d (of %d open JO).',
+                        (int) $agingAtRiskPercent,
+                        (int) $riskOpenJobOrdersOver30,
+                        (int) $riskOpenJobOrdersOver60,
+                        (int) $riskOpenJobOrders
+                    )
+                ),
+                array(
+                    'key' => 'source_quality_index',
+                    'label' => 'Source Quality Index',
+                    'value' => sprintf('Int %d | Part %d', (int) $internalQualityIndex, (int) $partnerQualityIndex),
+                    'hint' => sprintf(
+                        'Int A/H: %d%%/%d%% | Part A/H: %d%%/%d%% (last 90d).',
+                        (int) $internalAcceptancePercent,
+                        (int) $internalHiringPercent,
+                        (int) $partnerAcceptancePercent,
+                        (int) $partnerHiringPercent
+                    )
+                ),
+                array(
+                    'key' => 'forecast_accuracy',
+                    'label' => 'Forecast Accuracy',
+                    'value' => ((int) $forecastAccuracyPercent . '%'),
+                    'hint' => sprintf(
+                        'Baseline %d vs actual %d (delta %s%d).',
+                        (int) $forecastBaseline,
+                        (int) $forecastActual,
+                        ($forecastDelta >= 0 ? '+' : ''),
+                        (int) $forecastDelta
+                    )
+                )
+            )
+        );
+
         $candidateSourceSnapshot = $this->getCurrentCandidateSourceSnapshot($db, $siteID);
         $candidateSourcePieURL = '';
         if ($candidateSourceSnapshot['total'] > 0)
@@ -1086,6 +1311,7 @@ class KpisUI extends UserInterface
                 $totals,
                 $totalsLastWeek,
                 $totalsDiff,
+                $executiveScorecard,
                 $jobOrderKpiRows,
                 $requestQualifiedRows,
                 $candidateSourceRows,
@@ -1148,6 +1374,7 @@ class KpisUI extends UserInterface
         $totals,
         $totalsLastWeek,
         $totalsDiff,
+        $executiveScorecard,
         $jobOrderKpiRows,
         $requestQualifiedRows,
         $candidateSourceRows,
@@ -1234,7 +1461,8 @@ class KpisUI extends UserInterface
             'summary' => array(
                 'totals' => $totals,
                 'totalsLastWeek' => $totalsLastWeek,
-                'totalsDiff' => $totalsDiff
+                'totalsDiff' => $totalsDiff,
+                'executiveScorecard' => $executiveScorecard
             ),
             'charts' => array(
                 'candidateTrend' => array(
@@ -2311,6 +2539,365 @@ class KpisUI extends UserInterface
         }
 
         return $countsByCompany;
+    }
+
+    private function countDistinctCandidateJoborderTransitions(
+        $db,
+        $siteID,
+        DateTime $start,
+        DateTime $end,
+        $statusIDs,
+        $officialReports,
+        $monitoredJobOrders,
+        $candidateSourceScope,
+        $jobOrderScope
+    )
+    {
+        if (!is_array($statusIDs) || empty($statusIDs))
+        {
+            return 0;
+        }
+        if ($officialReports && empty($monitoredJobOrders))
+        {
+            return 0;
+        }
+
+        $normalizedStatusIDs = array();
+        foreach ($statusIDs as $statusID)
+        {
+            $statusID = (int) $statusID;
+            if ($statusID <= 0)
+            {
+                continue;
+            }
+            if (!in_array($statusID, $normalizedStatusIDs, true))
+            {
+                $normalizedStatusIDs[] = $statusID;
+            }
+        }
+        if (empty($normalizedStatusIDs))
+        {
+            return 0;
+        }
+
+        $scope = $this->normalizeJobOrderScope($jobOrderScope);
+        $scopeFilter = '';
+        if ($scope === 'open')
+        {
+            $scopeFilter = sprintf(
+                'AND jo.status IN %s',
+                JobOrderStatuses::getOpenStatusSQL()
+            );
+        }
+
+        $monitoredFilter = '';
+        if ($officialReports)
+        {
+            $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+            $monitoredFilter = sprintf('AND cjh.joborder_id IN (%s)', $monitoredIDs);
+        }
+
+        $sourceScopeFilter = $this->buildCandidateSourceScopeExistsFilter(
+            $db,
+            $siteID,
+            $candidateSourceScope,
+            'cjh.candidate_id'
+        );
+
+        $row = $db->getAssoc(sprintf(
+            "SELECT
+                COUNT(*) AS totalCount
+            FROM
+                (
+                    SELECT DISTINCT
+                        cjh.candidate_id,
+                        cjh.joborder_id
+                    FROM
+                        candidate_joborder_status_history AS cjh
+                    INNER JOIN joborder AS jo
+                        ON jo.joborder_id = cjh.joborder_id
+                        AND jo.site_id = cjh.site_id
+                    WHERE
+                        cjh.site_id = %s
+                    AND
+                        cjh.date >= %s
+                    AND
+                        cjh.date <= %s
+                    AND
+                        cjh.status_to IN (%s)
+                    %s
+                    %s
+                    %s
+                ) AS transition_rows",
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryString($start->format('Y-m-d H:i:s')),
+            $db->makeQueryString($end->format('Y-m-d H:i:s')),
+            $this->formatIntegerList($normalizedStatusIDs),
+            $scopeFilter,
+            $monitoredFilter,
+            $sourceScopeFilter
+        ));
+
+        if (empty($row))
+        {
+            return 0;
+        }
+
+        return (int) $row['totalCount'];
+    }
+
+    private function getMedianTimeToFillSnapshot(
+        $db,
+        $siteID,
+        $officialReports,
+        $monitoredJobOrders,
+        $candidateSourceScope,
+        $jobOrderScope
+    )
+    {
+        $result = array(
+            'medianDays' => null,
+            'sampleSize' => 0
+        );
+        if ($officialReports && empty($monitoredJobOrders))
+        {
+            return $result;
+        }
+
+        $scope = $this->normalizeJobOrderScope($jobOrderScope);
+        $scopeFilter = '';
+        if ($scope === 'open')
+        {
+            $scopeFilter = sprintf(
+                'AND jo.status IN %s',
+                JobOrderStatuses::getOpenStatusSQL()
+            );
+        }
+
+        $monitoredFilter = '';
+        if ($officialReports)
+        {
+            $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+            $monitoredFilter = sprintf('AND cjh.joborder_id IN (%s)', $monitoredIDs);
+        }
+
+        $sourceScopeFilter = $this->buildCandidateSourceScopeFilter($db, $candidateSourceScope, 'candidate');
+
+        $rows = $db->getAllAssoc(sprintf(
+            "SELECT
+                joborder.date_created AS jobOrderCreated,
+                cjh.date AS hiredDate
+            FROM
+                (
+                    SELECT
+                        cjh.candidate_id,
+                        cjh.joborder_id,
+                        MAX(cjh.date) AS maxDate
+                    FROM
+                        candidate_joborder_status_history AS cjh
+                    INNER JOIN joborder AS jo
+                        ON jo.joborder_id = cjh.joborder_id
+                        AND jo.site_id = cjh.site_id
+                    INNER JOIN candidate AS candidate
+                        ON candidate.candidate_id = cjh.candidate_id
+                        AND candidate.site_id = cjh.site_id
+                    WHERE
+                        cjh.site_id = %s
+                    AND
+                        candidate.is_admin_hidden = 0
+                    %s
+                    %s
+                    %s
+                    GROUP BY
+                        cjh.candidate_id,
+                        cjh.joborder_id
+                ) AS last_status
+            INNER JOIN candidate_joborder_status_history AS cjh
+                ON cjh.candidate_id = last_status.candidate_id
+                AND cjh.joborder_id = last_status.joborder_id
+                AND cjh.date = last_status.maxDate
+            INNER JOIN joborder
+                ON joborder.joborder_id = last_status.joborder_id
+                AND joborder.site_id = %s
+            WHERE
+                cjh.site_id = %s
+            AND
+                cjh.status_to = %s",
+            $db->makeQueryInteger($siteID),
+            $scopeFilter,
+            $monitoredFilter,
+            $sourceScopeFilter,
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED)
+        ));
+
+        $durations = array();
+        foreach ($rows as $row)
+        {
+            $jobOrderCreated = $this->parseDateTime($row['jobOrderCreated']);
+            $hiredDate = $this->parseDateTime($row['hiredDate']);
+            if ($jobOrderCreated === null || $hiredDate === null)
+            {
+                continue;
+            }
+
+            $days = (int) $jobOrderCreated->diff($hiredDate)->format('%r%a');
+            if ($days < 0)
+            {
+                continue;
+            }
+            $durations[] = $days;
+        }
+
+        if (empty($durations))
+        {
+            return $result;
+        }
+
+        sort($durations, SORT_NUMERIC);
+        $sampleSize = count($durations);
+        if (($sampleSize % 2) === 1)
+        {
+            $median = $durations[(int) floor($sampleSize / 2)];
+        }
+        else
+        {
+            $right = $sampleSize / 2;
+            $left = $right - 1;
+            $median = (int) round((($durations[$left] + $durations[$right]) / 2));
+        }
+
+        $result['medianDays'] = (int) $median;
+        $result['sampleSize'] = (int) $sampleSize;
+        return $result;
+    }
+
+    private function getSourcePipelineQualitySnapshot($db, $siteID, DateTime $start, $officialReports, $monitoredJobOrders, $jobOrderScope)
+    {
+        $result = array(
+            'internal' => array(
+                'submittedCount' => 0,
+                'approvedCount' => 0,
+                'hiredCount' => 0
+            ),
+            'partner' => array(
+                'submittedCount' => 0,
+                'approvedCount' => 0,
+                'hiredCount' => 0
+            )
+        );
+
+        if ($officialReports && empty($monitoredJobOrders))
+        {
+            return $result;
+        }
+
+        $scope = $this->normalizeJobOrderScope($jobOrderScope);
+        $scopeFilter = '';
+        if ($scope === 'open')
+        {
+            $scopeFilter = sprintf(
+                'AND jo.status IN %s',
+                JobOrderStatuses::getOpenStatusSQL()
+            );
+        }
+
+        $monitoredFilter = '';
+        if ($officialReports)
+        {
+            $monitoredIDs = $this->formatIntegerList(array_keys($monitoredJobOrders));
+            $monitoredFilter = sprintf('AND cjh.joborder_id IN (%s)', $monitoredIDs);
+        }
+
+        $rows = $db->getAllAssoc(sprintf(
+            "SELECT
+                CASE
+                    WHEN LOWER(COALESCE(candidate.source, '')) LIKE %s THEN 'partner'
+                    ELSE 'internal'
+                END AS sourceGroup,
+                COUNT(DISTINCT CASE
+                    WHEN cjh.status_to = %s THEN CONCAT(cjh.candidate_id, '-', cjh.joborder_id)
+                    ELSE NULL
+                END) AS submittedCount,
+                COUNT(DISTINCT CASE
+                    WHEN cjh.status_to = %s THEN CONCAT(cjh.candidate_id, '-', cjh.joborder_id)
+                    ELSE NULL
+                END) AS approvedCount,
+                COUNT(DISTINCT CASE
+                    WHEN cjh.status_to = %s THEN CONCAT(cjh.candidate_id, '-', cjh.joborder_id)
+                    ELSE NULL
+                END) AS hiredCount
+            FROM
+                candidate_joborder_status_history AS cjh
+            INNER JOIN candidate
+                ON candidate.candidate_id = cjh.candidate_id
+                AND candidate.site_id = cjh.site_id
+            INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjh.joborder_id
+                AND jo.site_id = cjh.site_id
+            WHERE
+                cjh.site_id = %s
+            AND
+                cjh.date >= %s
+            AND
+                candidate.is_admin_hidden = 0
+            AND
+                cjh.status_to IN (%s, %s, %s)
+            %s
+            %s
+            GROUP BY
+                sourceGroup",
+            $db->makeQueryString('%partner%'),
+            $db->makeQueryInteger(PIPELINE_STATUS_PROPOSED_TO_CUSTOMER),
+            $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_APPROVED),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger($siteID),
+            $db->makeQueryString($start->format('Y-m-d H:i:s')),
+            $db->makeQueryInteger(PIPELINE_STATUS_PROPOSED_TO_CUSTOMER),
+            $db->makeQueryInteger(PIPELINE_STATUS_CUSTOMER_APPROVED),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $scopeFilter,
+            $monitoredFilter
+        ));
+
+        foreach ($rows as $row)
+        {
+            $sourceGroup = strtolower(trim((string) $row['sourceGroup']));
+            if ($sourceGroup !== 'partner')
+            {
+                $sourceGroup = 'internal';
+            }
+            $result[$sourceGroup] = array(
+                'submittedCount' => (int) $row['submittedCount'],
+                'approvedCount' => (int) $row['approvedCount'],
+                'hiredCount' => (int) $row['hiredCount']
+            );
+        }
+
+        return $result;
+    }
+
+    private function buildRatePercent($numerator, $denominator)
+    {
+        $numerator = (float) $numerator;
+        $denominator = (float) $denominator;
+        if ($denominator <= 0)
+        {
+            return 0;
+        }
+
+        $percent = (int) round(($numerator / $denominator) * 100);
+        if ($percent < 0)
+        {
+            return 0;
+        }
+        if ($percent > 100)
+        {
+            return 100;
+        }
+
+        return $percent;
     }
 
     private function normalizeCandidateSourceScope($scope)

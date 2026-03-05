@@ -1765,6 +1765,14 @@ export type KpisListModernDataResponse = {
       expectedFilled: number;
       expectedInFullPlan: number;
     };
+    executiveScorecard: {
+      metrics: Array<{
+        key: string;
+        label: string;
+        value: string;
+        hint: string;
+      }>;
+    };
   };
   rows: {
     kpiRows: Array<{

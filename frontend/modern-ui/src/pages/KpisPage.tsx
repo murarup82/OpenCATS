@@ -13,6 +13,7 @@ type Props = {
 
 type TrendChartMode = 'line' | 'bars';
 type TrendPoint = { label: string; value: number };
+const KPI_EXECUTIVE_SCORECARD_PREF_KEY = 'opencats:modern:kpis:exec-scorecard:visible:v1';
 
 function toNumber(value: unknown): number {
   const cast = Number(value);
@@ -32,6 +33,22 @@ function toPercent(part: number, total: number): string {
 
 function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&').trim();
+}
+
+function readExecutiveScorecardVisibility(): boolean {
+  try {
+    return window.localStorage.getItem(KPI_EXECUTIVE_SCORECARD_PREF_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeExecutiveScorecardVisibility(value: boolean): void {
+  try {
+    window.localStorage.setItem(KPI_EXECUTIVE_SCORECARD_PREF_KEY, value ? '1' : '0');
+  } catch {
+    // Best effort only.
+  }
 }
 
 function toSemanticCellClass(rawClass: string): string {
@@ -204,6 +221,7 @@ export function KpisPage({ bootstrap }: Props) {
   const [error, setError] = useState<string>('');
   const [trendChartMode, setTrendChartMode] = useState<TrendChartMode>('line');
   const [activeTrendIndex, setActiveTrendIndex] = useState<number>(0);
+  const [showExecutiveScorecard, setShowExecutiveScorecard] = useState<boolean>(() => readExecutiveScorecardVisibility());
   const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
 
   useEffect(() => {
@@ -217,6 +235,10 @@ export function KpisPage({ bootstrap }: Props) {
     query.set('jobOrderScope', 'open');
     applyServerQuery(query);
   }, [serverQueryString, applyServerQuery]);
+
+  useEffect(() => {
+    writeExecutiveScorecardVisibility(showExecutiveScorecard);
+  }, [showExecutiveScorecard]);
 
   useEffect(() => {
     let mounted = true;
@@ -857,6 +879,39 @@ export function KpisPage({ bootstrap }: Props) {
                 </div>
               </article>
             </div>
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h3 className="avel-list-panel__title">Executive Scorecard</h3>
+              <div className="avel-my-notes-chip-row">
+                <button
+                  type="button"
+                  className={`modern-btn modern-btn--mini ${showExecutiveScorecard ? 'modern-btn--emphasis' : 'modern-btn--secondary'}`}
+                  aria-pressed={showExecutiveScorecard}
+                  onClick={() => setShowExecutiveScorecard((previous) => !previous)}
+                >
+                  {showExecutiveScorecard ? 'Hide Scorecard' : 'Show Scorecard'}
+                </button>
+              </div>
+            </div>
+            {showExecutiveScorecard ? (
+              data.summary.executiveScorecard.metrics.length === 0 ? (
+                <div className="modern-state">No executive scorecard data available.</div>
+              ) : (
+                <div className="avel-kpi-grid avel-kpi-grid--exec">
+                  {data.summary.executiveScorecard.metrics.map((metric) => (
+                    <article key={`exec-${metric.key}`} className="avel-kpi">
+                      <p className="avel-kpi__label">{metric.label}</p>
+                      <p className="avel-kpi__value">{metric.value}</p>
+                      <p className="avel-kpi__hint">{metric.hint}</p>
+                    </article>
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="modern-state">Executive scorecard is hidden. Toggle to display all KPI leadership metrics.</div>
+            )}
           </section>
         </div>
       </PageContainer>
