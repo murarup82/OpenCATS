@@ -99,6 +99,65 @@ function toDisplayText(value: unknown, fallback = '--'): string {
   return text === '' ? fallback : text;
 }
 
+function parseSourceCSV(csv: string): string[] {
+  return String(csv || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '');
+}
+
+function serializeSourceCSV(values: string[]): string {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  values.forEach((value) => {
+    const trimmed = String(value || '').trim();
+    if (trimmed === '') {
+      return;
+    }
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    normalized.push(trimmed);
+  });
+  return normalized.join(',');
+}
+
+function toISODateInput(value: string): string {
+  const raw = String(value || '').trim();
+  const match = /^(\d{2})-(\d{2})-(\d{2})$/.exec(raw);
+  if (!match) {
+    return '';
+  }
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  const shortYear = Number(match[3]);
+  if (!Number.isFinite(month) || !Number.isFinite(day) || !Number.isFinite(shortYear)) {
+    return '';
+  }
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return '';
+  }
+  const year = shortYear >= 70 ? 1900 + shortYear : 2000 + shortYear;
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function toLegacyShortDate(isoDate: string): string {
+  const raw = String(isoDate || '').trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (!match) {
+    return '';
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return '';
+  }
+  return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-${String(year % 100).padStart(2, '0')}`;
+}
+
 function isLikelyCVFileName(fileName: string): boolean {
   const normalized = String(fileName || '').trim().toLowerCase();
   if (normalized === '') {
@@ -315,6 +374,10 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [aiPrefillStatus, setAiPrefillStatus] = useState<string>('');
   const [aiPrefillError, setAiPrefillError] = useState<string>('');
   const [aiUndoSnapshot, setAiUndoSnapshot] = useState<CandidateEditFormState | null>(null);
+  const [editableSourceOptions, setEditableSourceOptions] = useState<SelectMenuOption[]>([]);
+  const [sourceCSV, setSourceCSV] = useState<string>('');
+  const [newSourceDraft, setNewSourceDraft] = useState<string>('');
+  const [sourceNotice, setSourceNotice] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -329,6 +392,18 @@ export function CandidatesEditPage({ bootstrap }: Props) {
         }
         setData(result);
         setFormState(toFormState(result));
+        const sourceOptions = result.options.sources.map((option) => ({ value: option.value, label: option.label }));
+        const selectedSource = String(result.candidate.source || '').trim();
+        if (
+          selectedSource !== '' &&
+          !sourceOptions.some((option) => option.value.trim().toLowerCase() === selectedSource.toLowerCase())
+        ) {
+          sourceOptions.push({ value: selectedSource, label: selectedSource });
+        }
+        setEditableSourceOptions(sourceOptions);
+        setSourceCSV(serializeSourceCSV([...parseSourceCSV(result.options.sourceCSV || ''), selectedSource]));
+        setNewSourceDraft('');
+        setSourceNotice('');
         setAiAttachmentID(pickDefaultAIAttachmentID(result.attachments));
       })
       .catch((err: Error) => {
@@ -498,6 +573,36 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     }
   }, [aiAttachmentID, aiPrefillPending, bootstrap.userID, data, formState]);
 
+  const addSourceOption = useCallback(() => {
+    const candidateSource = newSourceDraft.trim();
+    if (candidateSource === '') {
+      setSourceNotice('Enter a source name first.');
+      return;
+    }
+
+    const existing = editableSourceOptions.find(
+      (option) => option.value.trim().toLowerCase() === candidateSource.toLowerCase()
+    );
+    if (existing) {
+      setFormState((current) => (current ? { ...current, source: existing.value } : current));
+      setSourceNotice(`Source "${existing.value}" already exists. Selected it.`);
+      setNewSourceDraft('');
+      return;
+    }
+
+    const nextOptions = [...editableSourceOptions, { value: candidateSource, label: candidateSource }];
+    const normalized = nextOptions
+      .filter((option) => option.value !== '(none)')
+      .sort((left, right) => left.label.localeCompare(right.label, undefined, { sensitivity: 'base' }));
+
+    const withNone: SelectMenuOption[] = [{ value: '(none)', label: '(None)' }, ...normalized];
+    setEditableSourceOptions(withNone);
+    setSourceCSV(serializeSourceCSV([...parseSourceCSV(sourceCSV), candidateSource]));
+    setFormState((current) => (current ? { ...current, source: candidateSource } : current));
+    setSourceNotice(`Added source "${candidateSource}".`);
+    setNewSourceDraft('');
+  }, [editableSourceOptions, newSourceDraft, sourceCSV]);
+
   const updateExtraFieldValue = (postKey: string, value: string) => {
     setFormState((current) => {
       if (!current) {
@@ -617,10 +722,9 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
   const submitURL = data.actions.submitURL || `${bootstrap.indexName}?m=candidates&a=edit&ui=modern`;
   const showURL = data.actions.showURL || `${bootstrap.indexName}?m=candidates&a=show&candidateID=${data.meta.candidateID}&ui=modern`;
-  const sourceOptions: SelectMenuOption[] = data.options.sources.map((option) => ({
-    value: option.value,
-    label: option.label
-  }));
+  const sourceOptions: SelectMenuOption[] = editableSourceOptions.length > 0
+    ? editableSourceOptions
+    : data.options.sources.map((option) => ({ value: option.value, label: option.label }));
   const ownerOptions: SelectMenuOption[] = data.options.owners.map((option) => ({
     value: option.value,
     label: option.label
@@ -628,31 +732,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const gdprOptions: SelectMenuOption[] = [
     { value: '0', label: 'No' },
     { value: '1', label: 'Yes' }
-  ];
-  const genderOptions: SelectMenuOption[] = [
-    { value: '', label: '----' },
-    { value: 'm', label: 'Male' },
-    { value: 'f', label: 'Female' }
-  ];
-  const ethnicityOptions: SelectMenuOption[] = [
-    { value: '', label: '----' },
-    { value: '1', label: 'American Indian' },
-    { value: '2', label: 'Asian or Pacific Islander' },
-    { value: '3', label: 'Hispanic or Latino' },
-    { value: '4', label: 'Non-Hispanic Black' },
-    { value: '5', label: 'Non-Hispanic White' }
-  ];
-  const veteranOptions: SelectMenuOption[] = [
-    { value: '', label: '----' },
-    { value: '1', label: 'No' },
-    { value: '2', label: 'Eligible Veteran' },
-    { value: '3', label: 'Disabled Veteran' },
-    { value: '4', label: 'Eligible and Disabled' }
-  ];
-  const disabilityOptions: SelectMenuOption[] = [
-    { value: '', label: '----' },
-    { value: 'No', label: 'No' },
-    { value: 'Yes', label: 'Yes' }
   ];
   const aiCandidateAttachments = data.attachments.filter((attachment) => !attachment.isProfileImage);
   const aiPreferredAttachments = aiCandidateAttachments.filter((attachment) => isLikelyCVFileName(attachment.fileName));
@@ -670,14 +749,24 @@ export function CandidatesEditPage({ bootstrap }: Props) {
       : Number(aiAttachmentID || 0) <= 0
         ? 'Select a source attachment.'
         : '';
+  const candidateDisplayName = `${formState.firstName} ${formState.lastName}`.trim() || 'Unnamed Candidate';
 
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page">
       <PageContainer
-        title={`Edit Candidate #${data.meta.candidateID}`}
-        subtitle="Modern candidate editing workspace. Save action uses the proven legacy backend."
+        title={candidateDisplayName}
+        subtitle={`Candidate Profile #${data.meta.candidateID} · Modern editing workspace with legacy-safe save flow.`}
         actions={(
           <>
+            <button
+              type="button"
+              className="modern-btn modern-btn--emphasis avel-candidate-edit-ai-top"
+              onClick={runAIPrefillFromAttachment}
+              disabled={!aiCanRunPrefill}
+              title={aiRefillDisabledReason || 'Load CV details with AI'}
+            >
+              {aiPrefillPending ? 'AI Running...' : 'Load CV Details With AI'}
+            </button>
             <a className="modern-btn modern-btn--secondary" href={showURL}>
               Back To Profile
             </a>
@@ -695,6 +784,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
             </div>
 
             <form
+              id="candidate-edit-form"
               className="avel-candidate-edit-form"
               method="post"
               action={submitURL}
@@ -713,7 +803,11 @@ export function CandidatesEditPage({ bootstrap }: Props) {
             >
               <input type="hidden" name="postback" value="postback" />
               <input type="hidden" name="candidateID" value={String(data.meta.candidateID)} />
-              <input type="hidden" name="sourceCSV" value={data.options.sourceCSV || ''} />
+              <input type="hidden" name="sourceCSV" value={sourceCSV} />
+              <input type="hidden" name="gender" value={formState.gender} />
+              <input type="hidden" name="race" value={formState.race} />
+              <input type="hidden" name="veteran" value={formState.veteran} />
+              <input type="hidden" name="disability" value={formState.disability} />
 
               <div className="avel-candidate-form-strip">
                 <span className="modern-chip modern-chip--info">Candidate ID: {data.meta.candidateID}</span>
@@ -723,15 +817,66 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 <span className={`modern-chip ${formState.isHot ? 'modern-chip--warning' : 'modern-chip--info'}`}>
                   {formState.isHot ? 'Hot Candidate' : 'Standard Priority'}
                 </span>
+                {parseLimitText !== '' ? <span className="modern-chip modern-chip--source-other">{parseLimitText}</span> : null}
               </div>
+
+              {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
+              {aiPrefillError !== '' ? <div className="modern-state modern-state--error" role="alert">{aiPrefillError}</div> : null}
 
               <div className="avel-candidate-edit-grid">
                 {validationError !== '' ? (
                   <div className="modern-state modern-state--error avel-candidate-edit-field--full" role="alert">{validationError}</div>
                 ) : null}
-                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
-                  <strong>Identity & Contact</strong>
-                  <span>Primary profile data and communication details.</span>
+                <div className="avel-candidate-form-divider avel-candidate-form-divider--status avel-candidate-edit-field--full">
+                  <strong>Profile Status & Compliance</strong>
+                  <span>Operational state and GDPR settings used in day-to-day reporting.</span>
+                </div>
+                <label className="modern-command-toggle">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={formState.isActive}
+                    onChange={(event) => setFormState((current) => (current ? { ...current, isActive: event.target.checked } : current))}
+                  />
+                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                  <span>Active Candidate</span>
+                </label>
+
+                <label className="modern-command-toggle">
+                  <input
+                    type="checkbox"
+                    name="isHot"
+                    checked={formState.isHot}
+                    onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))}
+                  />
+                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                  <span>Hot Candidate</span>
+                </label>
+
+                <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
+                <SelectMenu
+                  label="GDPR Signed"
+                  value={formState.gdprSigned}
+                  options={gdprOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
+                />
+
+                <label className="modern-command-field">
+                  <span className="modern-command-label">GDPR Expiration</span>
+                  <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
+                  <input
+                    className="avel-form-control"
+                    type="date"
+                    value={toISODateInput(formState.gdprExpirationDate)}
+                    onChange={(event) =>
+                      setFormState((current) => (current ? { ...current, gdprExpirationDate: toLegacyShortDate(event.target.value) } : current))
+                    }
+                  />
+                </label>
+
+                <div className="avel-candidate-form-divider avel-candidate-form-divider--identity avel-candidate-edit-field--full">
+                  <strong>Profile & Reachability</strong>
+                  <span>Identity, contact channels, and candidate availability details.</span>
                 </div>
                 <label className="modern-command-field">
                   <span className="modern-command-label">First Name *</span>
@@ -813,27 +958,70 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </label>
 
                 <label className="modern-command-field">
-                  <span className="modern-command-label">Date Available (MM-DD-YY)</span>
+                  <span className="modern-command-label">Date Available</span>
+                  <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
                   <input
                     className="avel-form-control"
-                    type="text"
-                    name="dateAvailable"
-                    value={formState.dateAvailable}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, dateAvailable: event.target.value } : current))}
+                    type="date"
+                    value={toISODateInput(formState.dateAvailable)}
+                    onChange={(event) =>
+                      setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
+                    }
                   />
                 </label>
 
-                <div className="avel-candidate-form-divider avel-candidate-edit-field--full">
-                  <strong>Ownership, Source & GDPR</strong>
-                  <span>Ownership accountability and privacy configuration.</span>
+                <label className="modern-command-toggle">
+                  <input
+                    type="checkbox"
+                    name="canRelocate"
+                    checked={formState.canRelocate}
+                    onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
+                  />
+                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                  <span>Open To Relocation</span>
+                </label>
+
+                <label className="modern-command-field avel-candidate-edit-field--full">
+                  <span className="modern-command-label">Address</span>
+                  <textarea
+                    className="avel-form-control"
+                    name="address"
+                    value={formState.address}
+                    onChange={(event) => setFormState((current) => (current ? { ...current, address: event.target.value } : current))}
+                    rows={2}
+                  />
+                </label>
+
+                <div className="avel-candidate-form-divider avel-candidate-form-divider--source avel-candidate-edit-field--full">
+                  <strong>Sourcing & Ownership</strong>
+                  <span>Assign ownership and keep source taxonomy up to date.</span>
                 </div>
                 <input type="hidden" name="source" value={formState.source} />
                 <SelectMenu
                   label="Source"
                   value={formState.source}
-                  options={sourceOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, source: value } : current))}
+                  options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
+                  onChange={(value) => {
+                    setSourceNotice('');
+                    setFormState((current) => (current ? { ...current, source: value } : current));
+                  }}
                 />
+                <div className="modern-command-field avel-candidate-source-add">
+                  <span className="modern-command-label">Add New Source</span>
+                  <div className="avel-candidate-source-add__row">
+                    <input
+                      className="avel-form-control"
+                      type="text"
+                      value={newSourceDraft}
+                      placeholder="Type source name"
+                      onChange={(event) => setNewSourceDraft(event.target.value)}
+                    />
+                    <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={addSourceOption}>
+                      Add
+                    </button>
+                  </div>
+                  {sourceNotice !== '' ? <span className="avel-field-source-help">{sourceNotice}</span> : null}
+                </div>
 
                 <input type="hidden" name="owner" value={formState.owner} />
                 <SelectMenu
@@ -842,25 +1030,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   options={ownerOptions}
                   onChange={(value) => setFormState((current) => (current ? { ...current, owner: value } : current))}
                 />
-
-                <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
-                <SelectMenu
-                  label="GDPR Signed"
-                  value={formState.gdprSigned}
-                  options={gdprOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
-                />
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">GDPR Expiration (MM-DD-YY)</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="gdprExpirationDate"
-                    value={formState.gdprExpirationDate}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, gdprExpirationDate: event.target.value } : current))}
-                  />
-                </label>
 
                 <label className="modern-command-field">
                   <span className="modern-command-label">Current Employer</span>
@@ -900,17 +1069,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </label>
 
                 <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Address</span>
-                  <textarea
-                    className="avel-form-control"
-                    name="address"
-                    value={formState.address}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, address: event.target.value } : current))}
-                    rows={2}
-                  />
-                </label>
-
-                <label className="modern-command-field avel-candidate-edit-field--full">
                   <span className="modern-command-label">Key Skills</span>
                   <textarea
                     className="avel-form-control"
@@ -931,79 +1089,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     onChange={(nextValue) => setFormState((current) => (current ? { ...current, notes: nextValue } : current))}
                   />
                 </label>
-              </div>
-
-              <div className="avel-candidate-form-divider">
-                <strong>Status, Mobility & Compliance Attributes</strong>
-                <span>State toggles used in operations and reporting.</span>
-              </div>
-              <div className="avel-candidate-edit-toggles" role="group" aria-label="Candidate status and mobility options">
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={formState.isActive}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, isActive: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Active Candidate</span>
-                </label>
-
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="isHot"
-                    checked={formState.isHot}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Hot Candidate</span>
-                </label>
-
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="canRelocate"
-                    checked={formState.canRelocate}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Can Relocate</span>
-                </label>
-              </div>
-
-              <div className="avel-candidate-edit-grid">
-                <input type="hidden" name="gender" value={formState.gender} />
-                <SelectMenu
-                  label="Gender"
-                  value={formState.gender}
-                  options={genderOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, gender: value } : current))}
-                />
-
-                <input type="hidden" name="race" value={formState.race} />
-                <SelectMenu
-                  label="Ethnicity"
-                  value={formState.race}
-                  options={ethnicityOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, race: value } : current))}
-                />
-
-                <input type="hidden" name="veteran" value={formState.veteran} />
-                <SelectMenu
-                  label="Veteran Status"
-                  value={formState.veteran}
-                  options={veteranOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, veteran: value } : current))}
-                />
-
-                <input type="hidden" name="disability" value={formState.disability} />
-                <SelectMenu
-                  label="Disability Status"
-                  value={formState.disability}
-                  options={disabilityOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, disability: value } : current))}
-                />
               </div>
 
               {data.extraFields.length > 0 ? (
@@ -1051,15 +1136,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   </div>
                 </div>
               ) : null}
-
-              <div className="modern-table-actions avel-candidate-edit-actions">
-                <button type="submit" className="modern-btn modern-btn--emphasis">
-                  Save Candidate
-                </button>
-                <a className="modern-btn modern-btn--secondary" href={showURL}>
-                  Cancel
-                </a>
-              </div>
             </form>
 
             <section className="avel-candidate-edit-attachments avel-candidate-edit-attachments--panel">
@@ -1134,8 +1210,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     </button>
                   ) : null}
                 </div>
-                {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
-                {aiPrefillError !== '' ? <div className="modern-state modern-state--error" role="alert">{aiPrefillError}</div> : null}
               </div>
               {data.meta.permissions.canCreateAttachment && attachmentUploadOpen ? (
                 <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
@@ -1230,6 +1304,15 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 ))}
               </DataTable>
             </section>
+
+            <div className="modern-table-actions avel-candidate-edit-actions avel-candidate-edit-actions--footer">
+              <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
+                Save Candidate
+              </button>
+              <a className="modern-btn modern-btn--secondary" href={showURL}>
+                Cancel
+              </a>
+            </div>
           </section>
         </div>
 
