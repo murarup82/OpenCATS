@@ -27,3 +27,28 @@ npm run smoke:playwright
 | `OPENCATS_JOBORDER_ID` | Job order ID for `joborders.edit` smoke check. |
 
 If `OPENCATS_BASE_URL` is missing, all Playwright smoke tests are skipped by design.
+
+## GDPR Consent Visual Snapshots
+
+Command:
+
+```bash
+cd frontend/modern-ui
+npm run smoke:playwright:gdpr-consent
+```
+
+Additional environment variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `OPENCATS_GDPR_CONSENT_PATH` | Optional consent endpoint path (default: `/gdpr/consent.php`). |
+| `OPENCATS_GDPR_CONSENT_LANG` | Optional snapshot language query (default: `en`). |
+| `OPENCATS_GDPR_TOKEN_ACTIVE` | Token for active consent request snapshot. |
+| `OPENCATS_GDPR_TOKEN_ACCEPTED` | Token for already accepted consent request snapshot. |
+| `OPENCATS_GDPR_TOKEN_DECLINED` | Token for already declined consent request snapshot. |
+| `OPENCATS_GDPR_TOKEN_EXPIRED` | Token for expired consent request snapshot. |
+
+Notes:
+
+- The `invalid-link` snapshot runs without a token.
+- State-specific snapshots are skipped when their token variable is not set.

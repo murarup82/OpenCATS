@@ -25,6 +25,7 @@
     "smoke:routes": "node ./scripts/smoke-modern-routes.mjs",
     "smoke:endpoints": "node ./scripts/smoke-modern-endpoints.mjs",
     "smoke:playwright": "playwright test --config=playwright.config.mjs",
+    "smoke:playwright:gdpr-consent": "playwright test --config=playwright.config.mjs tests/playwright/gdpr-consent-visual.spec.mjs",
     "sanity:modern": "node ./scripts/modern-sanity-report.mjs",
     "scorecard:prefill": "node ./scripts/prefill-rollout-scorecard.mjs",
     "fixtures:lint": "node ./scripts/lint-smoke-fixtures.mjs",
