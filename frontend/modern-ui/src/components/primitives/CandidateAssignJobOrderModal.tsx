@@ -112,7 +112,8 @@ export function CandidateAssignJobOrderModal({
         setData(payload);
 
         const defaultStatusID = Number(payload.meta.defaultAssignmentStatusID || 0);
-        setSelectedStatusID(defaultStatusID > 0 ? defaultStatusID : 0);
+        const fallbackStatusID = Number(payload.options.assignmentStatuses[0]?.statusID || 0);
+        setSelectedStatusID(defaultStatusID > 0 ? defaultStatusID : fallbackStatusID);
 
         const firstAssignable = payload.options.jobOrders.find((jobOrder) => !jobOrder.isInPipeline);
         if (firstAssignable) {
@@ -264,6 +265,23 @@ export function CandidateAssignJobOrderModal({
     visibleJobOrders.find((jobOrder) => Number(jobOrder.jobOrderID) === selectedJobOrderID) || null;
   const allJobOrderCount = data?.options.jobOrders.length || 0;
   const assignableVisibleCount = visibleJobOrders.filter((jobOrder) => !jobOrder.isInPipeline).length;
+  const selectedStatusLabel = useMemo(() => {
+    if (!data) {
+      return 'Allocated';
+    }
+    const options = data.options.assignmentStatuses || [];
+    if (options.length === 0) {
+      return 'Allocated';
+    }
+    const selected = options.find((statusOption) => Number(statusOption.statusID) === selectedStatusID);
+    if (selected && String(selected.status || '').trim() !== '') {
+      return selected.status;
+    }
+    const defaultStatusID = Number(data.meta.defaultAssignmentStatusID || 0);
+    const fallback =
+      options.find((statusOption) => Number(statusOption.statusID) === defaultStatusID) || options[0] || null;
+    return fallback && String(fallback.status || '').trim() !== '' ? fallback.status : 'Allocated';
+  }, [data, selectedStatusID]);
 
   return (
     <Modal
@@ -327,23 +345,17 @@ export function CandidateAssignJobOrderModal({
             </span>
           </label>
 
-          {data?.meta.canSetStatusOnAdd ? (
-            <label className="modern-command-field avel-assign-job-modal__status-field">
-              <span className="modern-command-label">Initial Status</span>
-              <select
-                className="avel-form-control"
-                value={selectedStatusID > 0 ? String(selectedStatusID) : ''}
-                onChange={(event) => setSelectedStatusID(Number(event.target.value || 0))}
-                disabled={loading || pending}
-              >
-                {data.options.assignmentStatuses.map((statusOption) => (
-                  <option key={statusOption.statusID} value={String(statusOption.statusID)}>
-                    {statusOption.status}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
+          <label className="modern-command-field avel-assign-job-modal__status-field">
+            <span className="modern-command-label">Initial Status</span>
+            <input
+              className="avel-form-control"
+              type="text"
+              value={selectedStatusLabel}
+              readOnly
+              aria-readonly="true"
+              disabled={loading}
+            />
+          </label>
         </div>
 
         {!loading && data ? (
