@@ -165,6 +165,13 @@ export type CandidateGoogleDriveUploadMutationResponse = ModernMutationResponse 
   fileName?: string;
   authURL?: string;
   reusedExisting?: boolean;
+  googleDriveLinked?: boolean;
+};
+
+export type CandidateGoogleDriveDeleteMutationResponse = ModernMutationResponse & {
+  authURL?: string;
+  attachmentID?: number;
+  googleDriveLinked?: boolean;
 };
 
 export type CandidatesListModernDataResponse = {
@@ -2666,6 +2673,8 @@ export type CandidatesShowModernDataResponse = {
     deleteAttachmentToken?: string;
     googleDriveUploadAttachmentURL?: string;
     googleDriveUploadAttachmentToken?: string;
+    googleDriveDeleteAttachmentURL?: string;
+    googleDriveDeleteAttachmentToken?: string;
     googleDriveConnectURL?: string;
     addTagsURL: string;
     addTagsToken?: string;
@@ -2820,6 +2829,7 @@ export type CandidatesShowModernDataResponse = {
       fileName: string;
       dateCreated: string;
       retrievalURL: string;
+      googleDriveLinked?: boolean;
       previewAvailable: boolean;
       previewURL: string;
     }>;

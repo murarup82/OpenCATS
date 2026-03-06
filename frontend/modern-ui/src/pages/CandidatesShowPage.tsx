@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import {
   addCandidateProfileComment,
   createTalentFitFlowTransformJob,
+  deleteCandidateGoogleDriveAttachmentFile,
   deleteCandidateAttachment,
   deleteCandidateMessageThread,
   fetchPipelineStatusDetailsModernData,
@@ -288,6 +289,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
   const [googleDrivePendingAttachmentID, setGoogleDrivePendingAttachmentID] = useState<number>(0);
+  const [googleDriveDeletePendingAttachmentID, setGoogleDriveDeletePendingAttachmentID] = useState<number>(0);
   const [transformCVModalOpen, setTransformCVModalOpen] = useState<boolean>(false);
   const [transformAttachmentID, setTransformAttachmentID] = useState<number>(0);
   const [transformJobSearch, setTransformJobSearch] = useState<string>('');
@@ -863,7 +865,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
   const handleSendAttachmentToGoogleDocs = useCallback(
     async (attachment: CandidatesShowModernDataResponse['attachments']['items'][number]) => {
-      if (!data || googleDrivePendingAttachmentID > 0) {
+      if (!data || googleDrivePendingAttachmentID > 0 || googleDriveDeletePendingAttachmentID > 0) {
         return;
       }
 
@@ -917,13 +919,91 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         } else {
           showToast(result.reusedExisting ? 'Opened existing Google Doc.' : 'Sent to Google Docs.', 'success');
         }
+        refreshPageData();
       } catch (err: unknown) {
         showToast(err instanceof Error ? err.message : 'Unable to send attachment to Google Docs.', 'error');
       } finally {
         setGoogleDrivePendingAttachmentID(0);
       }
     },
-    [data, googleDrivePendingAttachmentID, openGoogleDriveConnectPopup, showToast]
+    [
+      data,
+      googleDriveDeletePendingAttachmentID,
+      googleDrivePendingAttachmentID,
+      openGoogleDriveConnectPopup,
+      refreshPageData,
+      showToast
+    ]
+  );
+
+  const handleDeleteGoogleDocsFile = useCallback(
+    async (attachment: CandidatesShowModernDataResponse['attachments']['items'][number]) => {
+      if (!data || googleDrivePendingAttachmentID > 0 || googleDriveDeletePendingAttachmentID > 0) {
+        return;
+      }
+
+      const submitURL = decodeLegacyURL(data.actions.googleDriveDeleteAttachmentURL || '');
+      const securityToken = data.actions.googleDriveDeleteAttachmentToken || '';
+      if (submitURL === '' || securityToken === '') {
+        showToast('Google Drive delete action is not available for this page.', 'error');
+        return;
+      }
+
+      const candidateID = Number(data.meta.candidateID || 0);
+      const attachmentID = Number(attachment.attachmentID || 0);
+      if (candidateID <= 0 || attachmentID <= 0) {
+        showToast('Invalid candidate or attachment ID.', 'error');
+        return;
+      }
+
+      const confirmed = window.confirm(
+        `Delete the linked Google Docs file for "${toDisplayText(attachment.fileName, 'this attachment')}"?`
+      );
+      if (!confirmed) {
+        return;
+      }
+
+      const executeDelete = async () =>
+        deleteCandidateGoogleDriveAttachmentFile(submitURL, {
+          candidateID,
+          attachmentID,
+          securityToken,
+          origin: String(window.location.origin || '')
+        });
+
+      setGoogleDriveDeletePendingAttachmentID(attachmentID);
+      try {
+        let result = await executeDelete();
+        if (!result.success && String(result.code || '') === 'googleDriveAuthRequired') {
+          const connectURL = decodeLegacyURL(String(result.authURL || data.actions.googleDriveConnectURL || ''));
+          const authResult = await openGoogleDriveConnectPopup(connectURL);
+          if (!authResult.success) {
+            throw new Error(authResult.message || 'Google Drive connection failed.');
+          }
+
+          result = await executeDelete();
+        }
+
+        if (!result.success) {
+          throw new Error(result.message || 'Unable to delete Google Docs file.');
+        }
+
+        showToast('Google Docs file deleted.', 'success');
+        refreshPageData();
+      } catch (err: unknown) {
+        showToast(err instanceof Error ? err.message : 'Unable to delete Google Docs file.', 'error');
+      } finally {
+        setGoogleDriveDeletePendingAttachmentID(0);
+      }
+    },
+    [
+      data,
+      googleDriveDeletePendingAttachmentID,
+      googleDrivePendingAttachmentID,
+      openGoogleDriveConnectPopup,
+      refreshPageData,
+      showToast
+    ]
   );
 
   const closeTransformCVModal = useCallback(() => {
@@ -2152,6 +2232,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                           isDocxAttachment(attachment.fileName) &&
                           !!data.actions.googleDriveUploadAttachmentURL &&
                           !!data.actions.googleDriveUploadAttachmentToken;
+                        const hasLinkedGoogleDoc = !!attachment.googleDriveLinked;
                         return (
                           <>
                             <a className="modern-link" href={decodeLegacyURL(attachment.retrievalURL)} target="_blank" rel="noreferrer">
@@ -2159,7 +2240,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                             </a>
                             {canOpenInGoogleDocs ? (
                               <span className="modern-chip modern-chip--info" style={{ marginLeft: 8 }}>
-                                Google Docs
+                                {hasLinkedGoogleDoc ? 'Google Docs linked' : 'Google Docs'}
                               </span>
                             ) : null}
                           </>
@@ -2178,10 +2259,29 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                             onClick={() => void handleSendAttachmentToGoogleDocs(attachment)}
                             disabled={
                               attachmentDeletePending ||
-                              (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID)
+                              (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID) ||
+                              (googleDriveDeletePendingAttachmentID > 0 && googleDriveDeletePendingAttachmentID !== attachment.attachmentID)
                             }
                           >
                             {googleDrivePendingAttachmentID === attachment.attachmentID ? 'Opening...' : 'Open in Google Docs'}
+                          </button>
+                        ) : null}
+                        {attachment.googleDriveLinked &&
+                        data.actions.googleDriveDeleteAttachmentURL &&
+                        data.actions.googleDriveDeleteAttachmentToken ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            onClick={() => void handleDeleteGoogleDocsFile(attachment)}
+                            disabled={
+                              attachmentDeletePending ||
+                              (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID) ||
+                              (googleDriveDeletePendingAttachmentID > 0 && googleDriveDeletePendingAttachmentID !== attachment.attachmentID)
+                            }
+                          >
+                            {googleDriveDeletePendingAttachmentID === attachment.attachmentID
+                              ? 'Deleting...'
+                              : 'Delete from Google Drive'}
                           </button>
                         ) : null}
                         {permissions.canDeleteAttachment ? (

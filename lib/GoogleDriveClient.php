@@ -93,6 +93,87 @@ class GoogleDriveClient
         );
     }
 
+    public function getFileByID($fileID)
+    {
+        $fileID = trim((string) $fileID);
+        if ($fileID === '')
+        {
+            return array();
+        }
+
+        $accessToken = $this->getValidAccessToken();
+        if ($accessToken === '')
+        {
+            return array();
+        }
+
+        $file = $this->getDriveFileMetadata($accessToken, $fileID);
+        if (empty($file))
+        {
+            return array();
+        }
+
+        if (!isset($file['id']) || trim((string) $file['id']) === '')
+        {
+            return array();
+        }
+
+        return array(
+            'id' => (string) $file['id'],
+            'name' => (isset($file['name']) ? (string) $file['name'] : ''),
+            'webViewLink' => (isset($file['webViewLink']) ? (string) $file['webViewLink'] : '')
+        );
+    }
+
+    public function deleteFileByID($fileID)
+    {
+        $fileID = trim((string) $fileID);
+        if ($fileID === '')
+        {
+            $this->setError('googleDriveDeleteFailed', 'Google Drive file ID is missing.');
+            return false;
+        }
+
+        $accessToken = $this->getValidAccessToken();
+        if ($accessToken === '')
+        {
+            return false;
+        }
+
+        $response = $this->httpRequest(
+            'https://www.googleapis.com/drive/v3/files/' . rawurlencode($fileID),
+            'DELETE',
+            array(),
+            array(
+                'Accept: application/json',
+                'Authorization: Bearer ' . $accessToken
+            )
+        );
+
+        if ($response['ok'] || (int) $response['statusCode'] === 404)
+        {
+            return true;
+        }
+
+        $providerDetails = $this->parseProviderErrorDetails((string) $response['body']);
+        if ($this->isDriveApiDisabledError($providerDetails))
+        {
+            $this->setError(
+                'googleDriveApiDisabled',
+                'Google Drive API appears disabled in Google Cloud. Enable it for this project and retry.'
+            );
+            return false;
+        }
+
+        $message = $this->buildProviderErrorMessage(
+            'Google Drive file delete failed.',
+            $response['statusCode'],
+            $providerDetails
+        );
+        $this->setError('googleDriveDeleteFailed', $message);
+        return false;
+    }
+
     private function getValidAccessToken()
     {
         $stored = $this->_tokenStore->get($this->_siteID, $this->_userID);

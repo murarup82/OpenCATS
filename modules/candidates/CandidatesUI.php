@@ -54,6 +54,7 @@ include_once(LEGACY_ROOT . '/lib/Search.php');
 include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
 include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
 include_once(LEGACY_ROOT . '/lib/GoogleDriveUserTokens.php');
+include_once(LEGACY_ROOT . '/lib/GoogleDriveAttachmentLinks.php');
 include_once(LEGACY_ROOT . '/lib/GoogleDriveClient.php');
 
 class CandidatesUI extends UserInterface
@@ -296,6 +297,13 @@ class CandidatesUI extends UserInterface
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
                 $this->onGoogleDriveUploadAttachment();
+                break;
+
+            case 'googleDriveDeleteAttachmentFile':
+                if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ) {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onGoogleDriveDeleteAttachmentFile();
                 break;
 
             /* Hot List Page */
@@ -949,6 +957,30 @@ class CandidatesUI extends UserInterface
 
         $profileImageURL = '';
         $attachmentsPayload = array();
+        $attachmentIDsForDriveMap = array();
+        foreach ($attachmentsRS as $attachmentDataForMap)
+        {
+            if ((int) $attachmentDataForMap['isProfileImage'] === 1)
+            {
+                continue;
+            }
+            $attachmentIDForMap = (int) $attachmentDataForMap['attachmentID'];
+            if ($attachmentIDForMap > 0)
+            {
+                $attachmentIDsForDriveMap[] = $attachmentIDForMap;
+            }
+        }
+        $googleDriveLinkedAttachmentIDMap = array();
+        if (!empty($attachmentIDsForDriveMap))
+        {
+            $googleDriveLinks = new GoogleDriveAttachmentLinks();
+            $googleDriveLinkedAttachmentIDMap = $googleDriveLinks->getAttachmentIDMap(
+                $this->_siteID,
+                $this->_userID,
+                $attachmentIDsForDriveMap
+            );
+        }
+
         foreach ($attachmentsRS as $attachmentData)
         {
             $isProfileImage = ((int) $attachmentData['isProfileImage'] === 1);
@@ -976,6 +1008,10 @@ class CandidatesUI extends UserInterface
                 'fileName' => (isset($attachmentData['originalFilename']) ? $attachmentData['originalFilename'] : ''),
                 'dateCreated' => (isset($attachmentData['dateCreated']) ? $attachmentData['dateCreated'] : '--'),
                 'retrievalURL' => $retrievalURL,
+                'googleDriveLinked' => (
+                    isset($googleDriveLinkedAttachmentIDMap[(int) $attachmentData['attachmentID']]) &&
+                    $googleDriveLinkedAttachmentIDMap[(int) $attachmentData['attachmentID']]
+                ),
                 'previewAvailable' => ((int) $attachmentData['hasText'] === 1),
                 'previewURL' => sprintf(
                     '%s?m=candidates&a=viewResume&attachmentID=%d&ui=legacy',
@@ -1313,6 +1349,8 @@ class CandidatesUI extends UserInterface
                 'deleteAttachmentToken' => $this->getCSRFToken('candidates.deleteAttachment'),
                 'googleDriveUploadAttachmentURL' => sprintf('%s?m=candidates&a=googleDriveUploadAttachment', $baseURL),
                 'googleDriveUploadAttachmentToken' => $this->getCSRFToken('candidates.googleDriveUploadAttachment'),
+                'googleDriveDeleteAttachmentURL' => sprintf('%s?m=candidates&a=googleDriveDeleteAttachmentFile', $baseURL),
+                'googleDriveDeleteAttachmentToken' => $this->getCSRFToken('candidates.googleDriveDeleteAttachmentFile'),
                 'googleDriveConnectURL' => $this->buildGoogleDriveConnectURL(''),
                 'addTagsURL' => sprintf('%s?m=candidates&a=addCandidateTags&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addTagsToken' => $this->getCSRFToken('candidates.addCandidateTags'),
@@ -5698,7 +5736,35 @@ class CandidatesUI extends UserInterface
         }
 
         $driveClient = new GoogleDriveClient($googleSettings, $tokenStore, $this->_siteID, $this->_userID);
-        $uploadResult = $driveClient->uploadDocxToFormattedCVFolder($attachmentPath, $originalFilename);
+        $googleDriveLinks = new GoogleDriveAttachmentLinks();
+
+        $uploadResult = array();
+        $existingLink = $googleDriveLinks->get($this->_siteID, $this->_userID, $attachmentID);
+        if (!empty($existingLink) && !empty($existingLink['fileID']))
+        {
+            $existingGoogleFile = $driveClient->getFileByID((string) $existingLink['fileID']);
+            if (!empty($existingGoogleFile))
+            {
+                $uploadResult = array(
+                    'fileID' => (isset($existingGoogleFile['id']) ? (string) $existingGoogleFile['id'] : ''),
+                    'fileName' => (isset($existingGoogleFile['name']) ? (string) $existingGoogleFile['name'] : $originalFilename),
+                    'editURL' => (isset($existingGoogleFile['webViewLink']) ? (string) $existingGoogleFile['webViewLink'] : ''),
+                    'reusedExisting' => true
+                );
+            }
+            else
+            {
+                if ($driveClient->getLastErrorCode() === '')
+                {
+                    $googleDriveLinks->delete($this->_siteID, $this->_userID, $attachmentID);
+                }
+            }
+        }
+
+        if (empty($uploadResult))
+        {
+            $uploadResult = $driveClient->uploadDocxToFormattedCVFolder($attachmentPath, $originalFilename);
+        }
         if (empty($uploadResult))
         {
             $errorCode = $driveClient->getLastErrorCode();
@@ -5726,6 +5792,17 @@ class CandidatesUI extends UserInterface
             return;
         }
 
+        if (!empty($uploadResult['fileID']))
+        {
+            $googleDriveLinks->save(
+                $this->_siteID,
+                $this->_userID,
+                $attachmentID,
+                (string) $uploadResult['fileID'],
+                (isset($uploadResult['fileName']) ? (string) $uploadResult['fileName'] : '')
+            );
+        }
+
         $this->outputGoogleDriveMutationJSON(
             $isModernJSON,
             200,
@@ -5738,7 +5815,152 @@ class CandidatesUI extends UserInterface
                 'editURL' => (isset($uploadResult['editURL']) ? (string) $uploadResult['editURL'] : ''),
                 'fileID' => (isset($uploadResult['fileID']) ? (string) $uploadResult['fileID'] : ''),
                 'fileName' => (isset($uploadResult['fileName']) ? (string) $uploadResult['fileName'] : $originalFilename),
-                'reusedExisting' => (!empty($uploadResult['reusedExisting']) ? true : false)
+                'reusedExisting' => (!empty($uploadResult['reusedExisting']) ? true : false),
+                'googleDriveLinked' => true
+            )
+        );
+    }
+
+    private function onGoogleDriveDeleteAttachmentFile()
+    {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 405, false, 'invalidMethod', 'Invalid request method.');
+            return;
+        }
+
+        if (!$this->isRequiredIDValid('candidateID', $_POST))
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 400, false, 'invalidCandidate', 'Invalid candidate ID.');
+            return;
+        }
+
+        if (!$this->isRequiredIDValid('attachmentID', $_POST))
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 400, false, 'invalidAttachment', 'Invalid attachment ID.');
+            return;
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('candidates.googleDriveDeleteAttachmentFile', $securityToken))
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 403, false, 'invalidToken', 'Invalid request token.');
+            return;
+        }
+
+        $candidateID = (int) $_POST['candidateID'];
+        $attachmentID = (int) $_POST['attachmentID'];
+        $origin = $this->sanitizeBrowserOriginForGoogleDrive($this->getTrimmedInput('origin', $_POST));
+
+        $candidates = new Candidates($this->_siteID);
+        $candidateData = $candidates->get($candidateID);
+        if (empty($candidateData))
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 404, false, 'candidateNotFound', 'Candidate not found.');
+            return;
+        }
+
+        $attachments = new Attachments($this->_siteID);
+        $attachmentRS = $attachments->get($attachmentID, true);
+        if (empty($attachmentRS) ||
+            (int) $attachmentRS['dataItemType'] !== DATA_ITEM_CANDIDATE ||
+            (int) $attachmentRS['dataItemID'] !== $candidateID)
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                403,
+                false,
+                'attachmentOwnership',
+                'Attachment does not belong to this candidate.'
+            );
+            return;
+        }
+
+        $googleSettings = $this->getGoogleDriveOAuthSettings();
+        if (!$this->isGoogleDriveConfigured($googleSettings))
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                503,
+                false,
+                'googleDriveNotConfigured',
+                'Google Drive integration is not configured. Ask an administrator to configure Google OIDC settings.'
+            );
+            return;
+        }
+
+        $tokenStore = new GoogleDriveUserTokens();
+        $tokenData = $tokenStore->get($this->_siteID, $this->_userID);
+        if (empty($tokenData) || trim((string) $tokenData['refreshToken']) === '')
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                401,
+                false,
+                'googleDriveAuthRequired',
+                'Google Drive is not connected for this user.',
+                array(
+                    'authURL' => $this->buildGoogleDriveConnectURL($origin)
+                )
+            );
+            return;
+        }
+
+        $googleDriveLinks = new GoogleDriveAttachmentLinks();
+        $existingLink = $googleDriveLinks->get($this->_siteID, $this->_userID, $attachmentID);
+        if (empty($existingLink) || empty($existingLink['fileID']))
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                404,
+                false,
+                'googleDriveFileNotLinked',
+                'No Google Docs file is linked to this attachment.'
+            );
+            return;
+        }
+
+        $driveClient = new GoogleDriveClient($googleSettings, $tokenStore, $this->_siteID, $this->_userID);
+        $deleted = $driveClient->deleteFileByID((string) $existingLink['fileID']);
+        if (!$deleted)
+        {
+            $errorCode = $driveClient->getLastErrorCode();
+            $errorMessage = $driveClient->getLastErrorMessage();
+            if ($errorMessage === '')
+            {
+                $errorMessage = 'Google Drive file delete failed.';
+            }
+
+            $statusCode = ($errorCode === 'googleDriveAuthRequired' ? 401 : 502);
+            $extra = array();
+            if ($errorCode === 'googleDriveAuthRequired')
+            {
+                $extra['authURL'] = $this->buildGoogleDriveConnectURL($origin);
+            }
+
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                $statusCode,
+                false,
+                ($errorCode !== '' ? $errorCode : 'googleDriveDeleteFailed'),
+                $errorMessage,
+                $extra
+            );
+            return;
+        }
+
+        $googleDriveLinks->delete($this->_siteID, $this->_userID, $attachmentID);
+
+        $this->outputGoogleDriveMutationJSON(
+            $isModernJSON,
+            200,
+            true,
+            'googleDriveDeleteSuccess',
+            'Google Docs file deleted.',
+            array(
+                'attachmentID' => $attachmentID,
+                'googleDriveLinked' => false
             )
         );
     }

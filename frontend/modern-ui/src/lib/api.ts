@@ -1,4 +1,5 @@
 import type {
+  CandidateGoogleDriveDeleteMutationResponse,
   ActivityListModernDataResponse,
   CandidateGoogleDriveUploadMutationResponse,
   CalendarEventMutationResponse,
@@ -991,6 +992,42 @@ export async function uploadCandidateAttachmentToGoogleDrive(
   });
 
   return (await parseModernMutationResponse(response, 'Google Drive upload')) as CandidateGoogleDriveUploadMutationResponse;
+}
+
+export async function deleteCandidateGoogleDriveAttachmentFile(
+  submitURL: string,
+  payload: {
+    candidateID: number;
+    attachmentID: number;
+    securityToken: string;
+    origin: string;
+  }
+): Promise<CandidateGoogleDriveDeleteMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('candidateID', String(payload.candidateID || 0));
+  body.set('attachmentID', String(payload.attachmentID || 0));
+  body.set('securityToken', payload.securityToken || '');
+  body.set('origin', payload.origin || '');
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'candidates',
+    a: 'googleDriveDeleteAttachmentFile'
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  return (await parseModernMutationResponse(
+    response,
+    'Google Drive delete'
+  )) as CandidateGoogleDriveDeleteMutationResponse;
 }
 
 export async function deleteJobOrderAttachment(
