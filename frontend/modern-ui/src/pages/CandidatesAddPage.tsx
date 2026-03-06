@@ -154,9 +154,128 @@ function readAIValue(value: unknown): { value: string; confidence: number } {
   };
 }
 
+function normalizeOptionLabel(value: unknown): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[:]/g, '')
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function isBlankLike(value: unknown): boolean {
+  const normalized = String(value || '').trim().toLowerCase();
+  return normalized === '' || normalized === '--' || normalized === '-' || normalized === 'n/a' || normalized === 'na';
+}
+
+function findExtraFieldByLabel(extraFields: CandidateExtraField[], labelText: string): CandidateExtraField | null {
+  const target = normalizeOptionLabel(labelText);
+  return extraFields.find((field) => normalizeOptionLabel(field.fieldName) === target) || null;
+}
+
+function setExtraFieldDefaultIfBlank(
+  next: CandidateAddFormState,
+  extraFields: CandidateExtraField[],
+  labelText: string,
+  desiredValue: string
+): boolean {
+  const field = findExtraFieldByLabel(extraFields, labelText);
+  const value = String(desiredValue || '').trim();
+  if (!field || value === '') {
+    return false;
+  }
+
+  const currentValue = String(next.extraFields[field.postKey] || '');
+  if (!isBlankLike(currentValue)) {
+    return false;
+  }
+
+  if (field.inputType === 'dropdown' || field.inputType === 'radio') {
+    const target = normalizeOptionLabel(value);
+    const matchedOption = field.options.find((option) => normalizeOptionLabel(option) === target);
+    if (!matchedOption) {
+      return false;
+    }
+    next.extraFields[field.postKey] = matchedOption;
+    return true;
+  }
+
+  if (field.inputType === 'checkbox') {
+    const normalized = normalizeOptionLabel(value);
+    if (normalized === 'yes' || normalized === 'true' || normalized === '1') {
+      next.extraFields[field.postKey] = 'Yes';
+      return true;
+    }
+    if (normalized === 'no' || normalized === 'false' || normalized === '0') {
+      next.extraFields[field.postKey] = 'No';
+      return true;
+    }
+    return false;
+  }
+
+  next.extraFields[field.postKey] = value;
+  return true;
+}
+
+function mapSeniorityLabel(years: number | null): string {
+  if (years === null || !Number.isFinite(years)) {
+    return '';
+  }
+  if (years <= 1) {
+    return 'Entry Level (0-1year)';
+  }
+  if (years <= 3) {
+    return 'Junior (1-3 years)';
+  }
+  if (years <= 5) {
+    return 'Middle (3-5 years)';
+  }
+  if (years <= 7) {
+    return 'Senior(5-7 years)';
+  }
+  return 'Expert( 7 years)';
+}
+
+function extractSeniorityYears(text: string): number | null {
+  const source = String(text || '');
+  if (source.trim() === '') {
+    return null;
+  }
+  const matcher = /(\d+)\s*\+?\s*(?:years?|yrs?|yoe)/gi;
+  let maxYears: number | null = null;
+  let match: RegExpExecArray | null = matcher.exec(source);
+  while (match) {
+    const years = Number(match[1]);
+    if (Number.isFinite(years)) {
+      maxYears = maxYears === null ? years : Math.max(maxYears, years);
+    }
+    match = matcher.exec(source);
+  }
+  return maxYears;
+}
+
+function extractMissionCustomer(text: string): string {
+  const source = String(text || '');
+  if (source.trim() === '') {
+    return '';
+  }
+
+  const missionMatch = source.match(/mission[:\s-]+([^.;\n]+)/i);
+  const customerMatch = source.match(/(customer|client)[:\s-]+([^.;\n]+)/i);
+  const parts: string[] = [];
+
+  if (missionMatch && missionMatch[1]) {
+    parts.push(`Mission: ${String(missionMatch[1]).trim()}`);
+  }
+  if (customerMatch && customerMatch[2]) {
+    parts.push(`Customer: ${String(customerMatch[2]).trim()}`);
+  }
+  return parts.join(' | ');
+}
+
 function mergeAIPrefillIntoFormState(
   current: CandidateAddFormState,
-  candidate: Record<string, unknown> | null
+  candidate: Record<string, unknown> | null,
+  extraFields: CandidateExtraField[]
 ): CandidateAddFormState {
   if (!candidate) {
     return current;
@@ -247,9 +366,71 @@ function mergeAIPrefillIntoFormState(
   }
 
   const currentEmployer = readAIValue(candidate.current_employer);
-  if (currentEmployer.value !== '' && currentEmployer.confidence >= confidenceThreshold) {
+  if (currentEmployer.value !== '' && currentEmployer.confidence >= confidenceThreshold && isBlankLike(next.currentEmployer)) {
     next.currentEmployer = currentEmployer.value;
   }
+
+  const strictConfidenceThreshold = 0.85;
+  if (isBlankLike(next.currentEmployer) && Array.isArray(candidate.employment_recent) && candidate.employment_recent.length > 0) {
+    const recent = candidate.employment_recent[0];
+    if (recent && typeof recent === 'object') {
+      const recentObject = recent as Record<string, unknown>;
+      const recentParts = ['company', 'client', 'title']
+        .map((key) => readAIValue(recentObject[key]))
+        .filter((part) => part.value !== '' && part.confidence >= strictConfidenceThreshold)
+        .map((part) => part.value);
+      if (recentParts.length > 0) {
+        next.currentEmployer = recentParts.join(' | ');
+      }
+    }
+  }
+
+  if (isBlankLike(next.currentEmployer)) {
+    const inferredCurrentEmployer = extractMissionCustomer(summary.value);
+    if (inferredCurrentEmployer !== '') {
+      next.currentEmployer = inferredCurrentEmployer;
+    }
+  }
+
+  const seniorityBand = readAIValue(candidate.seniority_band);
+  const seniorityBandMap: Record<string, string> = {
+    entrylevel: 'Entry Level (0-1year)',
+    junior: 'Junior (1-3 years)',
+    middle: 'Middle (3-5 years)',
+    senior: 'Senior(5-7 years)',
+    expert: 'Expert( 7 years)'
+  };
+  let senioritySet = false;
+  if (seniorityBand.value !== '' && seniorityBand.confidence >= strictConfidenceThreshold) {
+    const mappedBand = seniorityBandMap[normalizeOptionLabel(seniorityBand.value)];
+    if (mappedBand) {
+      senioritySet = setExtraFieldDefaultIfBlank(next, extraFields, 'Seniority', mappedBand);
+    }
+  }
+
+  if (!senioritySet) {
+    const yearsField = readAIValue(candidate.experience_years);
+    if (yearsField.value !== '' && yearsField.confidence >= strictConfidenceThreshold) {
+      const years = Number(yearsField.value);
+      if (Number.isFinite(years)) {
+        const mapped = mapSeniorityLabel(years);
+        if (mapped !== '') {
+          senioritySet = setExtraFieldDefaultIfBlank(next, extraFields, 'Seniority', mapped);
+        }
+      }
+    }
+  }
+
+  if (!senioritySet) {
+    const inferredYears = extractSeniorityYears(summary.value);
+    const mapped = mapSeniorityLabel(inferredYears);
+    if (mapped !== '') {
+      setExtraFieldDefaultIfBlank(next, extraFields, 'Seniority', mapped);
+    }
+  }
+
+  setExtraFieldDefaultIfBlank(next, extraFields, 'Notice Period', 'regular notice (20days)');
+  setExtraFieldDefaultIfBlank(next, extraFields, 'Preferred Work Model', 'Hybrid Office 3-4 Days');
 
   return next;
 }
@@ -265,6 +446,11 @@ function getChangedTrackedFields(
   after: CandidateAddFormState
 ): CandidateTrackedFieldKey[] {
   return TRACKED_FIELD_KEYS.filter((fieldKey) => before[fieldKey] !== after[fieldKey]);
+}
+
+function getChangedExtraFieldKeys(before: CandidateAddFormState, after: CandidateAddFormState): string[] {
+  const keys = new Set([...Object.keys(before.extraFields || {}), ...Object.keys(after.extraFields || {})]);
+  return Array.from(keys).filter((key) => String(before.extraFields?.[key] || '') !== String(after.extraFields?.[key] || ''));
 }
 
 function buildCandidateParseFailureMessage(statusResult: {
@@ -403,6 +589,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   const [aiPrefillError, setAiPrefillError] = useState('');
   const [aiUndoSnapshot, setAiUndoSnapshot] = useState<CandidateAddFormState | null>(null);
   const [fieldSources, setFieldSources] = useState<Partial<Record<CandidateTrackedFieldKey, CandidateFieldSource>>>({});
+  const [aiUpdatedExtraFieldKeys, setAiUpdatedExtraFieldKeys] = useState<string[]>([]);
   const [editableSourceOptions, setEditableSourceOptions] = useState<SelectMenuOption[]>([]);
   const [sourceCSV, setSourceCSV] = useState<string>('');
   const [newSourceDraft, setNewSourceDraft] = useState<string>('');
@@ -441,6 +628,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         setNewSourceDraft('');
         setSourceNotice('');
         setFieldSources({});
+        setAiUpdatedExtraFieldKeys([]);
         setResumeText(result.resumeImport.documentText || '');
         setResumeTempFile(result.resumeImport.documentTempFile || '');
       })
@@ -555,6 +743,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
   }, [editableSourceOptions, newSourceDraft, sourceCSV]);
 
   const updateExtraFieldValue = (postKey: string, value: string) => {
+    setAiUpdatedExtraFieldKeys((current) => current.filter((key) => key !== postKey));
     setFormState((current) => {
       if (!current) {
         return current;
@@ -572,11 +761,12 @@ export function CandidatesAddPage({ bootstrap }: Props) {
 
   const renderExtraFieldControl = (field: CandidateExtraField) => {
     const value = formState?.extraFields[field.postKey] || '';
+    const aiClassName = aiUpdatedExtraFieldKeys.includes(field.postKey) ? ' avel-form-control--source-ai' : '';
 
     if (field.inputType === 'textarea') {
       return (
         <textarea
-          className={`avel-form-control${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
+          className={`avel-form-control${aiClassName}${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
           name={field.postKey}
           value={value}
           onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
@@ -588,7 +778,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     if (field.inputType === 'dropdown') {
       return (
         <select
-          className={`avel-form-control${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
+          className={`avel-form-control${aiClassName}${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
           name={field.postKey}
           value={value}
           onChange={(event) => updateExtraFieldValue(field.postKey, event.target.value)}
@@ -643,7 +833,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
 
     return (
       <input
-        className={`avel-form-control${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
+        className={`avel-form-control${aiClassName}${isBlankValue(value) ? ' avel-form-control--missing' : ''}`}
         type="text"
         name={field.postKey}
         value={value}
@@ -783,10 +973,13 @@ export function CandidatesAddPage({ bootstrap }: Props) {
       }
 
       const baseState = formStateRef.current || currentState;
-      const mergedState = mergeAIPrefillIntoFormState(baseState, statusResult.candidate);
+      const mergedState = mergeAIPrefillIntoFormState(baseState, statusResult.candidate, data.extraFields);
       const changedByAI = getChangedTrackedFields(baseState, mergedState);
+      const changedExtraByAI = getChangedExtraFieldKeys(baseState, mergedState);
+      const totalChanged = changedByAI.length + changedExtraByAI.length;
       setFormState(mergedState);
       formStateRef.current = mergedState;
+      setAiUpdatedExtraFieldKeys(changedExtraByAI);
       if (changedByAI.length > 0) {
         setFieldSources((current) => {
           const next = { ...current };
@@ -802,8 +995,8 @@ export function CandidatesAddPage({ bootstrap }: Props) {
           ? ` Warnings: ${warningMessages.slice(0, 3).join(' | ')}${warningMessages.length > 3 ? ' ...' : ''}`
           : '';
       setAiPrefillStatus(
-        changedByAI.length > 0
-          ? `AI extraction applied. ${changedByAI.length} field${changedByAI.length === 1 ? '' : 's'} updated.${warningSuffix}`
+        totalChanged > 0
+          ? `AI extraction applied. ${totalChanged} field${totalChanged === 1 ? '' : 's'} updated.${warningSuffix}`
           : `AI extraction completed. No editable fields changed.${warningSuffix}`
       );
     } catch (prefillError) {
@@ -877,7 +1070,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
       : resumeActionPending !== 'none'
         ? 'Wait for CV upload to complete.'
         : '';
-  const aiFieldCount = Object.values(fieldSources).filter((source) => source === 'ai-prefill').length;
+  const aiFieldCount = Object.values(fieldSources).filter((source) => source === 'ai-prefill').length + aiUpdatedExtraFieldKeys.length;
 
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page">
@@ -1057,6 +1250,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                               });
                               return next;
                             });
+                            setAiUpdatedExtraFieldKeys([]);
                             setAiUndoSnapshot(null);
                             setAiPrefillStatus('AI extraction undone.');
                             setAiPrefillError('');
