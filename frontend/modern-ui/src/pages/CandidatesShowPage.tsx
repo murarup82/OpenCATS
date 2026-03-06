@@ -1050,14 +1050,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         actions={
           <>
             {permissions.canEditCandidate ? (
-              <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(decodeLegacyURL(data.actions.editURL))}>
+              <a className="modern-btn modern-btn--emphasis" href={ensureModernUIURL(decodeLegacyURL(data.actions.editURL))}>
                 Edit Candidate
               </a>
             ) : null}
             {permissions.canAddToJobOrder ? (
               <button
                 type="button"
-                className="modern-btn modern-btn--secondary"
+                className="modern-btn modern-btn--emphasis"
                 onClick={() =>
                   setAssignJobModal({
                     url: decodeLegacyURL(data.actions.addToJobOrderURL)
@@ -1065,21 +1065,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 }
               >
                 Add To Job Order
-              </button>
-            ) : null}
-            {permissions.canViewHistory ? (
-              <button
-                type="button"
-                className="modern-btn modern-btn--secondary"
-                onClick={() =>
-                  setPipelineModal({
-                    url: decodeLegacyURL(data.actions.viewHistoryURL),
-                    title: 'Candidate History',
-                    showRefreshClose: false
-                  })
-                }
-              >
-                History
               </button>
             ) : null}
             <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.legacyURL)}>
