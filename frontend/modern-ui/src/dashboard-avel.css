@@ -3860,6 +3860,16 @@
   gap: 10px;
 }
 
+.avel-joborder-show-page .avel-joborder-hero__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--avel-900);
+  font: 700 clamp(1.2rem, 0.95rem + 0.95vw, 1.8rem) / 1.1 'Space Grotesk', 'Segoe UI', sans-serif;
+  letter-spacing: -0.015em;
+}
+
 .avel-joborder-show-page .avel-joborder-hero__chips {
   display: inline-flex;
   flex-wrap: wrap;

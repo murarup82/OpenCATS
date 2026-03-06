@@ -992,6 +992,9 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
               </p>
             </div>
             <div className="avel-joborder-hero">
+              <div className="avel-joborder-hero__name">
+                {toDisplayText(jobOrder.title, 'Job Order')}
+              </div>
               <div className="avel-joborder-hero__chips">
                 <span className={createStatusClassName(String(jobOrder.status).toLowerCase().replace(/[^a-z0-9]+/g, '-'))}>
                   {toDisplayText(jobOrder.status)}
