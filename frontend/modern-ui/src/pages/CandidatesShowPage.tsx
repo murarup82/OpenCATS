@@ -2164,7 +2164,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   {data.attachments.transformCandidates.length > 0 ? (
                     <button
                       type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      className="modern-btn modern-btn--mini modern-btn--emphasis"
                       onClick={() => setTransformCVModalOpen(true)}
                     >
                       Transform CV
@@ -2187,7 +2187,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               <p className="avel-list-panel__hint">
                 {googleDriveAccountEmail !== ''
                   ? `Google Docs links are per-user. Connected Google account: ${googleDriveAccountEmail}.`
-                  : 'Google Docs links are per-user and map only to your connected Google Drive account.'}
+                  : 'Google Docs links are per-user and map only to your connected Google account.'}
               </p>
               {permissions.canCreateAttachment && attachmentUploadOpen ? (
                 <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
@@ -2246,7 +2246,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                             </a>
                             {canOpenInGoogleDocs ? (
                               <span className="modern-chip modern-chip--info" style={{ marginLeft: 8 }}>
-                                {hasLinkedGoogleDoc ? 'Linked in your Google Drive' : 'Not linked in your Google Drive'}
+                                {hasLinkedGoogleDoc ? 'Linked in Google Docs' : 'Not linked in Google Docs'}
                               </span>
                             ) : null}
                           </>
@@ -2269,7 +2269,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                               (googleDriveDeletePendingAttachmentID > 0 && googleDriveDeletePendingAttachmentID !== attachment.attachmentID)
                             }
                           >
-                            {googleDrivePendingAttachmentID === attachment.attachmentID ? 'Opening...' : 'Open in My Google Docs'}
+                            {googleDrivePendingAttachmentID === attachment.attachmentID ? 'Opening...' : 'Open in Google Docs'}
                           </button>
                         ) : null}
                         {attachment.googleDriveLinked &&
@@ -2277,7 +2277,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                         data.actions.googleDriveDeleteAttachmentToken ? (
                           <button
                             type="button"
-                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            className="modern-btn modern-btn--mini modern-btn--google-delete"
                             onClick={() => void handleDeleteGoogleDocsFile(attachment)}
                             disabled={
                               attachmentDeletePending ||
@@ -2287,7 +2287,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                           >
                             {googleDriveDeletePendingAttachmentID === attachment.attachmentID
                               ? 'Deleting...'
-                              : 'Delete from My Google Drive'}
+                              : 'Delete from Google'}
                           </button>
                         ) : null}
                         {permissions.canDeleteAttachment ? (

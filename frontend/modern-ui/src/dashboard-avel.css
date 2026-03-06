@@ -162,6 +162,17 @@
   box-shadow: none;
 }
 
+.avel-dashboard-page .modern-btn--google-delete {
+  color: #ffffff;
+  border-color: #cb7f2a;
+  background: linear-gradient(145deg, #e49b45 0%, #c8741d 100%);
+  box-shadow: 0 5px 12px rgba(170, 96, 24, 0.28);
+}
+
+.avel-dashboard-page .modern-btn--google-delete:hover {
+  box-shadow: 0 8px 16px rgba(170, 96, 24, 0.34);
+}
+
 .avel-dashboard-page .modern-btn--mini {
   min-height: 30px;
   padding: 5px 10px;
@@ -4760,6 +4771,10 @@
 .avel-candidate-show-page .avel-candidate-panel--events,
 .avel-candidate-show-page .avel-candidate-panel--questionnaires {
   background: linear-gradient(180deg, #f8fbfd 0%, #edf3f8 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-panel--attachments .modern-table-actions .modern-btn {
+  white-space: nowrap;
 }
 
 .avel-candidate-show-page .avel-candidate-details > div {
