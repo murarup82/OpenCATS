@@ -147,12 +147,8 @@ class GoogleDriveClient
 
         if (!$response['ok'])
         {
-            $bodyJSON = json_decode((string) $response['body'], true);
-            $providerError = '';
-            if (is_array($bodyJSON))
-            {
-                $providerError = (isset($bodyJSON['error']) ? (string) $bodyJSON['error'] : '');
-            }
+            $providerDetails = $this->parseProviderErrorDetails((string) $response['body']);
+            $providerError = (isset($providerDetails['error']) ? (string) $providerDetails['error'] : '');
 
             if ($providerError === 'invalid_grant')
             {
@@ -161,7 +157,21 @@ class GoogleDriveClient
                 return array();
             }
 
-            $this->setError('googleDriveRefreshFailed', 'Google Drive token refresh failed.');
+            if ($this->isDriveApiDisabledError($providerDetails))
+            {
+                $this->setError(
+                    'googleDriveApiDisabled',
+                    'Google Drive API appears disabled in Google Cloud. Enable it for this project and retry.'
+                );
+                return array();
+            }
+
+            $message = $this->buildProviderErrorMessage(
+                'Google Drive token refresh failed.',
+                $response['statusCode'],
+                $providerDetails
+            );
+            $this->setError('googleDriveRefreshFailed', $message);
             return array();
         }
 
@@ -218,7 +228,22 @@ class GoogleDriveClient
 
         if (!$response['ok'])
         {
-            $this->setError('googleDriveFolderLookupFailed', 'Unable to query Google Drive folders.');
+            $providerDetails = $this->parseProviderErrorDetails((string) $response['body']);
+            if ($this->isDriveApiDisabledError($providerDetails))
+            {
+                $this->setError(
+                    'googleDriveApiDisabled',
+                    'Google Drive API appears disabled in Google Cloud. Enable it for this project and retry.'
+                );
+                return '';
+            }
+
+            $message = $this->buildProviderErrorMessage(
+                'Unable to query Google Drive folders.',
+                $response['statusCode'],
+                $providerDetails
+            );
+            $this->setError('googleDriveFolderLookupFailed', $message);
             return '';
         }
 
@@ -262,7 +287,22 @@ class GoogleDriveClient
 
         if (!$response['ok'])
         {
-            $this->setError('googleDriveFolderCreateFailed', 'Unable to create Google Drive folder.');
+            $providerDetails = $this->parseProviderErrorDetails((string) $response['body']);
+            if ($this->isDriveApiDisabledError($providerDetails))
+            {
+                $this->setError(
+                    'googleDriveApiDisabled',
+                    'Google Drive API appears disabled in Google Cloud. Enable it for this project and retry.'
+                );
+                return '';
+            }
+
+            $message = $this->buildProviderErrorMessage(
+                'Unable to create Google Drive folder.',
+                $response['statusCode'],
+                $providerDetails
+            );
+            $this->setError('googleDriveFolderCreateFailed', $message);
             return '';
         }
 
@@ -322,7 +362,22 @@ class GoogleDriveClient
 
         if (!$response['ok'])
         {
-            $this->setError('googleDriveUploadFailed', 'Google Drive upload failed.');
+            $providerDetails = $this->parseProviderErrorDetails((string) $response['body']);
+            if ($this->isDriveApiDisabledError($providerDetails))
+            {
+                $this->setError(
+                    'googleDriveApiDisabled',
+                    'Google Drive API appears disabled in Google Cloud. Enable it for this project and retry.'
+                );
+                return array();
+            }
+
+            $message = $this->buildProviderErrorMessage(
+                'Google Drive upload failed.',
+                $response['statusCode'],
+                $providerDetails
+            );
+            $this->setError('googleDriveUploadFailed', $message);
             return array();
         }
 
@@ -457,6 +512,144 @@ class GoogleDriveClient
     {
         $this->_lastErrorCode = (string) $code;
         $this->_lastErrorMessage = (string) $message;
+        if (function_exists('error_log'))
+        {
+            error_log(
+                'GoogleDriveClient error | ' . json_encode(array(
+                    'siteID' => $this->_siteID,
+                    'userID' => $this->_userID,
+                    'code' => $this->_lastErrorCode,
+                    'message' => $this->_lastErrorMessage
+                ))
+            );
+        }
+    }
+
+    private function parseProviderErrorDetails($bodyText)
+    {
+        $details = array(
+            'error' => '',
+            'errorDescription' => '',
+            'message' => '',
+            'reason' => '',
+            'status' => ''
+        );
+
+        $payload = json_decode((string) $bodyText, true);
+        if (!is_array($payload))
+        {
+            return $details;
+        }
+
+        if (isset($payload['error']) && is_string($payload['error']))
+        {
+            $details['error'] = trim((string) $payload['error']);
+        }
+        if (isset($payload['error_description']) && is_string($payload['error_description']))
+        {
+            $details['errorDescription'] = trim((string) $payload['error_description']);
+        }
+        if (isset($payload['error']) && is_array($payload['error']))
+        {
+            $errorNode = $payload['error'];
+            if (isset($errorNode['status']) && is_string($errorNode['status']))
+            {
+                $details['status'] = trim((string) $errorNode['status']);
+            }
+            if (isset($errorNode['message']) && is_string($errorNode['message']))
+            {
+                $details['message'] = trim((string) $errorNode['message']);
+            }
+            if (isset($errorNode['errors']) && is_array($errorNode['errors']))
+            {
+                foreach ($errorNode['errors'] as $row)
+                {
+                    if (!is_array($row))
+                    {
+                        continue;
+                    }
+                    if (isset($row['reason']) && trim((string) $row['reason']) !== '')
+                    {
+                        $details['reason'] = trim((string) $row['reason']);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $details;
+    }
+
+    private function isDriveApiDisabledError($providerDetails)
+    {
+        if (!is_array($providerDetails))
+        {
+            return false;
+        }
+
+        $reason = strtolower(trim((string) (isset($providerDetails['reason']) ? $providerDetails['reason'] : '')));
+        $message = strtolower(trim((string) (isset($providerDetails['message']) ? $providerDetails['message'] : '')));
+        $errorDescription = strtolower(trim((string) (isset($providerDetails['errorDescription']) ? $providerDetails['errorDescription'] : '')));
+
+        if ($reason === 'accessnotconfigured')
+        {
+            return true;
+        }
+
+        if (strpos($message, 'api has not been used') !== false || strpos($message, 'is disabled') !== false)
+        {
+            return true;
+        }
+
+        if (strpos($errorDescription, 'api has not been used') !== false || strpos($errorDescription, 'is disabled') !== false)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function buildProviderErrorMessage($defaultMessage, $statusCode, $providerDetails)
+    {
+        $parts = array();
+        $defaultMessage = trim((string) $defaultMessage);
+        if ($defaultMessage !== '')
+        {
+            $parts[] = $defaultMessage;
+        }
+
+        $statusCode = (int) $statusCode;
+        if ($statusCode > 0)
+        {
+            $parts[] = '(HTTP ' . $statusCode . ')';
+        }
+
+        if (is_array($providerDetails))
+        {
+            $providerMessage = trim((string) (isset($providerDetails['message']) ? $providerDetails['message'] : ''));
+            $providerReason = trim((string) (isset($providerDetails['reason']) ? $providerDetails['reason'] : ''));
+            $providerError = trim((string) (isset($providerDetails['error']) ? $providerDetails['error'] : ''));
+            $providerErrorDescription = trim((string) (isset($providerDetails['errorDescription']) ? $providerDetails['errorDescription'] : ''));
+
+            if ($providerMessage !== '')
+            {
+                $parts[] = $providerMessage;
+            }
+            else if ($providerErrorDescription !== '')
+            {
+                $parts[] = $providerErrorDescription;
+            }
+            else if ($providerError !== '')
+            {
+                $parts[] = $providerError;
+            }
+
+            if ($providerReason !== '')
+            {
+                $parts[] = 'reason: ' . $providerReason;
+            }
+        }
+
+        return trim(implode(' ', $parts));
     }
 }
-
