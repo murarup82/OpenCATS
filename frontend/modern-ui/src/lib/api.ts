@@ -2379,6 +2379,36 @@ type LegacyAjaxResponse = {
   errorMessage: string;
 };
 
+export type TransformJobOrderSearchResult = {
+  totalElements: number;
+  jobOrders: Array<{
+    jobOrderID: number;
+    title: string;
+    companyName: string;
+  }>;
+};
+
+export type TalentFitFlowTransformCreateResponse = {
+  jobID: string;
+  status: string;
+};
+
+export type TalentFitFlowTransformStatusResponse = {
+  status: string;
+  cvDownloadURL: string;
+  analysisPdfState: string;
+  analysisPdfAttached: boolean;
+  analysisPdfRetryAfter: string;
+  errorCodeText: string;
+  errorMessageText: string;
+};
+
+export type TalentFitFlowTransformStoreResponse = {
+  attachmentID: number;
+  attachmentFilename: string;
+  retrievalURL: string;
+};
+
 function getTextNodeValue(xml: Document, tagName: string): string {
   const node = xml.getElementsByTagName(tagName).item(0);
   if (!node || !node.textContent) {
@@ -2386,6 +2416,65 @@ function getTextNodeValue(xml: Document, tagName: string): string {
   }
 
   return node.textContent.trim();
+}
+
+function getElementTextNodeValue(element: Element, tagName: string): string {
+  const node = element.getElementsByTagName(tagName).item(0);
+  if (!node || !node.textContent) {
+    return '';
+  }
+
+  return node.textContent.trim();
+}
+
+function compactLegacyAjaxPreview(bodyText: string, maxLength = 220): string {
+  return String(bodyText || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+
+async function postLegacyAjaxXML(
+  functionName: string,
+  fields: Record<string, string>,
+  actionLabel: string
+): Promise<Document> {
+  const body = new URLSearchParams();
+  body.set('f', functionName);
+  Object.entries(fields).forEach(([key, value]) => {
+    body.set(key, String(value || ''));
+  });
+  body.set('rhash', String(Math.floor(Math.random() * 100000000)));
+
+  const response = await fetch('ajax.php', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error(`${actionLabel} failed (${response.status}).`);
+  }
+
+  const responseText = await response.text();
+  const xml = new DOMParser().parseFromString(responseText, 'application/xml');
+  if (xml.getElementsByTagName('parsererror').length > 0) {
+    const preview = compactLegacyAjaxPreview(responseText);
+    throw new Error(
+      `${actionLabel} failed. Invalid XML response.${preview === '' ? '' : ` Response preview: ${preview}`}`
+    );
+  }
+
+  const errorCode = getTextNodeValue(xml, 'errorcode');
+  const errorMessage = getTextNodeValue(xml, 'errormessage');
+  if (errorCode !== '' && errorCode !== '0') {
+    throw new Error(errorMessage || `${actionLabel} failed.`);
+  }
+
+  return xml;
 }
 
 function parseSessionCookie(sessionCookie: string): { key: string; value: string } | null {
@@ -2454,5 +2543,129 @@ export async function callLegacyAjaxFunction(
     response: getTextNodeValue(xml, 'response'),
     errorCode,
     errorMessage
+  };
+}
+
+export async function searchJobOrdersForTransform(
+  query: string,
+  maxResults: number,
+  offset: number
+): Promise<TransformJobOrderSearchResult> {
+  const xml = await postLegacyAjaxXML(
+    'searchJobOrders',
+    {
+      query: String(query || '').trim(),
+      maxResults: String(Math.max(1, Number(maxResults || 50))),
+      offset: String(Math.max(0, Number(offset || 0)))
+    },
+    'Job order search'
+  );
+
+  const jobOrderNodes = xml.getElementsByTagName('joborder');
+  const jobOrders: TransformJobOrderSearchResult['jobOrders'] = [];
+  for (let index = 0; index < jobOrderNodes.length; index += 1) {
+    const node = jobOrderNodes.item(index);
+    if (!node) {
+      continue;
+    }
+    const jobOrderID = Number(getElementTextNodeValue(node, 'id') || 0);
+    if (jobOrderID <= 0) {
+      continue;
+    }
+    jobOrders.push({
+      jobOrderID,
+      title: getElementTextNodeValue(node, 'title'),
+      companyName: getElementTextNodeValue(node, 'companyname')
+    });
+  }
+
+  const totalElements = Number(getTextNodeValue(xml, 'totalelements') || jobOrders.length);
+  return {
+    totalElements: Number.isFinite(totalElements) ? totalElements : jobOrders.length,
+    jobOrders
+  };
+}
+
+export async function createTalentFitFlowTransformJob(payload: {
+  candidateID: number;
+  attachmentID: number;
+  jobOrderID: number;
+  language?: string;
+  roleType?: string;
+}): Promise<TalentFitFlowTransformCreateResponse> {
+  const xml = await postLegacyAjaxXML(
+    'talentFitFlowTransform',
+    {
+      action: 'create',
+      candidateID: String(Number(payload.candidateID || 0)),
+      attachmentID: String(Number(payload.attachmentID || 0)),
+      jobOrderID: String(Number(payload.jobOrderID || 0)),
+      language: String(payload.language || '').trim(),
+      roleType: String(payload.roleType || '').trim()
+    },
+    'CV transform create'
+  );
+
+  const jobID = getTextNodeValue(xml, 'jobid');
+  const status = getTextNodeValue(xml, 'status');
+  if (jobID === '') {
+    throw new Error('CV transform create failed. Missing job ID.');
+  }
+
+  return {
+    jobID,
+    status
+  };
+}
+
+export async function fetchTalentFitFlowTransformStatus(payload: {
+  jobID: string;
+  candidateID: number;
+  jobOrderID: number;
+}): Promise<TalentFitFlowTransformStatusResponse> {
+  const xml = await postLegacyAjaxXML(
+    'talentFitFlowTransform',
+    {
+      action: 'status',
+      jobId: String(payload.jobID || '').trim(),
+      candidateID: String(Number(payload.candidateID || 0)),
+      jobOrderID: String(Number(payload.jobOrderID || 0))
+    },
+    'CV transform status'
+  );
+
+  return {
+    status: getTextNodeValue(xml, 'status'),
+    cvDownloadURL: getTextNodeValue(xml, 'cv_download_url'),
+    analysisPdfState: getTextNodeValue(xml, 'analysis_pdf_state'),
+    analysisPdfAttached: getTextNodeValue(xml, 'analysis_pdf_attached') === '1',
+    analysisPdfRetryAfter: getTextNodeValue(xml, 'analysis_pdf_retry_after'),
+    errorCodeText: getTextNodeValue(xml, 'error_code'),
+    errorMessageText: getTextNodeValue(xml, 'error_message')
+  };
+}
+
+export async function storeTalentFitFlowTransformedAttachment(payload: {
+  candidateID: number;
+  attachmentID: number;
+  jobOrderID: number;
+  jobID: string;
+}): Promise<TalentFitFlowTransformStoreResponse> {
+  const xml = await postLegacyAjaxXML(
+    'talentFitFlowTransform',
+    {
+      action: 'store',
+      candidateID: String(Number(payload.candidateID || 0)),
+      attachmentID: String(Number(payload.attachmentID || 0)),
+      jobOrderID: String(Number(payload.jobOrderID || 0)),
+      jobId: String(payload.jobID || '').trim()
+    },
+    'CV transform store'
+  );
+
+  return {
+    attachmentID: Number(getTextNodeValue(xml, 'attachment_id') || 0),
+    attachmentFilename: getTextNodeValue(xml, 'attachment_filename'),
+    retrievalURL: getTextNodeValue(xml, 'retrieval_url')
   };
 }

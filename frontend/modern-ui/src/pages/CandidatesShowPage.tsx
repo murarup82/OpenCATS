@@ -2,13 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   addCandidateProfileComment,
+  createTalentFitFlowTransformJob,
   deleteCandidateAttachment,
   deleteCandidateMessageThread,
   fetchPipelineStatusDetailsModernData,
+  fetchTalentFitFlowTransformStatus,
   fetchCandidatesShowModernData,
   postCandidateMessage,
   removePipelineEntryViaLegacyURL,
+  searchJobOrdersForTransform,
   setDashboardPipelineStatus,
+  storeTalentFitFlowTransformedAttachment,
   updateCandidateTags,
   uploadCandidateAttachment,
   updatePipelineStatusHistoryDate
@@ -83,6 +87,12 @@ function formatQuestionnaireDate(value: unknown): string {
 
 function createStatusClassName(statusSlug: string): string {
   return `modern-status modern-status--${statusSlug || 'unknown'}`;
+}
+
+function sleep(delayMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, delayMs);
+  });
 }
 
 export function CandidatesShowPage({ bootstrap }: Props) {
@@ -162,8 +172,26 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
   const [transformCVModalOpen, setTransformCVModalOpen] = useState<boolean>(false);
   const [transformAttachmentID, setTransformAttachmentID] = useState<number>(0);
+  const [transformJobSearch, setTransformJobSearch] = useState<string>('');
+  const [transformJobOrderOffset, setTransformJobOrderOffset] = useState<number>(0);
+  const [transformJobOrders, setTransformJobOrders] = useState<
+    Array<{ jobOrderID: number; title: string; companyName: string }>
+  >([]);
+  const [transformJobOrderID, setTransformJobOrderID] = useState<number>(0);
+  const [transformJobLoading, setTransformJobLoading] = useState<boolean>(false);
+  const [transformJobCanLoadMore, setTransformJobCanLoadMore] = useState<boolean>(false);
+  const [transformLanguage, setTransformLanguage] = useState<string>('English');
+  const [transformRoleType, setTransformRoleType] = useState<string>('Technical');
+  const [transformStoreAttachment, setTransformStoreAttachment] = useState<boolean>(false);
+  const [transformPending, setTransformPending] = useState<boolean>(false);
+  const [transformStatusInfo, setTransformStatusInfo] = useState<string>('');
+  const [transformStatusError, setTransformStatusError] = useState<string>('');
+  const [transformDownloadURL, setTransformDownloadURL] = useState<string>('');
+  const [transformAnalysisMessage, setTransformAnalysisMessage] = useState<string>('');
   const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'error' | 'info' } | null>(null);
   const loadRequestRef = useRef(0);
+  const transformRequestIDRef = useRef(0);
+  const transformSearchRequestRef = useRef(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -625,29 +653,259 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     }
   }, [attachmentUploadFile, attachmentUploadIsResume, attachmentUploadPending, data, refreshPageData, showToast]);
 
-  const openModernTransformCV = useCallback(() => {
-    if (!data) {
-      return;
+  const closeTransformCVModal = useCallback(() => {
+    transformRequestIDRef.current += 1;
+    transformSearchRequestRef.current += 1;
+    setTransformCVModalOpen(false);
+    setTransformPending(false);
+    setTransformJobLoading(false);
+    setTransformStatusInfo('');
+    setTransformStatusError('');
+    setTransformDownloadURL('');
+    setTransformAnalysisMessage('');
+  }, []);
+
+  const loadTransformJobOrders = useCallback(async (queryRaw: string, offset: number, append: boolean) => {
+    const requestID = transformSearchRequestRef.current + 1;
+    transformSearchRequestRef.current = requestID;
+    setTransformJobLoading(true);
+    setTransformStatusError('');
+
+    try {
+      const query = String(queryRaw || '').trim();
+      const result = await searchJobOrdersForTransform(query, 50, Math.max(0, Number(offset || 0)));
+      if (requestID !== transformSearchRequestRef.current) {
+        return;
+      }
+
+      setTransformJobOrders((current) => (append ? [...current, ...result.jobOrders] : result.jobOrders));
+      setTransformJobOrderOffset(Math.max(0, Number(offset || 0)));
+      setTransformJobCanLoadMore(query === '' && result.jobOrders.length >= 50);
+    } catch (err: unknown) {
+      if (requestID !== transformSearchRequestRef.current) {
+        return;
+      }
+      setTransformStatusError(err instanceof Error ? err.message : 'Unable to load job orders.');
+      if (!append) {
+        setTransformJobOrders([]);
+        setTransformJobOrderOffset(0);
+        setTransformJobCanLoadMore(false);
+      }
+    } finally {
+      if (requestID === transformSearchRequestRef.current) {
+        setTransformJobLoading(false);
+      }
     }
-    const transformRows = data.attachments.transformCandidates || [];
-    if (transformRows.length === 0) {
-      return;
-    }
-    const selectedAttachmentID =
-      Number(transformAttachmentID || 0) > 0
-        ? Number(transformAttachmentID || 0)
-        : Number(transformRows[0].attachmentID || 0);
-    if (selectedAttachmentID <= 0) {
+  }, []);
+
+  useEffect(() => {
+    if (!transformCVModalOpen || !data) {
       return;
     }
 
-    const editURL = ensureModernUIURL(decodeLegacyURL(data.actions.editURL));
-    const nextURL = new URL(editURL, window.location.href);
-    nextURL.searchParams.set('autoAIPrefill', '1');
-    nextURL.searchParams.set('aiAttachmentID', String(selectedAttachmentID));
-    nextURL.searchParams.set('ui', 'modern');
-    window.location.assign(nextURL.toString());
-  }, [data, transformAttachmentID]);
+    transformRequestIDRef.current += 1;
+    transformSearchRequestRef.current += 1;
+    setTransformJobSearch('');
+    setTransformJobOrderOffset(0);
+    setTransformJobOrders([]);
+    setTransformJobOrderID(0);
+    setTransformJobCanLoadMore(false);
+    setTransformLanguage('English');
+    setTransformRoleType('Technical');
+    setTransformStoreAttachment(false);
+    setTransformPending(false);
+    setTransformStatusInfo('');
+    setTransformStatusError('');
+    setTransformDownloadURL('');
+    setTransformAnalysisMessage('');
+  }, [data, transformCVModalOpen]);
+
+  useEffect(() => {
+    if (!transformCVModalOpen || !data) {
+      return;
+    }
+
+    const timerID = window.setTimeout(() => {
+      void loadTransformJobOrders(transformJobSearch, 0, false);
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timerID);
+    };
+  }, [data, loadTransformJobOrders, transformCVModalOpen, transformJobSearch]);
+
+  useEffect(() => {
+    if (!transformCVModalOpen) {
+      return;
+    }
+    if (transformJobOrders.length === 0) {
+      setTransformJobOrderID(0);
+      return;
+    }
+    if (transformJobOrderID > 0 && transformJobOrders.some((row) => Number(row.jobOrderID) === transformJobOrderID)) {
+      return;
+    }
+    setTransformJobOrderID(Number(transformJobOrders[0].jobOrderID || 0));
+  }, [transformCVModalOpen, transformJobOrderID, transformJobOrders]);
+
+  const loadNextTransformJobOrders = useCallback(() => {
+    if (transformJobLoading || transformPending) {
+      return;
+    }
+    const query = String(transformJobSearch || '').trim();
+    if (query !== '') {
+      return;
+    }
+    const nextOffset = transformJobOrderOffset + 50;
+    void loadTransformJobOrders('', nextOffset, true);
+  }, [loadTransformJobOrders, transformJobLoading, transformJobOrderOffset, transformJobSearch, transformPending]);
+
+  const submitTransformCV = useCallback(async () => {
+    if (!data || transformPending) {
+      return;
+    }
+
+    const candidateID = Number(data.meta.candidateID || 0);
+    const attachmentID = Number(transformAttachmentID || 0);
+    const jobOrderID = Number(transformJobOrderID || 0);
+
+    if (candidateID <= 0) {
+      setTransformStatusError('Invalid candidate ID.');
+      return;
+    }
+    if (attachmentID <= 0) {
+      setTransformStatusError('Select a CV attachment.');
+      return;
+    }
+    if (jobOrderID <= 0) {
+      setTransformStatusError('Select a job order.');
+      return;
+    }
+
+    const requestID = transformRequestIDRef.current + 1;
+    transformRequestIDRef.current = requestID;
+    setTransformPending(true);
+    setTransformStatusError('');
+    setTransformStatusInfo('Submitting transform request...');
+    setTransformDownloadURL('');
+    setTransformAnalysisMessage('');
+
+    try {
+      const createResult = await createTalentFitFlowTransformJob({
+        candidateID,
+        attachmentID,
+        jobOrderID,
+        language: transformLanguage,
+        roleType: transformRoleType
+      });
+      if (requestID !== transformRequestIDRef.current) {
+        return;
+      }
+
+      let latestStatus = String(createResult.status || '').toUpperCase();
+      let statusResult = {
+        status: createResult.status,
+        cvDownloadURL: '',
+        analysisPdfState: '',
+        analysisPdfAttached: false,
+        analysisPdfRetryAfter: '',
+        errorCodeText: '',
+        errorMessageText: ''
+      };
+      setTransformStatusInfo(`Status: ${latestStatus || 'PENDING'}`);
+
+      while (
+        requestID === transformRequestIDRef.current &&
+        (latestStatus === '' || latestStatus === 'PENDING' || latestStatus === 'RUNNING' || latestStatus === 'QUEUED')
+      ) {
+        await sleep(7000);
+        if (requestID !== transformRequestIDRef.current) {
+          return;
+        }
+        statusResult = await fetchTalentFitFlowTransformStatus({
+          jobID: createResult.jobID,
+          candidateID,
+          jobOrderID
+        });
+        if (requestID !== transformRequestIDRef.current) {
+          return;
+        }
+        latestStatus = String(statusResult.status || '').toUpperCase();
+        setTransformStatusInfo(`Status: ${latestStatus || 'UNKNOWN'}`);
+      }
+
+      if (requestID !== transformRequestIDRef.current) {
+        return;
+      }
+
+      if (latestStatus !== 'COMPLETED') {
+        const failureMessage =
+          statusResult.errorMessageText ||
+          statusResult.errorCodeText ||
+          `Transform failed with status "${latestStatus || 'UNKNOWN'}".`;
+        throw new Error(failureMessage);
+      }
+
+      let analysisMessage = '';
+      const analysisState = String(statusResult.analysisPdfState || '').toUpperCase();
+      if (analysisState === 'PENDING') {
+        analysisMessage = 'Analysis report generating...';
+      } else if (analysisState === 'FAILED') {
+        analysisMessage = 'Analysis report failed.';
+      } else if (analysisState === 'READY') {
+        analysisMessage = statusResult.analysisPdfAttached ? 'Analysis PDF attached.' : 'Analysis PDF ready.';
+      }
+
+      if (transformStoreAttachment) {
+        setTransformStatusInfo('Saving attachment...');
+        const storeResult = await storeTalentFitFlowTransformedAttachment({
+          candidateID,
+          attachmentID,
+          jobOrderID,
+          jobID: createResult.jobID
+        });
+        if (requestID !== transformRequestIDRef.current) {
+          return;
+        }
+        setTransformStatusInfo(
+          storeResult.attachmentFilename !== ''
+            ? `Attachment saved as ${storeResult.attachmentFilename}.`
+            : 'Attachment saved.'
+        );
+        setTransformDownloadURL(statusResult.cvDownloadURL);
+        setTransformAnalysisMessage(analysisMessage);
+        refreshPageData();
+        showToast('Transform completed and saved as attachment.');
+        closeTransformCVModal();
+        return;
+      }
+
+      setTransformDownloadURL(statusResult.cvDownloadURL);
+      setTransformAnalysisMessage(analysisMessage);
+      setTransformStatusInfo(statusResult.cvDownloadURL !== '' ? 'Transform completed. Download is ready.' : 'Transform completed.');
+    } catch (err: unknown) {
+      if (requestID !== transformRequestIDRef.current) {
+        return;
+      }
+      setTransformStatusError(err instanceof Error ? err.message : 'Transform request failed.');
+      setTransformStatusInfo('');
+    } finally {
+      if (requestID === transformRequestIDRef.current) {
+        setTransformPending(false);
+      }
+    }
+  }, [
+    closeTransformCVModal,
+    data,
+    refreshPageData,
+    showToast,
+    transformAttachmentID,
+    transformJobOrderID,
+    transformLanguage,
+    transformPending,
+    transformRoleType,
+    transformStoreAttachment
+  ]);
 
   const openTagEditor = useCallback(() => {
     if (!data) {
@@ -1511,7 +1769,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                       className="modern-btn modern-btn--mini modern-btn--secondary"
                       onClick={() => setTransformCVModalOpen(true)}
                     >
-                      Transform CV With AI
+                      Transform CV
                     </button>
                   ) : null}
                   {permissions.canCreateAttachment ? (
@@ -1817,21 +2075,29 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         {transformCVModalOpen && data ? (
           <InlineModal
             isOpen={transformCVModalOpen}
-            ariaLabel="Transform CV With AI"
+            ariaLabel="Transform CV"
             dialogClassName="modern-inline-modal__dialog--compact"
-            onClose={() => setTransformCVModalOpen(false)}
+            closeOnBackdrop={!transformPending}
+            closeOnEscape={!transformPending}
+            onClose={() => {
+              if (transformPending) {
+                return;
+              }
+              closeTransformCVModal();
+            }}
           >
             <div className="modern-inline-modal__header">
-              <h3>Transform CV With AI</h3>
-              <p>Choose a resume attachment to prefill candidate fields in the modern editor.</p>
+              <h3>Transform CV</h3>
+              <p>Generate a transformed CV and optional analysis report for a selected job order.</p>
             </div>
             <div className="modern-inline-modal__body modern-inline-modal__body--form">
               <label className="modern-command-field">
-                <span className="modern-command-label">Resume Attachment</span>
+                <span className="modern-command-label">CV Attachment</span>
                 <select
                   className="avel-form-control"
                   value={String(transformAttachmentID || '')}
                   onChange={(event) => setTransformAttachmentID(Number(event.target.value || 0))}
+                  disabled={transformPending}
                 >
                   {data.attachments.transformCandidates.map((item) => (
                     <option key={`transform-attachment-${item.attachmentID}`} value={String(item.attachmentID)}>
@@ -1840,26 +2106,132 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   ))}
                 </select>
               </label>
+
+              <label className="modern-command-field">
+                <span className="modern-command-label">Job Order Search</span>
+                <input
+                  className="avel-form-control"
+                  type="text"
+                  value={transformJobSearch}
+                  onChange={(event) => setTransformJobSearch(event.target.value)}
+                  placeholder="Search job orders"
+                  disabled={transformPending}
+                />
+              </label>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '8px', alignItems: 'end' }}>
+                <label className="modern-command-field" style={{ marginBottom: 0 }}>
+                  <span className="modern-command-label">Job Order</span>
+                  <select
+                    className="avel-form-control"
+                    value={transformJobOrderID > 0 ? String(transformJobOrderID) : ''}
+                    onChange={(event) => setTransformJobOrderID(Number(event.target.value || 0))}
+                    disabled={transformPending || transformJobLoading}
+                  >
+                    {transformJobOrders.length === 0 ? (
+                      <option value="">
+                        {transformJobLoading ? 'Loading job orders...' : 'No job orders found'}
+                      </option>
+                    ) : null}
+                    {transformJobOrders.map((row) => (
+                      <option key={`transform-joborder-${row.jobOrderID}`} value={String(row.jobOrderID)}>
+                        {row.title}
+                        {row.companyName !== '' ? ` (${row.companyName})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--mini modern-btn--secondary"
+                  onClick={loadNextTransformJobOrders}
+                  disabled={
+                    transformPending ||
+                    transformJobLoading ||
+                    String(transformJobSearch || '').trim() !== '' ||
+                    !transformJobCanLoadMore
+                  }
+                >
+                  Next 50
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+                <label className="modern-command-field" style={{ marginBottom: 0 }}>
+                  <span className="modern-command-label">Language</span>
+                  <input
+                    className="avel-form-control"
+                    type="text"
+                    value={transformLanguage}
+                    onChange={(event) => setTransformLanguage(event.target.value)}
+                    disabled={transformPending}
+                  />
+                </label>
+                <label className="modern-command-field" style={{ marginBottom: 0 }}>
+                  <span className="modern-command-label">Role Type</span>
+                  <input
+                    className="avel-form-control"
+                    type="text"
+                    value={transformRoleType}
+                    onChange={(event) => setTransformRoleType(event.target.value)}
+                    disabled={transformPending}
+                  />
+                </label>
+              </div>
+
+              <label className="modern-command-toggle">
+                <input
+                  type="checkbox"
+                  checked={transformStoreAttachment}
+                  onChange={(event) => setTransformStoreAttachment(event.target.checked)}
+                  disabled={transformPending}
+                />
+                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                <span>Download and store as attachment</span>
+              </label>
+
+              {transformStatusError !== '' ? <div className="modern-state modern-state--error">{transformStatusError}</div> : null}
+              {transformStatusInfo !== '' ? <div className="modern-state">{transformStatusInfo}</div> : null}
+              {transformDownloadURL !== '' ? (
+                <div className="modern-state">
+                  Download available:{' '}
+                  <a className="modern-link" href={decodeLegacyURL(transformDownloadURL)} target="_blank" rel="noreferrer">
+                    Download CV
+                  </a>
+                </div>
+              ) : null}
+              {transformAnalysisMessage !== '' ? <div className="modern-state">{transformAnalysisMessage}</div> : null}
             </div>
             <div className="modern-inline-modal__actions">
-              <button type="button" className="modern-btn modern-btn--emphasis" onClick={openModernTransformCV}>
-                Open AI Transform
+              <button
+                type="button"
+                className="modern-btn modern-btn--emphasis"
+                onClick={submitTransformCV}
+                disabled={transformPending || Number(transformAttachmentID || 0) <= 0 || Number(transformJobOrderID || 0) <= 0}
+              >
+                {transformPending ? 'Processing...' : 'Submit'}
               </button>
               <button
                 type="button"
                 className="modern-btn modern-btn--secondary"
                 onClick={() => {
-                  setTransformCVModalOpen(false);
+                  closeTransformCVModal();
                   setPipelineModal({
                     url: decodeLegacyURL(data.actions.legacyURL),
                     title: 'Transform CV (Legacy)',
                     showRefreshClose: true
                   });
                 }}
+                disabled={transformPending}
               >
                 Use Legacy Transform
               </button>
-              <button type="button" className="modern-btn modern-btn--secondary" onClick={() => setTransformCVModalOpen(false)}>
+              <button
+                type="button"
+                className="modern-btn modern-btn--secondary"
+                onClick={closeTransformCVModal}
+                disabled={transformPending}
+              >
                 Cancel
               </button>
             </div>
