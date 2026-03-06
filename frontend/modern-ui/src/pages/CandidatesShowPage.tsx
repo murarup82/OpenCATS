@@ -13,6 +13,7 @@ import {
   searchJobOrdersForTransform,
   setDashboardPipelineStatus,
   storeTalentFitFlowTransformedAttachment,
+  uploadCandidateAttachmentToGoogleDrive,
   updateCandidateTags,
   uploadCandidateAttachment,
   updatePipelineStatusHistoryDate
@@ -170,6 +171,11 @@ function matchesTransformJobOrderSearch(jobOrder: { title: string; companyName: 
   );
 }
 
+function isDocxAttachment(filename: unknown): boolean {
+  const normalized = String(filename || '').trim().toLowerCase();
+  return normalized.endsWith('.docx');
+}
+
 function getAllocatedTransformJobOrders(
   data: CandidatesShowModernDataResponse | null,
   queryRaw: string
@@ -281,6 +287,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
+  const [googleDrivePendingAttachmentID, setGoogleDrivePendingAttachmentID] = useState<number>(0);
   const [transformCVModalOpen, setTransformCVModalOpen] = useState<boolean>(false);
   const [transformAttachmentID, setTransformAttachmentID] = useState<number>(0);
   const [transformJobSearch, setTransformJobSearch] = useState<string>('');
@@ -761,6 +768,158 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       setAttachmentUploadPending(false);
     }
   }, [attachmentUploadFile, attachmentUploadIsResume, attachmentUploadPending, data, refreshPageData, showToast]);
+
+  const openGoogleDriveConnectPopup = useCallback((connectURLRaw: string): Promise<{ success: boolean; message: string }> => {
+    return new Promise((resolve) => {
+      const connectURL = decodeLegacyURL(connectURLRaw);
+      if (connectURL === '') {
+        resolve({
+          success: false,
+          message: 'Google Drive connect URL is not available.'
+        });
+        return;
+      }
+
+      const popup = window.open(
+        connectURL,
+        'opencats-google-drive-connect',
+        'popup=yes,width=560,height=720,resizable=yes,scrollbars=yes'
+      );
+      if (!popup) {
+        resolve({
+          success: false,
+          message: 'Popup blocked. Allow popups for ATS and try again.'
+        });
+        return;
+      }
+
+      try {
+        popup.focus();
+      } catch (_error) {
+        // Best effort.
+      }
+
+      const expectedOrigin = String(window.location.origin || '');
+      let settled = false;
+      let closeWatchTimer = 0;
+      let timeoutTimer = 0;
+      let onMessage: (event: MessageEvent) => void = () => undefined;
+
+      const cleanup = () => {
+        window.removeEventListener('message', onMessage);
+        if (closeWatchTimer > 0) {
+          window.clearInterval(closeWatchTimer);
+        }
+        if (timeoutTimer > 0) {
+          window.clearTimeout(timeoutTimer);
+        }
+      };
+
+      const settle = (result: { success: boolean; message: string }) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        resolve(result);
+      };
+
+      onMessage = (event: MessageEvent) => {
+        const payload = event.data as { type?: string; success?: boolean; message?: string } | null;
+        if (!payload || payload.type !== 'opencats-google-drive-auth') {
+          return;
+        }
+
+        if (expectedOrigin !== '' && event.origin !== expectedOrigin) {
+          return;
+        }
+
+        settle({
+          success: !!payload.success,
+          message: String(payload.message || (payload.success ? 'Google Drive connected.' : 'Google Drive connection failed.'))
+        });
+      };
+
+      window.addEventListener('message', onMessage);
+
+      closeWatchTimer = window.setInterval(() => {
+        if (popup.closed) {
+          settle({
+            success: false,
+            message: 'Google Drive connection window was closed.'
+          });
+        }
+      }, 400);
+
+      timeoutTimer = window.setTimeout(() => {
+        settle({
+          success: false,
+          message: 'Google Drive connection timed out. Please try again.'
+        });
+      }, 180000);
+    });
+  }, []);
+
+  const handleSendAttachmentToGoogleDocs = useCallback(
+    async (attachment: CandidatesShowModernDataResponse['attachments']['items'][number]) => {
+      if (!data || googleDrivePendingAttachmentID > 0) {
+        return;
+      }
+
+      const submitURL = decodeLegacyURL(data.actions.googleDriveUploadAttachmentURL || '');
+      const securityToken = data.actions.googleDriveUploadAttachmentToken || '';
+      if (submitURL === '' || securityToken === '') {
+        showToast('Google Drive action is not available for this page.', 'error');
+        return;
+      }
+
+      const candidateID = Number(data.meta.candidateID || 0);
+      const attachmentID = Number(attachment.attachmentID || 0);
+      if (candidateID <= 0 || attachmentID <= 0) {
+        showToast('Invalid candidate or attachment ID.', 'error');
+        return;
+      }
+
+      const executeUpload = async () =>
+        uploadCandidateAttachmentToGoogleDrive(submitURL, {
+          candidateID,
+          attachmentID,
+          securityToken,
+          origin: String(window.location.origin || '')
+        });
+
+      setGoogleDrivePendingAttachmentID(attachmentID);
+      try {
+        let result = await executeUpload();
+        if (!result.success && String(result.code || '') === 'googleDriveAuthRequired') {
+          const connectURL = decodeLegacyURL(String(result.authURL || data.actions.googleDriveConnectURL || ''));
+          const authResult = await openGoogleDriveConnectPopup(connectURL);
+          if (!authResult.success) {
+            throw new Error(authResult.message || 'Google Drive connection failed.');
+          }
+
+          result = await executeUpload();
+        }
+
+        if (!result.success) {
+          throw new Error(result.message || 'Unable to send attachment to Google Docs.');
+        }
+
+        const editURL = decodeLegacyURL(String(result.editURL || ''));
+        if (editURL !== '') {
+          window.open(editURL, '_blank', 'noopener,noreferrer');
+          showToast('Sent to Google Docs. Opened in a new tab.', 'success');
+        } else {
+          showToast('Sent to Google Docs.', 'success');
+        }
+      } catch (err: unknown) {
+        showToast(err instanceof Error ? err.message : 'Unable to send attachment to Google Docs.', 'error');
+      } finally {
+        setGoogleDrivePendingAttachmentID(0);
+      }
+    },
+    [data, googleDrivePendingAttachmentID, openGoogleDriveConnectPopup, showToast]
+  );
 
   const closeTransformCVModal = useCallback(() => {
     transformRequestIDRef.current += 1;
@@ -1985,6 +2144,21 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <td>{toDisplayText(attachment.dateCreated)}</td>
                     <td>
                       <div className="modern-table-actions">
+                        {isDocxAttachment(attachment.fileName) &&
+                        data.actions.googleDriveUploadAttachmentURL &&
+                        data.actions.googleDriveUploadAttachmentToken ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--emphasis"
+                            onClick={() => void handleSendAttachmentToGoogleDocs(attachment)}
+                            disabled={
+                              attachmentDeletePending ||
+                              (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID)
+                            }
+                          >
+                            {googleDrivePendingAttachmentID === attachment.attachmentID ? 'Sending...' : 'Send To Google Docs'}
+                          </button>
+                        ) : null}
                         {permissions.canDeleteAttachment ? (
                           <button
                             type="button"

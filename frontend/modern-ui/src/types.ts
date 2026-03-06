@@ -159,6 +159,13 @@ export type ModernMutationResponse = {
   message?: string;
 };
 
+export type CandidateGoogleDriveUploadMutationResponse = ModernMutationResponse & {
+  editURL?: string;
+  fileID?: string;
+  fileName?: string;
+  authURL?: string;
+};
+
 export type CandidatesListModernDataResponse = {
   meta: {
     contractVersion: number;
@@ -2656,6 +2663,9 @@ export type CandidatesShowModernDataResponse = {
     createAttachmentURL: string;
     deleteAttachmentURL?: string;
     deleteAttachmentToken?: string;
+    googleDriveUploadAttachmentURL?: string;
+    googleDriveUploadAttachmentToken?: string;
+    googleDriveConnectURL?: string;
     addTagsURL: string;
     addTagsToken?: string;
     addToListURL: string;

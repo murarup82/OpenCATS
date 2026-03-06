@@ -52,6 +52,9 @@ include_once(LEGACY_ROOT . '/lib/Questionnaire.php');
 include_once(LEGACY_ROOT . '/lib/Tags.php');
 include_once(LEGACY_ROOT . '/lib/Search.php');
 include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
+include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
+include_once(LEGACY_ROOT . '/lib/GoogleDriveUserTokens.php');
+include_once(LEGACY_ROOT . '/lib/GoogleDriveClient.php');
 
 class CandidatesUI extends UserInterface
 {
@@ -286,6 +289,13 @@ class CandidatesUI extends UserInterface
                     CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
                 }
                 $this->onDeleteAttachment();
+                break;
+
+            case 'googleDriveUploadAttachment':
+                if ($this->getUserAccessLevel('candidates.show') < ACCESS_LEVEL_READ) {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onGoogleDriveUploadAttachment();
                 break;
 
             /* Hot List Page */
@@ -1301,6 +1311,9 @@ class CandidatesUI extends UserInterface
                 'createAttachmentURL' => sprintf('%s?m=candidates&a=createAttachment&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'deleteAttachmentURL' => sprintf('%s?m=candidates&a=deleteAttachment', $baseURL),
                 'deleteAttachmentToken' => $this->getCSRFToken('candidates.deleteAttachment'),
+                'googleDriveUploadAttachmentURL' => sprintf('%s?m=candidates&a=googleDriveUploadAttachment', $baseURL),
+                'googleDriveUploadAttachmentToken' => $this->getCSRFToken('candidates.googleDriveUploadAttachment'),
+                'googleDriveConnectURL' => $this->buildGoogleDriveConnectURL(''),
                 'addTagsURL' => sprintf('%s?m=candidates&a=addCandidateTags&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addTagsToken' => $this->getCSRFToken('candidates.addCandidateTags'),
                 'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
@@ -5470,6 +5483,319 @@ class CandidatesUI extends UserInterface
         CATSUtility::transferRelativeURI(
             'm=candidates&a=show&candidateID=' . $candidateID
         );
+    }
+
+    private function onGoogleDriveUploadAttachment()
+    {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 405, false, 'invalidMethod', 'Invalid request method.');
+            return;
+        }
+
+        if (!$this->isRequiredIDValid('candidateID', $_POST))
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 400, false, 'invalidCandidate', 'Invalid candidate ID.');
+            return;
+        }
+
+        if (!$this->isRequiredIDValid('attachmentID', $_POST))
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 400, false, 'invalidAttachment', 'Invalid attachment ID.');
+            return;
+        }
+
+        $securityToken = $this->getTrimmedInput('securityToken', $_POST);
+        if (!$this->isCSRFTokenValid('candidates.googleDriveUploadAttachment', $securityToken))
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 403, false, 'invalidToken', 'Invalid request token.');
+            return;
+        }
+
+        $candidateID = (int) $_POST['candidateID'];
+        $attachmentID = (int) $_POST['attachmentID'];
+        $origin = $this->sanitizeBrowserOriginForGoogleDrive($this->getTrimmedInput('origin', $_POST));
+
+        $candidates = new Candidates($this->_siteID);
+        $candidateData = $candidates->get($candidateID);
+        if (empty($candidateData))
+        {
+            $this->outputGoogleDriveMutationJSON($isModernJSON, 404, false, 'candidateNotFound', 'Candidate not found.');
+            return;
+        }
+
+        $attachments = new Attachments($this->_siteID);
+        $attachmentRS = $attachments->get($attachmentID, true);
+        if (empty($attachmentRS) ||
+            (int) $attachmentRS['dataItemType'] !== DATA_ITEM_CANDIDATE ||
+            (int) $attachmentRS['dataItemID'] !== $candidateID)
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                403,
+                false,
+                'attachmentOwnership',
+                'Attachment does not belong to this candidate.'
+            );
+            return;
+        }
+
+        $originalFilename = (isset($attachmentRS['originalFilename']) ? (string) $attachmentRS['originalFilename'] : '');
+        $fileExtension = strtolower(pathinfo($originalFilename, PATHINFO_EXTENSION));
+        if ($fileExtension !== 'docx')
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                400,
+                false,
+                'unsupportedAttachmentType',
+                'Only DOCX attachments can be sent to Google Docs.'
+            );
+            return;
+        }
+
+        $directoryName = (isset($attachmentRS['directoryName']) ? (string) $attachmentRS['directoryName'] : '');
+        $storedFilename = (isset($attachmentRS['storedFilename']) ? (string) $attachmentRS['storedFilename'] : '');
+        $attachmentPath = sprintf(
+            '%s/attachments/%s/%s',
+            rtrim(LEGACY_ROOT, '/\\'),
+            $directoryName,
+            $storedFilename
+        );
+        if ($directoryName === '' || $storedFilename === '' || !@is_file($attachmentPath))
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                404,
+                false,
+                'attachmentMissing',
+                'Attachment file is missing from server storage.'
+            );
+            return;
+        }
+
+        $googleSettings = $this->getGoogleDriveOAuthSettings();
+        if (!$this->isGoogleDriveConfigured($googleSettings))
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                503,
+                false,
+                'googleDriveNotConfigured',
+                'Google Drive integration is not configured. Ask an administrator to configure Google OIDC settings.'
+            );
+            return;
+        }
+
+        $tokenStore = new GoogleDriveUserTokens();
+        $tokenData = $tokenStore->get($this->_siteID, $this->_userID);
+        if (empty($tokenData) || trim((string) $tokenData['refreshToken']) === '')
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                401,
+                false,
+                'googleDriveAuthRequired',
+                'Google Drive is not connected for this user.',
+                array(
+                    'authURL' => $this->buildGoogleDriveConnectURL($origin)
+                )
+            );
+            return;
+        }
+
+        $driveClient = new GoogleDriveClient($googleSettings, $tokenStore, $this->_siteID, $this->_userID);
+        $uploadResult = $driveClient->uploadDocxToFormattedCVFolder($attachmentPath, $originalFilename);
+        if (empty($uploadResult))
+        {
+            $errorCode = $driveClient->getLastErrorCode();
+            $errorMessage = $driveClient->getLastErrorMessage();
+            if ($errorMessage === '')
+            {
+                $errorMessage = 'Google Drive upload failed.';
+            }
+
+            $statusCode = ($errorCode === 'googleDriveAuthRequired' ? 401 : 502);
+            $extra = array();
+            if ($errorCode === 'googleDriveAuthRequired')
+            {
+                $extra['authURL'] = $this->buildGoogleDriveConnectURL($origin);
+            }
+
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                $statusCode,
+                false,
+                ($errorCode !== '' ? $errorCode : 'googleDriveUploadFailed'),
+                $errorMessage,
+                $extra
+            );
+            return;
+        }
+
+        $this->outputGoogleDriveMutationJSON(
+            $isModernJSON,
+            200,
+            true,
+            'googleDriveUploadSuccess',
+            'Attachment copied to Google Drive and opened in Google Docs.',
+            array(
+                'editURL' => (isset($uploadResult['editURL']) ? (string) $uploadResult['editURL'] : ''),
+                'fileID' => (isset($uploadResult['fileID']) ? (string) $uploadResult['fileID'] : ''),
+                'fileName' => (isset($uploadResult['fileName']) ? (string) $uploadResult['fileName'] : $originalFilename)
+            )
+        );
+    }
+
+    private function outputGoogleDriveMutationJSON($isModernJSON, $statusCode, $success, $code, $message, $extraPayload = array())
+    {
+        if (!$isModernJSON)
+        {
+            CommonErrors::fatalModal(COMMONERROR_PERMISSION, $this, $message);
+            return;
+        }
+
+        if (!headers_sent())
+        {
+            switch ((int) $statusCode)
+            {
+                case 400:
+                    header('HTTP/1.1 400 Bad Request');
+                    break;
+                case 401:
+                    header('HTTP/1.1 401 Unauthorized');
+                    break;
+                case 403:
+                    header('HTTP/1.1 403 Forbidden');
+                    break;
+                case 404:
+                    header('HTTP/1.1 404 Not Found');
+                    break;
+                case 405:
+                    header('HTTP/1.1 405 Method Not Allowed');
+                    break;
+                case 502:
+                    header('HTTP/1.1 502 Bad Gateway');
+                    break;
+                case 503:
+                    header('HTTP/1.1 503 Service Unavailable');
+                    break;
+                default:
+                    break;
+            }
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        $payload = array(
+            'success' => ((bool) $success),
+            'code' => (string) $code,
+            'message' => (string) $message
+        );
+        if (is_array($extraPayload))
+        {
+            foreach ($extraPayload as $extraKey => $extraValue)
+            {
+                $payload[$extraKey] = $extraValue;
+            }
+        }
+
+        echo json_encode($payload);
+    }
+
+    private function getGoogleDriveOAuthSettings()
+    {
+        $settings = array(
+            'enabled' => (defined('GOOGLE_OIDC_ENABLED') && GOOGLE_OIDC_ENABLED) ? '1' : '0',
+            'clientId' => (defined('GOOGLE_OIDC_CLIENT_ID') ? trim((string) GOOGLE_OIDC_CLIENT_ID) : ''),
+            'clientSecret' => (defined('GOOGLE_OIDC_CLIENT_SECRET') ? trim((string) GOOGLE_OIDC_CLIENT_SECRET) : ''),
+            'redirectUri' => (defined('GOOGLE_OIDC_REDIRECT_URI') ? trim((string) GOOGLE_OIDC_REDIRECT_URI) : ''),
+            'hostedDomain' => (defined('GOOGLE_OIDC_HOSTED_DOMAIN') ? trim((string) GOOGLE_OIDC_HOSTED_DOMAIN) : '')
+        );
+
+        $googleOIDCSettings = new GoogleOIDCSettings($this->_siteID);
+        $siteSettings = $googleOIDCSettings->getAll();
+        foreach ($settings as $key => $value)
+        {
+            if (isset($siteSettings[$key]))
+            {
+                $settings[$key] = trim((string) $siteSettings[$key]);
+            }
+        }
+
+        return $settings;
+    }
+
+    private function isGoogleDriveConfigured($googleSettings)
+    {
+        if (!isset($googleSettings['enabled']) || $googleSettings['enabled'] !== '1')
+        {
+            return false;
+        }
+        if (!isset($googleSettings['clientId']) || trim((string) $googleSettings['clientId']) === '')
+        {
+            return false;
+        }
+        if (!isset($googleSettings['clientSecret']) || trim((string) $googleSettings['clientSecret']) === '')
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function buildGoogleDriveConnectURL($origin)
+    {
+        $query = array(
+            'm' => 'login',
+            'a' => 'googleDriveStart',
+            'ui' => 'legacy'
+        );
+        $origin = $this->sanitizeBrowserOriginForGoogleDrive($origin);
+        if ($origin !== '')
+        {
+            $query['origin'] = $origin;
+        }
+
+        return CATSUtility::getIndexName() . '?' . http_build_query($query, '', '&');
+    }
+
+    private function sanitizeBrowserOriginForGoogleDrive($origin)
+    {
+        $origin = trim((string) $origin);
+        if ($origin === '')
+        {
+            return '';
+        }
+
+        $parts = @parse_url($origin);
+        if (!is_array($parts) ||
+            !isset($parts['scheme']) ||
+            !isset($parts['host']))
+        {
+            return '';
+        }
+
+        $scheme = strtolower(trim((string) $parts['scheme']));
+        if ($scheme !== 'http' && $scheme !== 'https')
+        {
+            return '';
+        }
+
+        $host = trim((string) $parts['host']);
+        if ($host === '')
+        {
+            return '';
+        }
+
+        $port = '';
+        if (isset($parts['port']) && (int) $parts['port'] > 0)
+        {
+            $port = ':' . (int) $parts['port'];
+        }
+
+        return $scheme . '://' . $host . $port;
     }
 
     private function onAddProfileComment()

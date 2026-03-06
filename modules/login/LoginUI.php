@@ -36,6 +36,7 @@ include_once(LEGACY_ROOT . '/lib/License.php');
 include_once(LEGACY_ROOT . '/lib/Users.php');
 include_once(LEGACY_ROOT . '/lib/DatabaseConnection.php');
 include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
+include_once(LEGACY_ROOT . '/lib/GoogleDriveUserTokens.php');
 include_once(LEGACY_ROOT . '/lib/RolePagePermissions.php');
 
 class LoginUI extends UserInterface
@@ -43,6 +44,7 @@ class LoginUI extends UserInterface
     const GOOGLE_STATE_SESSION_KEY = 'googleOIDCLoginState';
     const GOOGLE_PROFILE_SESSION_KEY = 'googleOIDCAccessRequestProfile';
     const GOOGLE_REQUEST_STATUS_SESSION_KEY = 'googleOIDCAccessRequestStatus';
+    const GOOGLE_DRIVE_FLOW_MODE = 'drive-connect';
 
     public function __construct()
     {
@@ -75,6 +77,10 @@ class LoginUI extends UserInterface
 
             case 'googleStart':
                 $this->googleStart();
+                break;
+
+            case 'googleDriveStart':
+                $this->googleDriveStart();
                 break;
 
             case 'googleCallback':
@@ -830,6 +836,7 @@ class LoginUI extends UserInterface
 
         $_SESSION[self::GOOGLE_STATE_SESSION_KEY] = array(
             'token' => $this->makeRandomToken(16),
+            'mode' => 'login',
             'reloginVars' => $reloginVars,
             'siteName' => $siteName,
             'siteID' => $siteID
@@ -857,37 +864,116 @@ class LoginUI extends UserInterface
         );
     }
 
+    private function googleDriveStart()
+    {
+        if (!isset($_SESSION['CATS']) || !$_SESSION['CATS']->isLoggedIn())
+        {
+            $this->renderGoogleDrivePopupResult(false, 'Your session has expired. Sign in again and retry.', '');
+            return;
+        }
+
+        $siteID = (int) $_SESSION['CATS']->getSiteID();
+        $userID = (int) $_SESSION['CATS']->getUserID();
+        if ($siteID <= 0 || $userID <= 0)
+        {
+            $this->renderGoogleDrivePopupResult(false, 'Unable to resolve user context for Google Drive connection.', '');
+            return;
+        }
+
+        $googleSettings = $this->getGoogleSettingsForSite($siteID);
+        if (!$this->isGoogleOIDCConfigured($googleSettings))
+        {
+            $this->renderGoogleDrivePopupResult(
+                false,
+                'Google sign-in is not configured. Ask an administrator to configure Google OIDC settings first.',
+                ''
+            );
+            return;
+        }
+
+        $origin = $this->sanitizeBrowserOrigin($this->getTrimmedInput('origin', $_GET));
+        $_SESSION[self::GOOGLE_STATE_SESSION_KEY] = array(
+            'token' => $this->makeRandomToken(16),
+            'mode' => self::GOOGLE_DRIVE_FLOW_MODE,
+            'siteID' => $siteID,
+            'userID' => $userID,
+            'origin' => $origin
+        );
+
+        $params = array(
+            'client_id' => $googleSettings['clientId'],
+            'redirect_uri' => $this->getGoogleRedirectURI($googleSettings),
+            'response_type' => 'code',
+            'scope' => 'openid email profile https://www.googleapis.com/auth/drive.file',
+            'access_type' => 'offline',
+            'include_granted_scopes' => 'true',
+            'prompt' => 'consent',
+            'state' => $_SESSION[self::GOOGLE_STATE_SESSION_KEY]['token']
+        );
+
+        if (trim($googleSettings['hostedDomain']) !== '')
+        {
+            $params['hd'] = trim($googleSettings['hostedDomain']);
+        }
+
+        CATSUtility::transferURL(
+            'https://accounts.google.com/o/oauth2/v2/auth?' .
+            http_build_query($params, '', '&')
+        );
+    }
+
     private function googleCallback()
     {
+        $state = $this->getTrimmedInput('state', $_GET);
+        $code = $this->getTrimmedInput('code', $_GET);
         $googleError = $this->getTrimmedInput('error', $_GET);
+        $stateData = null;
+        if ($state !== '' &&
+            isset($_SESSION[self::GOOGLE_STATE_SESSION_KEY]) &&
+            is_array($_SESSION[self::GOOGLE_STATE_SESSION_KEY]))
+        {
+            $candidateStateData = $_SESSION[self::GOOGLE_STATE_SESSION_KEY];
+            if (isset($candidateStateData['token']) &&
+                $this->secureCompare((string) $candidateStateData['token'], $state))
+            {
+                $stateData = $candidateStateData;
+                unset($_SESSION[self::GOOGLE_STATE_SESSION_KEY]);
+            }
+        }
+
+        $isGoogleDriveFlow = (
+            is_array($stateData) &&
+            isset($stateData['mode']) &&
+            (string) $stateData['mode'] === self::GOOGLE_DRIVE_FLOW_MODE
+        );
+
         if ($googleError !== '')
         {
+            if ($isGoogleDriveFlow)
+            {
+                $origin = (isset($stateData['origin']) ? (string) $stateData['origin'] : '');
+                $this->renderGoogleDrivePopupResult(false, 'Google Drive connection was cancelled or failed.', $origin);
+                return;
+            }
             $this->displayLoginMessage('Google sign-in was cancelled or failed.');
             return;
         }
 
-        $state = $this->getTrimmedInput('state', $_GET);
-        $code = $this->getTrimmedInput('code', $_GET);
         if ($state === '' || $code === '')
         {
+            if ($isGoogleDriveFlow)
+            {
+                $origin = (isset($stateData['origin']) ? (string) $stateData['origin'] : '');
+                $this->renderGoogleDrivePopupResult(false, 'Google response was missing required OAuth fields.', $origin);
+                return;
+            }
             $this->displayLoginMessage('Google sign-in did not return a valid response.');
             return;
         }
 
-        if (!isset($_SESSION[self::GOOGLE_STATE_SESSION_KEY]) ||
-            !is_array($_SESSION[self::GOOGLE_STATE_SESSION_KEY]))
+        if ($stateData === null)
         {
             $this->displayLoginMessage('Google sign-in session has expired. Please try again.');
-            return;
-        }
-
-        $stateData = $_SESSION[self::GOOGLE_STATE_SESSION_KEY];
-        unset($_SESSION[self::GOOGLE_STATE_SESSION_KEY]);
-
-        if (!isset($stateData['token']) ||
-            !$this->secureCompare((string) $stateData['token'], $state))
-        {
-            $this->displayLoginMessage('Google sign-in validation failed. Please try again.');
             return;
         }
 
@@ -910,6 +996,12 @@ class LoginUI extends UserInterface
                 'Google sign-in is not configured yet. Please contact your administrator.',
                 $siteName
             );
+            return;
+        }
+
+        if ($isGoogleDriveFlow)
+        {
+            $this->onGoogleDriveCallback($stateData, $code, $googleSettings);
             return;
         }
 
@@ -979,6 +1071,178 @@ class LoginUI extends UserInterface
         );
 
         CATSUtility::transferRelativeURI('m=login&a=requestAccess');
+    }
+
+    private function onGoogleDriveCallback($stateData, $code, $googleSettings)
+    {
+        $siteID = (isset($stateData['siteID']) ? (int) $stateData['siteID'] : 0);
+        $userID = (isset($stateData['userID']) ? (int) $stateData['userID'] : 0);
+        $origin = (isset($stateData['origin']) ? (string) $stateData['origin'] : '');
+
+        if ($siteID <= 0 || $userID <= 0)
+        {
+            $this->renderGoogleDrivePopupResult(false, 'Unable to resolve target user for Google Drive connect.', $origin);
+            return;
+        }
+
+        if (!isset($_SESSION['CATS']) ||
+            !$_SESSION['CATS']->isLoggedIn() ||
+            (int) $_SESSION['CATS']->getUserID() !== $userID ||
+            (int) $_SESSION['CATS']->getSiteID() !== $siteID)
+        {
+            $this->renderGoogleDrivePopupResult(false, 'Google Drive connect requires an active ATS session for the same user.', $origin);
+            return;
+        }
+
+        $tokenRS = $this->exchangeGoogleAuthCode($code, $googleSettings);
+        if (!$tokenRS['success'])
+        {
+            $this->renderGoogleDrivePopupResult(false, $tokenRS['error'], $origin);
+            return;
+        }
+
+        $profileRS = $this->fetchGoogleUserInfo($tokenRS['accessToken']);
+        if (!$profileRS['success'])
+        {
+            $this->renderGoogleDrivePopupResult(false, $profileRS['error'], $origin);
+            return;
+        }
+
+        $profile = $profileRS['profile'];
+        $email = '';
+        if (isset($profile['email']))
+        {
+            $email = strtolower(trim((string) $profile['email']));
+        }
+        if ($email === '' || empty($profile['email_verified']))
+        {
+            $this->renderGoogleDrivePopupResult(false, 'Google account e-mail is missing or not verified.', $origin);
+            return;
+        }
+
+        if (!$this->isAllowedGoogleEmail($email, $googleSettings['hostedDomain']))
+        {
+            $this->renderGoogleDrivePopupResult(false, 'Your Google account domain is not allowed.', $origin);
+            return;
+        }
+
+        $refreshToken = (isset($tokenRS['refreshToken']) ? trim((string) $tokenRS['refreshToken']) : '');
+        $tokenStore = new GoogleDriveUserTokens();
+        $existingTokenRS = $tokenStore->get($siteID, $userID);
+        if ($refreshToken === '' && !empty($existingTokenRS['refreshToken']))
+        {
+            $refreshToken = (string) $existingTokenRS['refreshToken'];
+        }
+        if ($refreshToken === '')
+        {
+            $this->renderGoogleDrivePopupResult(
+                false,
+                'Google did not return a refresh token. Reconnect with consent or remove prior app access and retry.',
+                $origin
+            );
+            return;
+        }
+
+        $expiresAt = '';
+        $expiresIn = (isset($tokenRS['expiresIn']) ? (int) $tokenRS['expiresIn'] : 0);
+        if ($expiresIn > 0)
+        {
+            $expiresAt = date('Y-m-d H:i:s', time() + $expiresIn);
+        }
+
+        $tokenStore->save($siteID, $userID, array(
+            'googleSub' => (isset($profile['sub']) ? (string) $profile['sub'] : ''),
+            'googleEmail' => $email,
+            'accessToken' => (isset($tokenRS['accessToken']) ? (string) $tokenRS['accessToken'] : ''),
+            'refreshToken' => $refreshToken,
+            'tokenType' => (isset($tokenRS['tokenType']) ? (string) $tokenRS['tokenType'] : ''),
+            'tokenScope' => (isset($tokenRS['scope']) ? (string) $tokenRS['scope'] : ''),
+            'expiresAt' => $expiresAt
+        ));
+
+        $this->renderGoogleDrivePopupResult(true, 'Google Drive connected. You can continue in ATS.', $origin);
+    }
+
+    private function renderGoogleDrivePopupResult($success, $message, $origin)
+    {
+        $success = (bool) $success;
+        $message = trim((string) $message);
+        if ($message === '')
+        {
+            $message = ($success ? 'Google Drive connection completed.' : 'Google Drive connection failed.');
+        }
+
+        $origin = $this->sanitizeBrowserOrigin($origin);
+        $payload = array(
+            'type' => 'opencats-google-drive-auth',
+            'success' => $success,
+            'message' => $message
+        );
+        $payloadJSON = function_exists('json_encode')
+            ? json_encode($payload)
+            : '{"type":"opencats-google-drive-auth","success":false,"message":"Google Drive response encoding failed."}';
+        $originJSON = function_exists('json_encode')
+            ? json_encode($origin === '' ? '*' : $origin)
+            : "'*'";
+        $messageHTML = htmlspecialchars($message, ENT_QUOTES);
+
+        if (!headers_sent())
+        {
+            header('Content-Type: text/html; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        echo '<!DOCTYPE html><html><head><meta charset="', AJAX_ENCODING, '" /></head><body>';
+        echo '<p style="font-family: Arial, sans-serif; font-size: 14px; color: #234;">', $messageHTML, '</p>';
+        echo '<script type="text/javascript">';
+        echo '(function(){',
+            'var payload=', $payloadJSON, ';',
+            'var targetOrigin=', $originJSON, ';',
+            'try {',
+                'if (window.opener && !window.opener.closed) {',
+                    'window.opener.postMessage(payload, targetOrigin);',
+                '}',
+            '} catch (e) {}',
+            'window.setTimeout(function(){ window.close(); }, 120);',
+        '})();';
+        echo '</script></body></html>';
+    }
+
+    private function sanitizeBrowserOrigin($origin)
+    {
+        $origin = trim((string) $origin);
+        if ($origin === '')
+        {
+            return '';
+        }
+
+        $parts = @parse_url($origin);
+        if (!is_array($parts) ||
+            !isset($parts['scheme']) ||
+            !isset($parts['host']))
+        {
+            return '';
+        }
+
+        $scheme = strtolower(trim((string) $parts['scheme']));
+        if ($scheme !== 'http' && $scheme !== 'https')
+        {
+            return '';
+        }
+
+        $host = trim((string) $parts['host']);
+        if ($host === '')
+        {
+            return '';
+        }
+
+        $port = '';
+        if (isset($parts['port']) && (int) $parts['port'] > 0)
+        {
+            $port = ':' . (int) $parts['port'];
+        }
+
+        return $scheme . '://' . $host . $port;
     }
 
     private function requestAccess()
@@ -1388,7 +1652,12 @@ class LoginUI extends UserInterface
 
         return array(
             'success' => true,
-            'accessToken' => $payload['access_token']
+            'accessToken' => $payload['access_token'],
+            'refreshToken' => (isset($payload['refresh_token']) ? $payload['refresh_token'] : ''),
+            'tokenType' => (isset($payload['token_type']) ? $payload['token_type'] : ''),
+            'scope' => (isset($payload['scope']) ? $payload['scope'] : ''),
+            'expiresIn' => (isset($payload['expires_in']) ? (int) $payload['expires_in'] : 0),
+            'idToken' => (isset($payload['id_token']) ? $payload['id_token'] : '')
         );
     }
 
