@@ -716,7 +716,7 @@ class DashboardUI extends UserInterface
             $role = $userRoles->getForUser($this->_userID);
             if (!empty($role) && !empty($role['roleKey']))
             {
-                return in_array($role['roleKey'], array('site_admin', 'hr_manager'), true);
+                return in_array($role['roleKey'], array('site_admin', 'hr_manager', 'top_management'), true);
             }
         }
 
