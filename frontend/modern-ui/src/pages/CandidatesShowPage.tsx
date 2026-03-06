@@ -2147,9 +2147,24 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 {data.attachments.items.map((attachment) => (
                   <tr key={attachment.attachmentID}>
                     <td>
-                      <a className="modern-link" href={decodeLegacyURL(attachment.retrievalURL)} target="_blank" rel="noreferrer">
-                        {toDisplayText(attachment.fileName)}
-                      </a>
+                      {(() => {
+                        const canOpenInGoogleDocs =
+                          isDocxAttachment(attachment.fileName) &&
+                          !!data.actions.googleDriveUploadAttachmentURL &&
+                          !!data.actions.googleDriveUploadAttachmentToken;
+                        return (
+                          <>
+                            <a className="modern-link" href={decodeLegacyURL(attachment.retrievalURL)} target="_blank" rel="noreferrer">
+                              {toDisplayText(attachment.fileName)}
+                            </a>
+                            {canOpenInGoogleDocs ? (
+                              <span className="modern-chip modern-chip--info" style={{ marginLeft: 8 }}>
+                                Google Docs
+                              </span>
+                            ) : null}
+                          </>
+                        );
+                      })()}
                     </td>
                     <td>{toDisplayText(attachment.dateCreated)}</td>
                     <td>
@@ -2166,7 +2181,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                               (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID)
                             }
                           >
-                            {googleDrivePendingAttachmentID === attachment.attachmentID ? 'Sending...' : 'Send To Google Docs'}
+                            {googleDrivePendingAttachmentID === attachment.attachmentID ? 'Opening...' : 'Open in Google Docs'}
                           </button>
                         ) : null}
                         {permissions.canDeleteAttachment ? (
