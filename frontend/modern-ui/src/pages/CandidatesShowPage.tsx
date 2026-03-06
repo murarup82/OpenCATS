@@ -89,6 +89,64 @@ function createStatusClassName(statusSlug: string): string {
   return `modern-status modern-status--${statusSlug || 'unknown'}`;
 }
 
+function normalizeDisplayValue(value: unknown): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value).trim();
+  }
+  return '';
+}
+
+function isDisplayValueEmpty(value: unknown): boolean {
+  const normalized = normalizeDisplayValue(value).toLowerCase();
+  return normalized === '' || normalized === '-' || normalized === '--' || normalized === 'n/a' || normalized === 'na';
+}
+
+function getDetailFieldClassName(value: unknown, extraClassName = ''): string {
+  const classes = ['avel-candidate-detail-field', isDisplayValueEmpty(value) ? 'is-empty' : 'is-filled'];
+  const extra = String(extraClassName || '').trim();
+  if (extra !== '') {
+    classes.push(extra);
+  }
+  return classes.join(' ');
+}
+
+function getGDPRStatusChipClass(status: unknown): string {
+  const normalized = normalizeDisplayValue(status).toLowerCase();
+  if (
+    normalized.includes('sent') ||
+    normalized.includes('signed') ||
+    normalized.includes('complete') ||
+    normalized.includes('approved') ||
+    normalized.includes('active')
+  ) {
+    return 'avel-candidate-gdpr-chip--success';
+  }
+  if (
+    normalized.includes('pending') ||
+    normalized.includes('request') ||
+    normalized.includes('open') ||
+    normalized.includes('in progress') ||
+    normalized.includes('process')
+  ) {
+    return 'avel-candidate-gdpr-chip--pending';
+  }
+  if (normalized.includes('expire')) {
+    return 'avel-candidate-gdpr-chip--warning';
+  }
+  if (
+    normalized.includes('delete') ||
+    normalized.includes('fail') ||
+    normalized.includes('reject') ||
+    normalized.includes('revoke')
+  ) {
+    return 'avel-candidate-gdpr-chip--danger';
+  }
+  return 'avel-candidate-gdpr-chip--neutral';
+}
+
 function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => {
     window.setTimeout(resolve, delayMs);
@@ -1399,24 +1457,27 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 <p className="avel-list-panel__hint">Core profile data and custom fields.</p>
               </div>
               <div className="avel-candidate-details avel-candidate-details--profile">
-                <div><strong>Current Employer:</strong> {toDisplayText(candidate.currentEmployer)}</div>
-                <div><strong>Date Available:</strong> {toDisplayText(candidate.dateAvailable)}</div>
-                <div><strong>Best Time To Call:</strong> {toDisplayText(candidate.bestTimeToCall)}</div>
-                <div><strong>Can Relocate:</strong> {toDisplayText(candidate.canRelocate)}</div>
-                <div><strong>Current Pay:</strong> {toDisplayText(candidate.currentPay)}</div>
-                <div><strong>Desired Pay:</strong> {toDisplayText(candidate.desiredPay)}</div>
-                <div><strong>Created:</strong> {toDisplayText(candidate.dateCreated)} ({toDisplayText(candidate.enteredBy)})</div>
-                <div><strong>Modified:</strong> {toDisplayText(candidate.dateModified)}</div>
-                <div><strong>Address:</strong> {toDisplayText(candidate.address)}</div>
-                <div className="avel-candidate-details__full avel-candidate-details__full--skills"><strong>Key Skills:</strong> {toDisplayText(candidate.keySkills)}</div>
+                <div className={getDetailFieldClassName(candidate.currentEmployer)}><strong>Current Employer:</strong> {toDisplayText(candidate.currentEmployer)}</div>
+                <div className={getDetailFieldClassName(candidate.dateAvailable)}><strong>Date Available:</strong> {toDisplayText(candidate.dateAvailable)}</div>
+                <div className={getDetailFieldClassName(candidate.bestTimeToCall)}><strong>Best Time To Call:</strong> {toDisplayText(candidate.bestTimeToCall)}</div>
+                <div className={getDetailFieldClassName(candidate.canRelocate)}><strong>Can Relocate:</strong> {toDisplayText(candidate.canRelocate)}</div>
+                <div className={getDetailFieldClassName(candidate.currentPay)}><strong>Current Pay:</strong> {toDisplayText(candidate.currentPay)}</div>
+                <div className={getDetailFieldClassName(candidate.desiredPay)}><strong>Desired Pay:</strong> {toDisplayText(candidate.desiredPay)}</div>
+                <div className={getDetailFieldClassName(candidate.dateCreated)}><strong>Created:</strong> {toDisplayText(candidate.dateCreated)} ({toDisplayText(candidate.enteredBy)})</div>
+                <div className={getDetailFieldClassName(candidate.dateModified)}><strong>Modified:</strong> {toDisplayText(candidate.dateModified)}</div>
+                <div className={getDetailFieldClassName(candidate.address)}><strong>Address:</strong> {toDisplayText(candidate.address)}</div>
+                <div className={getDetailFieldClassName(candidate.keySkills, 'avel-candidate-details__full avel-candidate-details__full--skills')}>
+                  <strong>Key Skills:</strong> {toDisplayText(candidate.keySkills)}
+                </div>
                 {data.extraFields.map((field) => (
                   <div
                     key={field.fieldName}
-                    className={
+                    className={getDetailFieldClassName(
+                      field.display,
                       String(field.fieldName || '').toLowerCase().includes('key skill')
                         ? 'avel-candidate-details__full avel-candidate-details__full--skills'
-                        : undefined
-                    }
+                        : ''
+                    )}
                   >
                     <strong>{toDisplayText(field.fieldName)}:</strong> {toDisplayText(field.display)}
                   </div>
@@ -1427,22 +1488,25 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--gdpr">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">GDPR</h2>
-                <p className="avel-list-panel__hint">
-                  Latest status: {toDisplayText(gdpr.latestRequest.status)}
+                <p className="avel-list-panel__hint avel-candidate-gdpr-hint">
+                  <span>Latest status:</span>
+                  <span className={`modern-chip avel-candidate-gdpr-chip ${getGDPRStatusChipClass(gdpr.latestRequest.status)}`}>
+                    {toDisplayText(gdpr.latestRequest.status)}
+                  </span>
                 </p>
               </div>
               <div className="avel-candidate-details avel-candidate-details--gdpr">
-                <div><strong>Request Created:</strong> {toDisplayText(gdpr.latestRequest.createdAt)}</div>
-                <div><strong>Email Sent:</strong> {toDisplayText(gdpr.latestRequest.emailSentAt)}</div>
-                <div><strong>Link Expires:</strong> {toDisplayText(gdpr.latestRequest.expiresAt)}</div>
-                <div><strong>Deleted At:</strong> {toDisplayText(gdpr.latestRequest.deletedAt)}</div>
+                <div className={getDetailFieldClassName(gdpr.latestRequest.createdAt)}><strong>Request Created:</strong> {toDisplayText(gdpr.latestRequest.createdAt)}</div>
+                <div className={getDetailFieldClassName(gdpr.latestRequest.emailSentAt)}><strong>Email Sent:</strong> {toDisplayText(gdpr.latestRequest.emailSentAt)}</div>
+                <div className={getDetailFieldClassName(gdpr.latestRequest.expiresAt)}><strong>Link Expires:</strong> {toDisplayText(gdpr.latestRequest.expiresAt)}</div>
+                <div className={getDetailFieldClassName(gdpr.latestRequest.deletedAt)}><strong>Deleted At:</strong> {toDisplayText(gdpr.latestRequest.deletedAt)}</div>
                 {gdpr.sendDisabledReason !== '' ? (
-                  <div className="avel-candidate-details__full">
+                  <div className={getDetailFieldClassName(gdpr.sendDisabledReason, 'avel-candidate-details__full')}>
                     <strong>Send Disabled:</strong> {gdpr.sendDisabledReason}
                   </div>
                 ) : null}
                 {gdpr.legacyProof.link !== '' ? (
-                  <div className="avel-candidate-details__full">
+                  <div className={getDetailFieldClassName(gdpr.legacyProof.fileName, 'avel-candidate-details__full')}>
                     <strong>Legacy Proof:</strong>{' '}
                     <a className="modern-link" href={decodeLegacyURL(gdpr.legacyProof.link)} target="_blank" rel="noreferrer">
                       {toDisplayText(gdpr.legacyProof.fileName, 'View file')}
@@ -1450,7 +1514,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   </div>
                 ) : null}
                 {gdpr.flashMessage !== '' ? (
-                  <div className="avel-candidate-details__full">
+                  <div className={getDetailFieldClassName(gdpr.flashMessage, 'avel-candidate-details__full')}>
                     <strong>Info:</strong> {gdpr.flashMessage}
                   </div>
                 ) : null}
@@ -1837,21 +1901,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <td>{toDisplayText(attachment.dateCreated)}</td>
                     <td>
                       <div className="modern-table-actions">
-                        {attachment.previewAvailable ? (
-                          <button
-                            type="button"
-                            className="modern-btn modern-btn--mini modern-btn--secondary"
-                            onClick={() =>
-                              setPipelineModal({
-                                url: decodeLegacyURL(attachment.previewURL),
-                                title: `Preview: ${toDisplayText(attachment.fileName, 'Attachment')}`,
-                                showRefreshClose: false
-                              })
-                            }
-                          >
-                            Preview
-                          </button>
-                        ) : null}
                         {permissions.canDeleteAttachment ? (
                           <button
                             type="button"

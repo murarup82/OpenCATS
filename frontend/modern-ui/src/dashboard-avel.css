@@ -4646,105 +4646,170 @@
 
 .avel-candidate-show-page::before {
   background:
-    radial-gradient(circle at 12% 8%, rgba(214, 175, 120, 0.13) 0%, rgba(214, 175, 120, 0) 36%),
-    radial-gradient(circle at 88% 18%, rgba(128, 178, 149, 0.11) 0%, rgba(128, 178, 149, 0) 34%),
-    radial-gradient(circle at 54% 100%, rgba(146, 155, 183, 0.09) 0%, rgba(146, 155, 183, 0) 40%),
-    linear-gradient(180deg, #f7f9fa 0%, #f5f6f7 56%, #f8f8f6 100%);
+    radial-gradient(circle at 12% 8%, rgba(174, 196, 215, 0.1) 0%, rgba(174, 196, 215, 0) 36%),
+    radial-gradient(circle at 88% 18%, rgba(148, 176, 196, 0.08) 0%, rgba(148, 176, 196, 0) 34%),
+    radial-gradient(circle at 54% 100%, rgba(143, 160, 178, 0.07) 0%, rgba(143, 160, 178, 0) 40%),
+    linear-gradient(180deg, #eef3f7 0%, #e9eff4 56%, #edf2f6 100%);
 }
 
 .avel-candidate-show-page .avel-kpi {
-  border-color: #c7d5de;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafb 100%);
-  box-shadow: 0 5px 14px rgba(18, 38, 52, 0.08);
+  border-color: #b4c7d4;
+  background: linear-gradient(180deg, #f9fbfd 0%, #f1f5f8 100%);
+  box-shadow: 0 4px 10px rgba(18, 38, 52, 0.06);
 }
 
 .avel-candidate-show-page .avel-kpi:nth-child(1) {
-  background: linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
+  background: linear-gradient(180deg, #f9fcff 0%, #edf5fb 100%);
 }
 
 .avel-candidate-show-page .avel-kpi:nth-child(2) {
-  background: linear-gradient(180deg, #ffffff 0%, #f2faf4 100%);
+  background: linear-gradient(180deg, #f9fcfb 0%, #edf5f1 100%);
 }
 
 .avel-candidate-show-page .avel-kpi:nth-child(3) {
-  background: linear-gradient(180deg, #ffffff 0%, #f7f2fb 100%);
+  background: linear-gradient(180deg, #faf9fd 0%, #f0ecf6 100%);
 }
 
 .avel-candidate-show-page .avel-kpi:nth-child(4) {
-  background: linear-gradient(180deg, #ffffff 0%, #fdf6ec 100%);
+  background: linear-gradient(180deg, #fcfbf8 0%, #f3eee6 100%);
 }
 
 .avel-candidate-show-page .avel-candidate-hero {
-  border-color: #c5d5df;
+  border-color: #afc4d3;
   background:
-    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0) 42%),
-    linear-gradient(165deg, #fefefd 0%, #f6f8f9 58%, #f4f6f8 100%);
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.54) 0%, rgba(255, 255, 255, 0) 42%),
+    linear-gradient(165deg, #f6fafd 0%, #edf3f8 58%, #eaf1f6 100%);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 12px 24px rgba(16, 35, 48, 0.1);
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 10px 20px rgba(16, 35, 48, 0.08);
 }
 
 .avel-candidate-show-page .avel-candidate-hero__meta-item {
-  border-color: #c8d7e0;
-  background: #f7fafc;
-  color: #3f5f71;
+  border-color: #b8cbd8;
+  background: #eef4f8;
+  color: #2f556a;
 }
 
 .avel-candidate-show-page .avel-candidate-panel {
-  border-color: #c0d1dc;
-  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  border-color: #adc2d0;
+  background: linear-gradient(180deg, #f8fbfd 0%, #eff4f8 100%);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 8px 16px rgba(17, 36, 51, 0.07);
+    0 1px 0 rgba(255, 255, 255, 0.72) inset,
+    0 6px 12px rgba(17, 36, 51, 0.05);
 }
 
 .avel-candidate-show-page .avel-candidate-panel--profile {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, #f8fbfd 0%, #eef4f8 100%);
 }
 
 .avel-candidate-show-page .avel-candidate-panel--gdpr,
 .avel-candidate-show-page .avel-candidate-panel--eeo {
-  background: linear-gradient(180deg, #ffffff 0%, #f7f3fb 100%);
+  background: linear-gradient(180deg, #f9f8fc 0%, #efeaf5 100%);
 }
 
 .avel-candidate-show-page .avel-candidate-panel--pipelines {
-  background: linear-gradient(180deg, #ffffff 0%, #f2faf6 100%);
+  background: linear-gradient(180deg, #f8fcfa 0%, #ebf4ef 100%);
 }
 
 .avel-candidate-show-page .avel-candidate-panel--notes,
 .avel-candidate-show-page .avel-candidate-panel--messages {
-  background: linear-gradient(180deg, #ffffff 0%, #fff7f1 100%);
+  background: linear-gradient(180deg, #fcfaf8 0%, #f2ece7 100%);
 }
 
 .avel-candidate-show-page .avel-candidate-panel--attachments,
 .avel-candidate-show-page .avel-candidate-panel--tags,
 .avel-candidate-show-page .avel-candidate-panel--events,
 .avel-candidate-show-page .avel-candidate-panel--questionnaires {
-  background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+  background: linear-gradient(180deg, #f8fbfd 0%, #edf3f8 100%);
 }
 
 .avel-candidate-show-page .avel-candidate-details > div {
-  border-color: #d0dde5;
-  background: #fcfdfe;
+  border-color: #c2d1dc;
+  background: #f2f6f9;
+  color: #23485e;
+}
+
+.avel-candidate-show-page .avel-candidate-detail-field.is-filled {
+  border-color: #a9c1d2;
+  background: linear-gradient(180deg, #f1f7fc 0%, #e9f2f9 100%);
+  color: #143f59;
+}
+
+.avel-candidate-show-page .avel-candidate-detail-field.is-empty {
+  border-color: #cedae3;
+  background: #f6f9fb;
+  color: #698093;
 }
 
 .avel-candidate-show-page .avel-candidate-details__full {
-  border-color: #c5d5df;
-  background: linear-gradient(180deg, #fafcfd 0%, #f5f7f9 100%);
+  border-color: #b9cbd8;
+  background: linear-gradient(180deg, #eef5fa 0%, #e5edf4 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-details > div strong {
+  color: #426379;
+}
+
+.avel-candidate-show-page .avel-candidate-gdpr-hint {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.avel-candidate-show-page .avel-candidate-gdpr-chip {
+  border-radius: 999px;
+  border: 1px solid #b6c9d7;
+  background: #edf4f8;
+  color: #234a60;
+  padding: 3px 10px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.avel-candidate-show-page .avel-candidate-gdpr-chip--success {
+  border-color: #98c9a8;
+  background: #e7f5ec;
+  color: #1f6a41;
+}
+
+.avel-candidate-show-page .avel-candidate-gdpr-chip--pending {
+  border-color: #b0cce0;
+  background: #eaf4fb;
+  color: #205677;
+}
+
+.avel-candidate-show-page .avel-candidate-gdpr-chip--warning {
+  border-color: #e0bf8c;
+  background: #fff4e2;
+  color: #8f5a12;
+}
+
+.avel-candidate-show-page .avel-candidate-gdpr-chip--danger {
+  border-color: #dfb4b4;
+  background: #fceaea;
+  color: #8f3434;
+}
+
+.avel-candidate-show-page .avel-candidate-gdpr-chip--neutral {
+  border-color: #b6c9d7;
+  background: #edf4f8;
+  color: #234a60;
 }
 
 .avel-candidate-show-page .avel-candidate-notes {
-  border-color: #c6d7e2;
-  background: #fafcff;
+  border-color: #b8cbd8;
+  background: #f2f7fb;
 }
 
 .avel-candidate-show-page .modern-table th {
-  background: #f0f4f7;
-  border-bottom-color: #ccdce7;
+  background: #e8eff5;
+  border-bottom-color: #c1d2de;
 }
 
 .avel-candidate-show-page .modern-table td {
-  border-bottom-color: #e6edf2;
+  border-bottom-color: #d9e4ec;
 }
 
 .avel-candidate-edit-page .avel-candidate-edit-panel {
