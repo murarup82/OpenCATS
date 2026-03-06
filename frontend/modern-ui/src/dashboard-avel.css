@@ -4644,6 +4644,109 @@
   margin: 0 0 5px;
 }
 
+.avel-candidate-show-page::before {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(214, 175, 120, 0.13) 0%, rgba(214, 175, 120, 0) 36%),
+    radial-gradient(circle at 88% 18%, rgba(128, 178, 149, 0.11) 0%, rgba(128, 178, 149, 0) 34%),
+    radial-gradient(circle at 54% 100%, rgba(146, 155, 183, 0.09) 0%, rgba(146, 155, 183, 0) 40%),
+    linear-gradient(180deg, #f7f9fa 0%, #f5f6f7 56%, #f8f8f6 100%);
+}
+
+.avel-candidate-show-page .avel-kpi {
+  border-color: #c7d5de;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafb 100%);
+  box-shadow: 0 5px 14px rgba(18, 38, 52, 0.08);
+}
+
+.avel-candidate-show-page .avel-kpi:nth-child(1) {
+  background: linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
+}
+
+.avel-candidate-show-page .avel-kpi:nth-child(2) {
+  background: linear-gradient(180deg, #ffffff 0%, #f2faf4 100%);
+}
+
+.avel-candidate-show-page .avel-kpi:nth-child(3) {
+  background: linear-gradient(180deg, #ffffff 0%, #f7f2fb 100%);
+}
+
+.avel-candidate-show-page .avel-kpi:nth-child(4) {
+  background: linear-gradient(180deg, #ffffff 0%, #fdf6ec 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-hero {
+  border-color: #c5d5df;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0) 42%),
+    linear-gradient(165deg, #fefefd 0%, #f6f8f9 58%, #f4f6f8 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 12px 24px rgba(16, 35, 48, 0.1);
+}
+
+.avel-candidate-show-page .avel-candidate-hero__meta-item {
+  border-color: #c8d7e0;
+  background: #f7fafc;
+  color: #3f5f71;
+}
+
+.avel-candidate-show-page .avel-candidate-panel {
+  border-color: #c0d1dc;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 8px 16px rgba(17, 36, 51, 0.07);
+}
+
+.avel-candidate-show-page .avel-candidate-panel--profile {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-panel--gdpr,
+.avel-candidate-show-page .avel-candidate-panel--eeo {
+  background: linear-gradient(180deg, #ffffff 0%, #f7f3fb 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-panel--pipelines {
+  background: linear-gradient(180deg, #ffffff 0%, #f2faf6 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-panel--notes,
+.avel-candidate-show-page .avel-candidate-panel--messages {
+  background: linear-gradient(180deg, #ffffff 0%, #fff7f1 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-panel--attachments,
+.avel-candidate-show-page .avel-candidate-panel--tags,
+.avel-candidate-show-page .avel-candidate-panel--events,
+.avel-candidate-show-page .avel-candidate-panel--questionnaires {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-details > div {
+  border-color: #d0dde5;
+  background: #fcfdfe;
+}
+
+.avel-candidate-show-page .avel-candidate-details__full {
+  border-color: #c5d5df;
+  background: linear-gradient(180deg, #fafcfd 0%, #f5f7f9 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-notes {
+  border-color: #c6d7e2;
+  background: #fafcff;
+}
+
+.avel-candidate-show-page .modern-table th {
+  background: #f0f4f7;
+  border-bottom-color: #ccdce7;
+}
+
+.avel-candidate-show-page .modern-table td {
+  border-bottom-color: #e6edf2;
+}
+
 .avel-candidate-edit-page .avel-candidate-edit-panel {
   border: 1px solid #adc9dc;
   border-radius: 16px;
