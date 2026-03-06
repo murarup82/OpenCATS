@@ -170,6 +170,36 @@ function matchesTransformJobOrderSearch(jobOrder: { title: string; companyName: 
   );
 }
 
+function getAllocatedTransformJobOrders(
+  data: CandidatesShowModernDataResponse | null,
+  queryRaw: string
+): TransformJobOrderOption[] {
+  if (!data) {
+    return [];
+  }
+
+  const query = String(queryRaw || '').trim();
+  const allocatedMap = new Map<number, TransformJobOrderOption>();
+  data.pipelines.items.forEach((pipelineRow) => {
+    const jobOrderID = Number(pipelineRow.jobOrderID || 0);
+    if (jobOrderID <= 0 || allocatedMap.has(jobOrderID)) {
+      return;
+    }
+    const option: TransformJobOrderOption = {
+      jobOrderID,
+      title: toDisplayText(pipelineRow.jobOrderTitle, `Job Order #${jobOrderID}`),
+      companyName: toDisplayText(pipelineRow.companyName, ''),
+      isAllocated: true
+    };
+    if (!matchesTransformJobOrderSearch(option, query)) {
+      return;
+    }
+    allocatedMap.set(jobOrderID, option);
+  });
+
+  return Array.from(allocatedMap.values());
+}
+
 function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => {
     window.setTimeout(resolve, delayMs);
@@ -756,32 +786,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       if (requestID !== transformSearchRequestRef.current) {
         return;
       }
-      const allocatedMap = new Map<number, TransformJobOrderOption>();
-      if (data) {
-        data.pipelines.items.forEach((pipelineRow) => {
-          const jobOrderID = Number(pipelineRow.jobOrderID || 0);
-          if (jobOrderID <= 0 || allocatedMap.has(jobOrderID)) {
-            return;
-          }
-          const option: TransformJobOrderOption = {
-            jobOrderID,
-            title: toDisplayText(pipelineRow.jobOrderTitle, `Job Order #${jobOrderID}`),
-            companyName: toDisplayText(pipelineRow.companyName, ''),
-            isAllocated: true
-          };
-          if (!matchesTransformJobOrderSearch(option, query)) {
-            return;
-          }
-          allocatedMap.set(jobOrderID, option);
-        });
-      }
-
-      const allocatedOptions = Array.from(allocatedMap.values());
+      const allocatedOptions = getAllocatedTransformJobOrders(data, query);
+      const allocatedIDs = new Set<number>(allocatedOptions.map((row) => row.jobOrderID));
       const fetchedOptions: TransformJobOrderOption[] = result.jobOrders.map((row) => ({
         jobOrderID: Number(row.jobOrderID || 0),
         title: toDisplayText(row.title, `Job Order #${row.jobOrderID}`),
         companyName: toDisplayText(row.companyName, ''),
-        isAllocated: allocatedMap.has(Number(row.jobOrderID || 0))
+        isAllocated: allocatedIDs.has(Number(row.jobOrderID || 0))
       }));
 
       setTransformJobOrders((current) => {
@@ -817,7 +828,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       }
       setTransformStatusError(err instanceof Error ? err.message : 'Unable to load job orders.');
       if (!append) {
-        setTransformJobOrders([]);
+        const query = String(queryRaw || '').trim();
+        setTransformJobOrders(getAllocatedTransformJobOrders(data, query));
         setTransformJobOrderOffset(0);
         setTransformJobCanLoadMore(false);
       }
