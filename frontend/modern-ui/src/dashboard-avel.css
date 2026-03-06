@@ -3872,7 +3872,14 @@
   gap: 8px;
 }
 
-.avel-joborder-show-page .avel-joborder-hero__grid > div {
+.avel-company-show-page .avel-entity-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.avel-joborder-show-page .avel-entity-detail-field,
+.avel-company-show-page .avel-entity-detail-field {
   border: 1px dashed #c8dce8;
   border-radius: 10px;
   background: #f8fcff;
@@ -3881,7 +3888,8 @@
   gap: 3px;
 }
 
-.avel-joborder-show-page .avel-joborder-hero__grid > div > span {
+.avel-joborder-show-page .avel-entity-detail-field > span,
+.avel-company-show-page .avel-entity-detail-field > strong {
   color: #6a8695;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -3889,9 +3897,30 @@
   font-weight: 700;
 }
 
-.avel-joborder-show-page .avel-joborder-hero__grid > div > strong {
+.avel-joborder-show-page .avel-entity-detail-field > strong {
   color: #1e4658;
   font-size: 0.8rem;
+}
+
+.avel-company-show-page .avel-entity-detail-field__value {
+  color: #1e4658;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.avel-joborder-show-page .avel-entity-detail-field.is-filled,
+.avel-company-show-page .avel-entity-detail-field.is-filled {
+  border-color: #a9c1d2;
+  background: linear-gradient(180deg, #f1f7fc 0%, #e9f2f9 100%);
+  color: #143f59;
+}
+
+.avel-joborder-show-page .avel-entity-detail-field.is-empty,
+.avel-company-show-page .avel-entity-detail-field.is-empty {
+  border-color: #cedae3;
+  background: #f6f9fb;
+  color: #698093;
 }
 
 .avel-joborder-show-page .avel-joborder-show-split {
@@ -6149,7 +6178,8 @@
   }
 
   .avel-joborder-show-page .avel-joborder-show-split,
-  .avel-joborder-show-page .avel-joborder-hero__grid {
+  .avel-joborder-show-page .avel-joborder-hero__grid,
+  .avel-company-show-page .avel-entity-details {
     grid-template-columns: 1fr;
   }
 

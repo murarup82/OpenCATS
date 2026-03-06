@@ -60,6 +60,25 @@ function createStatusClassName(statusSlug: string): string {
   return `modern-status modern-status--${statusSlug || 'unknown'}`;
 }
 
+function normalizeDisplayValue(value: unknown): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value).trim();
+  }
+  return '';
+}
+
+function isDisplayValueEmpty(value: unknown): boolean {
+  const normalized = normalizeDisplayValue(value).toLowerCase();
+  return normalized === '' || normalized === '-' || normalized === '--' || normalized === 'n/a' || normalized === 'na';
+}
+
+function getDetailFieldClassName(value: unknown): string {
+  return `avel-entity-detail-field ${isDisplayValueEmpty(value) ? 'is-empty' : 'is-filled'}`;
+}
+
 export function JobOrdersShowPage({ bootstrap }: Props) {
   const [data, setData] = useState<JobOrdersShowModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -982,12 +1001,12 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 {jobOrder.public ? <span className="modern-chip modern-chip--info">Public</span> : null}
               </div>
               <div className="avel-joborder-hero__grid">
-                <div><span>Company</span><strong>{toDisplayText(jobOrder.companyName)}</strong></div>
-                <div><span>Owner</span><strong>{toDisplayText(jobOrder.ownerFullName)}</strong></div>
-                <div><span>Recruiter</span><strong>{toDisplayText(jobOrder.recruiterFullName)}</strong></div>
-                <div><span>Type</span><strong>{toDisplayText(jobOrder.typeDescription)}</strong></div>
-                <div><span>Start Date</span><strong>{toDisplayText(jobOrder.startDate)}</strong></div>
-                <div><span>Modified</span><strong>{toDisplayText(jobOrder.dateModified)}</strong></div>
+                <div className={getDetailFieldClassName(jobOrder.companyName)}><span>Company</span><strong>{toDisplayText(jobOrder.companyName)}</strong></div>
+                <div className={getDetailFieldClassName(jobOrder.ownerFullName)}><span>Owner</span><strong>{toDisplayText(jobOrder.ownerFullName)}</strong></div>
+                <div className={getDetailFieldClassName(jobOrder.recruiterFullName)}><span>Recruiter</span><strong>{toDisplayText(jobOrder.recruiterFullName)}</strong></div>
+                <div className={getDetailFieldClassName(jobOrder.typeDescription)}><span>Type</span><strong>{toDisplayText(jobOrder.typeDescription)}</strong></div>
+                <div className={getDetailFieldClassName(jobOrder.startDate)}><span>Start Date</span><strong>{toDisplayText(jobOrder.startDate)}</strong></div>
+                <div className={getDetailFieldClassName(jobOrder.dateModified)}><span>Modified</span><strong>{toDisplayText(jobOrder.dateModified)}</strong></div>
               </div>
             </div>
           </section>

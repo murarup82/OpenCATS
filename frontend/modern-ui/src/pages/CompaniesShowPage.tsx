@@ -37,6 +37,25 @@ function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
 }
 
+function normalizeDisplayValue(value: unknown): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value).trim();
+  }
+  return '';
+}
+
+function isDisplayValueEmpty(value: unknown): boolean {
+  const normalized = normalizeDisplayValue(value).toLowerCase();
+  return normalized === '' || normalized === '-' || normalized === '--' || normalized === 'n/a' || normalized === 'na';
+}
+
+function getDetailFieldClassName(value: unknown): string {
+  return `avel-entity-detail-field ${isDisplayValueEmpty(value) ? 'is-empty' : 'is-filled'}`;
+}
+
 export function CompaniesShowPage({ bootstrap }: Props) {
   const [data, setData] = useState<CompaniesShowModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -216,7 +235,7 @@ export function CompaniesShowPage({ bootstrap }: Props) {
   const company = data.company;
 
   return (
-    <div className="avel-dashboard-page avel-joborder-show-page">
+    <div className="avel-dashboard-page avel-joborder-show-page avel-company-show-page">
       <PageContainer
         title={toDisplayText(company.name, 'Company')}
         subtitle={`Company #${company.companyID}`}
@@ -267,31 +286,34 @@ export function CompaniesShowPage({ bootstrap }: Props) {
                   {company.isHot ? <span className="modern-chip modern-chip--warning">Hot Company</span> : null}
                 </div>
               </div>
-              <DataTable
-                columns={[
-                  { key: 'field', title: 'Field' },
-                  { key: 'value', title: 'Value' }
-                ]}
-                hasRows={true}
-              >
-                <tr><td>Phone</td><td>{toDisplayText(company.phone)}</td></tr>
-                <tr><td>Address</td><td>{toDisplayText(company.address)}</td></tr>
-                <tr><td>Location</td><td>{toDisplayText(company.cityAndState)}</td></tr>
-                <tr>
-                  <td>Billing Contact</td>
-                  <td>
+              <div className="avel-entity-details avel-entity-details--company">
+                <div className={getDetailFieldClassName(company.phone)}>
+                  <strong>Phone</strong>
+                  <span className="avel-entity-detail-field__value">{toDisplayText(company.phone)}</span>
+                </div>
+                <div className={getDetailFieldClassName(company.address)}>
+                  <strong>Address</strong>
+                  <span className="avel-entity-detail-field__value">{toDisplayText(company.address)}</span>
+                </div>
+                <div className={getDetailFieldClassName(company.cityAndState)}>
+                  <strong>Location</strong>
+                  <span className="avel-entity-detail-field__value">{toDisplayText(company.cityAndState)}</span>
+                </div>
+                <div className={getDetailFieldClassName(company.billingContactID > 0 ? company.billingContactFullName : '')}>
+                  <strong>Billing Contact</strong>
+                  <span className="avel-entity-detail-field__value">
                     {company.billingContactID > 0 ? (
                       <a className="modern-link" href={ensureModernUIURL(`${bootstrap.indexName}?m=contacts&a=show&contactID=${company.billingContactID}`)}>
                         {toDisplayText(company.billingContactFullName)}
                       </a>
                     ) : (
-                      'None'
+                      '--'
                     )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Web Site</td>
-                  <td>
+                  </span>
+                </div>
+                <div className={getDetailFieldClassName(company.webSite)}>
+                  <strong>Web Site</strong>
+                  <span className="avel-entity-detail-field__value">
                     {company.webSite.trim() !== '' ? (
                       <a className="modern-link" href={company.webSite} target="_blank" rel="noreferrer">
                         {company.webSite}
@@ -299,12 +321,23 @@ export function CompaniesShowPage({ bootstrap }: Props) {
                     ) : (
                       '--'
                     )}
-                  </td>
-                </tr>
-                <tr><td>Key Technologies</td><td>{toDisplayText(company.keyTechnologies)}</td></tr>
-                <tr><td>Created</td><td>{toDisplayText(company.dateCreated)} ({toDisplayText(company.enteredByFullName)})</td></tr>
-                <tr><td>Owner</td><td>{toDisplayText(company.ownerFullName)}</td></tr>
-              </DataTable>
+                  </span>
+                </div>
+                <div className={getDetailFieldClassName(company.keyTechnologies)}>
+                  <strong>Key Technologies</strong>
+                  <span className="avel-entity-detail-field__value">{toDisplayText(company.keyTechnologies)}</span>
+                </div>
+                <div className={getDetailFieldClassName(company.dateCreated)}>
+                  <strong>Created</strong>
+                  <span className="avel-entity-detail-field__value">
+                    {toDisplayText(company.dateCreated)} ({toDisplayText(company.enteredByFullName)})
+                  </span>
+                </div>
+                <div className={getDetailFieldClassName(company.ownerFullName)}>
+                  <strong>Owner</strong>
+                  <span className="avel-entity-detail-field__value">{toDisplayText(company.ownerFullName)}</span>
+                </div>
+              </div>
             </div>
 
             <div className="avel-list-panel">
