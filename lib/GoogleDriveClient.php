@@ -59,6 +59,21 @@ class GoogleDriveClient
             return false;
         }
 
+        $existingDoc = $this->findExistingConvertedDocByName(
+            $accessToken,
+            $targetFolderID,
+            $attachmentFilename
+        );
+        if (!empty($existingDoc))
+        {
+            return array(
+                'fileID' => (isset($existingDoc['id']) ? (string) $existingDoc['id'] : ''),
+                'fileName' => (isset($existingDoc['name']) ? (string) $existingDoc['name'] : $attachmentFilename),
+                'editURL' => (isset($existingDoc['webViewLink']) ? (string) $existingDoc['webViewLink'] : ''),
+                'reusedExisting' => true
+            );
+        }
+
         $uploadPayload = $this->uploadAndConvertDocx(
             $accessToken,
             $attachmentPath,
@@ -73,7 +88,8 @@ class GoogleDriveClient
         return array(
             'fileID' => (isset($uploadPayload['id']) ? (string) $uploadPayload['id'] : ''),
             'fileName' => (isset($uploadPayload['name']) ? (string) $uploadPayload['name'] : $attachmentFilename),
-            'editURL' => (isset($uploadPayload['webViewLink']) ? (string) $uploadPayload['webViewLink'] : '')
+            'editURL' => (isset($uploadPayload['webViewLink']) ? (string) $uploadPayload['webViewLink'] : ''),
+            'reusedExisting' => false
         );
     }
 
@@ -389,6 +405,121 @@ class GoogleDriveClient
         }
 
         return $payload;
+    }
+
+    private function findExistingConvertedDocByName($accessToken, $parentFolderID, $filename)
+    {
+        $parentFolderID = trim((string) $parentFolderID);
+        $filename = trim((string) $filename);
+        if ($parentFolderID === '' || $filename === '')
+        {
+            return array();
+        }
+
+        $escapedName = $this->escapeDriveQueryLiteral($filename);
+        $escapedParentID = $this->escapeDriveQueryLiteral($parentFolderID);
+        $q = "mimeType='application/vnd.google-apps.document' and trashed=false and name='" .
+            $escapedName .
+            "' and '" .
+            $escapedParentID .
+            "' in parents";
+
+        $url = 'https://www.googleapis.com/drive/v3/files?'
+            . 'q=' . rawurlencode($q)
+            . '&fields=' . rawurlencode('files(id,name,webViewLink,modifiedTime)')
+            . '&spaces=drive'
+            . '&orderBy=' . rawurlencode('modifiedTime desc')
+            . '&pageSize=1';
+
+        $response = $this->httpRequest(
+            $url,
+            'GET',
+            array(),
+            array(
+                'Accept: application/json',
+                'Authorization: Bearer ' . $accessToken
+            )
+        );
+
+        /* Do not hard-fail upload when duplicate lookup cannot be performed. */
+        if (!$response['ok'])
+        {
+            return array();
+        }
+
+        $payload = json_decode((string) $response['body'], true);
+        if (!is_array($payload) || !isset($payload['files']) || !is_array($payload['files']) || empty($payload['files']))
+        {
+            return array();
+        }
+
+        $row = $payload['files'][0];
+        if (!is_array($row) || empty($row['id']))
+        {
+            return array();
+        }
+
+        $file = array(
+            'id' => (string) $row['id'],
+            'name' => (isset($row['name']) ? (string) $row['name'] : $filename),
+            'webViewLink' => (isset($row['webViewLink']) ? (string) $row['webViewLink'] : '')
+        );
+
+        if ($file['webViewLink'] === '')
+        {
+            $details = $this->getDriveFileMetadata($accessToken, $file['id']);
+            if (!empty($details))
+            {
+                if (isset($details['name']) && trim((string) $details['name']) !== '')
+                {
+                    $file['name'] = (string) $details['name'];
+                }
+                if (isset($details['webViewLink']) && trim((string) $details['webViewLink']) !== '')
+                {
+                    $file['webViewLink'] = (string) $details['webViewLink'];
+                }
+            }
+        }
+
+        return $file;
+    }
+
+    private function getDriveFileMetadata($accessToken, $fileID)
+    {
+        $fileID = trim((string) $fileID);
+        if ($fileID === '')
+        {
+            return array();
+        }
+
+        $url = 'https://www.googleapis.com/drive/v3/files/'
+            . rawurlencode($fileID)
+            . '?fields=' . rawurlencode('id,name,webViewLink');
+
+        $response = $this->httpRequest(
+            $url,
+            'GET',
+            array(),
+            array(
+                'Accept: application/json',
+                'Authorization: Bearer ' . $accessToken
+            )
+        );
+        if (!$response['ok'])
+        {
+            return array();
+        }
+
+        $payload = json_decode((string) $response['body'], true);
+        return (is_array($payload) ? $payload : array());
+    }
+
+    private function escapeDriveQueryLiteral($value)
+    {
+        $value = (string) $value;
+        $value = str_replace('\\', '\\\\', $value);
+        $value = str_replace("'", "\\'", $value);
+        return $value;
     }
 
     private function httpRequest($url, $method = 'GET', $data = array(), $headers = array(), $isRawBody = false)

@@ -164,6 +164,7 @@ export type CandidateGoogleDriveUploadMutationResponse = ModernMutationResponse 
   fileID?: string;
   fileName?: string;
   authURL?: string;
+  reusedExisting?: boolean;
 };
 
 export type CandidatesListModernDataResponse = {

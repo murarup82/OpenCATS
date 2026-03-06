@@ -909,9 +909,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         const editURL = decodeLegacyURL(String(result.editURL || ''));
         if (editURL !== '') {
           window.open(editURL, '_blank', 'noopener,noreferrer');
-          showToast('Sent to Google Docs. Opened in a new tab.', 'success');
+          if (result.reusedExisting) {
+            showToast('Opened existing Google Doc (no duplicate created).', 'success');
+          } else {
+            showToast('Sent to Google Docs. Opened in a new tab.', 'success');
+          }
         } else {
-          showToast('Sent to Google Docs.', 'success');
+          showToast(result.reusedExisting ? 'Opened existing Google Doc.' : 'Sent to Google Docs.', 'success');
         }
       } catch (err: unknown) {
         showToast(err instanceof Error ? err.message : 'Unable to send attachment to Google Docs.', 'error');

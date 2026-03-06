@@ -5731,11 +5731,14 @@ class CandidatesUI extends UserInterface
             200,
             true,
             'googleDriveUploadSuccess',
-            'Attachment copied to Google Drive and opened in Google Docs.',
+            (!empty($uploadResult['reusedExisting'])
+                ? 'Existing Google Docs file opened (no duplicate created).'
+                : 'Attachment copied to Google Drive and opened in Google Docs.'),
             array(
                 'editURL' => (isset($uploadResult['editURL']) ? (string) $uploadResult['editURL'] : ''),
                 'fileID' => (isset($uploadResult['fileID']) ? (string) $uploadResult['fileID'] : ''),
-                'fileName' => (isset($uploadResult['fileName']) ? (string) $uploadResult['fileName'] : $originalFilename)
+                'fileName' => (isset($uploadResult['fileName']) ? (string) $uploadResult['fileName'] : $originalFilename),
+                'reusedExisting' => (!empty($uploadResult['reusedExisting']) ? true : false)
             )
         );
     }
