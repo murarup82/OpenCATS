@@ -103,6 +103,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
     title: string;
   } | null>(null);
   const [localFocus, setLocalFocus] = useState<LocalFocusFilter>('all');
+  const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
+  const moreFiltersRef = useRef<HTMLDetailsElement | null>(null);
   const skipNextAutoSearchRef = useRef(false);
 
   useEffect(() => {
@@ -280,6 +282,39 @@ export function CandidatesListPage({ bootstrap }: Props) {
       window.clearTimeout(debounceID);
     };
   }, [data, navigateWithFilters, searchDraft]);
+
+  useEffect(() => {
+    if (!isMoreFiltersOpen) {
+      return;
+    }
+
+    const handleDocumentPointerDown = (event: MouseEvent | TouchEvent) => {
+      const container = moreFiltersRef.current;
+      const target = event.target as Node | null;
+      if (!container || !target) {
+        return;
+      }
+      if (!container.contains(target)) {
+        setIsMoreFiltersOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMoreFiltersOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleDocumentPointerDown);
+    document.addEventListener('touchstart', handleDocumentPointerDown, { passive: true });
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentPointerDown);
+      document.removeEventListener('touchstart', handleDocumentPointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMoreFiltersOpen]);
 
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {
     if (!data) {
@@ -524,14 +559,25 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 <span>My Candidates Only</span>
               </label>
 
-              <details className="avel-candidate-more-filters">
-                <summary className="avel-candidate-more-filters__summary">More Filters</summary>
+              <details className="avel-candidate-more-filters" ref={moreFiltersRef} open={isMoreFiltersOpen}>
+                <summary
+                  className="avel-candidate-more-filters__summary"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setIsMoreFiltersOpen((current) => !current);
+                  }}
+                >
+                  More Filters
+                </summary>
                 <div className="avel-candidate-more-filters__panel">
                   <label className="modern-command-toggle">
                     <input
                       type="checkbox"
                       checked={filters.onlyHotCandidates}
-                      onChange={(event) => navigateWithFilters({ onlyHotCandidates: event.target.checked, page: 1 })}
+                      onChange={(event) => {
+                        setIsMoreFiltersOpen(false);
+                        navigateWithFilters({ onlyHotCandidates: event.target.checked, page: 1 });
+                      }}
                     />
                     <span className="modern-command-toggle__switch" aria-hidden="true"></span>
                     <span>Hot Candidates</span>
@@ -541,7 +587,10 @@ export function CandidatesListPage({ bootstrap }: Props) {
                     <input
                       type="checkbox"
                       checked={filters.onlyGdprUnsigned}
-                      onChange={(event) => navigateWithFilters({ onlyGdprUnsigned: event.target.checked, page: 1 })}
+                      onChange={(event) => {
+                        setIsMoreFiltersOpen(false);
+                        navigateWithFilters({ onlyGdprUnsigned: event.target.checked, page: 1 });
+                      }}
                     />
                     <span className="modern-command-toggle__switch" aria-hidden="true"></span>
                     <span>GDPR Not Signed</span>
@@ -551,7 +600,10 @@ export function CandidatesListPage({ bootstrap }: Props) {
                     <input
                       type="checkbox"
                       checked={filters.onlyInternalCandidates}
-                      onChange={(event) => navigateWithFilters({ onlyInternalCandidates: event.target.checked, page: 1 })}
+                      onChange={(event) => {
+                        setIsMoreFiltersOpen(false);
+                        navigateWithFilters({ onlyInternalCandidates: event.target.checked, page: 1 });
+                      }}
                     />
                     <span className="modern-command-toggle__switch" aria-hidden="true"></span>
                     <span>Internal Candidates</span>
