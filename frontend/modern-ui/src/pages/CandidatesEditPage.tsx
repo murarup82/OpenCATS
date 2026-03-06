@@ -432,6 +432,31 @@ function buildCandidateParseFailureMessage(statusResult: {
   return `AI prefill failed with status "${status || 'UNKNOWN'}".`;
 }
 
+function getCandidateParseWarningMessages(warnings: unknown[]): string[] {
+  if (!Array.isArray(warnings)) {
+    return [];
+  }
+  return warnings
+    .map((warning) => {
+      if (typeof warning === 'string') {
+        return warning.trim();
+      }
+      if (warning && typeof warning === 'object') {
+        const warningRecord = warning as Record<string, unknown>;
+        const message = String(warningRecord.message || '').trim();
+        const code = String(warningRecord.code || '').trim();
+        if (message !== '') {
+          return message;
+        }
+        if (code !== '') {
+          return code;
+        }
+      }
+      return '';
+    })
+    .filter((message) => message !== '');
+}
+
 export function CandidatesEditPage({ bootstrap }: Props) {
   const [autoAIPrefillAttachmentID] = useState<number>(() => readAutoAIPrefillAttachmentIDFromURL());
   const [data, setData] = useState<CandidatesEditModernDataResponse | null>(null);
@@ -704,6 +729,13 @@ export function CandidatesEditPage({ bootstrap }: Props) {
       let status = String(createResult.status || '').toUpperCase();
       setAiPrefillStatus(`Status: ${status || 'PENDING'}`);
 
+      if ((status === 'COMPLETED' || status === 'PARTIAL') && !statusResult.candidate) {
+        await sleep(600);
+        statusResult = await fetchTalentFitFlowCandidateParseStatus(createResult.jobID);
+        status = String(statusResult.status || '').toUpperCase();
+        setAiPrefillStatus(`Status: ${status || 'PENDING'}`);
+      }
+
       while (status === 'PENDING' || status === 'RUNNING') {
         await sleep(1800);
         statusResult = await fetchTalentFitFlowCandidateParseStatus(createResult.jobID);
@@ -729,10 +761,15 @@ export function CandidatesEditPage({ bootstrap }: Props) {
           return next;
         });
       }
+      const warningMessages = getCandidateParseWarningMessages(statusResult.warnings);
+      const warningSuffix =
+        warningMessages.length > 0
+          ? ` Warnings: ${warningMessages.slice(0, 3).join(' | ')}${warningMessages.length > 3 ? ' ...' : ''}`
+          : '';
       setAiPrefillStatus(
         changedByAI.length > 0
-          ? `AI prefill applied. ${changedByAI.length} field${changedByAI.length === 1 ? '' : 's'} updated.`
-          : 'AI prefill completed. No editable fields changed.'
+          ? `AI prefill applied. ${changedByAI.length} field${changedByAI.length === 1 ? '' : 's'} updated.${warningSuffix}`
+          : `AI prefill completed. No editable fields changed.${warningSuffix}`
       );
     } catch (prefillError) {
       setAiPrefillError(prefillError instanceof Error ? prefillError.message : 'AI prefill failed.');

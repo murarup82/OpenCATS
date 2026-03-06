@@ -281,7 +281,7 @@ class TalentFitFlowClient
             ', baseUrlHasApiSuffix=' . ($hasApiSuffix ? '1' : '0') .
             ', baseUrlHasTrailingSlash=' . ($hasTrailingSlash ? '1' : '0') .
             ', endpointPath=' . $endpointPath .
-            ', headers=' . implode('; ', $this->_sanitizeHeadersForLog($headers))
+            ', authHeadersRedacted=1'
         );
 
         $postFields = array(

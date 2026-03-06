@@ -294,6 +294,31 @@ function buildCandidateParseFailureMessage(statusResult: {
   return `AI extraction failed with status "${status || 'UNKNOWN'}".`;
 }
 
+function getCandidateParseWarningMessages(warnings: unknown[]): string[] {
+  if (!Array.isArray(warnings)) {
+    return [];
+  }
+  return warnings
+    .map((warning) => {
+      if (typeof warning === 'string') {
+        return warning.trim();
+      }
+      if (warning && typeof warning === 'object') {
+        const warningRecord = warning as Record<string, unknown>;
+        const message = String(warningRecord.message || '').trim();
+        const code = String(warningRecord.code || '').trim();
+        if (message !== '') {
+          return message;
+        }
+        if (code !== '') {
+          return code;
+        }
+      }
+      return '';
+    })
+    .filter((message) => message !== '');
+}
+
 function toISODateInput(value: string): string {
   const raw = String(value || '').trim();
   const match = /^(\d{2})-(\d{2})-(\d{2})$/.exec(raw);
@@ -739,6 +764,13 @@ export function CandidatesAddPage({ bootstrap }: Props) {
       let status = String(createResult.status || '').toUpperCase();
       setAiPrefillStatus(`Status: ${status || 'PENDING'}`);
 
+      if ((status === 'COMPLETED' || status === 'PARTIAL') && !statusResult.candidate) {
+        await sleep(600);
+        statusResult = await fetchTalentFitFlowCandidateParseStatus(createResult.jobID);
+        status = String(statusResult.status || '').toUpperCase();
+        setAiPrefillStatus(`Status: ${status || 'PENDING'}`);
+      }
+
       while (status === 'PENDING' || status === 'RUNNING') {
         await sleep(1800);
         statusResult = await fetchTalentFitFlowCandidateParseStatus(createResult.jobID);
@@ -764,7 +796,16 @@ export function CandidatesAddPage({ bootstrap }: Props) {
           return next;
         });
       }
-      setAiPrefillStatus('AI extraction applied. Review values before saving.');
+      const warningMessages = getCandidateParseWarningMessages(statusResult.warnings);
+      const warningSuffix =
+        warningMessages.length > 0
+          ? ` Warnings: ${warningMessages.slice(0, 3).join(' | ')}${warningMessages.length > 3 ? ' ...' : ''}`
+          : '';
+      setAiPrefillStatus(
+        changedByAI.length > 0
+          ? `AI extraction applied. ${changedByAI.length} field${changedByAI.length === 1 ? '' : 's'} updated.${warningSuffix}`
+          : `AI extraction completed. No editable fields changed.${warningSuffix}`
+      );
     } catch (prefillError) {
       setAiPrefillError(prefillError instanceof Error ? prefillError.message : 'AI extraction failed.');
     } finally {
