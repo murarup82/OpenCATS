@@ -50,6 +50,13 @@ type AddToListCompletedDetail = {
   listIDs?: Array<number | string>;
 };
 
+type TransformJobOrderOption = {
+  jobOrderID: number;
+  title: string;
+  companyName: string;
+  isAllocated: boolean;
+};
+
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
     const normalized = value.trim();
@@ -147,6 +154,22 @@ function getGDPRStatusChipClass(status: unknown): string {
   return 'avel-candidate-gdpr-chip--neutral';
 }
 
+function normalizeSearchText(value: string): string {
+  return String(value || '').trim().toLowerCase();
+}
+
+function matchesTransformJobOrderSearch(jobOrder: { title: string; companyName: string }, query: string): boolean {
+  const normalizedQuery = normalizeSearchText(query);
+  if (normalizedQuery === '') {
+    return true;
+  }
+
+  return (
+    normalizeSearchText(jobOrder.title).includes(normalizedQuery) ||
+    normalizeSearchText(jobOrder.companyName).includes(normalizedQuery)
+  );
+}
+
 function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => {
     window.setTimeout(resolve, delayMs);
@@ -232,9 +255,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [transformAttachmentID, setTransformAttachmentID] = useState<number>(0);
   const [transformJobSearch, setTransformJobSearch] = useState<string>('');
   const [transformJobOrderOffset, setTransformJobOrderOffset] = useState<number>(0);
-  const [transformJobOrders, setTransformJobOrders] = useState<
-    Array<{ jobOrderID: number; title: string; companyName: string }>
-  >([]);
+  const [transformJobOrders, setTransformJobOrders] = useState<TransformJobOrderOption[]>([]);
   const [transformJobOrderID, setTransformJobOrderID] = useState<number>(0);
   const [transformJobLoading, setTransformJobLoading] = useState<boolean>(false);
   const [transformJobCanLoadMore, setTransformJobCanLoadMore] = useState<boolean>(false);
@@ -735,8 +756,59 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       if (requestID !== transformSearchRequestRef.current) {
         return;
       }
+      const allocatedMap = new Map<number, TransformJobOrderOption>();
+      if (data) {
+        data.pipelines.items.forEach((pipelineRow) => {
+          const jobOrderID = Number(pipelineRow.jobOrderID || 0);
+          if (jobOrderID <= 0 || allocatedMap.has(jobOrderID)) {
+            return;
+          }
+          const option: TransformJobOrderOption = {
+            jobOrderID,
+            title: toDisplayText(pipelineRow.jobOrderTitle, `Job Order #${jobOrderID}`),
+            companyName: toDisplayText(pipelineRow.companyName, ''),
+            isAllocated: true
+          };
+          if (!matchesTransformJobOrderSearch(option, query)) {
+            return;
+          }
+          allocatedMap.set(jobOrderID, option);
+        });
+      }
 
-      setTransformJobOrders((current) => (append ? [...current, ...result.jobOrders] : result.jobOrders));
+      const allocatedOptions = Array.from(allocatedMap.values());
+      const fetchedOptions: TransformJobOrderOption[] = result.jobOrders.map((row) => ({
+        jobOrderID: Number(row.jobOrderID || 0),
+        title: toDisplayText(row.title, `Job Order #${row.jobOrderID}`),
+        companyName: toDisplayText(row.companyName, ''),
+        isAllocated: allocatedMap.has(Number(row.jobOrderID || 0))
+      }));
+
+      setTransformJobOrders((current) => {
+        if (!append) {
+          const merged = [...allocatedOptions];
+          const seen = new Set<number>(allocatedOptions.map((row) => row.jobOrderID));
+          fetchedOptions.forEach((row) => {
+            if (row.jobOrderID <= 0 || seen.has(row.jobOrderID)) {
+              return;
+            }
+            seen.add(row.jobOrderID);
+            merged.push(row);
+          });
+          return merged;
+        }
+
+        const merged = [...current];
+        const seen = new Set<number>(current.map((row) => row.jobOrderID));
+        fetchedOptions.forEach((row) => {
+          if (row.jobOrderID <= 0 || seen.has(row.jobOrderID)) {
+            return;
+          }
+          seen.add(row.jobOrderID);
+          merged.push(row);
+        });
+        return merged;
+      });
       setTransformJobOrderOffset(Math.max(0, Number(offset || 0)));
       setTransformJobCanLoadMore(query === '' && result.jobOrders.length >= 50);
     } catch (err: unknown) {
@@ -754,7 +826,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         setTransformJobLoading(false);
       }
     }
-  }, []);
+  }, [data]);
 
   useEffect(() => {
     if (!transformCVModalOpen || !data) {
@@ -2184,6 +2256,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     ) : null}
                     {transformJobOrders.map((row) => (
                       <option key={`transform-joborder-${row.jobOrderID}`} value={String(row.jobOrderID)}>
+                        {row.isAllocated ? '[Allocated] ' : ''}
                         {row.title}
                         {row.companyName !== '' ? ` (${row.companyName})` : ''}
                       </option>

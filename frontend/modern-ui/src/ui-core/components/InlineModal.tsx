@@ -37,6 +37,11 @@ export function InlineModal({
   onClose
 }: InlineModalProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -71,7 +76,7 @@ export function InlineModal({
 
       if (event.key === 'Escape' && closeOnEscape) {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -106,7 +111,7 @@ export function InlineModal({
       document.body.style.overflow = previousOverflow;
       previousActiveElement?.focus();
     };
-  }, [closeOnEscape, isOpen, onClose]);
+  }, [closeOnEscape, isOpen]);
 
   if (!isOpen) {
     return null;
