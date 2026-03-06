@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createTalentFitFlowCandidateParseJob,
   deleteCandidateAttachment,
@@ -92,6 +92,16 @@ function toFormState(data: CandidatesEditModernDataResponse): CandidateEditFormS
 
 function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
+}
+
+function readAutoAIPrefillAttachmentIDFromURL(): number {
+  const query = new URLSearchParams(window.location.search);
+  const shouldAuto = String(query.get('autoAIPrefill') || '').trim().toLowerCase();
+  if (shouldAuto !== '1' && shouldAuto !== 'true' && shouldAuto !== 'yes') {
+    return 0;
+  }
+  const attachmentID = Number(query.get('aiAttachmentID') || 0);
+  return Number.isFinite(attachmentID) && attachmentID > 0 ? attachmentID : 0;
 }
 
 function toDisplayText(value: unknown, fallback = '--'): string {
@@ -346,6 +356,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 export function CandidatesEditPage({ bootstrap }: Props) {
+  const [autoAIPrefillAttachmentID] = useState<number>(() => readAutoAIPrefillAttachmentIDFromURL());
   const [data, setData] = useState<CandidatesEditModernDataResponse | null>(null);
   const [formState, setFormState] = useState<CandidateEditFormState | null>(null);
   const [error, setError] = useState<string>('');
@@ -378,6 +389,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [sourceCSV, setSourceCSV] = useState<string>('');
   const [newSourceDraft, setNewSourceDraft] = useState<string>('');
   const [sourceNotice, setSourceNotice] = useState<string>('');
+  const autoAIPrefillHandledRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -404,7 +416,15 @@ export function CandidatesEditPage({ bootstrap }: Props) {
         setSourceCSV(serializeSourceCSV([...parseSourceCSV(result.options.sourceCSV || ''), selectedSource]));
         setNewSourceDraft('');
         setSourceNotice('');
-        setAiAttachmentID(pickDefaultAIAttachmentID(result.attachments));
+        const requestedAttachmentID = Number(autoAIPrefillAttachmentID || 0);
+        const hasRequestedAttachment =
+          requestedAttachmentID > 0 &&
+          result.attachments.some(
+            (attachment) => Number(attachment.attachmentID || 0) === requestedAttachmentID && !attachment.isProfileImage
+          );
+        setAiAttachmentID(
+          hasRequestedAttachment ? requestedAttachmentID : pickDefaultAIAttachmentID(result.attachments)
+        );
       })
       .catch((err: Error) => {
         if (!isMounted) {
@@ -421,7 +441,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [bootstrap, serverQueryString, reloadToken]);
+  }, [autoAIPrefillAttachmentID, bootstrap, serverQueryString, reloadToken]);
 
   useEffect(() => {
     setValidationError('');
@@ -572,6 +592,38 @@ export function CandidatesEditPage({ bootstrap }: Props) {
       setAiPrefillPending(false);
     }
   }, [aiAttachmentID, aiPrefillPending, bootstrap.userID, data, formState]);
+
+  useEffect(() => {
+    if (autoAIPrefillHandledRef.current) {
+      return;
+    }
+    if (Number(autoAIPrefillAttachmentID || 0) <= 0) {
+      return;
+    }
+    if (!data || !formState || aiPrefillPending) {
+      return;
+    }
+    if (!(data.resumeImport?.isParsingEnabled ?? false)) {
+      setAiPrefillError('AI parsing is disabled by server configuration.');
+      autoAIPrefillHandledRef.current = true;
+      return;
+    }
+    const attachmentID = Number(autoAIPrefillAttachmentID || 0);
+    const hasRequestedAttachment = data.attachments.some(
+      (attachment) => Number(attachment.attachmentID || 0) === attachmentID && !attachment.isProfileImage
+    );
+    if (!hasRequestedAttachment) {
+      setAiPrefillError('Selected resume attachment is no longer available.');
+      autoAIPrefillHandledRef.current = true;
+      return;
+    }
+    if (Number(aiAttachmentID || 0) !== attachmentID) {
+      setAiAttachmentID(attachmentID);
+      return;
+    }
+    autoAIPrefillHandledRef.current = true;
+    void runAIPrefillFromAttachment();
+  }, [aiAttachmentID, aiPrefillPending, autoAIPrefillAttachmentID, data, formState, runAIPrefillFromAttachment]);
 
   const addSourceOption = useCallback(() => {
     const candidateSource = newSourceDraft.trim();

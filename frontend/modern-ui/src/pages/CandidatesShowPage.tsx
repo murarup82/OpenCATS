@@ -160,6 +160,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
+  const [transformCVModalOpen, setTransformCVModalOpen] = useState<boolean>(false);
+  const [transformAttachmentID, setTransformAttachmentID] = useState<number>(0);
   const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'error' | 'info' } | null>(null);
   const loadRequestRef = useRef(0);
 
@@ -223,6 +225,23 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     setAttachmentUploadOpen(true);
     setAttachmentUploadError('');
   }, [bootstrap.targetAction, data]);
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+    const transformRows = data.attachments.transformCandidates || [];
+    if (transformRows.length === 0) {
+      setTransformAttachmentID(0);
+      setTransformCVModalOpen(false);
+      return;
+    }
+    const currentID = Number(transformAttachmentID || 0);
+    if (currentID > 0 && transformRows.some((row) => Number(row.attachmentID || 0) === currentID)) {
+      return;
+    }
+    setTransformAttachmentID(Number(transformRows[0].attachmentID || 0));
+  }, [data, transformAttachmentID]);
 
   const refreshPageData = useCallback(() => {
     setReloadToken((current) => current + 1);
@@ -605,6 +624,30 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       setAttachmentUploadPending(false);
     }
   }, [attachmentUploadFile, attachmentUploadIsResume, attachmentUploadPending, data, refreshPageData, showToast]);
+
+  const openModernTransformCV = useCallback(() => {
+    if (!data) {
+      return;
+    }
+    const transformRows = data.attachments.transformCandidates || [];
+    if (transformRows.length === 0) {
+      return;
+    }
+    const selectedAttachmentID =
+      Number(transformAttachmentID || 0) > 0
+        ? Number(transformAttachmentID || 0)
+        : Number(transformRows[0].attachmentID || 0);
+    if (selectedAttachmentID <= 0) {
+      return;
+    }
+
+    const editURL = ensureModernUIURL(decodeLegacyURL(data.actions.editURL));
+    const nextURL = new URL(editURL, window.location.href);
+    nextURL.searchParams.set('autoAIPrefill', '1');
+    nextURL.searchParams.set('aiAttachmentID', String(selectedAttachmentID));
+    nextURL.searchParams.set('ui', 'modern');
+    window.location.assign(nextURL.toString());
+  }, [data, transformAttachmentID]);
 
   const openTagEditor = useCallback(() => {
     if (!data) {
@@ -1474,15 +1517,9 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <button
                       type="button"
                       className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() =>
-                        setPipelineModal({
-                          url: decodeLegacyURL(data.actions.legacyURL),
-                          title: 'Transform CV (Legacy)',
-                          showRefreshClose: true
-                        })
-                      }
+                      onClick={() => setTransformCVModalOpen(true)}
                     >
-                      Transform CV (Legacy)
+                      Transform CV With AI
                     </button>
                   ) : null}
                   {permissions.canCreateAttachment ? (
@@ -1782,6 +1819,58 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   Cancel
                 </button>
               </div>
+          </InlineModal>
+        ) : null}
+
+        {transformCVModalOpen && data ? (
+          <InlineModal
+            isOpen={transformCVModalOpen}
+            ariaLabel="Transform CV With AI"
+            dialogClassName="modern-inline-modal__dialog--compact"
+            onClose={() => setTransformCVModalOpen(false)}
+          >
+            <div className="modern-inline-modal__header">
+              <h3>Transform CV With AI</h3>
+              <p>Choose a resume attachment to prefill candidate fields in the modern editor.</p>
+            </div>
+            <div className="modern-inline-modal__body modern-inline-modal__body--form">
+              <label className="modern-command-field">
+                <span className="modern-command-label">Resume Attachment</span>
+                <select
+                  className="avel-form-control"
+                  value={String(transformAttachmentID || '')}
+                  onChange={(event) => setTransformAttachmentID(Number(event.target.value || 0))}
+                >
+                  {data.attachments.transformCandidates.map((item) => (
+                    <option key={`transform-attachment-${item.attachmentID}`} value={String(item.attachmentID)}>
+                      {toDisplayText(item.originalFilename, `Attachment #${item.attachmentID}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="modern-inline-modal__actions">
+              <button type="button" className="modern-btn modern-btn--emphasis" onClick={openModernTransformCV}>
+                Open AI Transform
+              </button>
+              <button
+                type="button"
+                className="modern-btn modern-btn--secondary"
+                onClick={() => {
+                  setTransformCVModalOpen(false);
+                  setPipelineModal({
+                    url: decodeLegacyURL(data.actions.legacyURL),
+                    title: 'Transform CV (Legacy)',
+                    showRefreshClose: true
+                  });
+                }}
+              >
+                Use Legacy Transform
+              </button>
+              <button type="button" className="modern-btn modern-btn--secondary" onClick={() => setTransformCVModalOpen(false)}>
+                Cancel
+              </button>
+            </div>
           </InlineModal>
         ) : null}
 
