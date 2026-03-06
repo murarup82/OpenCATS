@@ -281,7 +281,7 @@ class TalentFitFlowClient
             ', baseUrlHasApiSuffix=' . ($hasApiSuffix ? '1' : '0') .
             ', baseUrlHasTrailingSlash=' . ($hasTrailingSlash ? '1' : '0') .
             ', endpointPath=' . $endpointPath .
-            ', headers=' . implode('; ', $headers)
+            ', headers=' . implode('; ', $this->_sanitizeHeadersForLog($headers))
         );
 
         $postFields = array(
@@ -647,6 +647,33 @@ class TalentFitFlowClient
             'x-timestamp: ' . $timestamp,
             'x-signature: ' . $signature
         );
+    }
+
+    private function _sanitizeHeadersForLog($headers)
+    {
+        $sanitized = array();
+        if (!is_array($headers))
+        {
+            return $sanitized;
+        }
+
+        foreach ($headers as $header)
+        {
+            $headerText = (string) $header;
+            if (stripos($headerText, 'x-api-key:') === 0)
+            {
+                $sanitized[] = 'x-api-key: [REDACTED]';
+                continue;
+            }
+            if (stripos($headerText, 'x-signature:') === 0)
+            {
+                $sanitized[] = 'x-signature: [REDACTED]';
+                continue;
+            }
+            $sanitized[] = $headerText;
+        }
+
+        return $sanitized;
     }
 
     private function _createCurlFile($filePath, $postName = '')

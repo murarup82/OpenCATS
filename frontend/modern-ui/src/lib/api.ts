@@ -1865,6 +1865,9 @@ type TalentFitFlowCandidateParseAJAXResponse = {
   warnings: unknown[];
   errorCode: string;
   errorMessage: string;
+  providerErrorCode: string;
+  providerErrorMessage: string;
+  retryable: boolean | null;
 };
 
 function getXMLTagValue(doc: Document, tagName: string): string {
@@ -1880,6 +1883,15 @@ function parseTalentFitFlowCandidateParseXML(xmlText: string): TalentFitFlowCand
 
   const errorCode = getXMLTagValue(xml, 'errorcode');
   const errorMessage = getXMLTagValue(xml, 'errormessage');
+  const providerErrorCode = getXMLTagValue(xml, 'error_code');
+  const providerErrorMessage = getXMLTagValue(xml, 'error_message');
+  const retryableRaw = getXMLTagValue(xml, 'retryable').trim().toLowerCase();
+  const retryable =
+    retryableRaw === '1' || retryableRaw === 'true'
+      ? true
+      : retryableRaw === '0' || retryableRaw === 'false'
+        ? false
+        : null;
   const jobID = getXMLTagValue(xml, 'jobid');
   const status = getXMLTagValue(xml, 'status');
   const candidateRaw = getXMLTagValue(xml, 'candidate_json');
@@ -1910,7 +1922,10 @@ function parseTalentFitFlowCandidateParseXML(xmlText: string): TalentFitFlowCand
     candidate,
     warnings,
     errorCode,
-    errorMessage
+    errorMessage,
+    providerErrorCode,
+    providerErrorMessage,
+    retryable
   };
 }
 

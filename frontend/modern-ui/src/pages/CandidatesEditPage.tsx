@@ -405,6 +405,33 @@ function toTrackedFieldLabel(fieldKey: CandidateTrackedFieldKey): string {
   return labels[fieldKey];
 }
 
+function buildCandidateParseFailureMessage(statusResult: {
+  status: string;
+  errorMessage: string;
+  providerErrorCode: string;
+  providerErrorMessage: string;
+}): string {
+  const status = String(statusResult.status || '').trim().toUpperCase();
+  const providerCode = String(statusResult.providerErrorCode || '').trim().toUpperCase();
+  const providerMessage = String(statusResult.providerErrorMessage || '').trim();
+  const ajaxMessage = String(statusResult.errorMessage || '').trim();
+  const effectiveMessage = providerMessage || ajaxMessage;
+
+  if (providerCode === 'TEXT_EXTRACTION_FAILED') {
+    return 'AI could not extract text from this CV. The file is likely scanned/image-only or encrypted. Upload a searchable PDF/DOCX (or run OCR) and retry.';
+  }
+
+  if (providerCode === 'UNSUPPORTED_FILE_TYPE') {
+    return 'AI cannot parse this file type. Upload PDF, DOC, DOCX, RTF, ODT, or TXT and retry.';
+  }
+
+  if (effectiveMessage !== '') {
+    return providerCode !== '' ? `${providerCode}: ${effectiveMessage}` : effectiveMessage;
+  }
+
+  return `AI prefill failed with status "${status || 'UNKNOWN'}".`;
+}
+
 export function CandidatesEditPage({ bootstrap }: Props) {
   const [autoAIPrefillAttachmentID] = useState<number>(() => readAutoAIPrefillAttachmentIDFromURL());
   const [data, setData] = useState<CandidatesEditModernDataResponse | null>(null);
@@ -685,7 +712,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
       }
 
       if (status !== 'COMPLETED' && status !== 'PARTIAL') {
-        throw new Error(statusResult.errorMessage || `AI prefill failed with status "${status || 'UNKNOWN'}".`);
+        throw new Error(buildCandidateParseFailureMessage(statusResult));
       }
 
       const baseState = formStateRef.current || baselineState;
