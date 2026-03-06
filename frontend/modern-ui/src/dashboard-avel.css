@@ -5165,6 +5165,15 @@
   box-shadow: 0 8px 16px rgba(0, 109, 144, 0.24);
 }
 
+.avel-candidate-edit-page .avel-candidate-edit-ai-upload {
+  border-color: #0c6f93;
+  box-shadow:
+    0 8px 16px rgba(2, 95, 130, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.38) inset;
+  min-width: 220px;
+  justify-content: center;
+}
+
 .avel-candidate-edit-page .avel-candidate-source-add {
   display: grid;
   gap: 5px;
@@ -5278,6 +5287,11 @@
 .avel-candidate-edit-page .avel-field-source-help {
   color: #486b7d;
   font-size: 0.69rem;
+}
+
+.avel-candidate-edit-page .avel-field-source-help--emphasis {
+  color: #1f4f66;
+  font-weight: 600;
 }
 
 .avel-candidate-edit-page .modern-command-label .avel-field-source-badge {
