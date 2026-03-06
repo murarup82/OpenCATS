@@ -2676,6 +2676,7 @@ export type CandidatesShowModernDataResponse = {
     googleDriveDeleteAttachmentURL?: string;
     googleDriveDeleteAttachmentToken?: string;
     googleDriveConnectURL?: string;
+    googleDriveAccountEmail?: string;
     addTagsURL: string;
     addTagsToken?: string;
     addToListURL: string;

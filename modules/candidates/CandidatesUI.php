@@ -980,6 +980,13 @@ class CandidatesUI extends UserInterface
                 $attachmentIDsForDriveMap
             );
         }
+        $googleDriveAccountEmail = '';
+        $googleDriveTokenStore = new GoogleDriveUserTokens();
+        $googleDriveTokenData = $googleDriveTokenStore->get($this->_siteID, $this->_userID);
+        if (!empty($googleDriveTokenData) && isset($googleDriveTokenData['googleEmail']))
+        {
+            $googleDriveAccountEmail = trim((string) $googleDriveTokenData['googleEmail']);
+        }
 
         foreach ($attachmentsRS as $attachmentData)
         {
@@ -1352,6 +1359,7 @@ class CandidatesUI extends UserInterface
                 'googleDriveDeleteAttachmentURL' => sprintf('%s?m=candidates&a=googleDriveDeleteAttachmentFile', $baseURL),
                 'googleDriveDeleteAttachmentToken' => $this->getCSRFToken('candidates.googleDriveDeleteAttachmentFile'),
                 'googleDriveConnectURL' => $this->buildGoogleDriveConnectURL(''),
+                'googleDriveAccountEmail' => $googleDriveAccountEmail,
                 'addTagsURL' => sprintf('%s?m=candidates&a=addCandidateTags&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addTagsToken' => $this->getCSRFToken('candidates.addCandidateTags'),
                 'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
