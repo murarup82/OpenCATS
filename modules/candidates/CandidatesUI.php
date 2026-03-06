@@ -1453,13 +1453,13 @@ class CandidatesUI extends UserInterface
         if (empty($candidateIDs)) {
             $quickFilter = $columnName . '=#0';
             $topLog = sprintf(
-                'No candidates found for "<strong>%s</strong>" in name, key skills, or resume.',
+                'No candidates found for "<strong>%s</strong>" in candidate ID, name, key skills, or resume.',
                 htmlspecialchars($query)
             );
         } else {
             $quickFilter = $columnName . '=#' . implode('-', $candidateIDs);
             $topLog = sprintf(
-                'Showing candidates matching "<strong>%s</strong>" in name, key skills, or resume.',
+                'Showing candidates matching "<strong>%s</strong>" in candidate ID, name, key skills, or resume.',
                 htmlspecialchars($query)
             );
         }
@@ -1503,6 +1503,15 @@ class CandidatesUI extends UserInterface
         $candidateIDMap = array();
         $search = new SearchCandidates($this->_siteID);
 
+        foreach ($this->getCandidateIDSearchCandidateIDs($query) as $candidateID)
+        {
+            $candidateID = (int) $candidateID;
+            if ($candidateID > 0)
+            {
+                $candidateIDMap[$candidateID] = true;
+            }
+        }
+
         $this->addCandidateIDsToMap(
             $candidateIDMap,
             $search->byFullName($query, 'lastName', 'ASC')
@@ -1523,6 +1532,89 @@ class CandidatesUI extends UserInterface
         sort($candidateIDs, SORT_NUMERIC);
 
         return $candidateIDs;
+    }
+
+    private function getCandidateIDSearchCandidateIDs($query)
+    {
+        $normalizedQuery = strtolower(
+            trim(
+                preg_replace('/\s+/', ' ', (string) $query)
+            )
+        );
+        if ($normalizedQuery === '')
+        {
+            return array();
+        }
+
+        $candidateIDs = array();
+        $matches = array();
+
+        if (preg_match('/^#?([0-9]+)$/', $normalizedQuery, $matches))
+        {
+            $candidateIDs[] = (int) $matches[1];
+        }
+        else if (preg_match('/^(?:candidate(?:\s+profile)?(?:\s+id)?|id)\s*#?\s*([0-9]+)$/i', $normalizedQuery, $matches))
+        {
+            $candidateIDs[] = (int) $matches[1];
+        }
+
+        if (empty($candidateIDs))
+        {
+            return array();
+        }
+
+        $candidateIDs = array_values(
+            array_unique(
+                array_filter($candidateIDs, function ($candidateID) {
+                    return ((int) $candidateID > 0);
+                })
+            )
+        );
+        if (empty($candidateIDs))
+        {
+            return array();
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $candidateIDSQL = array();
+        foreach ($candidateIDs as $candidateID)
+        {
+            $candidateIDSQL[] = $db->makeQueryInteger((int) $candidateID);
+        }
+        if (empty($candidateIDSQL))
+        {
+            return array();
+        }
+
+        $sql = sprintf(
+            "SELECT
+                candidate_id AS candidateID
+            FROM
+                candidate
+            WHERE
+                site_id = %s
+            AND
+                candidate_id IN (%s)",
+            $db->makeQueryInteger($this->_siteID),
+            implode(',', $candidateIDSQL)
+        );
+        $resultSet = $db->getAllAssoc($sql);
+        if (!is_array($resultSet))
+        {
+            return array();
+        }
+
+        $foundCandidateIDs = array();
+        foreach ($resultSet as $row)
+        {
+            $candidateID = (int) (isset($row['candidateID']) ? $row['candidateID'] : 0);
+            if ($candidateID > 0)
+            {
+                $foundCandidateIDs[$candidateID] = true;
+            }
+        }
+
+        return array_keys($foundCandidateIDs);
     }
 
     private function addCandidateIDsToMap(&$candidateIDMap, $resultSet)
