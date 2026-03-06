@@ -4467,6 +4467,34 @@
   gap: 10px;
 }
 
+.avel-candidate-show-page .avel-candidate-grid--summary {
+  order: 10;
+}
+
+.avel-candidate-show-page .avel-candidate-panel--eeo {
+  order: 20;
+}
+
+.avel-candidate-show-page .avel-candidate-panel--pipelines {
+  order: 30;
+}
+
+.avel-candidate-show-page .avel-candidate-grid--assets {
+  order: 40;
+}
+
+.avel-candidate-show-page .avel-candidate-panel--notes {
+  order: 50;
+}
+
+.avel-candidate-show-page .avel-candidate-panel--messages {
+  order: 60;
+}
+
+.avel-candidate-show-page .avel-candidate-grid--secondary {
+  order: 70;
+}
+
 .avel-candidate-show-page .avel-candidate-panel {
   border: 1px solid #b7d0df;
   border-radius: 14px;
@@ -4519,6 +4547,10 @@
   font-size: 0.81rem;
 }
 
+.avel-candidate-show-page .avel-candidate-details--profile {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .avel-candidate-show-page .avel-candidate-details > div {
   border: 1px solid #d3e3ee;
   border-radius: 11px;
@@ -4540,6 +4572,16 @@
   grid-column: 1 / -1;
   border-color: #bfd5e4;
   background: linear-gradient(180deg, #f8fcff 0%, #f1f8fd 100%);
+}
+
+.avel-candidate-show-page .avel-candidate-details--profile .avel-candidate-details__full--skills {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1400px) {
+  .avel-candidate-show-page .avel-candidate-details--profile {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .avel-candidate-show-page .avel-candidate-notes {

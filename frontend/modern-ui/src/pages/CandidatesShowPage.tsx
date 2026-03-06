@@ -1149,7 +1149,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             </div>
           </section>
 
-          <div className="avel-candidate-grid">
+          <div className="avel-candidate-grid avel-candidate-grid--summary">
             <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--profile">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Details</h2>
@@ -1164,10 +1164,17 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 <div><strong>Desired Pay:</strong> {toDisplayText(candidate.desiredPay)}</div>
                 <div><strong>Created:</strong> {toDisplayText(candidate.dateCreated)} ({toDisplayText(candidate.enteredBy)})</div>
                 <div><strong>Modified:</strong> {toDisplayText(candidate.dateModified)}</div>
-                <div className="avel-candidate-details__full"><strong>Address:</strong> {toDisplayText(candidate.address)}</div>
-                <div className="avel-candidate-details__full"><strong>Key Skills:</strong> {toDisplayText(candidate.keySkills)}</div>
+                <div><strong>Address:</strong> {toDisplayText(candidate.address)}</div>
+                <div className="avel-candidate-details__full avel-candidate-details__full--skills"><strong>Key Skills:</strong> {toDisplayText(candidate.keySkills)}</div>
                 {data.extraFields.map((field) => (
-                  <div key={field.fieldName} className="avel-candidate-details__full">
+                  <div
+                    key={field.fieldName}
+                    className={
+                      String(field.fieldName || '').toLowerCase().includes('key skill')
+                        ? 'avel-candidate-details__full avel-candidate-details__full--skills'
+                        : undefined
+                    }
+                  >
                     <strong>{toDisplayText(field.fieldName)}:</strong> {toDisplayText(field.display)}
                   </div>
                 ))}
@@ -1508,7 +1515,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             </DataTable>
           </section>
 
-          <div className="avel-candidate-grid">
+          <div className="avel-candidate-grid avel-candidate-grid--assets">
             <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--attachments">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Attachments</h2>
@@ -1664,7 +1671,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             </section>
           </div>
 
-          <div className="avel-candidate-grid">
+          <div className="avel-candidate-grid avel-candidate-grid--secondary">
             <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--events">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">Upcoming Events</h2>
