@@ -99,8 +99,29 @@ function stripLeadingNumericPrefix($value)
     return preg_replace('/^\s*\d+(?:[.\/-]\d+)*\s*[.\-–—:]*\s*/', '', $value);
 }
 
-function buildCandidateNameToken($candidate)
+function parseBooleanFlagValue($value)
 {
+    $value = strtolower(trim((string) $value));
+    return in_array($value, array('1', 'true', 'yes', 'on'), true);
+}
+
+function getRequestBooleanFlag($key, $default = false)
+{
+    if (!isset($_REQUEST[$key]))
+    {
+        return (bool) $default;
+    }
+
+    return parseBooleanFlagValue($_REQUEST[$key]);
+}
+
+function buildCandidateNameToken($candidate, $isAnonymous = false)
+{
+    if ((bool) $isAnonymous && isset($candidate['candidateID']))
+    {
+        return 'Candidate_' . (int) $candidate['candidateID'];
+    }
+
     $parts = array();
     $firstName = isset($candidate['firstName']) ? $candidate['firstName'] : '';
     $lastName = isset($candidate['lastName']) ? $candidate['lastName'] : '';
@@ -157,9 +178,9 @@ function normalizeJobTitleForFilename($jobTitle)
     return $jobTitle;
 }
 
-function buildCandidateCvFilename($candidate, $extension)
+function buildCandidateCvFilename($candidate, $extension, $isAnonymous = false)
 {
-    $token = buildCandidateNameToken($candidate);
+    $token = buildCandidateNameToken($candidate, $isAnonymous);
 
     $extension = trim((string) $extension);
     if ($extension === '')
@@ -172,9 +193,9 @@ function buildCandidateCvFilename($candidate, $extension)
     return FileUtility::makeSafeFilename($filename);
 }
 
-function buildTransformFilename($candidate, $jobOrder)
+function buildTransformFilename($candidate, $jobOrder, $isAnonymous = false)
 {
-    $token = buildCandidateNameToken($candidate);
+    $token = buildCandidateNameToken($candidate, $isAnonymous);
     $filenameParts = array('CV_Avel_' . $token);
 
     $jobTitle = isset($jobOrder['title']) ? $jobOrder['title'] : '';
@@ -219,7 +240,7 @@ function buildTransformTempPath($filename)
     return $tempPath;
 }
 
-function buildAnalysisFilename($candidate, $jobOrder, $matchScore = '')
+function buildAnalysisFilename($candidate, $jobOrder, $matchScore = '', $isAnonymous = false)
 {
     $scorePrefix = trim((string) $matchScore);
     if ($scorePrefix !== '' && is_numeric($scorePrefix))
@@ -231,7 +252,7 @@ function buildAnalysisFilename($candidate, $jobOrder, $matchScore = '')
         $scorePrefix = 'Matchscore_NA_';
     }
 
-    $token = buildCandidateNameToken($candidate);
+    $token = buildCandidateNameToken($candidate, $isAnonymous);
     $analysisBase = $scorePrefix . 'CV_Avel_Analysis_' . $token;
 
     $filenameParts = array($analysisBase);
@@ -335,6 +356,41 @@ function setAnalysisAttachmentStatus($jobId, $candidateAttached, $jobAttached)
     );
 }
 
+function getTransformAnonymousPreference($jobId)
+{
+    if (!isset($_SESSION['CATS']) || !is_object($_SESSION['CATS']))
+    {
+        return false;
+    }
+
+    $jobId = trim((string) $jobId);
+    if ($jobId === '')
+    {
+        return false;
+    }
+
+    $key = 'tffTransformAnonymous_' . $jobId;
+    $value = $_SESSION['CATS']->retrieveValueByName($key);
+    return !empty($value);
+}
+
+function setTransformAnonymousPreference($jobId, $isAnonymous)
+{
+    if (!isset($_SESSION['CATS']) || !is_object($_SESSION['CATS']))
+    {
+        return;
+    }
+
+    $jobId = trim((string) $jobId);
+    if ($jobId === '')
+    {
+        return;
+    }
+
+    $key = 'tffTransformAnonymous_' . $jobId;
+    $_SESSION['CATS']->storeValueByName($key, ((bool) $isAnonymous ? 1 : 0));
+}
+
 $interface = new SecureAJAXInterface();
 
 if ($_SESSION['CATS']->getAccessLevel('candidates.show') < ACCESS_LEVEL_READ)
@@ -377,6 +433,11 @@ if ($action === 'status')
     {
         $interface->outputXMLErrorPage(-1, 'Invalid job ID.');
         die();
+    }
+    $isAnonymous = getRequestBooleanFlag('anonymous', false);
+    if (!isset($_REQUEST['anonymous']))
+    {
+        $isAnonymous = getTransformAnonymousPreference($jobId);
     }
 
     $status = $client->getTransformStatus($jobId);
@@ -434,7 +495,7 @@ if ($action === 'status')
                             : '';
                     }
 
-                    $analysisFilename = buildAnalysisFilename($candidate, $jobOrder, $matchScore);
+                    $analysisFilename = buildAnalysisFilename($candidate, $jobOrder, $matchScore, $isAnonymous);
                     $analysisTempPath = buildAnalysisTempPath($analysisFilename);
 
                     $analysisResponse = $client->downloadAnalysisPdf($analysisPdfUrl, $analysisTempPath);
@@ -629,6 +690,7 @@ $jobOrderID = (int) $_REQUEST['jobOrderID'];
 $language = isset($_REQUEST['language']) ? trim($_REQUEST['language']) : '';
 $roleType = isset($_REQUEST['roleType']) ? trim($_REQUEST['roleType']) : '';
 $languageFolder = isset($_REQUEST['languageFolder']) ? trim($_REQUEST['languageFolder']) : '';
+$isAnonymous = getRequestBooleanFlag('anonymous', false);
 
 $candidates = new Candidates($siteID);
 $candidate = $candidates->get($candidateID);
@@ -685,6 +747,10 @@ if ($action === 'store')
         $interface->outputXMLErrorPage(-1, 'Invalid job ID.');
         die();
     }
+    if (!isset($_REQUEST['anonymous']))
+    {
+        $isAnonymous = getTransformAnonymousPreference($jobId);
+    }
 
     $status = $client->getTransformStatus($jobId);
     if ($status === false)
@@ -710,7 +776,7 @@ if ($action === 'store')
     }
 
     $downloadUrl = rewriteTalentFitFlowDownloadUrl($status['cv_download_url'], $client->getBaseUrl());
-    $filename = buildTransformFilename($candidate, $jobOrder);
+    $filename = buildTransformFilename($candidate, $jobOrder, $isAnonymous);
     $tempPath = buildTransformTempPath($filename);
 
     $downloadResponse = $client->downloadTransformedCv($downloadUrl, $tempPath);
@@ -854,7 +920,7 @@ if ($metadata === false)
 }
 
 $cvExtension = FileUtility::getFileExtension($attachment['originalFilename']);
-$cvFileName = buildCandidateCvFilename($candidate, $cvExtension);
+$cvFileName = buildCandidateCvFilename($candidate, $cvExtension, $isAnonymous);
 
 $options = array(
     'candidateId' => (string) $candidateID,
@@ -968,6 +1034,11 @@ $output =
     "    <jobid>" . htmlspecialchars($response['jobId'], ENT_QUOTES) . "</jobid>\n" .
     "    <status>" . htmlspecialchars($response['status'], ENT_QUOTES) . "</status>\n" .
     "</data>\n";
+
+if (isset($response['jobId']))
+{
+    setTransformAnonymousPreference($response['jobId'], $isAnonymous);
+}
 
 $interface->outputXMLPage($output);
 

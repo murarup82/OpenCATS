@@ -298,7 +298,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [transformJobCanLoadMore, setTransformJobCanLoadMore] = useState<boolean>(false);
   const [transformLanguage, setTransformLanguage] = useState<string>('English');
   const [transformRoleType, setTransformRoleType] = useState<string>('Technical');
-  const [transformStoreAttachment, setTransformStoreAttachment] = useState<boolean>(false);
+  const [transformStoreAttachment, setTransformStoreAttachment] = useState<boolean>(true);
+  const [transformAnonymous, setTransformAnonymous] = useState<boolean>(false);
   const [transformPending, setTransformPending] = useState<boolean>(false);
   const [transformStatusInfo, setTransformStatusInfo] = useState<string>('');
   const [transformStatusError, setTransformStatusError] = useState<string>('');
@@ -1013,7 +1014,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     setTransformJobCanLoadMore(false);
     setTransformLanguage('English');
     setTransformRoleType('Technical');
-    setTransformStoreAttachment(false);
+    setTransformStoreAttachment(true);
+    setTransformAnonymous(false);
     setTransformPending(false);
     setTransformStatusInfo('');
     setTransformStatusError('');
@@ -1097,7 +1099,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         attachmentID,
         jobOrderID,
         language: transformLanguage,
-        roleType: transformRoleType
+        roleType: transformRoleType,
+        anonymous: transformAnonymous
       });
       if (requestID !== transformRequestIDRef.current) {
         return;
@@ -1126,7 +1129,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         statusResult = await fetchTalentFitFlowTransformStatus({
           jobID: createResult.jobID,
           candidateID,
-          jobOrderID
+          jobOrderID,
+          anonymous: transformAnonymous
         });
         if (requestID !== transformRequestIDRef.current) {
           return;
@@ -1163,7 +1167,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           candidateID,
           attachmentID,
           jobOrderID,
-          jobID: createResult.jobID
+          jobID: createResult.jobID,
+          anonymous: transformAnonymous
         });
         if (requestID !== transformRequestIDRef.current) {
           return;
@@ -1201,6 +1206,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     refreshPageData,
     showToast,
     transformAttachmentID,
+    transformAnonymous,
     transformJobOrderID,
     transformLanguage,
     transformPending,
@@ -2487,16 +2493,28 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 </label>
               </div>
 
-              <label className="modern-command-toggle">
-                <input
-                  type="checkbox"
-                  checked={transformStoreAttachment}
-                  onChange={(event) => setTransformStoreAttachment(event.target.checked)}
-                  disabled={transformPending}
-                />
-                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                <span>Download and store as attachment</span>
-              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                <label className="modern-command-toggle" style={{ marginBottom: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={transformStoreAttachment}
+                    onChange={(event) => setTransformStoreAttachment(event.target.checked)}
+                    disabled={transformPending}
+                  />
+                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                  <span>Download and store as attachment</span>
+                </label>
+                <label className="modern-command-toggle" style={{ marginBottom: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={transformAnonymous}
+                    onChange={(event) => setTransformAnonymous(event.target.checked)}
+                    disabled={transformPending}
+                  />
+                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                  <span>Anonymous</span>
+                </label>
+              </div>
 
               {transformStatusError !== '' ? <div className="modern-state modern-state--error">{transformStatusError}</div> : null}
               {transformStatusInfo !== '' ? <div className="modern-state">{transformStatusInfo}</div> : null}
@@ -2518,21 +2536,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 disabled={transformPending || Number(transformAttachmentID || 0) <= 0 || Number(transformJobOrderID || 0) <= 0}
               >
                 {transformPending ? 'Processing...' : 'Submit'}
-              </button>
-              <button
-                type="button"
-                className="modern-btn modern-btn--secondary"
-                onClick={() => {
-                  closeTransformCVModal();
-                  setPipelineModal({
-                    url: decodeLegacyURL(data.actions.legacyURL),
-                    title: 'Transform CV (Legacy)',
-                    showRefreshClose: true
-                  });
-                }}
-                disabled={transformPending}
-              >
-                Use Legacy Transform
               </button>
               <button
                 type="button"

@@ -2641,6 +2641,7 @@ export async function createTalentFitFlowTransformJob(payload: {
   jobOrderID: number;
   language?: string;
   roleType?: string;
+  anonymous?: boolean;
 }): Promise<TalentFitFlowTransformCreateResponse> {
   const xml = await postLegacyAjaxXML(
     'talentFitFlowTransform',
@@ -2650,7 +2651,8 @@ export async function createTalentFitFlowTransformJob(payload: {
       attachmentID: String(Number(payload.attachmentID || 0)),
       jobOrderID: String(Number(payload.jobOrderID || 0)),
       language: String(payload.language || '').trim(),
-      roleType: String(payload.roleType || '').trim()
+      roleType: String(payload.roleType || '').trim(),
+      anonymous: payload.anonymous ? '1' : '0'
     },
     'CV transform create'
   );
@@ -2671,6 +2673,7 @@ export async function fetchTalentFitFlowTransformStatus(payload: {
   jobID: string;
   candidateID: number;
   jobOrderID: number;
+  anonymous?: boolean;
 }): Promise<TalentFitFlowTransformStatusResponse> {
   const xml = await postLegacyAjaxXML(
     'talentFitFlowTransform',
@@ -2678,7 +2681,8 @@ export async function fetchTalentFitFlowTransformStatus(payload: {
       action: 'status',
       jobId: String(payload.jobID || '').trim(),
       candidateID: String(Number(payload.candidateID || 0)),
-      jobOrderID: String(Number(payload.jobOrderID || 0))
+      jobOrderID: String(Number(payload.jobOrderID || 0)),
+      anonymous: payload.anonymous ? '1' : '0'
     },
     'CV transform status'
   );
@@ -2699,6 +2703,7 @@ export async function storeTalentFitFlowTransformedAttachment(payload: {
   attachmentID: number;
   jobOrderID: number;
   jobID: string;
+  anonymous?: boolean;
 }): Promise<TalentFitFlowTransformStoreResponse> {
   const xml = await postLegacyAjaxXML(
     'talentFitFlowTransform',
@@ -2707,7 +2712,8 @@ export async function storeTalentFitFlowTransformedAttachment(payload: {
       candidateID: String(Number(payload.candidateID || 0)),
       attachmentID: String(Number(payload.attachmentID || 0)),
       jobOrderID: String(Number(payload.jobOrderID || 0)),
-      jobId: String(payload.jobID || '').trim()
+      jobId: String(payload.jobID || '').trim(),
+      anonymous: payload.anonymous ? '1' : '0'
     },
     'CV transform store'
   );
