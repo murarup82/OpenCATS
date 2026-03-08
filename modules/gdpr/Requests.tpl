@@ -30,7 +30,7 @@
                     <div class="ui2-inline">
                         <button type="button" class="ui2-button" onclick="gdprExport('csv');">Export CSV</button>
                         <button type="button" class="ui2-button ui2-button--secondary" onclick="gdprExport('pdf');">Export PDF</button>
-                        <button type="button" class="ui2-button ui2-button--secondary" onclick="gdprScanLegacy();">Scan Legacy Proofs</button>
+                        <button type="button" id="gdprScanLegacyButton" class="ui2-button ui2-button--secondary">Scan Legacy Proofs</button>
                     </div>
                     <?php $this->dataGrid->drawShowFilterControl(); ?>
                     <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
@@ -65,7 +65,7 @@
             </div>
         </form>
 
-        <div id="gdprRequestsStatus" class="ui2-ai-status" style="display:none;"></div>
+        <div id="gdprRequestsStatus" class="ui2-ai-status" role="status" aria-live="polite" aria-atomic="true" style="display:none;"></div>
 
         <div class="ui2-datatable-filterarea">
             <?php $this->dataGrid->drawFilterArea(); ?>
@@ -88,6 +88,7 @@
     if (typeof GDPRRequests !== 'undefined')
     {
         GDPRRequests.configure({ sessionCookie: '<?php echo($this->sessionCookie); ?>' });
+        GDPRRequests.bind();
     }
 
     function gdprExport(format)
@@ -108,10 +109,5 @@
         form.target = prevTarget;
     }
 
-    function gdprScanLegacy()
-    {
-        if (typeof GDPRRequests === 'undefined') return;
-        GDPRRequests.scanLegacy();
-    }
 </script>
 <?php TemplateUtility::printFooter(); ?>

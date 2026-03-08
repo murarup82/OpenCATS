@@ -96,6 +96,194 @@ function parseAcceptLanguage($header, $allowed)
     return '';
 }
 
+function resolveConsentLanguage($allowedLangs)
+{
+    $langParam = '';
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang']))
+    {
+        $langParam = normalizeLang($_POST['lang'], $allowedLangs);
+    }
+    else if (isset($_GET['lang']))
+    {
+        $langParam = normalizeLang($_GET['lang'], $allowedLangs);
+    }
+
+    $langHeader = parseAcceptLanguage(isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '', $allowedLangs);
+    if ($langParam !== '')
+    {
+        return $langParam;
+    }
+    if ($langHeader !== '')
+    {
+        return $langHeader;
+    }
+
+    return 'en';
+}
+
+function getConsentCopy($lang)
+{
+    $copy = array(
+        'en' => array(
+            'invalidLinkTitle' => 'Invalid Consent Link',
+            'invalidLinkMessage' => 'This consent link is invalid or has expired.',
+            'gdprConsentTitle' => 'GDPR Consent',
+            'consentLinkExpiredTitle' => 'Consent Link Expired',
+            'consentRequestInactiveMessage' => 'This consent request is no longer active.',
+            'alreadyProcessedTitle' => 'Already Processed',
+            'consentAlreadyAcceptedMessage' => 'This consent request has already been accepted.',
+            'consentAlreadyDeclinedMessage' => 'This consent request has already been declined.',
+            'requestCanceledTitle' => 'Request Canceled',
+            'consentRequestCanceledMessage' => 'This consent request has been canceled.',
+            'consentLinkExpiredMessage' => 'This consent link has expired.',
+            'invalidRequestTitle' => 'Invalid Request',
+            'invalidRequestMessage' => 'Invalid request.',
+            'consentRecordedTitle' => 'Consent Recorded',
+            'consentRecordedMessage' => 'Thank you. Your consent has been recorded.',
+            'consentDeclinedTitle' => 'Consent Declined',
+            'consentDeclinedMessage' => 'Your consent has been declined.',
+            'ui' => array(
+                'eyebrow' => 'Privacy Consent',
+                'securePublicLink' => 'Secure Public Link',
+                'intro' => 'Review the notice below and choose whether you consent to data processing for recruitment activities.',
+                'languageLabel' => 'Language',
+                'languageNavLabel' => 'Choose consent language',
+                'acceptButton' => 'Accept Consent',
+                'declineButton' => 'Decline',
+                'footnote' => 'This consent link expires automatically if no response is submitted.'
+            )
+        ),
+        'ro' => array(
+            'invalidLinkTitle' => 'Link de consimtamant invalid',
+            'invalidLinkMessage' => 'Acest link de consimtamant este invalid sau a expirat.',
+            'gdprConsentTitle' => 'Consimtamant GDPR',
+            'consentLinkExpiredTitle' => 'Link de consimtamant expirat',
+            'consentRequestInactiveMessage' => 'Aceasta solicitare de consimtamant nu mai este activa.',
+            'alreadyProcessedTitle' => 'Deja procesat',
+            'consentAlreadyAcceptedMessage' => 'Aceasta solicitare de consimtamant a fost deja acceptata.',
+            'consentAlreadyDeclinedMessage' => 'Aceasta solicitare de consimtamant a fost deja refuzata.',
+            'requestCanceledTitle' => 'Solicitare anulata',
+            'consentRequestCanceledMessage' => 'Aceasta solicitare de consimtamant a fost anulata.',
+            'consentLinkExpiredMessage' => 'Acest link de consimtamant a expirat.',
+            'invalidRequestTitle' => 'Cerere invalida',
+            'invalidRequestMessage' => 'Cerere invalida.',
+            'consentRecordedTitle' => 'Consimtamant inregistrat',
+            'consentRecordedMessage' => 'Multumim. Consimtamantul a fost inregistrat.',
+            'consentDeclinedTitle' => 'Consimtamant refuzat',
+            'consentDeclinedMessage' => 'Consimtamantul a fost refuzat.',
+            'ui' => array(
+                'eyebrow' => 'Consimtamant GDPR',
+                'securePublicLink' => 'Link public securizat',
+                'intro' => 'Revizuiti notificarea de mai jos si alegeti daca sunteti de acord cu prelucrarea datelor pentru activitati de recrutare.',
+                'languageLabel' => 'Limba',
+                'languageNavLabel' => 'Alegeti limba consimtamantului',
+                'acceptButton' => 'Accept consimtamantul',
+                'declineButton' => 'Refuz',
+                'footnote' => 'Acest link de consimtamant expira automat daca nu este trimis niciun raspuns.'
+            )
+        ),
+        'fr' => array(
+            'invalidLinkTitle' => 'Lien de consentement invalide',
+            'invalidLinkMessage' => 'Ce lien de consentement est invalide ou a expire.',
+            'gdprConsentTitle' => 'Consentement RGPD',
+            'consentLinkExpiredTitle' => 'Lien de consentement expire',
+            'consentRequestInactiveMessage' => 'Cette demande de consentement n est plus active.',
+            'alreadyProcessedTitle' => 'Deja traite',
+            'consentAlreadyAcceptedMessage' => 'Cette demande de consentement a deja ete acceptee.',
+            'consentAlreadyDeclinedMessage' => 'Cette demande de consentement a deja ete refusee.',
+            'requestCanceledTitle' => 'Demande annulee',
+            'consentRequestCanceledMessage' => 'Cette demande de consentement a ete annulee.',
+            'consentLinkExpiredMessage' => 'Ce lien de consentement a expire.',
+            'invalidRequestTitle' => 'Requete invalide',
+            'invalidRequestMessage' => 'Requete invalide.',
+            'consentRecordedTitle' => 'Consentement enregistre',
+            'consentRecordedMessage' => 'Merci. Votre consentement a ete enregistre.',
+            'consentDeclinedTitle' => 'Consentement refuse',
+            'consentDeclinedMessage' => 'Votre consentement a ete refuse.',
+            'ui' => array(
+                'eyebrow' => 'Consentement RGPD',
+                'securePublicLink' => 'Lien public securise',
+                'intro' => 'Consultez la notice ci-dessous et choisissez si vous consentez au traitement des donnees pour les activites de recrutement.',
+                'languageLabel' => 'Langue',
+                'languageNavLabel' => 'Choisissez la langue du consentement',
+                'acceptButton' => 'Accepter le consentement',
+                'declineButton' => 'Refuser',
+                'footnote' => 'Ce lien de consentement expire automatiquement si aucune reponse n est envoyee.'
+            )
+        )
+    );
+
+    if (!isset($copy[$lang]))
+    {
+        return $copy['en'];
+    }
+
+    return $copy[$lang];
+}
+
+function getInactiveStatePresentation($stateName, $consentCopy)
+{
+    if ($stateName === 'accepted')
+    {
+        return array(
+            'title' => $consentCopy['alreadyProcessedTitle'],
+            'message' => $consentCopy['consentAlreadyAcceptedMessage'],
+            'messageTone' => 'success',
+            'isAlert' => false
+        );
+    }
+
+    if ($stateName === 'declined')
+    {
+        return array(
+            'title' => $consentCopy['alreadyProcessedTitle'],
+            'message' => $consentCopy['consentAlreadyDeclinedMessage'],
+            'messageTone' => 'warning',
+            'isAlert' => false
+        );
+    }
+
+    if ($stateName === 'canceled')
+    {
+        return array(
+            'title' => $consentCopy['requestCanceledTitle'],
+            'message' => $consentCopy['consentRequestCanceledMessage'],
+            'messageTone' => 'warning',
+            'isAlert' => true
+        );
+    }
+
+    if ($stateName === 'expired')
+    {
+        return array(
+            'title' => $consentCopy['consentLinkExpiredTitle'],
+            'message' => $consentCopy['consentLinkExpiredMessage'],
+            'messageTone' => 'warning',
+            'isAlert' => true
+        );
+    }
+
+    return array(
+        'title' => $consentCopy['consentLinkExpiredTitle'],
+        'message' => $consentCopy['consentRequestInactiveMessage'],
+        'messageTone' => 'warning',
+        'isAlert' => true
+    );
+}
+
+function getConsentFormAction()
+{
+    if (!empty($_SERVER['SCRIPT_NAME']))
+    {
+        return (string) $_SERVER['SCRIPT_NAME'];
+    }
+    if (!empty($_SERVER['PHP_SELF']))
+    {
+        return (string) $_SERVER['PHP_SELF'];
+    }
+    return 'consent.php';
+}
+
 function getNoticeForLang($db, $siteID, $lang)
 {
     $sql = sprintf(
@@ -126,6 +314,31 @@ function renderConsentPage($vars)
     exit;
 }
 
+function renderConsentView($vars, $consentCopy)
+{
+    $defaults = array(
+        'title' => $consentCopy['gdprConsentTitle'],
+        'message' => '',
+        'showForm' => false,
+        'siteName' => '',
+        'token' => '',
+        'currentLang' => 'en',
+        'noticeTitle' => '',
+        'noticeBody' => '',
+        'noticeVersion' => '',
+        'messageTone' => 'info',
+        'isAlert' => false,
+        'uiCopy' => $consentCopy['ui'],
+        'formAction' => getConsentFormAction()
+    );
+
+    renderConsentPage(array_merge($defaults, $vars));
+}
+
+$allowedLangs = array('ro', 'en', 'fr');
+$currentLang = resolveConsentLanguage($allowedLangs);
+$consentCopy = getConsentCopy($currentLang);
+
 $token = '';
 if (isset($_GET['t'])) $token = (string) $_GET['t'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['t']))
@@ -135,11 +348,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['t']))
 
 if ($token === '')
 {
-    renderConsentPage(array(
-        'title' => 'Invalid Consent Link',
-        'message' => 'This consent link is invalid or has expired.',
-        'showForm' => false
-    ));
+    renderConsentView(array(
+        'title' => $consentCopy['invalidLinkTitle'],
+        'message' => $consentCopy['invalidLinkMessage'],
+        'messageTone' => 'warning',
+        'isAlert' => true,
+        'currentLang' => $currentLang
+    ), $consentCopy);
 }
 
 $tokenHash = hash('sha256', $token);
@@ -171,11 +386,13 @@ $request = $db->getAssoc($sql);
 
 if (empty($request) || empty($request['candidateID']))
 {
-    renderConsentPage(array(
-        'title' => 'Invalid Consent Link',
-        'message' => 'This consent link is invalid or has expired.',
-        'showForm' => false
-    ));
+    renderConsentView(array(
+        'title' => $consentCopy['invalidLinkTitle'],
+        'message' => $consentCopy['invalidLinkMessage'],
+        'messageTone' => 'warning',
+        'isAlert' => true,
+        'currentLang' => $currentLang
+    ), $consentCopy);
 }
 
 function resolveRequestState($request)
@@ -221,37 +438,17 @@ function resolveRequestState($request)
 $state = resolveRequestState($request);
 $isActive = $state['active'];
 
-$allowedLangs = array('ro', 'en', 'fr');
-$langParam = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang']))
-{
-    $langParam = normalizeLang($_POST['lang'], $allowedLangs);
-}
-else if (isset($_GET['lang']))
-{
-    $langParam = normalizeLang($_GET['lang'], $allowedLangs);
-}
-$langHeader = parseAcceptLanguage(isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '', $allowedLangs);
-$currentLang = 'en';
-if ($langParam !== '')
-{
-    $currentLang = $langParam;
-}
-else if ($langHeader !== '')
-{
-    $currentLang = $langHeader;
-}
-
 $notice = getNoticeForLang($db, $request['siteID'], $currentLang);
 if (empty($notice) && $currentLang !== 'en')
 {
     $notice = getNoticeForLang($db, $request['siteID'], 'en');
     $currentLang = 'en';
+    $consentCopy = getConsentCopy($currentLang);
 }
 if (empty($notice))
 {
     $notice = array(
-        'title' => 'GDPR Consent',
+        'title' => $consentCopy['gdprConsentTitle'],
         'bodyText' => ''
     );
 }
@@ -269,112 +466,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['noticeVersion']))
     }
 }
 
+$pageContext = array(
+    'siteName' => $request['siteName'],
+    'token' => $token,
+    'currentLang' => $currentLang,
+    'noticeTitle' => $notice['title'],
+    'noticeBody' => $notice['bodyText'],
+    'noticeVersion' => $noticeVersion
+);
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET')
 {
     if (!$isActive)
     {
-        $title = 'Consent Link Expired';
-        $message = 'This consent request is no longer active.';
-        if ($state['state'] === 'accepted')
-        {
-            $title = 'Already Processed';
-            $message = 'This consent request has already been accepted.';
-        }
-        else if ($state['state'] === 'declined')
-        {
-            $title = 'Already Processed';
-            $message = 'This consent request has already been declined.';
-        }
-        else if ($state['state'] === 'canceled')
-        {
-            $title = 'Request Canceled';
-            $message = 'This consent request has been canceled.';
-        }
-        else if ($state['state'] === 'expired')
-        {
-            $title = 'Consent Link Expired';
-            $message = 'This consent link has expired.';
-        }
+        $inactive = getInactiveStatePresentation($state['state'], $consentCopy);
 
-        renderConsentPage(array(
-            'title' => $title,
-            'message' => $message,
+        renderConsentView(array_merge($pageContext, array(
+            'title' => $inactive['title'],
+            'message' => $inactive['message'],
             'showForm' => false,
-            'siteName' => $request['siteName'],
-            'token' => $token,
-            'currentLang' => $currentLang,
-            'noticeTitle' => $notice['title'],
-            'noticeBody' => $notice['bodyText'],
-            'noticeVersion' => $noticeVersion
-        ));
+            'messageTone' => $inactive['messageTone'],
+            'isAlert' => $inactive['isAlert']
+        )), $consentCopy);
     }
 
-    renderConsentPage(array(
-        'title' => 'GDPR Consent',
-        'message' => '',
+    renderConsentView(array_merge($pageContext, array(
+        'title' => $consentCopy['gdprConsentTitle'],
         'showForm' => true,
-        'token' => $token,
-        'siteName' => $request['siteName'],
-        'currentLang' => $currentLang,
-        'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText'],
-        'noticeVersion' => $noticeVersion
-    ));
+        'messageTone' => 'info',
+        'isAlert' => false
+    )), $consentCopy);
 }
 
 /* POST: Accept or Decline */
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 if ($action !== 'accept' && $action !== 'decline')
 {
-    renderConsentPage(array(
-        'title' => 'Invalid Request',
-        'message' => 'Invalid request.',
+    renderConsentView(array_merge($pageContext, array(
+        'title' => $consentCopy['invalidRequestTitle'],
+        'message' => $consentCopy['invalidRequestMessage'],
         'showForm' => false,
-        'siteName' => $request['siteName'],
-        'token' => $token,
-        'currentLang' => $currentLang,
-        'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText'],
-        'noticeVersion' => $noticeVersion
-    ));
+        'messageTone' => 'warning',
+        'isAlert' => true
+    )), $consentCopy);
 }
 
 if (!$isActive)
 {
-    $title = 'Consent Link Expired';
-    $message = 'This consent request is no longer active.';
-    if ($state['state'] === 'accepted')
-    {
-        $title = 'Already Processed';
-        $message = 'This consent request has already been accepted.';
-    }
-    else if ($state['state'] === 'declined')
-    {
-        $title = 'Already Processed';
-        $message = 'This consent request has already been declined.';
-    }
-    else if ($state['state'] === 'canceled')
-    {
-        $title = 'Request Canceled';
-        $message = 'This consent request has been canceled.';
-    }
-    else if ($state['state'] === 'expired')
-    {
-        $title = 'Consent Link Expired';
-        $message = 'This consent link has expired.';
-    }
+    $inactive = getInactiveStatePresentation($state['state'], $consentCopy);
 
-    renderConsentPage(array(
-        'title' => $title,
-        'message' => $message,
+    renderConsentView(array_merge($pageContext, array(
+        'title' => $inactive['title'],
+        'message' => $inactive['message'],
         'showForm' => false,
-        'siteName' => $request['siteName'],
-        'token' => $token,
-        'currentLang' => $currentLang,
-        'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText'],
-        'noticeVersion' => $noticeVersion
-    ));
+        'messageTone' => $inactive['messageTone'],
+        'isAlert' => $inactive['isAlert']
+    )), $consentCopy);
 }
 
 $ip = getClientIP();
@@ -406,17 +553,13 @@ if ($action === 'accept')
 
     if ($db->getAffectedRows() <= 0)
     {
-        renderConsentPage(array(
-            'title' => 'Already Processed',
-            'message' => 'This consent request is no longer active.',
+        renderConsentView(array_merge($pageContext, array(
+            'title' => $consentCopy['alreadyProcessedTitle'],
+            'message' => $consentCopy['consentRequestInactiveMessage'],
             'showForm' => false,
-            'siteName' => $request['siteName'],
-            'token' => $token,
-            'currentLang' => $currentLang,
-            'noticeTitle' => $notice['title'],
-            'noticeBody' => $notice['bodyText'],
-            'noticeVersion' => $noticeVersion
-        ));
+            'messageTone' => 'warning',
+            'isAlert' => true
+        )), $consentCopy);
     }
 
     $policyMonths = GDPR_POLICY_MONTHS;
@@ -444,17 +587,13 @@ if ($action === 'accept')
         $db->makeQueryInteger($request['siteID'])
     ));
 
-    renderConsentPage(array(
-        'title' => 'Consent Recorded',
-        'message' => 'Thank you. Your consent has been recorded.',
+    renderConsentView(array_merge($pageContext, array(
+        'title' => $consentCopy['consentRecordedTitle'],
+        'message' => $consentCopy['consentRecordedMessage'],
         'showForm' => false,
-        'siteName' => $request['siteName'],
-        'token' => $token,
-        'currentLang' => $currentLang,
-        'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText'],
-        'noticeVersion' => $noticeVersion
-    ));
+        'messageTone' => 'success',
+        'isAlert' => false
+    )), $consentCopy);
 }
 
 if ($action === 'decline')
@@ -479,28 +618,20 @@ if ($action === 'decline')
 
     if ($db->getAffectedRows() <= 0)
     {
-        renderConsentPage(array(
-            'title' => 'Already Processed',
-            'message' => 'This consent request is no longer active.',
+        renderConsentView(array_merge($pageContext, array(
+            'title' => $consentCopy['alreadyProcessedTitle'],
+            'message' => $consentCopy['consentRequestInactiveMessage'],
             'showForm' => false,
-            'siteName' => $request['siteName'],
-            'token' => $token,
-            'currentLang' => $currentLang,
-            'noticeTitle' => $notice['title'],
-            'noticeBody' => $notice['bodyText'],
-            'noticeVersion' => $noticeVersion
-        ));
+            'messageTone' => 'warning',
+            'isAlert' => true
+        )), $consentCopy);
     }
 
-    renderConsentPage(array(
-        'title' => 'Consent Declined',
-        'message' => 'Your consent has been declined.',
+    renderConsentView(array_merge($pageContext, array(
+        'title' => $consentCopy['consentDeclinedTitle'],
+        'message' => $consentCopy['consentDeclinedMessage'],
         'showForm' => false,
-        'siteName' => $request['siteName'],
-        'token' => $token,
-        'currentLang' => $currentLang,
-        'noticeTitle' => $notice['title'],
-        'noticeBody' => $notice['bodyText'],
-        'noticeVersion' => $noticeVersion
-    ));
+        'messageTone' => 'warning',
+        'isAlert' => false
+    )), $consentCopy);
 }

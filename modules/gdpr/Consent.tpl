@@ -5,21 +5,25 @@
     {
         $currentLang = 'en';
     }
+
+    $uiCopy = isset($this->uiCopy) && is_array($this->uiCopy) ? $this->uiCopy : array();
+    $eyebrow = isset($uiCopy['eyebrow']) ? $uiCopy['eyebrow'] : 'Privacy Consent';
+    $securePublicLink = isset($uiCopy['securePublicLink']) ? $uiCopy['securePublicLink'] : 'Secure Public Link';
+    $intro = isset($uiCopy['intro']) ? $uiCopy['intro'] : 'Review the notice below and choose whether you consent to data processing for recruitment activities.';
+    $languageLabel = isset($uiCopy['languageLabel']) ? $uiCopy['languageLabel'] : 'Language';
+    $languageNavLabel = isset($uiCopy['languageNavLabel']) ? $uiCopy['languageNavLabel'] : 'Choose consent language';
+    $acceptButton = isset($uiCopy['acceptButton']) ? $uiCopy['acceptButton'] : 'Accept Consent';
+    $declineButton = isset($uiCopy['declineButton']) ? $uiCopy['declineButton'] : 'Decline';
+    $footnote = isset($uiCopy['footnote']) ? $uiCopy['footnote'] : 'This consent link expires automatically if no response is submitted.';
+
+    $formAction = isset($this->formAction) && trim($this->formAction) !== '' ? trim($this->formAction) : 'consent.php';
     $tokenParam = isset($this->token) ? urlencode($this->token) : '';
-    $titleProbe = isset($this->title) ? strtolower(trim((string) $this->title)) : '';
-    $messageProbe = isset($this->message) ? strtolower(trim((string) $this->message)) : '';
-    $stateProbe = $titleProbe . ' ' . $messageProbe;
-    $messageTone = 'info';
-    $isAlert = false;
-    if (strpos($stateProbe, 'recorded') !== false || strpos($stateProbe, 'accepted') !== false)
+    $messageTone = isset($this->messageTone) ? strtolower(trim((string) $this->messageTone)) : 'info';
+    if ($messageTone !== 'success' && $messageTone !== 'warning')
     {
-        $messageTone = 'success';
+        $messageTone = 'info';
     }
-    else if (strpos($stateProbe, 'invalid') !== false || strpos($stateProbe, 'declined') !== false || strpos($stateProbe, 'expired') !== false || strpos($stateProbe, 'canceled') !== false || strpos($stateProbe, 'no longer active') !== false)
-    {
-        $messageTone = 'warning';
-        $isAlert = true;
-    }
+    $isAlert = !empty($this->isAlert);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars($currentLang); ?>">
@@ -28,8 +32,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><?php $this->_($this->title); ?></title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
-
         :root {
             --gdpr-50: #f4fbff;
             --gdpr-100: #e6f4fa;
@@ -64,7 +66,8 @@
             --gdpr-radius-md: 14px;
             --gdpr-radius-sm: 11px;
             --gdpr-focus-ring: 0 0 0 3px rgba(0, 151, 189, 0.3);
-            --gdpr-font: "Manrope", "Segoe UI", Tahoma, sans-serif;
+            --gdpr-font: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+            --gdpr-title-font: "Segoe UI Semibold", "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
         }
 
         *,
@@ -132,7 +135,7 @@
 
         .gdpr-title {
             margin: 0;
-            font: 700 clamp(1.5rem, 1.1rem + 1.1vw, 2.05rem) / 1.12 "Space Grotesk", "Segoe UI", sans-serif;
+            font: 700 clamp(1.5rem, 1.1rem + 1.1vw, 2.05rem) / 1.12 var(--gdpr-title-font);
             letter-spacing: -0.02em;
             color: var(--gdpr-900);
         }
@@ -406,24 +409,24 @@
     <main class="gdpr-page">
         <article class="gdpr-shell" role="region" aria-labelledby="gdpr-title">
             <header class="gdpr-header">
-                <p class="gdpr-eyebrow">Privacy Consent</p>
+                <p class="gdpr-eyebrow"><?php echo htmlspecialchars($eyebrow); ?></p>
                 <h1 id="gdpr-title" class="gdpr-title"><?php $this->_($this->title); ?></h1>
                 <div class="gdpr-meta">
                     <?php if (!empty($this->siteName)): ?>
                         <span class="gdpr-site-badge"><?php $this->_($this->siteName); ?></span>
                     <?php endif; ?>
-                    <span class="gdpr-meta-note">Secure Public Link</span>
+                    <span class="gdpr-meta-note"><?php echo htmlspecialchars($securePublicLink); ?></span>
                 </div>
-                <p class="gdpr-intro">Review the notice below and choose whether you consent to data processing for recruitment activities.</p>
+                <p class="gdpr-intro"><?php echo htmlspecialchars($intro); ?></p>
             </header>
 
             <?php if (!empty($this->token)): ?>
                 <section class="gdpr-language-wrap" aria-label="Language switcher">
-                    <span class="gdpr-language-label">Language</span>
-                    <nav class="gdpr-language-nav" aria-label="Choose consent language">
-                        <a href="consent.php?t=<?php echo($tokenParam); ?>&amp;lang=ro" <?php echo($currentLang === 'ro' ? 'aria-current="page"' : ''); ?>>RO</a>
-                        <a href="consent.php?t=<?php echo($tokenParam); ?>&amp;lang=en" <?php echo($currentLang === 'en' ? 'aria-current="page"' : ''); ?>>EN</a>
-                        <a href="consent.php?t=<?php echo($tokenParam); ?>&amp;lang=fr" <?php echo($currentLang === 'fr' ? 'aria-current="page"' : ''); ?>>FR</a>
+                    <span class="gdpr-language-label"><?php echo htmlspecialchars($languageLabel); ?></span>
+                    <nav class="gdpr-language-nav" aria-label="<?php echo htmlspecialchars($languageNavLabel); ?>">
+                        <a href="<?php echo htmlspecialchars($formAction); ?>?t=<?php echo($tokenParam); ?>&amp;lang=ro" <?php echo($currentLang === 'ro' ? 'aria-current="page"' : ''); ?>>RO</a>
+                        <a href="<?php echo htmlspecialchars($formAction); ?>?t=<?php echo($tokenParam); ?>&amp;lang=en" <?php echo($currentLang === 'en' ? 'aria-current="page"' : ''); ?>>EN</a>
+                        <a href="<?php echo htmlspecialchars($formAction); ?>?t=<?php echo($tokenParam); ?>&amp;lang=fr" <?php echo($currentLang === 'fr' ? 'aria-current="page"' : ''); ?>>FR</a>
                     </nav>
                 </section>
             <?php endif; ?>
@@ -447,16 +450,16 @@
                     <?php endif; ?>
                 </section>
 
-                <form class="gdpr-form" method="post" action="consent.php" aria-describedby="gdpr-security-note">
+                <form class="gdpr-form" method="post" action="<?php echo htmlspecialchars($formAction); ?>" aria-describedby="gdpr-security-note">
                     <input type="hidden" name="t" value="<?php $this->_($this->token); ?>" />
                     <input type="hidden" name="lang" value="<?php echo htmlspecialchars($currentLang); ?>" />
                     <input type="hidden" name="noticeVersion" value="<?php echo(isset($this->noticeVersion) ? htmlspecialchars($this->noticeVersion) : ''); ?>" />
                     <div class="gdpr-actions">
-                        <button type="submit" name="action" value="accept" class="gdpr-btn gdpr-btn--accept">Accept Consent</button>
-                        <button type="submit" name="action" value="decline" class="gdpr-btn gdpr-btn--decline">Decline</button>
+                        <button type="submit" name="action" value="accept" class="gdpr-btn gdpr-btn--accept"><?php echo htmlspecialchars($acceptButton); ?></button>
+                        <button type="submit" name="action" value="decline" class="gdpr-btn gdpr-btn--decline"><?php echo htmlspecialchars($declineButton); ?></button>
                     </div>
                 </form>
-                <p class="gdpr-footnote" id="gdpr-security-note">This consent link expires automatically if no response is submitted.</p>
+                <p class="gdpr-footnote" id="gdpr-security-note"><?php echo htmlspecialchars($footnote); ?></p>
             <?php endif; ?>
         </article>
     </main>

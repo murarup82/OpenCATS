@@ -54,25 +54,25 @@ class GDPRRequestsDataGrid extends DataGrid
             {
                 if ($hasCandidate && (int) $rsData['renewalEligible'] === 1)
                 {
-                    $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="GDPRRequests.actionCandidate(\'createLegacy\', ' . $rsData['candidateID'] . ');" title="Creates an audited GDPR request and emails the candidate.">Send renewal request</a>';
+                    $actions[] = '<button type="button" class="ui2-button ui2-button--secondary gdpr-request-action" data-gdpr-action="createLegacy" data-gdpr-candidate-id="' . $rsData['candidateID'] . '" title="Creates an audited GDPR request and emails the candidate.">Send renewal request</button>';
                 }
             }
             else if ($canEditGdpr && $isLatest && $hasCandidate)
             {
                 if (in_array($rsData['status'], array('CREATED', 'SENT')) && !$isExpired)
                 {
-                    $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="GDPRRequests.action(\'resend\', ' . $rsData['requestID'] . ');">Resend</a>';
-                    $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="GDPRRequests.action(\'expire\', ' . $rsData['requestID'] . ');">Expire Now</a>';
+                    $actions[] = '<button type="button" class="ui2-button ui2-button--secondary gdpr-request-action" data-gdpr-action="resend" data-gdpr-request-id="' . $rsData['requestID'] . '">Resend</button>';
+                    $actions[] = '<button type="button" class="ui2-button ui2-button--secondary gdpr-request-action" data-gdpr-action="expire" data-gdpr-request-id="' . $rsData['requestID'] . '">Expire Now</button>';
                 }
-                $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--secondary" onclick="GDPRRequests.action(\'create\', ' . $rsData['requestID'] . ');">Create New</a>';
+                $actions[] = '<button type="button" class="ui2-button ui2-button--secondary gdpr-request-action" data-gdpr-action="create" data-gdpr-request-id="' . $rsData['requestID'] . '">Create New</button>';
                 if ($rsData['status'] == 'DECLINED' && empty($rsData['deletedAt']))
                 {
-                    $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="GDPRRequests.action(\'delete\', ' . $rsData['requestID'] . ');">Delete Candidate Data</a>';
+                    $actions[] = '<button type="button" class="ui2-button ui2-button--danger gdpr-request-action" data-gdpr-action="delete" data-gdpr-request-id="' . $rsData['requestID'] . '">Delete Candidate Data</button>';
                 }
             }
             if ($canHardDeleteRequest && $rsData['isLegacy'] != 1 && !empty($rsData['requestID']))
             {
-                $actions[] = '<a href="javascript:void(0);" class="ui2-button ui2-button--danger" onclick="GDPRRequests.action(\'deleteRequest\', ' . $rsData['requestID'] . ');">Delete (test)</a>';
+                $actions[] = '<button type="button" class="ui2-button ui2-button--danger gdpr-request-action" data-gdpr-action="deleteRequest" data-gdpr-request-id="' . $rsData['requestID'] . '">Delete (test)</button>';
             }
             if (empty($actions))
             {

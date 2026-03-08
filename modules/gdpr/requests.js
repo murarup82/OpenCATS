@@ -6,7 +6,47 @@
 var GDPRRequests = (function ()
 {
     var config = {
-        sessionCookie: ''
+        sessionCookie: '',
+        statusId: 'gdprRequestsStatus'
+    };
+    var inFlight = false;
+
+    var actionMessages = {
+        resend: {
+            confirm: 'Resend this GDPR request now?',
+            progress: 'Resending GDPR request...',
+            success: 'GDPR request resent.'
+        },
+        expire: {
+            confirm: 'Expire this request now?',
+            progress: 'Expiring request...',
+            success: 'Request expired.'
+        },
+        create: {
+            confirm: 'Create and send a new GDPR request now?',
+            progress: 'Creating new GDPR request...',
+            success: 'New GDPR request created.'
+        },
+        createLegacy: {
+            confirm: 'Send a GDPR renewal request? This creates an audited request record and emails the candidate.',
+            progress: 'Sending GDPR renewal request...',
+            success: 'GDPR renewal request sent.'
+        },
+        delete: {
+            confirm: 'Delete candidate data? This cannot be undone.',
+            progress: 'Deleting candidate data...',
+            success: 'Candidate data deleted.'
+        },
+        deleteRequest: {
+            confirm: 'Delete this GDPR request row? This is for test cleanup only.',
+            progress: 'Deleting GDPR request row...',
+            success: 'GDPR request row deleted.'
+        },
+        scanLegacy: {
+            confirm: 'Scan legacy GDPR proofs now? This may take some time.',
+            progress: 'Scanning legacy GDPR proofs...',
+            success: 'Legacy GDPR proof scan complete.'
+        }
     };
 
     function byId(id)
@@ -43,7 +83,7 @@ var GDPRRequests = (function ()
 
     function setStatus(message, isError)
     {
-        var status = byId('gdprRequestsStatus');
+        var status = byId(config.statusId);
         if (!status)
         {
             if (message)
@@ -55,11 +95,53 @@ var GDPRRequests = (function ()
 
         status.innerHTML = escapeHTML(message);
         status.style.display = '';
-        status.style.color = isError ? '#b00000' : '#0f5132';
+        if (isError)
+        {
+            status.style.color = '#b00000';
+            status.style.borderLeftColor = '#b00000';
+        }
+        else
+        {
+            status.style.color = '#0f5132';
+            status.style.borderLeftColor = '#0f5132';
+        }
     }
 
-    function requestActionWithParams(action, extraParams)
+    function getActionMessage(action, key, fallback)
     {
+        if (actionMessages[action] && actionMessages[action][key])
+        {
+            return actionMessages[action][key];
+        }
+
+        return fallback;
+    }
+
+    function updateActionButtons()
+    {
+        var buttons = document.querySelectorAll('.gdpr-request-action');
+        var i;
+        for (i = 0; i < buttons.length; i++)
+        {
+            buttons[i].disabled = inFlight;
+        }
+
+        var scanButton = byId('gdprScanLegacyButton');
+        if (scanButton)
+        {
+            scanButton.disabled = inFlight;
+        }
+    }
+
+    function requestActionWithParams(action, extraParams, options)
+    {
+        options = options || {};
+        if (inFlight)
+        {
+            setStatus('Another GDPR action is already running. Please wait.', true);
+            return;
+        }
+
         var http = AJAX_getXMLHttpObject();
         if (!http)
         {
@@ -82,6 +164,8 @@ var GDPRRequests = (function ()
 
             if (!http.responseXML)
             {
+                inFlight = false;
+                updateActionButtons();
                 setStatus('Request failed.', true);
                 return;
             }
@@ -89,16 +173,29 @@ var GDPRRequests = (function ()
             var errorCode = getNodeValue(http.responseXML, 'errorcode');
             if (errorCode !== '0')
             {
+                inFlight = false;
+                updateActionButtons();
                 var errorMessage = getNodeValue(http.responseXML, 'errormessage');
                 setStatus(errorMessage || 'Request failed.', true);
                 return;
             }
 
-            setStatus('Action completed.', false);
+            var responseMessage = getNodeValue(http.responseXML, 'response');
+            var successMessage = options.successMessage || getActionMessage(action, 'success', 'Action completed.');
+            if (responseMessage)
+            {
+                successMessage = responseMessage;
+            }
+            setStatus(successMessage, false);
+
+            inFlight = false;
+            updateActionButtons();
             window.location.reload();
         };
 
-        setStatus('Working...', false);
+        inFlight = true;
+        updateActionButtons();
+        setStatus(options.progressMessage || getActionMessage(action, 'progress', 'Working...'), false);
         AJAX_callCATSFunction(
             http,
             'gdpr:requests',
@@ -113,37 +210,12 @@ var GDPRRequests = (function ()
 
     function requestAction(action, requestID)
     {
-        requestActionWithParams(action, '&requestID=' + urlEncode(requestID));
+        requestActionWithParams(action, '&requestID=' + urlEncode(requestID), {});
     }
 
     function confirmAction(action)
     {
-        if (action === 'delete')
-        {
-            return confirm('Delete candidate data? This cannot be undone.');
-        }
-
-        if (action === 'deleteRequest')
-        {
-            return confirm('Delete this GDPR request row? This is for test cleanup only.');
-        }
-
-        if (action === 'expire')
-        {
-            return confirm('Expire this request now?');
-        }
-
-        if (action === 'scanLegacy')
-        {
-            return confirm('Scan legacy GDPR proofs now? This may take some time.');
-        }
-
-        if (action === 'createLegacy')
-        {
-            return confirm('Send a GDPR renewal request? This creates an audited request record and emails the candidate.');
-        }
-
-        return true;
+        return confirm(getActionMessage(action, 'confirm', 'Run this GDPR action?'));
     }
 
     function action(actionName, requestID)
@@ -163,7 +235,7 @@ var GDPRRequests = (function ()
             return;
         }
 
-        requestActionWithParams(actionName, '&candidateID=' + urlEncode(candidateID));
+        requestActionWithParams(actionName, '&candidateID=' + urlEncode(candidateID), {});
     }
 
     function scanLegacy()
@@ -173,7 +245,46 @@ var GDPRRequests = (function ()
             return;
         }
 
-        requestActionWithParams('scanLegacy', '');
+        requestActionWithParams('scanLegacy', '', {});
+    }
+
+    function bind()
+    {
+        document.addEventListener('click', function (event)
+        {
+            var trigger = event.target;
+            if (!trigger)
+            {
+                return;
+            }
+
+            var actionButton = trigger.closest ? trigger.closest('.gdpr-request-action') : null;
+            if (actionButton)
+            {
+                event.preventDefault();
+                var actionName = actionButton.getAttribute('data-gdpr-action') || '';
+                var requestID = actionButton.getAttribute('data-gdpr-request-id') || '';
+                var candidateID = actionButton.getAttribute('data-gdpr-candidate-id') || '';
+                if (actionName === '')
+                {
+                    return;
+                }
+                if (candidateID !== '')
+                {
+                    actionCandidate(actionName, candidateID);
+                    return;
+                }
+                action(actionName, requestID);
+                return;
+            }
+
+            var scanButton = trigger.closest ? trigger.closest('#gdprScanLegacyButton') : null;
+            if (scanButton)
+            {
+                event.preventDefault();
+                scanLegacy();
+            }
+        });
     }
 
     function configure(newConfig)
@@ -187,10 +298,16 @@ var GDPRRequests = (function ()
         {
             config.sessionCookie = newConfig.sessionCookie;
         }
+
+        if (typeof newConfig.statusId !== 'undefined')
+        {
+            config.statusId = newConfig.statusId;
+        }
     }
 
     return {
         configure: configure,
+        bind: bind,
         action: action,
         actionCandidate: actionCandidate,
         scanLegacy: scanLegacy
