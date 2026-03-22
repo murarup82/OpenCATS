@@ -410,6 +410,22 @@ class JobOrdersUI extends UserInterface
                 $this->pipelineMatrix();
                 break;
 
+            case 'pipelineMatrixSaveView':
+                if ($this->getUserAccessLevel('joborders.list') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onPipelineMatrixSaveView();
+                break;
+
+            case 'pipelineMatrixDeleteView':
+                if ($this->getUserAccessLevel('joborders.list') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onPipelineMatrixDeleteView();
+                break;
+
             case 'setMonitoredJobOrder':
                 if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
                 {
@@ -6875,6 +6891,7 @@ class JobOrdersUI extends UserInterface
         $recruiterOptions = $this->getRecruiterAllocationUsers();
         $pipelines = new Pipelines($this->_siteID);
         $pipelineStatusOptions = $pipelines->getStatusesForPicking();
+        $savedViews = $this->getPipelineMatrixSavedViews();
 
         if ($isModernJSON)
         {
@@ -6910,6 +6927,7 @@ class JobOrdersUI extends UserInterface
                 $ownerOptions,
                 $recruiterOptions,
                 $pipelineStatusOptions,
+                $savedViews,
                 $errMessage,
                 'joborders-pipeline-matrix'
             );
@@ -7063,6 +7081,7 @@ class JobOrdersUI extends UserInterface
         $ownerOptions,
         $recruiterOptions,
         $pipelineStatusOptions,
+        $savedViews,
         $errMessage,
         $modernPage
     )
@@ -7285,8 +7304,11 @@ class JobOrdersUI extends UserInterface
             'actions' => array(
                 'listURL' => sprintf('%s?m=joborders&a=listByView&ui=modern', $baseURL),
                 'recruiterAllocationURL' => sprintf('%s?m=joborders&a=recruiterAllocation&ui=modern', $baseURL),
+                'saveViewURL' => sprintf('%s?m=joborders&a=pipelineMatrixSaveView', $baseURL),
+                'deleteViewURL' => sprintf('%s?m=joborders&a=pipelineMatrixDeleteView', $baseURL),
                 'legacyURL' => sprintf('%s?m=joborders&a=pipelineMatrix&ui=legacy', $baseURL)
             ),
+            'savedViews' => $savedViews,
             'rows' => $rowPayload
         );
 
@@ -7296,6 +7318,373 @@ class JobOrdersUI extends UserInterface
             header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         }
         echo json_encode($payload);
+    }
+
+    private function ensurePipelineMatrixViewsTable($db)
+    {
+        $db->query(
+            "CREATE TABLE IF NOT EXISTS joborders_pipeline_matrix_view (
+                pipeline_matrix_view_id INT(11) NOT NULL AUTO_INCREMENT,
+                site_id INT(11) NOT NULL,
+                user_id INT(11) NOT NULL,
+                view_name VARCHAR(120) NOT NULL,
+                view_config MEDIUMTEXT NOT NULL,
+                date_created DATETIME NOT NULL,
+                date_modified DATETIME NOT NULL,
+                PRIMARY KEY (pipeline_matrix_view_id),
+                KEY IDX_site_user (site_id, user_id)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci"
+        );
+    }
+
+    private function normalizePipelineMatrixViewConfig($config)
+    {
+        $columnKeys = array(
+            'candidate',
+            'jobOrder',
+            'company',
+            'source',
+            'keySkills',
+            'pipeline',
+            'owner',
+            'recruiter',
+            'location',
+            'gdpr',
+            'dateAdded',
+            'lastActivity'
+        );
+
+        $defaultOrder = $columnKeys;
+        $defaultVisible = array(
+            'candidate' => true,
+            'jobOrder' => true,
+            'company' => false,
+            'source' => true,
+            'keySkills' => true,
+            'pipeline' => true,
+            'owner' => true,
+            'recruiter' => false,
+            'location' => false,
+            'gdpr' => true,
+            'dateAdded' => false,
+            'lastActivity' => true
+        );
+        $defaultFilters = array(
+            'candidate' => '',
+            'jobOrder' => '',
+            'company' => '',
+            'source' => '',
+            'keySkills' => '',
+            'pipeline' => '',
+            'owner' => '',
+            'recruiter' => '',
+            'location' => '',
+            'gdpr' => '',
+            'dateAdded' => '',
+            'lastActivity' => ''
+        );
+
+        if (!is_array($config))
+        {
+            $config = array();
+        }
+
+        $columnOrder = $defaultOrder;
+        if (isset($config['columnOrder']) && is_array($config['columnOrder']))
+        {
+            $nextOrder = array();
+            foreach ($config['columnOrder'] as $columnName)
+            {
+                $columnName = trim((string) $columnName);
+                if ($columnName === '' || !in_array($columnName, $columnKeys, true) || in_array($columnName, $nextOrder, true))
+                {
+                    continue;
+                }
+                $nextOrder[] = $columnName;
+            }
+
+            foreach ($defaultOrder as $columnName)
+            {
+                if (!in_array($columnName, $nextOrder, true))
+                {
+                    $nextOrder[] = $columnName;
+                }
+            }
+
+            if (!empty($nextOrder))
+            {
+                $columnOrder = $nextOrder;
+            }
+        }
+
+        $visibleColumns = $defaultVisible;
+        if (isset($config['visibleColumns']) && is_array($config['visibleColumns']))
+        {
+            foreach ($defaultVisible as $columnName => $defaultValue)
+            {
+                if (isset($config['visibleColumns'][$columnName]))
+                {
+                    $visibleColumns[$columnName] = ((bool) $config['visibleColumns'][$columnName]);
+                }
+            }
+        }
+
+        $columnFilters = $defaultFilters;
+        if (isset($config['columnFilters']) && is_array($config['columnFilters']))
+        {
+            foreach ($defaultFilters as $columnName => $defaultValue)
+            {
+                if (isset($config['columnFilters'][$columnName]))
+                {
+                    $columnFilters[$columnName] = trim((string) $config['columnFilters'][$columnName]);
+                }
+            }
+        }
+
+        $sortBy = 'lastActivity';
+        if (isset($config['sortBy']) && in_array((string) $config['sortBy'], $columnKeys, true))
+        {
+            $sortBy = (string) $config['sortBy'];
+        }
+
+        $sortDirection = 'desc';
+        if (isset($config['sortDirection']) && strtolower((string) $config['sortDirection']) === 'asc')
+        {
+            $sortDirection = 'asc';
+        }
+
+        return array(
+            'columnOrder' => $columnOrder,
+            'visibleColumns' => $visibleColumns,
+            'columnFilters' => $columnFilters,
+            'sortBy' => $sortBy,
+            'sortDirection' => $sortDirection
+        );
+    }
+
+    private function getPipelineMatrixSavedViews()
+    {
+        $db = DatabaseConnection::getInstance();
+        $this->ensurePipelineMatrixViewsTable($db);
+
+        $rows = $db->getAllAssoc(sprintf(
+            "SELECT
+                pipeline_matrix_view_id AS viewID,
+                view_name AS viewName,
+                view_config AS viewConfig,
+                DATE_FORMAT(date_modified, '%%Y-%%m-%%dT%%H:%%i:%%sZ') AS updatedAt
+             FROM
+                joborders_pipeline_matrix_view
+             WHERE
+                site_id = %s
+             AND
+                user_id = %s
+             ORDER BY
+                date_modified DESC,
+                pipeline_matrix_view_id DESC",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($this->_userID)
+        ));
+
+        $payload = array();
+        foreach ($rows as $row)
+        {
+            $viewID = (int) (isset($row['viewID']) ? $row['viewID'] : 0);
+            if ($viewID <= 0)
+            {
+                continue;
+            }
+
+            $viewName = trim((string) (isset($row['viewName']) ? $row['viewName'] : ''));
+            if ($viewName === '')
+            {
+                continue;
+            }
+
+            $configData = array();
+            if (isset($row['viewConfig']) && trim((string) $row['viewConfig']) !== '')
+            {
+                $decoded = json_decode((string) $row['viewConfig'], true);
+                if (is_array($decoded))
+                {
+                    $configData = $decoded;
+                }
+            }
+
+            $payload[] = array(
+                'viewID' => $viewID,
+                'name' => $viewName,
+                'config' => $this->normalizePipelineMatrixViewConfig($configData),
+                'updatedAt' => (string) (isset($row['updatedAt']) ? $row['updatedAt'] : '')
+            );
+        }
+
+        return $payload;
+    }
+
+    private function onPipelineMatrixSaveView()
+    {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        if (!$isModernJSON)
+        {
+            CATSUtility::transferRelativeURI('m=joborders&a=pipelineMatrix&ui=modern');
+            return;
+        }
+
+        $viewID = (int) $this->getTrimmedInput('viewID', $_POST);
+        $viewName = trim($this->getTrimmedInput('viewName', $_POST));
+        $viewConfigRaw = trim($this->getTrimmedInput('viewConfig', $_POST));
+
+        if ($viewName === '')
+        {
+            $viewName = 'My Pipeline View';
+        }
+        if (strlen($viewName) > 120)
+        {
+            $viewName = substr($viewName, 0, 120);
+        }
+
+        $decodedConfig = json_decode($viewConfigRaw, true);
+        if (!is_array($decodedConfig))
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'invalidConfig',
+                'message' => 'Invalid view configuration payload.'
+            ));
+            return;
+        }
+
+        $normalizedConfig = $this->normalizePipelineMatrixViewConfig($decodedConfig);
+        $configJSON = json_encode($normalizedConfig);
+        if ($configJSON === false)
+        {
+            $configJSON = '{}';
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $this->ensurePipelineMatrixViewsTable($db);
+
+        if ($viewID > 0)
+        {
+            $db->query(sprintf(
+                "UPDATE
+                    joborders_pipeline_matrix_view
+                 SET
+                    view_name = %s,
+                    view_config = %s,
+                    date_modified = NOW()
+                 WHERE
+                    pipeline_matrix_view_id = %s
+                 AND
+                    site_id = %s
+                 AND
+                    user_id = %s",
+                $db->makeQueryString($viewName),
+                $db->makeQueryString($configJSON),
+                $db->makeQueryInteger($viewID),
+                $db->makeQueryInteger($this->_siteID),
+                $db->makeQueryInteger($this->_userID)
+            ));
+        }
+        else
+        {
+            $db->query(sprintf(
+                "INSERT INTO joborders_pipeline_matrix_view (
+                    site_id,
+                    user_id,
+                    view_name,
+                    view_config,
+                    date_created,
+                    date_modified
+                )
+                VALUES (
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    NOW(),
+                    NOW()
+                )",
+                $db->makeQueryInteger($this->_siteID),
+                $db->makeQueryInteger($this->_userID),
+                $db->makeQueryString($viewName),
+                $db->makeQueryString($configJSON)
+            ));
+            $viewID = (int) $db->getLastInsertID();
+        }
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode(array(
+            'success' => true,
+            'code' => 'saved',
+            'message' => 'View saved.',
+            'viewID' => (int) $viewID,
+            'views' => $this->getPipelineMatrixSavedViews()
+        ));
+    }
+
+    private function onPipelineMatrixDeleteView()
+    {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        if (!$isModernJSON)
+        {
+            CATSUtility::transferRelativeURI('m=joborders&a=pipelineMatrix&ui=modern');
+            return;
+        }
+
+        $viewID = (int) $this->getTrimmedInput('viewID', $_POST);
+        if ($viewID <= 0)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'invalidViewID',
+                'message' => 'Invalid view ID.'
+            ));
+            return;
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $this->ensurePipelineMatrixViewsTable($db);
+        $db->query(sprintf(
+            "DELETE FROM
+                joborders_pipeline_matrix_view
+             WHERE
+                pipeline_matrix_view_id = %s
+             AND
+                site_id = %s
+             AND
+                user_id = %s",
+            $db->makeQueryInteger($viewID),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($this->_userID)
+        ));
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode(array(
+            'success' => true,
+            'code' => 'deleted',
+            'message' => 'View deleted.',
+            'views' => $this->getPipelineMatrixSavedViews()
+        ));
     }
 
     private function recruiterAllocation($noticeMessage = '', $errorMessage = '')
