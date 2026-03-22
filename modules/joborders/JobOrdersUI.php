@@ -92,7 +92,8 @@ class JobOrdersUI extends UserInterface
         $this->_subTabs = array(
             //'Add Job Order'     => CATSUtility::getIndexName() . '?m=joborders&amp;a=add*al=' . ACCESS_LEVEL_EDIT . '@joborders.add',
             'Add Job Order' => 'javascript:void(0);*js=showPopWin(\''.CATSUtility::getIndexName().'?m=joborders&amp;a=addJobOrderPopup\', 400, 250, null);*al=' . ACCESS_LEVEL_EDIT . '@joborders.add',
-            'Search Job Orders' => CATSUtility::getIndexName() . '?m=joborders&amp;a=search'
+            'Search Job Orders' => CATSUtility::getIndexName() . '?m=joborders&amp;a=search',
+            'Pipeline Matrix' => CATSUtility::getIndexName() . '?m=joborders&amp;a=pipelineMatrix'
         );
 
         if (isset($_SESSION['CATS']) &&
@@ -399,6 +400,14 @@ class JobOrdersUI extends UserInterface
                 {
                     $this->recruiterAllocation();
                 }
+                break;
+
+            case 'pipelineMatrix':
+                if ($this->getUserAccessLevel('joborders.list') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->pipelineMatrix();
                 break;
 
             case 'setMonitoredJobOrder':
@@ -923,6 +932,7 @@ class JobOrdersUI extends UserInterface
                 'addJobOrderURL' => sprintf('%s?m=joborders&a=add&ui=modern', $baseURL),
                 'addJobOrderPopupURL' => sprintf('%s?m=joborders&a=addJobOrderPopup&ui=modern', $baseURL),
                 'recruiterAllocationURL' => sprintf('%s?m=joborders&a=recruiterAllocation&ui=modern', $baseURL),
+                'pipelineMatrixURL' => sprintf('%s?m=joborders&a=pipelineMatrix&ui=modern', $baseURL),
                 'legacyURL' => sprintf('%s?m=joborders&a=listByView&ui=legacy', $baseURL)
             ),
             'state' => array(
@@ -6668,6 +6678,624 @@ class JobOrdersUI extends UserInterface
         }
 
         return $rows;
+    }
+
+    private function pipelineMatrix($errMessage = '')
+    {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
+        $search = trim($this->getTrimmedInput('search', $_REQUEST));
+        $ownerUserID = (int) $this->getTrimmedInput('ownerUserID', $_REQUEST);
+
+        $recruiterUserIDRaw = $this->getTrimmedInput('recruiterUserID', $_REQUEST);
+        if ($recruiterUserIDRaw === '')
+        {
+            $recruiterUserID = -2;
+        }
+        else
+        {
+            $recruiterUserID = (int) $recruiterUserIDRaw;
+        }
+
+        $pipelineStatusIDRaw = $this->getTrimmedInput('pipelineStatusID', $_REQUEST);
+        if ($pipelineStatusIDRaw === '')
+        {
+            $pipelineStatusID = -2;
+        }
+        else
+        {
+            $pipelineStatusID = (int) $pipelineStatusIDRaw;
+        }
+
+        $includeClosed = $this->getRequestBooleanFlag('includeClosed', false);
+
+        $allowedRowsPerPage = array(50, 100, 200);
+        $maxResults = (int) $this->getTrimmedInput('maxResults', $_REQUEST);
+        if (!in_array($maxResults, $allowedRowsPerPage, true))
+        {
+            $maxResults = 100;
+        }
+
+        $sortBy = trim($this->getTrimmedInput('sortBy', $_REQUEST));
+        $allowedSortBy = array(
+            'candidateName',
+            'jobOrder',
+            'company',
+            'source',
+            'keySkills',
+            'pipeline',
+            'owner',
+            'recruiter',
+            'lastActivity',
+            'dateAdded',
+            'location',
+            'gdpr'
+        );
+        if (!in_array($sortBy, $allowedSortBy, true))
+        {
+            $sortBy = 'lastActivity';
+        }
+
+        $sortDirection = strtoupper($this->getTrimmedInput('sortDirection', $_REQUEST));
+        if ($sortDirection !== 'ASC' && $sortDirection !== 'DESC')
+        {
+            $sortDirection = 'DESC';
+        }
+
+        $page = (int) $this->getTrimmedInput('page', $_REQUEST);
+        if ($page <= 0)
+        {
+            $page = 1;
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $whereSQL = $this->buildPipelineMatrixWhereSQL(
+            $db,
+            $search,
+            $ownerUserID,
+            $recruiterUserID,
+            $pipelineStatusID,
+            $includeClosed
+        );
+
+        $countSQL = sprintf(
+            "SELECT
+                COUNT(*) AS totalRows
+             FROM
+                candidate_joborder AS cjo
+             INNER JOIN candidate
+                ON candidate.candidate_id = cjo.candidate_id
+               AND candidate.site_id = cjo.site_id
+             INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjo.joborder_id
+               AND jo.site_id = cjo.site_id
+             LEFT JOIN company
+                ON company.company_id = jo.company_id
+               AND company.site_id = cjo.site_id
+             LEFT JOIN user AS owner_user
+                ON owner_user.user_id = jo.owner
+               AND owner_user.site_id = cjo.site_id
+             LEFT JOIN user AS recruiter_user
+                ON recruiter_user.user_id = jo.recruiter
+               AND recruiter_user.site_id = cjo.site_id
+             LEFT JOIN candidate_joborder_status AS status
+                ON status.candidate_joborder_status_id = cjo.status
+             WHERE
+                %s",
+            $whereSQL
+        );
+        $countRS = $db->getAssoc($countSQL);
+        $totalRows = (isset($countRS['totalRows']) ? (int) $countRS['totalRows'] : 0);
+        if ($totalRows < 0)
+        {
+            $totalRows = 0;
+        }
+
+        $totalPages = 1;
+        if ($totalRows > 0)
+        {
+            $totalPages = (int) ceil($totalRows / $maxResults);
+            if ($totalPages <= 0)
+            {
+                $totalPages = 1;
+            }
+        }
+        if ($page > $totalPages)
+        {
+            $page = $totalPages;
+        }
+        $offset = ($page - 1) * $maxResults;
+        if ($offset < 0)
+        {
+            $offset = 0;
+        }
+
+        $orderBySQL = $this->getPipelineMatrixOrderBySQL($sortBy, $sortDirection);
+        $rowsSQL = sprintf(
+            "SELECT
+                cjo.candidate_joborder_id AS candidateJobOrderID,
+                cjo.candidate_id AS candidateID,
+                cjo.joborder_id AS jobOrderID,
+                cjo.status AS pipelineStatusID,
+                cjo.is_active AS isActive,
+                DATE_FORMAT(cjo.date_created, '%%m-%%d-%%y (%%h:%%i %%p)') AS dateCreated,
+                DATE_FORMAT(cjo.date_modified, '%%m-%%d-%%y (%%h:%%i %%p)') AS dateModified,
+                candidate.first_name AS candidateFirstName,
+                candidate.last_name AS candidateLastName,
+                candidate.city AS candidateCity,
+                candidate.country AS candidateCountry,
+                candidate.source AS source,
+                candidate.key_skills AS keySkills,
+                candidate.gdpr_signed AS gdprSigned,
+                jo.company_id AS companyID,
+                jo.title AS jobOrderTitle,
+                jo.owner AS ownerUserID,
+                jo.recruiter AS recruiterUserID,
+                company.name AS companyName,
+                owner_user.first_name AS ownerFirstName,
+                owner_user.last_name AS ownerLastName,
+                recruiter_user.first_name AS recruiterFirstName,
+                recruiter_user.last_name AS recruiterLastName,
+                status.short_description AS pipelineStatus
+             FROM
+                candidate_joborder AS cjo
+             INNER JOIN candidate
+                ON candidate.candidate_id = cjo.candidate_id
+               AND candidate.site_id = cjo.site_id
+             INNER JOIN joborder AS jo
+                ON jo.joborder_id = cjo.joborder_id
+               AND jo.site_id = cjo.site_id
+             LEFT JOIN company
+                ON company.company_id = jo.company_id
+               AND company.site_id = cjo.site_id
+             LEFT JOIN user AS owner_user
+                ON owner_user.user_id = jo.owner
+               AND owner_user.site_id = cjo.site_id
+             LEFT JOIN user AS recruiter_user
+                ON recruiter_user.user_id = jo.recruiter
+               AND recruiter_user.site_id = cjo.site_id
+             LEFT JOIN candidate_joborder_status AS status
+                ON status.candidate_joborder_status_id = cjo.status
+             WHERE
+                %s
+             ORDER BY
+                %s
+             LIMIT %s OFFSET %s",
+            $whereSQL,
+            $orderBySQL,
+            $db->makeQueryInteger($maxResults),
+            $db->makeQueryInteger($offset)
+        );
+        $rows = $db->getAllAssoc($rowsSQL);
+
+        $users = new Users($this->_siteID);
+        $ownerOptions = $users->getSelectList();
+        $recruiterOptions = $this->getRecruiterAllocationUsers();
+        $pipelines = new Pipelines($this->_siteID);
+        $pipelineStatusOptions = $pipelines->getStatusesForPicking();
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'joborders-pipeline-matrix')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernPipelineMatrixJSON(
+                $rows,
+                $search,
+                $ownerUserID,
+                $recruiterUserID,
+                $pipelineStatusID,
+                $includeClosed,
+                $sortBy,
+                $sortDirection,
+                $page,
+                $maxResults,
+                $totalRows,
+                $totalPages,
+                $ownerOptions,
+                $recruiterOptions,
+                $pipelineStatusOptions,
+                $errMessage,
+                'joborders-pipeline-matrix'
+            );
+            return;
+        }
+
+        $this->_template->assign('active', $this);
+        $this->_template->assign('search', $search);
+        $this->_template->assign('ownerUserID', $ownerUserID);
+        $this->_template->assign('recruiterUserID', $recruiterUserID);
+        $this->_template->assign('pipelineStatusID', $pipelineStatusID);
+        $this->_template->assign('includeClosed', $includeClosed);
+        $this->_template->assign('sortBy', $sortBy);
+        $this->_template->assign('sortDirection', $sortDirection);
+        $this->_template->assign('page', $page);
+        $this->_template->assign('totalPages', $totalPages);
+        $this->_template->assign('totalRows', $totalRows);
+        $this->_template->assign('maxResults', $maxResults);
+        $this->_template->assign('errMessage', $errMessage);
+
+        $this->_template->display('./modules/joborders/PipelineMatrix.tpl');
+    }
+
+    private function buildPipelineMatrixWhereSQL(
+        $db,
+        $search,
+        $ownerUserID,
+        $recruiterUserID,
+        $pipelineStatusID,
+        $includeClosed
+    )
+    {
+        $where = array();
+        $where[] = 'cjo.site_id = ' . $db->makeQueryInteger($this->_siteID);
+        $where[] = 'jo.is_admin_hidden = 0';
+
+        if (!$includeClosed)
+        {
+            $where[] = 'cjo.is_active = 1';
+            $where[] = sprintf(
+                'cjo.status NOT IN (%s, %s)',
+                $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+                $db->makeQueryInteger(PIPELINE_STATUS_REJECTED)
+            );
+        }
+
+        if ($ownerUserID > 0)
+        {
+            $where[] = 'jo.owner = ' . $db->makeQueryInteger($ownerUserID);
+        }
+
+        if ($recruiterUserID === -1)
+        {
+            $where[] = '(jo.recruiter IS NULL OR jo.recruiter = 0)';
+        }
+        else if ($recruiterUserID > 0)
+        {
+            $where[] = 'jo.recruiter = ' . $db->makeQueryInteger($recruiterUserID);
+        }
+
+        if ($pipelineStatusID >= 0)
+        {
+            $where[] = 'cjo.status = ' . $db->makeQueryInteger($pipelineStatusID);
+        }
+
+        if (!$this->canManageRecruiterAllocation())
+        {
+            $where[] = sprintf(
+                '(jo.owner = %s OR jo.recruiter = %s)',
+                $db->makeQueryInteger($this->_userID),
+                $db->makeQueryInteger($this->_userID)
+            );
+        }
+
+        if ($search !== '')
+        {
+            $searchLike = $db->makeQueryString('%' . $search . '%');
+            $where[] = sprintf(
+                "(CONCAT(TRIM(candidate.first_name), ' ', TRIM(candidate.last_name)) LIKE %s
+                  OR jo.title LIKE %s
+                  OR company.name LIKE %s
+                  OR candidate.key_skills LIKE %s
+                  OR candidate.source LIKE %s)",
+                $searchLike,
+                $searchLike,
+                $searchLike,
+                $searchLike,
+                $searchLike
+            );
+        }
+
+        return implode("\n                AND ", $where);
+    }
+
+    private function getPipelineMatrixOrderBySQL($sortBy, $sortDirection)
+    {
+        switch ($sortBy)
+        {
+            case 'candidateName':
+                return 'candidate.last_name ' . $sortDirection . ', candidate.first_name ' . $sortDirection;
+
+            case 'jobOrder':
+                return 'jo.title ' . $sortDirection . ', cjo.date_modified DESC';
+
+            case 'company':
+                return 'company.name ' . $sortDirection . ', jo.title ASC';
+
+            case 'source':
+                return 'candidate.source ' . $sortDirection . ', candidate.last_name ASC';
+
+            case 'keySkills':
+                return 'candidate.key_skills ' . $sortDirection . ', candidate.last_name ASC';
+
+            case 'pipeline':
+                return 'status.short_description ' . $sortDirection . ', cjo.date_modified DESC';
+
+            case 'owner':
+                return 'owner_user.last_name ' . $sortDirection . ', owner_user.first_name ' . $sortDirection;
+
+            case 'recruiter':
+                return 'recruiter_user.last_name ' . $sortDirection . ', recruiter_user.first_name ' . $sortDirection;
+
+            case 'dateAdded':
+                return 'cjo.date_created ' . $sortDirection . ', cjo.date_modified DESC';
+
+            case 'location':
+                return 'candidate.country ' . $sortDirection . ', candidate.city ' . $sortDirection;
+
+            case 'gdpr':
+                return 'candidate.gdpr_signed ' . $sortDirection . ', cjo.date_modified DESC';
+
+            case 'lastActivity':
+            default:
+                return 'cjo.date_modified ' . $sortDirection . ', cjo.candidate_joborder_id DESC';
+        }
+    }
+
+    private function renderModernPipelineMatrixJSON(
+        $rows,
+        $search,
+        $ownerUserID,
+        $recruiterUserID,
+        $pipelineStatusID,
+        $includeClosed,
+        $sortBy,
+        $sortDirection,
+        $page,
+        $maxResults,
+        $totalRows,
+        $totalPages,
+        $ownerOptions,
+        $recruiterOptions,
+        $pipelineStatusOptions,
+        $errMessage,
+        $modernPage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $ownerOptionsPayload = array(
+            array(
+                'value' => '0',
+                'label' => 'Any Owner'
+            )
+        );
+        foreach ($ownerOptions as $ownerData)
+        {
+            $ownerID = (int) (isset($ownerData['userID']) ? $ownerData['userID'] : 0);
+            if ($ownerID <= 0)
+            {
+                continue;
+            }
+
+            $label = trim(
+                (isset($ownerData['firstName']) ? (string) $ownerData['firstName'] : '') . ' ' .
+                (isset($ownerData['lastName']) ? (string) $ownerData['lastName'] : '')
+            );
+            if ($label === '')
+            {
+                $label = 'User #' . $ownerID;
+            }
+
+            $ownerOptionsPayload[] = array(
+                'value' => (string) $ownerID,
+                'label' => $label
+            );
+        }
+
+        $recruiterOptionsPayload = array(
+            array(
+                'value' => '-2',
+                'label' => 'Any Recruiter'
+            ),
+            array(
+                'value' => '-1',
+                'label' => 'Unassigned'
+            )
+        );
+        foreach ($recruiterOptions as $recruiterData)
+        {
+            $recruiterID = (int) (isset($recruiterData['userID']) ? $recruiterData['userID'] : 0);
+            if ($recruiterID <= 0)
+            {
+                continue;
+            }
+
+            $label = trim((string) (isset($recruiterData['fullName']) ? $recruiterData['fullName'] : ''));
+            if ($label === '')
+            {
+                $label = 'User #' . $recruiterID;
+            }
+
+            $recruiterOptionsPayload[] = array(
+                'value' => (string) $recruiterID,
+                'label' => $label
+            );
+        }
+
+        $pipelineStatusPayload = array(
+            array(
+                'value' => '-2',
+                'label' => 'Any Pipeline Status'
+            )
+        );
+        foreach ($pipelineStatusOptions as $statusData)
+        {
+            $statusID = (int) (isset($statusData['statusID']) ? $statusData['statusID'] : -1);
+            if ($statusID < 0)
+            {
+                continue;
+            }
+            $statusLabel = trim((string) (isset($statusData['status']) ? $statusData['status'] : ''));
+            if ($statusLabel === '')
+            {
+                $statusLabel = 'Status #' . $statusID;
+            }
+
+            $pipelineStatusPayload[] = array(
+                'value' => (string) $statusID,
+                'label' => $statusLabel
+            );
+        }
+
+        $rowPayload = array();
+        foreach ($rows as $row)
+        {
+            $candidateJobOrderID = (int) (isset($row['candidateJobOrderID']) ? $row['candidateJobOrderID'] : 0);
+            if ($candidateJobOrderID <= 0)
+            {
+                continue;
+            }
+
+            $candidateID = (int) (isset($row['candidateID']) ? $row['candidateID'] : 0);
+            $jobOrderID = (int) (isset($row['jobOrderID']) ? $row['jobOrderID'] : 0);
+            $companyID = (int) (isset($row['companyID']) ? $row['companyID'] : 0);
+
+            $candidateName = trim(
+                (isset($row['candidateFirstName']) ? (string) $row['candidateFirstName'] : '') . ' ' .
+                (isset($row['candidateLastName']) ? (string) $row['candidateLastName'] : '')
+            );
+            if ($candidateName === '')
+            {
+                $candidateName = ($candidateID > 0 ? 'Candidate #' . $candidateID : '--');
+            }
+
+            $ownerName = trim(
+                (isset($row['ownerFirstName']) ? (string) $row['ownerFirstName'] : '') . ' ' .
+                (isset($row['ownerLastName']) ? (string) $row['ownerLastName'] : '')
+            );
+            if ($ownerName === '')
+            {
+                $ownerName = '--';
+            }
+
+            $recruiterName = trim(
+                (isset($row['recruiterFirstName']) ? (string) $row['recruiterFirstName'] : '') . ' ' .
+                (isset($row['recruiterLastName']) ? (string) $row['recruiterLastName'] : '')
+            );
+            if ($recruiterName === '')
+            {
+                $recruiterName = '(Unassigned)';
+            }
+
+            $pipelineStatus = trim((string) (isset($row['pipelineStatus']) ? $row['pipelineStatus'] : ''));
+            if ($pipelineStatus === '')
+            {
+                $pipelineStatus = 'Status #' . (int) (isset($row['pipelineStatusID']) ? $row['pipelineStatusID'] : 0);
+            }
+
+            $source = trim((string) (isset($row['source']) ? $row['source'] : ''));
+            if ($source === '')
+            {
+                $source = '--';
+            }
+
+            $keySkills = trim((string) (isset($row['keySkills']) ? $row['keySkills'] : ''));
+            $locationParts = array();
+            if (isset($row['candidateCity']) && trim((string) $row['candidateCity']) !== '')
+            {
+                $locationParts[] = trim((string) $row['candidateCity']);
+            }
+            if (isset($row['candidateCountry']) && trim((string) $row['candidateCountry']) !== '')
+            {
+                $locationParts[] = trim((string) $row['candidateCountry']);
+            }
+            $locationLabel = (empty($locationParts) ? '--' : implode(', ', $locationParts));
+
+            $rowPayload[] = array(
+                'candidateJobOrderID' => $candidateJobOrderID,
+                'candidateID' => $candidateID,
+                'candidateName' => $candidateName,
+                'jobOrderID' => $jobOrderID,
+                'jobOrderTitle' => (string) (isset($row['jobOrderTitle']) ? $row['jobOrderTitle'] : '--'),
+                'companyID' => $companyID,
+                'companyName' => (string) (isset($row['companyName']) ? $row['companyName'] : '--'),
+                'source' => $source,
+                'keySkills' => $keySkills,
+                'pipelineStatusID' => (int) (isset($row['pipelineStatusID']) ? $row['pipelineStatusID'] : 0),
+                'pipelineStatus' => $pipelineStatus,
+                'ownerUserID' => (int) (isset($row['ownerUserID']) ? $row['ownerUserID'] : 0),
+                'ownerName' => $ownerName,
+                'recruiterUserID' => (int) (isset($row['recruiterUserID']) ? $row['recruiterUserID'] : 0),
+                'recruiterName' => $recruiterName,
+                'location' => $locationLabel,
+                'gdprSigned' => (isset($row['gdprSigned']) ? ((int) $row['gdprSigned'] === 1) : false),
+                'isActive' => (isset($row['isActive']) ? ((int) $row['isActive'] === 1) : false),
+                'dateAdded' => (string) (isset($row['dateCreated']) ? $row['dateCreated'] : '--'),
+                'lastActivity' => (string) (isset($row['dateModified']) ? $row['dateModified'] : '--'),
+                'candidateURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
+                'jobOrderURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
+                'companyURL' => sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, $companyID)
+            );
+        }
+
+        $startRow = ($totalRows > 0 ? (($page - 1) * $maxResults) + 1 : 0);
+        $endRow = ($totalRows > 0 ? min($totalRows, $page * $maxResults) : 0);
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.pipelineMatrix.v1',
+                'modernPage' => $modernPage,
+                'page' => (int) $page,
+                'totalPages' => (int) $totalPages,
+                'totalRows' => (int) $totalRows,
+                'entriesPerPage' => (int) $maxResults,
+                'permissions' => array(
+                    'canManageRecruiterAllocation' => ((bool) $this->canManageRecruiterAllocation()),
+                    'canEditCandidate' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
+                    'canEditJobOrder' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
+                )
+            ),
+            'filters' => array(
+                'search' => (string) $search,
+                'ownerUserID' => (int) $ownerUserID,
+                'recruiterUserID' => (int) $recruiterUserID,
+                'pipelineStatusID' => (int) $pipelineStatusID,
+                'includeClosed' => ((bool) $includeClosed),
+                'sortBy' => (string) $sortBy,
+                'sortDirection' => (string) $sortDirection
+            ),
+            'options' => array(
+                'owners' => $ownerOptionsPayload,
+                'recruiters' => $recruiterOptionsPayload,
+                'pipelineStatuses' => $pipelineStatusPayload,
+                'rowsPerPage' => array(50, 100, 200)
+            ),
+            'state' => array(
+                'errorMessage' => (string) $errMessage,
+                'startRow' => (int) $startRow,
+                'endRow' => (int) $endRow
+            ),
+            'actions' => array(
+                'listURL' => sprintf('%s?m=joborders&a=listByView&ui=modern', $baseURL),
+                'recruiterAllocationURL' => sprintf('%s?m=joborders&a=recruiterAllocation&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=joborders&a=pipelineMatrix&ui=legacy', $baseURL)
+            ),
+            'rows' => $rowPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function recruiterAllocation($noticeMessage = '', $errorMessage = '')

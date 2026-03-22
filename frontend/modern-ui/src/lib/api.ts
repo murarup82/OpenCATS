@@ -35,6 +35,7 @@ import type {
   JobOrderAssignCandidateModernDataResponse,
   JobOrdersAddModernDataResponse,
   JobOrdersEditModernDataResponse,
+  JobOrdersPipelineMatrixModernDataResponse,
   JobOrdersRecruiterAllocationModernDataResponse,
   JobOrdersRecruiterAllocationMutationResponse,
   JobOrdersShowModernDataResponse,
@@ -80,6 +81,7 @@ import {
   MODERN_GRAPHS_PAGE,
   MODERN_JOBORDER_ADD_PAGE,
   MODERN_JOBORDER_ADD_POPUP_PAGE,
+  MODERN_JOBORDER_PIPELINE_MATRIX_PAGE,
   MODERN_JOBORDER_EDIT_PAGE,
   MODERN_JOBORDER_RECRUITER_ALLOCATION_PAGE,
   MODERN_JOBORDER_SHOW_PAGE,
@@ -2174,6 +2176,24 @@ export async function fetchJobOrdersRecruiterAllocationModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<JobOrdersRecruiterAllocationModernDataResponse>(url);
   assertModernContract(data.meta, 'joborders.recruiterAllocation.v1', 'job orders recruiter allocation');
+
+  return data;
+}
+
+export async function fetchJobOrdersPipelineMatrixModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<JobOrdersPipelineMatrixModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'joborders',
+    action: 'pipelineMatrix',
+    modernPage: MODERN_JOBORDER_PIPELINE_MATRIX_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<JobOrdersPipelineMatrixModernDataResponse>(url);
+  assertModernContract(data.meta, 'joborders.pipelineMatrix.v1', 'job orders pipeline matrix');
 
   return data;
 }

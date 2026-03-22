@@ -449,6 +449,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                 Recruiter Allocation
               </a>
             ) : null}
+            <a className="modern-btn avel-joborders-action avel-joborders-action--allocation" href={ensureModernUIURL(data.actions.pipelineMatrixURL)}>
+              Pipeline Matrix
+            </a>
             <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
               Open Legacy UI
             </a>

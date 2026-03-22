@@ -48,6 +48,7 @@
                         <?php if (!empty($this->canManageRecruiterAllocation)): ?>
                             <a class="ui2-button ui2-button--secondary" href="<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=recruiterAllocation">Recruiter Allocation</a>
                         <?php endif; ?>
+                        <a class="ui2-button ui2-button--secondary" href="<?php echo CATSUtility::getIndexName(); ?>?m=joborders&amp;a=pipelineMatrix&amp;ui=modern">Pipeline Matrix</a>
                         <?php $this->dataGrid->drawShowFilterControl(); ?>
                         <?php $this->dataGrid->drawRowsPerPageSelector(); ?>
                     </div>

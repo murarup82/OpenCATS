@@ -2129,6 +2129,7 @@ export type JobOrdersListModernDataResponse = {
     addJobOrderURL: string;
     addJobOrderPopupURL: string;
     recruiterAllocationURL: string;
+    pipelineMatrixURL: string;
     legacyURL: string;
   };
   state: {
@@ -2225,6 +2226,82 @@ export type JobOrdersRecruiterAllocationMutationResponse = {
   errorMessage?: string;
   updatedCount?: number;
   errorCount?: number;
+};
+
+export type JobOrdersPipelineMatrixModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    permissions: {
+      canManageRecruiterAllocation: boolean;
+      canEditCandidate: boolean;
+      canEditJobOrder: boolean;
+    };
+  };
+  filters: {
+    search: string;
+    ownerUserID: number;
+    recruiterUserID: number;
+    pipelineStatusID: number;
+    includeClosed: boolean;
+    sortBy: string;
+    sortDirection: string;
+  };
+  options: {
+    owners: Array<{
+      value: string;
+      label: string;
+    }>;
+    recruiters: Array<{
+      value: string;
+      label: string;
+    }>;
+    pipelineStatuses: Array<{
+      value: string;
+      label: string;
+    }>;
+    rowsPerPage: number[];
+  };
+  state: {
+    errorMessage: string;
+    startRow: number;
+    endRow: number;
+  };
+  actions: {
+    listURL: string;
+    recruiterAllocationURL: string;
+    legacyURL: string;
+  };
+  rows: Array<{
+    candidateJobOrderID: number;
+    candidateID: number;
+    candidateName: string;
+    jobOrderID: number;
+    jobOrderTitle: string;
+    companyID: number;
+    companyName: string;
+    source: string;
+    keySkills: string;
+    pipelineStatusID: number;
+    pipelineStatus: string;
+    ownerUserID: number;
+    ownerName: string;
+    recruiterUserID: number;
+    recruiterName: string;
+    location: string;
+    gdprSigned: boolean;
+    isActive: boolean;
+    dateAdded: string;
+    lastActivity: string;
+    candidateURL: string;
+    jobOrderURL: string;
+    companyURL: string;
+  }>;
 };
 
 export type JobOrdersShowModernDataResponse = {

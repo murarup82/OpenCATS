@@ -17,6 +17,7 @@ import { CandidatesEditPage } from '../pages/CandidatesEditPage';
 import { JobOrdersAddPage } from '../pages/JobOrdersAddPage';
 import { JobOrdersEditPage } from '../pages/JobOrdersEditPage';
 import { JobOrdersListPage } from '../pages/JobOrdersListPage';
+import { JobOrdersPipelineMatrixPage } from '../pages/JobOrdersPipelineMatrixPage';
 import { JobOrdersRecruiterAllocationPage } from '../pages/JobOrdersRecruiterAllocationPage';
 import { JobOrdersShowPage } from '../pages/JobOrdersShowPage';
 import { CompaniesListPage } from '../pages/CompaniesListPage';
@@ -96,6 +97,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.companycontext': JobOrderCompanyContextActionPage,
   'joborders.addjoborderpopup': JobOrderAddActionPage,
   'joborders.recruiterallocation': JobOrdersRecruiterAllocationPage,
+  'joborders.pipelinematrix': JobOrdersPipelineMatrixPage,
   'joborders.setmonitoredjoborder': JobOrderMonitorActionPage,
   'joborders.pipelinestatusdetails': PipelineStatusActionPage,
   'joborders.pipelinestatuseditdate': PipelineStatusActionPage,

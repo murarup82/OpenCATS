@@ -2413,6 +2413,157 @@
   padding: 8px;
 }
 
+.avel-pipeline-matrix-page .avel-pipeline-matrix__views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__view-select,
+.avel-pipeline-matrix-page .avel-pipeline-matrix__view-name {
+  border: 1px solid #9ec0d4;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d3f4f;
+  padding: 7px 10px;
+  font: inherit;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__view-select {
+  min-width: 170px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__view-name {
+  min-width: 140px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__table th {
+  position: relative;
+  vertical-align: top;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__th-shell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__th-title {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+  background: #f6fbff;
+  border: 1px solid #9ec0d4;
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(17, 52, 68, 0.18);
+  padding: 10px;
+  min-width: 220px;
+  z-index: 30;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #4a6a7a;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu input {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  color: #1d3f4f;
+  background: #fff;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu-actions button {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d3f4f;
+  padding: 4px 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__columns-menu {
+  position: relative;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__columns-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__columns-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__columns-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 35;
+  min-width: 270px;
+  border: 1px solid #9ec0d4;
+  border-radius: 10px;
+  background: #f6fbff;
+  box-shadow: 0 10px 22px rgba(0, 66, 91, 0.16);
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__column-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__column-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #173b4a;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__column-move {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__column-move button {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d3f4f;
+  font: inherit;
+  padding: 3px 7px;
+  cursor: pointer;
+}
+
 .avel-candidates-page .modern-state {
   border-style: dashed;
 }
@@ -6086,6 +6237,27 @@
     min-width: 0;
     max-width: 100%;
     margin-top: 6px;
+    box-shadow: none;
+  }
+
+  .avel-pipeline-matrix-page .avel-pipeline-matrix__views {
+    width: 100%;
+  }
+
+  .avel-pipeline-matrix-page .avel-pipeline-matrix__view-select,
+  .avel-pipeline-matrix-page .avel-pipeline-matrix__view-name {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .avel-pipeline-matrix-page .avel-pipeline-matrix__columns-menu {
+    width: 100%;
+  }
+
+  .avel-pipeline-matrix-page .avel-pipeline-matrix__columns-panel {
+    position: static;
+    min-width: 0;
+    max-width: 100%;
     box-shadow: none;
   }
 
