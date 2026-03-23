@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-23T09:53:00.951Z
-Finished: 2026-03-23T09:53:22.576Z
+Started: 2026-03-23T10:01:37.393Z
+Finished: 2026-03-23T10:02:00.472Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -37,12 +37,12 @@ Command: `npm run build`
 [modern-ui] Cleaned build output directory: D:\Work\opencats\OpenCATS\public\modern-ui\build
 [36mvite v5.4.21 [32mbuilding for production...[36m[39m
 transforming...
-[32m✓[39m 153 modules transformed.
+[32m✓[39m 155 modules transformed.
 rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m    0.20 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  357.01 kB[22m[1m[22m
-[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,792.70 kB[39m[22m[2m │ map: 6,791.54 kB[22m
-[32m✓ built in 10.12s[39m
+[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,803.96 kB[39m[22m[2m │ map: 6,815.87 kB[22m
+[32m✓ built in 10.54s[39m
 ```
 
 **stderr**
@@ -148,7 +148,7 @@ Command: `npm run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 22 tests using 1 worker
+Running 28 tests using 1 worker
 
   -   1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
   -   2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
@@ -165,15 +165,21 @@ Running 22 tests using 1 worker
   -  13 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › expired state
   -  14 tests\playwright\import-workflow-actions.spec.mjs:42:3 › Import workflow route smoke › import.viewpending ui=modern mounts without a runtime boundary
   -  15 tests\playwright\import-workflow-actions.spec.mjs:54:3 › Import workflow route smoke › import.revert ui=modern mounts without a runtime boundary
-  -  16 tests\playwright\pipeline-matrix-runtime.spec.mjs:46:3 › Pipeline matrix runtime smoke › joborders.pipelineMatrix modern contract
-  -  17 tests\playwright\pipeline-matrix-runtime.spec.mjs:66:3 › Pipeline matrix runtime smoke › pipeline matrix route mounts without runtime boundary
-  -  18 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
-  -  19 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
-  -  20 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
-  -  21 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
-  -  22 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
+  -  16 tests\playwright\import-workflow-advanced-actions.spec.mjs:42:3 › Import workflow advanced route smoke › import.massimport ui=modern mounts without a runtime boundary
+  -  17 tests\playwright\import-workflow-advanced-actions.spec.mjs:54:3 › Import workflow advanced route smoke › import.massimportdocument ui=modern mounts without a runtime boundary
+  -  18 tests\playwright\operations-workspace-actions.spec.mjs:40:3 › Operations workspace action smoke › joborders.edithiringplan ui=modern mounts without a runtime boundary
+  -  19 tests\playwright\operations-workspace-actions.spec.mjs:57:3 › Operations workspace action smoke › gdpr.requests ui=modern mounts without a runtime boundary
+  -  20 tests\playwright\pipeline-matrix-runtime.spec.mjs:46:3 › Pipeline matrix runtime smoke › joborders.pipelineMatrix modern contract
+  -  21 tests\playwright\pipeline-matrix-runtime.spec.mjs:66:3 › Pipeline matrix runtime smoke › pipeline matrix route mounts without runtime boundary
+  -  22 tests\playwright\reports-workflow-actions.spec.mjs:42:3 › Reports workflow action smoke › reports.showhirereport ui=modern mounts without a runtime boundary
+  -  23 tests\playwright\reports-workflow-actions.spec.mjs:59:3 › Reports workflow action smoke › reports.generatejoborderreportpdf ui=modern forwards to the legacy download endpoint
+  -  24 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
+  -  25 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
+  -  26 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
+  -  27 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
+  -  28 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
 
-  22 skipped
+  28 skipped
 ```
 
 **stderr**

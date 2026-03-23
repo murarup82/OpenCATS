@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T09:53:28.665Z",
+  "generatedAt": "2026-03-23T10:02:07.449Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -742,7 +742,7 @@
       "classification": "native-explicit",
       "routeKey": "gdpr.requests",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "OperationsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1030,7 +1030,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importselecttype",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1048,7 +1048,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importuploadresume",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1057,7 +1057,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimport",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1066,7 +1066,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimportdocument",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1075,7 +1075,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimportedit",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1093,7 +1093,7 @@
       "classification": "native-explicit",
       "routeKey": "import.showmassimport",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1120,7 +1120,7 @@
       "classification": "native-explicit",
       "routeKey": "import.whatisbulkresumes",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1255,7 +1255,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.edithiringplan",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "OperationsWorkspaceActionPage",
       "guarded": true
     },
     {
@@ -1552,7 +1552,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.customizeeeoreport",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ReportsWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1561,7 +1561,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.customizejoborderreport",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ReportsWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1570,7 +1570,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.generateeeoreportpreview",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ReportsWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1579,7 +1579,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.generatejoborderreportpdf",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ReportsWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1606,7 +1606,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showhirereport",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ReportsWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1615,7 +1615,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showplacementreport",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ReportsWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1624,7 +1624,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showsubmissionreport",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ReportsWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1975,7 +1975,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.getfirefoxmodal",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "OperationsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2056,7 +2056,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.previewpage",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "OperationsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2065,7 +2065,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.previewpagetop",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "OperationsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2218,7 +2218,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.install",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "OperationsWorkspaceActionPage",
       "guarded": false
     },
     {

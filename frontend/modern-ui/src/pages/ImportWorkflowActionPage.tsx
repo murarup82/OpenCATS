@@ -10,9 +10,24 @@ type Props = {
   bootstrap: UIModeBootstrap;
 };
 
-type ImportWorkflowActionKey = 'viewpending' | 'viewerrors' | 'revert' | 'importbulkresumes' | 'deletebulkresumes';
+type ImportWorkflowActionKey =
+  | 'viewpending'
+  | 'viewerrors'
+  | 'revert'
+  | 'importbulkresumes'
+  | 'deletebulkresumes'
+  | 'importselecttype'
+  | 'importuploadresume'
+  | 'massimport'
+  | 'massimportdocument'
+  | 'massimportedit'
+  | 'showmassimport'
+  | 'whatisbulkresumes';
 
-type ImportWorkflowCopy = {
+type ImportWorkflowActionMode = 'modern-redirect' | 'legacy-redirect' | 'embed';
+
+type ImportWorkflowActionCopy = {
+  mode: ImportWorkflowActionMode;
   title: string;
   subtitle: string;
   panelTitle: string;
@@ -20,8 +35,9 @@ type ImportWorkflowCopy = {
   statusMessage: string;
 };
 
-const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowCopy> = {
+const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowActionCopy> = {
   viewpending: {
+    mode: 'modern-redirect',
     title: 'Import Pending Review',
     subtitle: 'Opening the modern import launcher for pending import work.',
     panelTitle: 'Import Launcher Redirect',
@@ -29,6 +45,7 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowCopy> = {
     statusMessage: 'Redirecting to the modern import launcher...'
   },
   viewerrors: {
+    mode: 'embed',
     title: 'Import Error Review',
     subtitle: 'Review import errors in an embedded legacy workspace.',
     panelTitle: 'Import Error Workspace',
@@ -36,6 +53,7 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowCopy> = {
     statusMessage: 'Loading embedded legacy import error workspace...'
   },
   revert: {
+    mode: 'legacy-redirect',
     title: 'Revert Import Batch',
     subtitle: 'Redirecting to the legacy import revert workflow.',
     panelTitle: 'Import Revert Redirect',
@@ -43,6 +61,7 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowCopy> = {
     statusMessage: 'Redirecting to the legacy import revert endpoint...'
   },
   importbulkresumes: {
+    mode: 'legacy-redirect',
     title: 'Import Bulk Resumes',
     subtitle: 'Redirecting to the legacy bulk resume import workflow.',
     panelTitle: 'Bulk Resume Import Redirect',
@@ -50,11 +69,68 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowCopy> = {
     statusMessage: 'Redirecting to the legacy bulk resume import endpoint...'
   },
   deletebulkresumes: {
+    mode: 'legacy-redirect',
     title: 'Delete Bulk Resumes',
     subtitle: 'Redirecting to the legacy bulk resume cleanup workflow.',
     panelTitle: 'Bulk Resume Cleanup Redirect',
     panelSubtitle: 'This action still runs through the legacy bulk cleanup flow.',
     statusMessage: 'Redirecting to the legacy bulk resume cleanup endpoint...'
+  },
+  importselecttype: {
+    mode: 'embed',
+    title: 'Import Select Type',
+    subtitle: 'Open the legacy import type selector in an embedded workspace.',
+    panelTitle: 'Import Select Type Workspace',
+    panelSubtitle: 'Legacy import type selection remains embedded while parity migration continues.',
+    statusMessage: 'Loading embedded legacy import type selector...'
+  },
+  importuploadresume: {
+    mode: 'embed',
+    title: 'Import Upload Resume',
+    subtitle: 'Open the legacy resume upload flow in an embedded workspace.',
+    panelTitle: 'Import Upload Resume Workspace',
+    panelSubtitle: 'Legacy resume upload remains embedded while parity migration continues.',
+    statusMessage: 'Loading embedded legacy resume upload workspace...'
+  },
+  massimport: {
+    mode: 'embed',
+    title: 'Mass Import',
+    subtitle: 'Open the legacy mass import workspace in embedded mode.',
+    panelTitle: 'Mass Import Workspace',
+    panelSubtitle: 'Legacy mass import remains embedded while parity migration continues.',
+    statusMessage: 'Loading embedded legacy mass import workspace...'
+  },
+  massimportdocument: {
+    mode: 'legacy-redirect',
+    title: 'Mass Import Document',
+    subtitle: 'Redirecting to the legacy mass import document endpoint.',
+    panelTitle: 'Mass Import Document Redirect',
+    panelSubtitle: 'This action still runs through the legacy import flow.',
+    statusMessage: 'Redirecting to the legacy mass import document endpoint...'
+  },
+  massimportedit: {
+    mode: 'embed',
+    title: 'Mass Import Edit',
+    subtitle: 'Open the legacy mass import edit workspace in embedded mode.',
+    panelTitle: 'Mass Import Edit Workspace',
+    panelSubtitle: 'Legacy mass import editing remains embedded while parity migration continues.',
+    statusMessage: 'Loading embedded legacy mass import edit workspace...'
+  },
+  showmassimport: {
+    mode: 'embed',
+    title: 'Show Mass Import',
+    subtitle: 'Open the legacy mass import review workspace in embedded mode.',
+    panelTitle: 'Show Mass Import Workspace',
+    panelSubtitle: 'Legacy mass import review remains embedded while parity migration continues.',
+    statusMessage: 'Loading embedded legacy mass import review workspace...'
+  },
+  whatisbulkresumes: {
+    mode: 'embed',
+    title: 'What Is Bulk Resumes',
+    subtitle: 'Open the legacy bulk resumes help workspace in embedded mode.',
+    panelTitle: 'Bulk Resumes Help Workspace',
+    panelSubtitle: 'Legacy bulk resumes help remains embedded while parity migration continues.',
+    statusMessage: 'Loading embedded legacy bulk resumes help workspace...'
   }
 };
 
@@ -80,10 +156,10 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
       return;
     }
 
-    if (actionKey === 'revert' || actionKey === 'importbulkresumes' || actionKey === 'deletebulkresumes') {
+    if (copy?.mode === 'legacy-redirect') {
       window.location.assign(legacyURL);
     }
-  }, [actionKey, legacyURL, modernImportURL]);
+  }, [actionKey, copy, legacyURL, modernImportURL]);
 
   if (!copy || actionKey === '') {
     return (
@@ -112,7 +188,7 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
     );
   }
 
-  const isEmbedMode = actionKey === 'viewerrors';
+  const isEmbedMode = copy?.mode === 'embed';
   const pageActions = isEmbedMode ? (
     <>
       <a className="modern-btn modern-btn--secondary" href={modernImportURL}>

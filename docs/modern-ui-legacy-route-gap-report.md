@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T09:53:28.665Z
+Generated: 2026-03-23T10:02:07.449Z
 
 ## Summary
 
@@ -109,7 +109,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | export | export | native-explicit | export.export | LegacyDownloadForwardActionPage |
 | export | exportByDataGrid | native-explicit | export.exportbydatagrid | LegacyDownloadForwardActionPage |
 | gdpr | export | native-explicit | gdpr.export | LegacyDownloadForwardActionPage |
-| gdpr | requests | native-explicit | gdpr.requests | LegacyActionWorkspacePage |
+| gdpr | requests | native-explicit | gdpr.requests | OperationsWorkspaceActionPage |
 | graphs | generic | native-explicit | graphs.generic | LegacyActionWorkspacePage |
 | graphs | genericPie | native-explicit | graphs.genericpie | LegacyActionWorkspacePage |
 | graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | LegacyActionWorkspacePage |
@@ -141,17 +141,17 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | import | deleteBulkResumes | native-explicit | import.deletebulkresumes | ImportWorkflowActionPage |
 | import | import | native-explicit | import.import | ImportLauncherPage |
 | import | importBulkResumes | native-explicit | import.importbulkresumes | ImportWorkflowActionPage |
-| import | importSelectType | native-explicit | import.importselecttype | LegacyActionWorkspacePage |
+| import | importSelectType | native-explicit | import.importselecttype | ImportWorkflowActionPage |
 | import | importUploadFile | native-explicit | import.importuploadfile | ImportLauncherPage |
-| import | importUploadResume | native-explicit | import.importuploadresume | LegacyActionWorkspacePage |
-| import | massImport | native-explicit | import.massimport | LegacyActionWorkspacePage |
-| import | massImportDocument | native-explicit | import.massimportdocument | LegacyActionWorkspacePage |
-| import | massImportEdit | native-explicit | import.massimportedit | LegacyActionWorkspacePage |
+| import | importUploadResume | native-explicit | import.importuploadresume | ImportWorkflowActionPage |
+| import | massImport | native-explicit | import.massimport | ImportWorkflowActionPage |
+| import | massImportDocument | native-explicit | import.massimportdocument | ImportWorkflowActionPage |
+| import | massImportEdit | native-explicit | import.massimportedit | ImportWorkflowActionPage |
 | import | revert | native-explicit | import.revert | ImportWorkflowActionPage |
-| import | showMassImport | native-explicit | import.showmassimport | LegacyActionWorkspacePage |
+| import | showMassImport | native-explicit | import.showmassimport | ImportWorkflowActionPage |
 | import | viewerrors | native-explicit | import.viewerrors | ImportWorkflowActionPage |
 | import | viewpending | native-explicit | import.viewpending | ImportWorkflowActionPage |
-| import | whatIsBulkResumes | native-explicit | import.whatisbulkresumes | LegacyActionWorkspacePage |
+| import | whatIsBulkResumes | native-explicit | import.whatisbulkresumes | ImportWorkflowActionPage |
 | joborders | add | native-explicit | joborders.add | JobOrdersAddPage |
 | joborders | addActivityChangeStatus | native-explicit-guarded | joborders.addactivitychangestatus | JobOrdersShowPage |
 | joborders | addCandidateModal | native-explicit-guarded | joborders.addcandidatemodal | CandidatesAddPage |
@@ -166,7 +166,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | deleteAttachment | native-explicit-guarded | joborders.deleteattachment | JobOrdersShowPage |
 | joborders | deleteMessageThread | native-explicit-guarded | joborders.deletemessagethread | JobOrdersShowPage |
 | joborders | edit | native-explicit-guarded | joborders.edit | JobOrdersEditPage |
-| joborders | editHiringPlan | native-explicit-guarded | joborders.edithiringplan | LegacyActionWorkspacePage |
+| joborders | editHiringPlan | native-explicit-guarded | joborders.edithiringplan | OperationsWorkspaceActionPage |
 | joborders | listByView | native-explicit | joborders.listbyview | JobOrdersListPage |
 | joborders | pipelineMatrix | native-explicit | joborders.pipelinematrix | JobOrdersPipelineMatrixPage |
 | joborders | pipelineMatrixDeleteView | native-explicit | joborders.pipelinematrixdeleteview | JobOrdersPipelineMatrixPage |
@@ -199,15 +199,15 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | logs | view | native-explicit | logs.view | LogsPage |
 | reports | customerDashboard | native-explicit | reports.customerdashboard | ReportsCustomerDashboardPage |
 | reports | customerDashboardDetails | native-explicit | reports.customerdashboarddetails | ReportsCustomerDashboardPage |
-| reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | LegacyActionWorkspacePage |
-| reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | LegacyActionWorkspacePage |
-| reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | LegacyActionWorkspacePage |
-| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | LegacyActionWorkspacePage |
+| reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | ReportsWorkflowActionPage |
+| reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | ReportsWorkflowActionPage |
+| reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | ReportsWorkflowActionPage |
+| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | ReportsWorkflowActionPage |
 | reports | graphView | native-explicit | reports.graphview | ReportsGraphViewPage |
 | reports | reports | native-explicit | reports.reports | ReportsLauncherPage |
-| reports | showHireReport | native-explicit | reports.showhirereport | LegacyActionWorkspacePage |
-| reports | showPlacementReport | native-explicit | reports.showplacementreport | LegacyActionWorkspacePage |
-| reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | LegacyActionWorkspacePage |
+| reports | showHireReport | native-explicit | reports.showhirereport | ReportsWorkflowActionPage |
+| reports | showPlacementReport | native-explicit | reports.showplacementreport | ReportsWorkflowActionPage |
+| reports | showSubmissionReport | native-explicit | reports.showsubmissionreport | ReportsWorkflowActionPage |
 | rss | jobOrders | native-explicit | rss.joborders | RssJobOrdersPage |
 | settings | addEmailTemplate | native-explicit | settings.addemailtemplate | LegacyActionWorkspacePage |
 | settings | addUser | native-explicit | settings.adduser | LegacyActionWorkspacePage |
@@ -246,7 +246,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | feedbackSettings | native-explicit | settings.feedbacksettings | LegacyActionWorkspacePage |
 | settings | forceEmail | native-explicit | settings.forceemail | LegacyActionWorkspacePage |
 | settings | gdprSettings | native-explicit | settings.gdprsettings | LegacyActionWorkspacePage |
-| settings | getFirefoxModal | native-explicit | settings.getfirefoxmodal | LegacyActionWorkspacePage |
+| settings | getFirefoxModal | native-explicit | settings.getfirefoxmodal | OperationsWorkspaceActionPage |
 | settings | googleOIDCSettings | native-explicit | settings.googleoidcsettings | LegacyActionWorkspacePage |
 | settings | loginActivity | native-explicit | settings.loginactivity | LegacyActionWorkspacePage |
 | settings | manageUsers | native-explicit | settings.manageusers | LegacyActionWorkspacePage |
@@ -255,8 +255,8 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | newInstallPassword | native-explicit | settings.newinstallpassword | LegacyActionWorkspacePage |
 | settings | newSiteName | native-explicit | settings.newsitename | LegacyActionWorkspacePage |
 | settings | onCareerPortalTweak | native-explicit | settings.oncareerportaltweak | LegacyActionWorkspacePage |
-| settings | previewPage | native-explicit | settings.previewpage | LegacyActionWorkspacePage |
-| settings | previewPageTop | native-explicit | settings.previewpagetop | LegacyActionWorkspacePage |
+| settings | previewPage | native-explicit | settings.previewpage | OperationsWorkspaceActionPage |
+| settings | previewPageTop | native-explicit | settings.previewpagetop | OperationsWorkspaceActionPage |
 | settings | professional | native-explicit | settings.professional | LegacyActionWorkspacePage |
 | settings | rejectionReasons | native-explicit | settings.rejectionreasons | LegacyActionWorkspacePage |
 | settings | reports | native-explicit | settings.reports | LegacyActionWorkspacePage |
@@ -273,7 +273,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | toolbar | getJavaScriptLib | native-explicit | toolbar.getjavascriptlib | LegacyUtilityForwardActionPage |
 | toolbar | getLicenseKey | native-explicit | toolbar.getlicensekey | LegacyUtilityForwardActionPage |
 | toolbar | getRemoteVersion | native-explicit | toolbar.getremoteversion | LegacyUtilityForwardActionPage |
-| toolbar | install | native-explicit | toolbar.install | LegacyActionWorkspacePage |
+| toolbar | install | native-explicit | toolbar.install | OperationsWorkspaceActionPage |
 | toolbar | storeMonsterResumeText | native-explicit | toolbar.storemonsterresumetext | LegacyUtilityForwardActionPage |
 | wizard | ajax_getPage | native-explicit | wizard.ajax_getpage | LegacyUtilityForwardActionPage |
 | xml | jobOrders | native-explicit | xml.joborders | LegacyDownloadForwardActionPage |
