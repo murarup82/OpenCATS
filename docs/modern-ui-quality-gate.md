@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-23T04:39:03.295Z
-Finished: 2026-03-23T04:39:38.924Z
+Started: 2026-03-23T04:42:27.557Z
+Finished: 2026-03-23T04:43:02.592Z
 Overall Status: **Pass**
 
 ## Summary
@@ -17,6 +17,7 @@ Overall Status: **Pass**
 | Command: Modernization Board | Pass | 0 |
 | Command: Modernization Consistency Guard | Pass | 0 |
 | Command: No Legacy-Wrapper Route Guard | Pass | 0 |
+| Command: Intentional Legacy-Forward Endpoint Guard | Pass | 0 |
 | Command: Zero Legacy-Dependent Guard | Pass | 0 |
 | Command: In-Scope Route Fallback Guard | Pass | 0 |
 | Command: Bridge Wildcard Retirement Guard | Pass | 0 |
@@ -30,6 +31,7 @@ Overall Status: **Pass**
 | Evidence: `docs/modern-ui-route-parity-checklist.md` | Pass | present |
 | Evidence: `docs/modern-ui-bridge-wildcard-retirement.md` | Pass | present |
 | Evidence: `docs/modern-ui-no-legacy-wrapper-routes-check.md` | Pass | present |
+| Evidence: `docs/modern-ui-legacy-forward-endpoints-check.md` | Pass | present |
 | Evidence: `docs/modern-ui-no-bridge-actions-check.md` | Pass | present |
 | Evidence: `docs/modern-ui-sanity-report.md` | Pass | present |
 | Evidence: `docs/modern-ui-parity-checklist.md` | Pass | present |
@@ -205,6 +207,21 @@ Command: `npm.cmd run verify:no-legacy-wrapper-routes`
 > node ./scripts/verify-no-legacy-wrapper-routes.mjs
 
 [modern-ui] Wrote legacy-wrapper route guard report: D:\Work\opencats\OpenCATS\docs\modern-ui-no-legacy-wrapper-routes-check.md
+```
+
+**stderr**
+`(no output)`
+
+### Intentional Legacy-Forward Endpoint Guard (Pass)
+
+Command: `npm.cmd run verify:legacy-forward-endpoints`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:legacy-forward-endpoints
+> node ./scripts/verify-legacy-forward-endpoints.mjs
+
+[modern-ui] Wrote legacy-forward endpoint guard report: D:\Work\opencats\OpenCATS\docs\modern-ui-legacy-forward-endpoints-check.md
 ```
 
 **stderr**
