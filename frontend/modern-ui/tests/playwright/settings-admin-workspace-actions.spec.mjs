@@ -143,7 +143,7 @@ test.describe('Settings admin workspace action smoke', () => {
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });
 
-  test('settings.emailtemplates ui=modern mounts without a runtime boundary', async ({ context, page }) => {
+  test('settings.emailtemplates ui=modern forwards without an iframe', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
@@ -151,6 +151,11 @@ test.describe('Settings admin workspace action smoke', () => {
       waitUntil: 'domcontentloaded'
     });
 
+    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
+    await expect(page.getByRole('heading', { name: 'Email Templates Workspace' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Continue to Legacy UI' })).toBeVisible();
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });

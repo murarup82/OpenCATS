@@ -102,8 +102,8 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     title: 'Login Activity',
     subtitle: 'Review user login activity in compatibility mode.',
     panelTitle: 'Login Activity Workspace',
-    panelSubtitle: 'Legacy login-activity view remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy login-activity view remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.myprofile': {
     title: 'My Profile',
@@ -130,197 +130,197 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     title: 'GDPR Settings',
     subtitle: 'Configure GDPR settings in compatibility mode.',
     panelTitle: 'GDPR Settings Workspace',
-    panelSubtitle: 'Legacy GDPR settings workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy GDPR settings workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.rejectionreasons': {
     title: 'Rejection Reasons',
     subtitle: 'Manage rejection reason lists in compatibility mode.',
     panelTitle: 'Rejection Reasons Workspace',
-    panelSubtitle: 'Legacy rejection-reason workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy rejection-reason workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.tags': {
     title: 'Tags',
     subtitle: 'Manage settings tags in compatibility mode.',
     panelTitle: 'Tags Workspace',
-    panelSubtitle: 'Legacy tags workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy tags workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.viewitemhistory': {
     title: 'Item History',
     subtitle: 'Review configuration item history in compatibility mode.',
     panelTitle: 'Item History Workspace',
-    panelSubtitle: 'Legacy item-history workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy item-history workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.emailsettings': {
     title: 'Email Settings',
     subtitle: 'Configure email delivery settings in compatibility mode.',
     panelTitle: 'Email Settings Workspace',
-    panelSubtitle: 'Legacy email-settings workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy email-settings workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.feedbacksettings': {
     title: 'Feedback Settings',
     subtitle: 'Configure feedback settings in compatibility mode.',
     panelTitle: 'Feedback Settings Workspace',
-    panelSubtitle: 'Legacy feedback-settings workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy feedback-settings workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.forceemail': {
     title: 'Force Email',
     subtitle: 'Run force-email operations in compatibility mode.',
     panelTitle: 'Force Email Workspace',
-    panelSubtitle: 'Legacy force-email workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy force-email workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.googleoidcsettings': {
     title: 'Google OIDC Settings',
     subtitle: 'Configure Google OIDC authentication settings in compatibility mode.',
     panelTitle: 'Google OIDC Workspace',
-    panelSubtitle: 'Legacy Google OIDC workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy Google OIDC workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.asplocalization': {
     title: 'ASP Localization',
     subtitle: 'Manage localization settings in compatibility mode.',
     panelTitle: 'Localization Workspace',
-    panelSubtitle: 'Legacy localization workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy localization workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.careerportalquestionnaire': {
     title: 'Career Portal Questionnaire',
     subtitle: 'Configure career portal questionnaire settings in compatibility mode.',
     panelTitle: 'Career Portal Questionnaire Workspace',
-    panelSubtitle: 'Legacy career portal questionnaire workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy career portal questionnaire workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.careerportalquestionnairepreview': {
     title: 'Career Portal Questionnaire Preview',
     subtitle: 'Preview the career portal questionnaire in compatibility mode.',
     panelTitle: 'Questionnaire Preview Workspace',
-    panelSubtitle: 'Legacy questionnaire preview workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy questionnaire preview workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.careerportalquestionnaireupdate': {
     title: 'Career Portal Questionnaire Update',
     subtitle: 'Apply questionnaire updates in compatibility mode.',
     panelTitle: 'Questionnaire Update Workspace',
-    panelSubtitle: 'Legacy questionnaire update workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy questionnaire update workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.careerportalsettings': {
     title: 'Career Portal Settings',
     subtitle: 'Configure career portal behavior in compatibility mode.',
     panelTitle: 'Career Portal Settings Workspace',
-    panelSubtitle: 'Legacy career portal settings workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy career portal settings workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.careerportaltemplateedit': {
     title: 'Career Portal Template',
     subtitle: 'Edit career portal templates in compatibility mode.',
     panelTitle: 'Career Portal Template Workspace',
-    panelSubtitle: 'Legacy template-edit workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy template-edit workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.createbackup': {
     title: 'Create Backup',
     subtitle: 'Create system backups in compatibility mode.',
     panelTitle: 'Backup Creation Workspace',
-    panelSubtitle: 'Legacy backup creation workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy backup creation workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.customizecalendar': {
     title: 'Customize Calendar',
     subtitle: 'Configure calendar preferences in compatibility mode.',
     panelTitle: 'Calendar Customization Workspace',
-    panelSubtitle: 'Legacy calendar customization workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy calendar customization workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.customizeextrafields': {
     title: 'Customize Extra Fields',
     subtitle: 'Configure extra field definitions in compatibility mode.',
     panelTitle: 'Extra Fields Workspace',
-    panelSubtitle: 'Legacy extra-field customization workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy extra-field customization workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.deletebackup': {
     title: 'Delete Backup',
     subtitle: 'Remove backup files in compatibility mode.',
     panelTitle: 'Backup Deletion Workspace',
-    panelSubtitle: 'Legacy backup deletion workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy backup deletion workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.eeo': {
     title: 'EEO Settings',
     subtitle: 'Manage EEO configuration in compatibility mode.',
     panelTitle: 'EEO Workspace',
-    panelSubtitle: 'Legacy EEO settings workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy EEO settings workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.newinstallfinished': {
     title: 'New Install Finished',
     subtitle: 'Complete installation finalization steps in compatibility mode.',
     panelTitle: 'Install Finalization Workspace',
-    panelSubtitle: 'Legacy installation finalization workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy installation finalization workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.newinstallpassword': {
     title: 'New Install Password',
     subtitle: 'Set installation password details in compatibility mode.',
     panelTitle: 'Install Password Workspace',
-    panelSubtitle: 'Legacy install-password workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy install-password workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.newsitename': {
     title: 'New Site Name',
     subtitle: 'Configure site naming during setup in compatibility mode.',
     panelTitle: 'Site Name Workspace',
-    panelSubtitle: 'Legacy site-name workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy site-name workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.oncareerportaltweak': {
     title: 'Career Portal Tweak',
     subtitle: 'Apply career portal tweak operations in compatibility mode.',
     panelTitle: 'Career Portal Tweak Workspace',
-    panelSubtitle: 'Legacy career portal tweak workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy career portal tweak workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.professional': {
     title: 'Professional Settings',
     subtitle: 'Manage professional package settings in compatibility mode.',
     panelTitle: 'Professional Settings Workspace',
-    panelSubtitle: 'Legacy professional settings workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy professional settings workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.rolepagepermissions': {
     title: 'Role Page Permissions',
     subtitle: 'Configure role-to-page permissions in compatibility mode.',
     panelTitle: 'Role Permissions Workspace',
-    panelSubtitle: 'Legacy role-permissions workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy role-permissions workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.schemamigrations': {
     title: 'Schema Migrations',
     subtitle: 'Review and run schema migrations in compatibility mode.',
     panelTitle: 'Schema Migrations Workspace',
-    panelSubtitle: 'Legacy schema-migration workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy schema-migration workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.talentfitflowsettings': {
     title: 'Talent Fit Flow Settings',
     subtitle: 'Configure Talent Fit Flow behavior in compatibility mode.',
     panelTitle: 'Talent Fit Flow Workspace',
-    panelSubtitle: 'Legacy Talent Fit Flow settings workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy Talent Fit Flow settings workflow remains available while modernization continues.',
+    mode: 'forward'
   },
   'settings.upgradesitename': {
     title: 'Upgrade Site Name',
     subtitle: 'Apply site-name upgrade changes in compatibility mode.',
     panelTitle: 'Upgrade Site Name Workspace',
-    panelSubtitle: 'Legacy site-name upgrade workflow remains embedded while modernization continues.',
-    mode: 'embed'
+    panelSubtitle: 'Legacy site-name upgrade workflow remains available while modernization continues.',
+    mode: 'forward'
   }
 };
 
