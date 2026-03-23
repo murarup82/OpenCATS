@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T06:06:39.489Z
+Generated: 2026-03-23T09:46:22.497Z
 
 ## Summary
 
@@ -51,7 +51,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | --- | --- | --- | --- | --- |
 | activity | listByViewDataGrid | native-explicit | activity.listbyviewdatagrid | ActivityListPage |
 | activity | viewByDate | native-explicit | activity.viewbydate | ActivityListPage |
-| attachments | getAttachment | native-explicit | attachments.getattachment | LegacyUtilityForwardActionPage |
+| attachments | getAttachment | native-explicit | attachments.getattachment | LegacyDownloadForwardActionPage |
 | calendar | addEvent | native-explicit | calendar.addevent | CalendarPage |
 | calendar | deleteEvent | native-explicit | calendar.deleteevent | CalendarPage |
 | calendar | dynamicData | native-explicit | calendar.dynamicdata | LegacyUtilityForwardActionPage |
@@ -106,9 +106,9 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | contacts | showColdCallList | native-explicit | contacts.showcoldcalllist | ContactsColdCallListPage |
 | dashboard | my | native-explicit | dashboard.my | DashboardMyPage |
 | dashboard | setPipelineStatus | native-explicit | dashboard.setpipelinestatus | DashboardMyPage |
-| export | export | native-explicit | export.export | LegacyUtilityForwardActionPage |
-| export | exportByDataGrid | native-explicit | export.exportbydatagrid | LegacyUtilityForwardActionPage |
-| gdpr | export | native-explicit | gdpr.export | LegacyUtilityForwardActionPage |
+| export | export | native-explicit | export.export | LegacyDownloadForwardActionPage |
+| export | exportByDataGrid | native-explicit | export.exportbydatagrid | LegacyDownloadForwardActionPage |
+| gdpr | export | native-explicit | gdpr.export | LegacyDownloadForwardActionPage |
 | gdpr | requests | native-explicit | gdpr.requests | LegacyActionWorkspacePage |
 | graphs | generic | native-explicit | graphs.generic | LegacyActionWorkspacePage |
 | graphs | genericPie | native-explicit | graphs.genericpie | LegacyActionWorkspacePage |
@@ -212,9 +212,9 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | addEmailTemplate | native-explicit | settings.addemailtemplate | LegacyActionWorkspacePage |
 | settings | addUser | native-explicit | settings.adduser | LegacyActionWorkspacePage |
 | settings | administration | native-explicit | settings.administration | LegacyActionWorkspacePage |
-| settings | ajax_tags_add | native-explicit | settings.ajax_tags_add | LegacyUtilityForwardActionPage |
-| settings | ajax_tags_del | native-explicit | settings.ajax_tags_del | LegacyUtilityForwardActionPage |
-| settings | ajax_tags_upd | native-explicit | settings.ajax_tags_upd | LegacyUtilityForwardActionPage |
+| settings | ajax_tags_add | native-explicit | settings.ajax_tags_add | SettingsTagsActionPage |
+| settings | ajax_tags_del | native-explicit | settings.ajax_tags_del | SettingsTagsActionPage |
+| settings | ajax_tags_upd | native-explicit | settings.ajax_tags_upd | SettingsTagsActionPage |
 | settings | ajax_wizardAddUser | native-explicit | settings.ajax_wizardadduser | SettingsWizardActionPage |
 | settings | ajax_wizardCheckKey | native-explicit | settings.ajax_wizardcheckkey | SettingsWizardActionPage |
 | settings | ajax_wizardDeleteUser | native-explicit | settings.ajax_wizarddeleteuser | SettingsWizardActionPage |
@@ -267,8 +267,8 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | talentFitFlowSettings | native-explicit | settings.talentfitflowsettings | LegacyActionWorkspacePage |
 | settings | upgradeSiteName | native-explicit | settings.upgradesitename | LegacyActionWorkspacePage |
 | settings | viewItemHistory | native-explicit | settings.viewitemhistory | LegacyActionWorkspacePage |
-| toolbar | attemptLogin | native-explicit | toolbar.attemptlogin | LegacyUtilityForwardActionPage |
-| toolbar | authenticate | native-explicit | toolbar.authenticate | LegacyUtilityForwardActionPage |
+| toolbar | attemptLogin | native-explicit | toolbar.attemptlogin | LoginLegacyActionPage |
+| toolbar | authenticate | native-explicit | toolbar.authenticate | LoginLegacyActionPage |
 | toolbar | checkEmailIsInSystem | native-explicit | toolbar.checkemailisinsystem | LegacyUtilityForwardActionPage |
 | toolbar | getJavaScriptLib | native-explicit | toolbar.getjavascriptlib | LegacyUtilityForwardActionPage |
 | toolbar | getLicenseKey | native-explicit | toolbar.getlicensekey | LegacyUtilityForwardActionPage |
@@ -276,4 +276,4 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | toolbar | install | native-explicit | toolbar.install | LegacyActionWorkspacePage |
 | toolbar | storeMonsterResumeText | native-explicit | toolbar.storemonsterresumetext | LegacyUtilityForwardActionPage |
 | wizard | ajax_getPage | native-explicit | wizard.ajax_getpage | LegacyUtilityForwardActionPage |
-| xml | jobOrders | native-explicit | xml.joborders | LegacyUtilityForwardActionPage |
+| xml | jobOrders | native-explicit | xml.joborders | LegacyDownloadForwardActionPage |

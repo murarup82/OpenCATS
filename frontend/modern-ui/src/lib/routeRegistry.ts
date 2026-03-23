@@ -48,6 +48,8 @@ import { LoginPage } from '../pages/LoginPage';
 import { LoginLegacyActionPage } from '../pages/LoginLegacyActionPage';
 import { LegacyActionWorkspacePage } from '../pages/LegacyActionWorkspacePage';
 import { LegacyUtilityForwardActionPage } from '../pages/LegacyUtilityForwardActionPage';
+import { LegacyDownloadForwardActionPage } from '../pages/LegacyDownloadForwardActionPage';
+import { SettingsTagsActionPage } from '../pages/SettingsTagsActionPage';
 import { SettingsWizardActionPage } from '../pages/SettingsWizardActionPage';
 import { RssJobOrdersPage } from '../pages/RssJobOrdersPage';
 import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
@@ -184,10 +186,10 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'login.requestaccess': LoginPage,
   'login.showloginform': LoginPage,
   'rss.joborders': RssJobOrdersPage,
-  'attachments.getattachment': LegacyUtilityForwardActionPage,
-  'export.export': LegacyUtilityForwardActionPage,
-  'export.exportbydatagrid': LegacyUtilityForwardActionPage,
-  'gdpr.export': LegacyUtilityForwardActionPage,
+  'attachments.getattachment': LegacyDownloadForwardActionPage,
+  'export.export': LegacyDownloadForwardActionPage,
+  'export.exportbydatagrid': LegacyDownloadForwardActionPage,
+  'gdpr.export': LegacyDownloadForwardActionPage,
   'gdpr.requests': LegacyActionWorkspacePage,
   'graphs.generic': LegacyActionWorkspacePage,
   'graphs.genericpie': LegacyActionWorkspacePage,
@@ -209,9 +211,9 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.addemailtemplate': LegacyActionWorkspacePage,
   'settings.adduser': LegacyActionWorkspacePage,
   'settings.administration': LegacyActionWorkspacePage,
-  'settings.ajax_tags_add': LegacyUtilityForwardActionPage,
-  'settings.ajax_tags_del': LegacyUtilityForwardActionPage,
-  'settings.ajax_tags_upd': LegacyUtilityForwardActionPage,
+  'settings.ajax_tags_add': SettingsTagsActionPage,
+  'settings.ajax_tags_del': SettingsTagsActionPage,
+  'settings.ajax_tags_upd': SettingsTagsActionPage,
   'settings.ajax_wizardadduser': SettingsWizardActionPage,
   'settings.ajax_wizardcheckkey': SettingsWizardActionPage,
   'settings.ajax_wizarddeleteuser': SettingsWizardActionPage,
@@ -264,8 +266,8 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.talentfitflowsettings': LegacyActionWorkspacePage,
   'settings.upgradesitename': LegacyActionWorkspacePage,
   'settings.viewitemhistory': LegacyActionWorkspacePage,
-  'toolbar.attemptlogin': LegacyUtilityForwardActionPage,
-  'toolbar.authenticate': LegacyUtilityForwardActionPage,
+  'toolbar.attemptlogin': LoginLegacyActionPage,
+  'toolbar.authenticate': LoginLegacyActionPage,
   'toolbar.checkemailisinsystem': LegacyUtilityForwardActionPage,
   'toolbar.getjavascriptlib': LegacyUtilityForwardActionPage,
   'toolbar.getlicensekey': LegacyUtilityForwardActionPage,
@@ -273,7 +275,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'toolbar.install': LegacyActionWorkspacePage,
   'toolbar.storemonsterresumetext': LegacyUtilityForwardActionPage,
   'wizard.ajax_getpage': LegacyUtilityForwardActionPage,
-  'xml.joborders': LegacyUtilityForwardActionPage
+  'xml.joborders': LegacyDownloadForwardActionPage
 };
 
 const registry: Record<string, ModernRouteComponent> = {

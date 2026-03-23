@@ -1,13 +1,13 @@
 # Modern UI Intentional Legacy-Forward Endpoint Guard
 
-Generated: 2026-03-23T06:06:42.246Z
+Generated: 2026-03-23T09:46:26.234Z
 
-This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` to avoid breaking download, AJAX, auth, XML, and mutation compatibility behavior.
+This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` for utility-forward compatibility behavior.
 
 ## Totals
 
-- Actual legacy-forward routes: 17
-- Expected legacy-forward routes: 17
+- Actual legacy-forward routes: 7
+- Expected legacy-forward routes: 7
 - Unexpected routes: 0
 - Missing expected routes: 0
 - Missing required UI switch excludes: 0
@@ -17,22 +17,12 @@ This guard tracks endpoint-style routes that intentionally remain on `LegacyUtil
 
 | Category | Route | Status |
 | --- | --- | --- |
-| Calendar legacy feed endpoint | `calendar.dynamicdata` | Present |
-| Attachment/export/download endpoints | `attachments.getattachment` | Present |
-| Attachment/export/download endpoints | `export.export` | Present |
-| Attachment/export/download endpoints | `export.exportbydatagrid` | Present |
-| Attachment/export/download endpoints | `gdpr.export` | Present |
-| Attachment/export/download endpoints | `xml.joborders` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_tags_add` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_tags_del` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_tags_upd` | Present |
-| Toolbar integration endpoints | `toolbar.attemptlogin` | Present |
-| Toolbar integration endpoints | `toolbar.authenticate` | Present |
-| Toolbar integration endpoints | `toolbar.checkemailisinsystem` | Present |
-| Toolbar integration endpoints | `toolbar.getjavascriptlib` | Present |
-| Toolbar integration endpoints | `toolbar.getlicensekey` | Present |
-| Toolbar integration endpoints | `toolbar.getremoteversion` | Present |
-| Toolbar integration endpoints | `toolbar.storemonsterresumetext` | Present |
+| Calendar utility endpoint | `calendar.dynamicdata` | Present |
+| Toolbar utility endpoints | `toolbar.checkemailisinsystem` | Present |
+| Toolbar utility endpoints | `toolbar.getjavascriptlib` | Present |
+| Toolbar utility endpoints | `toolbar.getlicensekey` | Present |
+| Toolbar utility endpoints | `toolbar.getremoteversion` | Present |
+| Toolbar utility endpoints | `toolbar.storemonsterresumetext` | Present |
 | Wizard AJAX endpoint | `wizard.ajax_getpage` | Present |
 
 ## Unexpected Routes

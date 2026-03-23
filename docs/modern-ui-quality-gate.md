@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-23T06:06:06.643Z
-Finished: 2026-03-23T06:06:48.395Z
+Started: 2026-03-23T09:45:50.709Z
+Finished: 2026-03-23T09:46:33.699Z
 Overall Status: **Pass**
 
 ## Summary
@@ -127,7 +127,7 @@ Command: `npm.cmd run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 18 tests using 1 worker
+Running 20 tests using 1 worker
 
   -   1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
   -   2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
@@ -147,8 +147,10 @@ Running 18 tests using 1 worker
   -  16 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
   -  17 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
   -  18 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
+  -  19 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
+  -  20 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
 
-  18 skipped
+  20 skipped
 ```
 
 **stderr**

@@ -10,24 +10,10 @@ const uiConfigPath = resolve(repoRoot, 'config.ui.php');
 const outputPath = resolve(repoRoot, 'docs', 'modern-ui-legacy-forward-endpoints-check.md');
 
 const expectedRoutesByCategory = {
-  'Calendar legacy feed endpoint': [
+  'Calendar utility endpoint': [
     'calendar.dynamicdata'
   ],
-  'Attachment/export/download endpoints': [
-    'attachments.getattachment',
-    'export.export',
-    'export.exportbydatagrid',
-    'gdpr.export',
-    'xml.joborders'
-  ],
-  'Settings AJAX and mutation endpoints': [
-    'settings.ajax_tags_add',
-    'settings.ajax_tags_del',
-    'settings.ajax_tags_upd'
-  ],
-  'Toolbar integration endpoints': [
-    'toolbar.attemptlogin',
-    'toolbar.authenticate',
+  'Toolbar utility endpoints': [
     'toolbar.checkemailisinsystem',
     'toolbar.getjavascriptlib',
     'toolbar.getlicensekey',
@@ -101,7 +87,7 @@ function main() {
     '',
     `Generated: ${new Date().toISOString()}`,
     '',
-    'This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` to avoid breaking download, AJAX, auth, XML, and mutation compatibility behavior.',
+    'This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` for utility-forward compatibility behavior.',
     '',
     '## Totals',
     '',

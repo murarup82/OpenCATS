@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T06:06:39.489Z",
+  "generatedAt": "2026-03-23T09:46:22.497Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -220,7 +220,7 @@
       "classification": "native-explicit",
       "routeKey": "attachments.getattachment",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyDownloadForwardActionPage",
       "guarded": false
     },
     {
@@ -715,7 +715,7 @@
       "classification": "native-explicit",
       "routeKey": "export.export",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyDownloadForwardActionPage",
       "guarded": false
     },
     {
@@ -724,7 +724,7 @@
       "classification": "native-explicit",
       "routeKey": "export.exportbydatagrid",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyDownloadForwardActionPage",
       "guarded": false
     },
     {
@@ -733,7 +733,7 @@
       "classification": "native-explicit",
       "routeKey": "gdpr.export",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyDownloadForwardActionPage",
       "guarded": false
     },
     {
@@ -1669,7 +1669,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_tags_add",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "SettingsTagsActionPage",
       "guarded": false
     },
     {
@@ -1678,7 +1678,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_tags_del",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "SettingsTagsActionPage",
       "guarded": false
     },
     {
@@ -1687,7 +1687,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.ajax_tags_upd",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "SettingsTagsActionPage",
       "guarded": false
     },
     {
@@ -2164,7 +2164,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.attemptlogin",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LoginLegacyActionPage",
       "guarded": false
     },
     {
@@ -2173,7 +2173,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.authenticate",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LoginLegacyActionPage",
       "guarded": false
     },
     {
@@ -2245,7 +2245,7 @@
       "classification": "native-explicit",
       "routeKey": "xml.joborders",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyDownloadForwardActionPage",
       "guarded": false
     }
   ]
