@@ -9,12 +9,16 @@ const routeRegistryPath = resolve(packageRoot, 'src', 'lib', 'routeRegistry.ts')
 const outputPath = resolve(repoRoot, 'docs', 'modern-ui-no-legacy-wrapper-routes-check.md');
 
 const blockedComponents = new Set([
+  'LegacyActionWorkspacePage',
+  'LegacyUtilityForwardActionPage',
   'LegacyRedirectPage',
   'EntityUtilityActionPage',
   'ReportsActionPage',
   'GraphsActionPage'
 ]);
 const deprecatedPageFiles = [
+  'src/pages/LegacyActionWorkspacePage.tsx',
+  'src/pages/LegacyUtilityForwardActionPage.tsx',
   'src/pages/LegacyRedirectPage.tsx',
   'src/pages/EntityUtilityActionPage.tsx',
   'src/pages/ReportsActionPage.tsx',
