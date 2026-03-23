@@ -1,13 +1,13 @@
 # Modern UI Intentional Legacy-Forward Endpoint Guard
 
-Generated: 2026-03-23T04:48:18.400Z
+Generated: 2026-03-23T04:51:48.216Z
 
 This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` to avoid breaking download, AJAX, auth, XML, and mutation compatibility behavior.
 
 ## Totals
 
-- Actual legacy-forward routes: 29
-- Expected legacy-forward routes: 29
+- Actual legacy-forward routes: 28
+- Expected legacy-forward routes: 28
 - Unexpected routes: 0
 - Missing expected routes: 0
 - Duplicate route mappings detected: no
@@ -36,7 +36,6 @@ This guard tracks endpoint-style routes that intentionally remain on `LegacyUtil
 | Settings AJAX and mutation endpoints | `settings.ajax_wizardpassword` | Present |
 | Settings AJAX and mutation endpoints | `settings.ajax_wizardsitename` | Present |
 | Settings AJAX and mutation endpoints | `settings.ajax_wizardwebsite` | Present |
-| Settings AJAX and mutation endpoints | `settings.oncareerportaltweak` | Present |
 | Toolbar integration endpoints | `toolbar.attemptlogin` | Present |
 | Toolbar integration endpoints | `toolbar.authenticate` | Present |
 | Toolbar integration endpoints | `toolbar.checkemailisinsystem` | Present |

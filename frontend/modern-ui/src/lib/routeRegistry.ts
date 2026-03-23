@@ -250,7 +250,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.newinstallfinished': LegacyActionWorkspacePage,
   'settings.newinstallpassword': LegacyActionWorkspacePage,
   'settings.newsitename': LegacyActionWorkspacePage,
-  'settings.oncareerportaltweak': LegacyUtilityForwardActionPage,
+  'settings.oncareerportaltweak': LegacyActionWorkspacePage,
   'settings.previewpage': LegacyActionWorkspacePage,
   'settings.previewpagetop': LegacyActionWorkspacePage,
   'settings.professional': LegacyActionWorkspacePage,

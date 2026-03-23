@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T04:48:15.754Z",
+  "generatedAt": "2026-03-23T04:51:44.937Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -2047,7 +2047,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.oncareerportaltweak",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {

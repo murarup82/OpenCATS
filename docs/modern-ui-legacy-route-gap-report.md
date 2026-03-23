@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T04:48:15.754Z
+Generated: 2026-03-23T04:51:44.937Z
 
 ## Summary
 
@@ -254,7 +254,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | newInstallFinished | native-explicit | settings.newinstallfinished | LegacyActionWorkspacePage |
 | settings | newInstallPassword | native-explicit | settings.newinstallpassword | LegacyActionWorkspacePage |
 | settings | newSiteName | native-explicit | settings.newsitename | LegacyActionWorkspacePage |
-| settings | onCareerPortalTweak | native-explicit | settings.oncareerportaltweak | LegacyUtilityForwardActionPage |
+| settings | onCareerPortalTweak | native-explicit | settings.oncareerportaltweak | LegacyActionWorkspacePage |
 | settings | previewPage | native-explicit | settings.previewpage | LegacyActionWorkspacePage |
 | settings | previewPageTop | native-explicit | settings.previewpagetop | LegacyActionWorkspacePage |
 | settings | professional | native-explicit | settings.professional | LegacyActionWorkspacePage |

@@ -33,8 +33,7 @@ const expectedRoutesByCategory = {
     'settings.ajax_wizardlocalization',
     'settings.ajax_wizardpassword',
     'settings.ajax_wizardsitename',
-    'settings.ajax_wizardwebsite',
-    'settings.oncareerportaltweak'
+    'settings.ajax_wizardwebsite'
   ],
   'Toolbar integration endpoints': [
     'toolbar.attemptlogin',

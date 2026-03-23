@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T04:48:16.374Z",
+  "generatedAt": "2026-03-23T04:51:45.679Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 228,
@@ -11,11 +11,11 @@
   "bucketSummaries": [
     {
       "bucket": "native-action",
-      "count": 51
+      "count": 50
     },
     {
       "bucket": "native-surface",
-      "count": 177
+      "count": 178
     }
   ],
   "moduleSummaries": [
@@ -685,19 +685,6 @@
       "action": "ajax_wizardWebsite",
       "classification": "native-explicit",
       "routeKey": "settings.ajax_wizardwebsite",
-      "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-action",
-      "modernizationRank": 9,
-      "legacyDependent": false
-    },
-    {
-      "module": "settings",
-      "action": "onCareerPortalTweak",
-      "classification": "native-explicit",
-      "routeKey": "settings.oncareerportaltweak",
       "resolution": "native",
       "component": "LegacyUtilityForwardActionPage",
       "guarded": false,
@@ -2947,6 +2934,19 @@
       "action": "newSiteName",
       "classification": "native-explicit",
       "routeKey": "settings.newsitename",
+      "resolution": "native",
+      "component": "LegacyActionWorkspacePage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "settings",
+      "action": "onCareerPortalTweak",
+      "classification": "native-explicit",
+      "routeKey": "settings.oncareerportaltweak",
       "resolution": "native",
       "component": "LegacyActionWorkspacePage",
       "guarded": false,

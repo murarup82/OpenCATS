@@ -179,6 +179,12 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     panelTitle: 'Settings Preview Header Workspace',
     panelSubtitle: 'Legacy settings flow is embedded while parity migration continues.'
   },
+  'settings.oncareerportaltweak': {
+    title: 'Career Portal Template Action',
+    subtitle: 'Apply career portal template changes in compatibility mode.',
+    panelTitle: 'Career Portal Template Action Workspace',
+    panelSubtitle: 'Legacy settings flow is embedded while parity migration continues.'
+  },
   'gdpr.requests': {
     title: 'GDPR Requests',
     subtitle: 'Review and manage GDPR consent request records.',
