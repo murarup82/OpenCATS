@@ -1,6 +1,6 @@
 # Bridge Wildcard Retirement Check
 
-Generated: 2026-03-23T12:56:32.002Z
+Generated: 2026-03-23T13:07:30.529Z
 Status: **Pass**
 Strict mode: disabled (global *.* bridge tolerated)
 Override: disabled

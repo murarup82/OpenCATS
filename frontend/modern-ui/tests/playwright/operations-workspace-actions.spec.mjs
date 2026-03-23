@@ -57,7 +57,7 @@ function buildModernJSONURL(moduleName, actionName, query = {}) {
 test.describe('Operations workspace action smoke', () => {
   test.skip(baseURL === '', 'Set OPENCATS_BASE_URL to run operations workspace smoke checks.');
 
-  test('joborders.edithiringplan ui=modern mounts without a runtime boundary', async ({ context, page }) => {
+  test('joborders.edithiringplan ui=modern forwards without an iframe', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
@@ -70,6 +70,12 @@ test.describe('Operations workspace action smoke', () => {
       }
     );
 
+    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
+    await expect(page.getByRole('heading', { name: 'Hiring Plan Redirect' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Continue' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open Legacy UI' }).first()).toBeVisible();
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });

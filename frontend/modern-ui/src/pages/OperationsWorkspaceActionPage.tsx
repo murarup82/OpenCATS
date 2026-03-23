@@ -26,28 +26,28 @@ type BackLink = {
 
 const COPY_BY_ROUTE: Record<string, RouteCopy> = {
   'joborders.edithiringplan': {
-    mode: 'embed',
+    mode: 'forward',
     title: 'Edit Hiring Plan',
-    subtitle: 'Adjust hiring plan rows and openings through the compatibility workspace.',
-    panelTitle: 'Hiring Plan Workspace',
-    panelSubtitle: 'Legacy hiring-plan UI is embedded while migration continues.',
-    statusMessage: 'Loading embedded legacy hiring-plan workspace...'
+    subtitle: 'Forward hiring plan rows and openings through the legacy endpoint without embedding a frame.',
+    panelTitle: 'Hiring Plan Redirect',
+    panelSubtitle: 'Legacy hiring-plan UI is forwarded while migration continues.',
+    statusMessage: 'Forwarding hiring-plan workspace to the legacy endpoint...'
   },
   'toolbar.install': {
-    mode: 'embed',
+    mode: 'forward',
     title: 'Toolbar Install',
-    subtitle: 'Complete toolbar installation steps in compatibility mode.',
-    panelTitle: 'Toolbar Install Workspace',
-    panelSubtitle: 'Legacy toolbar installation UI is embedded while migration continues.',
-    statusMessage: 'Loading embedded legacy toolbar installation workspace...'
+    subtitle: 'Forward toolbar installation steps through the legacy endpoint without embedding a frame.',
+    panelTitle: 'Toolbar Install Redirect',
+    panelSubtitle: 'Legacy toolbar installation UI is forwarded while migration continues.',
+    statusMessage: 'Forwarding toolbar installation workspace to the legacy endpoint...'
   },
   'settings.getfirefoxmodal': {
-    mode: 'embed',
+    mode: 'forward',
     title: 'Toolbar Browser Requirement',
-    subtitle: 'Review browser compatibility guidance in compatibility mode.',
-    panelTitle: 'Browser Requirement Workspace',
-    panelSubtitle: 'Legacy settings UI is embedded while migration continues.',
-    statusMessage: 'Loading embedded legacy settings workspace...'
+    subtitle: 'Forward browser compatibility guidance through the legacy endpoint without embedding a frame.',
+    panelTitle: 'Browser Requirement Redirect',
+    panelSubtitle: 'Legacy settings UI is forwarded while migration continues.',
+    statusMessage: 'Forwarding browser requirement workspace to the legacy endpoint...'
   },
   'settings.previewpage': {
     mode: 'forward',
@@ -145,7 +145,7 @@ function CompatibilityForwardPanel({ copy, backLink, canContinue, legacyURL }: C
 
   return (
     <div className="modern-dashboard avel-dashboard-shell">
-      <section className="modern-compat-page">
+      <section className="modern-compat-page modern-compat-page--forward">
         <header className="modern-compat-page__header">
           <div>
             <h2 className="modern-compat-page__title">{copy.panelTitle}</h2>

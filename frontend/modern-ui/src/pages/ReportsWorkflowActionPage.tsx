@@ -20,32 +20,32 @@ type RouteCopy = {
 
 const ROUTE_COPY: Record<string, RouteCopy> = {
   'reports.customizeeeoreport': {
-    title: 'Customize EEO Report',
-    subtitle: 'Configure the EEO report in the legacy workspace.',
-    panelTitle: 'EEO Report Customization Workspace',
-    panelSubtitle: 'Legacy report configuration is embedded while modernization continues.',
-    mode: 'embedded'
+    title: 'Customize EEO Report Redirect',
+    subtitle: 'Forwarding the EEO report customization workspace to legacy.',
+    panelTitle: 'EEO Report Customization Redirect',
+    panelSubtitle: 'Legacy report configuration opens automatically while the fallback remains visible.',
+    mode: 'forward'
   },
   'reports.customizejoborderreport': {
-    title: 'Customize Job Order Report',
-    subtitle: 'Configure the job order report in the legacy workspace.',
-    panelTitle: 'Job Order Report Customization Workspace',
-    panelSubtitle: 'Legacy report configuration is embedded while modernization continues.',
-    mode: 'embedded'
+    title: 'Customize Job Order Report Redirect',
+    subtitle: 'Forwarding the job order report customization workspace to legacy.',
+    panelTitle: 'Job Order Report Customization Redirect',
+    panelSubtitle: 'Legacy report configuration opens automatically while the fallback remains visible.',
+    mode: 'forward'
   },
   'reports.generateeeoreportpreview': {
-    title: 'EEO Report Preview',
-    subtitle: 'Review the generated EEO report preview in the legacy workspace.',
-    panelTitle: 'EEO Report Preview Workspace',
-    panelSubtitle: 'Legacy report preview is embedded while modernization continues.',
-    mode: 'embedded'
+    title: 'EEO Report Preview Redirect',
+    subtitle: 'Forwarding the EEO report preview workspace to legacy.',
+    panelTitle: 'EEO Report Preview Redirect',
+    panelSubtitle: 'Legacy report preview opens automatically while the fallback remains visible.',
+    mode: 'forward'
   },
   'reports.showhirereport': {
-    title: 'Hire Report',
-    subtitle: 'View the hire report in the legacy workspace.',
-    panelTitle: 'Hire Report Workspace',
-    panelSubtitle: 'Legacy reporting output is embedded while modernization continues.',
-    mode: 'embedded'
+    title: 'Hire Report Redirect',
+    subtitle: 'Forwarding the hire report workspace to legacy.',
+    panelTitle: 'Hire Report Redirect',
+    panelSubtitle: 'Legacy reporting output opens automatically while the fallback remains visible.',
+    mode: 'forward'
   },
   'reports.showplacementreport': {
     title: 'Placement Report Redirect',

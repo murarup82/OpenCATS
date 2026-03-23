@@ -39,7 +39,10 @@ function buildModernRouteURL(moduleName, actionName, query = {}) {
 test.describe('Reports workflow action smoke', () => {
   test.skip(baseURL === '', 'Set OPENCATS_BASE_URL to run reports workflow action smoke checks.');
 
-  test('reports.showhirereport ui=modern mounts without a runtime boundary', async ({ context, page }) => {
+  test('reports.showhirereport ui=modern exposes an explicit legacy fallback before redirecting', async ({
+    context,
+    page
+  }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
@@ -47,11 +50,34 @@ test.describe('Reports workflow action smoke', () => {
       waitUntil: 'domcontentloaded'
     });
 
-    await page.waitForSelector('.modern-compat-page', { state: 'visible' });
-    await expect(page.getByRole('heading', { name: 'Hire Report Workspace' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible();
+    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
+    await expect(page.getByRole('heading', { name: 'Hire Report Redirect' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Continue to Legacy Report' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Back To Reports' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Open Legacy UI' })).toBeVisible();
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+  });
+
+  test('reports.customizejoborderreport ui=modern exposes an explicit legacy fallback before redirecting', async ({
+    context,
+    page
+  }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    await page.goto(buildModernRouteURL('reports', 'customizejoborderreport'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
+    await expect(page.getByRole('heading', { name: 'Job Order Report Customization Redirect' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Continue to Legacy Report' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open Legacy UI' })).toBeVisible();
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });
