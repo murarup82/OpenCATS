@@ -29,12 +29,17 @@ import type {
   HomeOverviewModernDataResponse,
   HomeQuickSearchModernDataResponse,
   ImportLauncherModernDataResponse,
+  SettingsWizardAddUserModernDataResponse,
+  SettingsWizardCheckKeyModernDataResponse,
   SettingsWizardDeleteUserModernDataResponse,
   SettingsWizardEmailModernDataResponse,
   SettingsWizardFirstTimeSetupModernDataResponse,
   SettingsWizardLocalizationModernDataResponse,
   SettingsWizardImportModernDataResponse,
   SettingsWizardLicenseModernDataResponse,
+  SettingsWizardPasswordModernDataResponse,
+  SettingsWizardSiteNameModernDataResponse,
+  SettingsWizardWebsiteModernDataResponse,
   LoginModernDataResponse,
   JobOrderAddPopupModernDataResponse,
   JobOrderCompanyContextModernDataResponse,
@@ -287,8 +292,13 @@ export async function fetchImportLauncherModernData(
 }
 
 type SettingsWizardAction =
+  | 'ajax_wizardAddUser'
+  | 'ajax_wizardCheckKey'
   | 'ajax_wizardImport'
   | 'ajax_wizardLicense'
+  | 'ajax_wizardPassword'
+  | 'ajax_wizardSiteName'
+  | 'ajax_wizardWebsite'
   | 'ajax_wizardFirstTimeSetup'
   | 'ajax_wizardDeleteUser'
   | 'ajax_wizardEmail'
@@ -296,10 +306,20 @@ type SettingsWizardAction =
 
 function getSettingsWizardModernPage(action: SettingsWizardAction): string {
   switch (action) {
+    case 'ajax_wizardAddUser':
+      return 'settings-wizard-add-user';
+    case 'ajax_wizardCheckKey':
+      return 'settings-wizard-check-key';
     case 'ajax_wizardImport':
       return 'settings-wizard-import';
     case 'ajax_wizardLicense':
       return 'settings-wizard-license';
+    case 'ajax_wizardPassword':
+      return 'settings-wizard-password';
+    case 'ajax_wizardSiteName':
+      return 'settings-wizard-site-name';
+    case 'ajax_wizardWebsite':
+      return 'settings-wizard-website';
     case 'ajax_wizardFirstTimeSetup':
       return 'settings-wizard-first-time-setup';
     case 'ajax_wizardDeleteUser':
@@ -341,6 +361,20 @@ export async function fetchSettingsWizardLicenseModernData(
   return fetchSettingsWizardModernData<SettingsWizardLicenseModernDataResponse>(bootstrap, 'ajax_wizardLicense', query);
 }
 
+export async function fetchSettingsWizardAddUserModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardAddUserModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardAddUserModernDataResponse>(bootstrap, 'ajax_wizardAddUser', query);
+}
+
+export async function fetchSettingsWizardCheckKeyModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardCheckKeyModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardCheckKeyModernDataResponse>(bootstrap, 'ajax_wizardCheckKey', query);
+}
+
 export async function fetchSettingsWizardFirstTimeSetupModernData(
   bootstrap: UIModeBootstrap,
   query?: URLSearchParams
@@ -379,6 +413,27 @@ export async function fetchSettingsWizardLocalizationModernData(
     'ajax_wizardLocalization',
     query
   );
+}
+
+export async function fetchSettingsWizardPasswordModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardPasswordModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardPasswordModernDataResponse>(bootstrap, 'ajax_wizardPassword', query);
+}
+
+export async function fetchSettingsWizardSiteNameModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardSiteNameModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardSiteNameModernDataResponse>(bootstrap, 'ajax_wizardSiteName', query);
+}
+
+export async function fetchSettingsWizardWebsiteModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardWebsiteModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardWebsiteModernDataResponse>(bootstrap, 'ajax_wizardWebsite', query);
 }
 
 export async function fetchLoginModernData(

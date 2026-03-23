@@ -834,17 +834,37 @@ class SettingsUI extends UserInterface
                 break;
                
             case 'ajax_wizardAddUser':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.addUser') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have access to add a user.'
+                        );
+                        return;
+                    }
                     echo 'You do not have access to add a user.';
                     return;
                 }
-                $this->wizard_addUser();
+                $this->wizard_addUser($isModernJSON);
                 break;
 
             case 'ajax_wizardDeleteUser':
@@ -882,17 +902,37 @@ class SettingsUI extends UserInterface
                 break;
 
             case 'ajax_wizardCheckKey':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.checkKey') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have access to set the key.'
+                        );
+                        return;
+                    }
                     echo 'You do not have access to set the key.';
                     return;
                 }
-                $this->wizard_checkKey();
+                $this->wizard_checkKey($isModernJSON);
                 break;
 
             case 'ajax_wizardLocalization':
@@ -998,31 +1038,71 @@ class SettingsUI extends UserInterface
                 break;
 
             case 'ajax_wizardPassword':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.password') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have acess to set the site password.'
+                        );
+                        return;
+                    }
                     echo 'You do not have acess to set the site password.';
                     return;
                 }
-                $this->wizard_password();
+                $this->wizard_password($isModernJSON);
                 break;
 
             case 'ajax_wizardSiteName':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.siteName') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have permission to change the site name.'
+                        );
+                        return;
+                    }
                     echo 'You do not have permission to change the site name.';
                     return;
                 }
-                $this->wizard_siteName();
+                $this->wizard_siteName($isModernJSON);
                 break;
 
             case 'ajax_wizardEmail':
@@ -1094,17 +1174,37 @@ class SettingsUI extends UserInterface
                 break;
 
             case 'ajax_wizardWebsite':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.website') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have permission.'
+                        );
+                        return;
+                    }
                     echo 'You do not have permission.';
                     return;
                 }
-                $this->wizard_website();
+                $this->wizard_website($isModernJSON);
                 break;
 
             case 'administration':
@@ -4814,7 +4914,7 @@ class SettingsUI extends UserInterface
         $this->_template->display('./modules/settings/ItemHistory.tpl');
     }
 
-    private function wizard_addUser()
+    private function wizard_addUser($respondModernJSON = false)
     {
         if (isset($_GET[$id = 'firstName'])) $firstName = $_GET[$id]; else $firstName = '';
         if (isset($_GET[$id = 'lastName'])) $lastName = $_GET[$id]; else $lastName = '';
@@ -4826,6 +4926,16 @@ class SettingsUI extends UserInterface
 
         if (strlen($firstName) < 2 || strlen($lastName) < 2 || strlen($loginName) < 2 || strlen($password) < 2)
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'invalidInput',
+                    'First and last name are too short.'
+                );
+                return;
+            }
+
             echo 'First and last name are too short.';
             return;
         }
@@ -4835,6 +4945,16 @@ class SettingsUI extends UserInterface
         /* If adding an e-mail username, verify it is a valid e-mail. */
         if (strpos($loginName, '@') !== false && filter_var($loginName, FILTER_VALIDATE_EMAIL) === false)
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'invalidLoginName',
+                    'That is not a valid login name.'
+                );
+                return;
+            }
+
             echo 'That is not a valid login name.';
             return;
         }
@@ -4849,6 +4969,16 @@ class SettingsUI extends UserInterface
         /* Bail out if the specified username already exists. */
         if ($users->usernameExists($loginName))
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'usernameExists',
+                    'That username already exists.'
+                );
+                return;
+            }
+
             echo 'That username already exists.';
             return;
         }
@@ -4856,17 +4986,47 @@ class SettingsUI extends UserInterface
         $data = $users->getLicenseData();
         if ($data['totalUsers'] >= $data['userLicenses'])
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'licenseLimitReached',
+                    'You cannot add any more users with your license.'
+                );
+                return;
+            }
+
             echo 'You cannot add any more users with your license.';
             return;
         }
 
         if ($users->add($lastName, $firstName, $email, $loginName, $password, $accessLevel, false) !== -1)
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    true,
+                    'userAdded',
+                    'User added.'
+                );
+                return;
+            }
+
             echo 'Ok';
             return;
         }
         else
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'addFailed',
+                    'Unable to add user. One of the fields you entered may have been formatted incorrectly.'
+                );
+                return;
+            }
+
             echo 'Unable to add user. One of the fields you entered may have been formatted incorrectly.';
             return;
         }
@@ -4923,7 +5083,7 @@ class SettingsUI extends UserInterface
         echo 'Ok';
     }
 
-    private function wizard_checkKey()
+    private function wizard_checkKey($respondModernJSON = false)
     {
         $fileError = false;
 
@@ -4940,6 +5100,26 @@ class SettingsUI extends UserInterface
                 {
                     if (!CATSUtility::isSOAPEnabled())
                     {
+                        if ($respondModernJSON)
+                        {
+                            $this->respondModernWizardJSON(
+                                false,
+                                'soapMissing',
+                                "CATS Professional requires the PHP SOAP library which isn't currently installed.\n\n"
+                                    . "Installation Instructions:\n\n"
+                                    . "WAMP/Windows Users:\n"
+                                    . "1) Left click on the wamp icon.\n"
+                                    . "2) Select \"PHP Settings\" from the drop-down list.\n"
+                                    . "3) Select \"PHP Extensions\" from the drop-down list.\n"
+                                    . "4) Check the \"php_soap\" option.\n"
+                                    . "5) Restart WAMP.\n\n"
+                                    . "Linux Users:\n"
+                                    . "Re-install PHP with the --enable-soap configuration option.\n\n"
+                                    . "Please visit http://www.catsone.com for more support options."
+                            );
+                            return;
+                        }
+
                         echo "CATS Professional requires the PHP SOAP library which isn't currently installed.\n\n"
                             . "Installation Instructions:\n\n"
                             . "WAMP/Windows Users:\n"
@@ -4957,6 +5137,19 @@ class SettingsUI extends UserInterface
                     {
                         if (!LicenseUtility::validateProfessionalKey($key))
                         {
+                            if ($respondModernJSON)
+                            {
+                                $this->respondModernWizardJSON(
+                                    false,
+                                    'invalidProfessionalKey',
+                                    "That is not a valid CATS Professional license key. Please visit "
+                                        . "http://www.catsone.com/professional for more information about CATS Professional.\n\n"
+                                        . "For a free open-source key, please visit http://www.catsone.com/ and "
+                                        . "click on \"Downloads\"."
+                                );
+                                return;
+                            }
+
                             echo "That is not a valid CATS Professional license key. Please visit "
                                 . "http://www.catsone.com/professional for more information about CATS Professional.\n\n"
                                 . "For a free open-source key, please visit http://www.catsone.com/ and "
@@ -4974,6 +5167,16 @@ class SettingsUI extends UserInterface
 
             if ($configWritten)
             {
+                if ($respondModernJSON)
+                {
+                    $this->respondModernWizardJSON(
+                        true,
+                        'licenseKeySaved',
+                        'License key saved.'
+                    );
+                    return;
+                }
+
                 echo 'Ok';
                 return;
             }
@@ -4982,18 +5185,55 @@ class SettingsUI extends UserInterface
         // The key hasn't been written. But they may have manually inserted the key into their config.php, check
         if (LicenseUtility::isLicenseValid())
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    true,
+                    'licenseKeyValid',
+                    'License key is valid.'
+                );
+                return;
+            }
+
             echo 'Ok';
             return;
         }
 
         if ($fileError)
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'configWriteFailed',
+                    'You entered a valid key, but this wizard is unable to write to your config.php file! You have '
+                        . 'two choices: ' . "\n\n"
+                        . '1) Change the file permissions of your config.php file.'."\n".'If you\'re using unix, try:' . "\n" . 'chmod 777 config.php' . "\n\n"
+                        . '2) Edit your config.php file manually and enter your valid key near this line: ' . "\n"
+                        . 'define(\'LICENSE_KEY\', \'ENTER YOUR KEY HERE\');' . "\n" . 'Once you\'ve done this, refresh your browser.' . "\n\n"
+                        . 'For more help, visit our website at http://www.catsone.com for support options.'
+                );
+                return;
+            }
+
             echo 'You entered a valid key, but this wizard is unable to write to your config.php file! You have '
                 . 'two choices: ' . "\n\n"
                 . '1) Change the file permissions of your config.php file.'."\n".'If you\'re using unix, try:' . "\n" . 'chmod 777 config.php' . "\n\n"
                 . '2) Edit your config.php file manually and enter your valid key near this line: ' . "\n"
                 . 'define(\'LICENSE_KEY\', \'ENTER YOUR KEY HERE\');' . "\n" . 'Once you\'ve done this, refresh your browser.' . "\n\n"
                 . 'For more help, visit our website at http://www.catsone.com for support options.';
+        }
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                false,
+                'invalidKey',
+                'That is not a valid key. You can register for a free open source license key on our website '
+                    . 'at http://www.catsone.com or a professional key to unlock all of the available features at '
+                    . 'http://www.catsone.com/professional'
+            );
+            return;
         }
 
         echo 'That is not a valid key. You can register for a free open source license key on our website '
@@ -5097,13 +5337,23 @@ class SettingsUI extends UserInterface
         echo 'Ok';
     }
 
-    private function wizard_password()
+    private function wizard_password($respondModernJSON = false)
     {
         if (isset($_GET['password']) && !empty($_GET['password'])) $password = $_GET['password'];
         else $password = '';
 
         if (strlen($password) < 5)
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'invalidPassword',
+                    'Your password length must be at least 5 characters long.'
+                );
+                return;
+            }
+
             echo 'Your password length must be at least 5 characters long.';
             return;
         }
@@ -5111,7 +5361,27 @@ class SettingsUI extends UserInterface
         $users = new Users($this->_siteID);
         if ($users->changePassword($this->_userID, 'cats', $password) != LOGIN_SUCCESS)
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'passwordChangeFailed',
+                    'Cannot change your site password!'
+                );
+                return;
+            }
+
             echo 'Cannot change your site password!';
+            return;
+        }
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                true,
+                'passwordUpdated',
+                'Password updated.'
+            );
             return;
         }
 
@@ -5154,13 +5424,23 @@ class SettingsUI extends UserInterface
         echo 'Ok';
     }
 
-    private function wizard_siteName()
+    private function wizard_siteName($respondModernJSON = false)
     {
         if (isset($_GET['siteName']) && !empty($_GET['siteName'])) $siteName = $_GET['siteName'];
         else $siteName = '';
 
         if ($siteName == 'default_site' || strlen($siteName) <= 0)
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'invalidSiteName',
+                    'That is not a valid site name. Please choose a different one.'
+                );
+                return;
+            }
+
             echo 'That is not a valid site name. Please choose a different one.';
             return;
         }
@@ -5177,6 +5457,16 @@ class SettingsUI extends UserInterface
         $companies->setCompanyDefault($companyIDInternal);
 
         $_SESSION['CATS']->setSiteName($siteName);
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                true,
+                'siteNameUpdated',
+                'Site name updated.'
+            );
+            return;
+        }
 
         echo 'Ok';
     }
@@ -5214,12 +5504,34 @@ class SettingsUI extends UserInterface
         else echo 'Fail';
     }
 
-    private function wizard_website()
+    private function wizard_website($respondModernJSON = false)
     {
         $website = trim(isset($_GET[$id='website']) ? $_GET[$id] : '');
         if (strlen($website) > 10)
         {
-            if (!eval(Hooks::get('SETTINGS_CP_REQUEST'))) return;
+            if (!eval(Hooks::get('SETTINGS_CP_REQUEST')))
+            {
+                if ($respondModernJSON)
+                {
+                    $this->respondModernWizardJSON(
+                        false,
+                        'websiteRejected',
+                        'Website update was rejected.'
+                    );
+                }
+
+                return;
+            }
+        }
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                true,
+                'websiteUpdated',
+                'Website updated.'
+            );
+            return;
         }
 
         echo 'Ok';
