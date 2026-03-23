@@ -2228,6 +2228,26 @@ export type JobOrdersRecruiterAllocationMutationResponse = {
   errorCount?: number;
 };
 
+export type JobOrdersPipelineMatrixViewConfig = {
+  columnOrder: string[];
+  visibleColumns: Record<string, boolean>;
+  columnFilters: Record<string, string>;
+  sortBy: string;
+  sortDirection: string;
+};
+
+export type JobOrdersPipelineMatrixSavedView = {
+  viewID: number;
+  name: string;
+  config: JobOrdersPipelineMatrixViewConfig;
+  updatedAt: string;
+};
+
+export type JobOrdersPipelineMatrixViewMutationResponse = ModernMutationResponse & {
+  viewID?: number;
+  views?: JobOrdersPipelineMatrixSavedView[];
+};
+
 export type JobOrdersPipelineMatrixModernDataResponse = {
   meta: {
     contractVersion: number;
@@ -2275,8 +2295,11 @@ export type JobOrdersPipelineMatrixModernDataResponse = {
   actions: {
     listURL: string;
     recruiterAllocationURL: string;
+    saveViewURL: string;
+    deleteViewURL: string;
     legacyURL: string;
   };
+  savedViews: JobOrdersPipelineMatrixSavedView[];
   rows: Array<{
     candidateJobOrderID: number;
     candidateID: number;

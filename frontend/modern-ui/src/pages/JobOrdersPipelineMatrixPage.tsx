@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchJobOrdersPipelineMatrixModernData } from '../lib/api';
-import type { JobOrdersPipelineMatrixModernDataResponse, UIModeBootstrap } from '../types';
+import {
+  deleteJobOrdersPipelineMatrixView,
+  fetchJobOrdersPipelineMatrixModernData,
+  saveJobOrdersPipelineMatrixView
+} from '../lib/api';
+import type {
+  JobOrdersPipelineMatrixModernDataResponse,
+  JobOrdersPipelineMatrixSavedView,
+  UIModeBootstrap
+} from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
@@ -68,6 +76,21 @@ const DEFAULT_VISIBLE: Record<ColumnKey, boolean> = {
   lastActivity: true
 };
 
+const COLUMN_KEYS: ColumnKey[] = [
+  'candidate',
+  'jobOrder',
+  'company',
+  'source',
+  'keySkills',
+  'pipeline',
+  'owner',
+  'recruiter',
+  'location',
+  'gdpr',
+  'dateAdded',
+  'lastActivity'
+];
+
 function toInteger(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.trunc(parsed) : fallback;
@@ -93,6 +116,100 @@ function emptyFilters(): Record<ColumnKey, string> {
     dateAdded: '',
     lastActivity: ''
   };
+}
+
+function normalizeColumnOrder(columnOrder: unknown): ColumnKey[] {
+  if (!Array.isArray(columnOrder)) {
+    return [...DEFAULT_ORDER];
+  }
+
+  const nextOrder: ColumnKey[] = [];
+  columnOrder.forEach((columnName) => {
+    const normalized = String(columnName || '').trim() as ColumnKey;
+    if (!COLUMN_KEYS.includes(normalized)) {
+      return;
+    }
+    if (nextOrder.includes(normalized)) {
+      return;
+    }
+    nextOrder.push(normalized);
+  });
+
+  DEFAULT_ORDER.forEach((columnName) => {
+    if (!nextOrder.includes(columnName)) {
+      nextOrder.push(columnName);
+    }
+  });
+
+  return nextOrder.length > 0 ? nextOrder : [...DEFAULT_ORDER];
+}
+
+function normalizeVisibleColumns(visibleColumns: unknown): Record<ColumnKey, boolean> {
+  const normalized: Record<ColumnKey, boolean> = { ...DEFAULT_VISIBLE };
+  if (!visibleColumns || typeof visibleColumns !== 'object') {
+    return normalized;
+  }
+
+  const payload = visibleColumns as Record<string, unknown>;
+  COLUMN_KEYS.forEach((columnName) => {
+    if (Object.prototype.hasOwnProperty.call(payload, columnName)) {
+      normalized[columnName] = Boolean(payload[columnName]);
+    }
+  });
+
+  return normalized;
+}
+
+function normalizeColumnFilters(columnFilters: unknown): Record<ColumnKey, string> {
+  const normalized = emptyFilters();
+  if (!columnFilters || typeof columnFilters !== 'object') {
+    return normalized;
+  }
+
+  const payload = columnFilters as Record<string, unknown>;
+  COLUMN_KEYS.forEach((columnName) => {
+    if (Object.prototype.hasOwnProperty.call(payload, columnName)) {
+      normalized[columnName] = String(payload[columnName] || '');
+    }
+  });
+
+  return normalized;
+}
+
+function normalizeSortBy(sortBy: unknown): ColumnKey {
+  const normalized = String(sortBy || '').trim() as ColumnKey;
+  return COLUMN_KEYS.includes(normalized) ? normalized : 'lastActivity';
+}
+
+function normalizeSortDirection(sortDirection: unknown): SortDirection {
+  return String(sortDirection || '').toLowerCase() === 'asc' ? 'asc' : 'desc';
+}
+
+function normalizeSavedViews(savedViews: JobOrdersPipelineMatrixSavedView[] | undefined): MatrixView[] {
+  if (!Array.isArray(savedViews)) {
+    return [];
+  }
+
+  const payload: MatrixView[] = [];
+  savedViews.forEach((view) => {
+    const viewID = Number(view?.viewID || 0);
+    const viewName = String(view?.name || '').trim();
+    if (!Number.isFinite(viewID) || viewID <= 0 || viewName === '') {
+      return;
+    }
+
+    payload.push({
+      id: String(viewID),
+      name: viewName,
+      columnOrder: normalizeColumnOrder(view?.config?.columnOrder),
+      visibleColumns: normalizeVisibleColumns(view?.config?.visibleColumns),
+      columnFilters: normalizeColumnFilters(view?.config?.columnFilters),
+      sortBy: normalizeSortBy(view?.config?.sortBy),
+      sortDirection: normalizeSortDirection(view?.config?.sortDirection)
+    });
+  });
+
+  return payload;
 }
 
 function columnLabel(columnKey: ColumnKey): string {
@@ -141,16 +258,19 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
   const [savedViews, setSavedViews] = useState<MatrixView[]>([]);
   const [activeViewID, setActiveViewID] = useState('default');
   const [viewNameDraft, setViewNameDraft] = useState('');
+  const [viewMutationBusy, setViewMutationBusy] = useState(false);
+  const [viewMutationError, setViewMutationError] = useState('');
+  const [viewMutationNotice, setViewMutationNotice] = useState('');
 
   const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
   const storageKey = useMemo(
-    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:pipeline-matrix:v1`,
+    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:pipeline-matrix:v2`,
     [bootstrap.siteID, bootstrap.userID]
   );
 
   const applyDefaultLayout = useCallback(() => {
-    setColumnOrder(DEFAULT_ORDER);
-    setVisibleColumns(DEFAULT_VISIBLE);
+    setColumnOrder([...DEFAULT_ORDER]);
+    setVisibleColumns({ ...DEFAULT_VISIBLE });
     setColumnFilters(emptyFilters());
     setSortBy('lastActivity');
     setSortDirection('desc');
@@ -168,6 +288,7 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
         }
         setData(result);
         setSearchDraft(result.filters.search || '');
+        setSavedViews(normalizeSavedViews(result.savedViews));
       })
       .catch((err: unknown) => {
         if (!isMounted) {
@@ -192,38 +313,24 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
         return;
       }
       const payload = JSON.parse(raw) as {
-        savedViews?: MatrixView[];
         activeViewID?: string;
         working?: {
-          columnOrder?: ColumnKey[];
-          visibleColumns?: Record<ColumnKey, boolean>;
-          columnFilters?: Record<ColumnKey, string>;
-          sortBy?: ColumnKey;
-          sortDirection?: SortDirection;
+          columnOrder?: unknown;
+          visibleColumns?: unknown;
+          columnFilters?: unknown;
+          sortBy?: unknown;
+          sortDirection?: unknown;
         };
       };
-      if (Array.isArray(payload.savedViews)) {
-        setSavedViews(payload.savedViews);
-      }
       if (payload.activeViewID) {
         setActiveViewID(payload.activeViewID);
       }
       if (payload.working) {
-        if (Array.isArray(payload.working.columnOrder)) {
-          setColumnOrder(payload.working.columnOrder);
-        }
-        if (payload.working.visibleColumns) {
-          setVisibleColumns(payload.working.visibleColumns);
-        }
-        if (payload.working.columnFilters) {
-          setColumnFilters(payload.working.columnFilters);
-        }
-        if (payload.working.sortBy) {
-          setSortBy(payload.working.sortBy);
-        }
-        if (payload.working.sortDirection) {
-          setSortDirection(payload.working.sortDirection);
-        }
+        setColumnOrder(normalizeColumnOrder(payload.working.columnOrder));
+        setVisibleColumns(normalizeVisibleColumns(payload.working.visibleColumns));
+        setColumnFilters(normalizeColumnFilters(payload.working.columnFilters));
+        setSortBy(normalizeSortBy(payload.working.sortBy));
+        setSortDirection(normalizeSortDirection(payload.working.sortDirection));
       }
     } catch (_error) {
       // Ignore broken local storage payloads.
@@ -235,7 +342,6 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
       window.localStorage.setItem(
         storageKey,
         JSON.stringify({
-          savedViews,
           activeViewID,
           working: {
             columnOrder,
@@ -249,7 +355,24 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
     } catch (_error) {
       // Ignore local storage errors.
     }
-  }, [activeViewID, columnFilters, columnOrder, savedViews, sortBy, sortDirection, storageKey, visibleColumns]);
+  }, [activeViewID, columnFilters, columnOrder, sortBy, sortDirection, storageKey, visibleColumns]);
+
+  useEffect(() => {
+    if (activeViewID === 'default') {
+      return;
+    }
+
+    const nextView = savedViews.find((entry) => entry.id === activeViewID);
+    if (!nextView) {
+      setActiveViewID('default');
+      setViewNameDraft('');
+      return;
+    }
+
+    if (viewNameDraft.trim() === '') {
+      setViewNameDraft(nextView.name);
+    }
+  }, [activeViewID, savedViews, viewNameDraft]);
 
   const applyServerFilters = useCallback(
     (next: {
@@ -355,35 +478,107 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
 
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
+  const canPersistViews =
+    String(data.actions.saveViewURL || '').trim() !== '' && String(data.actions.deleteViewURL || '').trim() !== '';
   const activeColumnFilterCount = (Object.keys(columnFilters) as ColumnKey[]).filter(
     (columnKey) => (columnFilters[columnKey] || '').trim() !== ''
   ).length;
 
-  const saveCurrentView = () => {
-    const name = viewNameDraft.trim() === '' ? `View ${savedViews.length + 1}` : viewNameDraft.trim();
-    const nextID = activeViewID === 'default' ? `view-${Date.now()}` : activeViewID;
-    const nextView: MatrixView = { id: nextID, name, columnOrder, visibleColumns, columnFilters, sortBy, sortDirection };
-    setSavedViews((current) => {
-      const index = current.findIndex((entry) => entry.id === nextID);
-      if (index === -1) {
-        return [...current, nextView];
-      }
-      const next = current.slice();
-      next[index] = nextView;
-      return next;
-    });
-    setActiveViewID(nextID);
-    setViewNameDraft(name);
-  };
-
-  const deleteCurrentView = () => {
-    if (activeViewID === 'default') {
+  const saveCurrentView = async () => {
+    if (!data) {
       return;
     }
-    setSavedViews((current) => current.filter((entry) => entry.id !== activeViewID));
-    setActiveViewID('default');
-    setViewNameDraft('');
-    applyDefaultLayout();
+
+    const submitURL = String(data.actions.saveViewURL || '').trim();
+    if (submitURL === '') {
+      setViewMutationError('Saved views endpoint is unavailable.');
+      return;
+    }
+
+    const viewName = viewNameDraft.trim() === '' ? `View ${savedViews.length + 1}` : viewNameDraft.trim();
+    const viewID = activeViewID === 'default' ? 0 : toInteger(activeViewID, 0);
+
+    setViewMutationBusy(true);
+    setViewMutationError('');
+    setViewMutationNotice('');
+
+    try {
+      const response = await saveJobOrdersPipelineMatrixView(submitURL, {
+        viewID: viewID > 0 ? viewID : undefined,
+        viewName,
+        viewConfig: {
+          columnOrder,
+          visibleColumns,
+          columnFilters,
+          sortBy,
+          sortDirection
+        }
+      });
+
+      if (!response.success) {
+        setViewMutationError(response.message || 'Unable to save view.');
+        return;
+      }
+
+      const nextSavedViews = normalizeSavedViews(response.views);
+      setSavedViews(nextSavedViews);
+
+      const persistedViewID = Number(response.viewID || viewID || 0);
+      if (persistedViewID > 0) {
+        const nextID = String(persistedViewID);
+        setActiveViewID(nextID);
+        const persistedView = nextSavedViews.find((entry) => entry.id === nextID);
+        setViewNameDraft(persistedView ? persistedView.name : viewName);
+      } else {
+        setViewNameDraft(viewName);
+      }
+
+      setViewMutationNotice(response.message || 'View saved.');
+    } catch (err: unknown) {
+      setViewMutationError(err instanceof Error ? err.message : 'Unable to save view.');
+    } finally {
+      setViewMutationBusy(false);
+    }
+  };
+
+  const deleteCurrentView = async () => {
+    if (!data || activeViewID === 'default') {
+      return;
+    }
+
+    const submitURL = String(data.actions.deleteViewURL || '').trim();
+    if (submitURL === '') {
+      setViewMutationError('Delete view endpoint is unavailable.');
+      return;
+    }
+
+    const viewID = toInteger(activeViewID, 0);
+    if (viewID <= 0) {
+      setViewMutationError('Invalid view selection.');
+      return;
+    }
+
+    setViewMutationBusy(true);
+    setViewMutationError('');
+    setViewMutationNotice('');
+
+    try {
+      const response = await deleteJobOrdersPipelineMatrixView(submitURL, viewID);
+      if (!response.success) {
+        setViewMutationError(response.message || 'Unable to delete view.');
+        return;
+      }
+
+      setSavedViews(normalizeSavedViews(response.views));
+      setActiveViewID('default');
+      setViewNameDraft('');
+      applyDefaultLayout();
+      setViewMutationNotice(response.message || 'View deleted.');
+    } catch (err: unknown) {
+      setViewMutationError(err instanceof Error ? err.message : 'Unable to delete view.');
+    } finally {
+      setViewMutationBusy(false);
+    }
   };
 
   const moveColumn = (columnKey: ColumnKey, direction: -1 | 1) => {
@@ -415,16 +610,16 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
               <label className="modern-command-field"><span className="modern-command-label">Pipeline</span><select value={String(data.filters.pipelineStatusID)} onChange={(event) => applyServerFilters({ pipelineStatusID: toInteger(event.target.value, -2), page: 1 })}>{data.options.pipelineStatuses.map((option) => <option key={`status-${option.value}`} value={option.value}>{option.label}</option>)}</select></label>
               <label className="modern-command-field modern-command-field--compact"><span className="modern-command-label">Rows</span><select value={String(data.meta.entriesPerPage)} onChange={(event) => applyServerFilters({ maxResults: toInteger(event.target.value, 100), page: 1 })}>{data.options.rowsPerPage.map((value) => <option key={`rows-${value}`} value={value}>{value} rows</option>)}</select></label>
               <label className="modern-command-toggle"><input type="checkbox" checked={data.filters.includeClosed} onChange={(event) => applyServerFilters({ includeClosed: event.target.checked, page: 1 })} /><span className="modern-command-toggle__switch" aria-hidden="true" /><span>Include Closed</span></label>
-              <div className="modern-table-actions"><button type="button" className="modern-btn modern-btn--secondary" onClick={() => applyServerFilters({ search: searchDraft, page: 1 })}>Apply</button><button type="button" className="modern-btn modern-btn--secondary" onClick={() => { setSearchDraft(''); setColumnFilters(emptyFilters()); applyServerFilters({ search: '', ownerUserID: 0, recruiterUserID: -2, pipelineStatusID: -2, includeClosed: false, page: 1 }); }}>Reset Filters</button></div>
+              <div className="modern-table-actions"><button type="button" className="modern-btn modern-btn--secondary" onClick={() => applyServerFilters({ search: searchDraft, page: 1 })}>Apply</button><button type="button" className="modern-btn modern-btn--secondary" onClick={() => { setSearchDraft(''); setColumnFilters(emptyFilters()); setActiveHeaderMenuColumn(null); applyServerFilters({ search: '', ownerUserID: 0, recruiterUserID: -2, pipelineStatusID: -2, includeClosed: false, page: 1 }); }}>Reset Filters</button></div>
             </div>
 
             <div className="modern-command-bar__row modern-command-bar__row--meta">
               <div className="modern-chip-strip"><span className="modern-chip modern-chip--info">Column filters: {activeColumnFilterCount}</span><span className="modern-chip modern-chip--info">Rows on page: {filteredRows.length}/{data.rows.length}</span></div>
               <div className="avel-pipeline-matrix__views">
-                <select className="avel-pipeline-matrix__view-select" value={activeViewID} onChange={(event) => { const nextID = event.target.value; setActiveViewID(nextID); if (nextID === 'default') { applyDefaultLayout(); setViewNameDraft(''); return; } const nextView = savedViews.find((entry) => entry.id === nextID); if (!nextView) { return; } setViewNameDraft(nextView.name); setColumnOrder(nextView.columnOrder); setVisibleColumns(nextView.visibleColumns); setColumnFilters(nextView.columnFilters); setSortBy(nextView.sortBy); setSortDirection(nextView.sortDirection); }}>{<option value="default">Default Layout</option>}{savedViews.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select>
+                <select className="avel-pipeline-matrix__view-select" value={activeViewID} onChange={(event) => { const nextID = event.target.value; setActiveViewID(nextID); setViewMutationError(''); setViewMutationNotice(''); if (nextID === 'default') { applyDefaultLayout(); setViewNameDraft(''); return; } const nextView = savedViews.find((entry) => entry.id === nextID); if (!nextView) { return; } setViewNameDraft(nextView.name); setColumnOrder(nextView.columnOrder); setVisibleColumns(nextView.visibleColumns); setColumnFilters(nextView.columnFilters); setSortBy(nextView.sortBy); setSortDirection(nextView.sortDirection); }}>{<option value="default">Default Layout</option>}{savedViews.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select>
                 <input type="text" className="avel-pipeline-matrix__view-name" value={viewNameDraft} onChange={(event) => setViewNameDraft(event.target.value)} placeholder="View name" />
-                <button type="button" className="modern-btn modern-btn--secondary" onClick={saveCurrentView}>Save View</button>
-                <button type="button" className="modern-btn modern-btn--secondary" disabled={activeViewID === 'default'} onClick={deleteCurrentView}>Delete View</button>
+                <button type="button" className="modern-btn modern-btn--secondary" disabled={!canPersistViews || viewMutationBusy} onClick={saveCurrentView}>{viewMutationBusy ? 'Saving...' : 'Save View'}</button>
+                <button type="button" className="modern-btn modern-btn--secondary" disabled={!canPersistViews || activeViewID === 'default' || viewMutationBusy} onClick={deleteCurrentView}>Delete View</button>
               </div>
               <details className="avel-pipeline-matrix__columns-menu">
                 <summary className="modern-chip modern-chip--column-toggle">Columns</summary>
@@ -462,6 +657,8 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
                 </div>
               </details>
             </div>
+            {viewMutationError !== '' ? <div className="modern-state modern-state--error">{viewMutationError}</div> : null}
+            {viewMutationNotice !== '' ? <div className="modern-state">{viewMutationNotice}</div> : null}
             {data.state.errorMessage !== '' ? <div className="modern-state modern-state--error">{data.state.errorMessage}</div> : null}
           </section>
 

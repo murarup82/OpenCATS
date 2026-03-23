@@ -36,6 +36,8 @@ import type {
   JobOrdersAddModernDataResponse,
   JobOrdersEditModernDataResponse,
   JobOrdersPipelineMatrixModernDataResponse,
+  JobOrdersPipelineMatrixViewConfig,
+  JobOrdersPipelineMatrixViewMutationResponse,
   JobOrdersRecruiterAllocationModernDataResponse,
   JobOrdersRecruiterAllocationMutationResponse,
   JobOrdersShowModernDataResponse,
@@ -2196,6 +2198,68 @@ export async function fetchJobOrdersPipelineMatrixModernData(
   assertModernContract(data.meta, 'joborders.pipelineMatrix.v1', 'job orders pipeline matrix');
 
   return data;
+}
+
+export async function saveJobOrdersPipelineMatrixView(
+  submitURL: string,
+  payload: {
+    viewID?: number;
+    viewName: string;
+    viewConfig: JobOrdersPipelineMatrixViewConfig;
+  }
+): Promise<JobOrdersPipelineMatrixViewMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_JOBORDER_PIPELINE_MATRIX_PAGE);
+  body.set('viewName', String(payload.viewName || '').trim());
+  body.set('viewConfig', JSON.stringify(payload.viewConfig || {}));
+  if (Number(payload.viewID || 0) > 0) {
+    body.set('viewID', String(Number(payload.viewID || 0)));
+  }
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'joborders',
+    a: 'pipelineMatrixSaveView',
+    modernPage: MODERN_JOBORDER_PIPELINE_MATRIX_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  return (await parseModernMutationResponse(response, 'Save pipeline matrix view')) as JobOrdersPipelineMatrixViewMutationResponse;
+}
+
+export async function deleteJobOrdersPipelineMatrixView(
+  submitURL: string,
+  viewID: number
+): Promise<JobOrdersPipelineMatrixViewMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_JOBORDER_PIPELINE_MATRIX_PAGE);
+  body.set('viewID', String(Number(viewID || 0)));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'joborders',
+    a: 'pipelineMatrixDeleteView',
+    modernPage: MODERN_JOBORDER_PIPELINE_MATRIX_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  return (await parseModernMutationResponse(response, 'Delete pipeline matrix view')) as JobOrdersPipelineMatrixViewMutationResponse;
 }
 
 export async function saveJobOrderRecruiterAllocation(
