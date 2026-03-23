@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-23T11:32:35.300Z
-Finished: 2026-03-23T11:33:06.535Z
+Started: 2026-03-23T11:38:10.838Z
+Finished: 2026-03-23T11:38:42.832Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -13,6 +13,7 @@ Overall Required Status: **Pass**
 | Route Parity Checklist | Pass | Yes | 0 |
 | Bridge Wildcard Retirement | Pass | Yes | 0 |
 | No-Bridge Action Guard | Pass | Yes | 0 |
+| Unexpected Legacy Redirect Guard | Pass | Yes | 0 |
 | Legacy Fallback Link Guard | Pass | Yes | 0 |
 | Shell No-JS Fallback Guard | Pass | Yes | 0 |
 | Playwright Workflow Smoke | Pass | Yes | 0 |
@@ -42,7 +43,7 @@ rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m    0.20 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  358.04 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,815.60 kB[39m[22m[2m │ map: 6,840.61 kB[22m
-[32m✓ built in 12.45s[39m
+[32m✓ built in 14.52s[39m
 ```
 
 **stderr**
@@ -103,6 +104,21 @@ Command: `npm run verify:no-bridge-actions`
 > node ./scripts/verify-no-bridge-actions.mjs
 
 [modern-ui] Wrote no-bridge-action guard report: D:\Work\opencats\OpenCATS\docs\modern-ui-no-bridge-actions-check.md
+```
+
+**stderr**
+`(no output)`
+
+### Unexpected Legacy Redirect Guard (Pass)
+
+Command: `npm run verify:no-unexpected-legacy-redirects`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:no-unexpected-legacy-redirects
+> node ./scripts/verify-no-unexpected-legacy-redirects.mjs
+
+[modern-ui] Wrote unexpected legacy redirect guard report: D:\Work\opencats\OpenCATS\docs\modern-ui-unexpected-legacy-redirects-check.md
 ```
 
 **stderr**

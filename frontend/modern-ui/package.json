@@ -15,6 +15,7 @@
     "verify:no-bridge-actions": "node ./scripts/verify-no-bridge-actions.mjs",
     "verify:no-legacy-wrapper-routes": "node ./scripts/verify-no-legacy-wrapper-routes.mjs",
     "verify:legacy-forward-endpoints": "node ./scripts/verify-legacy-forward-endpoints.mjs",
+    "verify:no-unexpected-legacy-redirects": "node ./scripts/verify-no-unexpected-legacy-redirects.mjs",
     "verify:modernization-consistency": "node ./scripts/verify-modernization-consistency.mjs",
     "verify:zero-legacy-dependent": "node ./scripts/verify-modernization-zero-legacy-dependent.mjs",
     "verify:in-scope-routes": "node ./scripts/verify-no-inscope-wildcard-fallbacks.mjs",

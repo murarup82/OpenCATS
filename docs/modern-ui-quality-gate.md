@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-23T11:32:34.443Z
-Finished: 2026-03-23T11:33:28.184Z
+Started: 2026-03-23T11:38:09.785Z
+Finished: 2026-03-23T11:39:06.308Z
 Overall Status: **Pass**
 
 ## Summary
@@ -18,6 +18,7 @@ Overall Status: **Pass**
 | Command: Modernization Consistency Guard | Pass | 0 |
 | Command: No Legacy-Wrapper Route Guard | Pass | 0 |
 | Command: Intentional Legacy-Forward Endpoint Guard | Pass | 0 |
+| Command: Unexpected Legacy Redirect Guard | Pass | 0 |
 | Command: Zero Legacy-Dependent Guard | Pass | 0 |
 | Command: In-Scope Route Fallback Guard | Pass | 0 |
 | Command: Bridge Wildcard Retirement Guard | Pass | 0 |
@@ -32,6 +33,7 @@ Overall Status: **Pass**
 | Evidence: `docs/modern-ui-bridge-wildcard-retirement.md` | Pass | present |
 | Evidence: `docs/modern-ui-no-legacy-wrapper-routes-check.md` | Pass | present |
 | Evidence: `docs/modern-ui-legacy-forward-endpoints-check.md` | Pass | present |
+| Evidence: `docs/modern-ui-unexpected-legacy-redirects-check.md` | Pass | present |
 | Evidence: `docs/modern-ui-no-bridge-actions-check.md` | Pass | present |
 | Evidence: `docs/modern-ui-sanity-report.md` | Pass | present |
 | Evidence: `docs/modern-ui-parity-checklist.md` | Pass | present |
@@ -251,6 +253,21 @@ Command: `npm.cmd run verify:legacy-forward-endpoints`
 > node ./scripts/verify-legacy-forward-endpoints.mjs
 
 [modern-ui] Wrote legacy-forward endpoint guard report: D:\Work\opencats\OpenCATS\docs\modern-ui-legacy-forward-endpoints-check.md
+```
+
+**stderr**
+`(no output)`
+
+### Unexpected Legacy Redirect Guard (Pass)
+
+Command: `npm.cmd run verify:no-unexpected-legacy-redirects`
+
+**stdout**
+```text
+> opencats-modern-ui@0.1.0 verify:no-unexpected-legacy-redirects
+> node ./scripts/verify-no-unexpected-legacy-redirects.mjs
+
+[modern-ui] Wrote unexpected legacy redirect guard report: D:\Work\opencats\OpenCATS\docs\modern-ui-unexpected-legacy-redirects-check.md
 ```
 
 **stderr**
