@@ -4508,6 +4508,17 @@
   background-color: #dff2fb;
 }
 
+.avel-markdown-field .toastui-editor-popup {
+  z-index: 28;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(10, 62, 86, 0.2);
+}
+
+.avel-markdown-field .toastui-editor-popup-add-heading {
+  max-height: min(280px, 52vh);
+  overflow-y: auto;
+}
+
 .avel-markdown-field .toastui-editor-md-tab-container,
 .avel-markdown-field .toastui-editor-default-tab-container {
   background: #f5fafe;

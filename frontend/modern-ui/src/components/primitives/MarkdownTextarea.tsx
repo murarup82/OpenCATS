@@ -382,6 +382,16 @@ function isEditorSurfaceTarget(target: EventTarget | null): boolean {
   );
 }
 
+function isOutsideHostAndPopup(target: EventTarget | null, hostElement: HTMLElement): boolean {
+  if (!isElementTarget(target)) {
+    return false;
+  }
+  if (hostElement.contains(target)) {
+    return false;
+  }
+  return !isInsideEditorPopup(target);
+}
+
 function closeEditorPopups(editor: ToastEditor): void {
   const editorWithEmitter = editor as unknown as {
     eventEmitter?: {
@@ -536,6 +546,37 @@ export function MarkdownTextarea({
     };
     hostElement.addEventListener('focusin', onHostFocusIn);
 
+    const onHostKeyDownCapture = (rawEvent: Event) => {
+      if (!(rawEvent instanceof KeyboardEvent)) {
+        return;
+      }
+      if (rawEvent.key === 'Escape') {
+        closeEditorPopups(editor);
+        return;
+      }
+      if (!isEditorSurfaceTarget(rawEvent.target) || isInsideEditorPopup(rawEvent.target)) {
+        return;
+      }
+      closeEditorPopups(editor);
+    };
+    hostElement.addEventListener('keydown', onHostKeyDownCapture, true);
+
+    const onDocumentMouseDownCapture = (rawEvent: Event) => {
+      if (!isOutsideHostAndPopup(rawEvent.target, hostElement)) {
+        return;
+      }
+      closeEditorPopups(editor);
+    };
+    document.addEventListener('mousedown', onDocumentMouseDownCapture, true);
+
+    const onDocumentFocusIn = (rawEvent: Event) => {
+      if (!isOutsideHostAndPopup(rawEvent.target, hostElement)) {
+        return;
+      }
+      closeEditorPopups(editor);
+    };
+    document.addEventListener('focusin', onDocumentFocusIn, true);
+
     const markdownPasteTarget = hostElement.querySelector(
       '.toastui-editor-md-container .CodeMirror textarea, .toastui-editor-md-container textarea'
     ) as HTMLTextAreaElement | null;
@@ -564,6 +605,9 @@ export function MarkdownTextarea({
     return () => {
       hostElement.removeEventListener('mousedown', onHostMouseDownCapture, true);
       hostElement.removeEventListener('focusin', onHostFocusIn);
+      hostElement.removeEventListener('keydown', onHostKeyDownCapture, true);
+      document.removeEventListener('mousedown', onDocumentMouseDownCapture, true);
+      document.removeEventListener('focusin', onDocumentFocusIn, true);
       if (markdownPasteTarget) {
         markdownPasteTarget.removeEventListener('paste', onPaste);
       }
