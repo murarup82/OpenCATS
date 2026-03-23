@@ -4521,6 +4521,32 @@
   overscroll-behavior: contain;
 }
 
+.avel-markdown-field .toastui-editor-popup-add-heading ul {
+  margin: 0;
+  padding: 6px;
+}
+
+.avel-markdown-field .toastui-editor-popup-add-heading ul li {
+  margin: 0;
+}
+
+.avel-markdown-field .toastui-editor-popup-add-heading ul li button {
+  width: 100%;
+  min-height: 30px;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #164e67;
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.avel-markdown-field .toastui-editor-popup-add-heading ul li button:hover,
+.avel-markdown-field .toastui-editor-popup-add-heading ul li button:focus-visible {
+  background: #eaf5fc;
+}
+
 .avel-markdown-field .toastui-editor-md-tab-container,
 .avel-markdown-field .toastui-editor-default-tab-container {
   background: #f5fafe;
@@ -5771,6 +5797,10 @@
   gap: 10px;
 }
 
+.avel-joborder-edit-page.avel-candidate-edit-page--refined .avel-candidate-edit-section .avel-candidate-edit-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .avel-candidate-edit-page--refined .avel-candidate-edit-section--status .avel-candidate-edit-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -5906,6 +5936,14 @@
 
   .avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench > .avel-candidate-edit-attachments {
     position: static;
+  }
+
+  .avel-joborder-edit-page.avel-candidate-edit-page--refined .avel-candidate-edit-section .avel-candidate-edit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .avel-joborder-edit-page.avel-candidate-edit-page--refined .avel-candidate-edit-section--status .avel-candidate-edit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
