@@ -1717,6 +1717,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 Add To Job Order
               </button>
             ) : null}
+            {permissions.canDeleteCandidate ? (
+              <a
+                className="modern-btn modern-btn--danger"
+                href={ensureModernUIURL(decodeLegacyURL(data.actions.deleteURL))}
+              >
+                Delete Candidate
+              </a>
+            ) : null}
             <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.legacyURL)}>
               Open Legacy UI
             </a>

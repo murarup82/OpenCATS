@@ -977,6 +977,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                 {adminHideTogglePending ? 'Updating...' : jobOrder.isAdminHidden ? 'Unhide' : 'Hide'}
               </button>
             ) : null}
+            {permissions.canDeleteJobOrder ? (
+              <a
+                className="modern-btn modern-btn--danger"
+                href={ensureModernUIURL(decodeLegacyURL(data.actions.deleteURL))}
+              >
+                Delete Job Order
+              </a>
+            ) : null}
             <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.legacyURL)}>
               Open Legacy UI
             </a>
