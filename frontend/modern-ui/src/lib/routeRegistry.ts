@@ -43,12 +43,12 @@ import { ReportsGraphViewPage } from '../pages/ReportsGraphViewPage';
 import { SourcingPage } from '../pages/SourcingPage';
 import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
+import { GraphsWorkspaceActionPage } from '../pages/GraphsWorkspaceActionPage';
 import { LogsPage } from '../pages/LogsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { LoginLegacyActionPage } from '../pages/LoginLegacyActionPage';
-import { LegacyActionWorkspacePage } from '../pages/LegacyActionWorkspacePage';
-import { LegacyUtilityForwardActionPage } from '../pages/LegacyUtilityForwardActionPage';
 import { LegacyDownloadForwardActionPage } from '../pages/LegacyDownloadForwardActionPage';
+import { UtilityEndpointForwardActionPage } from '../pages/UtilityEndpointForwardActionPage';
 import { ImportWorkflowActionPage } from '../pages/ImportWorkflowActionPage';
 import { OperationsWorkspaceActionPage } from '../pages/OperationsWorkspaceActionPage';
 import { ReportsWorkflowActionPage } from '../pages/ReportsWorkflowActionPage';
@@ -56,6 +56,7 @@ import { SettingsAdminWorkspaceActionPage } from '../pages/SettingsAdminWorkspac
 import { SettingsTagsActionPage } from '../pages/SettingsTagsActionPage';
 import { SettingsWizardActionPage } from '../pages/SettingsWizardActionPage';
 import { RssJobOrdersPage } from '../pages/RssJobOrdersPage';
+import { CandidatesWorkspaceActionPage } from '../pages/CandidatesWorkspaceActionPage';
 import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
 import { JobOrderAssignActionPage } from '../pages/JobOrderAssignActionPage';
 import { PipelineStatusActionPage } from '../pages/PipelineStatusActionPage';
@@ -83,7 +84,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'calendar.addevent': CalendarPage,
   'calendar.editevent': CalendarPage,
   'calendar.deleteevent': CalendarPage,
-  'calendar.dynamicdata': LegacyUtilityForwardActionPage,
+  'calendar.dynamicdata': UtilityEndpointForwardActionPage,
   'candidates.createattachment': CandidatesShowPage,
   'joborders.createattachment': JobOrdersShowPage,
   'joborders.addcandidatemodal': CandidatesAddPage,
@@ -114,24 +115,24 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'candidates.delete': EntityDeleteActionPage,
   'candidates.addactivitychangestatus': CandidatesShowPage,
   'candidates.addcandidatetags': CandidatesShowPage,
-  'candidates.addduplicates': LegacyActionWorkspacePage,
-  'candidates.addeditimage': LegacyActionWorkspacePage,
+  'candidates.addduplicates': CandidatesWorkspaceActionPage,
+  'candidates.addeditimage': CandidatesWorkspaceActionPage,
   'candidates.addprofilecomment': CandidatesShowPage,
   'candidates.addtopipeline': CandidatesShowPage,
   'candidates.administrativehideshow': CandidatesShowPage,
   'candidates.deleteattachment': CandidatesShowPage,
   'candidates.deletemessagethread': CandidatesShowPage,
-  'candidates.emailcandidates': LegacyActionWorkspacePage,
+  'candidates.emailcandidates': CandidatesWorkspaceActionPage,
   'candidates.googledrivedeleteattachmentfile': CandidatesShowPage,
   'candidates.googledriveuploadattachment': CandidatesShowPage,
-  'candidates.linkduplicate': LegacyActionWorkspacePage,
-  'candidates.merge': LegacyActionWorkspacePage,
-  'candidates.mergeinfo': LegacyActionWorkspacePage,
+  'candidates.linkduplicate': CandidatesWorkspaceActionPage,
+  'candidates.merge': CandidatesWorkspaceActionPage,
+  'candidates.mergeinfo': CandidatesWorkspaceActionPage,
   'candidates.postmessage': CandidatesShowPage,
-  'candidates.removeduplicity': LegacyActionWorkspacePage,
+  'candidates.removeduplicity': CandidatesWorkspaceActionPage,
   'candidates.removefrompipeline': CandidatesShowPage,
-  'candidates.savesources': LegacyActionWorkspacePage,
-  'candidates.savedlists': LegacyActionWorkspacePage,
+  'candidates.savesources': CandidatesWorkspaceActionPage,
+  'candidates.savedlists': CandidatesWorkspaceActionPage,
   'companies.delete': EntityDeleteActionPage,
   'companies.deleteattachment': CompaniesShowPage,
   'contacts.delete': EntityDeleteActionPage,
@@ -147,7 +148,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.pipelinematrixsaveview': JobOrdersPipelineMatrixPage,
   'joborders.postmessage': JobOrdersShowPage,
   'joborders.removefrompipeline': JobOrdersShowPage,
-  'joborders.setcandidatejoborder': LegacyActionWorkspacePage,
+  'joborders.setcandidatejoborder': OperationsWorkspaceActionPage,
   'lists.deletestaticlist': ListsDetailPage,
   'lists.removefromlistdatagrid': ListsDetailPage,
   'lists.savelistaccess': ListsDetailPage,
@@ -195,11 +196,11 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'export.exportbydatagrid': LegacyDownloadForwardActionPage,
   'gdpr.export': LegacyDownloadForwardActionPage,
   'gdpr.requests': OperationsWorkspaceActionPage,
-  'graphs.generic': LegacyActionWorkspacePage,
-  'graphs.genericpie': LegacyActionWorkspacePage,
-  'graphs.joborderreportgraph': LegacyActionWorkspacePage,
-  'graphs.testgraph': LegacyActionWorkspacePage,
-  'graphs.wordverify': LegacyActionWorkspacePage,
+  'graphs.generic': GraphsWorkspaceActionPage,
+  'graphs.genericpie': GraphsWorkspaceActionPage,
+  'graphs.joborderreportgraph': GraphsWorkspaceActionPage,
+  'graphs.testgraph': GraphsWorkspaceActionPage,
+  'graphs.wordverify': GraphsWorkspaceActionPage,
   'import.deletebulkresumes': ImportWorkflowActionPage,
   'import.importbulkresumes': ImportWorkflowActionPage,
   'import.importselecttype': ImportWorkflowActionPage,
@@ -262,7 +263,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.previewpagetop': OperationsWorkspaceActionPage,
   'settings.professional': SettingsAdminWorkspaceActionPage,
   'settings.rejectionreasons': SettingsAdminWorkspaceActionPage,
-  'settings.reports': LegacyActionWorkspacePage,
+  'settings.reports': SettingsAdminWorkspaceActionPage,
   'settings.rolepagepermissions': SettingsAdminWorkspaceActionPage,
   'settings.schemamigrations': SettingsAdminWorkspaceActionPage,
   'settings.showuser': SettingsAdminWorkspaceActionPage,
@@ -272,13 +273,13 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.viewitemhistory': SettingsAdminWorkspaceActionPage,
   'toolbar.attemptlogin': LoginLegacyActionPage,
   'toolbar.authenticate': LoginLegacyActionPage,
-  'toolbar.checkemailisinsystem': LegacyUtilityForwardActionPage,
-  'toolbar.getjavascriptlib': LegacyUtilityForwardActionPage,
-  'toolbar.getlicensekey': LegacyUtilityForwardActionPage,
-  'toolbar.getremoteversion': LegacyUtilityForwardActionPage,
+  'toolbar.checkemailisinsystem': UtilityEndpointForwardActionPage,
+  'toolbar.getjavascriptlib': UtilityEndpointForwardActionPage,
+  'toolbar.getlicensekey': UtilityEndpointForwardActionPage,
+  'toolbar.getremoteversion': UtilityEndpointForwardActionPage,
   'toolbar.install': OperationsWorkspaceActionPage,
-  'toolbar.storemonsterresumetext': LegacyUtilityForwardActionPage,
-  'wizard.ajax_getpage': LegacyUtilityForwardActionPage,
+  'toolbar.storemonsterresumetext': UtilityEndpointForwardActionPage,
+  'wizard.ajax_getpage': UtilityEndpointForwardActionPage,
   'xml.joborders': LegacyDownloadForwardActionPage
 };
 

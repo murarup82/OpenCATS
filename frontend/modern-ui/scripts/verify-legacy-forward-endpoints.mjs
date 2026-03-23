@@ -9,21 +9,7 @@ const routeRegistryPath = resolve(packageRoot, 'src', 'lib', 'routeRegistry.ts')
 const uiConfigPath = resolve(repoRoot, 'config.ui.php');
 const outputPath = resolve(repoRoot, 'docs', 'modern-ui-legacy-forward-endpoints-check.md');
 
-const expectedRoutesByCategory = {
-  'Calendar utility endpoint': [
-    'calendar.dynamicdata'
-  ],
-  'Toolbar utility endpoints': [
-    'toolbar.checkemailisinsystem',
-    'toolbar.getjavascriptlib',
-    'toolbar.getlicensekey',
-    'toolbar.getremoteversion',
-    'toolbar.storemonsterresumetext'
-  ],
-  'Wizard AJAX endpoint': [
-    'wizard.ajax_getpage'
-  ]
-};
+const expectedRoutesByCategory = {};
 
 const expectedExcludedRoutes = ['wizard.ajax_getpage'];
 
@@ -82,12 +68,14 @@ function main() {
     return rows.join('\n');
   });
 
+  const hasExpectedInventory = rowsByCategory.length > 0;
+
   const markdown = [
     '# Modern UI Intentional Legacy-Forward Endpoint Guard',
     '',
     `Generated: ${new Date().toISOString()}`,
     '',
-    'This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` for utility-forward compatibility behavior.',
+    'This guard ensures endpoint-style routes have migrated off `LegacyUtilityForwardActionPage` while preserving required UI switch excludes.',
     '',
     '## Totals',
     '',
@@ -100,9 +88,13 @@ function main() {
     '',
     '## Expected Route Inventory',
     '',
-    '| Category | Route | Status |',
-    '| --- | --- | --- |',
-    ...rowsByCategory,
+    ...(hasExpectedInventory
+      ? [
+          '| Category | Route | Status |',
+          '| --- | --- | --- |',
+          ...rowsByCategory
+        ]
+      : ['None. `LegacyUtilityForwardActionPage` inventory is expected to be empty.']),
     '',
     unexpectedRoutes.length > 0 ? '## Unexpected Routes (Must Classify)' : '## Unexpected Routes',
     '',

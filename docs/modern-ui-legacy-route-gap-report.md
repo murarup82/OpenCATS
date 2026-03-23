@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T10:18:26.387Z
+Generated: 2026-03-23T10:28:35.701Z
 
 ## Summary
 
@@ -54,14 +54,14 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | attachments | getAttachment | native-explicit | attachments.getattachment | LegacyDownloadForwardActionPage |
 | calendar | addEvent | native-explicit | calendar.addevent | CalendarPage |
 | calendar | deleteEvent | native-explicit | calendar.deleteevent | CalendarPage |
-| calendar | dynamicData | native-explicit | calendar.dynamicdata | LegacyUtilityForwardActionPage |
+| calendar | dynamicData | native-explicit | calendar.dynamicdata | UtilityEndpointForwardActionPage |
 | calendar | editEvent | native-explicit | calendar.editevent | CalendarPage |
 | calendar | showCalendar | native-explicit | calendar.showcalendar | CalendarPage |
 | candidates | add | native-explicit | candidates.add | CandidatesAddPage |
 | candidates | addActivityChangeStatus | native-explicit-guarded | candidates.addactivitychangestatus | CandidatesShowPage |
 | candidates | addCandidateTags | native-explicit-guarded | candidates.addcandidatetags | CandidatesShowPage |
-| candidates | addDuplicates | native-explicit-guarded | candidates.addduplicates | LegacyActionWorkspacePage |
-| candidates | addEditImage | native-explicit-guarded | candidates.addeditimage | LegacyActionWorkspacePage |
+| candidates | addDuplicates | native-explicit-guarded | candidates.addduplicates | CandidatesWorkspaceActionPage |
+| candidates | addEditImage | native-explicit-guarded | candidates.addeditimage | CandidatesWorkspaceActionPage |
 | candidates | addProfileComment | native-explicit-guarded | candidates.addprofilecomment | CandidatesShowPage |
 | candidates | addToPipeline | native-explicit-guarded | candidates.addtopipeline | CandidatesShowPage |
 | candidates | administrativeHideShow | native-explicit-guarded | candidates.administrativehideshow | CandidatesShowPage |
@@ -71,17 +71,17 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | deleteAttachment | native-explicit-guarded | candidates.deleteattachment | CandidatesShowPage |
 | candidates | deleteMessageThread | native-explicit-guarded | candidates.deletemessagethread | CandidatesShowPage |
 | candidates | edit | native-explicit-guarded | candidates.edit | CandidatesEditPage |
-| candidates | emailCandidates | native-explicit | candidates.emailcandidates | LegacyActionWorkspacePage |
+| candidates | emailCandidates | native-explicit | candidates.emailcandidates | CandidatesWorkspaceActionPage |
 | candidates | googleDriveDeleteAttachmentFile | native-explicit-guarded | candidates.googledrivedeleteattachmentfile | CandidatesShowPage |
 | candidates | googleDriveUploadAttachment | native-explicit-guarded | candidates.googledriveuploadattachment | CandidatesShowPage |
-| candidates | linkDuplicate | native-explicit-guarded | candidates.linkduplicate | LegacyActionWorkspacePage |
+| candidates | linkDuplicate | native-explicit-guarded | candidates.linkduplicate | CandidatesWorkspaceActionPage |
 | candidates | listByView | native-explicit | candidates.listbyview | CandidatesListPage |
-| candidates | merge | native-explicit-guarded | candidates.merge | LegacyActionWorkspacePage |
-| candidates | mergeInfo | native-explicit | candidates.mergeinfo | LegacyActionWorkspacePage |
+| candidates | merge | native-explicit-guarded | candidates.merge | CandidatesWorkspaceActionPage |
+| candidates | mergeInfo | native-explicit | candidates.mergeinfo | CandidatesWorkspaceActionPage |
 | candidates | postMessage | native-explicit-guarded | candidates.postmessage | CandidatesShowPage |
-| candidates | removeDuplicity | native-explicit-guarded | candidates.removeduplicity | LegacyActionWorkspacePage |
+| candidates | removeDuplicity | native-explicit-guarded | candidates.removeduplicity | CandidatesWorkspaceActionPage |
 | candidates | removeFromPipeline | native-explicit-guarded | candidates.removefrompipeline | CandidatesShowPage |
-| candidates | saveSources | native-explicit | candidates.savesources | LegacyActionWorkspacePage |
+| candidates | saveSources | native-explicit | candidates.savesources | CandidatesWorkspaceActionPage |
 | candidates | search | native-explicit | candidates.search | CandidatesListPage |
 | candidates | show | native-explicit-guarded | candidates.show | CandidatesShowPage |
 | candidates | show_questionnaire | native-explicit-guarded | candidates.show_questionnaire | CandidateQuestionnaireActionPage |
@@ -110,11 +110,11 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | export | exportByDataGrid | native-explicit | export.exportbydatagrid | LegacyDownloadForwardActionPage |
 | gdpr | export | native-explicit | gdpr.export | LegacyDownloadForwardActionPage |
 | gdpr | requests | native-explicit | gdpr.requests | OperationsWorkspaceActionPage |
-| graphs | generic | native-explicit | graphs.generic | LegacyActionWorkspacePage |
-| graphs | genericPie | native-explicit | graphs.genericpie | LegacyActionWorkspacePage |
-| graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | LegacyActionWorkspacePage |
-| graphs | testGraph | native-explicit | graphs.testgraph | LegacyActionWorkspacePage |
-| graphs | wordVerify | native-explicit | graphs.wordverify | LegacyActionWorkspacePage |
+| graphs | generic | native-explicit | graphs.generic | GraphsWorkspaceActionPage |
+| graphs | genericPie | native-explicit | graphs.genericpie | GraphsWorkspaceActionPage |
+| graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | GraphsWorkspaceActionPage |
+| graphs | testGraph | native-explicit | graphs.testgraph | GraphsWorkspaceActionPage |
+| graphs | wordVerify | native-explicit | graphs.wordverify | GraphsWorkspaceActionPage |
 | home | addPersonalItem | native-explicit | home.addpersonalitem | HomeMyNotesPage |
 | home | addSavedSearch | native-explicit | home.addsavedsearch | HomePage |
 | home | appendPersonalNote | native-explicit | home.appendpersonalnote | HomeMyNotesPage |
@@ -259,7 +259,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | previewPageTop | native-explicit | settings.previewpagetop | OperationsWorkspaceActionPage |
 | settings | professional | native-explicit | settings.professional | SettingsAdminWorkspaceActionPage |
 | settings | rejectionReasons | native-explicit | settings.rejectionreasons | SettingsAdminWorkspaceActionPage |
-| settings | reports | native-explicit | settings.reports | LegacyActionWorkspacePage |
+| settings | reports | native-explicit | settings.reports | SettingsAdminWorkspaceActionPage |
 | settings | rolePagePermissions | native-explicit | settings.rolepagepermissions | SettingsAdminWorkspaceActionPage |
 | settings | schemaMigrations | native-explicit | settings.schemamigrations | SettingsAdminWorkspaceActionPage |
 | settings | showUser | native-explicit | settings.showuser | SettingsAdminWorkspaceActionPage |
@@ -269,11 +269,11 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | viewItemHistory | native-explicit | settings.viewitemhistory | SettingsAdminWorkspaceActionPage |
 | toolbar | attemptLogin | native-explicit | toolbar.attemptlogin | LoginLegacyActionPage |
 | toolbar | authenticate | native-explicit | toolbar.authenticate | LoginLegacyActionPage |
-| toolbar | checkEmailIsInSystem | native-explicit | toolbar.checkemailisinsystem | LegacyUtilityForwardActionPage |
-| toolbar | getJavaScriptLib | native-explicit | toolbar.getjavascriptlib | LegacyUtilityForwardActionPage |
-| toolbar | getLicenseKey | native-explicit | toolbar.getlicensekey | LegacyUtilityForwardActionPage |
-| toolbar | getRemoteVersion | native-explicit | toolbar.getremoteversion | LegacyUtilityForwardActionPage |
+| toolbar | checkEmailIsInSystem | native-explicit | toolbar.checkemailisinsystem | UtilityEndpointForwardActionPage |
+| toolbar | getJavaScriptLib | native-explicit | toolbar.getjavascriptlib | UtilityEndpointForwardActionPage |
+| toolbar | getLicenseKey | native-explicit | toolbar.getlicensekey | UtilityEndpointForwardActionPage |
+| toolbar | getRemoteVersion | native-explicit | toolbar.getremoteversion | UtilityEndpointForwardActionPage |
 | toolbar | install | native-explicit | toolbar.install | OperationsWorkspaceActionPage |
-| toolbar | storeMonsterResumeText | native-explicit | toolbar.storemonsterresumetext | LegacyUtilityForwardActionPage |
-| wizard | ajax_getPage | native-explicit | wizard.ajax_getpage | LegacyUtilityForwardActionPage |
+| toolbar | storeMonsterResumeText | native-explicit | toolbar.storemonsterresumetext | UtilityEndpointForwardActionPage |
+| wizard | ajax_getPage | native-explicit | wizard.ajax_getpage | UtilityEndpointForwardActionPage |
 | xml | jobOrders | native-explicit | xml.joborders | LegacyDownloadForwardActionPage |

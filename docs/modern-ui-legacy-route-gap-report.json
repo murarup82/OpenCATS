@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T10:18:26.387Z",
+  "generatedAt": "2026-03-23T10:28:35.701Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -247,7 +247,7 @@
       "classification": "native-explicit",
       "routeKey": "calendar.dynamicdata",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "UtilityEndpointForwardActionPage",
       "guarded": false
     },
     {
@@ -301,7 +301,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addduplicates",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "CandidatesWorkspaceActionPage",
       "guarded": true
     },
     {
@@ -310,7 +310,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addeditimage",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "CandidatesWorkspaceActionPage",
       "guarded": true
     },
     {
@@ -400,7 +400,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.emailcandidates",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "CandidatesWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -427,7 +427,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.linkduplicate",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "CandidatesWorkspaceActionPage",
       "guarded": true
     },
     {
@@ -445,7 +445,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.merge",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "CandidatesWorkspaceActionPage",
       "guarded": true
     },
     {
@@ -454,7 +454,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.mergeinfo",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "CandidatesWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -472,7 +472,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.removeduplicity",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "CandidatesWorkspaceActionPage",
       "guarded": true
     },
     {
@@ -490,7 +490,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.savesources",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "CandidatesWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -751,7 +751,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.generic",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "GraphsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -760,7 +760,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.genericpie",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "GraphsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -769,7 +769,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.joborderreportgraph",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "GraphsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -778,7 +778,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.testgraph",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "GraphsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -787,7 +787,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.wordverify",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "GraphsWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2092,7 +2092,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.reports",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2182,7 +2182,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.checkemailisinsystem",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "UtilityEndpointForwardActionPage",
       "guarded": false
     },
     {
@@ -2191,7 +2191,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.getjavascriptlib",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "UtilityEndpointForwardActionPage",
       "guarded": false
     },
     {
@@ -2200,7 +2200,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.getlicensekey",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "UtilityEndpointForwardActionPage",
       "guarded": false
     },
     {
@@ -2209,7 +2209,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.getremoteversion",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "UtilityEndpointForwardActionPage",
       "guarded": false
     },
     {
@@ -2227,7 +2227,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.storemonsterresumetext",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "UtilityEndpointForwardActionPage",
       "guarded": false
     },
     {
@@ -2236,7 +2236,7 @@
       "classification": "native-explicit",
       "routeKey": "wizard.ajax_getpage",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "UtilityEndpointForwardActionPage",
       "guarded": false
     },
     {

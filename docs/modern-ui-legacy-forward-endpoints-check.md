@@ -1,13 +1,13 @@
 # Modern UI Intentional Legacy-Forward Endpoint Guard
 
-Generated: 2026-03-23T10:18:29.352Z
+Generated: 2026-03-23T10:28:38.468Z
 
-This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` for utility-forward compatibility behavior.
+This guard ensures endpoint-style routes have migrated off `LegacyUtilityForwardActionPage` while preserving required UI switch excludes.
 
 ## Totals
 
-- Actual legacy-forward routes: 7
-- Expected legacy-forward routes: 7
+- Actual legacy-forward routes: 0
+- Expected legacy-forward routes: 0
 - Unexpected routes: 0
 - Missing expected routes: 0
 - Missing required UI switch excludes: 0
@@ -15,15 +15,7 @@ This guard tracks endpoint-style routes that intentionally remain on `LegacyUtil
 
 ## Expected Route Inventory
 
-| Category | Route | Status |
-| --- | --- | --- |
-| Calendar utility endpoint | `calendar.dynamicdata` | Present |
-| Toolbar utility endpoints | `toolbar.checkemailisinsystem` | Present |
-| Toolbar utility endpoints | `toolbar.getjavascriptlib` | Present |
-| Toolbar utility endpoints | `toolbar.getlicensekey` | Present |
-| Toolbar utility endpoints | `toolbar.getremoteversion` | Present |
-| Toolbar utility endpoints | `toolbar.storemonsterresumetext` | Present |
-| Wizard AJAX endpoint | `wizard.ajax_getpage` | Present |
+None. `LegacyUtilityForwardActionPage` inventory is expected to be empty.
 
 ## Unexpected Routes
 
