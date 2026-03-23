@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T04:37:09.671Z
+Generated: 2026-03-23T04:39:30.575Z
 
 ## Summary
 
@@ -109,7 +109,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | export | export | native-explicit | export.export | LegacyUtilityForwardActionPage |
 | export | exportByDataGrid | native-explicit | export.exportbydatagrid | LegacyUtilityForwardActionPage |
 | gdpr | export | native-explicit | gdpr.export | LegacyUtilityForwardActionPage |
-| gdpr | requests | native-explicit | gdpr.requests | LegacyUtilityForwardActionPage |
+| gdpr | requests | native-explicit | gdpr.requests | LegacyActionWorkspacePage |
 | graphs | generic | native-explicit | graphs.generic | LegacyActionWorkspacePage |
 | graphs | genericPie | native-explicit | graphs.genericpie | LegacyActionWorkspacePage |
 | graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | LegacyActionWorkspacePage |
@@ -273,7 +273,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | toolbar | getJavaScriptLib | native-explicit | toolbar.getjavascriptlib | LegacyUtilityForwardActionPage |
 | toolbar | getLicenseKey | native-explicit | toolbar.getlicensekey | LegacyUtilityForwardActionPage |
 | toolbar | getRemoteVersion | native-explicit | toolbar.getremoteversion | LegacyUtilityForwardActionPage |
-| toolbar | install | native-explicit | toolbar.install | LegacyUtilityForwardActionPage |
+| toolbar | install | native-explicit | toolbar.install | LegacyActionWorkspacePage |
 | toolbar | storeMonsterResumeText | native-explicit | toolbar.storemonsterresumetext | LegacyUtilityForwardActionPage |
 | wizard | ajax_getPage | native-explicit | wizard.ajax_getpage | LegacyUtilityForwardActionPage |
 | xml | jobOrders | native-explicit | xml.joborders | LegacyUtilityForwardActionPage |

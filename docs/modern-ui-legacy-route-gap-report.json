@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T04:37:09.671Z",
+  "generatedAt": "2026-03-23T04:39:30.575Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -742,7 +742,7 @@
       "classification": "native-explicit",
       "routeKey": "gdpr.requests",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2218,7 +2218,7 @@
       "classification": "native-explicit",
       "routeKey": "toolbar.install",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {

@@ -178,6 +178,18 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     subtitle: 'Preview header content in compatibility mode.',
     panelTitle: 'Settings Preview Header Workspace',
     panelSubtitle: 'Legacy settings flow is embedded while parity migration continues.'
+  },
+  'gdpr.requests': {
+    title: 'GDPR Requests',
+    subtitle: 'Review and manage GDPR consent request records.',
+    panelTitle: 'GDPR Requests Workspace',
+    panelSubtitle: 'Legacy GDPR flow is embedded while parity migration continues.'
+  },
+  'toolbar.install': {
+    title: 'Toolbar Install',
+    subtitle: 'Install and review legacy toolbar setup guidance.',
+    panelTitle: 'Toolbar Install Workspace',
+    panelSubtitle: 'Legacy toolbar flow is embedded while parity migration continues.'
   }
 };
 
@@ -200,6 +212,18 @@ const MODULE_FALLBACK_COPY: Record<string, PageCopy> = {
     subtitle: 'Manage system settings through the embedded compatibility workspace.',
     panelTitle: 'Settings Compatibility Workspace',
     panelSubtitle: 'Legacy settings flow is embedded while parity migration continues.'
+  },
+  gdpr: {
+    title: 'GDPR Workspace',
+    subtitle: 'Manage GDPR request and consent operations in compatibility mode.',
+    panelTitle: 'GDPR Compatibility Workspace',
+    panelSubtitle: 'Legacy GDPR flow is embedded while parity migration continues.'
+  },
+  toolbar: {
+    title: 'Toolbar Workspace',
+    subtitle: 'Complete toolbar compatibility operations in embedded mode.',
+    panelTitle: 'Toolbar Compatibility Workspace',
+    panelSubtitle: 'Legacy toolbar flow is embedded while parity migration continues.'
   }
 };
 
@@ -285,6 +309,20 @@ function resolveBackLink(bootstrap: UIModeBootstrap, query: URLSearchParams): Ba
   }
 
   if (moduleKey === 'settings') {
+    return {
+      label: 'Back To Settings',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=settings&a=administration`)
+    };
+  }
+
+  if (moduleKey === 'gdpr') {
+    return {
+      label: 'Back To Candidates',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=candidates&a=listByView`)
+    };
+  }
+
+  if (moduleKey === 'toolbar') {
     return {
       label: 'Back To Settings',
       href: ensureModernUIURL(`${bootstrap.indexName}?m=settings&a=administration`)

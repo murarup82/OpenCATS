@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T04:37:10.363Z",
+  "generatedAt": "2026-03-23T04:39:31.257Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 228,
@@ -11,11 +11,11 @@
   "bucketSummaries": [
     {
       "bucket": "native-action",
-      "count": 54
+      "count": 52
     },
     {
       "bucket": "native-surface",
-      "count": 174
+      "count": 176
     }
   ],
   "moduleSummaries": [
@@ -347,19 +347,6 @@
       "action": "export",
       "classification": "native-explicit",
       "routeKey": "gdpr.export",
-      "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-action",
-      "modernizationRank": 9,
-      "legacyDependent": false
-    },
-    {
-      "module": "gdpr",
-      "action": "requests",
-      "classification": "native-explicit",
-      "routeKey": "gdpr.requests",
       "resolution": "native",
       "component": "LegacyUtilityForwardActionPage",
       "guarded": false,
@@ -802,19 +789,6 @@
       "action": "getRemoteVersion",
       "classification": "native-explicit",
       "routeKey": "toolbar.getremoteversion",
-      "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-action",
-      "modernizationRank": 9,
-      "legacyDependent": false
-    },
-    {
-      "module": "toolbar",
-      "action": "install",
-      "classification": "native-explicit",
-      "routeKey": "toolbar.install",
       "resolution": "native",
       "component": "LegacyUtilityForwardActionPage",
       "guarded": false,
@@ -1441,6 +1415,19 @@
       "routeKey": "dashboard.setpipelinestatus",
       "resolution": "native",
       "component": "DashboardMyPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "gdpr",
+      "action": "requests",
+      "classification": "native-explicit",
+      "routeKey": "gdpr.requests",
+      "resolution": "native",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-surface",
@@ -3116,6 +3103,19 @@
       "action": "viewItemHistory",
       "classification": "native-explicit",
       "routeKey": "settings.viewitemhistory",
+      "resolution": "native",
+      "component": "LegacyActionWorkspacePage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "toolbar",
+      "action": "install",
+      "classification": "native-explicit",
+      "routeKey": "toolbar.install",
       "resolution": "native",
       "component": "LegacyActionWorkspacePage",
       "guarded": false,

@@ -187,7 +187,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'export.export': LegacyUtilityForwardActionPage,
   'export.exportbydatagrid': LegacyUtilityForwardActionPage,
   'gdpr.export': LegacyUtilityForwardActionPage,
-  'gdpr.requests': LegacyUtilityForwardActionPage,
+  'gdpr.requests': LegacyActionWorkspacePage,
   'graphs.generic': LegacyActionWorkspacePage,
   'graphs.genericpie': LegacyActionWorkspacePage,
   'graphs.joborderreportgraph': LegacyActionWorkspacePage,
@@ -269,7 +269,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'toolbar.getjavascriptlib': LegacyUtilityForwardActionPage,
   'toolbar.getlicensekey': LegacyUtilityForwardActionPage,
   'toolbar.getremoteversion': LegacyUtilityForwardActionPage,
-  'toolbar.install': LegacyUtilityForwardActionPage,
+  'toolbar.install': LegacyActionWorkspacePage,
   'toolbar.storemonsterresumetext': LegacyUtilityForwardActionPage,
   'wizard.ajax_getpage': LegacyUtilityForwardActionPage,
   'xml.joborders': LegacyUtilityForwardActionPage
