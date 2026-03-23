@@ -2670,6 +2670,7 @@ export type JobOrdersEditModernDataResponse = {
     jobOrderID: number;
     permissions: {
       canEditJobOrder: boolean;
+      canDeleteJobOrder: boolean;
     };
   };
   actions: {
@@ -2677,6 +2678,7 @@ export type JobOrdersEditModernDataResponse = {
     showURL: string;
     listURL: string;
     legacyURL: string;
+    deleteURL: string;
     companyContextURL: string;
     hiringPlanURL: string;
   };
@@ -3004,6 +3006,7 @@ export type CandidatesEditModernDataResponse = {
     candidateID: number;
     permissions: {
       canEditCandidate: boolean;
+      canDeleteCandidate: boolean;
       canCreateAttachment: boolean;
       canDeleteAttachment: boolean;
     };
@@ -3012,6 +3015,7 @@ export type CandidatesEditModernDataResponse = {
     submitURL: string;
     showURL: string;
     legacyURL: string;
+    deleteURL: string;
     createAttachmentURL: string;
     deleteAttachmentURL?: string;
     deleteAttachmentToken?: string;
@@ -3257,3 +3261,4 @@ export type QuickActionAddToListModernDataResponse = {
     numberEntries: number;
   }>;
 };
+

@@ -6,6 +6,7 @@ import {
   fetchTalentFitFlowCandidateParseStatus,
   uploadCandidateAttachment
 } from '../lib/api';
+import { ensureModernUIURL } from '../lib/navigation';
 import type { CandidatesEditModernDataResponse, UIModeBootstrap } from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -1198,6 +1199,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
   const submitURL = data.actions.submitURL || `${bootstrap.indexName}?m=candidates&a=edit&ui=modern`;
   const showURL = data.actions.showURL || `${bootstrap.indexName}?m=candidates&a=show&candidateID=${data.meta.candidateID}&ui=modern`;
+  const deleteURL = ensureModernUIURL(decodeLegacyURL(data.actions.deleteURL || ''));
   const sourceOptions: SelectMenuOption[] = editableSourceOptions.length > 0
     ? editableSourceOptions
     : data.options.sources.map((option) => ({ value: option.value, label: option.label }));
@@ -1284,6 +1286,11 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
                 Cancel
               </button>
+              {data.meta.permissions.canDeleteCandidate ? (
+                <a className="modern-btn modern-btn--danger" href={deleteURL}>
+                  Delete Candidate
+                </a>
+              ) : null}
               <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>
                 Back to Profile
               </a>

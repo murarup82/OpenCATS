@@ -2654,7 +2654,8 @@ class JobOrdersUI extends UserInterface
                 'modernPage' => $modernPage,
                 'jobOrderID' => $jobOrderID,
                 'permissions' => array(
-                    'canEditJobOrder' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
+                    'canEditJobOrder' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteJobOrder' => ($this->getUserAccessLevel('joborders.delete') >= ACCESS_LEVEL_DELETE)
                 )
             ),
             'actions' => array(
@@ -2662,6 +2663,7 @@ class JobOrdersUI extends UserInterface
                 'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
                 'listURL' => sprintf('%s?m=joborders&a=listByView&ui=modern', $baseURL),
                 'legacyURL' => sprintf('%s?m=joborders&a=edit&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'deleteURL' => sprintf('%s?m=joborders&a=delete&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
                 'companyContextURL' => sprintf('%s?m=joborders&a=companyContext&ui=legacy', $baseURL),
                 'hiringPlanURL' => $hiringPlanLink
             ),

@@ -3329,6 +3329,7 @@ class CandidatesUI extends UserInterface
                 'permissions' => array(
                     'canEditCandidate' => ($this->getUserAccessLevel('candidates.edit') >= ACCESS_LEVEL_EDIT),
                     'canCreateAttachment' => ($this->getUserAccessLevel('candidates.createAttachment') >= ACCESS_LEVEL_EDIT),
+                    'canDeleteCandidate' => ($this->getUserAccessLevel('candidates.delete') >= ACCESS_LEVEL_DELETE),
                     'canDeleteAttachment' => ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE)
                 )
             ),
@@ -3336,6 +3337,7 @@ class CandidatesUI extends UserInterface
                 'submitURL' => sprintf('%s?m=candidates&a=edit&ui=modern', $baseURL),
                 'showURL' => sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, $candidateID),
                 'legacyURL' => sprintf('%s?m=candidates&a=edit&candidateID=%d&ui=legacy', $baseURL, $candidateID),
+                'deleteURL' => sprintf('%s?m=candidates&a=delete&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'createAttachmentURL' => sprintf('%s?m=candidates&a=createAttachment&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'deleteAttachmentURL' => sprintf('%s?m=candidates&a=deleteAttachment', $baseURL),
                 'deleteAttachmentToken' => $this->getCSRFToken('candidates.deleteAttachment')

@@ -357,6 +357,7 @@ export function JobOrdersEditPage({ bootstrap }: Props) {
   const showURL = ensureModernUIURL(data.actions.showURL);
   const listURL = ensureModernUIURL(data.actions.listURL);
   const legacyURL = data.actions.legacyURL;
+  const deleteURL = ensureModernUIURL(data.actions.deleteURL);
   const hiringPlanURL = ensureModernUIURL(data.actions.hiringPlanURL);
   const jobOrderDisplayName = formState.title.trim() || 'Untitled Job Order';
   const selectedCompanyLabel = toDisplayText(
@@ -427,6 +428,11 @@ export function JobOrdersEditPage({ bootstrap }: Props) {
             <div className="modern-table-actions avel-candidate-edit-actions avel-candidate-edit-actions--sticky">
               <button type="submit" form="joborder-edit-form" className="modern-btn modern-btn--emphasis">Save Job Order</button>
               <button type="button" className="modern-btn modern-btn--secondary" onClick={resetForm}>Cancel</button>
+              {data.meta.permissions.canDeleteJobOrder ? (
+                <a className="modern-btn modern-btn--danger" href={deleteURL}>
+                  Delete Job Order
+                </a>
+              ) : null}
               <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>Back to Job Order</a>
               <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={listURL}>Back to Job Orders</a>
             </div>
