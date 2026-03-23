@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   deleteJobOrdersPipelineMatrixView,
   fetchJobOrdersPipelineMatrixModernData,
@@ -36,6 +36,15 @@ type ColumnKey =
 
 type SortDirection = 'asc' | 'desc';
 
+type MatrixServerFilters = {
+  search: string;
+  ownerUserID: number;
+  recruiterUserID: number;
+  pipelineStatusID: number;
+  includeClosed: boolean;
+  maxResults: number;
+};
+
 type MatrixView = {
   id: string;
   name: string;
@@ -44,6 +53,7 @@ type MatrixView = {
   columnFilters: Record<ColumnKey, string>;
   sortBy: ColumnKey;
   sortDirection: SortDirection;
+  serverFilters: MatrixServerFilters;
 };
 
 const DEFAULT_ORDER: ColumnKey[] = [
@@ -91,6 +101,8 @@ const COLUMN_KEYS: ColumnKey[] = [
   'lastActivity'
 ];
 
+const MULTI_FILTER_PREFIX = '__multi__:';
+
 function toInteger(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.trunc(parsed) : fallback;
@@ -99,6 +111,88 @@ function toInteger(value: unknown, fallback: number): number {
 function toDisplayText(value: unknown, fallback = '--'): string {
   const normalized = String(value || '').trim();
   return normalized === '' ? fallback : normalized;
+}
+
+function normalizeFilterToken(value: string): string {
+  return String(value || '').trim().toLowerCase();
+}
+
+function dedupeFilterValues(values: string[]): string[] {
+  const uniqueValues = new Map<string, string>();
+  values.forEach((value) => {
+    const normalized = String(value || '').trim();
+    if (normalized === '') {
+      return;
+    }
+    const token = normalizeFilterToken(normalized);
+    if (!uniqueValues.has(token)) {
+      uniqueValues.set(token, normalized);
+    }
+  });
+  return Array.from(uniqueValues.values());
+}
+
+function parseMultiFilterValues(rawValue: string): string[] | null {
+  const normalized = String(rawValue || '').trim();
+  if (!normalized.startsWith(MULTI_FILTER_PREFIX)) {
+    return null;
+  }
+  const payload = normalized.slice(MULTI_FILTER_PREFIX.length).trim();
+  if (payload === '') {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(payload) as unknown;
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    return dedupeFilterValues(parsed.map((value) => String(value || '')));
+  } catch (_error) {
+    return null;
+  }
+}
+
+function parseFilterSelection(rawValue: string): { values: string[]; isMulti: boolean } {
+  const multiValues = parseMultiFilterValues(rawValue);
+  if (multiValues !== null) {
+    return { values: multiValues, isMulti: true };
+  }
+
+  const single = String(rawValue || '').trim();
+  if (single === '') {
+    return { values: [], isMulti: false };
+  }
+  return { values: [single], isMulti: false };
+}
+
+function encodeFilterSelection(values: string[]): string {
+  const uniqueValues = dedupeFilterValues(values);
+  if (uniqueValues.length === 0) {
+    return '';
+  }
+  if (uniqueValues.length === 1) {
+    return uniqueValues[0];
+  }
+  return `${MULTI_FILTER_PREFIX}${JSON.stringify(uniqueValues)}`;
+}
+
+function splitColumnFilterValues(columnKey: ColumnKey, rawValue: string): string[] {
+  const normalized = String(rawValue || '').trim();
+  if (normalized === '') {
+    return [];
+  }
+
+  if (columnKey === 'keySkills') {
+    const splitValues = normalized
+      .split(/[,;|/]+/g)
+      .map((value) => value.trim())
+      .filter((value) => value !== '');
+    if (splitValues.length > 0) {
+      return dedupeFilterValues(splitValues);
+    }
+  }
+
+  return [normalized];
 }
 
 function emptyFilters(): Record<ColumnKey, string> {
@@ -185,6 +279,53 @@ function normalizeSortDirection(sortDirection: unknown): SortDirection {
   return String(sortDirection || '').toLowerCase() === 'asc' ? 'asc' : 'desc';
 }
 
+function normalizeServerFilters(serverFilters: unknown): MatrixServerFilters {
+  const defaults: MatrixServerFilters = {
+    search: '',
+    ownerUserID: 0,
+    recruiterUserID: -2,
+    pipelineStatusID: -2,
+    includeClosed: false,
+    maxResults: 100
+  };
+
+  if (!serverFilters || typeof serverFilters !== 'object') {
+    return defaults;
+  }
+
+  const payload = serverFilters as Record<string, unknown>;
+  const nextOwnerUserID = toInteger(payload.ownerUserID, defaults.ownerUserID);
+  const nextRecruiterUserID = toInteger(payload.recruiterUserID, defaults.recruiterUserID);
+  const nextPipelineStatusID = toInteger(payload.pipelineStatusID, defaults.pipelineStatusID);
+  const nextMaxResults = toInteger(payload.maxResults, defaults.maxResults);
+
+  return {
+    search: String(payload.search || '').trim(),
+    ownerUserID: nextOwnerUserID >= 0 ? nextOwnerUserID : defaults.ownerUserID,
+    recruiterUserID: nextRecruiterUserID >= -2 ? nextRecruiterUserID : defaults.recruiterUserID,
+    pipelineStatusID: nextPipelineStatusID >= -2 ? nextPipelineStatusID : defaults.pipelineStatusID,
+    includeClosed: Boolean(payload.includeClosed),
+    maxResults: [50, 100, 200].includes(nextMaxResults) ? nextMaxResults : defaults.maxResults
+  };
+}
+
+function emptyColumnOptions(): Record<ColumnKey, string[]> {
+  return {
+    candidate: [],
+    jobOrder: [],
+    company: [],
+    source: [],
+    keySkills: [],
+    pipeline: [],
+    owner: [],
+    recruiter: [],
+    location: [],
+    gdpr: [],
+    dateAdded: [],
+    lastActivity: []
+  };
+}
+
 function normalizeSavedViews(savedViews: JobOrdersPipelineMatrixSavedView[] | undefined): MatrixView[] {
   if (!Array.isArray(savedViews)) {
     return [];
@@ -205,7 +346,8 @@ function normalizeSavedViews(savedViews: JobOrdersPipelineMatrixSavedView[] | un
       visibleColumns: normalizeVisibleColumns(view?.config?.visibleColumns),
       columnFilters: normalizeColumnFilters(view?.config?.columnFilters),
       sortBy: normalizeSortBy(view?.config?.sortBy),
-      sortDirection: normalizeSortDirection(view?.config?.sortDirection)
+      sortDirection: normalizeSortDirection(view?.config?.sortDirection),
+      serverFilters: normalizeServerFilters(view?.config?.serverFilters)
     });
   });
 
@@ -255,12 +397,14 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
   const [sortBy, setSortBy] = useState<ColumnKey>('lastActivity');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [activeHeaderMenuColumn, setActiveHeaderMenuColumn] = useState<ColumnKey | null>(null);
+  const [headerMenuSearch, setHeaderMenuSearch] = useState('');
   const [savedViews, setSavedViews] = useState<MatrixView[]>([]);
   const [activeViewID, setActiveViewID] = useState('default');
   const [viewNameDraft, setViewNameDraft] = useState('');
   const [viewMutationBusy, setViewMutationBusy] = useState(false);
   const [viewMutationError, setViewMutationError] = useState('');
   const [viewMutationNotice, setViewMutationNotice] = useState('');
+  const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
 
   const { serverQueryString, applyServerQuery } = useServerQueryState(bootstrap.indexName);
   const storageKey = useMemo(
@@ -374,6 +518,56 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
     }
   }, [activeViewID, savedViews, viewNameDraft]);
 
+  useEffect(() => {
+    setHeaderMenuSearch('');
+  }, [activeHeaderMenuColumn]);
+
+  useEffect(() => {
+    const closeColumnsMenu = () => {
+      if (columnsMenuRef.current?.open) {
+        columnsMenuRef.current.removeAttribute('open');
+      }
+    };
+
+    const closeHeaderMenu = () => {
+      setActiveHeaderMenuColumn(null);
+    };
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const targetNode = event.target as Node | null;
+      const targetElement = targetNode instanceof Element ? targetNode : null;
+
+      if (columnsMenuRef.current && targetNode && !columnsMenuRef.current.contains(targetNode)) {
+        closeColumnsMenu();
+      }
+
+      if (activeHeaderMenuColumn !== null) {
+        const clickedHeaderMenu = targetElement?.closest('.avel-pipeline-matrix__header-menu');
+        const clickedHeaderToggle = targetElement?.closest('.avel-pipeline-matrix__th-title');
+        if (!clickedHeaderMenu && !clickedHeaderToggle) {
+          closeHeaderMenu();
+        }
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeColumnsMenu();
+        closeHeaderMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown, { passive: true });
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [activeHeaderMenuColumn]);
+
   const applyServerFilters = useCallback(
     (next: {
       search?: string;
@@ -383,6 +577,8 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
       includeClosed?: boolean;
       page?: number;
       maxResults?: number;
+      sortBy?: ColumnKey;
+      sortDirection?: SortDirection;
     }) => {
       const query = new URLSearchParams(serverQueryString);
       query.set('m', 'joborders');
@@ -394,8 +590,10 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
       query.set('pipelineStatusID', String(next.pipelineStatusID ?? data?.filters.pipelineStatusID ?? -2));
       const includeClosed = (next.includeClosed ?? data?.filters.includeClosed) ? true : false;
       query.set('includeClosed', includeClosed ? '1' : '0');
-      query.set('sortBy', sortBy);
-      query.set('sortDirection', sortDirection === 'asc' ? 'ASC' : 'DESC');
+      const nextSortBy = next.sortBy ?? sortBy;
+      const nextSortDirection = next.sortDirection ?? sortDirection;
+      query.set('sortBy', nextSortBy);
+      query.set('sortDirection', nextSortDirection === 'asc' ? 'ASC' : 'DESC');
       query.set('maxResults', String(next.maxResults ?? data?.meta.entriesPerPage ?? 100));
       query.set('page', String(Math.max(1, toInteger(next.page ?? data?.meta.page ?? 1, 1))));
       applyServerQuery(query);
@@ -433,10 +631,90 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
     }
   }, []);
 
+  const getColumnFilterTokens = useCallback(
+    (row: JobOrdersPipelineMatrixModernDataResponse['rows'][number], columnKey: ColumnKey): string[] => {
+      return splitColumnFilterValues(columnKey, getColumnValue(row, columnKey))
+        .map((value) => normalizeFilterToken(value))
+        .filter((value) => value !== '');
+    },
+    [getColumnValue]
+  );
+
+  const setColumnFilterSelection = useCallback((columnKey: ColumnKey, values: string[]) => {
+    const encoded = encodeFilterSelection(values);
+    setColumnFilters((current) => ({
+      ...current,
+      [columnKey]: encoded
+    }));
+  }, []);
+
+  const toggleColumnFilterValue = useCallback(
+    (columnKey: ColumnKey, value: string, checked: boolean) => {
+      const normalizedValue = String(value || '').trim();
+      if (normalizedValue === '') {
+        return;
+      }
+
+      setColumnFilters((current) => {
+        const existing = parseFilterSelection(current[columnKey] || '').values;
+        const nextMap = new Map(existing.map((entry) => [normalizeFilterToken(entry), entry]));
+        const token = normalizeFilterToken(normalizedValue);
+        if (checked) {
+          nextMap.set(token, normalizedValue);
+        } else {
+          nextMap.delete(token);
+        }
+        return {
+          ...current,
+          [columnKey]: encodeFilterSelection(Array.from(nextMap.values()))
+        };
+      });
+    },
+    []
+  );
+
   const visibleColumnOrder = useMemo(() => {
     const columns = columnOrder.filter((columnKey) => visibleColumns[columnKey]);
     return columns.length > 0 ? columns : ['jobOrder'];
   }, [columnOrder, visibleColumns]);
+
+  const columnFilterOptions = useMemo(() => {
+    const options = emptyColumnOptions();
+    if (!data) {
+      return options;
+    }
+
+    COLUMN_KEYS.forEach((columnKey) => {
+      const values = new Map<string, string>();
+      data.rows.forEach((row) => {
+        const rowValues = splitColumnFilterValues(columnKey, getColumnValue(row, columnKey));
+        rowValues.forEach((rowValue) => {
+          const token = normalizeFilterToken(rowValue);
+          if (token === '') {
+            return;
+          }
+          if (!values.has(token)) {
+            values.set(token, rowValue);
+          }
+        });
+      });
+      options[columnKey] = Array.from(values.values()).sort((left, right) =>
+        left.localeCompare(right, undefined, { sensitivity: 'base', numeric: true })
+      );
+    });
+
+    return options;
+  }, [data, getColumnValue]);
+
+  const columnFilterOptionTokens = useMemo(() => {
+    return COLUMN_KEYS.reduce(
+      (accumulator, columnKey) => {
+        accumulator[columnKey] = new Set(columnFilterOptions[columnKey].map((value) => normalizeFilterToken(value)));
+        return accumulator;
+      },
+      {} as Record<ColumnKey, Set<string>>
+    );
+  }, [columnFilterOptions]);
 
   const filteredRows = useMemo(() => {
     if (!data) {
@@ -444,11 +722,25 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
     }
     const rows = data.rows.filter((row) =>
       (Object.keys(columnFilters) as ColumnKey[]).every((columnKey) => {
-        const filterText = (columnFilters[columnKey] || '').trim().toLowerCase();
-        if (filterText === '') {
+        const selection = parseFilterSelection(columnFilters[columnKey] || '');
+        const selectedTokens = selection.values
+          .map((value) => normalizeFilterToken(value))
+          .filter((value) => value !== '');
+        if (selectedTokens.length === 0) {
           return true;
         }
-        return getColumnValue(row, columnKey).toLowerCase().includes(filterText);
+
+        const rowTokens = getColumnFilterTokens(row, columnKey);
+        if (selection.isMulti) {
+          return selectedTokens.some((token) => rowTokens.includes(token));
+        }
+
+        const filterText = selectedTokens[0];
+        const rowValue = normalizeFilterToken(getColumnValue(row, columnKey));
+        if (columnFilterOptionTokens[columnKey].has(filterText)) {
+          return rowTokens.includes(filterText);
+        }
+        return rowValue.includes(filterText);
       })
     );
 
@@ -462,7 +754,7 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
       return leftValue > rightValue ? sign : -sign;
     });
     return rows;
-  }, [columnFilters, data, getColumnValue, sortBy, sortDirection]);
+  }, [columnFilterOptionTokens, columnFilters, data, getColumnFilterTokens, getColumnValue, sortBy, sortDirection]);
 
   if (loading && !data) {
     return <div className="modern-state">Loading pipeline matrix...</div>;
@@ -511,7 +803,15 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
           visibleColumns,
           columnFilters,
           sortBy,
-          sortDirection
+          sortDirection,
+          serverFilters: {
+            search: String(data.filters.search || '').trim(),
+            ownerUserID: Number(data.filters.ownerUserID || 0),
+            recruiterUserID: Number(data.filters.recruiterUserID || -2),
+            pipelineStatusID: Number(data.filters.pipelineStatusID || -2),
+            includeClosed: Boolean(data.filters.includeClosed),
+            maxResults: Number(data.meta.entriesPerPage || 100)
+          }
         }
       });
 
@@ -598,6 +898,30 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
     });
   };
 
+  const applySavedView = useCallback(
+    (view: MatrixView) => {
+      setViewNameDraft(view.name);
+      setColumnOrder(view.columnOrder);
+      setVisibleColumns(view.visibleColumns);
+      setColumnFilters(view.columnFilters);
+      setSortBy(view.sortBy);
+      setSortDirection(view.sortDirection);
+      setSearchDraft(view.serverFilters.search);
+      applyServerFilters({
+        search: view.serverFilters.search,
+        ownerUserID: view.serverFilters.ownerUserID,
+        recruiterUserID: view.serverFilters.recruiterUserID,
+        pipelineStatusID: view.serverFilters.pipelineStatusID,
+        includeClosed: view.serverFilters.includeClosed,
+        maxResults: view.serverFilters.maxResults,
+        page: 1,
+        sortBy: view.sortBy,
+        sortDirection: view.sortDirection
+      });
+    },
+    [applyServerFilters]
+  );
+
   return (
     <div className="avel-dashboard-page avel-pipeline-matrix-page">
       <PageContainer title="Pipeline Matrix" subtitle="Excel-style candidate-job-order matrix with saved views and per-column filters." actions={<><a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.listURL)}>Back To Job Orders</a><a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.recruiterAllocationURL)}>Recruiter Allocation</a><a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>Open Legacy UI</a></>}>
@@ -616,12 +940,34 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
             <div className="modern-command-bar__row modern-command-bar__row--meta">
               <div className="modern-chip-strip"><span className="modern-chip modern-chip--info">Column filters: {activeColumnFilterCount}</span><span className="modern-chip modern-chip--info">Rows on page: {filteredRows.length}/{data.rows.length}</span></div>
               <div className="avel-pipeline-matrix__views">
-                <select className="avel-pipeline-matrix__view-select" value={activeViewID} onChange={(event) => { const nextID = event.target.value; setActiveViewID(nextID); setViewMutationError(''); setViewMutationNotice(''); if (nextID === 'default') { applyDefaultLayout(); setViewNameDraft(''); return; } const nextView = savedViews.find((entry) => entry.id === nextID); if (!nextView) { return; } setViewNameDraft(nextView.name); setColumnOrder(nextView.columnOrder); setVisibleColumns(nextView.visibleColumns); setColumnFilters(nextView.columnFilters); setSortBy(nextView.sortBy); setSortDirection(nextView.sortDirection); }}>{<option value="default">Default Layout</option>}{savedViews.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select>
+                <select
+                  className="avel-pipeline-matrix__view-select"
+                  value={activeViewID}
+                  onChange={(event) => {
+                    const nextID = event.target.value;
+                    setActiveViewID(nextID);
+                    setViewMutationError('');
+                    setViewMutationNotice('');
+                    if (nextID === 'default') {
+                      applyDefaultLayout();
+                      setViewNameDraft('');
+                      return;
+                    }
+                    const nextView = savedViews.find((entry) => entry.id === nextID);
+                    if (!nextView) {
+                      return;
+                    }
+                    applySavedView(nextView);
+                  }}
+                >
+                  {<option value="default">Default Layout</option>}
+                  {savedViews.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}
+                </select>
                 <input type="text" className="avel-pipeline-matrix__view-name" value={viewNameDraft} onChange={(event) => setViewNameDraft(event.target.value)} placeholder="View name" />
                 <button type="button" className="modern-btn modern-btn--secondary" disabled={!canPersistViews || viewMutationBusy} onClick={saveCurrentView}>{viewMutationBusy ? 'Saving...' : 'Save View'}</button>
                 <button type="button" className="modern-btn modern-btn--secondary" disabled={!canPersistViews || activeViewID === 'default' || viewMutationBusy} onClick={deleteCurrentView}>Delete View</button>
               </div>
-              <details className="avel-pipeline-matrix__columns-menu">
+              <details className="avel-pipeline-matrix__columns-menu" ref={columnsMenuRef}>
                 <summary className="modern-chip modern-chip--column-toggle">Columns</summary>
                 <div className="avel-pipeline-matrix__columns-panel">
                   {columnOrder.map((columnKey, index) => (
@@ -666,7 +1012,97 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
             <div className="avel-list-panel__header"><h2 className="avel-list-panel__title">Candidate Assignments</h2><p className="avel-list-panel__hint">Showing {data.state.startRow}-{data.state.endRow} of {data.meta.totalRows}</p></div>
             <div className="modern-table-wrap avel-pipeline-matrix__table-wrap">
               <table className="modern-table avel-pipeline-matrix__table">
-                <thead><tr>{visibleColumnOrder.map((columnKey) => <th key={`header-${columnKey}`}><div className="avel-pipeline-matrix__th-shell"><button type="button" className="avel-pipeline-matrix__th-title" onClick={() => setActiveHeaderMenuColumn((current) => current === columnKey ? null : columnKey)}>{columnLabel(columnKey)}{sortBy === columnKey ? ` (${sortDirection})` : ''}</button>{(columnFilters[columnKey] || '').trim() !== '' ? <span className="modern-chip modern-chip--info">Filtered</span> : null}</div>{activeHeaderMenuColumn === columnKey ? <div className="avel-pipeline-matrix__header-menu"><label>Filter value<input type="text" value={columnFilters[columnKey]} onChange={(event) => setColumnFilters((current) => ({ ...current, [columnKey]: event.target.value }))} placeholder={`Filter ${columnLabel(columnKey)}`} /></label><div className="avel-pipeline-matrix__header-menu-actions"><button type="button" onClick={() => { setSortBy(columnKey); setSortDirection('asc'); }}>Sort A-Z</button><button type="button" onClick={() => { setSortBy(columnKey); setSortDirection('desc'); }}>Sort Z-A</button><button type="button" onClick={() => setColumnFilters((current) => ({ ...current, [columnKey]: '' }))}>Clear</button><button type="button" onClick={() => setActiveHeaderMenuColumn(null)}>Close</button></div></div> : null}</th>)}</tr></thead>
+                <thead>
+                  <tr>
+                    {visibleColumnOrder.map((columnKey) => {
+                      const activeSelection = parseFilterSelection(columnFilters[columnKey] || '');
+                      const selectedTokens = new Set(activeSelection.values.map((value) => normalizeFilterToken(value)));
+                      const allOptions = columnFilterOptions[columnKey];
+                      const searchToken = normalizeFilterToken(headerMenuSearch);
+                      const visibleOptions =
+                        searchToken === ''
+                          ? allOptions
+                          : allOptions.filter((value) => normalizeFilterToken(value).includes(searchToken));
+                      const selectedUnknownValues = activeSelection.values.filter(
+                        (value) => !columnFilterOptionTokens[columnKey].has(normalizeFilterToken(value))
+                      );
+                      const renderedOptions = dedupeFilterValues([...selectedUnknownValues, ...visibleOptions]);
+
+                      return (
+                        <th key={`header-${columnKey}`}>
+                          <div className="avel-pipeline-matrix__th-shell">
+                            <button
+                              type="button"
+                              className="avel-pipeline-matrix__th-title"
+                              onClick={() => setActiveHeaderMenuColumn((current) => (current === columnKey ? null : columnKey))}
+                            >
+                              {columnLabel(columnKey)}
+                              {sortBy === columnKey ? ` (${sortDirection})` : ''}
+                            </button>
+                            {(columnFilters[columnKey] || '').trim() !== '' ? (
+                              <span className="modern-chip modern-chip--info">Filtered</span>
+                            ) : null}
+                          </div>
+                          {activeHeaderMenuColumn === columnKey ? (
+                            <div className="avel-pipeline-matrix__header-menu">
+                              <label>
+                                Search values
+                                <input
+                                  type="text"
+                                  value={headerMenuSearch}
+                                  onChange={(event) => setHeaderMenuSearch(event.target.value)}
+                                  placeholder={`Find ${columnLabel(columnKey)}`}
+                                />
+                              </label>
+                              <div className="avel-pipeline-matrix__header-menu-options">
+                                {renderedOptions.length === 0 ? (
+                                  <div className="avel-pipeline-matrix__header-empty">No matching values.</div>
+                                ) : (
+                                  renderedOptions.map((optionValue) => {
+                                    const token = normalizeFilterToken(optionValue);
+                                    return (
+                                      <label
+                                        key={`filter-${columnKey}-${optionValue}`}
+                                        className="avel-pipeline-matrix__header-menu-option"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedTokens.has(token)}
+                                          onChange={(event) =>
+                                            toggleColumnFilterValue(columnKey, optionValue, event.target.checked)
+                                          }
+                                        />
+                                        <span>{optionValue}</span>
+                                      </label>
+                                    );
+                                  })
+                                )}
+                              </div>
+                              <div className="avel-pipeline-matrix__header-menu-actions">
+                                <button
+                                  type="button"
+                                  onClick={() => setColumnFilterSelection(columnKey, renderedOptions)}
+                                  disabled={renderedOptions.length === 0}
+                                >
+                                  Select Visible
+                                </button>
+                                <button type="button" onClick={() => setColumnFilterSelection(columnKey, [])}>
+                                  Clear
+                                </button>
+                                <button type="button" onClick={() => { setSortBy(columnKey); setSortDirection('asc'); }}>
+                                  Sort A-Z
+                                </button>
+                                <button type="button" onClick={() => { setSortBy(columnKey); setSortDirection('desc'); }}>
+                                  Sort Z-A
+                                </button>
+                              </div>
+                            </div>
+                          ) : null}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
                 <tbody>{filteredRows.length === 0 ? <tr><td colSpan={visibleColumnOrder.length}>No rows match the current column filters.</td></tr> : filteredRows.map((row) => <tr key={`row-${row.candidateJobOrderID}`}>{visibleColumnOrder.map((columnKey) => { if (columnKey === 'candidate') { return <td key={`${row.candidateJobOrderID}-${columnKey}`}><a className="modern-link" href={ensureModernUIURL(row.candidateURL)}>{toDisplayText(row.candidateName)}</a></td>; } if (columnKey === 'jobOrder') { return <td key={`${row.candidateJobOrderID}-${columnKey}`}><a className="modern-link" href={ensureModernUIURL(row.jobOrderURL)}>{toDisplayText(row.jobOrderTitle)}</a></td>; } if (columnKey === 'company') { return <td key={`${row.candidateJobOrderID}-${columnKey}`}><a className="modern-link" href={ensureModernUIURL(row.companyURL)}>{toDisplayText(row.companyName)}</a></td>; } if (columnKey === 'pipeline') { return <td key={`${row.candidateJobOrderID}-${columnKey}`}><span className="modern-chip modern-chip--pipeline">{toDisplayText(row.pipelineStatus)}</span></td>; } if (columnKey === 'gdpr') { return <td key={`${row.candidateJobOrderID}-${columnKey}`}><span className={`modern-chip ${row.gdprSigned ? 'modern-chip--gdpr-signed' : 'modern-chip--gdpr-unsigned'}`}>{row.gdprSigned ? 'Signed' : 'Not Signed'}</span></td>; } return <td key={`${row.candidateJobOrderID}-${columnKey}`}>{toDisplayText(getColumnValue(row, columnKey))}</td>; })}</tr>)}</tbody>
               </table>
             </div>

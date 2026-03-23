@@ -2482,13 +2482,50 @@
   color: #4a6a7a;
 }
 
-.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu input {
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu input,
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu select {
   border: 1px solid #b8d0dd;
   border-radius: 8px;
   padding: 6px 8px;
   font: inherit;
   color: #1d3f4f;
   background: #fff;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu-options {
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid #d6e6ef;
+  background: #ffffff;
+  padding: 6px 8px;
+  font-size: 0.74rem;
+  color: #2b4c5d;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu-option input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+}
+
+.avel-pipeline-matrix-page .avel-pipeline-matrix__header-empty {
+  border: 1px dashed #c1d5e2;
+  border-radius: 8px;
+  background: #f9fcff;
+  color: #5d7a8b;
+  font-size: 0.73rem;
+  padding: 8px;
 }
 
 .avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu-actions {

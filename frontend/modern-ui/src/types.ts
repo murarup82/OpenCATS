@@ -2234,6 +2234,14 @@ export type JobOrdersPipelineMatrixViewConfig = {
   columnFilters: Record<string, string>;
   sortBy: string;
   sortDirection: string;
+  serverFilters?: {
+    search: string;
+    ownerUserID: number;
+    recruiterUserID: number;
+    pipelineStatusID: number;
+    includeClosed: boolean;
+    maxResults: number;
+  };
 };
 
 export type JobOrdersPipelineMatrixSavedView = {

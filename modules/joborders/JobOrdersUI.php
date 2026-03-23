@@ -7383,6 +7383,14 @@ class JobOrdersUI extends UserInterface
             'dateAdded' => '',
             'lastActivity' => ''
         );
+        $defaultServerFilters = array(
+            'search' => '',
+            'ownerUserID' => 0,
+            'recruiterUserID' => -2,
+            'pipelineStatusID' => -2,
+            'includeClosed' => false,
+            'maxResults' => 100
+        );
 
         if (!is_array($config))
         {
@@ -7453,12 +7461,59 @@ class JobOrdersUI extends UserInterface
             $sortDirection = 'asc';
         }
 
+        $serverFilters = $defaultServerFilters;
+        if (isset($config['serverFilters']) && is_array($config['serverFilters']))
+        {
+            $allowedRowsPerPage = array(50, 100, 200);
+
+            $search = trim((string) (isset($config['serverFilters']['search']) ? $config['serverFilters']['search'] : ''));
+            $ownerUserID = (int) (isset($config['serverFilters']['ownerUserID']) ? $config['serverFilters']['ownerUserID'] : 0);
+            if ($ownerUserID < 0)
+            {
+                $ownerUserID = 0;
+            }
+
+            $recruiterUserID = (int) (isset($config['serverFilters']['recruiterUserID']) ? $config['serverFilters']['recruiterUserID'] : -2);
+            if ($recruiterUserID < -2)
+            {
+                $recruiterUserID = -2;
+            }
+
+            $pipelineStatusID = (int) (isset($config['serverFilters']['pipelineStatusID']) ? $config['serverFilters']['pipelineStatusID'] : -2);
+            if ($pipelineStatusID < -2)
+            {
+                $pipelineStatusID = -2;
+            }
+
+            $includeClosed = false;
+            if (isset($config['serverFilters']['includeClosed']))
+            {
+                $includeClosed = ((bool) $config['serverFilters']['includeClosed']);
+            }
+
+            $maxResults = (int) (isset($config['serverFilters']['maxResults']) ? $config['serverFilters']['maxResults'] : 100);
+            if (!in_array($maxResults, $allowedRowsPerPage, true))
+            {
+                $maxResults = 100;
+            }
+
+            $serverFilters = array(
+                'search' => $search,
+                'ownerUserID' => $ownerUserID,
+                'recruiterUserID' => $recruiterUserID,
+                'pipelineStatusID' => $pipelineStatusID,
+                'includeClosed' => $includeClosed,
+                'maxResults' => $maxResults
+            );
+        }
+
         return array(
             'columnOrder' => $columnOrder,
             'visibleColumns' => $visibleColumns,
             'columnFilters' => $columnFilters,
             'sortBy' => $sortBy,
-            'sortDirection' => $sortDirection
+            'sortDirection' => $sortDirection,
+            'serverFilters' => $serverFilters
         );
     }
 
