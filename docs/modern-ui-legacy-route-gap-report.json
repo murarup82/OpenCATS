@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T04:18:22.002Z",
+  "generatedAt": "2026-03-23T04:31:56.251Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -301,7 +301,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addduplicates",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": true
     },
     {
@@ -310,7 +310,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.addeditimage",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": true
     },
     {
@@ -400,7 +400,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.emailcandidates",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -427,7 +427,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.linkduplicate",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": true
     },
     {
@@ -445,7 +445,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.merge",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": true
     },
     {
@@ -454,7 +454,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.mergeinfo",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -472,7 +472,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "candidates.removeduplicity",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": true
     },
     {
@@ -490,7 +490,7 @@
       "classification": "native-explicit",
       "routeKey": "candidates.savesources",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1003,7 +1003,7 @@
       "classification": "native-explicit",
       "routeKey": "import.deletebulkresumes",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1021,7 +1021,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importbulkresumes",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1030,7 +1030,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importselecttype",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1048,7 +1048,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importuploadresume",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1057,7 +1057,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimport",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1066,7 +1066,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimportdocument",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1075,7 +1075,7 @@
       "classification": "native-explicit",
       "routeKey": "import.massimportedit",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1084,7 +1084,7 @@
       "classification": "native-explicit",
       "routeKey": "import.revert",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1093,7 +1093,7 @@
       "classification": "native-explicit",
       "routeKey": "import.showmassimport",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1102,7 +1102,7 @@
       "classification": "native-explicit",
       "routeKey": "import.viewerrors",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1111,7 +1111,7 @@
       "classification": "native-explicit",
       "routeKey": "import.viewpending",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1120,7 +1120,7 @@
       "classification": "native-explicit",
       "routeKey": "import.whatisbulkresumes",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1255,7 +1255,7 @@
       "classification": "native-explicit-guarded",
       "routeKey": "joborders.edithiringplan",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": true
     },
     {
@@ -1552,7 +1552,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.customizeeeoreport",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1561,7 +1561,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.customizejoborderreport",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1570,7 +1570,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.generateeeoreportpreview",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1579,7 +1579,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.generatejoborderreportpdf",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1606,7 +1606,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showhirereport",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1615,7 +1615,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showplacementreport",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1624,7 +1624,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.showsubmissionreport",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1642,7 +1642,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.addemailtemplate",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1651,7 +1651,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.adduser",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1660,7 +1660,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.administration",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1795,7 +1795,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.asplocalization",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1804,7 +1804,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnaire",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1813,7 +1813,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnairepreview",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1822,7 +1822,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnaireupdate",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1831,7 +1831,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalsettings",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1840,7 +1840,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportaltemplateedit",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1849,7 +1849,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.changepassword",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1858,7 +1858,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.createbackup",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1867,7 +1867,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.customizecalendar",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1876,7 +1876,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.customizeextrafields",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1885,7 +1885,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deletebackup",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1894,7 +1894,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deleteemailtemplate",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1903,7 +1903,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deleteuser",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1912,7 +1912,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.edituser",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1921,7 +1921,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.eeo",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1930,7 +1930,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.emailsettings",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1939,7 +1939,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.emailtemplates",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1948,7 +1948,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.feedbacksettings",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1957,7 +1957,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.forceemail",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1966,7 +1966,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.gdprsettings",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1984,7 +1984,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.googleoidcsettings",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1993,7 +1993,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.loginactivity",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2002,7 +2002,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.manageusers",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2011,7 +2011,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.myprofile",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2020,7 +2020,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newinstallfinished",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2029,7 +2029,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newinstallpassword",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2038,7 +2038,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newsitename",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2074,7 +2074,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.professional",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2083,7 +2083,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.rejectionreasons",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2092,7 +2092,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.reports",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2101,7 +2101,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.rolepagepermissions",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2110,7 +2110,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.schemamigrations",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2119,7 +2119,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.showuser",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2128,7 +2128,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.tags",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2137,7 +2137,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.talentfitflowsettings",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2146,7 +2146,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.upgradesitename",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2155,7 +2155,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.viewitemhistory",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {

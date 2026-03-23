@@ -29,6 +29,12 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     panelTitle: 'Duplicate Candidate Workspace',
     panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
   },
+  'candidates.addeditimage': {
+    title: 'Edit Candidate Profile Picture',
+    subtitle: 'Upload or update candidate profile image.',
+    panelTitle: 'Candidate Profile Picture Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
   'candidates.emailcandidates': {
     title: 'Email Candidates',
     subtitle: 'Prepare and send candidate email communication.',
@@ -59,10 +65,28 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     panelTitle: 'Candidate Duplicity Cleanup Workspace',
     panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
   },
+  'candidates.savesources': {
+    title: 'Save Candidate Sources',
+    subtitle: 'Persist source values for candidate profiles.',
+    panelTitle: 'Candidate Source Save Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'candidates.savedlists': {
+    title: 'Candidate Saved Lists',
+    subtitle: 'Manage candidate list assignment and access.',
+    panelTitle: 'Candidate Saved Lists Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
   'joborders.edithiringplan': {
     title: 'Edit Hiring Plan',
     subtitle: 'Adjust hiring plan rows and openings for this job order.',
     panelTitle: 'Hiring Plan Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'joborders.setcandidatejoborder': {
+    title: 'Set Candidate Job Order',
+    subtitle: 'Assign candidate and job order linkage settings.',
+    panelTitle: 'Candidate Job Order Workspace',
     panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
   },
   'reports.customizeeeoreport': {
@@ -81,6 +105,12 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     title: 'EEO Report Preview',
     subtitle: 'Review generated EEO report preview output.',
     panelTitle: 'EEO Report Preview Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'reports.generatejoborderreportpdf': {
+    title: 'Generate Job Order Report PDF',
+    subtitle: 'Generate and download the job order report PDF.',
+    panelTitle: 'Job Order Report PDF Workspace',
     panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
   },
   'reports.showhirereport': {
@@ -110,6 +140,21 @@ const FALLBACK_COPY: PageCopy = {
   panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
 };
 
+const MODULE_FALLBACK_COPY: Record<string, PageCopy> = {
+  import: {
+    title: 'Import Workspace',
+    subtitle: 'Complete the import flow in legacy-compatibility mode.',
+    panelTitle: 'Import Compatibility Workspace',
+    panelSubtitle: 'Legacy import flow is embedded while parity migration continues.'
+  },
+  settings: {
+    title: 'Settings Workspace',
+    subtitle: 'Manage system settings through the embedded compatibility workspace.',
+    panelTitle: 'Settings Compatibility Workspace',
+    panelSubtitle: 'Legacy settings flow is embedded while parity migration continues.'
+  }
+};
+
 function toLowerText(value: unknown): string {
   return String(value || '').trim().toLowerCase();
 }
@@ -121,6 +166,16 @@ function parsePositiveInt(value: string | null): number {
 
 function buildRouteKey(bootstrap: UIModeBootstrap): string {
   return `${toLowerText(bootstrap.targetModule)}.${toLowerText(bootstrap.targetAction)}`;
+}
+
+function resolveCopy(routeKey: string, bootstrap: UIModeBootstrap): PageCopy {
+  const directCopy = COPY_BY_ROUTE_KEY[routeKey];
+  if (directCopy) {
+    return directCopy;
+  }
+
+  const moduleCopy = MODULE_FALLBACK_COPY[toLowerText(bootstrap.targetModule)];
+  return moduleCopy || FALLBACK_COPY;
 }
 
 function resolveBackLink(bootstrap: UIModeBootstrap, query: URLSearchParams): BackLink | null {
@@ -167,12 +222,26 @@ function resolveBackLink(bootstrap: UIModeBootstrap, query: URLSearchParams): Ba
     };
   }
 
+  if (moduleKey === 'import') {
+    return {
+      label: 'Back To Import',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=import&a=import`)
+    };
+  }
+
+  if (moduleKey === 'settings') {
+    return {
+      label: 'Back To Settings',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=settings&a=administration`)
+    };
+  }
+
   return null;
 }
 
 export function LegacyActionWorkspacePage({ bootstrap }: Props) {
   const routeKey = useMemo(() => buildRouteKey(bootstrap), [bootstrap]);
-  const copy = COPY_BY_ROUTE_KEY[routeKey] || FALLBACK_COPY;
+  const copy = useMemo(() => resolveCopy(routeKey, bootstrap), [routeKey, bootstrap]);
   const query = useMemo(() => new URLSearchParams(window.location.search), []);
   const backLink = useMemo(() => resolveBackLink(bootstrap, query), [bootstrap, query]);
   const legacyURL = useMemo(() => ensureUIURL(bootstrap.legacyURL, 'legacy'), [bootstrap.legacyURL]);
