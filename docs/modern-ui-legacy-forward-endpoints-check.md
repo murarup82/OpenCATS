@@ -1,6 +1,6 @@
 # Modern UI Intentional Legacy-Forward Endpoint Guard
 
-Generated: 2026-03-23T05:24:44.315Z
+Generated: 2026-03-23T05:36:52.726Z
 
 This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` to avoid breaking download, AJAX, auth, XML, and mutation compatibility behavior.
 

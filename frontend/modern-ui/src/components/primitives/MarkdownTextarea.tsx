@@ -371,6 +371,13 @@ function isInsideEditorPopup(target: EventTarget | null): boolean {
   return target.closest('.toastui-editor-popup') !== null;
 }
 
+function isHeadingPopupItemTarget(target: EventTarget | null): boolean {
+  if (!isElementTarget(target)) {
+    return false;
+  }
+  return target.closest('.toastui-editor-popup-add-heading li') !== null;
+}
+
 function isEditorSurfaceTarget(target: EventTarget | null): boolean {
   if (!isElementTarget(target)) {
     return false;
@@ -455,12 +462,29 @@ export function MarkdownTextarea({
   const onChangeRef = useRef(onChange);
   const syncGuardRef = useRef(false);
   const lastSyncedValueRef = useRef<string>(normalizeValue(value));
+  const popupCloseTimerRef = useRef<number | null>(null);
 
   const editorHeight = useMemo(() => `${Math.max(220, rows * 28 + 96)}px`, [rows]);
 
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+
+  const clearPopupCloseTimer = () => {
+    if (popupCloseTimerRef.current === null) {
+      return;
+    }
+    window.clearTimeout(popupCloseTimerRef.current);
+    popupCloseTimerRef.current = null;
+  };
+
+  const schedulePopupClose = (editor: ToastEditor) => {
+    clearPopupCloseTimer();
+    popupCloseTimerRef.current = window.setTimeout(() => {
+      popupCloseTimerRef.current = null;
+      closeEditorPopups(editor);
+    }, 0);
+  };
 
   const syncValueToEditor = (editor: ToastEditor, nextRawValue: string, moveCursorToEnd: boolean) => {
     const nextValue = normalizeValue(nextRawValue);
@@ -528,6 +552,14 @@ export function MarkdownTextarea({
     syncValueToEditor(editor, normalizeValue(value), true);
     applyToolbarAccessibilityLabels(hostElement);
 
+    const onHeadingPopupActivationCapture = (rawEvent: Event) => {
+      if (!isHeadingPopupItemTarget(rawEvent.target)) {
+        return;
+      }
+      schedulePopupClose(editor);
+    };
+    hostElement.addEventListener('click', onHeadingPopupActivationCapture, true);
+
     const onHostMouseDownCapture = (rawEvent: Event) => {
       if (!isEditorSurfaceTarget(rawEvent.target) || isInsideEditorPopup(rawEvent.target)) {
         return;
@@ -552,6 +584,10 @@ export function MarkdownTextarea({
       }
       if (rawEvent.key === 'Escape') {
         closeEditorPopups(editor);
+        return;
+      }
+      if ((rawEvent.key === 'Enter' || rawEvent.key === ' ') && isHeadingPopupItemTarget(rawEvent.target)) {
+        schedulePopupClose(editor);
         return;
       }
       if (!isEditorSurfaceTarget(rawEvent.target) || isInsideEditorPopup(rawEvent.target)) {
@@ -603,9 +639,11 @@ export function MarkdownTextarea({
     }
 
     return () => {
+      clearPopupCloseTimer();
+      hostElement.removeEventListener('click', onHeadingPopupActivationCapture, true);
+      hostElement.removeEventListener('keydown', onHostKeyDownCapture, true);
       hostElement.removeEventListener('mousedown', onHostMouseDownCapture, true);
       hostElement.removeEventListener('focusin', onHostFocusIn);
-      hostElement.removeEventListener('keydown', onHostKeyDownCapture, true);
       document.removeEventListener('mousedown', onDocumentMouseDownCapture, true);
       document.removeEventListener('focusin', onDocumentFocusIn, true);
       if (markdownPasteTarget) {

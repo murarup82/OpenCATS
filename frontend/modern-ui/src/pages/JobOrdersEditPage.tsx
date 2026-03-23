@@ -27,6 +27,12 @@ type JobOrderSidebarCardProps = {
   children: ReactNode;
 };
 
+type JobOrderFieldProps = {
+  label: string;
+  className?: string;
+  children: ReactNode;
+};
+
 type JobOrderEditFormState = {
   title: string;
   startDate: string;
@@ -122,6 +128,15 @@ function JobOrderSidebarCard({ title, description, children }: JobOrderSidebarCa
       </div>
       <div className="avel-candidate-edit-sidebar-card__body">{children}</div>
     </section>
+  );
+}
+
+function JobOrderField({ label, className = '', children }: JobOrderFieldProps) {
+  return (
+    <label className={`modern-command-field ${className}`.trim()}>
+      <span className="modern-command-label">{label}</span>
+      {children}
+    </label>
   );
 }
 
@@ -377,6 +392,10 @@ export function JobOrdersEditPage({ bootstrap }: Props) {
     setDepartments(data.options.departments || []);
   };
 
+  const setField = <K extends keyof JobOrderEditFormState>(field: K, value: JobOrderEditFormState[K]) => {
+    setFormState((current) => (current ? { ...current, [field]: value } : current));
+  };
+
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page avel-candidate-edit-page--refined avel-joborder-edit-page">
       <PageContainer
@@ -465,233 +484,354 @@ export function JobOrdersEditPage({ bootstrap }: Props) {
                 {companyContextError !== '' ? <div className="modern-state modern-state--error" role="alert">{companyContextError}</div> : null}
 
                 <JobOrderEditSectionCard
-                  title="Core Details"
-                  description="Primary job order fields and assignment settings."
+                  title="Role & Assignment"
+                  description="Title, company, ownership, and assigned work context."
                   className="avel-candidate-edit-section--identity"
                 >
                   <div className="avel-candidate-edit-grid">
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Title *</span>
-                  <input className="avel-form-control" type="text" name="title" value={formState.title} onChange={(event) => setFormState((current) => (current ? { ...current, title: event.target.value } : current))} required />
-                </label>
+                    <JobOrderField label="Title *" className="avel-candidate-edit-field--span-2">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="title"
+                        value={formState.title}
+                        onChange={(event) => setField('title', event.target.value)}
+                        required
+                      />
+                    </JobOrderField>
 
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Start Date (MM-DD-YY)</span>
-                  <input className="avel-form-control" type="text" name="startDate" value={formState.startDate} onChange={(event) => setFormState((current) => (current ? { ...current, startDate: event.target.value } : current))} />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Created Date (MM-DD-YY)</span>
-                  <input className="avel-form-control" type="text" name="createdDate" value={formState.createdDate} onChange={(event) => setFormState((current) => (current ? { ...current, createdDate: event.target.value } : current))} />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Created Time (HH:MM AM/PM)</span>
-                  <input className="avel-form-control" type="text" name="createdTime" value={formState.createdTime} onChange={(event) => setFormState((current) => (current ? { ...current, createdTime: event.target.value } : current))} />
-                </label>
-
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Company *</span>
-                  <div className="modern-table-actions" style={{ marginBottom: '6px' }}>
-                    {data.options.defaultCompanyID > 0 ? (
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() => {
-                          const nextCompanyID = String(data.options.defaultCompanyID);
-                          setFormState((current) => (current ? { ...current, companyID: nextCompanyID } : current));
+                    <JobOrderField label="Company *" className="avel-candidate-edit-field--span-2">
+                      <div className="modern-table-actions" style={{ marginBottom: '6px' }}>
+                        {data.options.defaultCompanyID > 0 ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            onClick={() => {
+                              const nextCompanyID = String(data.options.defaultCompanyID);
+                              setField('companyID', nextCompanyID);
+                              void loadCompanyContext(nextCompanyID);
+                            }}
+                          >
+                            Use Default Company
+                          </button>
+                        ) : null}
+                      </div>
+                      <select
+                        className="avel-form-control"
+                        name="companyID"
+                        value={formState.companyID}
+                        onChange={(event) => {
+                          const nextCompanyID = event.target.value;
+                          setField('companyID', nextCompanyID);
                           void loadCompanyContext(nextCompanyID);
                         }}
+                        required
                       >
-                        Use Default Company
-                      </button>
-                    ) : null}
-                  </div>
-                  <select
-                    className="avel-form-control"
-                    name="companyID"
-                    value={formState.companyID}
-                    onChange={(event) => {
-                      const nextCompanyID = event.target.value;
-                      setFormState((current) => (current ? { ...current, companyID: nextCompanyID } : current));
-                      void loadCompanyContext(nextCompanyID);
-                    }}
-                    required
-                  >
-                    {data.options.companies.map((option) => (
-                      <option key={`company-${option.value}`} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Department</span>
-                  <select className="avel-form-control" name="department" value={formState.department} onChange={(event) => setFormState((current) => (current ? { ...current, department: event.target.value } : current))}>
-                    <option value="(none)">None</option>
-                    {departments.map((department) => (
-                      <option key={`department-${department.departmentID}-${department.name}`} value={department.name}>{department.name}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Contact</span>
-                  <select className="avel-form-control" name="contactID" value={formState.contactID} onChange={(event) => setFormState((current) => (current ? { ...current, contactID: event.target.value } : current))}>
-                    {contacts.map((option) => (
-                      <option key={`contact-${option.value}`} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Type *</span>
-                  <select className="avel-form-control" name="type" value={formState.type} onChange={(event) => setFormState((current) => (current ? { ...current, type: event.target.value } : current))}>
-                    {data.options.jobTypes.map((option) => (
-                      <option key={`type-${option.value}`} value={option.value}>{option.label} ({option.description})</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">City *</span>
-                  <input className="avel-form-control" type="text" name="city" value={formState.city} onChange={(event) => setFormState((current) => (current ? { ...current, city: event.target.value } : current))} required />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Country *</span>
-                  <input className="avel-form-control" type="text" name="state" value={formState.state} onChange={(event) => setFormState((current) => (current ? { ...current, state: event.target.value } : current))} required />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Duration</span>
-                  <input className="avel-form-control" type="text" name="duration" value={formState.duration} onChange={(event) => setFormState((current) => (current ? { ...current, duration: event.target.value } : current))} />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Maximum Rate</span>
-                  <input className="avel-form-control" type="text" name="maxRate" value={formState.maxRate} onChange={(event) => setFormState((current) => (current ? { ...current, maxRate: event.target.value } : current))} />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Salary</span>
-                  <input className="avel-form-control" type="text" name="salary" value={formState.salary} onChange={(event) => setFormState((current) => (current ? { ...current, salary: event.target.value } : current))} />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Total Openings *</span>
-                  <input className="avel-form-control" type="text" name="openings" value={formState.openings} onChange={(event) => setFormState((current) => (current ? { ...current, openings: event.target.value } : current))} readOnly={data.options.hasHiringPlan} />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Remaining Openings</span>
-                  <input className="avel-form-control" type="text" name="openingsAvailable" value={formState.openingsAvailable} onChange={(event) => setFormState((current) => (current ? { ...current, openingsAvailable: event.target.value } : current))} />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Recruiter *</span>
-                  <select className="avel-form-control" name="recruiter" value={formState.recruiter} onChange={(event) => setFormState((current) => (current ? { ...current, recruiter: event.target.value } : current))}>
-                    {data.options.recruiters.map((option) => (
-                      <option key={`recruiter-${option.value}`} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Owner</span>
-                  <select className="avel-form-control" name="owner" value={formState.owner} onChange={(event) => setFormState((current) => (current ? { ...current, owner: event.target.value } : current))}>
-                    {data.options.owners.map((option) => (
-                      <option key={`owner-${option.value}`} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Company Job ID</span>
-                  <input className="avel-form-control" type="text" name="companyJobID" value={formState.companyJobID} onChange={(event) => setFormState((current) => (current ? { ...current, companyJobID: event.target.value } : current))} />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Status *</span>
-                  <select className="avel-form-control" name="status" value={formState.status} onChange={(event) => setFormState((current) => (current ? { ...current, status: event.target.value } : current))}>
-                    {data.options.statusGroups.map((group) => (
-                      <optgroup key={`status-group-${group.group}`} label={group.group}>
-                        {group.options.map((option) => (
-                          <option key={`status-${group.group}-${option.value}`} value={option.value}>{option.label}</option>
+                        {data.options.companies.map((option) => (
+                          <option key={`company-${option.value}`} value={option.value}>{option.label}</option>
                         ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </label>
+                      </select>
+                    </JobOrderField>
+
+                    <JobOrderField label="Department">
+                      <select
+                        className="avel-form-control"
+                        name="department"
+                        value={formState.department}
+                        onChange={(event) => setField('department', event.target.value)}
+                      >
+                        <option value="(none)">None</option>
+                        {departments.map((department) => (
+                          <option key={`department-${department.departmentID}-${department.name}`} value={department.name}>
+                            {department.name}
+                          </option>
+                        ))}
+                      </select>
+                    </JobOrderField>
+
+                    <JobOrderField label="Contact">
+                      <select
+                        className="avel-form-control"
+                        name="contactID"
+                        value={formState.contactID}
+                        onChange={(event) => setField('contactID', event.target.value)}
+                      >
+                        {contacts.map((option) => (
+                          <option key={`contact-${option.value}`} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </JobOrderField>
+
+                    <JobOrderField label="Recruiter *">
+                      <select
+                        className="avel-form-control"
+                        name="recruiter"
+                        value={formState.recruiter}
+                        onChange={(event) => setField('recruiter', event.target.value)}
+                      >
+                        {data.options.recruiters.map((option) => (
+                          <option key={`recruiter-${option.value}`} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </JobOrderField>
+
+                    <JobOrderField label="Owner">
+                      <select
+                        className="avel-form-control"
+                        name="owner"
+                        value={formState.owner}
+                        onChange={(event) => setField('owner', event.target.value)}
+                      >
+                        {data.options.owners.map((option) => (
+                          <option key={`owner-${option.value}`} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </JobOrderField>
+
+                    <JobOrderField label="Company Job ID" className="avel-candidate-edit-field--span-2">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="companyJobID"
+                        value={formState.companyJobID}
+                        onChange={(event) => setField('companyJobID', event.target.value)}
+                      />
+                    </JobOrderField>
                   </div>
                 </JobOrderEditSectionCard>
 
                 <JobOrderEditSectionCard
-                  title="Publication & Narrative"
-                  description="Visibility controls and rich-text details."
-                  className="avel-candidate-edit-section--narrative"
+                  title="Location & Timing"
+                  description="Work type, geography, and posting timestamps."
                 >
-                  <div className="avel-candidate-edit-toggles" role="group" aria-label="Job order publication and ownership options">
-                <label className="modern-command-toggle">
-                  <input type="checkbox" name="isHot" checked={formState.isHot} onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))} />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Hot Job Order</span>
-                </label>
+                  <div className="avel-candidate-edit-grid">
+                    <JobOrderField label="Type *" className="avel-candidate-edit-field--span-2">
+                      <select
+                        className="avel-form-control"
+                        name="type"
+                        value={formState.type}
+                        onChange={(event) => setField('type', event.target.value)}
+                      >
+                        {data.options.jobTypes.map((option) => (
+                          <option key={`type-${option.value}`} value={option.value}>
+                            {option.label} ({option.description})
+                          </option>
+                        ))}
+                      </select>
+                    </JobOrderField>
 
-                <label className="modern-command-toggle">
-                  <input type="checkbox" name="public" checked={formState.public} onChange={(event) => setFormState((current) => (current ? { ...current, public: event.target.checked } : current))} />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Public Job Order</span>
-                </label>
+                    <JobOrderField label="City *">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="city"
+                        value={formState.city}
+                        onChange={(event) => setField('city', event.target.value)}
+                        required
+                      />
+                    </JobOrderField>
 
-                {data.options.canSendOwnershipEmail ? (
-                  <label className="modern-command-toggle">
-                    <input type="checkbox" name="ownershipChange" checked={formState.ownershipChange} onChange={(event) => setFormState((current) => (current ? { ...current, ownershipChange: event.target.checked } : current))} />
-                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                    <span>E-mail New Owner</span>
-                  </label>
-                ) : null}
+                    <JobOrderField label="Country *">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="state"
+                        value={formState.state}
+                        onChange={(event) => setField('state', event.target.value)}
+                        required
+                      />
+                    </JobOrderField>
+
+                    <JobOrderField label="Start Date (MM-DD-YY)">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="startDate"
+                        value={formState.startDate}
+                        onChange={(event) => setField('startDate', event.target.value)}
+                      />
+                    </JobOrderField>
+
+                    <JobOrderField label="Created Date (MM-DD-YY)">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="createdDate"
+                        value={formState.createdDate}
+                        onChange={(event) => setField('createdDate', event.target.value)}
+                      />
+                    </JobOrderField>
+
+                    <JobOrderField label="Created Time (HH:MM AM/PM)" className="avel-candidate-edit-field--span-2">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="createdTime"
+                        value={formState.createdTime}
+                        onChange={(event) => setField('createdTime', event.target.value)}
+                      />
+                    </JobOrderField>
                   </div>
+                </JobOrderEditSectionCard>
 
-              {data.options.careerPortalEnabled && formState.public ? (
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">Questionnaire</span>
-                  <select className="avel-form-control" name="questionnaire" value={formState.questionnaire} onChange={(event) => setFormState((current) => (current ? { ...current, questionnaire: event.target.value } : current))}>
-                    {data.options.questionnaires.map((option) => (
-                      <option key={`questionnaire-${option.value}`} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-              ) : (
-                <input type="hidden" name="questionnaire" value={formState.questionnaire} />
-              )}
+                <JobOrderEditSectionCard
+                  title="Capacity & Compensation"
+                  description="Demand, pay range, and current status."
+                  className="avel-candidate-edit-section--status"
+                >
+                  <div className="avel-candidate-edit-grid">
+                    <JobOrderField label="Duration">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="duration"
+                        value={formState.duration}
+                        onChange={(event) => setField('duration', event.target.value)}
+                      />
+                    </JobOrderField>
 
-              <label className="modern-command-field avel-candidate-edit-field--full">
-                <span className="modern-command-label">Description</span>
-                <MarkdownTextarea
-                  name="description"
-                  value={formState.description}
-                  rows={8}
-                  ariaLabel="Job order description"
-                  onChange={(nextValue) =>
-                    setFormState((current) => (current ? { ...current, description: nextValue } : current))
-                  }
-                />
-              </label>
+                    <JobOrderField label="Maximum Rate">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="maxRate"
+                        value={formState.maxRate}
+                        onChange={(event) => setField('maxRate', event.target.value)}
+                      />
+                    </JobOrderField>
 
-              <label className="modern-command-field avel-candidate-edit-field--full">
-                <span className="modern-command-label">Internal Notes</span>
-                <MarkdownTextarea
-                  name="notes"
-                  value={formState.notes}
-                  rows={5}
-                  ariaLabel="Job order internal notes"
-                  onChange={(nextValue) =>
-                    setFormState((current) => (current ? { ...current, notes: nextValue } : current))
-                  }
-                />
-              </label>
+                    <JobOrderField label="Salary">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="salary"
+                        value={formState.salary}
+                        onChange={(event) => setField('salary', event.target.value)}
+                      />
+                    </JobOrderField>
+
+                    <JobOrderField label="Status *">
+                      <select
+                        className="avel-form-control"
+                        name="status"
+                        value={formState.status}
+                        onChange={(event) => setField('status', event.target.value)}
+                      >
+                        {data.options.statusGroups.map((group) => (
+                          <optgroup key={`status-group-${group.group}`} label={group.group}>
+                            {group.options.map((option) => (
+                              <option key={`status-${group.group}-${option.value}`} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </JobOrderField>
+
+                    <JobOrderField label="Total Openings *" className="avel-candidate-edit-field--span-2">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="openings"
+                        value={formState.openings}
+                        onChange={(event) => setField('openings', event.target.value)}
+                        readOnly={data.options.hasHiringPlan}
+                      />
+                    </JobOrderField>
+
+                    <JobOrderField label="Remaining Openings" className="avel-candidate-edit-field--span-2">
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="openingsAvailable"
+                        value={formState.openingsAvailable}
+                        onChange={(event) => setField('openingsAvailable', event.target.value)}
+                      />
+                    </JobOrderField>
+                  </div>
                 </JobOrderEditSectionCard>
               </div>
+
+              <JobOrderEditSectionCard
+                title="Publication, Questionnaire & Narrative"
+                description="Visibility toggles, application settings, and job narrative."
+                className="avel-candidate-edit-section--narrative"
+              >
+                <div className="avel-candidate-edit-toggles" role="group" aria-label="Job order publication and ownership options">
+                  <label className="modern-command-toggle">
+                    <input
+                      type="checkbox"
+                      name="isHot"
+                      checked={formState.isHot}
+                      onChange={(event) => setField('isHot', event.target.checked)}
+                    />
+                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                    <span>Hot Job Order</span>
+                  </label>
+
+                  <label className="modern-command-toggle">
+                    <input
+                      type="checkbox"
+                      name="public"
+                      checked={formState.public}
+                      onChange={(event) => setField('public', event.target.checked)}
+                    />
+                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                    <span>Public Job Order</span>
+                  </label>
+
+                  {data.options.canSendOwnershipEmail ? (
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        name="ownershipChange"
+                        checked={formState.ownershipChange}
+                        onChange={(event) => setField('ownershipChange', event.target.checked)}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>E-mail New Owner</span>
+                    </label>
+                  ) : null}
+                </div>
+
+                {data.options.careerPortalEnabled && formState.public ? (
+                  <JobOrderField label="Questionnaire" className="avel-candidate-edit-field--full">
+                    <select
+                      className="avel-form-control"
+                      name="questionnaire"
+                      value={formState.questionnaire}
+                      onChange={(event) => setField('questionnaire', event.target.value)}
+                    >
+                      {data.options.questionnaires.map((option) => (
+                        <option key={`questionnaire-${option.value}`} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </JobOrderField>
+                ) : (
+                  <input type="hidden" name="questionnaire" value={formState.questionnaire} />
+                )}
+
+                <JobOrderField label="Description" className="avel-candidate-edit-field--full">
+                  <MarkdownTextarea
+                    name="description"
+                    value={formState.description}
+                    rows={8}
+                    ariaLabel="Job order description"
+                    onChange={(nextValue) => setField('description', nextValue)}
+                  />
+                </JobOrderField>
+
+                <JobOrderField label="Internal Notes" className="avel-candidate-edit-field--full">
+                  <MarkdownTextarea
+                    name="notes"
+                    value={formState.notes}
+                    rows={5}
+                    ariaLabel="Job order internal notes"
+                    onChange={(nextValue) => setField('notes', nextValue)}
+                  />
+                </JobOrderField>
+              </JobOrderEditSectionCard>
 
               {data.extraFields.length > 0 ? (
                 <div className="avel-candidate-edit-extra avel-candidate-edit-extra--custom">
@@ -784,3 +924,4 @@ export function JobOrdersEditPage({ bootstrap }: Props) {
     </div>
   );
 }
+
