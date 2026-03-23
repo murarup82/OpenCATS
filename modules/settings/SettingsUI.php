@@ -904,17 +904,37 @@ class SettingsUI extends UserInterface
                 break;
 
             case 'ajax_wizardLicense':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.license') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have access to accept the license agreement.'
+                        );
+                        return;
+                    }
                     echo 'You do not have access to accept the license agreement.';
                     return;
                 }
-                $this->wizard_license();
+                $this->wizard_license($isModernJSON);
                 break;
 
             case 'ajax_wizardPassword':
@@ -960,17 +980,37 @@ class SettingsUI extends UserInterface
                 break;
 
             case 'ajax_wizardImport':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.import') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have permission to import.'
+                        );
+                        return;
+                    }
                     echo 'You do not have permission to import.';
                     return;
                 }
-                $this->wizard_import();
+                $this->wizard_import($isModernJSON);
                 break;
 
             case 'ajax_wizardWebsite':
@@ -4876,10 +4916,35 @@ class SettingsUI extends UserInterface
         echo 'Ok';
     }
 
-    private function wizard_license()
+    private function respondModernWizardJSON($success, $code, $message)
+    {
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        echo json_encode(array(
+            'success' => (bool) $success,
+            'code' => (string) $code,
+            'message' => (string) $message
+        ));
+    }
+
+    private function wizard_license($respondModernJSON = false)
     {
         $site = new Site($this->_siteID);
         $site->setAgreedToLicense();
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                true,
+                'licenseAccepted',
+                'License agreement accepted.'
+            );
+            return;
+        }
 
         echo 'Ok';
     }
@@ -4957,12 +5022,34 @@ class SettingsUI extends UserInterface
         echo 'Ok';
     }
 
-    private function wizard_import()
+    private function wizard_import($respondModernJSON = false)
     {
         $siteID = $_SESSION['CATS']->getSiteID();
 
         // Echos Ok to redirect to the import stage, or Fail to go to home module
         $files = ImportUtility::getDirectoryFiles(FileUtility::getUploadPath($siteID, 'massimport'));
+
+        if ($respondModernJSON)
+        {
+            if (count($files))
+            {
+                $this->respondModernWizardJSON(
+                    true,
+                    'importReady',
+                    'Import files are available.'
+                );
+            }
+            else
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'importNotReady',
+                    'No import files were found.'
+                );
+            }
+
+            return;
+        }
 
         if (count($files)) echo 'Ok';
         else echo 'Fail';

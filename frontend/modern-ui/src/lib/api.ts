@@ -29,6 +29,8 @@ import type {
   HomeOverviewModernDataResponse,
   HomeQuickSearchModernDataResponse,
   ImportLauncherModernDataResponse,
+  SettingsWizardImportModernDataResponse,
+  SettingsWizardLicenseModernDataResponse,
   LoginModernDataResponse,
   JobOrderAddPopupModernDataResponse,
   JobOrderCompanyContextModernDataResponse,
@@ -278,6 +280,42 @@ export async function fetchImportLauncherModernData(
   assertModernContract(data.meta, 'import.launcher.v1', 'import launcher data');
 
   return data;
+}
+
+type SettingsWizardAction = 'ajax_wizardImport' | 'ajax_wizardLicense';
+
+function getSettingsWizardModernPage(action: SettingsWizardAction): string {
+  return action === 'ajax_wizardImport' ? 'settings-wizard-import' : 'settings-wizard-license';
+}
+
+async function fetchSettingsWizardModernData<T extends ModernMutationResponse>(
+  bootstrap: UIModeBootstrap,
+  action: SettingsWizardAction,
+  query?: URLSearchParams
+): Promise<T> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action,
+    modernPage: getSettingsWizardModernPage(action),
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  return getJSON<T>(url);
+}
+
+export async function fetchSettingsWizardImportModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardImportModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardImportModernDataResponse>(bootstrap, 'ajax_wizardImport', query);
+}
+
+export async function fetchSettingsWizardLicenseModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardLicenseModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardLicenseModernDataResponse>(bootstrap, 'ajax_wizardLicense', query);
 }
 
 export async function fetchLoginModernData(

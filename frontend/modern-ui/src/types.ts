@@ -1660,6 +1660,9 @@ export type ImportLauncherModernDataResponse = {
   }>;
 };
 
+export type SettingsWizardImportModernDataResponse = ModernMutationResponse;
+export type SettingsWizardLicenseModernDataResponse = ModernMutationResponse;
+
 export type LoginModernDataResponse = {
   meta: {
     contractVersion: number;
