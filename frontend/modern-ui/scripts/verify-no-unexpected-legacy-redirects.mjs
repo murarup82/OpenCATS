@@ -13,6 +13,7 @@ const expectedLegacyRedirectPages = new Set([
   'src/pages/ImportWorkflowActionPage.tsx',
   'src/pages/LegacyDownloadForwardActionPage.tsx',
   'src/pages/LoginLegacyActionPage.tsx',
+  'src/pages/OperationsWorkspaceActionPage.tsx',
   'src/pages/PipelineStatusActionPage.tsx',
   'src/pages/ReportsJobOrderPdfActionPage.tsx',
   'src/pages/ReportsWorkflowActionPage.tsx',

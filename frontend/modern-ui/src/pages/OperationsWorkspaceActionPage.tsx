@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
@@ -11,10 +11,12 @@ type Props = {
 };
 
 type RouteCopy = {
+  mode: 'embed' | 'forward';
   title: string;
   subtitle: string;
   panelTitle: string;
   panelSubtitle: string;
+  statusMessage: string;
 };
 
 type BackLink = {
@@ -24,42 +26,54 @@ type BackLink = {
 
 const COPY_BY_ROUTE: Record<string, RouteCopy> = {
   'joborders.edithiringplan': {
+    mode: 'embed',
     title: 'Edit Hiring Plan',
     subtitle: 'Adjust hiring plan rows and openings through the compatibility workspace.',
     panelTitle: 'Hiring Plan Workspace',
-    panelSubtitle: 'Legacy hiring-plan UI is embedded while migration continues.'
+    panelSubtitle: 'Legacy hiring-plan UI is embedded while migration continues.',
+    statusMessage: 'Loading embedded legacy hiring-plan workspace...'
   },
   'toolbar.install': {
+    mode: 'embed',
     title: 'Toolbar Install',
     subtitle: 'Complete toolbar installation steps in compatibility mode.',
     panelTitle: 'Toolbar Install Workspace',
-    panelSubtitle: 'Legacy toolbar installation UI is embedded while migration continues.'
+    panelSubtitle: 'Legacy toolbar installation UI is embedded while migration continues.',
+    statusMessage: 'Loading embedded legacy toolbar installation workspace...'
   },
   'settings.getfirefoxmodal': {
+    mode: 'embed',
     title: 'Toolbar Browser Requirement',
     subtitle: 'Review browser compatibility guidance in compatibility mode.',
     panelTitle: 'Browser Requirement Workspace',
-    panelSubtitle: 'Legacy settings UI is embedded while migration continues.'
+    panelSubtitle: 'Legacy settings UI is embedded while migration continues.',
+    statusMessage: 'Loading embedded legacy settings workspace...'
   },
   'settings.previewpage': {
-    title: 'Settings Preview',
-    subtitle: 'Preview settings content in compatibility mode.',
-    panelTitle: 'Settings Preview Workspace',
-    panelSubtitle: 'Legacy settings preview UI is embedded while migration continues.'
+    mode: 'forward',
+    title: 'Settings Preview Redirect',
+    subtitle: 'Forward settings preview content through the legacy endpoint without embedding a frame.',
+    panelTitle: 'Settings Preview Forward',
+    panelSubtitle: 'Legacy settings preview UI is forwarded while migration continues.',
+    statusMessage: 'Forwarding settings preview page to the legacy endpoint...'
   },
   'settings.previewpagetop': {
+    mode: 'embed',
     title: 'Settings Preview Header',
     subtitle: 'Preview header content in compatibility mode.',
     panelTitle: 'Settings Preview Header Workspace',
-    panelSubtitle: 'Legacy settings preview UI is embedded while migration continues.'
+    panelSubtitle: 'Legacy settings preview UI is embedded while migration continues.',
+    statusMessage: 'Loading embedded legacy settings preview header workspace...'
   }
 };
 
 const FALLBACK_COPY: RouteCopy = {
+  mode: 'embed',
   title: 'Operations Workspace',
   subtitle: 'Embedded compatibility workspace for operations workflows.',
   panelTitle: 'Operations Compatibility Workspace',
-  panelSubtitle: 'Legacy workspace is embedded while migration continues.'
+  panelSubtitle: 'Legacy workspace is embedded while migration continues.',
+  statusMessage: 'Loading embedded legacy workspace...'
 };
 
 function toLowerText(value: unknown): string {
@@ -109,14 +123,139 @@ function resolveBackLink(routeKey: string, bootstrap: UIModeBootstrap, query: UR
   };
 }
 
+type CompatibilityPanelProps = {
+  copy: RouteCopy;
+  backLink: BackLink;
+  canContinue: boolean;
+  legacyURL: string;
+};
+
+function CompatibilityForwardPanel({ copy, backLink, canContinue, legacyURL }: CompatibilityPanelProps) {
+  useEffect(() => {
+    if (!canContinue) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      window.location.assign(legacyURL);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [canContinue, legacyURL]);
+
+  return (
+    <div className="modern-dashboard avel-dashboard-shell">
+      <section className="modern-compat-page">
+        <header className="modern-compat-page__header">
+          <div>
+            <h2 className="modern-compat-page__title">{copy.panelTitle}</h2>
+            <p className="modern-compat-page__subtitle">{copy.panelSubtitle}</p>
+          </div>
+          <div className="modern-compat-page__meta">ui_forward=1</div>
+        </header>
+
+        <div className="modern-compat-page__actions">
+          <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+            {backLink.label}
+          </a>
+          {canContinue ? (
+            <>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                Continue
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+                Open In New Tab
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                Open Legacy UI
+              </a>
+            </>
+          ) : null}
+        </div>
+
+        <section className="avel-list-panel">
+          <div className={`modern-state${canContinue ? '' : ' modern-state--error'}`}>
+            {canContinue ? copy.statusMessage : 'Legacy endpoint URL is unavailable for this settings preview route.'}
+          </div>
+        </section>
+      </section>
+    </div>
+  );
+}
+
+type EmbeddedPanelProps = {
+  copy: RouteCopy;
+  backLink: BackLink;
+  legacyURL: string;
+  canContinue: boolean;
+};
+
+function CompatibilityEmbeddedPanel({ copy, backLink, legacyURL, canContinue }: EmbeddedPanelProps) {
+  const embeddedURL = useMemo(() => buildEmbeddedLegacyURL(legacyURL), [legacyURL]);
+  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
+
+  return (
+    <div className="modern-dashboard avel-dashboard-shell">
+      <section className="modern-compat-page">
+        <header className="modern-compat-page__header">
+          <div>
+            <h2 className="modern-compat-page__title">{copy.panelTitle}</h2>
+            <p className="modern-compat-page__subtitle">{copy.panelSubtitle}</p>
+          </div>
+          <div className="modern-compat-page__meta">ui_embed=1</div>
+        </header>
+
+        <div className="modern-compat-page__actions">
+          <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+            {backLink.label}
+          </a>
+          {canContinue ? (
+            <>
+              <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>
+                Reload
+              </button>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+                Open In New Tab
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                Open Legacy UI
+              </a>
+            </>
+          ) : null}
+        </div>
+
+        <div className="modern-compat-page__frame-wrap">
+          {canContinue ? (
+            <>
+              {frameLoading ? (
+                <div className="modern-compat-page__frame-loader" aria-live="polite">
+                  {copy.statusMessage}
+                </div>
+              ) : null}
+              <iframe
+                key={frameReloadToken}
+                title={`${copy.title} legacy workspace`}
+                className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
+                src={embeddedURL}
+                onLoad={handleFrameLoad}
+              />
+            </>
+          ) : (
+            <div className="modern-state modern-state--error">Legacy endpoint URL is unavailable for this settings route.</div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function OperationsWorkspaceActionPage({ bootstrap }: Props) {
   const routeKey = useMemo(() => buildRouteKey(bootstrap), [bootstrap]);
   const copy = useMemo(() => COPY_BY_ROUTE[routeKey] || FALLBACK_COPY, [routeKey]);
   const query = useMemo(() => new URLSearchParams(window.location.search), []);
   const backLink = useMemo(() => resolveBackLink(routeKey, bootstrap, query), [routeKey, bootstrap, query]);
   const legacyURL = useMemo(() => ensureUIURL(bootstrap.legacyURL, 'legacy'), [bootstrap.legacyURL]);
-  const embeddedURL = useMemo(() => buildEmbeddedLegacyURL(legacyURL), [legacyURL]);
-  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
+  const canContinue = legacyURL !== '';
 
   return (
     <div className="avel-dashboard-page">
@@ -128,53 +267,19 @@ export function OperationsWorkspaceActionPage({ bootstrap }: Props) {
             <a className="modern-btn modern-btn--secondary" href={backLink.href}>
               {backLink.label}
             </a>
-            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
-              Open Legacy UI
-            </a>
-          </>
-        }
-      >
-        <div className="modern-dashboard avel-dashboard-shell">
-          <section className="modern-compat-page">
-            <header className="modern-compat-page__header">
-              <div>
-                <h2 className="modern-compat-page__title">{copy.panelTitle}</h2>
-                <p className="modern-compat-page__subtitle">{copy.panelSubtitle}</p>
-              </div>
-              <div className="modern-compat-page__meta">ui_embed=1</div>
-            </header>
-
-            <div className="modern-compat-page__actions">
-              <a className="modern-btn modern-btn--secondary" href={backLink.href}>
-                {backLink.label}
-              </a>
-              <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>
-                Reload
-              </button>
-              <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
-                Open In New Tab
-              </a>
+            {canContinue ? (
               <a className="modern-btn modern-btn--secondary" href={legacyURL}>
                 Open Legacy UI
               </a>
-            </div>
-
-            <div className={`modern-compat-page__frame-wrap${frameLoading ? ' is-loading' : ''}`}>
-              {frameLoading ? (
-                <div className="modern-compat-page__frame-loader" aria-live="polite">
-                  Loading legacy workspace...
-                </div>
-              ) : null}
-              <iframe
-                key={frameReloadToken}
-                title={`${copy.title} legacy workspace`}
-                className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
-                src={embeddedURL}
-                onLoad={handleFrameLoad}
-              />
-            </div>
-          </section>
-        </div>
+            ) : null}
+          </>
+        }
+      >
+        {copy.mode === 'forward' ? (
+          <CompatibilityForwardPanel copy={copy} backLink={backLink} canContinue={canContinue} legacyURL={legacyURL} />
+        ) : (
+          <CompatibilityEmbeddedPanel copy={copy} backLink={backLink} legacyURL={legacyURL} canContinue={canContinue} />
+        )}
       </PageContainer>
     </div>
   );

@@ -30,6 +30,7 @@ import type {
   HomeOverviewModernDataResponse,
   HomeQuickSearchModernDataResponse,
   ImportLauncherModernDataResponse,
+  ImportBulkResumesModernMutationResponse,
   SettingsAdministrationModernDataResponse,
   SettingsWizardAddUserModernDataResponse,
   SettingsWizardCheckKeyModernDataResponse,
@@ -71,6 +72,8 @@ import type {
   RssJobOrdersModernDataResponse,
   SourcingListModernDataResponse,
   SourcingSaveMutationResponse,
+  SettingsMyProfileChangePasswordModernDataResponse,
+  SettingsMyProfileModernDataResponse,
   UIModeBootstrap
 } from '../types';
 import { getJSON } from './httpClient';
@@ -117,6 +120,8 @@ import {
   MODERN_REPORTS_GRAPH_VIEW_PAGE,
   MODERN_REPORTS_PAGE,
   MODERN_SETTINGS_ADMINISTRATION_PAGE,
+  MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE,
+  MODERN_SETTINGS_MYPROFILE_PAGE,
   MODERN_SOURCING_PAGE,
   MODERN_KPIS_DETAILS_PAGE,
   buildModernJSONRequestQuery
@@ -295,6 +300,42 @@ export async function fetchImportLauncherModernData(
   return data;
 }
 
+export async function fetchImportBulkResumesModernMutation(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<ImportBulkResumesModernMutationResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'import',
+    action: 'importBulkResumes',
+    modernPage: 'import-bulk-resumes',
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ImportBulkResumesModernMutationResponse>(url);
+  assertModernContract(data.meta, 'import.bulkResumes.v1', 'bulk resume import mutation');
+
+  return data;
+}
+
+export async function fetchSettingsMyProfileModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsMyProfileModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'myProfile',
+    modernPage: MODERN_SETTINGS_MYPROFILE_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsMyProfileModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.myprofile.v1', 'settings my profile data');
+
+  return data;
+}
+
 export async function fetchSettingsAdministrationModernData(
   bootstrap: UIModeBootstrap,
   query: URLSearchParams
@@ -309,6 +350,29 @@ export async function fetchSettingsAdministrationModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<SettingsAdministrationModernDataResponse>(url);
   assertModernContract(data.meta, 'settings.administration.v1', 'settings administration data');
+
+  return data;
+}
+
+export async function fetchSettingsMyProfileChangePasswordModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsMyProfileChangePasswordModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'myProfile',
+    modernPage: MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE,
+    query
+  });
+  apiQuery.set('s', 'changePassword');
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsMyProfileChangePasswordModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    'settings.myprofile.changePassword.v1',
+    'settings my profile change password data'
+  );
 
   return data;
 }

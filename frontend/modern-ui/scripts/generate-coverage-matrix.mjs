@@ -7,67 +7,143 @@ const packageRoot = resolve(scriptDir, '..');
 const routeRegistryPath = resolve(packageRoot, 'src', 'lib', 'routeRegistry.ts');
 const outputPath = resolve(packageRoot, '..', '..', 'docs', 'modern-ui-route-coverage.md');
 
-const source = readFileSync(routeRegistryPath, 'utf8');
+const LEGACY_FORWARD_COMPONENTS = new Set([
+  'LegacyDownloadForwardActionPage',
+  'LoginLegacyActionPage',
+  'UtilityEndpointForwardActionPage',
+  'ImportWorkflowActionPage',
+  'OperationsWorkspaceActionPage',
+  'ReportsWorkflowActionPage',
+  'SettingsAdminWorkspaceActionPage',
+  'SettingsTagsActionPage',
+  'SettingsWizardActionPage',
+  'CandidatesWorkspaceActionPage',
+  'GraphsWorkspaceActionPage'
+]);
 
-function extractBlock(marker) {
-  const start = source.indexOf(marker);
-  if (start < 0) {
-    return '';
-  }
-  const braceStart = source.indexOf('{', start);
-  if (braceStart < 0) {
-    return '';
+function parseRouteRegistry(source) {
+  function parseNamedObjectRoutes(constName) {
+    const namedBlockMatch = new RegExp(`const\\s+${constName}:[\\s\\S]*?=\\s*\\{([\\s\\S]*?)\\n\\};`, 'm').exec(source);
+    if (!namedBlockMatch) {
+      return [];
+    }
+
+    const namedBody = namedBlockMatch[1];
+    const entries = [];
+    const routeRegex = /'([^']+)'\s*:\s*([A-Za-z0-9_]+)/g;
+    let routeMatch;
+    while ((routeMatch = routeRegex.exec(namedBody)) !== null) {
+      entries.push({
+        routeKey: routeMatch[1].toLowerCase(),
+        component: routeMatch[2]
+      });
+    }
+
+    return entries;
   }
 
-  let depth = 0;
-  for (let index = braceStart; index < source.length; index += 1) {
-    const char = source[index];
-    if (char === '{') {
-      depth += 1;
-    } else if (char === '}') {
-      depth -= 1;
-      if (depth === 0) {
-        return source.slice(braceStart + 1, index);
+  function parseExplicitBridgeRoutes(constName) {
+    const bridgeBlockMatch = new RegExp(
+      `const\\s+${constName}\\s*=\\s*buildExplicitBridgeRoutes\\(\\{([\\s\\S]*?)\\}(?:,\\s*([A-Za-z0-9_]+)\\s*)?\\);`,
+      'm'
+    ).exec(source);
+    if (!bridgeBlockMatch) {
+      return [];
+    }
+
+    const bridgeBody = bridgeBlockMatch[1];
+    const componentName = bridgeBlockMatch[2] ? String(bridgeBlockMatch[2]) : 'ModuleBridgePage';
+    const entries = [];
+    const moduleRegex = /([A-Za-z0-9_]+)\s*:\s*\[([\s\S]*?)\]/g;
+    let moduleMatch;
+    while ((moduleMatch = moduleRegex.exec(bridgeBody)) !== null) {
+      const moduleKey = moduleMatch[1].toLowerCase();
+      const actionsBody = moduleMatch[2];
+      const actionRegex = /'([^']+)'/g;
+      let actionMatch;
+      while ((actionMatch = actionRegex.exec(actionsBody)) !== null) {
+        entries.push({
+          routeKey: `${moduleKey}.${actionMatch[1].toLowerCase()}`,
+          component: componentName
+        });
       }
+    }
+
+    return entries;
+  }
+
+  const registryBlockMatch = /const\s+registry:[\s\S]*?=\s*\{([\s\S]*?)\n\};/m.exec(source);
+  if (!registryBlockMatch) {
+    throw new Error('Unable to parse route registry block.');
+  }
+
+  const routes = new Map();
+  const registryBody = registryBlockMatch[1];
+  const routeRegex = /'([^']+)'\s*:\s*([A-Za-z0-9_]+)/g;
+  let routeMatch;
+  while ((routeMatch = routeRegex.exec(registryBody)) !== null) {
+    routes.set(routeMatch[1].toLowerCase(), routeMatch[2]);
+  }
+
+  for (const entry of parseNamedObjectRoutes('explicitNativeActionRoutes')) {
+    routes.set(entry.routeKey, entry.component);
+  }
+  for (const entry of parseExplicitBridgeRoutes('explicitBridgeActionRoutes')) {
+    routes.set(entry.routeKey, entry.component);
+  }
+  for (const entry of parseExplicitBridgeRoutes('explicitActionCompatRoutes')) {
+    routes.set(entry.routeKey, entry.component);
+  }
+
+  const guardedBlockMatch = /const\s+guardedRouteParams:[\s\S]*?=\s*\{([\s\S]*?)\n\};/m.exec(source);
+  const guardedRouteParams = new Map();
+  const guardedRoutes = new Set();
+  if (guardedBlockMatch) {
+    const guardedBody = guardedBlockMatch[1];
+    const guardedRegex = /'([^']+)'\s*:\s*\[([^\]]*)\]/g;
+    let guardedMatch;
+    while ((guardedMatch = guardedRegex.exec(guardedBody)) !== null) {
+      const routeKey = guardedMatch[1].toLowerCase();
+      guardedRoutes.add(routeKey);
+      const rawList = guardedMatch[2] || '';
+      const params = rawList
+        .split(',')
+        .map((entry) => entry.replace(/['"\s]/g, '').trim())
+        .filter((entry) => entry !== '');
+      guardedRouteParams.set(routeKey, params);
     }
   }
 
-  return '';
+  return { routes, guardedRoutes, guardedRouteParams };
 }
 
-const registryBlock = extractBlock('const registry');
-const guardBlock = extractBlock('const guardedRouteParams');
+function classifyComponent(component) {
+  if (component === 'ModuleBridgePage') {
+    return 'bridge';
+  }
 
-const routeRows = [];
-const routePattern = /'([^']+)':\s*([A-Za-z0-9_]+)/g;
-let routeMatch = routePattern.exec(registryBlock);
-while (routeMatch) {
-  const routeKey = routeMatch[1];
-  const component = routeMatch[2];
+  if (LEGACY_FORWARD_COMPONENTS.has(component)) {
+    return 'legacy-forward';
+  }
+
+  return 'native-ui';
+}
+
+const source = readFileSync(routeRegistryPath, 'utf8');
+const { routes, guardedRoutes, guardedRouteParams } = parseRouteRegistry(source);
+
+const routeRows = Array.from(routes.entries()).map(([routeKey, component]) => {
   const moduleName = routeKey.split('.')[0] || '(unknown)';
-  const coverage = component === 'ModuleBridgePage' ? 'bridge' : 'native';
-  routeRows.push({
+  const coverage = classifyComponent(component);
+  return {
     routeKey,
     moduleName,
     component,
-    coverage
-  });
-  routeMatch = routePattern.exec(registryBlock);
-}
-
-const routeGuards = new Map();
-const guardPattern = /'([^']+)':\s*\[([^\]]*)\]/g;
-let guardMatch = guardPattern.exec(guardBlock);
-while (guardMatch) {
-  const routeKey = guardMatch[1];
-  const rawGuardList = guardMatch[2] || '';
-  const params = rawGuardList
-    .split(',')
-    .map((entry) => entry.replace(/['"\s]/g, '').trim())
-    .filter((entry) => entry !== '');
-  routeGuards.set(routeKey, params);
-  guardMatch = guardPattern.exec(guardBlock);
-}
+    coverage,
+    guarded: guardedRoutes.has(routeKey),
+    guardParams: guardedRouteParams.get(routeKey) || []
+  };
+});
 
 routeRows.sort((left, right) => {
   if (left.moduleName === right.moduleName) {
@@ -77,15 +153,18 @@ routeRows.sort((left, right) => {
 });
 
 const totalCount = routeRows.length;
-const nativeCount = routeRows.filter((row) => row.coverage === 'native').length;
+const nativeCount = routeRows.filter((row) => row.coverage === 'native-ui').length;
+const legacyForwardCount = routeRows.filter((row) => row.coverage === 'legacy-forward').length;
 const bridgeCount = routeRows.filter((row) => row.coverage === 'bridge').length;
 const nativeRate = totalCount > 0 ? ((nativeCount / totalCount) * 100).toFixed(1) : '0.0';
 
 const moduleSummary = new Map();
 for (const row of routeRows) {
-  const current = moduleSummary.get(row.moduleName) || { native: 0, bridge: 0 };
-  if (row.coverage === 'native') {
-    current.native += 1;
+  const current = moduleSummary.get(row.moduleName) || { nativeUI: 0, legacyForward: 0, bridge: 0 };
+  if (row.coverage === 'native-ui') {
+    current.nativeUI += 1;
+  } else if (row.coverage === 'legacy-forward') {
+    current.legacyForward += 1;
   } else {
     current.bridge += 1;
   }
@@ -94,13 +173,18 @@ for (const row of routeRows) {
 
 const summaryLines = Array.from(moduleSummary.entries())
   .sort(([left], [right]) => left.localeCompare(right))
-  .map(([moduleName, counts]) => `- \`${moduleName}\`: native=${counts.native}, bridge=${counts.bridge}`);
+  .map(
+    ([moduleName, counts]) =>
+      `- \`${moduleName}\`: native-ui=${counts.nativeUI}, legacy-forward=${counts.legacyForward}, bridge=${counts.bridge}`
+  );
 
 const routeTableRows = routeRows.map((row) => {
-  const guards = routeGuards.get(row.routeKey);
-  const guardText = guards && guards.length > 0 ? guards.join(', ') : '-';
+  const guardText = row.guardParams.length > 0 ? row.guardParams.join(', ') : '-';
   return `| \`${row.routeKey}\` | \`${row.component}\` | ${row.coverage} | ${guardText} |`;
 });
+
+const legacyForwardRows = routeRows.filter((row) => row.coverage === 'legacy-forward');
+const bridgeRows = routeRows.filter((row) => row.coverage === 'bridge');
 
 const generatedAt = new Date().toISOString();
 
@@ -109,18 +193,37 @@ const markdown = [
   '',
   `Generated: ${generatedAt}`,
   '',
+  'This report classifies routeRegistry mappings into true native UI routes, intentional legacy-forward endpoints/wrappers, and bridge fallbacks.',
+  '',
   '## Summary',
   '',
   `- Total route mappings: **${totalCount}**`,
-  `- Native mappings: **${nativeCount}**`,
+  `- True native UI mappings: **${nativeCount}**`,
+  `- Intentional legacy-forward mappings: **${legacyForwardCount}**`,
   `- Bridge mappings: **${bridgeCount}**`,
-  `- Native coverage (mapping-level): **${nativeRate}%**`,
+  `- True native UI coverage (mapping-level): **${nativeRate}%**`,
   '',
   '## Module Summary',
   '',
   ...summaryLines,
   '',
-  '## Route Detail',
+  '## Intentional Legacy-Forward Routes',
+  '',
+  '| Route | Component | Guarded |',
+  '| --- | --- | --- |',
+  ...(legacyForwardRows.length > 0
+    ? legacyForwardRows.map((row) => `| \`${row.routeKey}\` | \`${row.component}\` | ${row.guarded ? 'yes' : 'no'} |`)
+    : ['| _(none)_ | _(none)_ | _(none)_ |']),
+  '',
+  '## Bridge Routes',
+  '',
+  '| Route | Component | Guarded |',
+  '| --- | --- | --- |',
+  ...(bridgeRows.length > 0
+    ? bridgeRows.map((row) => `| \`${row.routeKey}\` | \`${row.component}\` | ${row.guarded ? 'yes' : 'no'} |`)
+    : ['| _(none)_ | _(none)_ | _(none)_ |']),
+  '',
+  '## Full Route Detail',
   '',
   '| Route | Component | Coverage | Guarded Params |',
   '| --- | --- | --- | --- |',

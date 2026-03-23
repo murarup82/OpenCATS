@@ -184,7 +184,7 @@ class ImportUI extends UserInterface
                     return;
                 }
 
-                $this->renderModernImportMutationJSON('import-revert', false, 'invalidImportID', 'Invalid import ID.');
+                $this->renderModernImportMutationJSON('import-revert', 'import.revert.v1', false, 'invalidImportID', 'Invalid import ID.');
                 return;
             }
 
@@ -215,7 +215,7 @@ class ImportUI extends UserInterface
                     return;
                 }
 
-                $this->renderModernImportMutationJSON('import-revert', false, 'invalidImportID', 'Invalid import ID.');
+                $this->renderModernImportMutationJSON('import-revert', 'import.revert.v1', false, 'invalidImportID', 'Invalid import ID.');
                 return;
             }
 
@@ -250,7 +250,7 @@ class ImportUI extends UserInterface
                 return;
             }
 
-            $this->renderModernImportMutationJSON('import-revert', true, 'importReverted', $message);
+            $this->renderModernImportMutationJSON('import-revert', 'import.revert.v1', true, 'importReverted', $message);
             return;
         }
 
@@ -539,18 +539,18 @@ class ImportUI extends UserInterface
         echo json_encode($payload);
     }
 
-    private function renderModernImportMutationJSON($modernPage, $success, $code, $message)
+    private function renderModernImportMutationJSON($modernPage, $contractKey, $success, $code, $message, $extra = array())
     {
-        $payload = array(
+        $payload = array_merge(array(
             'meta' => array(
                 'contractVersion' => 1,
-                'contractKey' => 'import.revert.v1',
+                'contractKey' => $contractKey,
                 'modernPage' => $modernPage
             ),
             'success' => (bool) $success,
             'code' => (string) $code,
             'message' => (string) $message
-        );
+        ), $extra);
 
         if (!headers_sent())
         {
@@ -2433,6 +2433,10 @@ class ImportUI extends UserInterface
 
     private function importBulkResumes()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS'])) {
             CommonErrors::fatal(COMMONERROR_NOTLOGGEDIN, $this);
         }
@@ -2446,6 +2450,34 @@ class ImportUI extends UserInterface
         $bulkResumes = $attachments->getBulkAttachments();
 
         if (!count($bulkResumes)) {
+            if ($isModernJSON)
+            {
+                if ($modernPage !== '' && $modernPage !== 'import-bulk-resumes')
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'error' => true,
+                        'message' => 'Unsupported modern page contract.',
+                        'requestedPage' => $modernPage
+                    ));
+                    return;
+                }
+
+                $this->renderModernImportMutationJSON(
+                    'import-bulk-resumes',
+                    'import.bulkResumes.v1',
+                    false,
+                    'noBulkResumes',
+                    'No bulk resume documents were found.'
+                );
+                return;
+            }
+
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this);
         }
 
@@ -2469,6 +2501,37 @@ class ImportUI extends UserInterface
                 @file_put_contents($newFileName, $contents);
                 chmod($newFileName, 0777);
             }
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'import-bulk-resumes')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernImportMutationJSON(
+                'import-bulk-resumes',
+                'import.bulkResumes.v1',
+                true,
+                'bulkResumesPrepared',
+                'Bulk resume documents were prepared.',
+                array(
+                    'redirectURL' => CATSUtility::getIndexName() . '?m=import&a=massImport&step=2&ui=legacy'
+                )
+            );
+            return;
         }
 
         CATSUtility::transferRelativeURI('m=import&a=massImport&step=2');

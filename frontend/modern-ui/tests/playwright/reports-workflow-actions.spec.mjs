@@ -71,4 +71,24 @@ test.describe('Reports workflow action smoke', () => {
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });
+
+  test('reports.showPlacementReport ui=modern exposes an explicit legacy fallback before redirecting', async ({
+    context,
+    page
+  }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    await page.goto(buildModernRouteURL('reports', 'showPlacementReport'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
+    await expect(page.getByRole('heading', { name: 'Placement Report Redirect' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Continue to Legacy Report' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open Legacy UI' })).toBeVisible();
+    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+  });
 });

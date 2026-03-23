@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
+import { fetchImportBulkResumesModernMutation } from '../lib/api';
 import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
 import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
@@ -61,12 +62,12 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowActionCopy> = {
     statusMessage: 'Forwarding to the legacy import revert endpoint...'
   },
   importbulkresumes: {
-    mode: 'legacy-redirect',
+    mode: 'endpoint-forward',
     title: 'Import Bulk Resumes',
-    subtitle: 'Redirecting to the legacy bulk resume import workflow.',
-    panelTitle: 'Bulk Resume Import Redirect',
-    panelSubtitle: 'This action still runs through the legacy bulk import flow.',
-    statusMessage: 'Redirecting to the legacy bulk resume import endpoint...'
+    subtitle: 'Forwarding the bulk resume rescan workflow without embedding the legacy frame.',
+    panelTitle: 'Bulk Resume Rescan Forward',
+    panelSubtitle: 'This action runs the bulk resume import contract, then continues into mass import.',
+    statusMessage: 'Preparing bulk resume rescan and forwarding to mass import...'
   },
   deletebulkresumes: {
     mode: 'legacy-redirect',
@@ -141,6 +142,7 @@ function normalizeAction(value: string): ImportWorkflowActionKey | '' {
 
 export function ImportWorkflowActionPage({ bootstrap }: Props) {
   const actionKey = useMemo(() => normalizeAction(bootstrap.targetAction), [bootstrap.targetAction]);
+  const [forwardError, setForwardError] = useState<string>('');
   const legacyURL = useMemo(() => ensureUIURL(bootstrap.legacyURL, 'legacy'), [bootstrap.legacyURL]);
   const modernImportURL = useMemo(
     () => ensureModernUIURL(`${bootstrap.indexName}?m=import&a=import`),
@@ -151,9 +153,39 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
   const copy = actionKey ? ACTION_COPY[actionKey] : null;
 
   useEffect(() => {
+    let mounted = true;
+
     if (actionKey === 'viewpending') {
       window.location.replace(modernImportURL);
       return;
+    }
+
+    if (actionKey === 'importbulkresumes') {
+      void (async () => {
+        try {
+          setForwardError('');
+          const result = await fetchImportBulkResumesModernMutation(bootstrap);
+          if (!mounted) {
+            return;
+          }
+
+          if (!result.success) {
+            throw new Error(String(result.message || 'Unable to prepare bulk resume import.'));
+          }
+
+          const redirectURL = ensureUIURL(String(result.redirectURL || legacyURL), 'legacy');
+          window.location.replace(redirectURL);
+        } catch (error) {
+          if (!mounted) {
+            return;
+          }
+          setForwardError(error instanceof Error ? error.message : 'Unable to prepare bulk resume import.');
+        }
+      })();
+
+      return () => {
+        mounted = false;
+      };
     }
 
     if (copy?.mode === 'endpoint-forward') {
@@ -161,13 +193,20 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
         window.location.assign(legacyURL);
       }, 80);
 
-      return () => window.clearTimeout(timer);
+      return () => {
+        mounted = false;
+        window.clearTimeout(timer);
+      };
     }
 
     if (copy?.mode === 'legacy-redirect') {
       window.location.assign(legacyURL);
     }
-  }, [actionKey, copy, legacyURL, modernImportURL]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [actionKey, bootstrap, copy, legacyURL, modernImportURL]);
 
   if (!copy || actionKey === '') {
     return (
@@ -253,19 +292,21 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
                   Loading legacy import workspace...
                 </div>
               ) : null}
-              {isEmbedMode ? (
-                <iframe
-                  key={frameReloadToken}
-                  title={`${copy.title} legacy workspace`}
-                  className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
+                {isEmbedMode ? (
+                  <iframe
+                    key={frameReloadToken}
+                    title={`${copy.title} legacy workspace`}
+                    className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
                   src={embeddedLegacyURL}
                   onLoad={handleFrameLoad}
                 />
-              ) : (
-                <section className="avel-list-panel">
-                  <div className="modern-state">{copy.statusMessage}</div>
-                </section>
-              )}
+                ) : (
+                  <section className="avel-list-panel">
+                    <div className={`modern-state${forwardError !== '' ? ' modern-state--error' : ''}`} role={forwardError !== '' ? 'alert' : undefined}>
+                      {forwardError !== '' ? forwardError : copy.statusMessage}
+                    </div>
+                  </section>
+                )}
             </div>
           </section>
         </div>

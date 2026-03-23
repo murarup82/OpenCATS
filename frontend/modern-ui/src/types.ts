@@ -159,6 +159,18 @@ export type ModernMutationResponse = {
   message?: string;
 };
 
+export type ImportBulkResumesModernMutationResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  success: boolean;
+  code?: string;
+  message?: string;
+  redirectURL?: string;
+};
+
 export type CandidateGoogleDriveUploadMutationResponse = ModernMutationResponse & {
   editURL?: string;
   fileID?: string;
@@ -1756,6 +1768,41 @@ export type SettingsWizardLocalizationModernDataResponse = ModernMutationRespons
 export type SettingsWizardPasswordModernDataResponse = ModernMutationResponse;
 export type SettingsWizardSiteNameModernDataResponse = ModernMutationResponse;
 export type SettingsWizardWebsiteModernDataResponse = ModernMutationResponse;
+
+export type SettingsProfileSummary = {
+  userID: number;
+  fullName: string;
+  isDemoUser: boolean;
+  authMode: string;
+};
+
+export type SettingsMyProfileModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  summary: SettingsProfileSummary;
+  actions: {
+    showProfileURL: string;
+    changePasswordURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsMyProfileChangePasswordModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  summary: SettingsProfileSummary;
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL: string;
+  };
+};
 
 export type SettingsAdministrationModernDataResponse = {
   meta: {

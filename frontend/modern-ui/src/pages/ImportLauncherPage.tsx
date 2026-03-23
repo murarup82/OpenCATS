@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchImportLauncherModernData } from '../lib/api';
 import { useServerQueryState } from '../lib/useServerQueryState';
+import { ensureModernUIURL } from '../lib/navigation';
 import { PageContainer } from '../components/layout/PageContainer';
 import { DataTable } from '../components/primitives/DataTable';
 import { ErrorState } from '../components/states/ErrorState';
@@ -122,7 +123,7 @@ export function ImportLauncherPage({ bootstrap }: Props) {
                   <a className="modern-btn modern-btn--secondary" href={data.actions.massImportURL}>
                     Mass Import
                   </a>
-                  <a className="modern-btn modern-btn--secondary" href={data.actions.importBulkResumesURL}>
+                  <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.importBulkResumesURL)}>
                     Rescan Bulk Resumes
                   </a>
                   {data.permissions.canManageBulkResumes ? (
@@ -132,7 +133,7 @@ export function ImportLauncherPage({ bootstrap }: Props) {
                   ) : null}
                 </div>
                 <p className="modern-state" style={{ marginTop: '8px' }}>
-                  Import upload and commit forms still run through legacy endpoints; this launcher modernizes access and review.
+                  Import upload and commit forms still run through legacy endpoints; bulk resume rescans now use the modern forward path.
                 </p>
               </section>
 

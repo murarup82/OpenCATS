@@ -1297,7 +1297,57 @@ class SettingsUI extends UserInterface
      */
     private function myProfile()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $requestedSubpage = strtolower($this->getTrimmedInput('s', $_GET));
         $isDemoUser = $_SESSION['CATS']->isDemo();
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($requestedSubpage === '')
+            {
+                if ($modernPage !== '' && $modernPage !== 'settings-myprofile')
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'error' => true,
+                        'message' => 'Unsupported modern page contract.',
+                        'requestedPage' => $modernPage
+                    ));
+                    return;
+                }
+
+                $this->renderModernMyProfileJSON('settings-myprofile');
+                return;
+            }
+
+            if ($requestedSubpage === 'changepassword')
+            {
+                if ($modernPage !== '' && $modernPage !== 'settings-myprofile-change-password')
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'error' => true,
+                        'message' => 'Unsupported modern page contract.',
+                        'requestedPage' => $modernPage
+                    ));
+                    return;
+                }
+
+                $this->renderModernMyProfileChangePasswordJSON('settings-myprofile-change-password');
+                return;
+            }
+        }
 
         if (isset($_GET['s']))
         {
@@ -3546,37 +3596,41 @@ class SettingsUI extends UserInterface
         $candidates = new Candidates($this->_siteID);
         $totalCandidates = $candidates->getCount();
 
-        if ($responseFormat === 'modern-json' && $requestedSubpage === '')
+        if ($responseFormat === 'modern-json')
         {
-            if ($modernPage !== '' && $modernPage !== 'settings-administration')
+            if ($requestedSubpage === '')
             {
-                if (!headers_sent())
+                if ($modernPage !== '' && $modernPage !== 'settings-administration')
                 {
-                    header('HTTP/1.1 400 Bad Request');
-                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
-                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'error' => true,
+                        'message' => 'Unsupported modern page contract.',
+                        'requestedPage' => $modernPage
+                    ));
+                    return;
                 }
-                echo json_encode(array(
-                    'error' => true,
-                    'message' => 'Unsupported modern page contract.',
-                    'requestedPage' => $modernPage
-                ));
+
+                $this->renderModernAdministrationJSON(
+                    'settings-administration',
+                    $systemInfoData,
+                    $newVersion,
+                    $versionCheckPref,
+                    $systemAdministration,
+                    $careerPortalUnlock,
+                    $rolePermissionsEnabled,
+                    $totalCandidates,
+                    $message,
+                    $messageSuccess
+                );
                 return;
             }
 
-            $this->renderModernAdministrationJSON(
-                'settings-administration',
-                $systemInfoData,
-                $newVersion,
-                $versionCheckPref,
-                $systemAdministration,
-                $careerPortalUnlock,
-                $rolePermissionsEnabled,
-                $totalCandidates,
-                $message,
-                $messageSuccess
-            );
-            return;
         }
 
         // FIXME: 's' isn't a good variable name.
@@ -4766,6 +4820,65 @@ class SettingsUI extends UserInterface
         $systemInfo->updateVersionCheckPrefs($enableNewVersionCheck);
 
         NewVersionCheck::checkForUpdate();
+    }
+
+    private function renderModernMyProfileJSON($modernPage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.myprofile.v1',
+                'modernPage' => $modernPage
+            ),
+            'summary' => array(
+                'userID' => (int) $this->_userID,
+                'fullName' => (string) $_SESSION['CATS']->getFullName(),
+                'isDemoUser' => ((bool) $_SESSION['CATS']->isDemo()),
+                'authMode' => (string) AUTH_MODE
+            ),
+            'actions' => array(
+                'showProfileURL' => sprintf(
+                    '%s?m=settings&a=showUser&userID=%d&privledged=false&ui=legacy',
+                    $baseURL,
+                    (int) $this->_userID
+                ),
+                'changePasswordURL' => sprintf(
+                    '%s?m=settings&a=myProfile&s=changePassword&ui=modern',
+                    $baseURL
+                ),
+                'legacyURL' => sprintf('%s?m=settings&a=myProfile&ui=legacy', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernMyProfileChangePasswordJSON($modernPage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.myprofile.changePassword.v1',
+                'modernPage' => $modernPage
+            ),
+            'summary' => array(
+                'userID' => (int) $this->_userID,
+                'fullName' => (string) $_SESSION['CATS']->getFullName(),
+                'isDemoUser' => ((bool) $_SESSION['CATS']->isDemo()),
+                'authMode' => (string) AUTH_MODE
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=changePassword', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=myProfile&s=changePassword&ui=legacy', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=myProfile&ui=modern', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
     }
 
     private function buildModernAdministrationSection($key, $title, $description, $items)

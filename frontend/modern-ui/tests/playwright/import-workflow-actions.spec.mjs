@@ -6,6 +6,7 @@ const sessionCookie = String(process.env.OPENCATS_COOKIE || '').trim();
 const contractVersion = 1;
 const importLauncherContractKey = 'import.launcher.v1';
 const importRevertContractKey = 'import.revert.v1';
+const importBulkResumesContractKey = 'import.bulkResumes.v1';
 
 function joinURL(root, path) {
   const normalizedRoot = root.endsWith('/') ? root.slice(0, -1) : root;
@@ -39,12 +40,12 @@ function buildModernRouteURL(moduleName, actionName, query = {}) {
   return `${joinURL(baseURL, indexPath)}?${params.toString()}`;
 }
 
-function buildModernJSONURL(moduleName, actionName, query = {}) {
+function buildModernJSONURL(moduleName, actionName, modernPage, query = {}) {
   const params = new URLSearchParams({
     m: moduleName,
     a: actionName,
     format: 'modern-json',
-    modernPage: actionName === 'import' ? 'import-launcher' : 'import-revert',
+    modernPage,
     ui: 'legacy'
   });
 
@@ -58,7 +59,7 @@ function buildModernJSONURL(moduleName, actionName, query = {}) {
 }
 
 async function fetchImportLauncherModernJSON(request) {
-  const response = await request.get(buildModernJSONURL('import', 'import'), {
+  const response = await request.get(buildModernJSONURL('import', 'import', 'import-launcher'), {
     headers: buildHeaders(),
     failOnStatusCode: false
   });
@@ -68,6 +69,7 @@ async function fetchImportLauncherModernJSON(request) {
   const payload = await response.json();
   const meta = payload?.meta || {};
   const pendingImports = Array.isArray(payload?.pendingImports) ? payload.pendingImports : [];
+  const bulkResumeCount = Number(payload?.summary?.bulkResumeCount || 0);
 
   expect(Number(meta.contractVersion || 0)).toBe(contractVersion);
   expect(String(meta.contractKey || '').trim()).toBe(importLauncherContractKey);
@@ -77,7 +79,7 @@ async function fetchImportLauncherModernJSON(request) {
     expect(String(pendingImports[0]?.revertURL || '')).toContain('ui=modern');
   }
 
-  return { payload, pendingImports };
+  return { payload, pendingImports, bulkResumeCount };
 }
 
 test.describe('Import workflow route smoke', () => {
@@ -125,7 +127,7 @@ test.describe('Import workflow route smoke', () => {
     test.skip(pendingImports.length === 0, 'Set up at least one pending import to run import.revert contract smoke.');
 
     const response = await request.get(
-      buildModernJSONURL('import', 'revert', {
+      buildModernJSONURL('import', 'revert', 'import-revert', {
         importID: pendingImports[0].importID
       }),
       {
@@ -145,5 +147,53 @@ test.describe('Import workflow route smoke', () => {
     expect(payload.success).toBe(true);
     expect(String(payload.code || '').trim()).toBe('importReverted');
     expect(String(payload.message || '').trim()).not.toBe('');
+  });
+
+  test('import.importbulkresumes ui=modern forwards without a runtime boundary and no iframe', async ({
+    context,
+    page,
+    request
+  }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    const { bulkResumeCount } = await fetchImportLauncherModernJSON(request);
+    test.skip(bulkResumeCount === 0, 'Set up at least one bulk resume document to run import.importBulkResumes smoke.');
+
+    await page.goto(buildModernRouteURL('import', 'importbulkresumes'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.locator('iframe')).toHaveCount(0);
+  });
+
+  test('import.importBulkResumes modern-json returns the import.bulkResumes.v1 contract', async ({ request }) => {
+    const { bulkResumeCount } = await fetchImportLauncherModernJSON(request);
+    test.skip(bulkResumeCount === 0, 'Set up at least one bulk resume document to run import.importBulkResumes contract smoke.');
+
+    const response = await request.get(
+      buildModernJSONURL('import', 'importBulkResumes', 'import-bulk-resumes'),
+      {
+        headers: buildHeaders(),
+        failOnStatusCode: false
+      }
+    );
+
+    expect(response.ok(), 'import.importBulkResumes should return HTTP 200').toBeTruthy();
+
+    const payload = await response.json();
+    const meta = payload?.meta || {};
+
+    expect(Number(meta.contractVersion || 0)).toBe(contractVersion);
+    expect(String(meta.contractKey || '').trim()).toBe(importBulkResumesContractKey);
+    expect(String(meta.modernPage || '').trim()).toBe('import-bulk-resumes');
+    expect(payload.success).toBe(true);
+    expect(String(payload.code || '').trim()).toBe('bulkResumesPrepared');
+    expect(String(payload.message || '').trim()).not.toBe('');
+    expect(String(payload.redirectURL || '')).toContain('m=import');
+    expect(String(payload.redirectURL || '')).toContain('a=massImport');
+    expect(String(payload.redirectURL || '')).toContain('ui=legacy');
   });
 });

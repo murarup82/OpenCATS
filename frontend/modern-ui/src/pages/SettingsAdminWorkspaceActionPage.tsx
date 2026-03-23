@@ -2,10 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
-import { fetchSettingsAdministrationModernData } from '../lib/api';
+import {
+  fetchSettingsMyProfileChangePasswordModernData,
+  fetchSettingsAdministrationModernData,
+  fetchSettingsMyProfileModernData
+} from '../lib/api';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
-import type { SettingsAdministrationModernDataResponse, UIModeBootstrap } from '../types';
+import type {
+  SettingsAdministrationModernDataResponse,
+  SettingsMyProfileChangePasswordModernDataResponse,
+  SettingsMyProfileModernDataResponse,
+  UIModeBootstrap
+} from '../types';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -96,6 +105,12 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     subtitle: 'Update password settings in compatibility mode.',
     panelTitle: 'Change Password Workspace',
     panelSubtitle: 'Legacy password workflow remains embedded while modernization continues.'
+  },
+  'settings.myprofile.changepassword': {
+    title: 'Change Password',
+    subtitle: 'Update password settings in native mode.',
+    panelTitle: 'Change Password Workspace',
+    panelSubtitle: 'Legacy password workflow remains available while the native card remains focused on the form.'
   },
   'settings.gdprsettings': {
     title: 'GDPR Settings',
@@ -274,8 +289,45 @@ const FALLBACK_COPY: PageCopy = {
   panelSubtitle: 'Legacy settings workflow is embedded while modernization continues.'
 };
 
+type NativeSettingsRouteMode = 'administration' | 'myprofile' | 'changePassword' | 'fallback';
+
 function toBooleanLabel(value: boolean, onLabel: string, offLabel: string): string {
   return value ? onLabel : offLabel;
+}
+
+type SettingsSummaryCard = {
+  label: string;
+  value: string;
+  note: string;
+  tone: 'info' | 'success' | 'warning';
+};
+
+function buildSettingsProfileSummaryCards(summary: {
+  userID: number;
+  fullName: string;
+  isDemoUser: boolean;
+  authMode: string;
+}): SettingsSummaryCard[] {
+  return [
+    {
+      label: 'Signed in as',
+      value: summary.fullName || '--',
+      note: `User ID ${summary.userID}`,
+      tone: 'info'
+    },
+    {
+      label: 'Authentication',
+      value: summary.authMode || '--',
+      note: summary.isDemoUser ? 'Demo account' : 'Standard account',
+      tone: summary.isDemoUser ? 'warning' : 'success'
+    },
+    {
+      label: 'Demo access',
+      value: toBooleanLabel(summary.isDemoUser, 'Enabled', 'Disabled'),
+      note: 'Legacy settings stay available',
+      tone: summary.isDemoUser ? 'warning' : 'info'
+    }
+  ];
 }
 
 function SettingsAdministrationNativeShell({
@@ -426,6 +478,34 @@ function buildRouteKey(bootstrap: UIModeBootstrap): string {
   return `${toLowerText(bootstrap.targetModule)}.${toLowerText(bootstrap.targetAction)}`;
 }
 
+function getRequestedSubpage(): string {
+  return toLowerText(new URLSearchParams(window.location.search).get('s'));
+}
+
+function buildNativeRouteMode(routeKey: string, requestedSubpage: string): NativeSettingsRouteMode {
+  if (routeKey === 'settings.administration' && requestedSubpage === '') {
+    return 'administration';
+  }
+
+  if (routeKey === 'settings.myprofile' && requestedSubpage === 'changepassword') {
+    return 'changePassword';
+  }
+
+  if (routeKey === 'settings.myprofile' && requestedSubpage === '') {
+    return 'myprofile';
+  }
+
+  return 'fallback';
+}
+
+function buildCopyKey(routeKey: string, nativeRouteMode: NativeSettingsRouteMode): string {
+  if (nativeRouteMode === 'changePassword') {
+    return 'settings.myprofile.changepassword';
+  }
+
+  return routeKey;
+}
+
 function resolveBackLink(routeKey: string, bootstrap: UIModeBootstrap): BackLink {
   if (routeKey === 'settings.administration') {
     return {
@@ -440,30 +520,229 @@ function resolveBackLink(routeKey: string, bootstrap: UIModeBootstrap): BackLink
   };
 }
 
+function SettingsMyProfileNativeShell({
+  data
+}: {
+  data: SettingsMyProfileModernDataResponse;
+}) {
+  const changePasswordURL = ensureModernUIURL(data.actions.changePasswordURL);
+  const showProfileURL = ensureUIURL(data.actions.showProfileURL, 'legacy');
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const summaryCards = buildSettingsProfileSummaryCards(data.summary);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-profile-page">
+      <PageContainer
+        title="My Profile"
+        subtitle="Review your account and jump to password changes from the native shell."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={changePasswordURL}>
+              Change Password
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.summary.isDemoUser ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Notice</strong>
+              <span>Demo users cannot modify settings.</span>
+            </section>
+          ) : null}
+
+          <section className="avel-settings-admin-summary">
+            {summaryCards.map((card) => (
+              <article key={card.label} className={`avel-settings-admin-summary-card is-${card.tone}`}>
+                <span className="avel-settings-admin-summary-label">{card.label}</span>
+                <strong className="avel-settings-admin-summary-value">{card.value}</strong>
+                <span className="avel-settings-admin-summary-note">{card.note}</span>
+              </article>
+            ))}
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Profile Shortcuts</h2>
+              <p className="avel-list-panel__hint">
+                Open the legacy profile view or jump straight to the native password card route.
+              </p>
+            </div>
+
+            <div className="avel-settings-admin-links">
+              <a className="avel-settings-admin-link" href={showProfileURL}>
+                <span className="avel-settings-admin-link__label-row">
+                  <span className="avel-settings-admin-link__label">View Profile</span>
+                </span>
+                <span className="avel-settings-admin-link__description">
+                  Open the existing legacy profile details view.
+                </span>
+              </a>
+              <a className="avel-settings-admin-link is-highlighted" href={changePasswordURL}>
+                <span className="avel-settings-admin-link__label-row">
+                  <span className="avel-settings-admin-link__label">Change Password</span>
+                </span>
+                <span className="avel-settings-admin-link__description">
+                  Open the native change-password card route.
+                </span>
+              </a>
+            </div>
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Legacy Workspace</h2>
+              <p className="avel-list-panel__hint">
+                Legacy profile navigation remains available without affecting the modern shell.
+              </p>
+            </div>
+            <div className="modern-compat-page__actions">
+              <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+                Open In New Tab
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                Open Legacy UI
+              </a>
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsChangePasswordNativeShell({
+  data
+}: {
+  data: SettingsMyProfileChangePasswordModernDataResponse;
+}) {
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const summaryCards = buildSettingsProfileSummaryCards(data.summary);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-password-page">
+      <PageContainer
+        title="Change Password"
+        subtitle="Keep the legacy submit flow while presenting the password form in a native card."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To My Profile
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.summary.isDemoUser ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Notice</strong>
+              <span>Demo users cannot modify settings.</span>
+            </section>
+          ) : null}
+
+          {toLowerText(data.summary.authMode) === 'ldap' ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>LDAP Enabled</strong>
+              <span>Password changes remain managed outside OpenCATS.</span>
+            </section>
+          ) : null}
+
+          <section className="avel-settings-admin-summary">
+            {summaryCards.map((card) => (
+              <article key={card.label} className={`avel-settings-admin-summary-card is-${card.tone}`}>
+                <span className="avel-settings-admin-summary-label">{card.label}</span>
+                <strong className="avel-settings-admin-summary-value">{card.value}</strong>
+                <span className="avel-settings-admin-summary-note">{card.note}</span>
+              </article>
+            ))}
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Password Form</h2>
+              <p className="avel-list-panel__hint">
+                This card posts to the existing legacy password-change endpoint without changing field names.
+              </p>
+            </div>
+
+            <form className="avel-settings-password-form" action={data.actions.submitURL} method="post" name="changePasswordForm" id="changePasswordForm">
+              <input type="hidden" name="postback" id="postback" value="postback" />
+
+              <div className="avel-settings-password-grid">
+                <label className="avel-settings-password-field" htmlFor="currentPassword">
+                  <span>Current Password</span>
+                  <input className="avel-form-control" type="password" id="currentPassword" name="currentPassword" />
+                </label>
+
+                <label className="avel-settings-password-field" htmlFor="newPassword">
+                  <span>New Password</span>
+                  <input className="avel-form-control" type="password" id="newPassword" name="newPassword" />
+                </label>
+
+                <label className="avel-settings-password-field" htmlFor="retypeNewPassword">
+                  <span>Retype New Password</span>
+                  <input className="avel-form-control" type="password" id="retypeNewPassword" name="retypeNewPassword" />
+                </label>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis">
+                  Change Password
+                </button>
+                <button type="reset" className="modern-btn modern-btn--secondary">
+                  Reset
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
+                  Back
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
 export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
   const routeKey = useMemo(() => buildRouteKey(bootstrap), [bootstrap]);
-  const copy = useMemo(() => COPY_BY_ROUTE_KEY[routeKey] || FALLBACK_COPY, [routeKey]);
+  const requestedSubpage = useMemo(() => getRequestedSubpage(), []);
+  const nativeRouteMode = useMemo(() => buildNativeRouteMode(routeKey, requestedSubpage), [routeKey, requestedSubpage]);
+  const copyKey = useMemo(() => buildCopyKey(routeKey, nativeRouteMode), [routeKey, nativeRouteMode]);
+  const copy = useMemo(() => COPY_BY_ROUTE_KEY[copyKey] || FALLBACK_COPY, [copyKey]);
   const backLink = useMemo(() => resolveBackLink(routeKey, bootstrap), [routeKey, bootstrap]);
   const legacyURL = useMemo(() => ensureUIURL(bootstrap.legacyURL, 'legacy'), [bootstrap.legacyURL]);
   const embeddedURL = useMemo(() => buildEmbeddedLegacyURL(legacyURL), [legacyURL]);
-  const isNativeAdministrationRoute = routeKey === 'settings.administration' && String(new URLSearchParams(window.location.search).get('s') || '').trim() === '';
-  const [nativeData, setNativeData] = useState<SettingsAdministrationModernDataResponse | null>(null);
+  const isNativeRoute = nativeRouteMode !== 'fallback';
+  const [nativeData, setNativeData] = useState<
+    SettingsAdministrationModernDataResponse | SettingsMyProfileModernDataResponse | SettingsMyProfileChangePasswordModernDataResponse | null
+  >(null);
   const [nativeError, setNativeError] = useState('');
-  const [nativeLoading, setNativeLoading] = useState(isNativeAdministrationRoute);
+  const [nativeLoading, setNativeLoading] = useState(isNativeRoute);
   const [reloadToken, setReloadToken] = useState(0);
   const loadRequestRef = useRef(0);
   const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
-  const refreshNativeAdministration = useCallback(() => {
-    if (!isNativeAdministrationRoute) {
+  const refreshNativeRoute = useCallback(() => {
+    if (!isNativeRoute) {
       return;
     }
     setReloadToken((current) => current + 1);
-  }, [isNativeAdministrationRoute]);
+  }, [isNativeRoute]);
 
-  usePageRefreshEvents(refreshNativeAdministration);
+  usePageRefreshEvents(refreshNativeRoute);
 
   useEffect(() => {
-    if (!isNativeAdministrationRoute) {
+    if (!isNativeRoute) {
       setNativeData(null);
       setNativeError('');
       setNativeLoading(false);
@@ -477,7 +756,21 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     setNativeError('');
 
     const query = new URLSearchParams(window.location.search);
-    fetchSettingsAdministrationModernData(bootstrap, query)
+    const loadNativeData = async () => {
+      switch (nativeRouteMode)
+      {
+        case 'administration':
+          return fetchSettingsAdministrationModernData(bootstrap, query);
+        case 'myprofile':
+          return fetchSettingsMyProfileModernData(bootstrap, query);
+        case 'changePassword':
+          return fetchSettingsMyProfileChangePasswordModernData(bootstrap, query);
+        default:
+          throw new Error('Unsupported settings native route.');
+      }
+    };
+
+    void loadNativeData()
       .then((result) => {
         if (!isMounted || requestID !== loadRequestRef.current) {
           return;
@@ -488,7 +781,7 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
         if (!isMounted || requestID !== loadRequestRef.current) {
           return;
         }
-        setNativeError(error.message || 'Unable to load settings administration.');
+        setNativeError(error.message || 'Unable to load settings workspace.');
         setNativeData(null);
       })
       .finally(() => {
@@ -500,19 +793,97 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [bootstrap, isNativeAdministrationRoute, reloadToken]);
+  }, [bootstrap, nativeRouteMode, isNativeRoute, reloadToken]);
 
-  if (isNativeAdministrationRoute && nativeLoading && !nativeData) {
-    return <div className="modern-state">Loading settings administration...</div>;
+  if (isNativeRoute && nativeLoading && !nativeData) {
+    return <div className="modern-state">Loading settings workspace...</div>;
   }
 
-  if (isNativeAdministrationRoute && nativeData && nativeError === '') {
+  if (isNativeRoute && nativeData && nativeError === '') {
+    if (nativeRouteMode === 'administration') {
+      return (
+        <SettingsAdministrationNativeShell
+          data={nativeData as SettingsAdministrationModernDataResponse}
+          legacyURL={legacyURL}
+          backLink={backLink}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'myprofile') {
+      return <SettingsMyProfileNativeShell data={nativeData as SettingsMyProfileModernDataResponse} />;
+    }
+
+    if (nativeRouteMode === 'changePassword') {
+      return (
+        <SettingsChangePasswordNativeShell
+          data={nativeData as SettingsMyProfileChangePasswordModernDataResponse}
+        />
+      );
+    }
+  }
+
+  if (nativeError !== '') {
+    // Fall back to the embedded legacy workspace if the native contract cannot load.
     return (
-      <SettingsAdministrationNativeShell
-        data={nativeData}
-        legacyURL={legacyURL}
-        backLink={backLink}
-      />
+      <div className="avel-dashboard-page">
+        <PageContainer
+          title={copy.title}
+          subtitle={copy.subtitle}
+          actions={(
+            <>
+              <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+                {backLink.label}
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                Open Legacy UI
+              </a>
+            </>
+          )}
+        >
+          <div className="modern-dashboard avel-dashboard-shell">
+            <section className="modern-compat-page">
+              <header className="modern-compat-page__header">
+                <div>
+                  <h2 className="modern-compat-page__title">{copy.panelTitle}</h2>
+                  <p className="modern-compat-page__subtitle">{copy.panelSubtitle}</p>
+                </div>
+                <div className="modern-compat-page__meta">ui_embed=1</div>
+              </header>
+
+              <div className="modern-compat-page__actions">
+                <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+                  {backLink.label}
+                </a>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>
+                  Reload
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+                  Open In New Tab
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+
+              <div className={`modern-compat-page__frame-wrap${frameLoading ? ' is-loading' : ''}`}>
+                {frameLoading ? (
+                  <div className="modern-compat-page__frame-loader" aria-live="polite">
+                    Loading legacy workspace...
+                  </div>
+                ) : null}
+                <iframe
+                  key={frameReloadToken}
+                  title={`${copy.title} legacy workspace`}
+                  className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
+                  src={embeddedURL}
+                  onLoad={handleFrameLoad}
+                />
+              </div>
+            </section>
+          </div>
+        </PageContainer>
+      </div>
     );
   }
 

@@ -74,6 +74,25 @@ test.describe('Operations workspace action smoke', () => {
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });
 
+  test('settings.previewpage ui=modern forwards without an iframe', async ({ context, page }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    await page.goto(buildModernRouteURL('settings', 'previewpage'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForSelector('.modern-compat-page', { state: 'visible' });
+    await expect(page.getByRole('heading', { name: 'Settings Preview Redirect' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Settings Preview Forward' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Continue' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open Legacy UI' }).first()).toBeVisible();
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+  });
+
   test('gdpr.requests ui=modern mounts and returns the gdpr.requests.v1 contract', async ({
     context,
     page,

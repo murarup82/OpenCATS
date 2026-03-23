@@ -2235,6 +2235,18 @@
   font-size: 0.78rem;
 }
 
+.avel-dashboard-page .reports-workflow-forward__body {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-dashboard-page .reports-workflow-forward__note {
+  margin: 0;
+  color: #5a7587;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
 .avel-dashboard-page .modern-table-wrap {
   overflow-x: auto;
   border: 1px solid #d0e3ed;
@@ -2957,6 +2969,36 @@
   color: var(--avel-text-soft);
   font-size: 0.88rem;
   line-height: 1.45;
+}
+
+.avel-settings-password-page .avel-settings-password-form {
+  display: grid;
+  gap: 14px;
+}
+
+.avel-settings-password-page .avel-settings-password-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.avel-settings-password-page .avel-settings-password-field {
+  display: grid;
+  gap: 6px;
+}
+
+.avel-settings-password-page .avel-settings-password-field > span {
+  color: var(--avel-text-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 980px) {
+  .avel-settings-password-page .avel-settings-password-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .avel-joborders-page .modern-chip--openings {
