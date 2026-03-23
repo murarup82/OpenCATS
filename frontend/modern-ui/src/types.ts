@@ -1662,6 +1662,10 @@ export type ImportLauncherModernDataResponse = {
 
 export type SettingsWizardImportModernDataResponse = ModernMutationResponse;
 export type SettingsWizardLicenseModernDataResponse = ModernMutationResponse;
+export type SettingsWizardFirstTimeSetupModernDataResponse = ModernMutationResponse;
+export type SettingsWizardDeleteUserModernDataResponse = ModernMutationResponse;
+export type SettingsWizardEmailModernDataResponse = ModernMutationResponse;
+export type SettingsWizardLocalizationModernDataResponse = ModernMutationResponse;
 
 export type LoginModernDataResponse = {
   meta: {

@@ -29,6 +29,10 @@ import type {
   HomeOverviewModernDataResponse,
   HomeQuickSearchModernDataResponse,
   ImportLauncherModernDataResponse,
+  SettingsWizardDeleteUserModernDataResponse,
+  SettingsWizardEmailModernDataResponse,
+  SettingsWizardFirstTimeSetupModernDataResponse,
+  SettingsWizardLocalizationModernDataResponse,
   SettingsWizardImportModernDataResponse,
   SettingsWizardLicenseModernDataResponse,
   LoginModernDataResponse,
@@ -282,10 +286,29 @@ export async function fetchImportLauncherModernData(
   return data;
 }
 
-type SettingsWizardAction = 'ajax_wizardImport' | 'ajax_wizardLicense';
+type SettingsWizardAction =
+  | 'ajax_wizardImport'
+  | 'ajax_wizardLicense'
+  | 'ajax_wizardFirstTimeSetup'
+  | 'ajax_wizardDeleteUser'
+  | 'ajax_wizardEmail'
+  | 'ajax_wizardLocalization';
 
 function getSettingsWizardModernPage(action: SettingsWizardAction): string {
-  return action === 'ajax_wizardImport' ? 'settings-wizard-import' : 'settings-wizard-license';
+  switch (action) {
+    case 'ajax_wizardImport':
+      return 'settings-wizard-import';
+    case 'ajax_wizardLicense':
+      return 'settings-wizard-license';
+    case 'ajax_wizardFirstTimeSetup':
+      return 'settings-wizard-first-time-setup';
+    case 'ajax_wizardDeleteUser':
+      return 'settings-wizard-delete-user';
+    case 'ajax_wizardEmail':
+      return 'settings-wizard-email';
+    case 'ajax_wizardLocalization':
+      return 'settings-wizard-localization';
+  }
 }
 
 async function fetchSettingsWizardModernData<T extends ModernMutationResponse>(
@@ -316,6 +339,46 @@ export async function fetchSettingsWizardLicenseModernData(
   query?: URLSearchParams
 ): Promise<SettingsWizardLicenseModernDataResponse> {
   return fetchSettingsWizardModernData<SettingsWizardLicenseModernDataResponse>(bootstrap, 'ajax_wizardLicense', query);
+}
+
+export async function fetchSettingsWizardFirstTimeSetupModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardFirstTimeSetupModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardFirstTimeSetupModernDataResponse>(
+    bootstrap,
+    'ajax_wizardFirstTimeSetup',
+    query
+  );
+}
+
+export async function fetchSettingsWizardDeleteUserModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardDeleteUserModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardDeleteUserModernDataResponse>(
+    bootstrap,
+    'ajax_wizardDeleteUser',
+    query
+  );
+}
+
+export async function fetchSettingsWizardEmailModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardEmailModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardEmailModernDataResponse>(bootstrap, 'ajax_wizardEmail', query);
+}
+
+export async function fetchSettingsWizardLocalizationModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsWizardLocalizationModernDataResponse> {
+  return fetchSettingsWizardModernData<SettingsWizardLocalizationModernDataResponse>(
+    bootstrap,
+    'ajax_wizardLocalization',
+    query
+  );
 }
 
 export async function fetchLoginModernData(

@@ -848,17 +848,37 @@ class SettingsUI extends UserInterface
                 break;
 
             case 'ajax_wizardDeleteUser':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.deleteUser') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have access to delete a user.'
+                        );
+                        return;
+                    }
                     echo 'You do not have access to delete a user.';
                     return;
                 }
-                $this->wizard_deleteUser();
+                $this->wizard_deleteUser($isModernJSON);
                 break;
 
             case 'ajax_wizardCheckKey':
@@ -876,31 +896,71 @@ class SettingsUI extends UserInterface
                 break;
 
             case 'ajax_wizardLocalization':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.localization') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have access to change your localization settings.'
+                        );
+                        return;
+                    }
                     echo 'You do not have access to change your localization settings.';
                     return;
                 }
-                $this->wizard_localization();
+                $this->wizard_localization($isModernJSON);
                 break;
 
             case 'ajax_wizardFirstTimeSetup':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.firstTimeSetup') < ACCESS_LEVEL_SA)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not has access to this first-time-setup wizard.'
+                        );
+                        return;
+                    }
                     echo 'You do not has access to this first-time-setup wizard.';
                     return;
                 }
-                $this->wizard_firstTimeSetup();
+                $this->wizard_firstTimeSetup($isModernJSON);
                 break;
 
             case 'ajax_wizardLicense':
@@ -966,17 +1026,37 @@ class SettingsUI extends UserInterface
                 break;
 
             case 'ajax_wizardEmail':
+                $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
                 if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS']))
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'sessionLost',
+                            'CATS has lost your session data!'
+                        );
+                        return;
+                    }
                     echo 'CATS has lost your session data!';
                     return;
                 }
                 if ($this->getUserAccessLevel('settings.setEmail') < ACCESS_LEVEL_READ)
                 {
+                    if ($isModernJSON)
+                    {
+                        $this->respondModernWizardJSON(
+                            false,
+                            'permissionDenied',
+                            'You do not have permission to set the email.'
+                        );
+                        return;
+                    }
                     echo 'You do not have permission to set the email.';
                     return;
                 }
-                $this->wizard_email();
+                $this->wizard_email($isModernJSON);
                 break;
 
             case 'ajax_wizardImport':
@@ -4792,23 +4872,54 @@ class SettingsUI extends UserInterface
         }
     }
 
-    private function wizard_deleteUser()
+    private function wizard_deleteUser($respondModernJSON = false)
     {
         if (isset($_GET[$id = 'userID'])) $userID = intval($_GET[$id]);
         else
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'missingUserID',
+                    'Unable to find the user you are trying to delete.'
+                );
+                return;
+            }
+
             echo 'Unable to find the user you are trying to delete.';
             return;
         }
 
         if ($userID == $_SESSION['CATS']->getUserID())
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'selfDelete',
+                    'You cannot delete yourself!'
+                );
+                return;
+            }
+
             echo 'You cannot delete yourself!';
             return;
         }
 
         $users = new Users($this->_siteID);
         $users->delete($userID);
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                true,
+                'userDeleted',
+                'User deleted.'
+            );
+            return;
+        }
+
         echo 'Ok';
     }
 
@@ -4890,10 +5001,19 @@ class SettingsUI extends UserInterface
             . 'http://www.catsone.com/professional';
     }
 
-    private function wizard_localization()
+    private function wizard_localization($respondModernJSON = false)
     {
         if (!isset($_GET['timeZone']) || !isset($_GET['dateFormat']))
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'invalidInput',
+                    "You didn't provide a time zone or date format."
+                );
+                return;
+            }
             echo 'You didn\'t provide a time zone or date format.';
             return;
         }
@@ -4912,6 +5032,16 @@ class SettingsUI extends UserInterface
         $site = new Site($this->_siteID);
         $site->setLocalization($timeZone, $isDMY);
         $site->setLocalizationConfigured();
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                true,
+                'localizationUpdated',
+                'Localization settings saved.'
+            );
+            return;
+        }
 
         echo 'Ok';
     }
@@ -4949,10 +5079,20 @@ class SettingsUI extends UserInterface
         echo 'Ok';
     }
 
-    private function wizard_firstTimeSetup()
+    private function wizard_firstTimeSetup($respondModernJSON = false)
     {
         $site = new Site($this->_siteID);
         $site->setFirstTimeSetup();
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                true,
+                'firstTimeSetupComplete',
+                'First-time setup completed.'
+            );
+            return;
+        }
 
         echo 'Ok';
     }
@@ -4978,19 +5118,38 @@ class SettingsUI extends UserInterface
         echo 'Ok';
     }
 
-    private function wizard_email()
+    private function wizard_email($respondModernJSON = false)
     {
         if (isset($_GET['email']) && !empty($_GET['email'])) $email = $_GET['email'];
         else $email = '';
 
         if (strlen($email) < 5)
         {
+            if ($respondModernJSON)
+            {
+                $this->respondModernWizardJSON(
+                    false,
+                    'invalidEmail',
+                    'Your e-mail address must be at least 5 characters long.'
+                );
+                return;
+            }
             echo 'Your e-mail address must be at least 5 characters long.';
             return;
         }
 
         $site = new Users($this->_siteID);
         $site->updateSelfEmail($this->_userID, $email);
+
+        if ($respondModernJSON)
+        {
+            $this->respondModernWizardJSON(
+                true,
+                'emailUpdated',
+                'E-mail address updated.'
+            );
+            return;
+        }
 
         echo 'Ok';
     }
