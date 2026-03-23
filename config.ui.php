@@ -80,5 +80,6 @@ $GLOBALS['UI_SWITCH_TARGET_ACCESS_LEVELS'] = array();
 /* Optional hard excludes. */
 $GLOBALS['UI_SWITCH_EXCLUDE_MODULES'] = array('login', 'settings', 'import', 'export', 'attachments');
 $GLOBALS['UI_SWITCH_EXCLUDE_ROUTES'] = array(
-    'dashboard.myPipeline'
+    'dashboard.myPipeline',
+    'wizard.ajax_getpage'
 );

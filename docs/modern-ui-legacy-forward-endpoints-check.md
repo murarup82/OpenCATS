@@ -1,6 +1,6 @@
 # Modern UI Intentional Legacy-Forward Endpoint Guard
 
-Generated: 2026-03-23T04:51:48.216Z
+Generated: 2026-03-23T05:07:30.615Z
 
 This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` to avoid breaking download, AJAX, auth, XML, and mutation compatibility behavior.
 
@@ -10,6 +10,7 @@ This guard tracks endpoint-style routes that intentionally remain on `LegacyUtil
 - Expected legacy-forward routes: 28
 - Unexpected routes: 0
 - Missing expected routes: 0
+- Missing required UI switch excludes: 0
 - Duplicate route mappings detected: no
 
 ## Expected Route Inventory
@@ -52,3 +53,7 @@ None.
 ## Missing Expected Routes
 
 None.
+
+## Required UI Switch Excludes
+
+- `wizard.ajax_getpage`
