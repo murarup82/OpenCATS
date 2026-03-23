@@ -898,29 +898,26 @@ export function JobOrdersPipelineMatrixPage({ bootstrap }: Props) {
     });
   };
 
-  const applySavedView = useCallback(
-    (view: MatrixView) => {
-      setViewNameDraft(view.name);
-      setColumnOrder(view.columnOrder);
-      setVisibleColumns(view.visibleColumns);
-      setColumnFilters(view.columnFilters);
-      setSortBy(view.sortBy);
-      setSortDirection(view.sortDirection);
-      setSearchDraft(view.serverFilters.search);
-      applyServerFilters({
-        search: view.serverFilters.search,
-        ownerUserID: view.serverFilters.ownerUserID,
-        recruiterUserID: view.serverFilters.recruiterUserID,
-        pipelineStatusID: view.serverFilters.pipelineStatusID,
-        includeClosed: view.serverFilters.includeClosed,
-        maxResults: view.serverFilters.maxResults,
-        page: 1,
-        sortBy: view.sortBy,
-        sortDirection: view.sortDirection
-      });
-    },
-    [applyServerFilters]
-  );
+  const applySavedView = (view: MatrixView) => {
+    setViewNameDraft(view.name);
+    setColumnOrder(view.columnOrder);
+    setVisibleColumns(view.visibleColumns);
+    setColumnFilters(view.columnFilters);
+    setSortBy(view.sortBy);
+    setSortDirection(view.sortDirection);
+    setSearchDraft(view.serverFilters.search);
+    applyServerFilters({
+      search: view.serverFilters.search,
+      ownerUserID: view.serverFilters.ownerUserID,
+      recruiterUserID: view.serverFilters.recruiterUserID,
+      pipelineStatusID: view.serverFilters.pipelineStatusID,
+      includeClosed: view.serverFilters.includeClosed,
+      maxResults: view.serverFilters.maxResults,
+      page: 1,
+      sortBy: view.sortBy,
+      sortDirection: view.sortDirection
+    });
+  };
 
   return (
     <div className="avel-dashboard-page avel-pipeline-matrix-page">
