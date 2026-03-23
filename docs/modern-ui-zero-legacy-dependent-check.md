@@ -1,10 +1,10 @@
 # Modern UI Zero Legacy-Dependent Guard
 
-Generated: 2026-03-04T05:36:52.405Z
+Generated: 2026-03-23T04:16:26.273Z
 
 ## Totals
 
-- Modern-native routes: 222
+- Modern-native routes: 228
 - Legacy-dependent routes: 0
 
 ## Result

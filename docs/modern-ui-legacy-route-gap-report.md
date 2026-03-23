@@ -1,11 +1,11 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-04T05:36:50.173Z
+Generated: 2026-03-23T04:15:00.597Z
 
 ## Summary
 
-- Legacy handleRequest actions discovered: 222
-- Native explicit modern coverage: 222
+- Legacy handleRequest actions discovered: 228
+- Native explicit modern coverage: 228
 - Native default fallback coverage: 0
 - Bridge coverage (explicit + fallback): 0
 - Bridge explicit route mapping: 0
@@ -19,7 +19,7 @@ Generated: 2026-03-04T05:36:50.173Z
 | activity | 2 | 2 | 0 | 0 | 0 |
 | attachments | 1 | 1 | 0 | 0 | 0 |
 | calendar | 5 | 5 | 0 | 0 | 0 |
-| candidates | 27 | 27 | 0 | 0 | 0 |
+| candidates | 29 | 29 | 0 | 0 | 0 |
 | companies | 9 | 9 | 0 | 0 | 0 |
 | contacts | 9 | 9 | 0 | 0 | 0 |
 | dashboard | 2 | 2 | 0 | 0 | 0 |
@@ -28,10 +28,10 @@ Generated: 2026-03-04T05:36:50.173Z
 | graphs | 5 | 5 | 0 | 0 | 0 |
 | home | 22 | 22 | 0 | 0 | 0 |
 | import | 15 | 15 | 0 | 0 | 0 |
-| joborders | 24 | 24 | 0 | 0 | 0 |
+| joborders | 27 | 27 | 0 | 0 | 0 |
 | kpis | 1 | 1 | 0 | 0 | 0 |
 | lists | 8 | 8 | 0 | 0 | 0 |
-| login | 7 | 7 | 0 | 0 | 0 |
+| login | 8 | 8 | 0 | 0 | 0 |
 | logs | 1 | 1 | 0 | 0 | 0 |
 | reports | 11 | 11 | 0 | 0 | 0 |
 | rss | 1 | 1 | 0 | 0 | 0 |
@@ -72,6 +72,8 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | candidates | deleteMessageThread | native-explicit-guarded | candidates.deletemessagethread | CandidatesShowPage |
 | candidates | edit | native-explicit-guarded | candidates.edit | CandidatesEditPage |
 | candidates | emailCandidates | native-explicit | candidates.emailcandidates | LegacyUtilityForwardActionPage |
+| candidates | googleDriveDeleteAttachmentFile | native-explicit-guarded | candidates.googledrivedeleteattachmentfile | CandidatesShowPage |
+| candidates | googleDriveUploadAttachment | native-explicit-guarded | candidates.googledriveuploadattachment | CandidatesShowPage |
 | candidates | linkDuplicate | native-explicit-guarded | candidates.linkduplicate | LegacyUtilityForwardActionPage |
 | candidates | listByView | native-explicit | candidates.listbyview | CandidatesListPage |
 | candidates | merge | native-explicit-guarded | candidates.merge | LegacyUtilityForwardActionPage |
@@ -166,6 +168,9 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | edit | native-explicit-guarded | joborders.edit | JobOrdersEditPage |
 | joborders | editHiringPlan | native-explicit-guarded | joborders.edithiringplan | LegacyUtilityForwardActionPage |
 | joborders | listByView | native-explicit | joborders.listbyview | JobOrdersListPage |
+| joborders | pipelineMatrix | native-explicit | joborders.pipelinematrix | JobOrdersPipelineMatrixPage |
+| joborders | pipelineMatrixDeleteView | native-explicit | joborders.pipelinematrixdeleteview | JobOrdersPipelineMatrixPage |
+| joborders | pipelineMatrixSaveView | native-explicit | joborders.pipelinematrixsaveview | JobOrdersPipelineMatrixPage |
 | joborders | pipelineStatusDetails | native-explicit-guarded | joborders.pipelinestatusdetails | PipelineStatusActionPage |
 | joborders | pipelineStatusEditDate | native-explicit-guarded | joborders.pipelinestatuseditdate | PipelineStatusActionPage |
 | joborders | postMessage | native-explicit-guarded | joborders.postmessage | JobOrdersShowPage |
@@ -186,6 +191,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | login | attemptLogin | native-explicit | login.attemptlogin | LoginLegacyActionPage |
 | login | forgotPassword | native-explicit | login.forgotpassword | LoginPage |
 | login | googleCallback | native-explicit | login.googlecallback | LoginLegacyActionPage |
+| login | googleDriveStart | native-explicit | login.googledrivestart | LoginLegacyActionPage |
 | login | googleStart | native-explicit | login.googlestart | LoginLegacyActionPage |
 | login | noCookiesModal | native-explicit | login.nocookiesmodal | LoginPage |
 | login | requestAccess | native-explicit | login.requestaccess | LoginPage |

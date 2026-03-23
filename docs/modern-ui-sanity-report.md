@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-04T05:36:27.971Z
-Finished: 2026-03-04T05:36:44.344Z
+Started: 2026-03-23T04:10:44.295Z
+Finished: 2026-03-23T04:11:05.479Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -37,12 +37,12 @@ Command: `npm run build`
 [modern-ui] Cleaned build output directory: D:\Work\opencats\OpenCATS\public\modern-ui\build
 [36mvite v5.4.21 [32mbuilding for production...[36m[39m
 transforming...
-[32m✓[39m 145 modules transformed.
+[32m✓[39m 148 modules transformed.
 rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m    0.20 kB[22m[1m[22m
-[2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  308.55 kB[22m[1m[22m
-[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,655.53 kB[39m[22m[2m │ map: 6,338.68 kB[22m
-[32m✓ built in 7.46s[39m
+[2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  356.94 kB[22m[1m[22m
+[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,768.94 kB[39m[22m[2m │ map: 6,724.42 kB[22m
+[32m✓ built in 9.19s[39m
 ```
 
 **stderr**
@@ -148,18 +148,23 @@ Command: `npm run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 8 tests using 1 worker
+Running 13 tests using 1 worker
 
-  -  1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
-  -  2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
-  -  3 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › companies.add modern contract
-  -  4 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › companies.edit modern contract
-  -  5 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › contacts.add modern contract
-  -  6 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › contacts.edit modern contract
-  -  7 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › joborders.add modern contract
-  -  8 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › joborders.edit modern contract
+  -   1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
+  -   2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
+  -   3 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › companies.add modern contract
+  -   4 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › companies.edit modern contract
+  -   5 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › contacts.add modern contract
+  -   6 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › contacts.edit modern contract
+  -   7 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › joborders.add modern contract
+  -   8 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › joborders.edit modern contract
+  -   9 tests\playwright\gdpr-consent-visual.spec.mjs:56:3 › GDPR consent visual snapshots › invalid-link state
+  -  10 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › active state
+  -  11 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › accepted state
+  -  12 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › declined state
+  -  13 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › expired state
 
-  8 skipped
+  13 skipped
 ```
 
 **stderr**

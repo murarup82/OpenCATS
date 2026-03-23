@@ -1,8 +1,8 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-04T05:36:27.457Z
-Finished: 2026-03-04T05:36:56.905Z
-Overall Status: **Pass**
+Started: 2026-03-23T04:10:43.352Z
+Finished: 2026-03-23T04:11:23.742Z
+Overall Status: **Fail**
 
 ## Summary
 
@@ -17,10 +17,10 @@ Overall Status: **Pass**
 | Command: Modernization Board | Pass | 0 |
 | Command: Modernization Consistency Guard | Pass | 0 |
 | Command: No Legacy-Wrapper Route Guard | Pass | 0 |
-| Command: Zero Legacy-Dependent Guard | Pass | 0 |
-| Command: In-Scope Route Fallback Guard | Pass | 0 |
+| Command: Zero Legacy-Dependent Guard | Fail | 1 |
+| Command: In-Scope Route Fallback Guard | Fail | 1 |
 | Command: Bridge Wildcard Retirement Guard | Pass | 0 |
-| Command: No-Bridge Action Guard | Pass | 0 |
+| Command: No-Bridge Action Guard | Fail | 1 |
 | Command: Legacy Fallback Link Guard | Pass | 0 |
 | Command: Shell No-JS Fallback Guard | Pass | 0 |
 | Command: Cutover Evidence Snapshot | Pass | 0 |
@@ -125,18 +125,23 @@ Command: `npm.cmd run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 8 tests using 1 worker
+Running 13 tests using 1 worker
 
-  -  1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
-  -  2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
-  -  3 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › companies.add modern contract
-  -  4 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › companies.edit modern contract
-  -  5 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › contacts.add modern contract
-  -  6 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › contacts.edit modern contract
-  -  7 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › joborders.add modern contract
-  -  8 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › joborders.edit modern contract
+  -   1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
+  -   2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
+  -   3 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › companies.add modern contract
+  -   4 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › companies.edit modern contract
+  -   5 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › contacts.add modern contract
+  -   6 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › contacts.edit modern contract
+  -   7 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › joborders.add modern contract
+  -   8 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › joborders.edit modern contract
+  -   9 tests\playwright\gdpr-consent-visual.spec.mjs:56:3 › GDPR consent visual snapshots › invalid-link state
+  -  10 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › active state
+  -  11 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › accepted state
+  -  12 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › declined state
+  -  13 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › expired state
 
-  8 skipped
+  13 skipped
 ```
 
 **stderr**
@@ -205,7 +210,7 @@ Command: `npm.cmd run verify:no-legacy-wrapper-routes`
 **stderr**
 `(no output)`
 
-### Zero Legacy-Dependent Guard (Pass)
+### Zero Legacy-Dependent Guard (Fail)
 
 Command: `npm.cmd run verify:zero-legacy-dependent`
 
@@ -218,9 +223,11 @@ Command: `npm.cmd run verify:zero-legacy-dependent`
 ```
 
 **stderr**
-`(no output)`
+```text
+[modern-ui] Legacy-dependent routes detected (totals.legacyDependent=5, rows=5).
+```
 
-### In-Scope Route Fallback Guard (Pass)
+### In-Scope Route Fallback Guard (Fail)
 
 Command: `npm.cmd run verify:in-scope-routes`
 
@@ -228,12 +235,16 @@ Command: `npm.cmd run verify:in-scope-routes`
 ```text
 > opencats-modern-ui@0.1.0 verify:in-scope-routes
 > node ./scripts/verify-no-inscope-wildcard-fallbacks.mjs
-
-[modern-ui] No in-scope wildcard/default fallback routes detected.
 ```
 
 **stderr**
-`(no output)`
+```text
+[modern-ui] In-scope fallback routes found: 4
+- candidates.googleDriveDeleteAttachmentFile -> bridge-global-fallback (*.*)
+- candidates.googleDriveUploadAttachment -> bridge-global-fallback (*.*)
+- joborders.pipelineMatrixDeleteView -> bridge-global-fallback (*.*)
+- joborders.pipelineMatrixSaveView -> bridge-global-fallback (*.*)
+```
 
 ### Bridge Wildcard Retirement Guard (Pass)
 
@@ -250,7 +261,7 @@ Command: `npm.cmd run verify:bridge-wildcards`
 **stderr**
 `(no output)`
 
-### No-Bridge Action Guard (Pass)
+### No-Bridge Action Guard (Fail)
 
 Command: `npm.cmd run verify:no-bridge-actions`
 
@@ -263,7 +274,9 @@ Command: `npm.cmd run verify:no-bridge-actions`
 ```
 
 **stderr**
-`(no output)`
+```text
+[modern-ui] Bridge actions detected (bridge=5, bridgeExplicit=0, bridgeFallback=5, rows=5).
+```
 
 ### Legacy Fallback Link Guard (Pass)
 

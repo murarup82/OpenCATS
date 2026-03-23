@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-03-04T05:36:50.764Z",
+  "generatedAt": "2026-03-23T04:15:09.447Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
-    "actions": 222,
-    "modernNative": 222,
+    "actions": 228,
+    "modernNative": 228,
     "legacyDependent": 0,
     "bridge": 0,
     "unresolved": 0
@@ -11,11 +11,11 @@
   "bucketSummaries": [
     {
       "bucket": "native-action",
-      "count": 129
+      "count": 130
     },
     {
       "bucket": "native-surface",
-      "count": 93
+      "count": 98
     }
   ],
   "moduleSummaries": [
@@ -39,8 +39,8 @@
     },
     {
       "module": "candidates",
-      "totalActions": 27,
-      "modernNative": 27,
+      "totalActions": 29,
+      "modernNative": 29,
       "legacyDependent": 0
     },
     {
@@ -93,8 +93,8 @@
     },
     {
       "module": "joborders",
-      "totalActions": 24,
-      "modernNative": 24,
+      "totalActions": 27,
+      "modernNative": 27,
       "legacyDependent": 0
     },
     {
@@ -111,8 +111,8 @@
     },
     {
       "module": "login",
-      "totalActions": 7,
-      "modernNative": 7,
+      "totalActions": 8,
+      "modernNative": 8,
       "legacyDependent": 0
     },
     {
@@ -841,6 +841,19 @@
       "action": "googleCallback",
       "classification": "native-explicit",
       "routeKey": "login.googlecallback",
+      "resolution": "native",
+      "component": "LoginLegacyActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "login",
+      "action": "googleDriveStart",
+      "classification": "native-explicit",
+      "routeKey": "login.googledrivestart",
       "resolution": "native",
       "component": "LoginLegacyActionPage",
       "guarded": false,
@@ -2034,6 +2047,32 @@
     },
     {
       "module": "candidates",
+      "action": "googleDriveDeleteAttachmentFile",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.googledrivedeleteattachmentfile",
+      "resolution": "native",
+      "component": "CandidatesShowPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
+      "action": "googleDriveUploadAttachment",
+      "classification": "native-explicit-guarded",
+      "routeKey": "candidates.googledriveuploadattachment",
+      "resolution": "native",
+      "component": "CandidatesShowPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "candidates",
       "action": "listByView",
       "classification": "native-explicit",
       "routeKey": "candidates.listbyview",
@@ -2754,6 +2793,45 @@
       "routeKey": "joborders.listbyview",
       "resolution": "native",
       "component": "JobOrdersListPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "joborders",
+      "action": "pipelineMatrix",
+      "classification": "native-explicit",
+      "routeKey": "joborders.pipelinematrix",
+      "resolution": "native",
+      "component": "JobOrdersPipelineMatrixPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "joborders",
+      "action": "pipelineMatrixDeleteView",
+      "classification": "native-explicit",
+      "routeKey": "joborders.pipelinematrixdeleteview",
+      "resolution": "native",
+      "component": "JobOrdersPipelineMatrixPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "joborders",
+      "action": "pipelineMatrixSaveView",
+      "classification": "native-explicit",
+      "routeKey": "joborders.pipelinematrixsaveview",
+      "resolution": "native",
+      "component": "JobOrdersPipelineMatrixPage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-surface",
