@@ -14,6 +14,7 @@ const expectedLegacyRedirectPages = new Set([
   'src/pages/LegacyDownloadForwardActionPage.tsx',
   'src/pages/LoginLegacyActionPage.tsx',
   'src/pages/PipelineStatusActionPage.tsx',
+  'src/pages/ReportsJobOrderPdfActionPage.tsx',
   'src/pages/ReportsWorkflowActionPage.tsx',
   'src/pages/SettingsTagsActionPage.tsx',
   'src/pages/UtilityEndpointForwardActionPage.tsx'

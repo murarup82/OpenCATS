@@ -39,11 +39,45 @@ class GDPRUI extends UserInterface
         }
     }
 
+    private function isModernJSONRequest()
+    {
+        return (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+    }
+
+    private function respondModernJSON($statusCode, $payload)
+    {
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            if (function_exists('http_response_code'))
+            {
+                http_response_code((int) $statusCode);
+            }
+            else
+            {
+                header(sprintf('HTTP/1.1 %d', (int) $statusCode));
+            }
+        }
+
+        echo json_encode($payload);
+    }
+
     private function requests()
     {
         if ($this->getUserAccessLevel('gdpr.requests') < ACCESS_LEVEL_READ)
         {
-            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for GDPR consents.');
+            if ($this->isModernJSONRequest())
+            {
+                $this->respondModernJSON(403, array(
+                    'success' => false,
+                    'message' => 'Invalid user level for GDPR consents.'
+                ));
+            }
+            else
+            {
+                CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for GDPR consents.');
+            }
             return;
         }
 
@@ -78,6 +112,12 @@ class GDPRUI extends UserInterface
             'LEGACY' => 'Legacy'
         );
 
+        if ($this->isModernJSONRequest())
+        {
+            $this->renderModernRequestsJSON($dataGrid, $statusOptions);
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('dataGrid', $dataGrid);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
@@ -93,11 +133,261 @@ class GDPRUI extends UserInterface
         $this->_template->display('./modules/gdpr/Requests.tpl');
     }
 
+    private function renderModernRequestsJSON($dataGrid, $statusOptions)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $rows = $dataGrid->getRows();
+        $totalRows = (int) $dataGrid->getNumberOfRows();
+        $parameters = $dataGrid->getParameters();
+
+        $entriesPerPage = 15;
+        if (isset($parameters['maxResults']))
+        {
+            $entriesPerPage = (int) $parameters['maxResults'];
+        }
+        if ($entriesPerPage <= 0)
+        {
+            $entriesPerPage = 15;
+        }
+
+        $page = 1;
+        if (method_exists($dataGrid, 'getCurrentPage'))
+        {
+            $page = (int) $dataGrid->getCurrentPage();
+        }
+        if ($page <= 0)
+        {
+            $page = 1;
+        }
+
+        $totalPages = 1;
+        if ($entriesPerPage > 0)
+        {
+            $totalPages = (int) ceil($totalRows / $entriesPerPage);
+            if ($totalPages <= 0)
+            {
+                $totalPages = 1;
+            }
+        }
+
+        $canEditGdpr = ($this->getUserAccessLevel('gdpr.requests') >= ACCESS_LEVEL_EDIT);
+        $canHardDeleteRequest = ($this->getUserAccessLevel('gdpr.requests') >= ACCESS_LEVEL_SA);
+
+        $responseRows = array();
+        $pageRequestRows = 0;
+        $pageLegacyRows = 0;
+        foreach ($rows as $row)
+        {
+            $normalizedRow = $this->buildModernRequestRow($row, $baseURL, $canEditGdpr, $canHardDeleteRequest);
+            $responseRows[] = $normalizedRow;
+
+            if (!empty($normalizedRow['isLegacy']))
+            {
+                $pageLegacyRows++;
+            }
+            else
+            {
+                $pageRequestRows++;
+            }
+        }
+
+        $statusOptionRows = array();
+        foreach ($statusOptions as $value => $label)
+        {
+            $statusOptionRows[] = array(
+                'value' => (string) $value,
+                'label' => (string) $label
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'gdpr.requests.v1',
+                'modernPage' => 'gdpr-requests',
+                'page' => $page,
+                'totalPages' => $totalPages,
+                'totalRows' => $totalRows,
+                'entriesPerPage' => $entriesPerPage,
+                'permissions' => array(
+                    'canReadRequests' => true,
+                    'canEditRequests' => $canEditGdpr,
+                    'canHardDeleteRequests' => $canHardDeleteRequest,
+                    'canScanLegacy' => $canEditGdpr,
+                    'canExportRequests' => true
+                )
+            ),
+            'filters' => array(
+                'status' => isset($_GET['status']) ? trim($_GET['status']) : '',
+                'expiring' => isset($_GET['expiring']) ? trim($_GET['expiring']) : '',
+                'search' => isset($_GET['search']) ? trim($_GET['search']) : '',
+                'needsDeletion' => (isset($_GET['needsDeletion']) && trim($_GET['needsDeletion']) !== ''),
+                'candidateID' => isset($_GET['candidateID']) ? trim($_GET['candidateID']) : '',
+                'dateFrom' => isset($_GET['dateFrom']) ? trim($_GET['dateFrom']) : '',
+                'dateTo' => isset($_GET['dateTo']) ? trim($_GET['dateTo']) : ''
+            ),
+            'options' => array(
+                'statuses' => $statusOptionRows,
+                'rowsPerPage' => array(15, 30, 50, 100)
+            ),
+            'actions' => array(
+                'submitURL' => CATSUtility::getAbsoluteURI('ajax.php?f=gdpr:requests'),
+                'exportCSVURL' => $this->buildModernRequestsExportURL('csv'),
+                'exportPDFURL' => $this->buildModernRequestsExportURL('pdf'),
+                'legacyURL' => sprintf('%s?m=gdpr&a=requests&ui=legacy', $baseURL)
+            ),
+            'counts' => array(
+                'totalRows' => $totalRows,
+                'totalPages' => $totalPages,
+                'pageRows' => count($responseRows),
+                'requestRowsOnPage' => $pageRequestRows,
+                'legacyRowsOnPage' => $pageLegacyRows
+            ),
+            'rows' => $responseRows
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function buildModernRequestRow($row, $baseURL, $canEditGdpr, $canHardDeleteRequest)
+    {
+        $requestID = (int) (isset($row['requestID']) ? $row['requestID'] : 0);
+        $candidateID = (int) (isset($row['candidateID']) ? $row['candidateID'] : 0);
+        $candidateExists = !empty($row['candidateExists']);
+        $isLegacy = (!empty($row['isLegacy']) && (int) $row['isLegacy'] === 1);
+        $isExpired = (!empty($row['isExpired']) && (int) $row['isExpired'] === 1);
+        $isLatest = (!empty($row['isLatest']) && (int) $row['isLatest'] === 1);
+        $status = isset($row['status']) ? (string) $row['status'] : '';
+        $displayStatus = $status;
+        if (!$isLegacy && $isExpired && ($status === 'CREATED' || $status === 'SENT'))
+        {
+            $displayStatus = 'EXPIRED';
+        }
+
+        $firstName = isset($row['firstName']) ? (string) $row['firstName'] : '';
+        $lastName = isset($row['lastName']) ? (string) $row['lastName'] : '';
+        $fullName = trim($firstName . ' ' . $lastName);
+        if ($fullName === '')
+        {
+            $fullName = ($candidateExists ? '(Unnamed Candidate)' : 'Deleted Candidate');
+        }
+
+        $decisionLabel = '--';
+        if ($isLegacy)
+        {
+            $decisionLabel = (!empty($row['legacyProofStatus']) && $row['legacyProofStatus'] === 'PROOF_FOUND')
+                ? 'Legacy (proof attached)'
+                : 'Legacy (no proof on file)';
+        }
+        else if (!empty($row['acceptedAt']))
+        {
+            $decisionLabel = 'Accepted ' . $row['acceptedAt'];
+        }
+        else if (!empty($row['declinedAt']))
+        {
+            $decisionLabel = 'Declined ' . $row['declinedAt'];
+        }
+
+        $renewalEligible = (!empty($row['renewalEligible']) && (int) $row['renewalEligible'] === 1);
+        $canSendRenewal = ($canEditGdpr && $isLegacy && $candidateExists && $renewalEligible);
+        $canResend = ($canEditGdpr && !$isLegacy && $isLatest && $candidateExists && in_array($status, array('CREATED', 'SENT'), true) && !$isExpired && empty($row['deletedAt']));
+        $canExpire = ($canEditGdpr && !$isLegacy && $isLatest && $candidateExists && in_array($status, array('CREATED', 'SENT'), true) && !$isExpired && empty($row['deletedAt']));
+        $canCreateNew = ($canEditGdpr && !$isLegacy && $isLatest && $candidateExists);
+        $canDeleteCandidate = ($canEditGdpr && !$isLegacy && $isLatest && $status === 'DECLINED' && empty($row['deletedAt']));
+        $canDeleteRequest = ($canHardDeleteRequest && !$isLegacy && $requestID > 0);
+
+        $candidateURL = '';
+        if ($candidateExists && $candidateID > 0)
+        {
+            $candidateURL = sprintf('%s?m=candidates&a=show&candidateID=%d', $baseURL, $candidateID);
+        }
+
+        $proofURL = '';
+        $proofLabel = '';
+        if (!empty($row['proofAttachmentID']) && !empty($row['proofDirName']))
+        {
+            $proofHash = Attachments::makeDirectoryAccessToken((int) $row['proofAttachmentID'], (string) $row['proofDirName']);
+            $proofURL = sprintf(
+                '%s?m=attachments&a=getAttachment&id=%d&directoryNameHash=%s',
+                $baseURL,
+                (int) $row['proofAttachmentID'],
+                rawurlencode($proofHash)
+            );
+            $proofLabel = !empty($row['proofFilename']) ? (string) $row['proofFilename'] : 'View PDF';
+        }
+
+        return array(
+            'requestID' => $requestID,
+            'candidateID' => $candidateID,
+            'candidateExists' => $candidateExists,
+            'candidateName' => $fullName,
+            'candidateURL' => $candidateURL,
+            'email1' => isset($row['email1']) ? (string) $row['email1'] : '',
+            'status' => $status,
+            'statusLabel' => $displayStatus,
+            'displayStatus' => $displayStatus,
+            'createdAt' => isset($row['createdAt']) ? (string) $row['createdAt'] : '',
+            'sentAt' => isset($row['sentAt']) ? (string) $row['sentAt'] : '',
+            'expiresAt' => isset($row['expiresAt']) ? (string) $row['expiresAt'] : '',
+            'acceptedAt' => isset($row['acceptedAt']) ? (string) $row['acceptedAt'] : '',
+            'acceptedIP' => isset($row['acceptedIP']) ? (string) $row['acceptedIP'] : '',
+            'acceptedLang' => isset($row['acceptedLang']) ? (string) $row['acceptedLang'] : '',
+            'noticeVersion' => isset($row['noticeVersion']) ? (string) $row['noticeVersion'] : '',
+            'declinedAt' => isset($row['declinedAt']) ? (string) $row['declinedAt'] : '',
+            'deletedAt' => isset($row['deletedAt']) ? (string) $row['deletedAt'] : '',
+            'isExpired' => $isExpired,
+            'isLegacy' => $isLegacy,
+            'isLatest' => $isLatest,
+            'decision' => $decisionLabel,
+            'decisionLabel' => $decisionLabel,
+            'renewalEligible' => $renewalEligible,
+            'legacyProofStatus' => isset($row['legacyProofStatus']) ? (string) $row['legacyProofStatus'] : '',
+            'legacyProofAttachmentID' => (int) (isset($row['legacyProofAttachmentID']) ? $row['legacyProofAttachmentID'] : 0),
+            'proofAttachmentID' => (int) (isset($row['proofAttachmentID']) ? $row['proofAttachmentID'] : 0),
+            'proofDirName' => isset($row['proofDirName']) ? (string) $row['proofDirName'] : '',
+            'proofFilename' => isset($row['proofFilename']) ? (string) $row['proofFilename'] : '',
+            'proofURL' => $proofURL,
+            'proofLabel' => $proofLabel,
+            'actions' => array(
+                'canSendRenewal' => $canSendRenewal,
+                'canResend' => $canResend,
+                'canExpire' => $canExpire,
+                'canCreateNew' => $canCreateNew,
+                'canDeleteCandidate' => $canDeleteCandidate,
+                'canDeleteRequest' => $canDeleteRequest
+            )
+        );
+    }
+
+    private function buildModernRequestsExportURL($format)
+    {
+        $query = $_GET;
+        $query['m'] = 'gdpr';
+        $query['a'] = 'export';
+        $query['exportFormat'] = $format;
+        $query['ui'] = 'legacy';
+        unset($query['format']);
+        unset($query['modernPage']);
+        unset($query['contractVersion']);
+
+        return CATSUtility::getAbsoluteURI(CATSUtility::getIndexName() . '?' . http_build_query($query, '', '&'));
+    }
+
     private function export()
     {
         if ($this->getUserAccessLevel('gdpr.requests') < ACCESS_LEVEL_READ)
         {
-            CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for GDPR consents.');
+            if ($this->isModernJSONRequest())
+            {
+                $this->respondModernJSON(403, array(
+                    'success' => false,
+                    'message' => 'Invalid user level for GDPR consents.'
+                ));
+            }
+            else
+            {
+                CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for GDPR consents.');
+            }
             return;
         }
 

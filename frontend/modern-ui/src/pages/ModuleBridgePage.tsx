@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import type { UIModeBootstrap } from '../types';
 import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
@@ -77,6 +78,20 @@ export function ModuleBridgePage({ bootstrap }: Props) {
   const embeddedURL = buildEmbeddedLegacyURL(bootstrap.legacyURL);
   const dashboardURL = `${bootstrap.indexName}?m=dashboard&a=my&ui=modern`;
   const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('opencats:modern-route:bridge-hit', {
+        detail: {
+          module: moduleName,
+          action: actionName,
+          requestURI: String(bootstrap.requestURI || ''),
+          legacyURL: String(bootstrap.legacyURL || ''),
+          timestampUTC: new Date().toISOString()
+        }
+      })
+    );
+  }, [actionName, bootstrap.legacyURL, bootstrap.requestURI, moduleName]);
 
   return (
     <div className="avel-dashboard-page">

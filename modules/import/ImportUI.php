@@ -161,7 +161,33 @@ class ImportUI extends UserInterface
     */
     private function revert()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         if (!$this->isRequiredIDValid('importID', $_GET)) {
+            if ($isModernJSON)
+            {
+                if ($modernPage !== '' && $modernPage !== 'import-revert')
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'error' => true,
+                        'message' => 'Unsupported modern page contract.',
+                        'requestedPage' => $modernPage
+                    ));
+                    return;
+                }
+
+                $this->renderModernImportMutationJSON('import-revert', false, 'invalidImportID', 'Invalid import ID.');
+                return;
+            }
+
             $this->import();
             return;
         }
@@ -171,6 +197,28 @@ class ImportUI extends UserInterface
         $import = new Import($this->_siteID);
         $tableName = $import->get($importID);
         if (!$tableName) {
+            if ($isModernJSON)
+            {
+                if ($modernPage !== '' && $modernPage !== 'import-revert')
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'error' => true,
+                        'message' => 'Unsupported modern page contract.',
+                        'requestedPage' => $modernPage
+                    ));
+                    return;
+                }
+
+                $this->renderModernImportMutationJSON('import-revert', false, 'invalidImportID', 'Invalid import ID.');
+                return;
+            }
+
             $this->import();
             return;
         }
@@ -183,6 +231,28 @@ class ImportUI extends UserInterface
         if (!eval(Hooks::get('IMPORT_REVERT'))) return;
 
         $message = 'The revert was successful.';
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'import-revert')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernImportMutationJSON('import-revert', true, 'importReverted', $message);
+            return;
+        }
 
         $this->_template->assign('successMessage', $message);
         $this->viewPending();
@@ -428,7 +498,7 @@ class ImportUI extends UserInterface
                 'dateCreated' => isset($row['dateCreated']) ? (string) $row['dateCreated'] : '',
                 'addedLines' => isset($row['addedLines']) ? (int) $row['addedLines'] : 0,
                 'hasErrors' => (!empty($row['importErrors'])),
-                'revertURL' => sprintf('%s?m=import&a=revert&importID=%d&ui=legacy', $baseURL, $importID),
+                'revertURL' => sprintf('%s?m=import&a=revert&importID=%d&ui=modern', $baseURL, $importID),
                 'viewErrorsURL' => sprintf('%s?m=import&a=viewerrors&importID=%d&ui=legacy', $baseURL, $importID)
             );
         }
@@ -459,6 +529,27 @@ class ImportUI extends UserInterface
                 'lastBulkCreatedDate' => isset($bulk['lastAttachmentCreatedDate']) ? (string) $bulk['lastAttachmentCreatedDate'] : ''
             ),
             'pendingImports' => $pendingImports
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
+    }
+
+    private function renderModernImportMutationJSON($modernPage, $success, $code, $message)
+    {
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'import.revert.v1',
+                'modernPage' => $modernPage
+            ),
+            'success' => (bool) $success,
+            'code' => (string) $code,
+            'message' => (string) $message
         );
 
         if (!headers_sent())

@@ -2780,6 +2780,185 @@
   color: #1f5f7b;
 }
 
+.avel-gdpr-requests-page .modern-chip-strip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.avel-gdpr-requests-page .modern-chip {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 3px 9px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.avel-gdpr-requests-page .modern-chip--warning {
+  border-color: #f0c98d;
+  background: #fff5e4;
+  color: #92500d;
+}
+
+.avel-gdpr-requests-page .modern-chip--critical {
+  border-color: #eab6b6;
+  background: #fff0f0;
+  color: #9a2f2f;
+}
+
+.avel-gdpr-requests-page .modern-chip--info {
+  border-color: #b5d8e8;
+  background: #eef8ff;
+  color: #1f5f7b;
+}
+
+.avel-gdpr-requests-page .modern-chip--success {
+  border-color: #9acfb2;
+  background: #e7f7ee;
+  color: #1e6d43;
+}
+
+.avel-settings-admin-page .avel-settings-admin-flash {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  border-radius: 16px;
+  border: 1px solid var(--avel-border);
+  box-shadow: var(--avel-shadow-sm);
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fcff 100%);
+}
+
+.avel-settings-admin-page .avel-settings-admin-flash.is-success {
+  border-color: #9acfb2;
+  background: linear-gradient(180deg, #effaf3 0%, #e5f7ec 100%);
+  color: #1e6d43;
+}
+
+.avel-settings-admin-page .avel-settings-admin-flash.is-warning {
+  border-color: #f0c98d;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff2df 100%);
+  color: #92500d;
+}
+
+.avel-settings-admin-page .avel-settings-admin-flash strong {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.avel-settings-admin-page .avel-settings-admin-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.avel-settings-admin-page .avel-settings-admin-summary-card {
+  display: grid;
+  gap: 5px;
+  border-radius: 16px;
+  border: 1px solid var(--avel-border);
+  box-shadow: var(--avel-shadow-sm);
+  padding: 14px 15px 13px;
+  background: linear-gradient(180deg, #ffffff 0%, #f6fbff 100%);
+}
+
+.avel-settings-admin-page .avel-settings-admin-summary-card.is-success {
+  border-color: #9acfb2;
+  background: linear-gradient(180deg, #f4fbf7 0%, #ecf8f0 100%);
+}
+
+.avel-settings-admin-page .avel-settings-admin-summary-card.is-warning {
+  border-color: #f0c98d;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff5e4 100%);
+}
+
+.avel-settings-admin-page .avel-settings-admin-summary-card.is-info {
+  border-color: #b5d8e8;
+  background: linear-gradient(180deg, #f6fbff 0%, #edf8ff 100%);
+}
+
+.avel-settings-admin-page .avel-settings-admin-summary-label {
+  color: var(--avel-text-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.avel-settings-admin-page .avel-settings-admin-summary-value {
+  color: var(--avel-900);
+  font: 700 1.03rem/1.1 'Space Grotesk', 'Segoe UI', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.avel-settings-admin-page .avel-settings-admin-summary-note {
+  color: var(--avel-text-soft);
+  font-size: 0.84rem;
+}
+
+.avel-settings-admin-page .avel-settings-admin-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.avel-settings-admin-page .avel-settings-admin-link {
+  display: grid;
+  gap: 7px;
+  border-radius: 16px;
+  border: 1px solid var(--avel-border);
+  box-shadow: var(--avel-shadow-sm);
+  padding: 13px 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  color: inherit;
+  text-decoration: none;
+}
+
+.avel-settings-admin-page .avel-settings-admin-link:hover {
+  transform: translateY(-1px);
+  border-color: var(--avel-border-strong);
+  box-shadow: var(--avel-shadow-md);
+}
+
+.avel-settings-admin-page .avel-settings-admin-link.is-highlighted {
+  border-color: #9fc9dd;
+  background: linear-gradient(180deg, #f0fbff 0%, #e7f8ff 100%);
+}
+
+.avel-settings-admin-page .avel-settings-admin-link__label-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.avel-settings-admin-page .avel-settings-admin-link__label {
+  color: var(--avel-900);
+  font-weight: 800;
+}
+
+.avel-settings-admin-page .avel-settings-admin-link__badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #b5d8e8;
+  background: #eef8ff;
+  color: #1f5f7b;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 3px 8px;
+}
+
+.avel-settings-admin-page .avel-settings-admin-link__description {
+  color: var(--avel-text-soft);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 .avel-joborders-page .modern-chip--openings {
   border-color: #8fc8a7;
   background: linear-gradient(180deg, #ddf4e7 0%, #c9ecd9 100%);

@@ -24,7 +24,7 @@ type ImportWorkflowActionKey =
   | 'showmassimport'
   | 'whatisbulkresumes';
 
-type ImportWorkflowActionMode = 'modern-redirect' | 'legacy-redirect' | 'embed';
+type ImportWorkflowActionMode = 'modern-redirect' | 'legacy-redirect' | 'endpoint-forward' | 'embed';
 
 type ImportWorkflowActionCopy = {
   mode: ImportWorkflowActionMode;
@@ -53,12 +53,12 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowActionCopy> = {
     statusMessage: 'Loading embedded legacy import error workspace...'
   },
   revert: {
-    mode: 'legacy-redirect',
+    mode: 'endpoint-forward',
     title: 'Revert Import Batch',
-    subtitle: 'Redirecting to the legacy import revert workflow.',
-    panelTitle: 'Import Revert Redirect',
-    panelSubtitle: 'This action still runs through the legacy import flow.',
-    statusMessage: 'Redirecting to the legacy import revert endpoint...'
+    subtitle: 'Forwarding to the legacy import revert endpoint.',
+    panelTitle: 'Import Revert Forward',
+    panelSubtitle: 'This action forwards to the legacy import endpoint without embedding a frame.',
+    statusMessage: 'Forwarding to the legacy import revert endpoint...'
   },
   importbulkresumes: {
     mode: 'legacy-redirect',
@@ -154,6 +154,14 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
     if (actionKey === 'viewpending') {
       window.location.replace(modernImportURL);
       return;
+    }
+
+    if (copy?.mode === 'endpoint-forward') {
+      const timer = window.setTimeout(() => {
+        window.location.assign(legacyURL);
+      }, 80);
+
+      return () => window.clearTimeout(timer);
     }
 
     if (copy?.mode === 'legacy-redirect') {

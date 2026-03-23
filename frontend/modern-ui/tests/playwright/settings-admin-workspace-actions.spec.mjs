@@ -49,6 +49,8 @@ test.describe('Settings admin workspace action smoke', () => {
 
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByText('Candidate records')).toHaveCount(1);
+    await expect(page.getByText('Legacy Workspace')).toHaveCount(1);
   });
 
   test('settings.manageusers ui=modern mounts without a runtime boundary', async ({ context, page }) => {

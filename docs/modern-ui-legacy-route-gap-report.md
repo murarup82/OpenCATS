@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T11:44:48.125Z
+Generated: 2026-03-23T12:17:51.348Z
 
 ## Summary
 
@@ -109,7 +109,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | export | export | native-explicit | export.export | LegacyDownloadForwardActionPage |
 | export | exportByDataGrid | native-explicit | export.exportbydatagrid | LegacyDownloadForwardActionPage |
 | gdpr | export | native-explicit | gdpr.export | LegacyDownloadForwardActionPage |
-| gdpr | requests | native-explicit | gdpr.requests | OperationsWorkspaceActionPage |
+| gdpr | requests | native-explicit | gdpr.requests | GdprRequestsPage |
 | graphs | generic | native-explicit | graphs.generic | GraphsWorkspaceActionPage |
 | graphs | genericPie | native-explicit | graphs.genericpie | GraphsWorkspaceActionPage |
 | graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | GraphsWorkspaceActionPage |
@@ -202,7 +202,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | reports | customizeEEOReport | native-explicit | reports.customizeeeoreport | ReportsWorkflowActionPage |
 | reports | customizeJobOrderReport | native-explicit | reports.customizejoborderreport | ReportsWorkflowActionPage |
 | reports | generateEEOReportPreview | native-explicit | reports.generateeeoreportpreview | ReportsWorkflowActionPage |
-| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | ReportsWorkflowActionPage |
+| reports | generateJobOrderReportPDF | native-explicit | reports.generatejoborderreportpdf | ReportsJobOrderPdfActionPage |
 | reports | graphView | native-explicit | reports.graphview | ReportsGraphViewPage |
 | reports | reports | native-explicit | reports.reports | ReportsLauncherPage |
 | reports | showHireReport | native-explicit | reports.showhirereport | ReportsWorkflowActionPage |

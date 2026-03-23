@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T11:44:48.125Z",
+  "generatedAt": "2026-03-23T12:17:51.348Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -742,7 +742,7 @@
       "classification": "native-explicit",
       "routeKey": "gdpr.requests",
       "resolution": "native",
-      "component": "OperationsWorkspaceActionPage",
+      "component": "GdprRequestsPage",
       "guarded": false
     },
     {
@@ -1579,7 +1579,7 @@
       "classification": "native-explicit",
       "routeKey": "reports.generatejoborderreportpdf",
       "resolution": "native",
-      "component": "ReportsWorkflowActionPage",
+      "component": "ReportsJobOrderPdfActionPage",
       "guarded": false
     },
     {

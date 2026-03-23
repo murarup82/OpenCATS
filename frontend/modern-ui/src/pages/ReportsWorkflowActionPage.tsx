@@ -40,13 +40,6 @@ const ROUTE_COPY: Record<string, RouteCopy> = {
     panelSubtitle: 'Legacy report preview is embedded while modernization continues.',
     mode: 'embedded'
   },
-  'reports.generatejoborderreportpdf': {
-    title: 'Generate Job Order Report PDF',
-    subtitle: 'Forwarding to the legacy PDF download endpoint.',
-    panelTitle: 'Job Order Report PDF Redirect',
-    panelSubtitle: 'The legacy endpoint will start the download immediately.',
-    mode: 'download'
-  },
   'reports.showhirereport': {
     title: 'Hire Report',
     subtitle: 'View the hire report in the legacy workspace.',

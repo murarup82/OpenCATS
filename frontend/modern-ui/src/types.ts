@@ -895,6 +895,91 @@ export type ActivityListModernDataResponse = {
   }>;
 };
 
+export type GdprRequestsModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    permissions?: {
+      canViewAll?: boolean;
+      canEdit?: boolean;
+      canExport?: boolean;
+      canDeleteCandidateData?: boolean;
+    };
+    summary?: {
+      createdCount?: number;
+      sentCount?: number;
+      acceptedCount?: number;
+      declinedCount?: number;
+      expiredCount?: number;
+      legacyCount?: number;
+      needsDeletionCount?: number;
+    };
+  };
+  filters: {
+    status: string;
+    expiring: string;
+    search: string;
+    dateFrom: string;
+    dateTo: string;
+    candidateID: string;
+    needsDeletion: boolean;
+  };
+  options?: {
+    statuses?: Array<{
+      value: string;
+      label: string;
+    }>;
+  };
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    exportCSVURL: string;
+    exportPDFURL: string;
+  };
+  rows: Array<{
+    requestID: number;
+    candidateID: number;
+    candidateExists?: boolean | number;
+    candidateName?: string;
+    fullName?: string;
+    firstName?: string;
+    lastName?: string;
+    candidateEmail?: string;
+    email1?: string;
+    candidateURL?: string;
+    showURL?: string;
+    status?: string;
+    statusLabel: string;
+    displayStatus?: string;
+    isExpired?: boolean | number;
+    createdAt?: string;
+    createdAtSort?: string;
+    expiresAt?: string;
+    sentAt?: string;
+    decision: string;
+    decisionLabel?: string;
+    acceptedAt?: string;
+    acceptedIP?: string;
+    acceptedLang?: string;
+    noticeVersion?: string;
+    proofURL: string;
+    proofLabel: string;
+    proofAttachmentID?: number;
+    proofDirName?: string;
+    proofFilename?: string;
+    deletedAt?: string;
+    deletedAtFormatted?: string;
+    isLatest?: boolean | number;
+    isLegacy?: boolean | number;
+    renewalEligible?: boolean | number;
+  }>;
+};
+
 export type CalendarModernDataResponse = {
   meta: {
     contractVersion: number;
@@ -1671,6 +1756,46 @@ export type SettingsWizardLocalizationModernDataResponse = ModernMutationRespons
 export type SettingsWizardPasswordModernDataResponse = ModernMutationResponse;
 export type SettingsWizardSiteNameModernDataResponse = ModernMutationResponse;
 export type SettingsWizardWebsiteModernDataResponse = ModernMutationResponse;
+
+export type SettingsAdministrationModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  flash?: {
+    message: string;
+    success: boolean;
+  };
+  summary: {
+    siteName: string;
+    version: string;
+    fullName: string;
+    systemAdministration: boolean;
+    careerPortalUnlock: boolean;
+    rolePermissionsEnabled: boolean;
+    totalCandidates: number;
+    newVersionAvailable: boolean;
+    versionCheckPref: boolean;
+  };
+  sections: Array<{
+    key: string;
+    title: string;
+    description: string;
+    items: Array<{
+      label: string;
+      description: string;
+      href: string;
+      badge?: string;
+      highlight?: boolean;
+      external?: boolean;
+    }>;
+  }>;
+  actions: {
+    dashboardURL: string;
+    legacyURL: string;
+  };
+};
 
 export type LoginModernDataResponse = {
   meta: {

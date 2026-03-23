@@ -3495,6 +3495,12 @@ class SettingsUI extends UserInterface
      */
     private function administration()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $requestedSubpage = strtolower($this->getTrimmedInput('s', $_GET));
+        $message = $this->getTrimmedInput('message', $_GET);
+        $messageSuccess = $this->getTrimmedInput('messageSuccess', $_GET);
+
         $systemInfo = new SystemInfo();
         $systemInfoData = $systemInfo->getSystemInfo();
 
@@ -3523,6 +3529,54 @@ class SettingsUI extends UserInterface
         else
         {
             $systemAdministration = false;
+        }
+
+        $rolePagePermissions = new RolePagePermissions($this->_siteID);
+        $rolePermissionsEnabled = $rolePagePermissions->isSchemaAvailable() ? 1 : 0;
+        $careerPortalUnlock = false;
+        $careerPortalSettings = new CareerPortalSettings($this->_siteID);
+        $cpData = $careerPortalSettings->getAll();
+        if (intval($cpData['enabled']) || !$_SESSION['CATS']->isFree() ||
+            LicenseUtility::isProfessional())
+        {
+            $careerPortalUnlock = true;
+        }
+
+        $totalCandidates = 0;
+        $candidates = new Candidates($this->_siteID);
+        $totalCandidates = $candidates->getCount();
+
+        if ($responseFormat === 'modern-json' && $requestedSubpage === '')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-administration')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernAdministrationJSON(
+                'settings-administration',
+                $systemInfoData,
+                $newVersion,
+                $versionCheckPref,
+                $systemAdministration,
+                $careerPortalUnlock,
+                $rolePermissionsEnabled,
+                $totalCandidates,
+                $message,
+                $messageSuccess
+            );
+            return;
         }
 
         // FIXME: 's' isn't a good variable name.
@@ -3634,25 +3688,13 @@ class SettingsUI extends UserInterface
         if (!strcmp($templateFile, './modules/settings/Administration.tpl'))
         {
             // Highlight certain rows of importance based on criteria
-            $candidates = new Candidates($this->_siteID);
             $this->_template->assign('totalCandidates', $candidates->getCount());
         }
 
         if (!eval(Hooks::get('SETTINGS_DISPLAY_ADMINISTRATION'))) return;
 
-        /* Check if careers website is enabled or can be enabled */
-        $careerPortalUnlock = false;
-        $careerPortalSettings = new CareerPortalSettings($this->_siteID);
-        $cpData = $careerPortalSettings->getAll();
-        if (intval($cpData['enabled']) || !$_SESSION['CATS']->isFree() ||
-            LicenseUtility::isProfessional())
-        {
-            $careerPortalUnlock = true;
-        }
-
         $this->_template->assign('careerPortalUnlock', $careerPortalUnlock);
-        $rolePagePermissions = new RolePagePermissions($this->_siteID);
-        $this->_template->assign('rolePermissionsEnabled', $rolePagePermissions->isSchemaAvailable() ? 1 : 0);
+        $this->_template->assign('rolePermissionsEnabled', $rolePermissionsEnabled);
         $this->_template->assign('subActive', 'Administration');
         $this->_template->assign('systemAdministration', $systemAdministration);
         $this->_template->assign('active', $this);
@@ -4486,6 +4528,191 @@ class SettingsUI extends UserInterface
         }
     }
 
+    private function renderModernAdministrationJSON(
+        $modernPage,
+        $systemInfoData,
+        $newVersion,
+        $versionCheckPref,
+        $systemAdministration,
+        $careerPortalUnlock,
+        $rolePermissionsEnabled,
+        $totalCandidates,
+        $message,
+        $messageSuccess
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $sections = array();
+
+        $siteManagementItems = array(
+            $this->buildModernAdministrationItem(
+                'Careers Website',
+                'Configure your website where applicants can apply and post their resumes for your jobs.',
+                $careerPortalUnlock
+                    ? sprintf('%s?m=settings&a=careerPortalSettings&ui=legacy', $baseURL)
+                    : 'http://www.catsone.com/?a=careerswebsite',
+                '',
+                false,
+                !$careerPortalUnlock
+            ),
+            $this->buildModernAdministrationItem(
+                'Change Site Details',
+                'Change the site details such as site name and institution configuration.',
+                sprintf('%s?m=settings&a=administration&s=siteName&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'General E-Mail Configuration',
+                'Configure E-Mail preferences such as return address and when E-Mails are sent.',
+                sprintf('%s?m=settings&a=emailSettings&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'E-Mail Template Configuration',
+                'Configure E-Mail templates for your site.',
+                sprintf('%s?m=settings&a=emailTemplates&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'Localization',
+                'Change how addresses and times are displayed and behave for different regions.',
+                sprintf('%s?m=settings&a=administration&s=localization&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'Data Import',
+                'Import resumes, candidates, companies or contacts from files on your computer.',
+                sprintf('%s?m=import&ui=legacy', $baseURL),
+                $totalCandidates <= 0 ? 'Seed data' : '',
+                $totalCandidates <= 0
+            ),
+            $this->buildModernAdministrationItem(
+                'Site Backup',
+                'Produce a downloadable backup with all the content in your site.',
+                sprintf('%s?m=settings&a=createBackup&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'Schema Migrations',
+                'Review and apply pending schema migrations.',
+                sprintf('%s?m=settings&a=schemaMigrations&ui=legacy', $baseURL),
+                $newVersion ? 'Update available' : '',
+                $newVersion
+            )
+        );
+        $sections[] = $this->buildModernAdministrationSection(
+            'site-management',
+            'Site Management',
+            'Core configuration and lifecycle settings used by site administrators.',
+            $siteManagementItems
+        );
+
+        $featureSettingsItems = array(
+            $this->buildModernAdministrationItem(
+                'EEO / EOC Support',
+                'Enable and configure EEO / EOC compliance tracking.',
+                sprintf('%s?m=settings&a=eeo&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'GDPR Settings',
+                'Configure GDPR consent defaults such as expiration timeline.',
+                sprintf('%s?m=settings&a=gdprSettings&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'Feedback Settings',
+                'Configure which user receives feedback submitted from the global footer.',
+                sprintf('%s?m=settings&a=feedbackSettings&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'Configure Tags',
+                'Add/Remove tags, description for tags',
+                sprintf('%s?m=settings&a=tags&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'Rejection Reasons',
+                'Add or rename rejection reasons for pipeline status changes.',
+                sprintf('%s?m=settings&a=rejectionReasons&ui=legacy', $baseURL)
+            ),
+            $this->buildModernAdministrationItem(
+                'TalentFitFlow Integration',
+                'Configure API credentials for CV transformations.',
+                sprintf('%s?m=settings&a=talentFitFlowSettings&ui=legacy', $baseURL)
+            )
+        );
+        $sections[] = $this->buildModernAdministrationSection(
+            'feature-settings',
+            'Feature Settings',
+            'Compliance, tagging, and workflow integrations that shape recruiter behavior.',
+            $featureSettingsItems
+        );
+
+        $userManagementItems = array(
+            $this->buildModernAdministrationItem(
+                'User Management',
+                'Add, edit and delete users for your site.',
+                sprintf('%s?m=settings&a=manageUsers&ui=legacy', $baseURL)
+            )
+        );
+        if ((int) $rolePermissionsEnabled === 1)
+        {
+            $userManagementItems[] = $this->buildModernAdministrationItem(
+                'Role Access Matrix',
+                'Configure page visibility and minimum access level by role.',
+                sprintf('%s?m=settings&a=rolePagePermissions&ui=legacy', $baseURL)
+            );
+        }
+        $userManagementItems[] = $this->buildModernAdministrationItem(
+            'Login Activity',
+            'Shows you the login history for your site.',
+            sprintf('%s?m=settings&a=loginActivity&ui=legacy', $baseURL)
+        );
+        $userManagementItems[] = $this->buildModernAdministrationItem(
+            'Google SSO / Access Request',
+            'Configure Google Workspace sign-in and access request provisioning e-mails.',
+            sprintf('%s?m=settings&a=googleOIDCSettings&ui=legacy', $baseURL)
+        );
+        $sections[] = $this->buildModernAdministrationSection(
+            'user-management',
+            'User Management',
+            'Identity, permissions, and access-request controls for the tenant.',
+            $userManagementItems
+        );
+
+        $flash = array();
+        if ($message !== '')
+        {
+            $flash = array(
+                'message' => $message,
+                'success' => (strtolower($messageSuccess) === 'true' || $messageSuccess === '1')
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.administration.v1',
+                'modernPage' => $modernPage
+            ),
+            'summary' => array(
+                'siteName' => (string) $_SESSION['CATS']->getSiteName(),
+                'version' => CATSUtility::getVersion(),
+                'fullName' => (string) $_SESSION['CATS']->getFullName(),
+                'systemAdministration' => ((bool) $systemAdministration),
+                'careerPortalUnlock' => ((bool) $careerPortalUnlock),
+                'rolePermissionsEnabled' => ((bool) $rolePermissionsEnabled),
+                'totalCandidates' => (int) $totalCandidates,
+                'newVersionAvailable' => ((bool) $newVersion),
+                'versionCheckPref' => ((bool) $versionCheckPref)
+            ),
+            'sections' => $sections,
+            'actions' => array(
+                'dashboardURL' => sprintf('%s?m=dashboard&a=my&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=administration&ui=legacy', $baseURL)
+            )
+        );
+        if (!empty($flash))
+        {
+            $payload['flash'] = $flash;
+        }
+
+        $this->respondModernJSON(200, $payload);
+    }
+
     /*
      * Called by handleRequest to change localization settings at administrator login for ASP systems.
      */
@@ -4539,6 +4766,64 @@ class SettingsUI extends UserInterface
         $systemInfo->updateVersionCheckPrefs($enableNewVersionCheck);
 
         NewVersionCheck::checkForUpdate();
+    }
+
+    private function buildModernAdministrationSection($key, $title, $description, $items)
+    {
+        return array(
+            'key' => (string) $key,
+            'title' => (string) $title,
+            'description' => (string) $description,
+            'items' => $items
+        );
+    }
+
+    private function buildModernAdministrationItem($label, $description, $href, $badge = '', $highlight = false, $external = false)
+    {
+        $item = array(
+            'label' => (string) $label,
+            'description' => (string) $description,
+            'href' => (string) $href
+        );
+        if ($badge !== '')
+        {
+            $item['badge'] = (string) $badge;
+        }
+        if ($highlight)
+        {
+            $item['highlight'] = true;
+        }
+        if ($external)
+        {
+            $item['external'] = true;
+        }
+
+        return $item;
+    }
+
+    private function respondModernJSON($statusCode, $payload)
+    {
+        $statusCode = (int) $statusCode;
+        if ($statusCode <= 0)
+        {
+            $statusCode = 200;
+        }
+
+        if (!headers_sent())
+        {
+            if (function_exists('http_response_code'))
+            {
+                http_response_code($statusCode);
+            }
+            else
+            {
+                header(sprintf('HTTP/1.1 %d', $statusCode));
+            }
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        echo json_encode($payload);
     }
 
     /*

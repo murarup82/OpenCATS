@@ -4,6 +4,7 @@ import type {
   CandidateGoogleDriveUploadMutationResponse,
   CalendarEventMutationResponse,
   CalendarModernDataResponse,
+  GdprRequestsModernDataResponse,
   CandidateResumeModernDataResponse,
   CandidateAssignToJobOrderModernDataResponse,
   CandidateAssignToJobOrderMutationResponse,
@@ -29,6 +30,7 @@ import type {
   HomeOverviewModernDataResponse,
   HomeQuickSearchModernDataResponse,
   ImportLauncherModernDataResponse,
+  SettingsAdministrationModernDataResponse,
   SettingsWizardAddUserModernDataResponse,
   SettingsWizardCheckKeyModernDataResponse,
   SettingsWizardDeleteUserModernDataResponse,
@@ -77,6 +79,7 @@ import {
   MODERN_ACTIVITY_PAGE,
   MODERN_CALENDAR_PAGE,
   MODERN_CANDIDATE_RESUME_PAGE,
+  MODERN_GDPR_REQUESTS_PAGE,
   MODERN_CANDIDATES_PAGE,
   MODERN_CANDIDATE_ADD_PAGE,
   MODERN_CANDIDATE_EDIT_PAGE,
@@ -113,6 +116,7 @@ import {
   MODERN_REPORTS_CUSTOMER_DASHBOARD_PAGE,
   MODERN_REPORTS_GRAPH_VIEW_PAGE,
   MODERN_REPORTS_PAGE,
+  MODERN_SETTINGS_ADMINISTRATION_PAGE,
   MODERN_SOURCING_PAGE,
   MODERN_KPIS_DETAILS_PAGE,
   buildModernJSONRequestQuery
@@ -287,6 +291,24 @@ export async function fetchImportLauncherModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ImportLauncherModernDataResponse>(url);
   assertModernContract(data.meta, 'import.launcher.v1', 'import launcher data');
+
+  return data;
+}
+
+export async function fetchSettingsAdministrationModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsAdministrationModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'administration',
+    modernPage: MODERN_SETTINGS_ADMINISTRATION_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsAdministrationModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.administration.v1', 'settings administration data');
 
   return data;
 }
@@ -1658,6 +1680,27 @@ export async function fetchActivityListModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ActivityListModernDataResponse>(url);
   assertModernContract(data.meta, 'activity.listByView.v1', 'activities');
+
+  return data;
+}
+
+export async function fetchGdprRequestsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<GdprRequestsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'gdpr',
+    action: 'requests',
+    modernPage: MODERN_GDPR_REQUESTS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<GdprRequestsModernDataResponse>(url);
+  assertModernContract(data.meta, 'gdpr.requests.v1', 'GDPR requests');
+  if (!data.actions || String(data.actions.submitURL || '').trim() === '' || String(data.actions.legacyURL || '').trim() === '') {
+    throw new Error('Invalid GDPR requests contract: missing actions.submitURL or actions.legacyURL.');
+  }
 
   return data;
 }

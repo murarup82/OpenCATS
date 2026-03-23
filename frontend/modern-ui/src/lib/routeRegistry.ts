@@ -40,6 +40,7 @@ import { ListsActionPage } from '../pages/ListsActionPage';
 import { ReportsLauncherPage } from '../pages/ReportsLauncherPage';
 import { ReportsCustomerDashboardPage } from '../pages/ReportsCustomerDashboardPage';
 import { ReportsGraphViewPage } from '../pages/ReportsGraphViewPage';
+import { ReportsJobOrderPdfActionPage } from '../pages/ReportsJobOrderPdfActionPage';
 import { SourcingPage } from '../pages/SourcingPage';
 import { QueuePage } from '../pages/QueuePage';
 import { GraphsPage } from '../pages/GraphsPage';
@@ -55,6 +56,7 @@ import { ReportsWorkflowActionPage } from '../pages/ReportsWorkflowActionPage';
 import { SettingsAdminWorkspaceActionPage } from '../pages/SettingsAdminWorkspaceActionPage';
 import { SettingsTagsActionPage } from '../pages/SettingsTagsActionPage';
 import { SettingsWizardActionPage } from '../pages/SettingsWizardActionPage';
+import { GdprRequestsPage } from '../pages/GdprRequestsPage';
 import { RssJobOrdersPage } from '../pages/RssJobOrdersPage';
 import { CandidatesWorkspaceActionPage } from '../pages/CandidatesWorkspaceActionPage';
 import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
@@ -156,7 +158,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'reports.customizeeeoreport': ReportsWorkflowActionPage,
   'reports.customizejoborderreport': ReportsWorkflowActionPage,
   'reports.generateeeoreportpreview': ReportsWorkflowActionPage,
-  'reports.generatejoborderreportpdf': ReportsWorkflowActionPage,
+  'reports.generatejoborderreportpdf': ReportsJobOrderPdfActionPage,
   'reports.showhirereport': ReportsWorkflowActionPage,
   'reports.showplacementreport': ReportsWorkflowActionPage,
   'reports.showsubmissionreport': ReportsWorkflowActionPage,
@@ -195,7 +197,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'export.export': LegacyDownloadForwardActionPage,
   'export.exportbydatagrid': LegacyDownloadForwardActionPage,
   'gdpr.export': LegacyDownloadForwardActionPage,
-  'gdpr.requests': OperationsWorkspaceActionPage,
+  'gdpr.requests': GdprRequestsPage,
   'graphs.generic': GraphsWorkspaceActionPage,
   'graphs.genericpie': GraphsWorkspaceActionPage,
   'graphs.joborderreportgraph': GraphsWorkspaceActionPage,

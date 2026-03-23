@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
+import { fetchSettingsAdministrationModernData } from '../lib/api';
+import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
-import type { UIModeBootstrap } from '../types';
+import type { SettingsAdministrationModernDataResponse, UIModeBootstrap } from '../types';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -272,6 +274,150 @@ const FALLBACK_COPY: PageCopy = {
   panelSubtitle: 'Legacy settings workflow is embedded while modernization continues.'
 };
 
+function toBooleanLabel(value: boolean, onLabel: string, offLabel: string): string {
+  return value ? onLabel : offLabel;
+}
+
+function SettingsAdministrationNativeShell({
+  data,
+  legacyURL,
+  backLink
+}: {
+  data: SettingsAdministrationModernDataResponse;
+  legacyURL: string;
+  backLink: BackLink;
+}) {
+  const dashboardURL = ensureModernUIURL(data.actions.dashboardURL);
+  const flashTone = data.flash?.success ? 'is-success' : 'is-warning';
+
+  const summaryCards = [
+    {
+      label: 'Site',
+      value: data.summary.siteName || '--',
+      note: `Version ${data.summary.version}`,
+      tone: 'info'
+    },
+    {
+      label: 'Signed in as',
+      value: data.summary.fullName || '--',
+      note: data.summary.systemAdministration ? 'System administrator' : 'Restricted administration',
+      tone: data.summary.systemAdministration ? 'success' : 'warning'
+    },
+    {
+      label: 'Career portal',
+      value: toBooleanLabel(data.summary.careerPortalUnlock, 'Unlocked', 'Locked'),
+      note: 'Legacy careers-website settings remain available',
+      tone: data.summary.careerPortalUnlock ? 'success' : 'warning'
+    },
+    {
+      label: 'Role matrix',
+      value: toBooleanLabel(data.summary.rolePermissionsEnabled, 'Enabled', 'Hidden'),
+      note: 'Controls page visibility by role',
+      tone: data.summary.rolePermissionsEnabled ? 'success' : 'warning'
+    },
+    {
+      label: 'Candidate records',
+      value: String(data.summary.totalCandidates),
+      note: data.summary.totalCandidates > 0 ? 'Data import remains optional' : 'Import highlighted for first-time setup',
+      tone: data.summary.totalCandidates > 0 ? 'info' : 'warning'
+    },
+    {
+      label: 'Update checks',
+      value: data.summary.versionCheckPref ? 'Enabled' : 'Disabled',
+      note: data.summary.newVersionAvailable ? 'Update available' : 'No update detected',
+      tone: data.summary.newVersionAvailable ? 'warning' : 'info'
+    }
+  ] as const;
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page">
+      <PageContainer
+        title="Settings Administration"
+        subtitle="Modern overview for the configuration hub. Detail edits still route to the legacy forms."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={dashboardURL}>
+              Back To Dashboard
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.flash?.message ? (
+            <section className={`avel-settings-admin-flash ${flashTone}`} aria-live="polite">
+              <strong>{data.flash.success ? 'Saved' : 'Notice'}</strong>
+              <span>{data.flash.message}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-settings-admin-summary">
+            {summaryCards.map((card) => (
+              <article key={card.label} className={`avel-settings-admin-summary-card is-${card.tone}`}>
+                <span className="avel-settings-admin-summary-label">{card.label}</span>
+                <strong className="avel-settings-admin-summary-value">{card.value}</strong>
+                <span className="avel-settings-admin-summary-note">{card.note}</span>
+              </article>
+            ))}
+          </section>
+
+          {data.sections.map((section) => (
+            <section className="avel-list-panel" key={section.key}>
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">{section.title}</h2>
+                <p className="avel-list-panel__hint">{section.description}</p>
+              </div>
+
+              <div className="avel-settings-admin-links">
+                {section.items.map((item) => {
+                  const href = item.external ? item.href : ensureUIURL(item.href, 'legacy');
+                  return (
+                    <a
+                      key={`${section.key}:${item.label}`}
+                      className={`avel-settings-admin-link${item.highlight ? ' is-highlighted' : ''}`}
+                      href={href}
+                      target={item.external ? '_blank' : undefined}
+                      rel={item.external ? 'noreferrer' : undefined}
+                    >
+                      <span className="avel-settings-admin-link__label-row">
+                        <span className="avel-settings-admin-link__label">{item.label}</span>
+                        {item.badge ? <span className="avel-settings-admin-link__badge">{item.badge}</span> : null}
+                      </span>
+                      <span className="avel-settings-admin-link__description">{item.description}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Legacy Workspace</h2>
+              <p className="avel-list-panel__hint">
+                Use the embedded legacy workspace for edit-heavy subpages and submit flows.
+              </p>
+            </div>
+            <div className="modern-compat-page__actions">
+              <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+                {backLink.label}
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+                Open In New Tab
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                Open Legacy UI
+              </a>
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
 function toLowerText(value: unknown): string {
   return String(value || '').trim().toLowerCase();
 }
@@ -300,7 +446,75 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
   const backLink = useMemo(() => resolveBackLink(routeKey, bootstrap), [routeKey, bootstrap]);
   const legacyURL = useMemo(() => ensureUIURL(bootstrap.legacyURL, 'legacy'), [bootstrap.legacyURL]);
   const embeddedURL = useMemo(() => buildEmbeddedLegacyURL(legacyURL), [legacyURL]);
+  const isNativeAdministrationRoute = routeKey === 'settings.administration' && String(new URLSearchParams(window.location.search).get('s') || '').trim() === '';
+  const [nativeData, setNativeData] = useState<SettingsAdministrationModernDataResponse | null>(null);
+  const [nativeError, setNativeError] = useState('');
+  const [nativeLoading, setNativeLoading] = useState(isNativeAdministrationRoute);
+  const [reloadToken, setReloadToken] = useState(0);
+  const loadRequestRef = useRef(0);
   const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
+  const refreshNativeAdministration = useCallback(() => {
+    if (!isNativeAdministrationRoute) {
+      return;
+    }
+    setReloadToken((current) => current + 1);
+  }, [isNativeAdministrationRoute]);
+
+  usePageRefreshEvents(refreshNativeAdministration);
+
+  useEffect(() => {
+    if (!isNativeAdministrationRoute) {
+      setNativeData(null);
+      setNativeError('');
+      setNativeLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    const requestID = loadRequestRef.current + 1;
+    loadRequestRef.current = requestID;
+    setNativeLoading(true);
+    setNativeError('');
+
+    const query = new URLSearchParams(window.location.search);
+    fetchSettingsAdministrationModernData(bootstrap, query)
+      .then((result) => {
+        if (!isMounted || requestID !== loadRequestRef.current) {
+          return;
+        }
+        setNativeData(result);
+      })
+      .catch((error: Error) => {
+        if (!isMounted || requestID !== loadRequestRef.current) {
+          return;
+        }
+        setNativeError(error.message || 'Unable to load settings administration.');
+        setNativeData(null);
+      })
+      .finally(() => {
+        if (isMounted && requestID === loadRequestRef.current) {
+          setNativeLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [bootstrap, isNativeAdministrationRoute, reloadToken]);
+
+  if (isNativeAdministrationRoute && nativeLoading && !nativeData) {
+    return <div className="modern-state">Loading settings administration...</div>;
+  }
+
+  if (isNativeAdministrationRoute && nativeData && nativeError === '') {
+    return (
+      <SettingsAdministrationNativeShell
+        data={nativeData}
+        legacyURL={legacyURL}
+        backLink={backLink}
+      />
+    );
+  }
 
   return (
     <div className="avel-dashboard-page">

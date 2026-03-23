@@ -29,12 +29,6 @@ const COPY_BY_ROUTE: Record<string, RouteCopy> = {
     panelTitle: 'Hiring Plan Workspace',
     panelSubtitle: 'Legacy hiring-plan UI is embedded while migration continues.'
   },
-  'gdpr.requests': {
-    title: 'GDPR Requests',
-    subtitle: 'Review GDPR request records in compatibility mode.',
-    panelTitle: 'GDPR Requests Workspace',
-    panelSubtitle: 'Legacy GDPR requests UI is embedded while migration continues.'
-  },
   'toolbar.install': {
     title: 'Toolbar Install',
     subtitle: 'Complete toolbar installation steps in compatibility mode.',
@@ -94,13 +88,6 @@ function resolveBackLink(routeKey: string, bootstrap: UIModeBootstrap, query: UR
     return {
       label: 'Back To Job Orders',
       href: ensureModernUIURL(`${bootstrap.indexName}?m=joborders&a=listByView`)
-    };
-  }
-
-  if (routeKey === 'gdpr.requests') {
-    return {
-      label: 'Back To Candidates',
-      href: ensureModernUIURL(`${bootstrap.indexName}?m=candidates&a=listByView`)
     };
   }
 
