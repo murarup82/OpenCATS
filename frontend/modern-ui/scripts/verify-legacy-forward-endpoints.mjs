@@ -23,18 +23,7 @@ const expectedRoutesByCategory = {
   'Settings AJAX and mutation endpoints': [
     'settings.ajax_tags_add',
     'settings.ajax_tags_del',
-    'settings.ajax_tags_upd',
-    'settings.ajax_wizardadduser',
-    'settings.ajax_wizardcheckkey',
-    'settings.ajax_wizarddeleteuser',
-    'settings.ajax_wizardemail',
-    'settings.ajax_wizardfirsttimesetup',
-    'settings.ajax_wizardimport',
-    'settings.ajax_wizardlicense',
-    'settings.ajax_wizardlocalization',
-    'settings.ajax_wizardpassword',
-    'settings.ajax_wizardsitename',
-    'settings.ajax_wizardwebsite'
+    'settings.ajax_tags_upd'
   ],
   'Toolbar integration endpoints': [
     'toolbar.attemptlogin',

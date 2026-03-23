@@ -48,6 +48,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { LoginLegacyActionPage } from '../pages/LoginLegacyActionPage';
 import { LegacyActionWorkspacePage } from '../pages/LegacyActionWorkspacePage';
 import { LegacyUtilityForwardActionPage } from '../pages/LegacyUtilityForwardActionPage';
+import { SettingsWizardActionPage } from '../pages/SettingsWizardActionPage';
 import { RssJobOrdersPage } from '../pages/RssJobOrdersPage';
 import { CandidateAssignActionPage } from '../pages/CandidateAssignActionPage';
 import { JobOrderAssignActionPage } from '../pages/JobOrderAssignActionPage';
@@ -211,17 +212,17 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.ajax_tags_add': LegacyUtilityForwardActionPage,
   'settings.ajax_tags_del': LegacyUtilityForwardActionPage,
   'settings.ajax_tags_upd': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardadduser': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardcheckkey': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizarddeleteuser': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardemail': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardfirsttimesetup': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardimport': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardlicense': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardlocalization': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardpassword': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardsitename': LegacyUtilityForwardActionPage,
-  'settings.ajax_wizardwebsite': LegacyUtilityForwardActionPage,
+  'settings.ajax_wizardadduser': SettingsWizardActionPage,
+  'settings.ajax_wizardcheckkey': SettingsWizardActionPage,
+  'settings.ajax_wizarddeleteuser': SettingsWizardActionPage,
+  'settings.ajax_wizardemail': SettingsWizardActionPage,
+  'settings.ajax_wizardfirsttimesetup': SettingsWizardActionPage,
+  'settings.ajax_wizardimport': SettingsWizardActionPage,
+  'settings.ajax_wizardlicense': SettingsWizardActionPage,
+  'settings.ajax_wizardlocalization': SettingsWizardActionPage,
+  'settings.ajax_wizardpassword': SettingsWizardActionPage,
+  'settings.ajax_wizardsitename': SettingsWizardActionPage,
+  'settings.ajax_wizardwebsite': SettingsWizardActionPage,
   'settings.asplocalization': LegacyActionWorkspacePage,
   'settings.careerportalquestionnaire': LegacyActionWorkspacePage,
   'settings.careerportalquestionnairepreview': LegacyActionWorkspacePage,

@@ -1,13 +1,13 @@
 # Modern UI Intentional Legacy-Forward Endpoint Guard
 
-Generated: 2026-03-23T05:54:16.784Z
+Generated: 2026-03-23T06:06:42.246Z
 
 This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` to avoid breaking download, AJAX, auth, XML, and mutation compatibility behavior.
 
 ## Totals
 
-- Actual legacy-forward routes: 28
-- Expected legacy-forward routes: 28
+- Actual legacy-forward routes: 17
+- Expected legacy-forward routes: 17
 - Unexpected routes: 0
 - Missing expected routes: 0
 - Missing required UI switch excludes: 0
@@ -26,17 +26,6 @@ This guard tracks endpoint-style routes that intentionally remain on `LegacyUtil
 | Settings AJAX and mutation endpoints | `settings.ajax_tags_add` | Present |
 | Settings AJAX and mutation endpoints | `settings.ajax_tags_del` | Present |
 | Settings AJAX and mutation endpoints | `settings.ajax_tags_upd` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardadduser` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardcheckkey` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizarddeleteuser` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardemail` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardfirsttimesetup` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardimport` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardlicense` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardlocalization` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardpassword` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardsitename` | Present |
-| Settings AJAX and mutation endpoints | `settings.ajax_wizardwebsite` | Present |
 | Toolbar integration endpoints | `toolbar.attemptlogin` | Present |
 | Toolbar integration endpoints | `toolbar.authenticate` | Present |
 | Toolbar integration endpoints | `toolbar.checkemailisinsystem` | Present |

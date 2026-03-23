@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T05:54:14.062Z
+Generated: 2026-03-23T06:06:39.489Z
 
 ## Summary
 
@@ -215,17 +215,17 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | ajax_tags_add | native-explicit | settings.ajax_tags_add | LegacyUtilityForwardActionPage |
 | settings | ajax_tags_del | native-explicit | settings.ajax_tags_del | LegacyUtilityForwardActionPage |
 | settings | ajax_tags_upd | native-explicit | settings.ajax_tags_upd | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardAddUser | native-explicit | settings.ajax_wizardadduser | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardCheckKey | native-explicit | settings.ajax_wizardcheckkey | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardDeleteUser | native-explicit | settings.ajax_wizarddeleteuser | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardEmail | native-explicit | settings.ajax_wizardemail | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardFirstTimeSetup | native-explicit | settings.ajax_wizardfirsttimesetup | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardImport | native-explicit | settings.ajax_wizardimport | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardLicense | native-explicit | settings.ajax_wizardlicense | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardLocalization | native-explicit | settings.ajax_wizardlocalization | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardPassword | native-explicit | settings.ajax_wizardpassword | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardSiteName | native-explicit | settings.ajax_wizardsitename | LegacyUtilityForwardActionPage |
-| settings | ajax_wizardWebsite | native-explicit | settings.ajax_wizardwebsite | LegacyUtilityForwardActionPage |
+| settings | ajax_wizardAddUser | native-explicit | settings.ajax_wizardadduser | SettingsWizardActionPage |
+| settings | ajax_wizardCheckKey | native-explicit | settings.ajax_wizardcheckkey | SettingsWizardActionPage |
+| settings | ajax_wizardDeleteUser | native-explicit | settings.ajax_wizarddeleteuser | SettingsWizardActionPage |
+| settings | ajax_wizardEmail | native-explicit | settings.ajax_wizardemail | SettingsWizardActionPage |
+| settings | ajax_wizardFirstTimeSetup | native-explicit | settings.ajax_wizardfirsttimesetup | SettingsWizardActionPage |
+| settings | ajax_wizardImport | native-explicit | settings.ajax_wizardimport | SettingsWizardActionPage |
+| settings | ajax_wizardLicense | native-explicit | settings.ajax_wizardlicense | SettingsWizardActionPage |
+| settings | ajax_wizardLocalization | native-explicit | settings.ajax_wizardlocalization | SettingsWizardActionPage |
+| settings | ajax_wizardPassword | native-explicit | settings.ajax_wizardpassword | SettingsWizardActionPage |
+| settings | ajax_wizardSiteName | native-explicit | settings.ajax_wizardsitename | SettingsWizardActionPage |
+| settings | ajax_wizardWebsite | native-explicit | settings.ajax_wizardwebsite | SettingsWizardActionPage |
 | settings | aspLocalization | native-explicit | settings.asplocalization | LegacyActionWorkspacePage |
 | settings | careerPortalQuestionnaire | native-explicit | settings.careerportalquestionnaire | LegacyActionWorkspacePage |
 | settings | careerPortalQuestionnairePreview | native-explicit | settings.careerportalquestionnairepreview | LegacyActionWorkspacePage |

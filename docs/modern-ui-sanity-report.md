@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-23T05:53:49.257Z
-Finished: 2026-03-23T05:54:08.337Z
+Started: 2026-03-23T06:06:07.305Z
+Finished: 2026-03-23T06:06:33.944Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -37,12 +37,12 @@ Command: `npm run build`
 [modern-ui] Cleaned build output directory: D:\Work\opencats\OpenCATS\public\modern-ui\build
 [36mvite v5.4.21 [32mbuilding for production...[36m[39m
 transforming...
-[32m✓[39m 149 modules transformed.
+[32m✓[39m 150 modules transformed.
 rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m    0.20 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  357.01 kB[22m[1m[22m
-[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,780.86 kB[39m[22m[2m │ map: 6,758.96 kB[22m
-[32m✓ built in 8.68s[39m
+[2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,785.53 kB[39m[22m[2m │ map: 6,772.49 kB[22m
+[32m✓ built in 10.89s[39m
 ```
 
 **stderr**
@@ -148,7 +148,7 @@ Command: `npm run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 15 tests using 1 worker
+Running 18 tests using 1 worker
 
   -   1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
   -   2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
@@ -165,8 +165,11 @@ Running 15 tests using 1 worker
   -  13 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › expired state
   -  14 tests\playwright\pipeline-matrix-runtime.spec.mjs:46:3 › Pipeline matrix runtime smoke › joborders.pipelineMatrix modern contract
   -  15 tests\playwright\pipeline-matrix-runtime.spec.mjs:66:3 › Pipeline matrix runtime smoke › pipeline matrix route mounts without runtime boundary
+  -  16 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
+  -  17 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
+  -  18 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
 
-  15 skipped
+  18 skipped
 ```
 
 **stderr**
