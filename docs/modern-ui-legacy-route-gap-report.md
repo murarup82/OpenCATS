@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T10:11:22.853Z
+Generated: 2026-03-23T10:18:26.387Z
 
 ## Summary
 
@@ -226,21 +226,21 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | ajax_wizardPassword | native-explicit | settings.ajax_wizardpassword | SettingsWizardActionPage |
 | settings | ajax_wizardSiteName | native-explicit | settings.ajax_wizardsitename | SettingsWizardActionPage |
 | settings | ajax_wizardWebsite | native-explicit | settings.ajax_wizardwebsite | SettingsWizardActionPage |
-| settings | aspLocalization | native-explicit | settings.asplocalization | LegacyActionWorkspacePage |
-| settings | careerPortalQuestionnaire | native-explicit | settings.careerportalquestionnaire | LegacyActionWorkspacePage |
-| settings | careerPortalQuestionnairePreview | native-explicit | settings.careerportalquestionnairepreview | LegacyActionWorkspacePage |
-| settings | careerPortalQuestionnaireUpdate | native-explicit | settings.careerportalquestionnaireupdate | LegacyActionWorkspacePage |
-| settings | careerPortalSettings | native-explicit | settings.careerportalsettings | LegacyActionWorkspacePage |
-| settings | careerPortalTemplateEdit | native-explicit | settings.careerportaltemplateedit | LegacyActionWorkspacePage |
+| settings | aspLocalization | native-explicit | settings.asplocalization | SettingsAdminWorkspaceActionPage |
+| settings | careerPortalQuestionnaire | native-explicit | settings.careerportalquestionnaire | SettingsAdminWorkspaceActionPage |
+| settings | careerPortalQuestionnairePreview | native-explicit | settings.careerportalquestionnairepreview | SettingsAdminWorkspaceActionPage |
+| settings | careerPortalQuestionnaireUpdate | native-explicit | settings.careerportalquestionnaireupdate | SettingsAdminWorkspaceActionPage |
+| settings | careerPortalSettings | native-explicit | settings.careerportalsettings | SettingsAdminWorkspaceActionPage |
+| settings | careerPortalTemplateEdit | native-explicit | settings.careerportaltemplateedit | SettingsAdminWorkspaceActionPage |
 | settings | changePassword | native-explicit | settings.changepassword | SettingsAdminWorkspaceActionPage |
-| settings | createBackup | native-explicit | settings.createbackup | LegacyActionWorkspacePage |
-| settings | customizeCalendar | native-explicit | settings.customizecalendar | LegacyActionWorkspacePage |
-| settings | customizeExtraFields | native-explicit | settings.customizeextrafields | LegacyActionWorkspacePage |
-| settings | deleteBackup | native-explicit | settings.deletebackup | LegacyActionWorkspacePage |
+| settings | createBackup | native-explicit | settings.createbackup | SettingsAdminWorkspaceActionPage |
+| settings | customizeCalendar | native-explicit | settings.customizecalendar | SettingsAdminWorkspaceActionPage |
+| settings | customizeExtraFields | native-explicit | settings.customizeextrafields | SettingsAdminWorkspaceActionPage |
+| settings | deleteBackup | native-explicit | settings.deletebackup | SettingsAdminWorkspaceActionPage |
 | settings | deleteEmailTemplate | native-explicit | settings.deleteemailtemplate | SettingsAdminWorkspaceActionPage |
 | settings | deleteUser | native-explicit | settings.deleteuser | SettingsAdminWorkspaceActionPage |
 | settings | editUser | native-explicit | settings.edituser | SettingsAdminWorkspaceActionPage |
-| settings | eeo | native-explicit | settings.eeo | LegacyActionWorkspacePage |
+| settings | eeo | native-explicit | settings.eeo | SettingsAdminWorkspaceActionPage |
 | settings | emailSettings | native-explicit | settings.emailsettings | SettingsAdminWorkspaceActionPage |
 | settings | emailTemplates | native-explicit | settings.emailtemplates | SettingsAdminWorkspaceActionPage |
 | settings | feedbackSettings | native-explicit | settings.feedbacksettings | SettingsAdminWorkspaceActionPage |
@@ -251,21 +251,21 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | loginActivity | native-explicit | settings.loginactivity | SettingsAdminWorkspaceActionPage |
 | settings | manageUsers | native-explicit | settings.manageusers | SettingsAdminWorkspaceActionPage |
 | settings | myProfile | native-explicit | settings.myprofile | SettingsAdminWorkspaceActionPage |
-| settings | newInstallFinished | native-explicit | settings.newinstallfinished | LegacyActionWorkspacePage |
-| settings | newInstallPassword | native-explicit | settings.newinstallpassword | LegacyActionWorkspacePage |
-| settings | newSiteName | native-explicit | settings.newsitename | LegacyActionWorkspacePage |
-| settings | onCareerPortalTweak | native-explicit | settings.oncareerportaltweak | LegacyActionWorkspacePage |
+| settings | newInstallFinished | native-explicit | settings.newinstallfinished | SettingsAdminWorkspaceActionPage |
+| settings | newInstallPassword | native-explicit | settings.newinstallpassword | SettingsAdminWorkspaceActionPage |
+| settings | newSiteName | native-explicit | settings.newsitename | SettingsAdminWorkspaceActionPage |
+| settings | onCareerPortalTweak | native-explicit | settings.oncareerportaltweak | SettingsAdminWorkspaceActionPage |
 | settings | previewPage | native-explicit | settings.previewpage | OperationsWorkspaceActionPage |
 | settings | previewPageTop | native-explicit | settings.previewpagetop | OperationsWorkspaceActionPage |
-| settings | professional | native-explicit | settings.professional | LegacyActionWorkspacePage |
+| settings | professional | native-explicit | settings.professional | SettingsAdminWorkspaceActionPage |
 | settings | rejectionReasons | native-explicit | settings.rejectionreasons | SettingsAdminWorkspaceActionPage |
 | settings | reports | native-explicit | settings.reports | LegacyActionWorkspacePage |
-| settings | rolePagePermissions | native-explicit | settings.rolepagepermissions | LegacyActionWorkspacePage |
-| settings | schemaMigrations | native-explicit | settings.schemamigrations | LegacyActionWorkspacePage |
+| settings | rolePagePermissions | native-explicit | settings.rolepagepermissions | SettingsAdminWorkspaceActionPage |
+| settings | schemaMigrations | native-explicit | settings.schemamigrations | SettingsAdminWorkspaceActionPage |
 | settings | showUser | native-explicit | settings.showuser | SettingsAdminWorkspaceActionPage |
 | settings | tags | native-explicit | settings.tags | SettingsAdminWorkspaceActionPage |
-| settings | talentFitFlowSettings | native-explicit | settings.talentfitflowsettings | LegacyActionWorkspacePage |
-| settings | upgradeSiteName | native-explicit | settings.upgradesitename | LegacyActionWorkspacePage |
+| settings | talentFitFlowSettings | native-explicit | settings.talentfitflowsettings | SettingsAdminWorkspaceActionPage |
+| settings | upgradeSiteName | native-explicit | settings.upgradesitename | SettingsAdminWorkspaceActionPage |
 | settings | viewItemHistory | native-explicit | settings.viewitemhistory | SettingsAdminWorkspaceActionPage |
 | toolbar | attemptLogin | native-explicit | toolbar.attemptlogin | LoginLegacyActionPage |
 | toolbar | authenticate | native-explicit | toolbar.authenticate | LoginLegacyActionPage |

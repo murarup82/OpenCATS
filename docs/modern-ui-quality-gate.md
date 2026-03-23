@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-23T10:10:53.645Z
-Finished: 2026-03-23T10:11:32.980Z
+Started: 2026-03-23T10:17:56.560Z
+Finished: 2026-03-23T10:18:36.187Z
 Overall Status: **Pass**
 
 ## Summary
@@ -127,7 +127,7 @@ Command: `npm.cmd run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 32 tests using 1 worker
+Running 36 tests using 1 worker
 
   -   1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
   -   2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
@@ -156,13 +156,17 @@ Running 32 tests using 1 worker
   -  25 tests\playwright\settings-admin-workspace-actions.spec.mjs:54:3 › Settings admin workspace action smoke › settings.manageusers ui=modern mounts without a runtime boundary
   -  26 tests\playwright\settings-admin-workspace-actions.spec.mjs:66:3 › Settings admin workspace action smoke › settings.emailtemplates ui=modern mounts without a runtime boundary
   -  27 tests\playwright\settings-admin-workspace-actions.spec.mjs:78:3 › Settings admin workspace action smoke › settings.myprofile ui=modern mounts without a runtime boundary
-  -  28 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
-  -  29 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
-  -  30 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
-  -  31 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
-  -  32 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
+  -  28 tests\playwright\settings-platform-workspace-actions.spec.mjs:42:3 › Settings platform workspace action smoke › settings.careerportalsettings ui=modern mounts without a runtime boundary
+  -  29 tests\playwright\settings-platform-workspace-actions.spec.mjs:54:3 › Settings platform workspace action smoke › settings.createbackup ui=modern mounts without a runtime boundary
+  -  30 tests\playwright\settings-platform-workspace-actions.spec.mjs:66:3 › Settings platform workspace action smoke › settings.rolepagepermissions ui=modern mounts without a runtime boundary
+  -  31 tests\playwright\settings-platform-workspace-actions.spec.mjs:78:3 › Settings platform workspace action smoke › settings.schemamigrations ui=modern mounts without a runtime boundary
+  -  32 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
+  -  33 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
+  -  34 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
+  -  35 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
+  -  36 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
 
-  32 skipped
+  36 skipped
 ```
 
 **stderr**

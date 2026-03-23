@@ -1,6 +1,6 @@
 # Operations Ownership Review Reminder
 
-Generated: 2026-03-23T10:11:32.941Z
+Generated: 2026-03-23T10:18:36.152Z
 Next Review Due: 2026-04-22
 Review Cadence: Monthly during steady-state, weekly during cutover windows.
 

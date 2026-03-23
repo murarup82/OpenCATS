@@ -142,6 +142,126 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     subtitle: 'Configure Google OIDC authentication settings in compatibility mode.',
     panelTitle: 'Google OIDC Workspace',
     panelSubtitle: 'Legacy Google OIDC workflow remains embedded while modernization continues.'
+  },
+  'settings.asplocalization': {
+    title: 'ASP Localization',
+    subtitle: 'Manage localization settings in compatibility mode.',
+    panelTitle: 'Localization Workspace',
+    panelSubtitle: 'Legacy localization workflow remains embedded while modernization continues.'
+  },
+  'settings.careerportalquestionnaire': {
+    title: 'Career Portal Questionnaire',
+    subtitle: 'Configure career portal questionnaire settings in compatibility mode.',
+    panelTitle: 'Career Portal Questionnaire Workspace',
+    panelSubtitle: 'Legacy career portal questionnaire workflow remains embedded while modernization continues.'
+  },
+  'settings.careerportalquestionnairepreview': {
+    title: 'Career Portal Questionnaire Preview',
+    subtitle: 'Preview the career portal questionnaire in compatibility mode.',
+    panelTitle: 'Questionnaire Preview Workspace',
+    panelSubtitle: 'Legacy questionnaire preview workflow remains embedded while modernization continues.'
+  },
+  'settings.careerportalquestionnaireupdate': {
+    title: 'Career Portal Questionnaire Update',
+    subtitle: 'Apply questionnaire updates in compatibility mode.',
+    panelTitle: 'Questionnaire Update Workspace',
+    panelSubtitle: 'Legacy questionnaire update workflow remains embedded while modernization continues.'
+  },
+  'settings.careerportalsettings': {
+    title: 'Career Portal Settings',
+    subtitle: 'Configure career portal behavior in compatibility mode.',
+    panelTitle: 'Career Portal Settings Workspace',
+    panelSubtitle: 'Legacy career portal settings workflow remains embedded while modernization continues.'
+  },
+  'settings.careerportaltemplateedit': {
+    title: 'Career Portal Template',
+    subtitle: 'Edit career portal templates in compatibility mode.',
+    panelTitle: 'Career Portal Template Workspace',
+    panelSubtitle: 'Legacy template-edit workflow remains embedded while modernization continues.'
+  },
+  'settings.createbackup': {
+    title: 'Create Backup',
+    subtitle: 'Create system backups in compatibility mode.',
+    panelTitle: 'Backup Creation Workspace',
+    panelSubtitle: 'Legacy backup creation workflow remains embedded while modernization continues.'
+  },
+  'settings.customizecalendar': {
+    title: 'Customize Calendar',
+    subtitle: 'Configure calendar preferences in compatibility mode.',
+    panelTitle: 'Calendar Customization Workspace',
+    panelSubtitle: 'Legacy calendar customization workflow remains embedded while modernization continues.'
+  },
+  'settings.customizeextrafields': {
+    title: 'Customize Extra Fields',
+    subtitle: 'Configure extra field definitions in compatibility mode.',
+    panelTitle: 'Extra Fields Workspace',
+    panelSubtitle: 'Legacy extra-field customization workflow remains embedded while modernization continues.'
+  },
+  'settings.deletebackup': {
+    title: 'Delete Backup',
+    subtitle: 'Remove backup files in compatibility mode.',
+    panelTitle: 'Backup Deletion Workspace',
+    panelSubtitle: 'Legacy backup deletion workflow remains embedded while modernization continues.'
+  },
+  'settings.eeo': {
+    title: 'EEO Settings',
+    subtitle: 'Manage EEO configuration in compatibility mode.',
+    panelTitle: 'EEO Workspace',
+    panelSubtitle: 'Legacy EEO settings workflow remains embedded while modernization continues.'
+  },
+  'settings.newinstallfinished': {
+    title: 'New Install Finished',
+    subtitle: 'Complete installation finalization steps in compatibility mode.',
+    panelTitle: 'Install Finalization Workspace',
+    panelSubtitle: 'Legacy installation finalization workflow remains embedded while modernization continues.'
+  },
+  'settings.newinstallpassword': {
+    title: 'New Install Password',
+    subtitle: 'Set installation password details in compatibility mode.',
+    panelTitle: 'Install Password Workspace',
+    panelSubtitle: 'Legacy install-password workflow remains embedded while modernization continues.'
+  },
+  'settings.newsitename': {
+    title: 'New Site Name',
+    subtitle: 'Configure site naming during setup in compatibility mode.',
+    panelTitle: 'Site Name Workspace',
+    panelSubtitle: 'Legacy site-name workflow remains embedded while modernization continues.'
+  },
+  'settings.oncareerportaltweak': {
+    title: 'Career Portal Tweak',
+    subtitle: 'Apply career portal tweak operations in compatibility mode.',
+    panelTitle: 'Career Portal Tweak Workspace',
+    panelSubtitle: 'Legacy career portal tweak workflow remains embedded while modernization continues.'
+  },
+  'settings.professional': {
+    title: 'Professional Settings',
+    subtitle: 'Manage professional package settings in compatibility mode.',
+    panelTitle: 'Professional Settings Workspace',
+    panelSubtitle: 'Legacy professional settings workflow remains embedded while modernization continues.'
+  },
+  'settings.rolepagepermissions': {
+    title: 'Role Page Permissions',
+    subtitle: 'Configure role-to-page permissions in compatibility mode.',
+    panelTitle: 'Role Permissions Workspace',
+    panelSubtitle: 'Legacy role-permissions workflow remains embedded while modernization continues.'
+  },
+  'settings.schemamigrations': {
+    title: 'Schema Migrations',
+    subtitle: 'Review and run schema migrations in compatibility mode.',
+    panelTitle: 'Schema Migrations Workspace',
+    panelSubtitle: 'Legacy schema-migration workflow remains embedded while modernization continues.'
+  },
+  'settings.talentfitflowsettings': {
+    title: 'Talent Fit Flow Settings',
+    subtitle: 'Configure Talent Fit Flow behavior in compatibility mode.',
+    panelTitle: 'Talent Fit Flow Workspace',
+    panelSubtitle: 'Legacy Talent Fit Flow settings workflow remains embedded while modernization continues.'
+  },
+  'settings.upgradesitename': {
+    title: 'Upgrade Site Name',
+    subtitle: 'Apply site-name upgrade changes in compatibility mode.',
+    panelTitle: 'Upgrade Site Name Workspace',
+    panelSubtitle: 'Legacy site-name upgrade workflow remains embedded while modernization continues.'
   }
 };
 

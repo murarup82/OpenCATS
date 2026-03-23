@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T10:11:22.853Z",
+  "generatedAt": "2026-03-23T10:18:26.387Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -1795,7 +1795,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.asplocalization",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1804,7 +1804,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnaire",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1813,7 +1813,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnairepreview",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1822,7 +1822,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalquestionnaireupdate",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1831,7 +1831,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportalsettings",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1840,7 +1840,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.careerportaltemplateedit",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1858,7 +1858,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.createbackup",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1867,7 +1867,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.customizecalendar",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1876,7 +1876,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.customizeextrafields",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1885,7 +1885,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deletebackup",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1921,7 +1921,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.eeo",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2020,7 +2020,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newinstallfinished",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2029,7 +2029,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newinstallpassword",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2038,7 +2038,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.newsitename",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2047,7 +2047,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.oncareerportaltweak",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2074,7 +2074,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.professional",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2101,7 +2101,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.rolepagepermissions",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2110,7 +2110,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.schemamigrations",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2137,7 +2137,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.talentfitflowsettings",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2146,7 +2146,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.upgradesitename",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
