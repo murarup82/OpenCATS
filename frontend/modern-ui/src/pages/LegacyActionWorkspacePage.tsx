@@ -130,6 +130,54 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     subtitle: 'View submission reporting output.',
     panelTitle: 'Submission Report Workspace',
     panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'graphs.generic': {
+    title: 'Generic Graph',
+    subtitle: 'View generated graph output in compatibility mode.',
+    panelTitle: 'Generic Graph Workspace',
+    panelSubtitle: 'Legacy graph output is embedded while parity migration continues.'
+  },
+  'graphs.genericpie': {
+    title: 'Generic Pie Graph',
+    subtitle: 'View generated pie graph output in compatibility mode.',
+    panelTitle: 'Generic Pie Graph Workspace',
+    panelSubtitle: 'Legacy graph output is embedded while parity migration continues.'
+  },
+  'graphs.joborderreportgraph': {
+    title: 'Job Order Report Graph',
+    subtitle: 'View job order report graph output in compatibility mode.',
+    panelTitle: 'Job Order Report Graph Workspace',
+    panelSubtitle: 'Legacy graph output is embedded while parity migration continues.'
+  },
+  'graphs.testgraph': {
+    title: 'Graph Test',
+    subtitle: 'View test graph output in compatibility mode.',
+    panelTitle: 'Graph Test Workspace',
+    panelSubtitle: 'Legacy graph output is embedded while parity migration continues.'
+  },
+  'graphs.wordverify': {
+    title: 'Word Verification Graphic',
+    subtitle: 'View word verification image output in compatibility mode.',
+    panelTitle: 'Word Verification Workspace',
+    panelSubtitle: 'Legacy graph output is embedded while parity migration continues.'
+  },
+  'settings.getfirefoxmodal': {
+    title: 'Toolbar Browser Requirement',
+    subtitle: 'Display browser compatibility guidance for toolbar setup.',
+    panelTitle: 'Firefox Requirement Workspace',
+    panelSubtitle: 'Legacy settings flow is embedded while parity migration continues.'
+  },
+  'settings.previewpage': {
+    title: 'Settings Preview',
+    subtitle: 'Preview settings content in compatibility mode.',
+    panelTitle: 'Settings Preview Workspace',
+    panelSubtitle: 'Legacy settings flow is embedded while parity migration continues.'
+  },
+  'settings.previewpagetop': {
+    title: 'Settings Preview Header',
+    subtitle: 'Preview header content in compatibility mode.',
+    panelTitle: 'Settings Preview Header Workspace',
+    panelSubtitle: 'Legacy settings flow is embedded while parity migration continues.'
   }
 };
 
@@ -219,6 +267,13 @@ function resolveBackLink(bootstrap: UIModeBootstrap, query: URLSearchParams): Ba
     return {
       label: 'Back To Reports',
       href: ensureModernUIURL(`${bootstrap.indexName}?m=reports&a=reports`)
+    };
+  }
+
+  if (moduleKey === 'graphs') {
+    return {
+      label: 'Back To Graphs',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=graphs`)
     };
   }
 

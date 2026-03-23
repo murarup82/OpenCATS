@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T04:31:56.251Z
+Generated: 2026-03-23T04:37:09.671Z
 
 ## Summary
 
@@ -110,11 +110,11 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | export | exportByDataGrid | native-explicit | export.exportbydatagrid | LegacyUtilityForwardActionPage |
 | gdpr | export | native-explicit | gdpr.export | LegacyUtilityForwardActionPage |
 | gdpr | requests | native-explicit | gdpr.requests | LegacyUtilityForwardActionPage |
-| graphs | generic | native-explicit | graphs.generic | LegacyUtilityForwardActionPage |
-| graphs | genericPie | native-explicit | graphs.genericpie | LegacyUtilityForwardActionPage |
-| graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | LegacyUtilityForwardActionPage |
-| graphs | testGraph | native-explicit | graphs.testgraph | LegacyUtilityForwardActionPage |
-| graphs | wordVerify | native-explicit | graphs.wordverify | LegacyUtilityForwardActionPage |
+| graphs | generic | native-explicit | graphs.generic | LegacyActionWorkspacePage |
+| graphs | genericPie | native-explicit | graphs.genericpie | LegacyActionWorkspacePage |
+| graphs | jobOrderReportGraph | native-explicit | graphs.joborderreportgraph | LegacyActionWorkspacePage |
+| graphs | testGraph | native-explicit | graphs.testgraph | LegacyActionWorkspacePage |
+| graphs | wordVerify | native-explicit | graphs.wordverify | LegacyActionWorkspacePage |
 | home | addPersonalItem | native-explicit | home.addpersonalitem | HomeMyNotesPage |
 | home | addSavedSearch | native-explicit | home.addsavedsearch | HomePage |
 | home | appendPersonalNote | native-explicit | home.appendpersonalnote | HomeMyNotesPage |
@@ -246,7 +246,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | feedbackSettings | native-explicit | settings.feedbacksettings | LegacyActionWorkspacePage |
 | settings | forceEmail | native-explicit | settings.forceemail | LegacyActionWorkspacePage |
 | settings | gdprSettings | native-explicit | settings.gdprsettings | LegacyActionWorkspacePage |
-| settings | getFirefoxModal | native-explicit | settings.getfirefoxmodal | LegacyUtilityForwardActionPage |
+| settings | getFirefoxModal | native-explicit | settings.getfirefoxmodal | LegacyActionWorkspacePage |
 | settings | googleOIDCSettings | native-explicit | settings.googleoidcsettings | LegacyActionWorkspacePage |
 | settings | loginActivity | native-explicit | settings.loginactivity | LegacyActionWorkspacePage |
 | settings | manageUsers | native-explicit | settings.manageusers | LegacyActionWorkspacePage |
@@ -255,8 +255,8 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | newInstallPassword | native-explicit | settings.newinstallpassword | LegacyActionWorkspacePage |
 | settings | newSiteName | native-explicit | settings.newsitename | LegacyActionWorkspacePage |
 | settings | onCareerPortalTweak | native-explicit | settings.oncareerportaltweak | LegacyUtilityForwardActionPage |
-| settings | previewPage | native-explicit | settings.previewpage | LegacyUtilityForwardActionPage |
-| settings | previewPageTop | native-explicit | settings.previewpagetop | LegacyUtilityForwardActionPage |
+| settings | previewPage | native-explicit | settings.previewpage | LegacyActionWorkspacePage |
+| settings | previewPageTop | native-explicit | settings.previewpagetop | LegacyActionWorkspacePage |
 | settings | professional | native-explicit | settings.professional | LegacyActionWorkspacePage |
 | settings | rejectionReasons | native-explicit | settings.rejectionreasons | LegacyActionWorkspacePage |
 | settings | reports | native-explicit | settings.reports | LegacyActionWorkspacePage |

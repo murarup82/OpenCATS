@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T04:31:56.251Z",
+  "generatedAt": "2026-03-23T04:37:09.671Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -751,7 +751,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.generic",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -760,7 +760,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.genericpie",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -769,7 +769,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.joborderreportgraph",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -778,7 +778,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.testgraph",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -787,7 +787,7 @@
       "classification": "native-explicit",
       "routeKey": "graphs.wordverify",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -1975,7 +1975,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.getfirefoxmodal",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2056,7 +2056,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.previewpage",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
@@ -2065,7 +2065,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.previewpagetop",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "LegacyActionWorkspacePage",
       "guarded": false
     },
     {
