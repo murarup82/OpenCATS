@@ -1910,6 +1910,63 @@ export type SettingsRejectionReasonsModernDataResponse = {
   }>;
 };
 
+export type SettingsEmailTemplatesModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    submitURL: string;
+    addURL: string;
+    deleteURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  templates: Array<{
+    emailTemplateID: number;
+    emailTemplateTitle: string;
+    emailTemplateTag: string;
+    text: string;
+    disabled: number;
+    possibleVariables: string;
+    isCustom: boolean;
+  }>;
+};
+
+export type SettingsEmailTemplateMutationResponse = ModernMutationResponse & {
+  meta: {
+    contractVersion: number;
+    contractKey:
+      | 'settings.addEmailTemplate.mutation.v1'
+      | 'settings.deleteEmailTemplate.mutation.v1'
+      | 'settings.emailTemplates.mutation.v1';
+    modernPage: string;
+  };
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
+export type SettingsAddEmailTemplateMutationResponse = SettingsEmailTemplateMutationResponse & {
+  meta: SettingsEmailTemplateMutationResponse['meta'] & {
+    contractKey: 'settings.addEmailTemplate.mutation.v1';
+  };
+};
+
+export type SettingsDeleteEmailTemplateMutationResponse = SettingsEmailTemplateMutationResponse & {
+  meta: SettingsEmailTemplateMutationResponse['meta'] & {
+    contractKey: 'settings.deleteEmailTemplate.mutation.v1';
+  };
+};
+
+export type SettingsUpdateEmailTemplateMutationResponse = SettingsEmailTemplateMutationResponse & {
+  meta: SettingsEmailTemplateMutationResponse['meta'] & {
+    contractKey: 'settings.emailTemplates.mutation.v1';
+  };
+};
+
 export type SettingsTagsModernDataResponse = {
   meta: {
     contractVersion: number;

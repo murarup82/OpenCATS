@@ -1277,11 +1277,22 @@ class SettingsUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this);
             return;
         }
-        
+
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $emailTemplates = new EmailTemplates($this->_siteID);
         $templateID = $_GET['id'];
         $emailTemplates->delete($templateID);
-       
+
+        if ($isModernJSON)
+        {
+            $this->renderModernEmailTemplateMutationJSON(
+                'settings.deleteEmailTemplate.mutation.v1',
+                true,
+                'E-Mail template deleted.'
+            );
+            return;
+        }
+
         $this->emailTemplates();
     }
     
@@ -1292,16 +1303,35 @@ class SettingsUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this);
             return;
         }
-        
+
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $possibleVariables = "%CANDSTATUS%%CANDOWNER%%CANDFIRSTNAME%%CANDFULLNAME%%CANDPREVSTATUS%";
         $emailTemplates = new EmailTemplates($this->_siteID);
         $emailTemplateID = $emailTemplates->add("", "New Email Template", "CUSTOM", $this->_siteID, $possibleVariables);
         if($emailTemplateID < 1)
         {
+            if ($isModernJSON)
+            {
+                $this->renderModernEmailTemplateMutationJSON(
+                    'settings.addEmailTemplate.mutation.v1',
+                    false,
+                    'Failed to add template.'
+                );
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_RECORDERROR, $this, 'Failed to add template.');
         }
         else
         {
+            if ($isModernJSON)
+            {
+                $this->renderModernEmailTemplateMutationJSON(
+                    'settings.addEmailTemplate.mutation.v1',
+                    true,
+                    'E-Mail template added.'
+                );
+                return;
+            }
             $this->emailTemplates();
         }
     }
@@ -2206,10 +2236,34 @@ class SettingsUI extends UserInterface
     //FIXME: Document me.
     private function emailTemplates()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $emailTemplates = new EmailTemplates($this->_siteID);
         $emailTemplatesRS = $emailTemplates->getAll();
 
         if (!eval(Hooks::get('SETTINGS_EMAIL_TEMPLATES'))) return;
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-email-templates')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernEmailTemplatesJSON('settings-email-templates', $emailTemplatesRS);
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
@@ -2220,6 +2274,8 @@ class SettingsUI extends UserInterface
     //FIXME: Document me.
     private function onEmailTemplates()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
         if (!$this->isRequiredIDValid('templateID', $_POST))
         {
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid template ID.');
@@ -2262,7 +2318,73 @@ class SettingsUI extends UserInterface
         $emailTemplates = new EmailTemplates($this->_siteID);
         $emailTemplates->update($templateID, $templateTitle, $text, $disabled);
 
+        if ($isModernJSON)
+        {
+            $this->renderModernEmailTemplateMutationJSON(
+                'settings.emailTemplates.mutation.v1',
+                true,
+                'E-Mail template saved.'
+            );
+            return;
+        }
+
         CATSUtility::transferRelativeURI('m=settings&a=emailTemplates');
+    }
+
+    private function renderModernEmailTemplatesJSON($modernPage, $emailTemplatesRS)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedTemplates = array();
+        foreach ($emailTemplatesRS as $template)
+        {
+            $tag = isset($template['emailTemplateTag']) ? (string) $template['emailTemplateTag'] : '';
+            $normalizedTemplates[] = array(
+                'emailTemplateID' => (int) $template['emailTemplateID'],
+                'emailTemplateTitle' => isset($template['emailTemplateTitle']) ? (string) $template['emailTemplateTitle'] : '',
+                'emailTemplateTag' => $tag,
+                'text' => isset($template['text']) ? (string) $template['text'] : '',
+                'disabled' => isset($template['disabled']) ? (int) $template['disabled'] : 0,
+                'possibleVariables' => isset($template['possibleVariables']) ? (string) $template['possibleVariables'] : '',
+                'isCustom' => (strpos($tag, 'CUSTOM') === 0)
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.emailTemplates.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=emailTemplates', $baseURL),
+                'addURL' => sprintf('%s?m=settings&a=addEmailTemplate&ui=modern', $baseURL),
+                'deleteURL' => sprintf('%s?m=settings&a=deleteEmailTemplate&ui=modern', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=emailTemplates&ui=legacy', $baseURL)
+            ),
+            'templates' => $normalizedTemplates
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernEmailTemplateMutationJSON($contractKey, $success, $message)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => (string) $contractKey,
+                'modernPage' => 'settings-email-templates'
+            ),
+            'success' => (bool) $success,
+            'message' => (string) $message,
+            'actions' => array(
+                'routeURL' => sprintf('%s?m=settings&a=emailTemplates&ui=modern', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
     }
 
     /*

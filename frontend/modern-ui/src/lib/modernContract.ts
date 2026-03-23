@@ -41,6 +41,7 @@ export const MODERN_SETTINGS_ADMINISTRATION_PAGE = 'settings-administration';
 export const MODERN_SETTINGS_MYPROFILE_PAGE = 'settings-myprofile';
 export const MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE = 'settings-myprofile-change-password';
 export const MODERN_SETTINGS_LOGIN_ACTIVITY_PAGE = 'settings-login-activity';
+export const MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE = 'settings-email-templates';
 export const MODERN_SETTINGS_REJECTION_REASONS_PAGE = 'settings-rejection-reasons';
 export const MODERN_SETTINGS_TAGS_PAGE = 'settings-tags';
 export const MODERN_SETTINGS_ROLE_PAGE_PERMISSIONS_PAGE = 'settings-role-page-permissions';

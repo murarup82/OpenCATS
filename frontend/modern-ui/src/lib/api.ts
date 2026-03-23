@@ -33,7 +33,10 @@ import type {
   ImportBulkResumesModernMutationResponse,
   ImportDeleteBulkResumesModernMutationResponse,
   SettingsAdministrationModernDataResponse,
+  SettingsAddEmailTemplateMutationResponse,
   SettingsAddUserModernDataResponse,
+  SettingsDeleteEmailTemplateMutationResponse,
+  SettingsEmailTemplatesModernDataResponse,
   SettingsEditUserModernDataResponse,
   SettingsLoginActivityModernDataResponse,
   SettingsManageUsersModernDataResponse,
@@ -42,6 +45,7 @@ import type {
   SettingsSchemaMigrationsModernDataResponse,
   SettingsTagsModernDataResponse,
   SettingsShowUserModernDataResponse,
+  SettingsUpdateEmailTemplateMutationResponse,
   SettingsWizardAddUserModernDataResponse,
   SettingsWizardCheckKeyModernDataResponse,
   SettingsWizardDeleteUserModernDataResponse,
@@ -133,6 +137,7 @@ import {
   MODERN_SETTINGS_ADMINISTRATION_PAGE,
   MODERN_SETTINGS_ADD_USER_PAGE,
   MODERN_SETTINGS_EDIT_USER_PAGE,
+  MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE,
   MODERN_SETTINGS_LOGIN_ACTIVITY_PAGE,
   MODERN_SETTINGS_MANAGE_USERS_PAGE,
   MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE,
@@ -432,6 +437,131 @@ export async function fetchSettingsLoginActivityModernData(
   assertModernContract(data.meta, 'settings.loginActivity.v1', 'settings login activity data');
 
   return data;
+}
+
+export async function fetchSettingsEmailTemplatesModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsEmailTemplatesModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'emailTemplates',
+    modernPage: MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsEmailTemplatesModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.emailTemplates.v1', 'settings email templates data');
+
+  return data;
+}
+
+export async function addSettingsEmailTemplate(
+  addURL: string
+): Promise<SettingsAddEmailTemplateMutationResponse> {
+  const requestURL = buildModernMutationURL(addURL, {
+    m: 'settings',
+    a: 'addEmailTemplate',
+    modernPage: MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'GET',
+    credentials: 'same-origin'
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Add email template'
+  )) as SettingsAddEmailTemplateMutationResponse;
+  assertModernContract(
+    result.meta,
+    'settings.addEmailTemplate.mutation.v1',
+    'settings add email template mutation'
+  );
+
+  return result;
+}
+
+export async function deleteSettingsEmailTemplate(
+  deleteURL: string,
+  templateID: number
+): Promise<SettingsDeleteEmailTemplateMutationResponse> {
+  const requestURL = buildModernMutationURL(deleteURL, {
+    m: 'settings',
+    a: 'deleteEmailTemplate',
+    id: Number(templateID || 0),
+    modernPage: MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'GET',
+    credentials: 'same-origin'
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Delete email template'
+  )) as SettingsDeleteEmailTemplateMutationResponse;
+  assertModernContract(
+    result.meta,
+    'settings.deleteEmailTemplate.mutation.v1',
+    'settings delete email template mutation'
+  );
+
+  return result;
+}
+
+export async function updateSettingsEmailTemplate(
+  submitURL: string,
+  payload: {
+    templateID: number;
+    emailTemplateTitle: string;
+    messageText: string;
+    messageTextOrigional?: string;
+    useThisTemplate: boolean;
+  }
+): Promise<SettingsUpdateEmailTemplateMutationResponse> {
+  const normalizedMessageText = String(payload.messageText || '');
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE);
+  body.set('templateID', String(Number(payload.templateID || 0)));
+  body.set('emailTemplateTitle', String(payload.emailTemplateTitle || ''));
+  body.set('messageText', normalizedMessageText);
+  body.set('messageTextOrigional', String(payload.messageTextOrigional ?? normalizedMessageText));
+  if (payload.useThisTemplate) {
+    body.set('useThisTemplate', '1');
+  }
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'emailTemplates',
+    modernPage: MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update email template'
+  )) as SettingsUpdateEmailTemplateMutationResponse;
+  assertModernContract(
+    result.meta,
+    'settings.emailTemplates.mutation.v1',
+    'settings update email template mutation'
+  );
+
+  return result;
 }
 
 export async function fetchSettingsManageUsersModernData(

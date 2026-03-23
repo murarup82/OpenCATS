@@ -17,9 +17,11 @@ import {
   fetchSettingsTagsModernData,
   fetchSettingsViewItemHistoryModernData
 } from '../lib/api';
+import * as settingsApi from '../lib/api';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import type {
+  ModernMutationResponse,
   SettingsAdministrationModernDataResponse,
   SettingsManageUsersModernDataResponse,
   SettingsAddUserModernDataResponse,
@@ -99,24 +101,24 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.emailtemplates': {
     title: 'Email Templates',
-    subtitle: 'Manage email templates in compatibility mode.',
+    subtitle: 'Manage email templates in the native settings shell.',
     panelTitle: 'Email Templates Workspace',
-    panelSubtitle: 'Legacy email-template workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native template editor keeps legacy submit field compatibility.',
+    mode: 'embed'
   },
   'settings.addemailtemplate': {
     title: 'Add Email Template',
-    subtitle: 'Create an email template in compatibility mode.',
+    subtitle: 'Create an email template in the native settings shell.',
     panelTitle: 'Add Email Template Workspace',
-    panelSubtitle: 'Legacy email-template creation remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native add-template action updates the workspace without legacy forwarding.',
+    mode: 'embed'
   },
   'settings.deleteemailtemplate': {
     title: 'Delete Email Template',
-    subtitle: 'Remove an email template in compatibility mode.',
+    subtitle: 'Remove an email template in the native settings shell.',
     panelTitle: 'Delete Email Template Workspace',
-    panelSubtitle: 'Legacy email-template deletion remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native delete-template action updates the workspace without legacy forwarding.',
+    mode: 'embed'
   },
   'settings.loginactivity': {
     title: 'Login Activity',
@@ -361,6 +363,7 @@ type NativeSettingsRouteMode =
   | 'editUser'
   | 'showUser'
   | 'loginActivity'
+  | 'emailTemplates'
   | 'rejectionReasons'
   | 'tags'
   | 'rolePagePermissions'
@@ -416,6 +419,292 @@ function buildSettingsProfileSummaryCards(summary: {
     }
   ];
 }
+
+type SettingsEmailTemplateToken = {
+  label: string;
+  value: string;
+};
+
+type SettingsEmailTemplateMutationResponse = ModernMutationResponse & {
+  templateID?: number;
+};
+
+type SettingsEmailTemplate = {
+  emailTemplateID: number;
+  emailTemplateTitle: string;
+  emailTemplateTag: string;
+  text: string;
+  messageTextOrigional: string;
+  disabled: boolean;
+  possibleVariables: string;
+  canDelete: boolean;
+};
+
+type SettingsEmailTemplatesModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  flash?: {
+    saved: boolean;
+    success: boolean;
+    message: string;
+  };
+  state: {
+    noGlobalTemplates: boolean;
+  };
+  actions: {
+    routeURL: string;
+    submitURL: string;
+    addTemplateURL: string;
+    deleteTemplateURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  helpers: {
+    mergeFields: SettingsEmailTemplateToken[];
+  };
+  templates: SettingsEmailTemplate[];
+};
+
+const EMAIL_TEMPLATE_FORMATTING_TOKENS: SettingsEmailTemplateToken[] = [
+  { label: 'Bold', value: '<B></B>' },
+  { label: 'Italics', value: '<I></I>' },
+  { label: 'Underline', value: '<U></U>' }
+];
+
+const EMAIL_TEMPLATE_GLOBAL_MERGE_TOKENS: SettingsEmailTemplateToken[] = [
+  { label: 'Current Date/Time', value: '%DATETIME%' },
+  { label: 'Site Name', value: '%SITENAME%' },
+  { label: 'Recruiter/Current User Name', value: '%USERFULLNAME%' },
+  { label: 'Recruiter/Current User E-Mail Link', value: '%USERMAIL%' }
+];
+
+const EMAIL_TEMPLATE_CONDITIONAL_MERGE_TOKENS: SettingsEmailTemplateToken[] = [
+  { label: 'Previous Candidate Status', value: '%CANDPREVSTATUS%' },
+  { label: 'Current Candidate Status', value: '%CANDSTATUS%' },
+  { label: 'Candidate Owner', value: '%CANDOWNER%' },
+  { label: 'Candidate First Name', value: '%CANDFIRSTNAME%' },
+  { label: 'Candidate Full Name', value: '%CANDFULLNAME%' },
+  { label: 'CATS Candidate URL', value: '%CANDCATSURL%' },
+  { label: 'Company Owner', value: '%CLNTOWNER%' },
+  { label: 'Company Name', value: '%CLNTNAME%' },
+  { label: 'CATS Company URL', value: '%CLNTCATSURL%' },
+  { label: 'Contact Owner', value: '%CONTOWNER%' },
+  { label: 'Contact First Name', value: '%CONTFIRSTNAME%' },
+  { label: 'Contact Full Name', value: '%CONTFULLNAME%' },
+  { label: 'Contacts Company Name', value: '%CONTCLIENTNAME%' },
+  { label: 'CATS Contact URL', value: '%CONTCATSURL%' },
+  { label: 'Job Order Owner', value: '%JBODOWNER%' },
+  { label: 'Job Order Title', value: '%JBODTITLE%' },
+  { label: 'Job Order Company', value: '%JBODCLIENT%' },
+  { label: 'Job Order ID', value: '%JBODID%' },
+  { label: 'CATS Job Order URL', value: '%JBODCATSURL%' }
+];
+
+const SETTINGS_EMAIL_TEMPLATE_FETCHER_NAMES = [
+  'fetchSettingsEmailTemplatesModernData'
+] as const;
+
+const SETTINGS_EMAIL_TEMPLATE_ADD_MUTATION_NAMES = [
+  'fetchSettingsAddEmailTemplateModernMutation',
+  'fetchSettingsAddEmailTemplateModernData',
+  'fetchSettingsEmailTemplateAddModernMutation',
+  'fetchSettingsEmailTemplateAddModernData'
+] as const;
+
+const SETTINGS_EMAIL_TEMPLATE_DELETE_MUTATION_NAMES = [
+  'fetchSettingsDeleteEmailTemplateModernMutation',
+  'fetchSettingsDeleteEmailTemplateModernData',
+  'fetchSettingsEmailTemplateDeleteModernMutation',
+  'fetchSettingsEmailTemplateDeleteModernData'
+] as const;
+
+const SETTINGS_EMAIL_TEMPLATE_SAVE_MUTATION_NAMES = [
+  'fetchSettingsEmailTemplatesSaveModernMutation',
+  'fetchSettingsEmailTemplatesUpdateModernMutation',
+  'fetchSettingsEmailTemplatesSubmitModernMutation',
+  'fetchSettingsEmailTemplateSaveModernMutation',
+  'fetchSettingsEmailTemplateUpdateModernMutation'
+] as const;
+
+type SettingsAsyncAPIFunction = (...args: unknown[]) => Promise<unknown>;
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function toSafeNumber(value: unknown): number {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+}
+
+function toSafeString(value: unknown): string {
+  return typeof value === 'string' ? value : String(value ?? '');
+}
+
+function getSettingsAPIAsyncFunction(candidateNames: readonly string[]): SettingsAsyncAPIFunction | null {
+  const apiRecord = settingsApi as unknown as Record<string, unknown>;
+  for (const candidateName of candidateNames) {
+    const candidate = apiRecord[candidateName];
+    if (typeof candidate === 'function') {
+      return candidate as SettingsAsyncAPIFunction;
+    }
+  }
+
+  return null;
+}
+
+function parseTemplateVariableSet(possibleVariables: string): Set<string> {
+  const tokens = possibleVariables.match(/%[A-Z0-9_]+%/g) || [];
+  return new Set(tokens);
+}
+
+function normalizeSettingsEmailTemplateMutationResponse(
+  response: unknown,
+  fallbackMessage: string
+): SettingsEmailTemplateMutationResponse {
+  if (!isObjectRecord(response)) {
+    return {
+      success: true,
+      message: fallbackMessage
+    };
+  }
+
+  const successCandidate = response.success;
+  const success = typeof successCandidate === 'boolean'
+    ? successCandidate
+    : String(successCandidate || '').trim().toLowerCase() !== 'false';
+  const templateIDCandidate = toSafeNumber(
+    response.templateID ?? response.emailTemplateID ?? response.id
+  );
+
+  return {
+    success,
+    code: typeof response.code === 'string' ? response.code : undefined,
+    message: typeof response.message === 'string' ? response.message : fallbackMessage,
+    templateID: templateIDCandidate > 0 ? templateIDCandidate : undefined
+  };
+}
+
+function normalizeSettingsEmailTemplatesModernData(
+  response: unknown,
+  bootstrap: UIModeBootstrap
+): SettingsEmailTemplatesModernDataResponse {
+  const payload = isObjectRecord(response) ? response : {};
+  const payloadMeta = isObjectRecord(payload.meta) ? payload.meta : {};
+  const payloadActions = isObjectRecord(payload.actions) ? payload.actions : {};
+  const payloadHelpers = isObjectRecord(payload.helpers) ? payload.helpers : {};
+  const payloadState = isObjectRecord(payload.state) ? payload.state : {};
+  const payloadFlash = isObjectRecord(payload.flash) ? payload.flash : {};
+  const rawTemplates = Array.isArray(payload.templates)
+    ? payload.templates
+    : (Array.isArray(payload.emailTemplates) ? payload.emailTemplates : []);
+  const rawMergeFields = Array.isArray(payloadHelpers.mergeFields)
+    ? payloadHelpers.mergeFields
+    : (Array.isArray(payload.mergeFields) ? payload.mergeFields : []);
+
+  const normalizedMergeFields = rawMergeFields
+    .map((item) => {
+      if (typeof item === 'string') {
+        return {
+          label: item,
+          value: item
+        };
+      }
+      if (!isObjectRecord(item)) {
+        return null;
+      }
+      const value = toSafeString(item.value || item.token || '');
+      if (value.trim() === '') {
+        return null;
+      }
+      return {
+        label: toSafeString(item.label || value),
+        value
+      };
+    })
+    .filter((item): item is SettingsEmailTemplateToken => item !== null);
+
+  const normalizedTemplates = rawTemplates
+    .map((item) => {
+      if (!isObjectRecord(item)) {
+        return null;
+      }
+      const emailTemplateID = toSafeNumber(item.emailTemplateID ?? item.templateID ?? item.id);
+      if (emailTemplateID <= 0) {
+        return null;
+      }
+
+      const emailTemplateTitle = toSafeString(item.emailTemplateTitle ?? item.title ?? '').trim();
+      const text = toSafeString(item.text ?? item.messageText ?? item.body ?? '');
+      const messageTextOrigional = toSafeString(
+        item.messageTextOrigional ?? item.messageTextOriginal ?? item.originalText ?? text
+      );
+      const emailTemplateTag = toSafeString(item.emailTemplateTag ?? item.tag ?? item.templateTag ?? '');
+      const disabled = isTruthyText(item.disabled ?? 0);
+      const possibleVariables = toSafeString(item.possibleVariables ?? item.variables ?? '');
+      const canDeleteCandidate = item.canDelete ?? item.isCustom;
+      const canDelete = typeof canDeleteCandidate === 'boolean'
+        ? canDeleteCandidate
+        : emailTemplateTag.toUpperCase().startsWith('CUSTOM');
+
+      return {
+        emailTemplateID,
+        emailTemplateTitle: emailTemplateTitle === '' ? `Template ${emailTemplateID}` : emailTemplateTitle,
+        emailTemplateTag,
+        text,
+        messageTextOrigional,
+        disabled,
+        possibleVariables,
+        canDelete
+      } satisfies SettingsEmailTemplate;
+    })
+    .filter((item): item is SettingsEmailTemplate => item !== null);
+
+  return {
+    meta: {
+      contractVersion: toSafeNumber(payloadMeta.contractVersion) || 1,
+      contractKey: toSafeString(payloadMeta.contractKey || 'settings.emailTemplates.v1'),
+      modernPage: toSafeString(payloadMeta.modernPage || 'settings-email-templates')
+    },
+    flash: {
+      saved: isTruthyText(payloadFlash.saved ?? payloadFlash.success ?? false),
+      success: isTruthyText(payloadFlash.success ?? payloadFlash.saved ?? false),
+      message: toSafeString(payloadFlash.message || '')
+    },
+    state: {
+      noGlobalTemplates: isTruthyText(payloadState.noGlobalTemplates ?? false)
+    },
+    actions: {
+      routeURL: toSafeString(payloadActions.routeURL || `${bootstrap.indexName}?m=settings&a=emailTemplates&ui=modern`),
+      submitURL: toSafeString(payloadActions.submitURL || `${bootstrap.indexName}?m=settings&a=emailTemplates`),
+      addTemplateURL: toSafeString(payloadActions.addTemplateURL || payloadActions.addURL || `${bootstrap.indexName}?m=settings&a=addEmailTemplate`),
+      deleteTemplateURL: toSafeString(payloadActions.deleteTemplateURL || payloadActions.deleteURL || `${bootstrap.indexName}?m=settings&a=deleteEmailTemplate`),
+      backURL: toSafeString(payloadActions.backURL || `${bootstrap.indexName}?m=settings&a=administration&ui=modern`),
+      legacyURL: toSafeString(payloadActions.legacyURL || `${bootstrap.indexName}?m=settings&a=emailTemplates&ui=legacy`)
+    },
+    helpers: {
+      mergeFields: normalizedMergeFields
+    },
+    templates: normalizedTemplates
+  };
+}
+
+async function fetchSettingsEmailTemplatesNativeData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsEmailTemplatesModernDataResponse> {
+  const fetcher = getSettingsAPIAsyncFunction(SETTINGS_EMAIL_TEMPLATE_FETCHER_NAMES);
+  if (fetcher === null) {
+    throw new Error('Email templates native fetcher is unavailable.');
+  }
+
+  const payload = await fetcher(bootstrap, query);
+  return normalizeSettingsEmailTemplatesModernData(payload, bootstrap);
+}
+
 
 function SettingsAdministrationNativeShell({
   data,
@@ -591,6 +880,14 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
     return 'loginActivity';
   }
 
+  if (
+    routeKey === 'settings.emailtemplates' ||
+    routeKey === 'settings.addemailtemplate' ||
+    routeKey === 'settings.deleteemailtemplate'
+  ) {
+    return 'emailTemplates';
+  }
+
   if (routeKey === 'settings.manageusers') {
     return 'manageUsers';
   }
@@ -642,6 +939,10 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
 function buildCopyKey(routeKey: string, nativeRouteMode: NativeSettingsRouteMode): string {
   if (nativeRouteMode === 'changePassword') {
     return 'settings.myprofile.changepassword';
+  }
+
+  if (nativeRouteMode === 'emailTemplates') {
+    return 'settings.emailtemplates';
   }
 
   return routeKey;
@@ -1100,6 +1401,639 @@ function SettingsRejectionReasonsNativeShell({
               ))}
             </div>
           </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+type SettingsEmailTemplateRouteActionMode = 'view' | 'add' | 'delete';
+
+function resolveSettingsEmailTemplateRouteActionMode(routeKey: string): SettingsEmailTemplateRouteActionMode {
+  if (routeKey === 'settings.addemailtemplate') {
+    return 'add';
+  }
+  if (routeKey === 'settings.deleteemailtemplate') {
+    return 'delete';
+  }
+  return 'view';
+}
+
+function SettingsEmailTemplatesNativeShell({
+  data,
+  bootstrap,
+  routeKey,
+  onReload
+}: {
+  data: SettingsEmailTemplatesModernDataResponse;
+  bootstrap: UIModeBootstrap;
+  routeKey: string;
+  onReload: () => void;
+}) {
+  const routeActionMode = useMemo(
+    () => resolveSettingsEmailTemplateRouteActionMode(routeKey),
+    [routeKey]
+  );
+  const routeURL = ensureModernUIURL(data.actions.routeURL);
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const addTemplateURL = ensureUIURL(data.actions.addTemplateURL, 'legacy');
+  const deleteTemplateURL = ensureUIURL(data.actions.deleteTemplateURL, 'legacy');
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [selectedTemplateID, setSelectedTemplateID] = useState(0);
+  const [emailTemplateTitle, setEmailTemplateTitle] = useState('');
+  const [messageText, setMessageText] = useState('');
+  const [messageTextOrigional, setMessageTextOrigional] = useState('');
+  const [useThisTemplate, setUseThisTemplate] = useState(true);
+  const [busyAction, setBusyAction] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [autoActionHandled, setAutoActionHandled] = useState(false);
+  const messageTextRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const selectedTemplate = useMemo(
+    () => data.templates.find((template) => template.emailTemplateID === selectedTemplateID) ?? null,
+    [data.templates, selectedTemplateID]
+  );
+
+  const availableMergeTokens = useMemo(() => {
+    const helperTokens = data.helpers.mergeFields.length > 0
+      ? data.helpers.mergeFields
+      : EMAIL_TEMPLATE_CONDITIONAL_MERGE_TOKENS;
+    const uniqueByValue = new Map<string, SettingsEmailTemplateToken>();
+    helperTokens.forEach((token) => {
+      const value = String(token.value || '').trim();
+      if (value === '') {
+        return;
+      }
+      uniqueByValue.set(value, {
+        label: String(token.label || value).trim() || value,
+        value
+      });
+    });
+    return Array.from(uniqueByValue.values());
+  }, [data.helpers.mergeFields]);
+
+  const templateVariableSet = useMemo(
+    () => parseTemplateVariableSet(selectedTemplate?.possibleVariables || ''),
+    [selectedTemplate?.possibleVariables]
+  );
+
+  const visibleMergeTokens = useMemo(() => {
+    if (templateVariableSet.size === 0) {
+      return availableMergeTokens;
+    }
+
+    return availableMergeTokens.filter((token) => templateVariableSet.has(token.value));
+  }, [availableMergeTokens, templateVariableSet]);
+
+  const initializeEditorFromTemplate = useCallback((template: SettingsEmailTemplate | null) => {
+    if (template === null) {
+      setEmailTemplateTitle('');
+      setMessageText('');
+      setMessageTextOrigional('');
+      setUseThisTemplate(true);
+      return;
+    }
+
+    setEmailTemplateTitle(template.emailTemplateTitle);
+    setMessageText(template.text);
+    setMessageTextOrigional(template.messageTextOrigional);
+    setUseThisTemplate(!template.disabled);
+  }, []);
+
+  useEffect(() => {
+    if (data.templates.length === 0) {
+      setSelectedTemplateID(0);
+      initializeEditorFromTemplate(null);
+      return;
+    }
+
+    if (selectedTemplateID > 0 && data.templates.some((template) => template.emailTemplateID === selectedTemplateID)) {
+      return;
+    }
+
+    const query = new URLSearchParams(window.location.search);
+    const requestedTemplateID = toSafeNumber(query.get('templateID') || query.get('id'));
+    const preferredTemplateID = data.templates.some((template) => template.emailTemplateID === requestedTemplateID)
+      ? requestedTemplateID
+      : data.templates[data.templates.length - 1].emailTemplateID;
+    setSelectedTemplateID(preferredTemplateID);
+  }, [data.templates, initializeEditorFromTemplate, selectedTemplateID]);
+
+  useEffect(() => {
+    initializeEditorFromTemplate(selectedTemplate);
+  }, [initializeEditorFromTemplate, selectedTemplate]);
+
+  const applyMutation = useCallback(async (
+    actionLabel: string,
+    fetcherNames: readonly string[],
+    mutationPayload: URLSearchParams,
+    fallbackRequest: () => Promise<Response>
+  ) => {
+    const mutationFetcher = getSettingsAPIAsyncFunction(fetcherNames);
+    if (mutationFetcher !== null) {
+      const mutationResponse = await mutationFetcher(bootstrap, mutationPayload);
+      return normalizeSettingsEmailTemplateMutationResponse(mutationResponse, `${actionLabel} complete.`);
+    }
+
+    const response = await fallbackRequest();
+    if (!response.ok) {
+      throw new Error(`${actionLabel} failed (${response.status}).`);
+    }
+    return {
+      success: true,
+      message: `${actionLabel} complete.`
+    } satisfies SettingsEmailTemplateMutationResponse;
+  }, [bootstrap]);
+
+  const saveTemplate = useCallback(async () => {
+    if (selectedTemplate === null) {
+      return;
+    }
+
+    setBusyAction('save');
+    setFeedback('');
+    setErrorMessage('');
+
+    const postBody = new URLSearchParams();
+    postBody.set('postback', 'postback');
+    postBody.set('templateID', String(selectedTemplate.emailTemplateID));
+    if (selectedTemplate.canDelete) {
+      postBody.set('emailTemplateTitle', emailTemplateTitle);
+    }
+    postBody.set('messageText', messageText);
+    postBody.set('messageTextOrigional', messageTextOrigional);
+    if (useThisTemplate) {
+      postBody.set('useThisTemplate', 'on');
+    }
+
+    try {
+      const mutationResponse = await applyMutation(
+        'Save template',
+        SETTINGS_EMAIL_TEMPLATE_SAVE_MUTATION_NAMES,
+        postBody,
+        async () => fetch(submitURL, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: postBody.toString()
+        })
+      );
+
+      if (!mutationResponse.success) {
+        throw new Error(mutationResponse.message || 'Unable to save template.');
+      }
+
+      setFeedback(mutationResponse.message || 'Template saved.');
+      onReload();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to save template.');
+    } finally {
+      setBusyAction('');
+    }
+  }, [
+    applyMutation,
+    emailTemplateTitle,
+    messageText,
+    messageTextOrigional,
+    onReload,
+    selectedTemplate,
+    submitURL,
+    useThisTemplate
+  ]);
+
+  const addTemplate = useCallback(async (redirectToWorkspace: boolean) => {
+    setBusyAction('add');
+    setFeedback('');
+    setErrorMessage('');
+
+    try {
+      const mutationResponse = await applyMutation(
+        'Add template',
+        SETTINGS_EMAIL_TEMPLATE_ADD_MUTATION_NAMES,
+        new URLSearchParams(),
+        async () => fetch(addTemplateURL, {
+          credentials: 'same-origin'
+        })
+      );
+
+      if (!mutationResponse.success) {
+        throw new Error(mutationResponse.message || 'Unable to add template.');
+      }
+
+      if (redirectToWorkspace) {
+        window.location.assign(routeURL);
+        return;
+      }
+
+      setFeedback(mutationResponse.message || 'Template added.');
+      onReload();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to add template.');
+    } finally {
+      setBusyAction('');
+    }
+  }, [addTemplateURL, applyMutation, onReload, routeURL]);
+
+  const deleteTemplate = useCallback(async (templateID: number, redirectToWorkspace: boolean) => {
+    if (templateID <= 0) {
+      setErrorMessage('Template ID is required.');
+      return;
+    }
+
+    setBusyAction('delete');
+    setFeedback('');
+    setErrorMessage('');
+
+    const deletePayload = new URLSearchParams();
+    deletePayload.set('id', String(templateID));
+
+    try {
+      const mutationResponse = await applyMutation(
+        'Delete template',
+        SETTINGS_EMAIL_TEMPLATE_DELETE_MUTATION_NAMES,
+        deletePayload,
+        async () => {
+          const requestURL = new URL(deleteTemplateURL, window.location.href);
+          requestURL.searchParams.set('id', String(templateID));
+          return fetch(requestURL.toString(), {
+            credentials: 'same-origin'
+          });
+        }
+      );
+
+      if (!mutationResponse.success) {
+        throw new Error(mutationResponse.message || 'Unable to delete template.');
+      }
+
+      if (redirectToWorkspace) {
+        window.location.assign(routeURL);
+        return;
+      }
+
+      setFeedback(mutationResponse.message || 'Template deleted.');
+      onReload();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to delete template.');
+    } finally {
+      setBusyAction('');
+    }
+  }, [applyMutation, deleteTemplateURL, onReload, routeURL]);
+
+  useEffect(() => {
+    if (routeActionMode === 'view' || autoActionHandled) {
+      return;
+    }
+
+    setAutoActionHandled(true);
+
+    if (routeActionMode === 'add') {
+      void addTemplate(true);
+      return;
+    }
+
+    const query = new URLSearchParams(window.location.search);
+    const templateID = toSafeNumber(query.get('id') || query.get('templateID'));
+    void deleteTemplate(templateID, true);
+  }, [addTemplate, autoActionHandled, deleteTemplate, routeActionMode]);
+
+  const resetTemplateDraft = useCallback(() => {
+    initializeEditorFromTemplate(selectedTemplate);
+  }, [initializeEditorFromTemplate, selectedTemplate]);
+
+  const insertAtCursor = useCallback((insertText: string) => {
+    const textArea = messageTextRef.current;
+    if (!textArea) {
+      setMessageText((currentValue) => `${currentValue}${insertText}`);
+      return;
+    }
+
+    const startPos = textArea.selectionStart ?? textArea.value.length;
+    const endPos = textArea.selectionEnd ?? textArea.value.length;
+    setUseThisTemplate(true);
+    setMessageText((currentValue) => {
+      const currentStart = Math.max(0, Math.min(startPos, currentValue.length));
+      const currentEnd = Math.max(currentStart, Math.min(endPos, currentValue.length));
+      const nextValue = `${currentValue.slice(0, currentStart)}${insertText}${currentValue.slice(currentEnd)}`;
+      window.requestAnimationFrame(() => {
+        const nextPosition = currentStart + insertText.length;
+        if (messageTextRef.current) {
+          messageTextRef.current.focus();
+          messageTextRef.current.setSelectionRange(nextPosition, nextPosition);
+        }
+      });
+      return nextValue;
+    });
+  }, []);
+
+  const isBusy = busyAction !== '';
+  const canDeleteSelectedTemplate = selectedTemplate?.canDelete === true;
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page avel-settings-user-page">
+      <PageContainer
+        title="Email Templates"
+        subtitle="Manage template copy, merge fields, and activation settings without leaving the modern shell."
+        actions={(
+          <>
+            <button
+              type="button"
+              className="modern-btn modern-btn--emphasis"
+              onClick={() => {
+                void addTemplate(false);
+              }}
+              disabled={isBusy}
+            >
+              {busyAction === 'add' ? 'Adding...' : 'Add Template'}
+            </button>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.flash?.saved && data.flash.message !== '' ? (
+            <section className={`avel-settings-admin-flash ${data.flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite">
+              <strong>{data.flash.success ? 'Saved' : 'Notice'}</strong>
+              <span>{data.flash.message}</span>
+            </section>
+          ) : null}
+          {feedback !== '' ? (
+            <section className="avel-settings-admin-flash is-success" aria-live="polite">
+              <strong>Done</strong>
+              <span>{feedback}</span>
+            </section>
+          ) : null}
+          {errorMessage !== '' ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Error</strong>
+              <span>{errorMessage}</span>
+            </section>
+          ) : null}
+          {(routeActionMode === 'add' || routeActionMode === 'delete') ? (
+            <section className="modern-state" aria-live="polite">
+              {routeActionMode === 'add' ? 'Running native add-template action...' : 'Running native delete-template action...'}
+            </section>
+          ) : null}
+
+          <div className="avel-settings-user-layout">
+            <section className="avel-list-panel avel-settings-user-layout__main">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Template Workspace</h2>
+                <p className="avel-list-panel__hint">
+                  Select a template, edit the message body, and save through the existing settings payload contract.
+                </p>
+              </div>
+
+              {data.templates.length === 0 ? (
+                <div className="modern-state">No email templates are available for this site.</div>
+              ) : (
+                <>
+                  <label className="avel-settings-inline-field" htmlFor="emailTemplateIDSelect">
+                    <span>Template</span>
+                    <select
+                      className="avel-form-control"
+                      id="emailTemplateIDSelect"
+                      value={selectedTemplateID > 0 ? String(selectedTemplateID) : ''}
+                      onChange={(event) => {
+                        setSelectedTemplateID(toSafeNumber(event.target.value));
+                      }}
+                    >
+                      {data.templates.map((template) => (
+                        <option key={template.emailTemplateID} value={template.emailTemplateID}>
+                          {template.emailTemplateTitle}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="avel-settings-inline-actions">
+                    {data.templates.map((template) => (
+                      <button
+                        key={template.emailTemplateID}
+                        type="button"
+                        className={`modern-btn ${template.emailTemplateID === selectedTemplateID ? 'modern-btn--emphasis' : 'modern-btn--secondary'} modern-btn--mini`}
+                        onClick={() => {
+                          setSelectedTemplateID(template.emailTemplateID);
+                        }}
+                      >
+                        {template.emailTemplateTitle}
+                      </button>
+                    ))}
+                  </div>
+
+                  {selectedTemplate ? (
+                    <form
+                      className="avel-settings-user-form"
+                      action={submitURL}
+                      method="post"
+                      autoComplete="off"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void saveTemplate();
+                      }}
+                    >
+                      <input type="hidden" name="postback" value="postback" />
+                      <input type="hidden" name="templateID" value={selectedTemplate.emailTemplateID} />
+                      <input type="hidden" name="messageTextOrigional" value={messageTextOrigional} />
+                      {selectedTemplate.canDelete ? (
+                        <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="emailTemplateTitle">
+                          <span>Template Title</span>
+                          <input
+                            className="avel-form-control"
+                            id="emailTemplateTitle"
+                            name="emailTemplateTitle"
+                            type="text"
+                            value={emailTemplateTitle}
+                            onChange={(event) => {
+                              setEmailTemplateTitle(event.target.value);
+                            }}
+                          />
+                        </label>
+                      ) : null}
+
+                      <div className="avel-settings-long-field">
+                        <h3>Message</h3>
+                        <textarea
+                          ref={messageTextRef}
+                          className="avel-form-control avel-settings-prewrap"
+                          id="messageText"
+                          name="messageText"
+                          rows={14}
+                          value={messageText}
+                          onChange={(event) => {
+                            setMessageText(event.target.value);
+                          }}
+                          disabled={!useThisTemplate}
+                        />
+                        <label className="avel-settings-user-field--check" htmlFor={`useThisTemplate-${selectedTemplate.emailTemplateID}`}>
+                          <input
+                            id={`useThisTemplate-${selectedTemplate.emailTemplateID}`}
+                            name="useThisTemplate"
+                            type="checkbox"
+                            checked={useThisTemplate}
+                            onChange={(event) => {
+                              setUseThisTemplate(event.target.checked);
+                            }}
+                          />
+                          <span>Use this Template / Feature</span>
+                        </label>
+                      </div>
+
+                      <div className="modern-compat-page__actions">
+                        <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isBusy}>
+                          {busyAction === 'save' ? 'Saving...' : 'Save Template'}
+                        </button>
+                        <button type="button" className="modern-btn modern-btn--secondary" onClick={resetTemplateDraft} disabled={isBusy}>
+                          Reset Template
+                        </button>
+                        {canDeleteSelectedTemplate ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--danger"
+                            onClick={() => {
+                              if (selectedTemplate === null) {
+                                return;
+                              }
+                              if (!window.confirm('Delete this custom template?')) {
+                                return;
+                              }
+                              void deleteTemplate(selectedTemplate.emailTemplateID, false);
+                            }}
+                            disabled={isBusy}
+                          >
+                            {busyAction === 'delete' ? 'Deleting...' : 'Delete Template'}
+                          </button>
+                        ) : null}
+                      </div>
+                    </form>
+                  ) : null}
+                </>
+              )}
+            </section>
+
+            <aside className="avel-list-panel avel-settings-user-layout__sidebar">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Template Helpers</h2>
+                <p className="avel-list-panel__hint">
+                  Insert formatting and merge variables directly into the active message.
+                </p>
+              </div>
+
+              <div className="avel-settings-form-stack">
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">Active Template</span>
+                  <strong className="avel-settings-admin-summary-value">{selectedTemplate?.emailTemplateTitle || '--'}</strong>
+                  <span className="avel-settings-admin-summary-note">
+                    {selectedTemplate ? `Template #${selectedTemplate.emailTemplateID}` : 'Select a template to begin editing.'}
+                  </span>
+                </article>
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">Status</span>
+                  <strong className="avel-settings-admin-summary-value">{useThisTemplate ? 'Enabled' : 'Disabled'}</strong>
+                  <span className="avel-settings-admin-summary-note">
+                    {useThisTemplate
+                      ? 'Template text will be used by the legacy send flow.'
+                      : 'Template falls back to stored original text.'}
+                  </span>
+                </article>
+              </div>
+
+              <div className="avel-settings-form-stack">
+                <div>
+                  <h3 className="avel-list-panel__title">Insert Formatting</h3>
+                  <div className="avel-settings-inline-actions">
+                    {EMAIL_TEMPLATE_FORMATTING_TOKENS.map((token) => (
+                      <button
+                        key={token.value}
+                        type="button"
+                        className="modern-btn modern-btn--secondary modern-btn--mini"
+                        onClick={() => {
+                          insertAtCursor(token.value);
+                        }}
+                        disabled={selectedTemplate === null}
+                      >
+                        {token.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {!data.state.noGlobalTemplates ? (
+                  <div>
+                    <h3 className="avel-list-panel__title">Global Merge Fields</h3>
+                    <div className="avel-settings-inline-actions">
+                      {EMAIL_TEMPLATE_GLOBAL_MERGE_TOKENS.map((token) => (
+                        <button
+                          key={token.value}
+                          type="button"
+                          className="modern-btn modern-btn--secondary modern-btn--mini"
+                          onClick={() => {
+                            insertAtCursor(token.value);
+                          }}
+                          disabled={selectedTemplate === null}
+                        >
+                          {token.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div>
+                  <h3 className="avel-list-panel__title">Mail Merge Fields</h3>
+                  {visibleMergeTokens.length === 0 ? (
+                    <div className="modern-state">No merge fields available for the selected template.</div>
+                  ) : (
+                    <div className="avel-settings-inline-actions">
+                      {visibleMergeTokens.map((token) => (
+                        <button
+                          key={token.value}
+                          type="button"
+                          className="modern-btn modern-btn--secondary modern-btn--mini"
+                          onClick={() => {
+                            insertAtCursor(token.value);
+                          }}
+                          disabled={selectedTemplate === null}
+                        >
+                          {token.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--emphasis"
+                  onClick={() => {
+                    void addTemplate(false);
+                  }}
+                  disabled={isBusy}
+                >
+                  {busyAction === 'add' ? 'Adding...' : 'Add Template'}
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={routeURL}>
+                  Reload Templates
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
+                  Back To Settings
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </aside>
+          </div>
         </div>
       </PageContainer>
     </div>
@@ -2787,6 +3721,7 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     | SettingsEditUserModernDataResponse
     | SettingsShowUserModernDataResponse
     | SettingsLoginActivityModernDataResponse
+    | SettingsEmailTemplatesModernDataResponse
     | SettingsRejectionReasonsModernDataResponse
     | SettingsTagsModernDataResponse
     | SettingsRolePagePermissionsModernDataResponse
@@ -2842,6 +3777,8 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           return fetchSettingsShowUserModernData(bootstrap, query);
         case 'loginActivity':
           return fetchSettingsLoginActivityModernData(bootstrap, query);
+        case 'emailTemplates':
+          return fetchSettingsEmailTemplatesNativeData(bootstrap, query);
         case 'rejectionReasons':
           return fetchSettingsRejectionReasonsModernData(bootstrap, query);
         case 'tags':
@@ -2954,6 +3891,17 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
       return (
         <SettingsLoginActivityNativeShell
           data={nativeData as SettingsLoginActivityModernDataResponse}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'emailTemplates') {
+      return (
+        <SettingsEmailTemplatesNativeShell
+          data={nativeData as SettingsEmailTemplatesModernDataResponse}
+          bootstrap={bootstrap}
+          routeKey={routeKey}
+          onReload={refreshNativeRoute}
         />
       );
     }

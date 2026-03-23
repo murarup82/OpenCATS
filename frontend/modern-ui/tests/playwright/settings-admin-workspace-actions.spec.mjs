@@ -8,6 +8,7 @@ const settingsAdministrationContractKey = 'settings.administration.v1';
 const settingsMyProfileContractKey = 'settings.myprofile.v1';
 const settingsMyProfileChangePasswordContractKey = 'settings.myprofile.changePassword.v1';
 const settingsLoginActivityContractKey = 'settings.loginActivity.v1';
+const settingsEmailTemplatesContractKey = 'settings.emailTemplates.v1';
 const settingsRejectionReasonsContractKey = 'settings.rejectionReasons.v1';
 const settingsTagsContractKey = 'settings.tags.v1';
 const settingsManageUsersContractKey = 'settings.manageUsers.v1';
@@ -149,6 +150,28 @@ test.describe('Settings admin workspace action smoke', () => {
     const { actions } = await assertModernContract(response, settingsLoginActivityContractKey);
     expect(String(actions.routeURL || '').trim()).not.toBe('');
     expect(String(actions.legacyURL || '').trim()).not.toBe('');
+  });
+
+  test('settings.emailtemplates modern-json returns the settings.emailTemplates.v1 contract', async ({ request }) => {
+    const response = await request.get(buildModernJSONURL('emailTemplates', 'settings-email-templates'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { payload, actions } = await assertModernContract(response, settingsEmailTemplatesContractKey);
+    expect(String(actions.submitURL || '').trim()).not.toBe('');
+    expect(String(actions.addURL || '').trim()).not.toBe('');
+    expect(String(actions.deleteURL || '').trim()).not.toBe('');
+    expect(String(actions.legacyURL || '').trim()).not.toBe('');
+    expect(Array.isArray(payload.templates)).toBeTruthy();
+
+    if (Array.isArray(payload.templates) && payload.templates.length > 0) {
+      const firstTemplate = payload.templates[0] || {};
+      expect(Number(firstTemplate.emailTemplateID || 0)).toBeGreaterThan(0);
+      expect(String(firstTemplate.emailTemplateTitle || '').trim()).not.toBe('');
+      expect(String(firstTemplate.emailTemplateTag || '').trim()).not.toBe('');
+      expect(typeof firstTemplate.isCustom).toBe('boolean');
+    }
   });
 
   test('settings.rejectionreasons modern-json returns the settings.rejectionReasons.v1 contract', async ({ request }) => {
@@ -307,7 +330,7 @@ test.describe('Settings admin workspace action smoke', () => {
     await expect(page.locator('iframe')).toHaveCount(0);
   });
 
-  test('settings.emailtemplates ui=modern forwards without an iframe', async ({ context, page }) => {
+  test('settings.emailtemplates ui=modern mounts natively without a forward redirect', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
@@ -315,13 +338,12 @@ test.describe('Settings admin workspace action smoke', () => {
       waitUntil: 'domcontentloaded'
     });
 
-    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
-    await expect(page.getByRole('heading', { name: 'Email Templates Workspace' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Continue to Legacy UI' })).toBeVisible();
-    await expect(page.locator('iframe')).toHaveCount(0);
-    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Email Templates Workspace' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open Legacy UI' })).toBeVisible();
+    await expect(page.locator('.modern-compat-page--forward')).toHaveCount(0);
+    await expect(page.locator('iframe')).toHaveCount(0);
   });
 
   test('settings.myprofile?s=changePassword ui=modern mounts without a runtime boundary', async ({ context, page }) => {
