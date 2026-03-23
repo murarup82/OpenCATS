@@ -529,12 +529,66 @@ export function CalendarPage({ bootstrap }: Props) {
     }
 
     const entryAction = String(bootstrap.targetAction || '').trim().toLowerCase();
-    if (entryAction !== 'addevent' && entryAction !== 'editevent') {
+    if (entryAction !== 'addevent' && entryAction !== 'editevent' && entryAction !== 'deleteevent') {
       actionEntryHandledRef.current = true;
       return;
     }
 
     const query = new URLSearchParams(serverQueryString);
+    if (entryAction === 'deleteevent') {
+      actionEntryHandledRef.current = true;
+      const eventID = parseQueryInteger(query, 'eventID', 0);
+      if (eventID <= 0) {
+        showToast('info', 'Event ID is required to delete a calendar event.');
+        return;
+      }
+
+      if (!data.meta.permissions.canDeleteEvent) {
+        showToast('error', 'You do not have permission to delete events.');
+        return;
+      }
+
+      setDeletePending(true);
+      setDeleteError('');
+      void deleteCalendarEvent(data.actions.deleteEventURL, data.actions.deleteEventToken, eventID)
+        .then((result) => {
+          if (!result.success) {
+            const message = result.message || 'Calendar event delete failed.';
+            setDeleteError(message);
+            showToast('error', message);
+            return;
+          }
+
+          showToast('success', 'Event deleted.');
+
+          const nextQuery = new URLSearchParams(serverQueryString);
+          nextQuery.set('m', 'calendar');
+          nextQuery.set('a', 'showCalendar');
+          nextQuery.delete('eventID');
+          nextQuery.delete('showEvent');
+          if (!nextQuery.get('ui')) {
+            nextQuery.set('ui', 'modern');
+          }
+
+          const nextQueryString = nextQuery.toString();
+          window.history.replaceState({}, '', `${bootstrap.indexName}?${nextQueryString}`);
+          if (nextQueryString !== serverQueryString) {
+            setServerQueryString(nextQueryString);
+          } else {
+            refreshPageData();
+          }
+        })
+        .catch((err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Calendar event delete failed.';
+          setDeleteError(message);
+          showToast('error', message);
+        })
+        .finally(() => {
+          setDeletePending(false);
+        });
+      return;
+    }
+
     if (entryAction === 'addevent') {
       openCreateModal(buildCreateStateFromQuery(data, query));
       actionEntryHandledRef.current = true;
@@ -557,7 +611,7 @@ export function CalendarPage({ bootstrap }: Props) {
 
     actionEntryHandledRef.current = true;
     showToast('info', `Event #${eventID} is outside the current calendar range. Navigate to its date and try again.`);
-  }, [bootstrap.targetAction, data, openCreateModal, openEditModal, serverQueryString, showToast]);
+  }, [bootstrap.indexName, bootstrap.targetAction, data, openCreateModal, openEditModal, refreshPageData, serverQueryString, showToast]);
 
   if (loading && !data) {
     return <div className="modern-state">Loading calendar...</div>;

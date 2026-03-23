@@ -75,7 +75,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'dashboard.setpipelinestatus': DashboardMyPage,
   'calendar.addevent': CalendarPage,
   'calendar.editevent': CalendarPage,
-  'calendar.deleteevent': LegacyUtilityForwardActionPage,
+  'calendar.deleteevent': CalendarPage,
   'calendar.dynamicdata': LegacyUtilityForwardActionPage,
   'candidates.createattachment': CandidatesShowPage,
   'joborders.createattachment': JobOrdersShowPage,

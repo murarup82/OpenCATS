@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T04:42:53.415Z
+Generated: 2026-03-23T04:48:15.754Z
 
 ## Summary
 
@@ -53,7 +53,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | activity | viewByDate | native-explicit | activity.viewbydate | ActivityListPage |
 | attachments | getAttachment | native-explicit | attachments.getattachment | LegacyUtilityForwardActionPage |
 | calendar | addEvent | native-explicit | calendar.addevent | CalendarPage |
-| calendar | deleteEvent | native-explicit | calendar.deleteevent | LegacyUtilityForwardActionPage |
+| calendar | deleteEvent | native-explicit | calendar.deleteevent | CalendarPage |
 | calendar | dynamicData | native-explicit | calendar.dynamicdata | LegacyUtilityForwardActionPage |
 | calendar | editEvent | native-explicit | calendar.editevent | CalendarPage |
 | calendar | showCalendar | native-explicit | calendar.showcalendar | CalendarPage |

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T04:42:54.155Z",
+  "generatedAt": "2026-03-23T04:48:16.374Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 228,
@@ -11,11 +11,11 @@
   "bucketSummaries": [
     {
       "bucket": "native-action",
-      "count": 52
+      "count": 51
     },
     {
       "bucket": "native-surface",
-      "count": 176
+      "count": 177
     }
   ],
   "moduleSummaries": [
@@ -165,19 +165,6 @@
       "action": "getAttachment",
       "classification": "native-explicit",
       "routeKey": "attachments.getattachment",
-      "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-action",
-      "modernizationRank": 9,
-      "legacyDependent": false
-    },
-    {
-      "module": "calendar",
-      "action": "deleteEvent",
-      "classification": "native-explicit",
-      "routeKey": "calendar.deleteevent",
       "resolution": "native",
       "component": "LegacyUtilityForwardActionPage",
       "guarded": false,
@@ -867,6 +854,19 @@
       "action": "addEvent",
       "classification": "native-explicit",
       "routeKey": "calendar.addevent",
+      "resolution": "native",
+      "component": "CalendarPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "calendar",
+      "action": "deleteEvent",
+      "classification": "native-explicit",
+      "routeKey": "calendar.deleteevent",
       "resolution": "native",
       "component": "CalendarPage",
       "guarded": false,

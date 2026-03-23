@@ -9,8 +9,7 @@ const routeRegistryPath = resolve(packageRoot, 'src', 'lib', 'routeRegistry.ts')
 const outputPath = resolve(repoRoot, 'docs', 'modern-ui-legacy-forward-endpoints-check.md');
 
 const expectedRoutesByCategory = {
-  'Calendar endpoint actions': [
-    'calendar.deleteevent',
+  'Calendar legacy feed endpoint': [
     'calendar.dynamicdata'
   ],
   'Attachment/export/download endpoints': [

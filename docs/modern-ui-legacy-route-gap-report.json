@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T04:42:53.415Z",
+  "generatedAt": "2026-03-23T04:48:15.754Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -238,7 +238,7 @@
       "classification": "native-explicit",
       "routeKey": "calendar.deleteevent",
       "resolution": "native",
-      "component": "LegacyUtilityForwardActionPage",
+      "component": "CalendarPage",
       "guarded": false
     },
     {

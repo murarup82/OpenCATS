@@ -1,13 +1,13 @@
 # Modern UI Intentional Legacy-Forward Endpoint Guard
 
-Generated: 2026-03-23T04:42:56.486Z
+Generated: 2026-03-23T04:48:18.400Z
 
 This guard tracks endpoint-style routes that intentionally remain on `LegacyUtilityForwardActionPage` to avoid breaking download, AJAX, auth, XML, and mutation compatibility behavior.
 
 ## Totals
 
-- Actual legacy-forward routes: 30
-- Expected legacy-forward routes: 30
+- Actual legacy-forward routes: 29
+- Expected legacy-forward routes: 29
 - Unexpected routes: 0
 - Missing expected routes: 0
 - Duplicate route mappings detected: no
@@ -16,8 +16,7 @@ This guard tracks endpoint-style routes that intentionally remain on `LegacyUtil
 
 | Category | Route | Status |
 | --- | --- | --- |
-| Calendar endpoint actions | `calendar.deleteevent` | Present |
-| Calendar endpoint actions | `calendar.dynamicdata` | Present |
+| Calendar legacy feed endpoint | `calendar.dynamicdata` | Present |
 | Attachment/export/download endpoints | `attachments.getattachment` | Present |
 | Attachment/export/download endpoints | `export.export` | Present |
 | Attachment/export/download endpoints | `export.exportbydatagrid` | Present |
