@@ -1406,6 +1406,8 @@ class SettingsUI extends UserInterface
      */
     private function showUser()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         // FIXME: Does $_GET['userID'] exist?
         if (isset($_GET['privledged']) &&  $_GET['privledged'] == 'false' &&
             $this->_userID == $_GET['userID'])
@@ -1513,6 +1515,38 @@ class SettingsUI extends UserInterface
         $this->_template->assign('currentUser', $this->_userID);
         $this->_template->assign('loginDisplay', self::MAX_RECENT_LOGINS);
         $this->_template->assign('loginAttempts', $loginAttempts);
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-show-user')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernShowUserJSON(
+                'settings-show-user',
+                $privledged,
+                $data,
+                $categories,
+                $EEOSettingsRS,
+                $userRoles->isSchemaAvailable() ? 1 : 0,
+                $applicationRole,
+                $loginAttempts
+            );
+            return;
+        }
+
         $this->_template->display('./modules/settings/ShowUser.tpl');
     }
 
@@ -1521,6 +1555,8 @@ class SettingsUI extends UserInterface
      */
     private function addUser()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $users = new Users($this->_siteID);
         $accessLevels = $users->getAccessLevels();
 
@@ -1577,6 +1613,37 @@ class SettingsUI extends UserInterface
         $this->_template->assign('auth_mode', AUTH_MODE);
 
         if (!eval(Hooks::get('SETTINGS_ADD_USER'))) return;
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-add-user')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernAddUserJSON(
+                'settings-add-user',
+                $accessLevels,
+                $license,
+                $categories,
+                $EEOSettingsRS,
+                $userRoles->isSchemaAvailable() ? 1 : 0,
+                $userRolesRS,
+                $defaultUserRoleID
+            );
+            return;
+        }
 
         $this->_template->display('./modules/settings/AddUser.tpl');
     }
@@ -1723,6 +1790,8 @@ class SettingsUI extends UserInterface
      */
     private function editUser()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         /* Bail out if we don't have a valid user ID. */
         if (!$this->isRequiredIDValid('userID', $_GET))
         {
@@ -1825,6 +1894,41 @@ class SettingsUI extends UserInterface
         $this->_template->assign('cannotEnableMessage', $cannotEnableMessage);
         $this->_template->assign('disableAccessChange', $disableAccessChange);
         $this->_template->assign('auth_mode', AUTH_MODE);
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-edit-user')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernEditUserJSON(
+                'settings-edit-user',
+                $data,
+                $accessLevels,
+                $license,
+                $categories,
+                $EEOSettingsRS,
+                $userRoles->isSchemaAvailable() ? 1 : 0,
+                $userRolesRS,
+                $selectedUserRoleID,
+                $cannotEnableMessage,
+                $disableAccessChange
+            );
+            return;
+        }
+
         $this->_template->display('./modules/settings/EditUser.tpl');
     }
 
@@ -4817,7 +4921,7 @@ class SettingsUI extends UserInterface
             $this->buildModernAdministrationItem(
                 'User Management',
                 'Add, edit and delete users for your site.',
-                sprintf('%s?m=settings&a=manageUsers&ui=legacy', $baseURL)
+                sprintf('%s?m=settings&a=manageUsers&ui=modern', $baseURL)
             )
         );
         if ((int) $rolePermissionsEnabled === 1)
@@ -5386,6 +5490,350 @@ class SettingsUI extends UserInterface
         return json_encode($value);
     }
 
+    private function renderModernManageUsersJSON($modernPage, $rows, $license, $userRolesEnabled)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $canDeleteUsers = ($this->getUserAccessLevel('settings.deleteUser') >= ACCESS_LEVEL_SA);
+        $canAddUsers = (AUTH_MODE != 'ldap');
+        $normalizedRows = array();
+
+        foreach ($rows as $row)
+        {
+            $userID = (int) $row['userID'];
+            $normalizedRows[] = array(
+                'userID' => $userID,
+                'firstName' => (string) $row['firstName'],
+                'lastName' => (string) $row['lastName'],
+                'username' => (string) $row['username'],
+                'applicationRole' => isset($row['applicationRole']) ? (string) $row['applicationRole'] : '',
+                'accessLevel' => (int) $row['accessLevel'],
+                'accessLevelDescription' => (string) $row['accessLevelDescription'],
+                'successfulDate' => (string) $row['successfulDate'],
+                'unsuccessfulDate' => (string) $row['unsuccessfulDate'],
+                'showURL' => sprintf('%s?m=settings&a=showUser&userID=%d&ui=modern', $baseURL, $userID),
+                'editURL' => sprintf('%s?m=settings&a=editUser&userID=%d&ui=modern', $baseURL, $userID),
+                'canDelete' => ($canDeleteUsers && $userID !== (int) $this->_userID)
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.manageUsers.v1',
+                'modernPage' => $modernPage
+            ),
+            'summary' => array(
+                'totalUsers' => (int) count($normalizedRows),
+                'totalLicensedUsers' => isset($license['userLicenses']) ? (int) $license['userLicenses'] : 0,
+                'availableSlots' => isset($license['diff']) ? (int) $license['diff'] : 0,
+                'unlimitedLicenses' => !empty($license['unlimited']),
+                'canAddLicensedUsers' => !empty($license['canAdd'])
+            ),
+            'state' => array(
+                'authMode' => (string) AUTH_MODE,
+                'currentUserID' => (int) $this->_userID,
+                'userRolesEnabled' => ((int) $userRolesEnabled === 1)
+            ),
+            'actions' => array(
+                'addUserURL' => sprintf('%s?m=settings&a=addUser&ui=modern', $baseURL),
+                'deleteActionURL' => sprintf('%s?m=settings&a=ajax_wizardDeleteUser', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=manageUsers&ui=legacy', $baseURL)
+            ),
+            'permissions' => array(
+                'canDeleteUsers' => $canDeleteUsers,
+                'canAddUsers' => $canAddUsers
+            ),
+            'rows' => $normalizedRows
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernAddUserJSON(
+        $modernPage,
+        $accessLevels,
+        $license,
+        $categories,
+        $EEOSettingsRS,
+        $userRolesEnabled,
+        $userRolesRS,
+        $defaultUserRoleID
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $maxAssignableAccessLevel = (int) $this->getUserAccessLevel('settings.addUser');
+        $normalizedAccessLevels = array();
+        foreach ($accessLevels as $accessLevel)
+        {
+            $accessID = (int) $accessLevel['accessID'];
+            if ($accessID > $maxAssignableAccessLevel)
+            {
+                continue;
+            }
+            if (empty($license['canAdd']) && empty($license['unlimited']) && $accessID > ACCESS_LEVEL_READ)
+            {
+                continue;
+            }
+
+            $normalizedAccessLevels[] = array(
+                'accessID' => $accessID,
+                'shortDescription' => (string) $accessLevel['shortDescription'],
+                'longDescription' => (string) $accessLevel['longDescription'],
+                'isDefault' => ($accessID === (int) ACCESS_LEVEL_DELETE)
+            );
+        }
+
+        $normalizedCategories = array();
+        foreach ($categories as $category)
+        {
+            $normalizedCategories[] = array(
+                'label' => isset($category[0]) ? (string) $category[0] : '',
+                'value' => isset($category[1]) ? (string) $category[1] : '',
+                'description' => isset($category[2]) ? (string) $category[2] : '',
+                'requiredAccessLevel' => isset($category[3]) ? (int) $category[3] : 0,
+                'forcedAccessLevel' => isset($category[4]) ? (int) $category[4] : 0
+            );
+        }
+
+        $normalizedRoles = array();
+        foreach ($userRolesRS as $userRole)
+        {
+            $normalizedRoles[] = array(
+                'roleID' => (int) $userRole['roleID'],
+                'roleKey' => (string) $userRole['roleKey'],
+                'roleName' => (string) $userRole['roleName'],
+                'accessLevel' => (int) $userRole['accessLevel'],
+                'isActive' => (int) $userRole['isActive']
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.addUser.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'authMode' => (string) AUTH_MODE,
+                'defaultAccessLevel' => (int) ACCESS_LEVEL_DELETE,
+                'userRolesEnabled' => ((int) $userRolesEnabled === 1),
+                'defaultUserRoleID' => (int) $defaultUserRoleID,
+                'eeoEnabled' => (!empty($EEOSettingsRS['enabled'])),
+                'showLicenseWarning' => (empty($license['canAdd']) && empty($license['unlimited']))
+            ),
+            'summary' => array(
+                'totalLicensedUsers' => isset($license['userLicenses']) ? (int) $license['userLicenses'] : 0,
+                'availableSlots' => isset($license['diff']) ? (int) $license['diff'] : 0
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=addUser', $baseURL),
+                'manageUsersURL' => sprintf('%s?m=settings&a=manageUsers&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=addUser&ui=legacy', $baseURL)
+            ),
+            'accessLevels' => $normalizedAccessLevels,
+            'categories' => $normalizedCategories,
+            'roles' => $normalizedRoles
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernEditUserJSON(
+        $modernPage,
+        $data,
+        $accessLevels,
+        $license,
+        $categories,
+        $EEOSettingsRS,
+        $userRolesEnabled,
+        $userRolesRS,
+        $selectedUserRoleID,
+        $cannotEnableMessage,
+        $disableAccessChange
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $maxAssignableAccessLevel = (int) $this->getUserAccessLevel('');
+        $userID = (int) $data['userID'];
+
+        $normalizedAccessLevels = array();
+        foreach ($accessLevels as $accessLevel)
+        {
+            $accessID = (int) $accessLevel['accessID'];
+            if ($accessID > $maxAssignableAccessLevel)
+            {
+                continue;
+            }
+
+            $normalizedAccessLevels[] = array(
+                'accessID' => $accessID,
+                'shortDescription' => (string) $accessLevel['shortDescription'],
+                'longDescription' => (string) $accessLevel['longDescription'],
+                'isSelected' => ((int) $data['accessLevel'] === $accessID),
+                'isDisabled' => (
+                    ($disableAccessChange && $accessID > ACCESS_LEVEL_READ) ||
+                    ((int) $this->_userID === $userID)
+                )
+            );
+        }
+
+        $normalizedCategories = array();
+        foreach ($categories as $category)
+        {
+            $value = isset($category[1]) ? (string) $category[1] : '';
+            $normalizedCategories[] = array(
+                'label' => isset($category[0]) ? (string) $category[0] : '',
+                'value' => $value,
+                'description' => isset($category[2]) ? (string) $category[2] : '',
+                'isSelected' => ((string) $data['categories'] === $value)
+            );
+        }
+
+        $normalizedRoles = array();
+        foreach ($userRolesRS as $userRole)
+        {
+            $normalizedRoles[] = array(
+                'roleID' => (int) $userRole['roleID'],
+                'roleKey' => (string) $userRole['roleKey'],
+                'roleName' => (string) $userRole['roleName'],
+                'accessLevel' => (int) $userRole['accessLevel'],
+                'isActive' => (int) $userRole['isActive']
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.editUser.v1',
+                'modernPage' => $modernPage,
+                'userID' => $userID
+            ),
+            'state' => array(
+                'authMode' => (string) AUTH_MODE,
+                'currentUserID' => (int) $this->_userID,
+                'userRolesEnabled' => ((int) $userRolesEnabled === 1),
+                'selectedUserRoleID' => (int) $selectedUserRoleID,
+                'cannotEnableMessage' => ($cannotEnableMessage ? true : false),
+                'disableAccessChange' => ($disableAccessChange ? true : false),
+                'canResetPassword' => (AUTH_MODE != 'ldap'),
+                'eeoEnabled' => (!empty($EEOSettingsRS['enabled']))
+            ),
+            'summary' => array(
+                'totalLicensedUsers' => isset($license['userLicenses']) ? (int) $license['userLicenses'] : 0,
+                'availableSlots' => isset($license['diff']) ? (int) $license['diff'] : 0
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=editUser', $baseURL),
+                'showUserURL' => sprintf('%s?m=settings&a=showUser&userID=%d&ui=modern', $baseURL, $userID),
+                'manageUsersURL' => sprintf('%s?m=settings&a=manageUsers&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=editUser&userID=%d&ui=legacy', $baseURL, $userID)
+            ),
+            'user' => array(
+                'userID' => $userID,
+                'firstName' => (string) $data['firstName'],
+                'lastName' => (string) $data['lastName'],
+                'email' => (string) $data['email'],
+                'username' => (string) $data['username'],
+                'accessLevel' => (int) $data['accessLevel'],
+                'accessLevelDescription' => (string) $data['accessLevelDescription'],
+                'accessLevelLongDescription' => (string) $data['accessLevelLongDescription'],
+                'categories' => (string) $data['categories'],
+                'canSeeEEOInfo' => !empty($data['canSeeEEOInfo'])
+            ),
+            'accessLevels' => $normalizedAccessLevels,
+            'categories' => $normalizedCategories,
+            'roles' => $normalizedRoles
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernShowUserJSON(
+        $modernPage,
+        $privledged,
+        $data,
+        $categories,
+        $EEOSettingsRS,
+        $userRolesEnabled,
+        $applicationRole,
+        $loginAttempts
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $userID = (int) $data['userID'];
+        $categoryLabel = '';
+        $categoryDescription = '';
+
+        foreach ($categories as $category)
+        {
+            if ((string) $data['categories'] === (string) $category[1])
+            {
+                $categoryLabel = isset($category[0]) ? (string) $category[0] : '';
+                $categoryDescription = isset($category[2]) ? (string) $category[2] : '';
+                break;
+            }
+        }
+
+        $normalizedAttempts = array();
+        foreach ($loginAttempts as $attempt)
+        {
+            $normalizedAttempts[] = array(
+                'ip' => (string) $attempt['ip'],
+                'hostname' => (string) $attempt['hostname'],
+                'shortUserAgent' => (string) $attempt['shortUserAgent'],
+                'date' => (string) $attempt['date'],
+                'successful' => (string) $attempt['successful']
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.showUser.v1',
+                'modernPage' => $modernPage,
+                'userID' => $userID
+            ),
+            'state' => array(
+                'privledged' => ($privledged ? true : false),
+                'userRolesEnabled' => ((int) $userRolesEnabled === 1),
+                'eeoEnabled' => (!empty($EEOSettingsRS['enabled']))
+            ),
+            'actions' => array(
+                'editURL' => sprintf('%s?m=settings&a=editUser&userID=%d&ui=modern', $baseURL, $userID),
+                'manageUsersURL' => sprintf('%s?m=settings&a=manageUsers&ui=modern', $baseURL),
+                'settingsURL' => sprintf('%s?m=settings&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=showUser&userID=%d&ui=legacy', $baseURL, $userID)
+            ),
+            'user' => array(
+                'userID' => $userID,
+                'firstName' => (string) $data['firstName'],
+                'lastName' => (string) $data['lastName'],
+                'fullName' => trim((string) ($data['firstName'] . ' ' . $data['lastName'])),
+                'email' => (string) $data['email'],
+                'username' => (string) $data['username'],
+                'accessLevel' => (int) $data['accessLevel'],
+                'accessLevelLongDescription' => (string) $data['accessLevelLongDescription'],
+                'canSeeEEOInfo' => !empty($data['canSeeEEOInfo']),
+                'successfulDate' => (string) $data['successfulDate'],
+                'unsuccessfulDate' => (string) $data['unsuccessfulDate'],
+                'category' => array(
+                    'value' => (string) $data['categories'],
+                    'label' => $categoryLabel,
+                    'description' => $categoryDescription
+                ),
+                'applicationRole' => array(
+                    'roleName' => isset($applicationRole['roleName']) ? (string) $applicationRole['roleName'] : '',
+                    'roleKey' => isset($applicationRole['roleKey']) ? (string) $applicationRole['roleKey'] : '',
+                    'accessLevel' => isset($applicationRole['accessLevel']) ? (int) $applicationRole['accessLevel'] : 0
+                )
+            ),
+            'loginAttempts' => $normalizedAttempts
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
     private function buildModernAdministrationSection($key, $title, $description, $items)
     {
         return array(
@@ -5449,10 +5897,13 @@ class SettingsUI extends UserInterface
      */
     private function manageUsers()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $users = new Users($this->_siteID);
         $rs = $users->getAll();
         $license = $users->getLicenseData();
         $userRoles = new UserRoles($this->_siteID);
+        $userRolesEnabled = $userRoles->isSchemaAvailable() ? 1 : 0;
         $userIDs = array();
         foreach ($rs as $row)
         {
@@ -5489,11 +5940,38 @@ class SettingsUI extends UserInterface
             }
         }
 
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-manage-users')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernManageUsersJSON(
+                'settings-manage-users',
+                $rs,
+                $license,
+                $userRolesEnabled
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'User Management');
         $this->_template->assign('rs', $rs);
         $this->_template->assign('license', $license);
-        $this->_template->assign('userRolesEnabled', $userRoles->isSchemaAvailable() ? 1 : 0);
+        $this->_template->assign('userRolesEnabled', $userRolesEnabled);
         $this->_template->assign('currentUser', $this->_userID);
         $this->_template->display('./modules/settings/Users.tpl');
     }

@@ -33,11 +33,15 @@ import type {
   ImportBulkResumesModernMutationResponse,
   ImportDeleteBulkResumesModernMutationResponse,
   SettingsAdministrationModernDataResponse,
+  SettingsAddUserModernDataResponse,
+  SettingsEditUserModernDataResponse,
   SettingsLoginActivityModernDataResponse,
+  SettingsManageUsersModernDataResponse,
   SettingsRejectionReasonsModernDataResponse,
   SettingsRolePagePermissionsModernDataResponse,
   SettingsSchemaMigrationsModernDataResponse,
   SettingsTagsModernDataResponse,
+  SettingsShowUserModernDataResponse,
   SettingsWizardAddUserModernDataResponse,
   SettingsWizardCheckKeyModernDataResponse,
   SettingsWizardDeleteUserModernDataResponse,
@@ -127,13 +131,17 @@ import {
   MODERN_REPORTS_GRAPH_VIEW_PAGE,
   MODERN_REPORTS_PAGE,
   MODERN_SETTINGS_ADMINISTRATION_PAGE,
+  MODERN_SETTINGS_ADD_USER_PAGE,
+  MODERN_SETTINGS_EDIT_USER_PAGE,
   MODERN_SETTINGS_LOGIN_ACTIVITY_PAGE,
+  MODERN_SETTINGS_MANAGE_USERS_PAGE,
   MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE,
   MODERN_SETTINGS_MYPROFILE_PAGE,
   MODERN_SETTINGS_REJECTION_REASONS_PAGE,
   MODERN_SETTINGS_ROLE_PAGE_PERMISSIONS_PAGE,
   MODERN_SETTINGS_SCHEMA_MIGRATIONS_PAGE,
   MODERN_SETTINGS_TAGS_PAGE,
+  MODERN_SETTINGS_SHOW_USER_PAGE,
   MODERN_SETTINGS_VIEW_ITEM_HISTORY_PAGE,
   MODERN_SOURCING_PAGE,
   MODERN_KPIS_DETAILS_PAGE,
@@ -422,6 +430,78 @@ export async function fetchSettingsLoginActivityModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<SettingsLoginActivityModernDataResponse>(url);
   assertModernContract(data.meta, 'settings.loginActivity.v1', 'settings login activity data');
+
+  return data;
+}
+
+export async function fetchSettingsManageUsersModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsManageUsersModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'manageUsers',
+    modernPage: MODERN_SETTINGS_MANAGE_USERS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsManageUsersModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.manageUsers.v1', 'settings manage users data');
+
+  return data;
+}
+
+export async function fetchSettingsAddUserModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsAddUserModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'addUser',
+    modernPage: MODERN_SETTINGS_ADD_USER_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsAddUserModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.addUser.v1', 'settings add user data');
+
+  return data;
+}
+
+export async function fetchSettingsEditUserModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsEditUserModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'editUser',
+    modernPage: MODERN_SETTINGS_EDIT_USER_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsEditUserModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.editUser.v1', 'settings edit user data');
+
+  return data;
+}
+
+export async function fetchSettingsShowUserModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsShowUserModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'showUser',
+    modernPage: MODERN_SETTINGS_SHOW_USER_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsShowUserModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.showUser.v1', 'settings show user data');
 
   return data;
 }

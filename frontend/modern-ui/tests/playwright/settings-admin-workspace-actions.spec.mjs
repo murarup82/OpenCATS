@@ -10,6 +10,10 @@ const settingsMyProfileChangePasswordContractKey = 'settings.myprofile.changePas
 const settingsLoginActivityContractKey = 'settings.loginActivity.v1';
 const settingsRejectionReasonsContractKey = 'settings.rejectionReasons.v1';
 const settingsTagsContractKey = 'settings.tags.v1';
+const settingsManageUsersContractKey = 'settings.manageUsers.v1';
+const settingsAddUserContractKey = 'settings.addUser.v1';
+const settingsEditUserContractKey = 'settings.editUser.v1';
+const settingsShowUserContractKey = 'settings.showUser.v1';
 
 function joinURL(root, path) {
   const normalizedRoot = root.endsWith('/') ? root.slice(0, -1) : root;
@@ -74,6 +78,21 @@ async function assertModernContract(response, expectedContractKey) {
   expect(String(meta.modernPage || '').trim()).not.toBe('');
 
   return { payload, actions };
+}
+
+function getFirstUserID(rows) {
+  if (!Array.isArray(rows)) {
+    return 0;
+  }
+
+  for (const row of rows) {
+    const userID = Number(row?.userID || 0);
+    if (Number.isFinite(userID) && userID > 0) {
+      return userID;
+    }
+  }
+
+  return 0;
 }
 
 test.describe('Settings admin workspace action smoke', () => {
@@ -155,6 +174,97 @@ test.describe('Settings admin workspace action smoke', () => {
     expect(String(actions.updateURL || '').trim()).not.toBe('');
   });
 
+  test('settings.manageusers modern-json returns the settings.manageUsers.v1 contract', async ({ request }) => {
+    const response = await request.get(buildModernJSONURL('manageUsers', 'settings-manage-users'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { payload, actions } = await assertModernContract(response, settingsManageUsersContractKey);
+    expect(String(actions.addUserURL || '').trim()).not.toBe('');
+    expect(String(actions.deleteActionURL || '').trim()).not.toBe('');
+    expect(String(actions.backURL || '').trim()).not.toBe('');
+    expect(String(actions.legacyURL || '').trim()).not.toBe('');
+    expect(Array.isArray(payload.rows)).toBeTruthy();
+
+    if (Array.isArray(payload.rows) && payload.rows.length > 0) {
+      const firstRow = payload.rows[0] || {};
+      expect(Number(firstRow.userID || 0)).toBeGreaterThan(0);
+      expect(String(firstRow.showURL || '').trim()).not.toBe('');
+      expect(String(firstRow.editURL || '').trim()).not.toBe('');
+    }
+  });
+
+  test('settings.adduser modern-json returns the settings.addUser.v1 contract', async ({ request }) => {
+    const response = await request.get(buildModernJSONURL('addUser', 'settings-add-user'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { actions } = await assertModernContract(response, settingsAddUserContractKey);
+    expect(String(actions.submitURL || '').trim()).not.toBe('');
+    expect(String(actions.manageUsersURL || '').trim()).not.toBe('');
+    expect(String(actions.legacyURL || '').trim()).not.toBe('');
+  });
+
+  test('settings.edituser modern-json returns the settings.editUser.v1 contract', async ({ request }) => {
+    const usersResponse = await request.get(buildModernJSONURL('manageUsers', 'settings-manage-users'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { payload: usersPayload } = await assertModernContract(usersResponse, settingsManageUsersContractKey);
+    const userID = getFirstUserID(usersPayload.rows);
+    test.skip(userID <= 0, 'No users returned to exercise the editUser contract.');
+
+    const response = await request.get(
+      buildModernJSONURL('editUser', 'settings-edit-user', {
+        userID
+      }),
+      {
+        headers: buildHeaders(),
+        failOnStatusCode: false
+      }
+    );
+
+    const { payload, actions } = await assertModernContract(response, settingsEditUserContractKey);
+    expect(Number(payload?.meta?.userID || 0)).toBe(userID);
+    expect(Number(payload?.user?.userID || 0)).toBe(userID);
+    expect(String(actions.submitURL || '').trim()).not.toBe('');
+    expect(String(actions.showUserURL || '').trim()).not.toBe('');
+    expect(String(actions.manageUsersURL || '').trim()).not.toBe('');
+    expect(String(actions.legacyURL || '').trim()).not.toBe('');
+  });
+
+  test('settings.showuser modern-json returns the settings.showUser.v1 contract', async ({ request }) => {
+    const usersResponse = await request.get(buildModernJSONURL('manageUsers', 'settings-manage-users'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { payload: usersPayload } = await assertModernContract(usersResponse, settingsManageUsersContractKey);
+    const userID = getFirstUserID(usersPayload.rows);
+    test.skip(userID <= 0, 'No users returned to exercise the showUser contract.');
+
+    const response = await request.get(
+      buildModernJSONURL('showUser', 'settings-show-user', {
+        userID
+      }),
+      {
+        headers: buildHeaders(),
+        failOnStatusCode: false
+      }
+    );
+
+    const { payload, actions } = await assertModernContract(response, settingsShowUserContractKey);
+    expect(Number(payload?.meta?.userID || 0)).toBe(userID);
+    expect(Number(payload?.user?.userID || 0)).toBe(userID);
+    expect(String(actions.editURL || '').trim()).not.toBe('');
+    expect(String(actions.manageUsersURL || '').trim()).not.toBe('');
+    expect(String(actions.settingsURL || '').trim()).not.toBe('');
+    expect(String(actions.legacyURL || '').trim()).not.toBe('');
+  });
+
   test('settings.administration ui=modern mounts without a runtime boundary', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
@@ -182,7 +292,7 @@ test.describe('Settings admin workspace action smoke', () => {
     await expect(page.getByText('Profile Shortcuts')).toHaveCount(1);
   });
 
-  test('settings.manageusers ui=modern mounts without a runtime boundary', async ({ context, page }) => {
+  test('settings.manageusers ui=modern mounts natively without a forward redirect', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
@@ -190,13 +300,11 @@ test.describe('Settings admin workspace action smoke', () => {
       waitUntil: 'domcontentloaded'
     });
 
-    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
-    await expect(page.getByRole('heading', { name: 'User Management Workspace' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Continue to Legacy UI' })).toBeVisible();
-    await expect(page.locator('iframe')).toHaveCount(0);
-    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'User Management Workspace' })).toBeVisible();
+    await expect(page.locator('.modern-compat-page--forward')).toHaveCount(0);
+    await expect(page.locator('iframe')).toHaveCount(0);
   });
 
   test('settings.emailtemplates ui=modern forwards without an iframe', async ({ context, page }) => {

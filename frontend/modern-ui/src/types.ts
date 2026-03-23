@@ -2029,6 +2029,206 @@ export type SettingsViewItemHistoryModernDataResponse = {
   }>;
 };
 
+export type SettingsManageUsersModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  summary: {
+    totalUsers: number;
+    totalLicensedUsers: number;
+    availableSlots: number;
+    unlimitedLicenses: boolean;
+    canAddLicensedUsers: boolean;
+  };
+  state: {
+    authMode: string;
+    currentUserID: number;
+    userRolesEnabled: boolean;
+  };
+  actions: {
+    addUserURL: string;
+    deleteActionURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  permissions: {
+    canDeleteUsers: boolean;
+    canAddUsers: boolean;
+  };
+  rows: Array<{
+    userID: number;
+    firstName: string;
+    lastName: string;
+    username: string;
+    applicationRole: string;
+    accessLevel: number;
+    accessLevelDescription: string;
+    successfulDate: string;
+    unsuccessfulDate: string;
+    showURL: string;
+    editURL: string;
+    canDelete: boolean;
+  }>;
+};
+
+export type SettingsAddUserModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  state: {
+    authMode: string;
+    defaultAccessLevel: number;
+    userRolesEnabled: boolean;
+    defaultUserRoleID: number;
+    eeoEnabled: boolean;
+    showLicenseWarning: boolean;
+  };
+  summary: {
+    totalLicensedUsers: number;
+    availableSlots: number;
+  };
+  actions: {
+    submitURL: string;
+    manageUsersURL: string;
+    legacyURL: string;
+  };
+  accessLevels: Array<{
+    accessID: number;
+    shortDescription: string;
+    longDescription: string;
+    isDefault: boolean;
+  }>;
+  categories: Array<{
+    label: string;
+    value: string;
+    description: string;
+    requiredAccessLevel: number;
+    forcedAccessLevel: number;
+  }>;
+  roles: Array<{
+    roleID: number;
+    roleKey: string;
+    roleName: string;
+    accessLevel: number;
+    isActive: number;
+  }>;
+};
+
+export type SettingsEditUserModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    userID: number;
+  };
+  state: {
+    authMode: string;
+    currentUserID: number;
+    userRolesEnabled: boolean;
+    selectedUserRoleID: number;
+    cannotEnableMessage: boolean;
+    disableAccessChange: boolean;
+    canResetPassword: boolean;
+    eeoEnabled: boolean;
+  };
+  summary: {
+    totalLicensedUsers: number;
+    availableSlots: number;
+  };
+  actions: {
+    submitURL: string;
+    showUserURL: string;
+    manageUsersURL: string;
+    legacyURL: string;
+  };
+  user: {
+    userID: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    username: string;
+    accessLevel: number;
+    accessLevelDescription: string;
+    accessLevelLongDescription: string;
+    categories: string;
+    canSeeEEOInfo: boolean;
+  };
+  accessLevels: Array<{
+    accessID: number;
+    shortDescription: string;
+    longDescription: string;
+    isSelected: boolean;
+    isDisabled: boolean;
+  }>;
+  categories: Array<{
+    label: string;
+    value: string;
+    description: string;
+    isSelected: boolean;
+  }>;
+  roles: Array<{
+    roleID: number;
+    roleKey: string;
+    roleName: string;
+    accessLevel: number;
+    isActive: number;
+  }>;
+};
+
+export type SettingsShowUserModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    userID: number;
+  };
+  state: {
+    privledged: boolean;
+    userRolesEnabled: boolean;
+    eeoEnabled: boolean;
+  };
+  actions: {
+    editURL: string;
+    manageUsersURL: string;
+    settingsURL: string;
+    legacyURL: string;
+  };
+  user: {
+    userID: number;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    email: string;
+    username: string;
+    accessLevel: number;
+    accessLevelLongDescription: string;
+    canSeeEEOInfo: boolean;
+    successfulDate: string;
+    unsuccessfulDate: string;
+    category: {
+      value: string;
+      label: string;
+      description: string;
+    };
+    applicationRole: {
+      roleName: string;
+      roleKey: string;
+      accessLevel: number;
+    };
+  };
+  loginAttempts: Array<{
+    ip: string;
+    hostname: string;
+    shortUserAgent: string;
+    date: string;
+    successful: string;
+  }>;
+};
+
 export type LoginModernDataResponse = {
   meta: {
     contractVersion: number;

@@ -3204,6 +3204,100 @@
   margin: 4px 0 0;
 }
 
+/* User management modernization */
+.avel-settings-user-page .avel-settings-user-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(290px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.avel-settings-user-page .avel-settings-user-layout__main,
+.avel-settings-user-page .avel-settings-user-layout__sidebar {
+  display: grid;
+  gap: 12px;
+}
+
+.avel-settings-user-page .avel-settings-user-form {
+  display: grid;
+  gap: 14px;
+}
+
+.avel-settings-user-page .avel-settings-user-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.avel-settings-user-page .avel-settings-user-field {
+  grid-column: span 6;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-settings-user-page .avel-settings-user-field--full {
+  grid-column: 1 / -1;
+}
+
+.avel-settings-user-page .avel-settings-user-field--check {
+  grid-column: span 12;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--avel-border);
+  border-radius: 12px;
+  background: #f8fcff;
+  padding: 10px 12px;
+}
+
+.avel-settings-user-page .avel-settings-user-field > span,
+.avel-settings-user-page .avel-settings-user-field--check > span,
+.avel-settings-user-page .avel-settings-user-profile__field > span {
+  color: var(--avel-text-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.avel-settings-user-page .avel-settings-user-field--check > input {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.avel-settings-user-page .avel-settings-user-profile {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.avel-settings-user-page .avel-settings-user-profile__field {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--avel-border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fcff 100%);
+  padding: 12px 14px;
+}
+
+.avel-settings-user-page .avel-settings-user-profile__field strong {
+  color: var(--avel-900);
+  font: 700 0.95rem/1.25 'Space Grotesk', 'Segoe UI', sans-serif;
+  word-break: break-word;
+}
+
+.avel-settings-user-page .avel-settings-user-table td strong {
+  color: var(--avel-900);
+}
+
+.avel-settings-user-page .avel-settings-user-table .modern-chip {
+  white-space: nowrap;
+}
+
+.avel-settings-user-page .avel-settings-user-table .avel-settings-inline-actions {
+  flex-wrap: wrap;
+}
+
 @media (max-width: 980px) {
   .avel-settings-workflow-page .avel-settings-tag-row {
     grid-template-columns: 1fr;
@@ -3211,6 +3305,15 @@
 
   .avel-settings-workflow-page .avel-settings-history-values {
     grid-template-columns: 1fr;
+  }
+
+  .avel-settings-user-page .avel-settings-user-layout,
+  .avel-settings-user-page .avel-settings-user-profile {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-settings-user-page .avel-settings-user-field {
+    grid-column: 1 / -1;
   }
 }
 

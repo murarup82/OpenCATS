@@ -4,6 +4,10 @@ import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
 import {
   fetchSettingsLoginActivityModernData,
+  fetchSettingsManageUsersModernData,
+  fetchSettingsAddUserModernData,
+  fetchSettingsEditUserModernData,
+  fetchSettingsShowUserModernData,
   fetchSettingsRejectionReasonsModernData,
   fetchSettingsRolePagePermissionsModernData,
   fetchSettingsSchemaMigrationsModernData,
@@ -17,6 +21,10 @@ import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import type {
   SettingsAdministrationModernDataResponse,
+  SettingsManageUsersModernDataResponse,
+  SettingsAddUserModernDataResponse,
+  SettingsEditUserModernDataResponse,
+  SettingsShowUserModernDataResponse,
   SettingsLoginActivityModernDataResponse,
   SettingsRejectionReasonsModernDataResponse,
   SettingsRolePagePermissionsModernDataResponse,
@@ -56,31 +64,31 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.manageusers': {
     title: 'Manage Users',
-    subtitle: 'Review and manage user access in compatibility mode.',
+    subtitle: 'Review and manage user access in the native settings shell.',
     panelTitle: 'User Management Workspace',
-    panelSubtitle: 'Legacy user-management workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native user-management list keeps add/edit/profile actions available.',
+    mode: 'embed'
   },
   'settings.adduser': {
     title: 'Add User',
-    subtitle: 'Create a user account in compatibility mode.',
+    subtitle: 'Create a user account in the native settings shell.',
     panelTitle: 'Add User Workspace',
-    panelSubtitle: 'Legacy user-creation workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native user-creation form preserves the legacy submit payload.',
+    mode: 'embed'
   },
   'settings.edituser': {
     title: 'Edit User',
-    subtitle: 'Edit user profile and permissions in compatibility mode.',
+    subtitle: 'Edit user profile and permissions in the native settings shell.',
     panelTitle: 'Edit User Workspace',
-    panelSubtitle: 'Legacy user-edit workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native user-edit form keeps legacy fields, IDs, and tokens intact.',
+    mode: 'embed'
   },
   'settings.showuser': {
     title: 'User Profile',
-    subtitle: 'Review user account details in compatibility mode.',
+    subtitle: 'Review user account details in the native settings shell.',
     panelTitle: 'User Profile Workspace',
-    panelSubtitle: 'Legacy user-profile workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native user profile view keeps legacy navigation and edit actions available.',
+    mode: 'embed'
   },
   'settings.deleteuser': {
     title: 'Delete User',
@@ -348,6 +356,10 @@ type NativeSettingsRouteMode =
   | 'administration'
   | 'myprofile'
   | 'changePassword'
+  | 'manageUsers'
+  | 'addUser'
+  | 'editUser'
+  | 'showUser'
   | 'loginActivity'
   | 'rejectionReasons'
   | 'tags'
@@ -358,6 +370,16 @@ type NativeSettingsRouteMode =
 
 function toBooleanLabel(value: boolean, onLabel: string, offLabel: string): string {
   return value ? onLabel : offLabel;
+}
+
+function toDisplayText(value: unknown): string {
+  const text = String(value ?? '').trim();
+  return text === '' ? '--' : text;
+}
+
+function isTruthyText(value: unknown): boolean {
+  const text = String(value ?? '').trim().toLowerCase();
+  return text === '1' || text === 'true' || text === 'yes' || text === 'y';
 }
 
 type SettingsSummaryCard = {
@@ -569,6 +591,28 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
     return 'loginActivity';
   }
 
+  if (routeKey === 'settings.manageusers') {
+    return 'manageUsers';
+  }
+
+  if (routeKey === 'settings.adduser') {
+    return 'addUser';
+  }
+
+  if (routeKey === 'settings.edituser') {
+    const query = new URLSearchParams(window.location.search);
+    if (hasPositiveIntParam(query, 'userID')) {
+      return 'editUser';
+    }
+  }
+
+  if (routeKey === 'settings.showuser') {
+    const query = new URLSearchParams(window.location.search);
+    if (hasPositiveIntParam(query, 'userID')) {
+      return 'showUser';
+    }
+  }
+
   if (routeKey === 'settings.rejectionreasons') {
     return 'rejectionReasons';
   }
@@ -608,6 +652,20 @@ function resolveBackLink(routeKey: string, bootstrap: UIModeBootstrap): BackLink
     return {
       label: 'Back To Dashboard',
       href: ensureModernUIURL(`${bootstrap.indexName}?m=dashboard&a=my`)
+    };
+  }
+
+  if (routeKey === 'settings.manageusers') {
+    return {
+      label: 'Back To Settings',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=settings&a=administration&ui=modern`)
+    };
+  }
+
+  if (routeKey === 'settings.adduser' || routeKey === 'settings.edituser' || routeKey === 'settings.showuser') {
+    return {
+      label: 'Back To Users',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=settings&a=manageUsers&ui=modern`)
     };
   }
 
@@ -1692,6 +1750,953 @@ function SettingsViewItemHistoryNativeShell({
   );
 }
 
+function SettingsManageUsersNativeShell({
+  data,
+  legacyURL,
+  backLink,
+  onReload
+}: {
+  data: SettingsManageUsersModernDataResponse;
+  legacyURL: string;
+  backLink: BackLink;
+  onReload: () => void;
+}) {
+  const addUserURL = ensureModernUIURL(data.actions.addUserURL);
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const canAddUsers = data.permissions.canAddUsers && data.state.authMode !== 'ldap';
+  const showApplicationRoles = data.state.userRolesEnabled;
+  const [busyUserID, setBusyUserID] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const summaryCards = [
+    {
+      label: 'Users',
+      value: String(data.summary.totalUsers),
+      note: 'Native list mirrors the legacy user-management set.',
+      tone: 'info'
+    },
+    {
+      label: 'Licensed seats',
+      value: data.summary.unlimitedLicenses ? 'Unlimited' : String(data.summary.totalLicensedUsers),
+      note: data.summary.unlimitedLicenses
+        ? 'License pool is not capped.'
+        : `${data.summary.availableSlots} slot${data.summary.availableSlots === 1 ? '' : 's'} available`,
+      tone: data.summary.unlimitedLicenses ? 'success' : 'warning'
+    },
+    {
+      label: 'Access mode',
+      value: data.state.authMode || '--',
+      note: data.state.userRolesEnabled ? 'Application roles are enabled' : 'Application roles are hidden',
+      tone: data.state.userRolesEnabled ? 'success' : 'info'
+    }
+  ] as const;
+
+  const deleteUser = useCallback(
+    async (userID: number) => {
+      if (!data.permissions.canDeleteUsers || busyUserID !== null || userID <= 0) {
+        return;
+      }
+
+      if (!window.confirm('Delete this user?')) {
+        return;
+      }
+
+      setBusyUserID(userID);
+      setErrorMessage('');
+      setFeedback('');
+
+      try {
+        const deleteURL = new URL(data.actions.deleteActionURL, window.location.href);
+        deleteURL.searchParams.set('userID', String(userID));
+        const response = await fetch(deleteURL.toString(), {
+          credentials: 'same-origin'
+        });
+        const responseText = (await response.text()).trim();
+
+        if (!response.ok || responseText !== 'Ok') {
+          throw new Error(responseText || 'Unable to delete user.');
+        }
+
+        setFeedback('User deleted.');
+        onReload();
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to delete user.');
+      } finally {
+        setBusyUserID(null);
+      }
+    },
+    [busyUserID, data.actions.deleteActionURL, data.permissions.canDeleteUsers, onReload]
+  );
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page avel-settings-user-page">
+      <PageContainer
+        title="Manage Users"
+        subtitle="Review user accounts, open profiles, and edit access from the native settings shell."
+        actions={(
+          <>
+            {canAddUsers ? (
+              <a className="modern-btn modern-btn--emphasis" href={addUserURL}>
+                Add User
+              </a>
+            ) : null}
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {errorMessage !== '' ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Error</strong>
+              <span>{errorMessage}</span>
+            </section>
+          ) : null}
+          {feedback !== '' ? (
+            <section className="avel-settings-admin-flash is-success" aria-live="polite">
+              <strong>Done</strong>
+              <span>{feedback}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-settings-admin-summary">
+            {summaryCards.map((card) => (
+              <article key={card.label} className={`avel-settings-admin-summary-card is-${card.tone}`}>
+                <span className="avel-settings-admin-summary-label">{card.label}</span>
+                <strong className="avel-settings-admin-summary-value">{card.value}</strong>
+                <span className="avel-settings-admin-summary-note">{card.note}</span>
+              </article>
+            ))}
+          </section>
+
+          <div className="avel-settings-user-layout">
+            <section className="avel-list-panel avel-settings-user-layout__main">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">User List</h2>
+                <p className="avel-list-panel__hint">
+                  Open a profile to inspect details, or edit a user directly from the native list.
+                </p>
+              </div>
+
+              <div className="avel-settings-table-wrap">
+                <table className="avel-settings-table avel-settings-user-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Username</th>
+                      {showApplicationRoles ? <th>Role</th> : null}
+                      <th>Access</th>
+                      <th>Last Success</th>
+                      <th>Last Failure</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={showApplicationRoles ? 7 : 6}>No users found.</td>
+                      </tr>
+                    ) : (
+                      data.rows.map((row) => (
+                        <tr key={row.userID}>
+                          <td>
+                            <strong>{toDisplayText(`${row.firstName} ${row.lastName}`)}</strong>
+                            <div className="avel-settings-prewrap">{`#${row.userID}`}</div>
+                          </td>
+                          <td>{toDisplayText(row.username)}</td>
+                          {showApplicationRoles ? <td>{toDisplayText(row.applicationRole)}</td> : null}
+                          <td>
+                            <span className="modern-chip modern-chip--info">
+                              {toDisplayText(row.accessLevelDescription)}
+                            </span>
+                          </td>
+                          <td>{toDisplayText(row.successfulDate)}</td>
+                          <td>{toDisplayText(row.unsuccessfulDate)}</td>
+                          <td>
+                            <div className="avel-settings-inline-actions">
+                              <a className="modern-btn modern-btn--secondary modern-btn--mini" href={ensureModernUIURL(row.showURL)}>
+                                View
+                              </a>
+                              <a className="modern-btn modern-btn--secondary modern-btn--mini" href={ensureModernUIURL(row.editURL)}>
+                                Edit
+                              </a>
+                              {data.permissions.canDeleteUsers && row.canDelete ? (
+                                <button
+                                  type="button"
+                                  className="modern-btn modern-btn--danger modern-btn--mini"
+                                  onClick={() => {
+                                    void deleteUser(row.userID);
+                                  }}
+                                  disabled={busyUserID !== null}
+                                >
+                                  {busyUserID === row.userID ? 'Deleting...' : 'Delete'}
+                                </button>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside className="avel-list-panel avel-settings-user-layout__sidebar">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Workspace</h2>
+                <p className="avel-list-panel__hint">
+                  Add users from the native shell or return to the legacy flow if you need an older view.
+                </p>
+              </div>
+
+              <div className="avel-settings-form-stack">
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">Permissions</span>
+                  <strong className="avel-settings-admin-summary-value">
+                    {toBooleanLabel(data.permissions.canAddUsers, 'Can Add', 'Read Only')}
+                  </strong>
+                  <span className="avel-settings-admin-summary-note">
+                    {data.permissions.canDeleteUsers ? 'Delete access is available for eligible users.' : 'Delete access is restricted.'}
+                  </span>
+                </article>
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">Current user</span>
+                  <strong className="avel-settings-admin-summary-value">User #{data.state.currentUserID}</strong>
+                  <span className="avel-settings-admin-summary-note">Modern list keeps the current account protected.</span>
+                </article>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                {canAddUsers ? (
+                  <a className="modern-btn modern-btn--emphasis" href={addUserURL}>
+                    Add User
+                  </a>
+                ) : null}
+                <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+                  {backLink.label}
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsAddUserNativeShell({
+  data,
+  legacyURL,
+  backLink
+}: {
+  data: SettingsAddUserModernDataResponse;
+  legacyURL: string;
+  backLink: BackLink;
+}) {
+  const manageUsersURL = ensureModernUIURL(data.actions.manageUsersURL);
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const showLicenseWarning = data.state.showLicenseWarning || (!data.summary.totalLicensedUsers && !data.summary.availableSlots);
+  const isLdapMode = toLowerText(data.state.authMode) === 'ldap';
+  const accessLevelDefault = String(data.state.defaultAccessLevel || '');
+  const roleIDDefault = String(data.state.defaultUserRoleID || '');
+  const roleDefault = 'none';
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page avel-settings-user-page">
+      <PageContainer
+        title="Add User"
+        subtitle="Create a user account without leaving the modern settings shell."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={manageUsersURL}>
+              Back To Users
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {showLicenseWarning ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>License</strong>
+              <span>
+                {data.state.authMode === 'ldap'
+                  ? 'LDAP mode can restrict new user creation.'
+                  : 'User licensing is tight; verify a seat before saving.'}
+              </span>
+            </section>
+          ) : null}
+          {isLdapMode ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>LDAP Mode</strong>
+              <span>LDAP authentication is enabled. Adding site users is disabled.</span>
+            </section>
+          ) : null}
+
+          <section className="avel-settings-admin-summary">
+            <article className="avel-settings-admin-summary-card is-info">
+              <span className="avel-settings-admin-summary-label">Seats</span>
+              <strong className="avel-settings-admin-summary-value">{data.summary.availableSlots}</strong>
+              <span className="avel-settings-admin-summary-note">Open slots available now</span>
+            </article>
+            <article className="avel-settings-admin-summary-card is-info">
+              <span className="avel-settings-admin-summary-label">Default access</span>
+              <strong className="avel-settings-admin-summary-value">{toDisplayText(data.state.defaultAccessLevel)}</strong>
+              <span className="avel-settings-admin-summary-note">Matches the legacy add-user form default</span>
+            </article>
+            <article className="avel-settings-admin-summary-card is-info">
+              <span className="avel-settings-admin-summary-label">Roles</span>
+              <strong className="avel-settings-admin-summary-value">
+                {toBooleanLabel(data.state.userRolesEnabled, 'Enabled', 'Hidden')}
+              </strong>
+              <span className="avel-settings-admin-summary-note">
+                {data.state.userRolesEnabled ? 'Application roles can be assigned.' : 'Role assignment stays off for this site.'}
+              </span>
+            </article>
+          </section>
+
+          <div className="avel-settings-user-layout">
+            <section className="avel-list-panel avel-settings-user-layout__main">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">User Details</h2>
+                <p className="avel-list-panel__hint">These fields post to the existing add-user endpoint.</p>
+              </div>
+
+              <form className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off">
+                <input type="hidden" name="postback" value="postback" />
+                <div className="avel-settings-user-grid">
+                  <label className="avel-settings-user-field" htmlFor="firstName">
+                    <span>First Name</span>
+                    <input className="avel-form-control" id="firstName" name="firstName" type="text" defaultValue="" />
+                  </label>
+                  <label className="avel-settings-user-field" htmlFor="lastName">
+                    <span>Last Name</span>
+                    <input className="avel-form-control" id="lastName" name="lastName" type="text" defaultValue="" />
+                  </label>
+                  <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="email">
+                    <span>Email</span>
+                    <input className="avel-form-control" id="email" name="email" type="email" defaultValue="" />
+                  </label>
+                  <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="username">
+                    <span>Username</span>
+                    <input className="avel-form-control" id="username" name="username" type="text" defaultValue="" />
+                  </label>
+                  <label className="avel-settings-user-field" htmlFor="accessLevel">
+                    <span>Access Level</span>
+                    <select className="avel-form-control" id="accessLevel" name="accessLevel" defaultValue={accessLevelDefault}>
+                      {data.accessLevels.map((accessLevel) => (
+                        <option key={accessLevel.accessID} value={accessLevel.accessID}>
+                          {accessLevel.shortDescription}
+                          {accessLevel.isDefault ? ' (Default)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="avel-settings-user-field" htmlFor="roleID">
+                    <span>Application Role</span>
+                    {data.state.userRolesEnabled && data.roles.length > 0 ? (
+                      <select className="avel-form-control" id="roleID" name="roleID" defaultValue={roleIDDefault}>
+                        {data.roles.map((role) => (
+                          <option key={role.roleID} value={role.roleID}>
+                            {role.roleName}
+                            {role.isActive ? '' : ' (Inactive)'}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input type="hidden" name="roleID" value="0" />
+                    )}
+                  </label>
+                  <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="role">
+                    <span>Category</span>
+                    {data.categories.length > 0 ? (
+                      <select className="avel-form-control" id="role" name="role" defaultValue={roleDefault}>
+                        <option value="none">Normal User</option>
+                        {data.categories.map((category) => (
+                          <option key={category.value} value={category.value} title={category.description}>
+                            {category.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input type="hidden" name="role" value="none" />
+                    )}
+                  </label>
+                  {data.state.eeoEnabled ? (
+                    <label className="avel-settings-user-field avel-settings-user-field--check" htmlFor="eeoIsVisible">
+                      <input id="eeoIsVisible" name="eeoIsVisible" type="checkbox" defaultChecked={false} />
+                      <span>EEO Visible</span>
+                    </label>
+                  ) : null}
+                </div>
+
+                <div className="avel-list-panel__header">
+                  <h3 className="avel-list-panel__title">Password</h3>
+                  <p className="avel-list-panel__hint">Passwords post as `password` and `retypePassword`.</p>
+                </div>
+
+                <div className="avel-settings-user-grid">
+                  {isLdapMode ? (
+                    <>
+                      <input type="hidden" name="password" value="password" />
+                      <input type="hidden" name="retypePassword" value="password" />
+                      <div className="modern-state">LDAP authentication is enabled, so password fields are not required.</div>
+                    </>
+                  ) : (
+                    <>
+                      <label className="avel-settings-user-field" htmlFor="password">
+                        <span>Password</span>
+                        <input className="avel-form-control" id="password" name="password" type="password" autoComplete="new-password" />
+                      </label>
+                      <label className="avel-settings-user-field" htmlFor="retypePassword">
+                        <span>Retype Password</span>
+                        <input className="avel-form-control" id="retypePassword" name="retypePassword" type="password" autoComplete="new-password" />
+                      </label>
+                    </>
+                  )}
+                </div>
+
+                <div className="modern-compat-page__actions">
+                  <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isLdapMode}>
+                    Add User
+                  </button>
+                  <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+                    {backLink.label}
+                  </a>
+                  <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                    Open Legacy UI
+                  </a>
+                </div>
+              </form>
+            </section>
+
+            <aside className="avel-list-panel avel-settings-user-layout__sidebar">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Workspace</h2>
+                <p className="avel-list-panel__hint">Keep the legacy add-user flow one click away.</p>
+              </div>
+              <div className="avel-settings-form-stack">
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">Access mode</span>
+                  <strong className="avel-settings-admin-summary-value">{toDisplayText(data.state.authMode)}</strong>
+                  <span className="avel-settings-admin-summary-note">Contract-compatible submit flow</span>
+                </article>
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">Role defaults</span>
+                  <strong className="avel-settings-admin-summary-value">
+                    {data.state.userRolesEnabled ? 'Enabled' : 'Disabled'}
+                  </strong>
+                  <span className="avel-settings-admin-summary-note">
+                    {data.state.userRolesEnabled
+                      ? 'Select an application role if needed.'
+                      : 'Application roles are not available on this site.'}
+                  </span>
+                </article>
+              </div>
+              <div className="modern-compat-page__actions">
+                <a className="modern-btn modern-btn--secondary" href={manageUsersURL}>
+                  Back To Users
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsEditUserNativeShell({
+  data,
+  legacyURL,
+  backLink
+}: {
+  data: SettingsEditUserModernDataResponse;
+  legacyURL: string;
+  backLink: BackLink;
+}) {
+  const manageUsersURL = ensureModernUIURL(data.actions.manageUsersURL);
+  const showUserURL = ensureModernUIURL(data.actions.showUserURL);
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const accessLevelValue = String(data.user.accessLevel || '');
+  const roleIDValue = String(data.state.selectedUserRoleID || '');
+  const roleValue = data.categories.find((category) => category.isSelected)?.value || 'none';
+  const disableRoleSelect = data.state.disableAccessChange || data.state.currentUserID === data.user.userID;
+  const summaryCards = [
+    {
+      label: 'User',
+      value: toDisplayText(`${data.user.firstName} ${data.user.lastName}`),
+      note: `User ID ${data.meta.userID}`,
+      tone: 'info'
+    },
+    {
+      label: 'Access level',
+      value: toDisplayText(data.user.accessLevelDescription),
+      note: data.state.disableAccessChange ? 'Access changes are locked for this record.' : data.user.accessLevelLongDescription,
+      tone: data.state.disableAccessChange ? 'warning' : 'success'
+    },
+    {
+      label: 'Seats',
+      value: String(data.summary.availableSlots),
+      note: `${data.summary.totalLicensedUsers} licensed user${data.summary.totalLicensedUsers === 1 ? '' : 's'}`,
+      tone: 'info'
+    }
+  ] as const;
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page avel-settings-user-page">
+      <PageContainer
+        title="Edit User"
+        subtitle={`Edit ${toDisplayText(`${data.user.firstName} ${data.user.lastName}`)} without changing the legacy submit contract.`}
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={showUserURL}>
+              View Profile
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={manageUsersURL}>
+              Back To Users
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.state.cannotEnableMessage ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Access</strong>
+              <span>License availability is too low to promote this user.</span>
+            </section>
+          ) : null}
+
+          <section className="avel-settings-admin-summary">
+            {summaryCards.map((card) => (
+              <article key={card.label} className={`avel-settings-admin-summary-card is-${card.tone}`}>
+                <span className="avel-settings-admin-summary-label">{card.label}</span>
+                <strong className="avel-settings-admin-summary-value">{card.value}</strong>
+                <span className="avel-settings-admin-summary-note">{card.note}</span>
+              </article>
+            ))}
+          </section>
+
+          <div className="avel-settings-user-layout">
+            <section className="avel-list-panel avel-settings-user-layout__main">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">User Details</h2>
+                <p className="avel-list-panel__hint">All field names match the legacy edit-user submit payload.</p>
+              </div>
+
+              <form className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off">
+                <input type="hidden" name="postback" value="postback" />
+                <input type="hidden" name="userID" value={data.meta.userID} />
+                <input type="hidden" name="passwordIsReset" value="0" />
+                <div className="avel-settings-user-grid">
+                  <label className="avel-settings-user-field" htmlFor="firstName">
+                    <span>First Name</span>
+                    <input className="avel-form-control" id="firstName" name="firstName" type="text" defaultValue={data.user.firstName} />
+                  </label>
+                  <label className="avel-settings-user-field" htmlFor="lastName">
+                    <span>Last Name</span>
+                    <input className="avel-form-control" id="lastName" name="lastName" type="text" defaultValue={data.user.lastName} />
+                  </label>
+                  <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="email">
+                    <span>Email</span>
+                    <input className="avel-form-control" id="email" name="email" type="email" defaultValue={data.user.email} />
+                  </label>
+                  <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="username">
+                    <span>Username</span>
+                    <input className="avel-form-control" id="username" name="username" type="text" defaultValue={data.user.username} />
+                  </label>
+                  <label className="avel-settings-user-field" htmlFor="accessLevel">
+                    <span>Access Level</span>
+                    {data.state.disableAccessChange ? (
+                      <input type="hidden" name="accessLevel" value={accessLevelValue} />
+                    ) : null}
+                    <select
+                      className="avel-form-control"
+                      id="accessLevel"
+                      name="accessLevel"
+                      defaultValue={accessLevelValue}
+                      disabled={data.state.disableAccessChange}
+                    >
+                      {data.accessLevels.map((accessLevel) => (
+                        <option key={accessLevel.accessID} value={accessLevel.accessID} disabled={accessLevel.isDisabled}>
+                          {accessLevel.shortDescription}
+                          {accessLevel.isSelected ? ' (Selected)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="avel-settings-user-field" htmlFor="roleID">
+                    <span>Application Role</span>
+                    {data.state.userRolesEnabled && data.roles.length > 0 ? (
+                      <>
+                        <select
+                          className="avel-form-control"
+                          id="roleID"
+                          name="roleID"
+                          defaultValue={roleIDValue}
+                          disabled={disableRoleSelect}
+                        >
+                          {data.roles.map((role) => (
+                            <option key={role.roleID} value={role.roleID} disabled={role.isActive === 0}>
+                              {role.roleName}
+                              {role.roleID === data.state.selectedUserRoleID ? ' (Selected)' : ''}
+                            </option>
+                          ))}
+                        </select>
+                        {disableRoleSelect ? <input type="hidden" name="roleID" value={roleIDValue || '0'} /> : null}
+                      </>
+                    ) : (
+                      <input type="hidden" name="roleID" value="0" />
+                    )}
+                  </label>
+                  <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="role">
+                    <span>Category</span>
+                    {data.categories.length > 0 ? (
+                      <select className="avel-form-control" id="role" name="role" defaultValue={roleValue}>
+                        <option value="none">Normal User</option>
+                        {data.categories.map((category) => (
+                          <option key={category.value} value={category.value}>
+                            {category.label}
+                            {category.isSelected ? ' (Selected)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input type="hidden" name="role" value="none" />
+                    )}
+                  </label>
+                  {data.state.eeoEnabled ? (
+                    <label className="avel-settings-user-field avel-settings-user-field--check" htmlFor="eeoIsVisible">
+                      <input
+                        id="eeoIsVisible"
+                        name="eeoIsVisible"
+                        type="checkbox"
+                        defaultChecked={data.user.canSeeEEOInfo}
+                      />
+                      <span>EEO Visible</span>
+                    </label>
+                  ) : null}
+                </div>
+
+                {data.state.canResetPassword ? (
+                  <>
+                    <div className="avel-list-panel__header">
+                      <h3 className="avel-list-panel__title">Password Reset</h3>
+                      <p className="avel-list-panel__hint">Leave blank to keep the current password.</p>
+                    </div>
+
+                    <div className="avel-settings-user-grid">
+                      <label className="avel-settings-user-field" htmlFor="password1">
+                        <span>New Password</span>
+                        <input className="avel-form-control" id="password1" name="password1" type="password" autoComplete="new-password" />
+                      </label>
+                      <label className="avel-settings-user-field" htmlFor="password2">
+                        <span>Retype New Password</span>
+                        <input className="avel-form-control" id="password2" name="password2" type="password" autoComplete="new-password" />
+                      </label>
+                      <label className="avel-settings-user-field avel-settings-user-field--check" htmlFor="passwordIsResetToggle">
+                        <input id="passwordIsResetToggle" name="passwordIsReset" type="checkbox" value="1" />
+                        <span>Reset password</span>
+                      </label>
+                    </div>
+                  </>
+                ) : null}
+
+                <div className="modern-compat-page__actions">
+                  <button type="submit" className="modern-btn modern-btn--emphasis">
+                    Save User
+                  </button>
+                  <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+                    {backLink.label}
+                  </a>
+                  <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                    Open Legacy UI
+                  </a>
+                </div>
+              </form>
+            </section>
+
+            <aside className="avel-list-panel avel-settings-user-layout__sidebar">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Workspace</h2>
+                <p className="avel-list-panel__hint">
+                  Keep the profile view and legacy edit path close while making the form easier to scan.
+                </p>
+              </div>
+
+              <div className="avel-settings-form-stack">
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">Current role</span>
+                  <strong className="avel-settings-admin-summary-value">
+                    {toDisplayText(data.user.accessLevelDescription)}
+                  </strong>
+                  <span className="avel-settings-admin-summary-note">
+                    {data.state.disableAccessChange ? 'Locked for this edit session.' : data.user.accessLevelLongDescription}
+                  </span>
+                </article>
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">EEO</span>
+                  <strong className="avel-settings-admin-summary-value">
+                    {toBooleanLabel(data.user.canSeeEEOInfo, 'Visible', 'Hidden')}
+                  </strong>
+                  <span className="avel-settings-admin-summary-note">
+                    {data.state.eeoEnabled ? 'EEO visibility is enabled on this site.' : 'EEO visibility is disabled on this site.'}
+                  </span>
+                </article>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                <a className="modern-btn modern-btn--secondary" href={showUserURL}>
+                  View Profile
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={manageUsersURL}>
+                  Back To Users
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsShowUserNativeShell({
+  data,
+  legacyURL,
+  backLink
+}: {
+  data: SettingsShowUserModernDataResponse;
+  legacyURL: string;
+  backLink: BackLink;
+}) {
+  const editURL = ensureModernUIURL(data.actions.editURL);
+  const manageUsersURL = ensureModernUIURL(data.actions.manageUsersURL);
+  const settingsURL = ensureModernUIURL(data.actions.settingsURL);
+  const canManage = data.state.privledged;
+  const summaryCards = [
+    {
+      label: 'User',
+      value: toDisplayText(data.user.fullName),
+      note: `User ID ${data.meta.userID}`,
+      tone: 'info'
+    },
+    {
+      label: 'Role',
+      value: toDisplayText(data.user.applicationRole.roleName || data.user.accessLevelLongDescription),
+      note: data.user.category.label || 'Category not assigned',
+      tone: 'success'
+    },
+    {
+      label: 'Visibility',
+      value: toBooleanLabel(data.user.canSeeEEOInfo, 'EEO Visible', 'EEO Hidden'),
+      note: data.state.privledged ? 'Privileged profile view enabled' : 'Read-only profile view',
+      tone: data.state.privledged ? 'success' : 'warning'
+    }
+  ] as const;
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page avel-settings-user-page">
+      <PageContainer
+        title="User Profile"
+        subtitle={
+          canManage
+            ? `Profile view for ${toDisplayText(data.user.fullName)} with edit and navigation actions kept native.`
+            : 'Read-only profile view. Contact your site administrator to change these settings.'
+        }
+        actions={(
+          <>
+            {canManage ? (
+              <a className="modern-btn modern-btn--emphasis" href={editURL}>
+                Edit User
+              </a>
+            ) : null}
+            <a className="modern-btn modern-btn--secondary" href={canManage ? backLink.href : settingsURL}>
+              {canManage ? backLink.label : 'Back To Settings'}
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {!canManage ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Read only</strong>
+              <span>Contact your site administrator to modify this account.</span>
+            </section>
+          ) : null}
+
+          <section className="avel-settings-admin-summary">
+            {summaryCards.map((card) => (
+              <article key={card.label} className={`avel-settings-admin-summary-card is-${card.tone}`}>
+                <span className="avel-settings-admin-summary-label">{card.label}</span>
+                <strong className="avel-settings-admin-summary-value">{card.value}</strong>
+                <span className="avel-settings-admin-summary-note">{card.note}</span>
+              </article>
+            ))}
+          </section>
+
+          <div className="avel-settings-user-layout">
+            <section className="avel-list-panel avel-settings-user-layout__main">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">User Details</h2>
+                <p className="avel-list-panel__hint">Read-only profile view with a direct path back to edit.</p>
+              </div>
+
+              <div className="avel-settings-user-profile">
+                <div className="avel-settings-user-profile__field">
+                  <span>Name</span>
+                  <strong>{toDisplayText(data.user.fullName)}</strong>
+                </div>
+                <div className="avel-settings-user-profile__field">
+                  <span>Username</span>
+                  <strong>{toDisplayText(data.user.username)}</strong>
+                </div>
+                <div className="avel-settings-user-profile__field">
+                  <span>Email</span>
+                  <strong>{toDisplayText(data.user.email)}</strong>
+                </div>
+                <div className="avel-settings-user-profile__field">
+                  <span>Access Level</span>
+                  <strong>{toDisplayText(data.user.accessLevelLongDescription)}</strong>
+                </div>
+                <div className="avel-settings-user-profile__field">
+                  <span>Application Role</span>
+                  <strong>{toDisplayText(data.user.applicationRole.roleName)}</strong>
+                </div>
+                <div className="avel-settings-user-profile__field">
+                  <span>Category</span>
+                  <strong>{toDisplayText(data.user.category.label)}</strong>
+                </div>
+                <div className="avel-settings-user-profile__field">
+                  <span>Successful Login</span>
+                  <strong>{toDisplayText(data.user.successfulDate)}</strong>
+                </div>
+                <div className="avel-settings-user-profile__field">
+                  <span>Unsuccessful Login</span>
+                  <strong>{toDisplayText(data.user.unsuccessfulDate)}</strong>
+                </div>
+              </div>
+
+              {canManage ? (
+                <>
+                  <div className="avel-list-panel__header">
+                    <h3 className="avel-list-panel__title">Login Attempts</h3>
+                    <p className="avel-list-panel__hint">Recent logins and browser metadata from the native profile response.</p>
+                  </div>
+
+                  <div className="avel-settings-table-wrap">
+                    <table className="avel-settings-table avel-settings-table--dense">
+                      <thead>
+                        <tr>
+                          <th>Status</th>
+                          <th>Date</th>
+                          <th>IP</th>
+                          <th>Hostname</th>
+                          <th>User Agent</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.loginAttempts.length === 0 ? (
+                          <tr>
+                            <td colSpan={5}>No login attempts recorded.</td>
+                          </tr>
+                        ) : (
+                          data.loginAttempts.map((attempt, index) => (
+                            <tr key={`${attempt.date}-${index}`}>
+                              <td>
+                                <span className={`modern-chip ${isTruthyText(attempt.successful) ? 'modern-chip--success' : 'modern-chip--critical'}`}>
+                                  {isTruthyText(attempt.successful) ? 'Successful' : 'Unsuccessful'}
+                                </span>
+                              </td>
+                              <td>{toDisplayText(attempt.date)}</td>
+                              <td>{toDisplayText(attempt.ip)}</td>
+                              <td>{toDisplayText(attempt.hostname)}</td>
+                              <td>{toDisplayText(attempt.shortUserAgent)}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : null}
+            </section>
+
+            <aside className="avel-list-panel avel-settings-user-layout__sidebar">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Workspace</h2>
+                <p className="avel-list-panel__hint">
+                  Keep profile navigation and legacy access one click away.
+                </p>
+              </div>
+
+              <div className="avel-settings-form-stack">
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">EEO</span>
+                  <strong className="avel-settings-admin-summary-value">
+                    {toBooleanLabel(data.user.canSeeEEOInfo, 'Visible', 'Hidden')}
+                  </strong>
+                  <span className="avel-settings-admin-summary-note">
+                    {data.state.eeoEnabled ? 'EEO fields are supported on this site.' : 'EEO fields are disabled on this site.'}
+                  </span>
+                </article>
+                <article className="avel-settings-admin-summary-card is-info">
+                  <span className="avel-settings-admin-summary-label">Role access</span>
+                  <strong className="avel-settings-admin-summary-value">
+                    {data.state.userRolesEnabled ? 'Enabled' : 'Disabled'}
+                  </strong>
+                  <span className="avel-settings-admin-summary-note">Application role metadata stays visible in the profile.</span>
+                </article>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                {canManage ? (
+                  <a className="modern-btn modern-btn--emphasis" href={editURL}>
+                    Edit User
+                  </a>
+                ) : null}
+                {canManage ? (
+                  <a className="modern-btn modern-btn--secondary" href={manageUsersURL}>
+                    Back To Users
+                  </a>
+                ) : null}
+                <a className="modern-btn modern-btn--secondary" href={settingsURL}>
+                  Back To Settings
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
 function SettingsForwardPanel({
   copy,
   backLink,
@@ -1777,6 +2782,10 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     | SettingsAdministrationModernDataResponse
     | SettingsMyProfileModernDataResponse
     | SettingsMyProfileChangePasswordModernDataResponse
+    | SettingsManageUsersModernDataResponse
+    | SettingsAddUserModernDataResponse
+    | SettingsEditUserModernDataResponse
+    | SettingsShowUserModernDataResponse
     | SettingsLoginActivityModernDataResponse
     | SettingsRejectionReasonsModernDataResponse
     | SettingsTagsModernDataResponse
@@ -1823,6 +2832,14 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           return fetchSettingsMyProfileModernData(bootstrap, query);
         case 'changePassword':
           return fetchSettingsMyProfileChangePasswordModernData(bootstrap, query);
+        case 'manageUsers':
+          return fetchSettingsManageUsersModernData(bootstrap, query);
+        case 'addUser':
+          return fetchSettingsAddUserModernData(bootstrap, query);
+        case 'editUser':
+          return fetchSettingsEditUserModernData(bootstrap, query);
+        case 'showUser':
+          return fetchSettingsShowUserModernData(bootstrap, query);
         case 'loginActivity':
           return fetchSettingsLoginActivityModernData(bootstrap, query);
         case 'rejectionReasons':
@@ -1888,6 +2905,47 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
       return (
         <SettingsChangePasswordNativeShell
           data={nativeData as SettingsMyProfileChangePasswordModernDataResponse}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'manageUsers') {
+      return (
+        <SettingsManageUsersNativeShell
+          data={nativeData as SettingsManageUsersModernDataResponse}
+          legacyURL={legacyURL}
+          backLink={backLink}
+          onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'addUser') {
+      return (
+        <SettingsAddUserNativeShell
+          data={nativeData as SettingsAddUserModernDataResponse}
+          legacyURL={legacyURL}
+          backLink={backLink}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'editUser') {
+      return (
+        <SettingsEditUserNativeShell
+          data={nativeData as SettingsEditUserModernDataResponse}
+          legacyURL={legacyURL}
+          backLink={backLink}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'showUser') {
+      return (
+        <SettingsShowUserNativeShell
+          data={nativeData as SettingsShowUserModernDataResponse}
+          legacyURL={legacyURL}
+          backLink={backLink}
         />
       );
     }
