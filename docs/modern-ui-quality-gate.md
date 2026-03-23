@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-23T05:44:02.331Z
-Finished: 2026-03-23T05:44:37.147Z
+Started: 2026-03-23T05:53:48.618Z
+Finished: 2026-03-23T05:54:23.345Z
 Overall Status: **Pass**
 
 ## Summary
@@ -127,7 +127,7 @@ Command: `npm.cmd run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 13 tests using 1 worker
+Running 15 tests using 1 worker
 
   -   1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
   -   2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
@@ -142,8 +142,10 @@ Running 13 tests using 1 worker
   -  11 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › accepted state
   -  12 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › declined state
   -  13 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › expired state
+  -  14 tests\playwright\pipeline-matrix-runtime.spec.mjs:46:3 › Pipeline matrix runtime smoke › joborders.pipelineMatrix modern contract
+  -  15 tests\playwright\pipeline-matrix-runtime.spec.mjs:66:3 › Pipeline matrix runtime smoke › pipeline matrix route mounts without runtime boundary
 
-  13 skipped
+  15 skipped
 ```
 
 **stderr**

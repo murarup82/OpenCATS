@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-23T05:44:02.948Z
-Finished: 2026-03-23T05:44:22.781Z
+Started: 2026-03-23T05:53:49.257Z
+Finished: 2026-03-23T05:54:08.337Z
 Overall Required Status: **Pass**
 
 ## Summary
@@ -42,7 +42,7 @@ rendering chunks...
 [2m../../public/modern-ui/build/[22m[32m.vite/manifest.json  [39m[1m[2m    0.20 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[35mstyle.css            [39m[1m[2m  357.01 kB[22m[1m[22m
 [2m../../public/modern-ui/build/[22m[36mapp.bundle.js        [39m[1m[33m1,780.86 kB[39m[22m[2m │ map: 6,758.96 kB[22m
-[32m✓ built in 9.22s[39m
+[32m✓ built in 8.68s[39m
 ```
 
 **stderr**
@@ -148,7 +148,7 @@ Command: `npm run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 13 tests using 1 worker
+Running 15 tests using 1 worker
 
   -   1 tests\playwright\add-edit-workflows.spec.mjs:114:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
   -   2 tests\playwright\add-edit-workflows.spec.mjs:122:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
@@ -163,8 +163,10 @@ Running 13 tests using 1 worker
   -  11 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › accepted state
   -  12 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › declined state
   -  13 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › expired state
+  -  14 tests\playwright\pipeline-matrix-runtime.spec.mjs:46:3 › Pipeline matrix runtime smoke › joborders.pipelineMatrix modern contract
+  -  15 tests\playwright\pipeline-matrix-runtime.spec.mjs:66:3 › Pipeline matrix runtime smoke › pipeline matrix route mounts without runtime boundary
 
-  13 skipped
+  15 skipped
 ```
 
 **stderr**
