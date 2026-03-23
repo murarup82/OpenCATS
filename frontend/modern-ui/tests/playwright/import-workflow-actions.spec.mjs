@@ -98,6 +98,23 @@ test.describe('Import workflow route smoke', () => {
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });
 
+  test('import.viewerrors ui=modern forwards without an iframe', async ({ context, page }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    await page.goto(buildModernRouteURL('import', 'viewerrors'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
+    await expect(page.getByRole('heading', { name: 'Import Error Review Forward' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open Legacy UI' })).toBeVisible();
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+  });
+
   test('import.revert ui=modern mounts without a runtime boundary and no iframe', async ({
     context,
     page,

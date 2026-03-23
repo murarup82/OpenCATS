@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { fetchImportDeleteBulkResumesModernMutation, fetchImportBulkResumesModernMutation } from '../lib/api';
-import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
-import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import type { UIModeBootstrap } from '../types';
 import '../dashboard-avel.css';
 
@@ -25,7 +23,7 @@ type ImportWorkflowActionKey =
   | 'showmassimport'
   | 'whatisbulkresumes';
 
-type ImportWorkflowActionMode = 'modern-redirect' | 'legacy-redirect' | 'endpoint-forward' | 'embed';
+type ImportWorkflowActionMode = 'modern-redirect' | 'legacy-redirect' | 'endpoint-forward';
 
 type ImportWorkflowActionCopy = {
   mode: ImportWorkflowActionMode;
@@ -46,12 +44,12 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowActionCopy> = {
     statusMessage: 'Redirecting to the modern import launcher...'
   },
   viewerrors: {
-    mode: 'embed',
+    mode: 'endpoint-forward',
     title: 'Import Error Review',
-    subtitle: 'Review import errors in an embedded legacy workspace.',
-    panelTitle: 'Import Error Workspace',
-    panelSubtitle: 'Legacy import error review remains embedded while parity migration continues.',
-    statusMessage: 'Loading embedded legacy import error workspace...'
+    subtitle: 'Forward import errors to the legacy workspace without embedding a frame.',
+    panelTitle: 'Import Error Review Forward',
+    panelSubtitle: 'Legacy import error review remains available while parity migration continues.',
+    statusMessage: 'Forwarding to the legacy import error review workspace...'
   },
   revert: {
     mode: 'endpoint-forward',
@@ -78,28 +76,28 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowActionCopy> = {
     statusMessage: 'Preparing bulk resume cleanup and forwarding to the import launcher...'
   },
   importselecttype: {
-    mode: 'embed',
+    mode: 'endpoint-forward',
     title: 'Import Select Type',
-    subtitle: 'Open the legacy import type selector in an embedded workspace.',
-    panelTitle: 'Import Select Type Workspace',
-    panelSubtitle: 'Legacy import type selection remains embedded while parity migration continues.',
-    statusMessage: 'Loading embedded legacy import type selector...'
+    subtitle: 'Forward the legacy import type selector without embedding a frame.',
+    panelTitle: 'Import Select Type Forward',
+    panelSubtitle: 'Legacy import type selection remains available while parity migration continues.',
+    statusMessage: 'Forwarding to the legacy import type selector...'
   },
   importuploadresume: {
-    mode: 'embed',
+    mode: 'endpoint-forward',
     title: 'Import Upload Resume',
-    subtitle: 'Open the legacy resume upload flow in an embedded workspace.',
-    panelTitle: 'Import Upload Resume Workspace',
-    panelSubtitle: 'Legacy resume upload remains embedded while parity migration continues.',
-    statusMessage: 'Loading embedded legacy resume upload workspace...'
+    subtitle: 'Forward the legacy resume upload flow without embedding a frame.',
+    panelTitle: 'Import Upload Resume Forward',
+    panelSubtitle: 'Legacy resume upload remains available while parity migration continues.',
+    statusMessage: 'Forwarding to the legacy resume upload workspace...'
   },
   massimport: {
-    mode: 'embed',
+    mode: 'endpoint-forward',
     title: 'Mass Import',
-    subtitle: 'Open the legacy mass import workspace in embedded mode.',
-    panelTitle: 'Mass Import Workspace',
-    panelSubtitle: 'Legacy mass import remains embedded while parity migration continues.',
-    statusMessage: 'Loading embedded legacy mass import workspace...'
+    subtitle: 'Forward the legacy mass import workspace without embedding a frame.',
+    panelTitle: 'Mass Import Forward',
+    panelSubtitle: 'Legacy mass import remains available while parity migration continues.',
+    statusMessage: 'Forwarding to the legacy mass import workspace...'
   },
   massimportdocument: {
     mode: 'legacy-redirect',
@@ -110,28 +108,28 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowActionCopy> = {
     statusMessage: 'Redirecting to the legacy mass import document endpoint...'
   },
   massimportedit: {
-    mode: 'embed',
+    mode: 'endpoint-forward',
     title: 'Mass Import Edit',
-    subtitle: 'Open the legacy mass import edit workspace in embedded mode.',
-    panelTitle: 'Mass Import Edit Workspace',
-    panelSubtitle: 'Legacy mass import editing remains embedded while parity migration continues.',
-    statusMessage: 'Loading embedded legacy mass import edit workspace...'
+    subtitle: 'Forward the legacy mass import edit workspace without embedding a frame.',
+    panelTitle: 'Mass Import Edit Forward',
+    panelSubtitle: 'Legacy mass import editing remains available while parity migration continues.',
+    statusMessage: 'Forwarding to the legacy mass import edit workspace...'
   },
   showmassimport: {
-    mode: 'embed',
+    mode: 'endpoint-forward',
     title: 'Show Mass Import',
-    subtitle: 'Open the legacy mass import review workspace in embedded mode.',
-    panelTitle: 'Show Mass Import Workspace',
-    panelSubtitle: 'Legacy mass import review remains embedded while parity migration continues.',
-    statusMessage: 'Loading embedded legacy mass import review workspace...'
+    subtitle: 'Forward the legacy mass import review workspace without embedding a frame.',
+    panelTitle: 'Show Mass Import Forward',
+    panelSubtitle: 'Legacy mass import review remains available while parity migration continues.',
+    statusMessage: 'Forwarding to the legacy mass import review workspace...'
   },
   whatisbulkresumes: {
-    mode: 'embed',
+    mode: 'endpoint-forward',
     title: 'What Is Bulk Resumes',
-    subtitle: 'Open the legacy bulk resumes help workspace in embedded mode.',
-    panelTitle: 'Bulk Resumes Help Workspace',
-    panelSubtitle: 'Legacy bulk resumes help remains embedded while parity migration continues.',
-    statusMessage: 'Loading embedded legacy bulk resumes help workspace...'
+    subtitle: 'Forward the legacy bulk resumes help workspace without embedding a frame.',
+    panelTitle: 'Bulk Resumes Help Forward',
+    panelSubtitle: 'Legacy bulk resumes help remains available while parity migration continues.',
+    statusMessage: 'Forwarding to the legacy bulk resumes help workspace...'
   }
 };
 
@@ -148,8 +146,6 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
     () => ensureModernUIURL(`${bootstrap.indexName}?m=import&a=import`),
     [bootstrap.indexName]
   );
-  const embeddedLegacyURL = useMemo(() => buildEmbeddedLegacyURL(legacyURL), [legacyURL]);
-  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
   const copy = actionKey ? ACTION_COPY[actionKey] : null;
 
   useEffect(() => {
@@ -263,20 +259,8 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
     );
   }
 
-  const isEmbedMode = copy?.mode === 'embed';
-  const pageActions = isEmbedMode ? (
-    <>
-      <a className="modern-btn modern-btn--secondary" href={modernImportURL}>
-        Back To Import
-      </a>
-      <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>
-        Reload
-      </button>
-      <a className="modern-btn modern-btn--secondary" href={legacyURL}>
-        Open Legacy UI
-      </a>
-    </>
-  ) : (
+  const isForwardPanel = copy?.mode === 'endpoint-forward' || copy?.mode === 'legacy-redirect';
+  const pageActions = (
     <>
       <a className="modern-btn modern-btn--secondary" href={modernImportURL}>
         Back To Import
@@ -291,23 +275,23 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
     <div className="avel-dashboard-page">
       <PageContainer title={copy.title} subtitle={copy.subtitle} actions={pageActions}>
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="modern-compat-page">
+          <section className={`modern-compat-page${isForwardPanel ? ' modern-compat-page--forward' : ''}`}>
             <header className="modern-compat-page__header">
               <div>
                 <h2 className="modern-compat-page__title">{copy.panelTitle}</h2>
                 <p className="modern-compat-page__subtitle">{copy.panelSubtitle}</p>
               </div>
-              <div className="modern-compat-page__meta">ui_embed=1</div>
+              {isForwardPanel ? <div className="modern-compat-page__meta">legacy_forward=1</div> : null}
             </header>
 
-            {isEmbedMode ? (
+            {isForwardPanel ? (
               <div className="modern-compat-page__actions">
                 <a className="modern-btn modern-btn--secondary" href={modernImportURL}>
                   Back To Import
                 </a>
-                <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>
-                  Reload
-                </button>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+                  Open In New Tab
+                </a>
                 <a className="modern-btn modern-btn--secondary" href={legacyURL}>
                   Open Legacy UI
                 </a>
@@ -315,26 +299,20 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
             ) : null}
 
             <div className="modern-compat-page__frame-wrap">
-              {isEmbedMode && frameLoading ? (
-                <div className="modern-compat-page__frame-loader" aria-live="polite">
-                  Loading legacy import workspace...
+              <section className="avel-list-panel">
+                <div
+                  className={`modern-state${forwardError !== '' ? ' modern-state--error' : ''}`}
+                  role={forwardError !== '' ? 'alert' : undefined}
+                  aria-live="polite"
+                >
+                  {forwardError !== '' ? forwardError : copy.statusMessage}
                 </div>
-              ) : null}
-                {isEmbedMode ? (
-                  <iframe
-                    key={frameReloadToken}
-                    title={`${copy.title} legacy workspace`}
-                    className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
-                  src={embeddedLegacyURL}
-                  onLoad={handleFrameLoad}
-                />
-                ) : (
-                  <section className="avel-list-panel">
-                    <div className={`modern-state${forwardError !== '' ? ' modern-state--error' : ''}`} role={forwardError !== '' ? 'alert' : undefined}>
-                      {forwardError !== '' ? forwardError : copy.statusMessage}
-                    </div>
-                  </section>
-                )}
+                {isForwardPanel ? (
+                  <p className="reports-workflow-forward__note">
+                    The redirect keeps the legacy import workflow available while the native shell finishes loading.
+                  </p>
+                ) : null}
+              </section>
             </div>
           </section>
         </div>
