@@ -49,7 +49,7 @@ export function CompaniesInternalPostingsActionPage({ bootstrap }: Props) {
           return;
         }
 
-        window.location.replace(resolveURL);
+        window.location.replace(fallbackURL);
       } catch (err: unknown) {
         if (!active) {
           return;
@@ -62,7 +62,7 @@ export function CompaniesInternalPostingsActionPage({ bootstrap }: Props) {
     return () => {
       active = false;
     };
-  }, [bootstrap.indexName, resolveURL]);
+  }, [bootstrap.indexName, fallbackURL, resolveURL]);
 
   if (error !== '') {
     return (

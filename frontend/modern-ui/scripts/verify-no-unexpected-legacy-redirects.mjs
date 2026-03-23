@@ -9,7 +9,6 @@ const pagesDir = resolve(packageRoot, 'src', 'pages');
 const outputPath = resolve(repoRoot, 'docs', 'modern-ui-unexpected-legacy-redirects-check.md');
 
 const expectedLegacyRedirectPages = new Set([
-  'src/pages/CompaniesInternalPostingsActionPage.tsx',
   'src/pages/ContactVCardActionPage.tsx',
   'src/pages/ImportWorkflowActionPage.tsx',
   'src/pages/LegacyDownloadForwardActionPage.tsx',
@@ -46,16 +45,58 @@ function getLineNumber(source, offset) {
   return source.slice(0, offset).split('\n').length;
 }
 
-function collectLegacyRedirectVariableNames(source) {
-  const names = new Set();
-  const variableRegex = /const\s+([A-Za-z_$][\w$]*)\s*=\s*[\s\S]{0,280}?ensureUIURL\([\s\S]{0,280}?'legacy'[\s\S]{0,120}?\);/g;
+function collectVariableAssignments(source) {
+  const assignments = new Map();
+  const assignmentRegex = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([\s\S]*?);/g;
 
   let match;
-  while ((match = variableRegex.exec(source)) !== null) {
+  while ((match = assignmentRegex.exec(source)) !== null) {
     const variableName = String(match[1] || '').trim();
-    if (variableName !== '') {
+    const expression = String(match[2] || '');
+    if (variableName !== '' && expression !== '') {
+      assignments.set(variableName, expression);
+    }
+  }
+
+  return assignments;
+}
+
+function collectLegacyRedirectVariableNames(source) {
+  const names = new Set();
+  const assignments = collectVariableAssignments(source);
+
+  assignments.forEach((expression, variableName) => {
+    if (!/url/i.test(variableName)) {
+      return;
+    }
+    const normalizedExpression = expression.toLowerCase();
+    const isLegacySource =
+      (normalizedExpression.includes('ensureuiurl(') && normalizedExpression.includes("'legacy'")) ||
+      (normalizedExpression.includes('ensureuiurl(') && normalizedExpression.includes('"legacy"')) ||
+      normalizedExpression.includes('ui=legacy') ||
+      normalizedExpression.includes('bootstrap.legacyurl');
+
+    if (isLegacySource) {
       names.add(variableName);
     }
+  });
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    assignments.forEach((expression, variableName) => {
+      if (!/url/i.test(variableName)) {
+        return;
+      }
+      if (names.has(variableName)) {
+        return;
+      }
+      const inheritsLegacyValue = Array.from(names).some((name) => new RegExp(`\\b${name}\\b`).test(expression));
+      if (inheritsLegacyValue) {
+        names.add(variableName);
+        changed = true;
+      }
+    });
   }
 
   return names;
@@ -72,10 +113,14 @@ function collectLegacyRedirectFindings(source, relativePath) {
     const argument = String(match[2] || '').trim();
     const lowerArgument = argument.toLowerCase();
     const variableRedirect = Array.from(legacyVariables).find((name) => new RegExp(`\\b${name}\\b`).test(argument));
+    const directLegacyEnsureUIURL =
+      /ensureUIURL\([\s\S]*?'legacy'[\s\S]*?\)/.test(argument) ||
+      /ensureUIURL\([\s\S]*?"legacy"[\s\S]*?\)/.test(argument);
     const isLegacyRedirect =
       lowerArgument.includes('legacy') ||
       lowerArgument.includes("'ui=legacy'") ||
       lowerArgument.includes('"ui=legacy"') ||
+      directLegacyEnsureUIURL ||
       Boolean(variableRedirect);
 
     if (!isLegacyRedirect) {
@@ -167,4 +212,3 @@ function main() {
 }
 
 main();
-

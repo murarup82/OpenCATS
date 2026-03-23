@@ -1,15 +1,15 @@
 # Modern UI Unexpected Legacy Redirect Guard
 
-Generated: 2026-03-23T11:38:57.343Z
+Generated: 2026-03-23T11:44:51.937Z
 
 This guard tracks runtime `window.location.assign/replace` redirects that target legacy URLs.
 
 ## Totals
 
 - Redirect findings: 8
-- Expected legacy-redirect pages: 9
+- Expected legacy-redirect pages: 8
 - Unexpected redirect findings: 0
-- Expected pages without redirect findings: 1
+- Expected pages without redirect findings: 0
 
 ## Redirect Findings
 
@@ -28,6 +28,6 @@ This guard tracks runtime `window.location.assign/replace` redirects that target
 
 None.
 
-## Expected Pages Without Findings (Review Inventory)
+## Expected Pages Without Findings
 
-- `src/pages/CompaniesInternalPostingsActionPage.tsx`
+None.
