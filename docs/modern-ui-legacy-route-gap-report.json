@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T12:43:39.194Z",
+  "generatedAt": "2026-03-23T12:56:26.583Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -2011,7 +2011,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.myprofile",
       "resolution": "native",
-      "component": "SettingsAdminWorkspaceActionPage",
+      "component": "SettingsMyProfilePage",
       "guarded": false
     },
     {

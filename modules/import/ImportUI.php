@@ -2404,6 +2404,10 @@ class ImportUI extends UserInterface
 
     private function deleteBulkResumes()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
         if (!isset($_SESSION['CATS']) || empty($_SESSION['CATS'])) {
             CommonErrors::fatal(COMMONERROR_NOTLOGGEDIN, $this);
         }
@@ -2417,15 +2421,76 @@ class ImportUI extends UserInterface
         $bulkResumes = $attachments->getBulkAttachments();
 
         if (!count($bulkResumes)) {
+            if ($isModernJSON)
+            {
+                if ($modernPage !== '' && $modernPage !== 'import-delete-bulk-resumes')
+                {
+                    if (!headers_sent())
+                    {
+                        header('HTTP/1.1 400 Bad Request');
+                        header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                    }
+                    echo json_encode(array(
+                        'error' => true,
+                        'message' => 'Unsupported modern page contract.',
+                        'requestedPage' => $modernPage
+                    ));
+                    return;
+                }
+
+                $this->renderModernImportMutationJSON(
+                    'import-delete-bulk-resumes',
+                    'import.deleteBulkResumes.v1',
+                    false,
+                    'noBulkResumes',
+                    'No bulk resume documents were found.'
+                );
+                return;
+            }
+
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this);
         }
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'import-delete-bulk-resumes')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+        }
+
         /**
-         * Write the parsed resume contents to the new file which will
-         * be created as a text document for each bulk attachment.
+         * Remove each bulk attachment from the temporary import store.
          */
         foreach ($bulkResumes as $bulkResume) {
             $attachments->delete($bulkResume['attachmentID'], true);
+        }
+
+        if ($isModernJSON)
+        {
+            $this->renderModernImportMutationJSON(
+                'import-delete-bulk-resumes',
+                'import.deleteBulkResumes.v1',
+                true,
+                'bulkResumesDeleted',
+                'Bulk resume documents were deleted.',
+                array(
+                    'redirectURL' => CATSUtility::getIndexName() . '?m=import&a=import&ui=modern'
+                )
+            );
+            return;
         }
 
         $this->import();

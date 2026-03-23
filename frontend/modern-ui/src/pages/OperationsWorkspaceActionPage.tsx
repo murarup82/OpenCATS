@@ -58,12 +58,12 @@ const COPY_BY_ROUTE: Record<string, RouteCopy> = {
     statusMessage: 'Forwarding settings preview page to the legacy endpoint...'
   },
   'settings.previewpagetop': {
-    mode: 'embed',
-    title: 'Settings Preview Header',
-    subtitle: 'Preview header content in compatibility mode.',
-    panelTitle: 'Settings Preview Header Workspace',
-    panelSubtitle: 'Legacy settings preview UI is embedded while migration continues.',
-    statusMessage: 'Loading embedded legacy settings preview header workspace...'
+    mode: 'forward',
+    title: 'Settings Preview Header Redirect',
+    subtitle: 'Forward settings preview header content through the legacy endpoint without embedding a frame.',
+    panelTitle: 'Settings Preview Header Forward',
+    panelSubtitle: 'Legacy settings preview header UI is forwarded while migration continues.',
+    statusMessage: 'Forwarding settings preview header page to the legacy endpoint...'
   }
 };
 

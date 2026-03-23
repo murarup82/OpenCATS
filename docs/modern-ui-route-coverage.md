@@ -1,16 +1,16 @@
 # Modern UI Route Coverage Matrix
 
-Generated: 2026-03-23T12:43:23.508Z
+Generated: 2026-03-23T12:56:10.888Z
 
 This report classifies routeRegistry mappings into true native UI routes, intentional legacy-forward endpoints/wrappers, and bridge fallbacks.
 
 ## Summary
 
 - Total route mappings: **251**
-- True native UI mappings: **139**
-- Intentional legacy-forward mappings: **111**
+- True native UI mappings: **140**
+- Intentional legacy-forward mappings: **110**
 - Bridge mappings: **1**
-- True native UI coverage (mapping-level): **55.4%**
+- True native UI coverage (mapping-level): **55.8%**
 
 ## Module Summary
 
@@ -35,7 +35,7 @@ This report classifies routeRegistry mappings into true native UI routes, intent
 - `queue`: native-ui=1, legacy-forward=0, bridge=0
 - `reports`: native-ui=6, legacy-forward=6, bridge=0
 - `rss`: native-ui=1, legacy-forward=0, bridge=0
-- `settings`: native-ui=0, legacy-forward=58, bridge=0
+- `settings`: native-ui=1, legacy-forward=57, bridge=0
 - `sourcing`: native-ui=1, legacy-forward=0, bridge=0
 - `toolbar`: native-ui=0, legacy-forward=8, bridge=0
 - `wizard`: native-ui=0, legacy-forward=1, bridge=0
@@ -129,7 +129,6 @@ This report classifies routeRegistry mappings into true native UI routes, intent
 | `settings.googleoidcsettings` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.loginactivity` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.manageusers` | `SettingsAdminWorkspaceActionPage` | no |
-| `settings.myprofile` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.newinstallfinished` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.newinstallpassword` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.newsitename` | `SettingsAdminWorkspaceActionPage` | no |
@@ -390,7 +389,7 @@ This report classifies routeRegistry mappings into true native UI routes, intent
 | `settings.googleoidcsettings` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.loginactivity` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.manageusers` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
-| `settings.myprofile` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
+| `settings.myprofile` | `SettingsMyProfilePage` | native-ui | - |
 | `settings.newinstallfinished` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.newinstallpassword` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.newsitename` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |

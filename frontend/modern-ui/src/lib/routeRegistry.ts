@@ -54,6 +54,7 @@ import { ImportWorkflowActionPage } from '../pages/ImportWorkflowActionPage';
 import { OperationsWorkspaceActionPage } from '../pages/OperationsWorkspaceActionPage';
 import { ReportsWorkflowActionPage } from '../pages/ReportsWorkflowActionPage';
 import { SettingsAdminWorkspaceActionPage } from '../pages/SettingsAdminWorkspaceActionPage';
+import { SettingsMyProfilePage } from '../pages/SettingsMyProfilePage';
 import { SettingsTagsActionPage } from '../pages/SettingsTagsActionPage';
 import { SettingsWizardActionPage } from '../pages/SettingsWizardActionPage';
 import { GdprRequestsPage } from '../pages/GdprRequestsPage';
@@ -256,7 +257,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.googleoidcsettings': SettingsAdminWorkspaceActionPage,
   'settings.loginactivity': SettingsAdminWorkspaceActionPage,
   'settings.manageusers': SettingsAdminWorkspaceActionPage,
-  'settings.myprofile': SettingsAdminWorkspaceActionPage,
+  'settings.myprofile': SettingsMyProfilePage,
   'settings.newinstallfinished': SettingsAdminWorkspaceActionPage,
   'settings.newinstallpassword': SettingsAdminWorkspaceActionPage,
   'settings.newsitename': SettingsAdminWorkspaceActionPage,

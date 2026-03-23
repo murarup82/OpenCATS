@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T12:43:39.194Z
+Generated: 2026-03-23T12:56:26.583Z
 
 ## Summary
 
@@ -250,7 +250,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | googleOIDCSettings | native-explicit | settings.googleoidcsettings | SettingsAdminWorkspaceActionPage |
 | settings | loginActivity | native-explicit | settings.loginactivity | SettingsAdminWorkspaceActionPage |
 | settings | manageUsers | native-explicit | settings.manageusers | SettingsAdminWorkspaceActionPage |
-| settings | myProfile | native-explicit | settings.myprofile | SettingsAdminWorkspaceActionPage |
+| settings | myProfile | native-explicit | settings.myprofile | SettingsMyProfilePage |
 | settings | newInstallFinished | native-explicit | settings.newinstallfinished | SettingsAdminWorkspaceActionPage |
 | settings | newInstallPassword | native-explicit | settings.newinstallpassword | SettingsAdminWorkspaceActionPage |
 | settings | newSiteName | native-explicit | settings.newsitename | SettingsAdminWorkspaceActionPage |

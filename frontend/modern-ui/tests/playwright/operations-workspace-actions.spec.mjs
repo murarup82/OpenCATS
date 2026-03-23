@@ -74,17 +74,17 @@ test.describe('Operations workspace action smoke', () => {
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });
 
-  test('settings.previewpage ui=modern forwards without an iframe', async ({ context, page }) => {
+  test('settings.previewpagetop ui=modern forwards without an iframe', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
-    await page.goto(buildModernRouteURL('settings', 'previewpage'), {
+    await page.goto(buildModernRouteURL('settings', 'previewpagetop'), {
       waitUntil: 'domcontentloaded'
     });
 
     await page.waitForSelector('.modern-compat-page', { state: 'visible' });
-    await expect(page.getByRole('heading', { name: 'Settings Preview Redirect' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Settings Preview Forward' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Settings Preview Header Redirect' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Settings Preview Header Forward' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Continue' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Open Legacy UI' }).first()).toBeVisible();
     await expect(page.locator('iframe')).toHaveCount(0);

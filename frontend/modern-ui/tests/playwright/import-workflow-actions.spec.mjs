@@ -7,6 +7,7 @@ const contractVersion = 1;
 const importLauncherContractKey = 'import.launcher.v1';
 const importRevertContractKey = 'import.revert.v1';
 const importBulkResumesContractKey = 'import.bulkResumes.v1';
+const importDeleteBulkResumesContractKey = 'import.deleteBulkResumes.v1';
 
 function joinURL(root, path) {
   const normalizedRoot = root.endsWith('/') ? root.slice(0, -1) : root;
@@ -147,6 +148,57 @@ test.describe('Import workflow route smoke', () => {
     expect(payload.success).toBe(true);
     expect(String(payload.code || '').trim()).toBe('importReverted');
     expect(String(payload.message || '').trim()).not.toBe('');
+  });
+
+  test('import.deletebulkresumes ui=modern mounts without a runtime boundary and no iframe', async ({
+    context,
+    page,
+    request
+  }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    const { bulkResumeCount } = await fetchImportLauncherModernJSON(request);
+    test.skip(bulkResumeCount === 0, 'Set up at least one bulk resume document to run import.deleteBulkResumes smoke.');
+
+    await page.goto(buildModernRouteURL('import', 'deletebulkresumes'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.locator('iframe')).toHaveCount(0);
+  });
+
+  test('import.deleteBulkResumes modern-json returns the import.deleteBulkResumes.v1 contract', async ({ request }) => {
+    const { bulkResumeCount } = await fetchImportLauncherModernJSON(request);
+    test.skip(
+      bulkResumeCount === 0,
+      'Set up at least one bulk resume document to run import.deleteBulkResumes contract smoke.'
+    );
+
+    const response = await request.get(
+      buildModernJSONURL('import', 'deleteBulkResumes', 'import-delete-bulk-resumes'),
+      {
+        headers: buildHeaders(),
+        failOnStatusCode: false
+      }
+    );
+
+    expect(response.ok(), 'import.deleteBulkResumes should return HTTP 200').toBeTruthy();
+
+    const payload = await response.json();
+    const meta = payload?.meta || {};
+
+    expect(Number(meta.contractVersion || 0)).toBe(contractVersion);
+    expect(String(meta.contractKey || '').trim()).toBe(importDeleteBulkResumesContractKey);
+    expect(String(meta.modernPage || '').trim()).toBe('import-delete-bulk-resumes');
+    expect(payload.success).toBe(true);
+    expect(String(payload.code || '').trim()).toBe('bulkResumesDeleted');
+    expect(String(payload.message || '').trim()).not.toBe('');
+    expect(String(payload.redirectURL || '')).toContain('m=import');
+    expect(String(payload.redirectURL || '')).toContain('a=import');
+    expect(String(payload.redirectURL || '')).toContain('ui=modern');
   });
 
   test('import.importbulkresumes ui=modern forwards without a runtime boundary and no iframe', async ({

@@ -127,13 +127,13 @@ export function ImportLauncherPage({ bootstrap }: Props) {
                     Rescan Bulk Resumes
                   </a>
                   {data.permissions.canManageBulkResumes ? (
-                    <a className="modern-btn modern-btn--secondary" href={data.actions.deleteBulkResumesURL}>
+                    <a className="modern-btn modern-btn--secondary" href={ensureModernUIURL(data.actions.deleteBulkResumesURL)}>
                       Delete Bulk Resumes
                     </a>
                   ) : null}
                 </div>
                 <p className="modern-state" style={{ marginTop: '8px' }}>
-                  Import upload and commit forms still run through legacy endpoints; bulk resume rescans now use the modern forward path.
+                  Import upload and commit forms still run through legacy endpoints; bulk resume rescans and cleanup now use the modern forward path.
                 </p>
               </section>
 

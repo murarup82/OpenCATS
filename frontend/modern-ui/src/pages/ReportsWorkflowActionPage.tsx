@@ -55,11 +55,11 @@ const ROUTE_COPY: Record<string, RouteCopy> = {
     mode: 'forward'
   },
   'reports.showsubmissionreport': {
-    title: 'Submission Report',
-    subtitle: 'View the submission report in the legacy workspace.',
-    panelTitle: 'Submission Report Workspace',
-    panelSubtitle: 'Legacy reporting output is embedded while modernization continues.',
-    mode: 'embedded'
+    title: 'Submission Report Redirect',
+    subtitle: 'Forwarding to the legacy submission report workspace.',
+    panelTitle: 'Submission Report Redirect',
+    panelSubtitle: 'Legacy report output opens automatically in 500ms while the fallback remains visible.',
+    mode: 'forward'
   }
 };
 

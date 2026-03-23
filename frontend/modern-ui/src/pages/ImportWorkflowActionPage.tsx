@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
-import { fetchImportBulkResumesModernMutation } from '../lib/api';
+import { fetchImportDeleteBulkResumesModernMutation, fetchImportBulkResumesModernMutation } from '../lib/api';
 import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
 import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
@@ -70,12 +70,12 @@ const ACTION_COPY: Record<ImportWorkflowActionKey, ImportWorkflowActionCopy> = {
     statusMessage: 'Preparing bulk resume rescan and forwarding to mass import...'
   },
   deletebulkresumes: {
-    mode: 'legacy-redirect',
+    mode: 'endpoint-forward',
     title: 'Delete Bulk Resumes',
-    subtitle: 'Redirecting to the legacy bulk resume cleanup workflow.',
-    panelTitle: 'Bulk Resume Cleanup Redirect',
-    panelSubtitle: 'This action still runs through the legacy bulk cleanup flow.',
-    statusMessage: 'Redirecting to the legacy bulk resume cleanup endpoint...'
+    subtitle: 'Forwarding bulk resume cleanup through the legacy endpoint without embedding a frame.',
+    panelTitle: 'Bulk Resume Cleanup Forward',
+    panelSubtitle: 'This action runs the bulk resume delete contract, then returns to the import launcher.',
+    statusMessage: 'Preparing bulk resume cleanup and forwarding to the import launcher...'
   },
   importselecttype: {
     mode: 'embed',
@@ -180,6 +180,34 @@ export function ImportWorkflowActionPage({ bootstrap }: Props) {
             return;
           }
           setForwardError(error instanceof Error ? error.message : 'Unable to prepare bulk resume import.');
+        }
+      })();
+
+      return () => {
+        mounted = false;
+      };
+    }
+
+    if (actionKey === 'deletebulkresumes') {
+      void (async () => {
+        try {
+          setForwardError('');
+          const result = await fetchImportDeleteBulkResumesModernMutation(bootstrap);
+          if (!mounted) {
+            return;
+          }
+
+          if (!result.success) {
+            throw new Error(String(result.message || 'Unable to delete bulk resume documents.'));
+          }
+
+          const redirectURL = ensureModernUIURL(String(result.redirectURL || modernImportURL));
+          window.location.replace(redirectURL);
+        } catch (error) {
+          if (!mounted) {
+            return;
+          }
+          setForwardError(error instanceof Error ? error.message : 'Unable to delete bulk resume documents.');
         }
       })();
 

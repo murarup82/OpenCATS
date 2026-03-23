@@ -31,6 +31,7 @@ import type {
   HomeQuickSearchModernDataResponse,
   ImportLauncherModernDataResponse,
   ImportBulkResumesModernMutationResponse,
+  ImportDeleteBulkResumesModernMutationResponse,
   SettingsAdministrationModernDataResponse,
   SettingsWizardAddUserModernDataResponse,
   SettingsWizardCheckKeyModernDataResponse,
@@ -314,6 +315,24 @@ export async function fetchImportBulkResumesModernMutation(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<ImportBulkResumesModernMutationResponse>(url);
   assertModernContract(data.meta, 'import.bulkResumes.v1', 'bulk resume import mutation');
+
+  return data;
+}
+
+export async function fetchImportDeleteBulkResumesModernMutation(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<ImportDeleteBulkResumesModernMutationResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'import',
+    action: 'deleteBulkResumes',
+    modernPage: 'import-delete-bulk-resumes',
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<ImportDeleteBulkResumesModernMutationResponse>(url);
+  assertModernContract(data.meta, 'import.deleteBulkResumes.v1', 'bulk resume delete mutation');
 
   return data;
 }

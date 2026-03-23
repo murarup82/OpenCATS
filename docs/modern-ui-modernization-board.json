@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T12:43:39.948Z",
+  "generatedAt": "2026-03-23T12:56:27.273Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 228,
@@ -11,11 +11,11 @@
   "bucketSummaries": [
     {
       "bucket": "native-action",
-      "count": 128
+      "count": 127
     },
     {
       "bucket": "native-surface",
-      "count": 100
+      "count": 101
     }
   ],
   "moduleSummaries": [
@@ -1465,19 +1465,6 @@
       "action": "manageUsers",
       "classification": "native-explicit",
       "routeKey": "settings.manageusers",
-      "resolution": "native",
-      "component": "SettingsAdminWorkspaceActionPage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-action",
-      "modernizationRank": 9,
-      "legacyDependent": false
-    },
-    {
-      "module": "settings",
-      "action": "myProfile",
-      "classification": "native-explicit",
-      "routeKey": "settings.myprofile",
       "resolution": "native",
       "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false,
@@ -3118,6 +3105,19 @@
       "routeKey": "rss.joborders",
       "resolution": "native",
       "component": "RssJobOrdersPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "settings",
+      "action": "myProfile",
+      "classification": "native-explicit",
+      "routeKey": "settings.myprofile",
+      "resolution": "native",
+      "component": "SettingsMyProfilePage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-surface",

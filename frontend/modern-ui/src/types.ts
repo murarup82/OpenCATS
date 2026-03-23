@@ -171,6 +171,18 @@ export type ImportBulkResumesModernMutationResponse = {
   redirectURL?: string;
 };
 
+export type ImportDeleteBulkResumesModernMutationResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  success: boolean;
+  code?: string;
+  message?: string;
+  redirectURL?: string;
+};
+
 export type CandidateGoogleDriveUploadMutationResponse = ModernMutationResponse & {
   editURL?: string;
   fileID?: string;
