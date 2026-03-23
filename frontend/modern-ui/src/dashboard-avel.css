@@ -5612,6 +5612,310 @@
   background: linear-gradient(180deg, #fff7f7 0%, #ffeded 100%);
 }
 
+.avel-candidate-edit-page--refined .modern-page {
+  gap: 20px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-header {
+  position: sticky;
+  top: 8px;
+  z-index: 24;
+  border: 1px solid #b9d4e4;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 250, 255, 0.98) 100%);
+  box-shadow: 0 10px 26px rgba(8, 56, 80, 0.12);
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__eyebrow {
+  margin: 0 0 6px;
+  color: #4f7082;
+  font: 700 0.62rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__title {
+  margin: 0;
+  color: #0f4660;
+  font: 700 clamp(1.2rem, 1rem + 0.8vw, 1.72rem) / 1.12 'Space Grotesk', 'Segoe UI', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__subtitle {
+  margin: 5px 0 0;
+  color: #557788;
+  font-size: 0.78rem;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__chips {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-actions {
+  margin: 0;
+  border: 1px solid #c3d8e6;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgba(10, 71, 101, 0.08);
+  padding: 6px;
+  gap: 6px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-actions--sticky {
+  top: auto;
+  justify-content: flex-end;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-panel {
+  border: 1px solid #bfd7e6;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbfeff 0%, #f4f9fd 100%);
+  box-shadow: 0 10px 24px rgba(9, 62, 88, 0.1);
+  padding: 16px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench > .avel-candidate-edit-form {
+  grid-column: 1 / span 8;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench > .avel-candidate-edit-attachments {
+  grid-column: 9 / span 4;
+  position: sticky;
+  top: 94px;
+  margin-top: 0;
+  border-top: none;
+  padding-top: 0;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-form {
+  gap: 14px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-sections {
+  gap: 14px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section {
+  --avel-section-border: #cde0ec;
+  --avel-section-surface: #ffffff;
+  --avel-section-field-surface: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  gap: 12px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section .modern-command-field,
+.avel-candidate-edit-page--refined .avel-candidate-edit-section .modern-command-toggle {
+  border-color: #d3e3ed;
+  background: #ffffff;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section .modern-command-toggle {
+  border-radius: 11px;
+  padding: 8px 10px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section__header {
+  display: grid;
+  gap: 4px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section__title {
+  margin: 0;
+  color: #134e6a;
+  font: 700 0.92rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section__description {
+  margin: 0;
+  color: #5f7f90;
+  font-size: 0.75rem;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section .avel-candidate-edit-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section--status .avel-candidate-edit-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.avel-candidate-edit-page--refined .modern-command-field {
+  border-radius: 11px;
+  padding: 8px 9px;
+}
+
+.avel-candidate-edit-page--refined .modern-command-field .modern-command-label {
+  color: #2f5e75;
+  font-size: 0.63rem;
+  letter-spacing: 0.06em;
+}
+
+.avel-candidate-edit-page--refined .avel-form-control {
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.avel-candidate-edit-page--refined textarea.avel-form-control {
+  min-height: 78px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-attachments {
+  display: grid;
+  gap: 12px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card {
+  border: 1px solid #c9ddea;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(10, 63, 90, 0.08);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card__header {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card__title {
+  margin: 0;
+  color: #144f6a;
+  font: 700 0.88rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card__description {
+  margin: 2px 0 0;
+  color: #5f7f90;
+  font-size: 0.74rem;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card__body {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list {
+  margin: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list > div {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) 1fr;
+  gap: 8px;
+  align-items: baseline;
+  border-bottom: 1px solid #e2edf4;
+  padding-bottom: 7px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list > div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list dt {
+  color: #638293;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list dd {
+  margin: 0;
+  color: #174f67;
+  font-size: 0.79rem;
+  font-weight: 600;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-extra {
+  border: 1px solid #cbdfea;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-extra__summary {
+  cursor: pointer;
+  list-style: none;
+  color: #1f5f7b;
+  font: 700 0.82rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-extra__summary::-webkit-details-marker {
+  display: none;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-extra > .avel-list-panel__hint {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 1180px) {
+  .avel-candidate-edit-page--refined .avel-candidate-edit-header {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .avel-candidate-edit-page--refined .avel-candidate-edit-actions--sticky {
+    justify-content: flex-start;
+  }
+
+  .avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench > .avel-candidate-edit-form,
+  .avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench > .avel-candidate-edit-attachments {
+    grid-column: 1 / -1;
+  }
+
+  .avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench > .avel-candidate-edit-attachments {
+    position: static;
+  }
+}
+
+@media (max-width: 860px) {
+  .avel-candidate-edit-page--refined .avel-candidate-edit-section--status .avel-candidate-edit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .avel-candidate-edit-page--refined .avel-candidate-edit-grid,
+  .avel-candidate-edit-page--refined .avel-candidate-edit-section .avel-candidate-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-candidate-edit-page--refined .avel-candidate-edit-actions--sticky {
+    width: 100%;
+  }
+
+  .avel-candidate-edit-page--refined .avel-candidate-edit-actions .modern-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
 .avel-logs-panel {
   padding: 16px;
   display: grid;
