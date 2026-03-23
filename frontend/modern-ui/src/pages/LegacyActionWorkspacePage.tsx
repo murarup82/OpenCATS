@@ -1,0 +1,230 @@
+import { useMemo } from 'react';
+import { PageContainer } from '../components/layout/PageContainer';
+import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
+import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
+import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
+import type { UIModeBootstrap } from '../types';
+import '../dashboard-avel.css';
+
+type Props = {
+  bootstrap: UIModeBootstrap;
+};
+
+type PageCopy = {
+  title: string;
+  subtitle: string;
+  panelTitle: string;
+  panelSubtitle: string;
+};
+
+type BackLink = {
+  label: string;
+  href: string;
+};
+
+const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
+  'candidates.addduplicates': {
+    title: 'Candidate Duplicate Review',
+    subtitle: 'Review and resolve duplicate candidate records.',
+    panelTitle: 'Duplicate Candidate Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'candidates.emailcandidates': {
+    title: 'Email Candidates',
+    subtitle: 'Prepare and send candidate email communication.',
+    panelTitle: 'Candidate Email Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'candidates.linkduplicate': {
+    title: 'Link Duplicate Candidate',
+    subtitle: 'Link related candidate profiles safely.',
+    panelTitle: 'Candidate Link Duplicate Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'candidates.merge': {
+    title: 'Merge Candidate Records',
+    subtitle: 'Merge candidate profiles with legacy-safe behavior.',
+    panelTitle: 'Candidate Merge Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'candidates.mergeinfo': {
+    title: 'Candidate Merge Preview',
+    subtitle: 'Review merge details before applying changes.',
+    panelTitle: 'Candidate Merge Info Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'candidates.removeduplicity': {
+    title: 'Remove Candidate Duplicity',
+    subtitle: 'Finalize duplicate cleanup actions.',
+    panelTitle: 'Candidate Duplicity Cleanup Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'joborders.edithiringplan': {
+    title: 'Edit Hiring Plan',
+    subtitle: 'Adjust hiring plan rows and openings for this job order.',
+    panelTitle: 'Hiring Plan Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'reports.customizeeeoreport': {
+    title: 'Customize EEO Report',
+    subtitle: 'Configure EEO report parameters.',
+    panelTitle: 'EEO Report Customization Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'reports.customizejoborderreport': {
+    title: 'Customize Job Order Report',
+    subtitle: 'Configure job order report options and filters.',
+    panelTitle: 'Job Order Report Customization Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'reports.generateeeoreportpreview': {
+    title: 'EEO Report Preview',
+    subtitle: 'Review generated EEO report preview output.',
+    panelTitle: 'EEO Report Preview Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'reports.showhirereport': {
+    title: 'Hire Report',
+    subtitle: 'View hiring activity report output.',
+    panelTitle: 'Hire Report Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'reports.showplacementreport': {
+    title: 'Placement Report',
+    subtitle: 'View placement reporting output.',
+    panelTitle: 'Placement Report Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  },
+  'reports.showsubmissionreport': {
+    title: 'Submission Report',
+    subtitle: 'View submission reporting output.',
+    panelTitle: 'Submission Report Workspace',
+    panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+  }
+};
+
+const FALLBACK_COPY: PageCopy = {
+  title: 'Legacy Action Workspace',
+  subtitle: 'Embedded compatibility workspace for legacy action flow.',
+  panelTitle: 'Legacy Compatibility Workspace',
+  panelSubtitle: 'Legacy workflow is embedded while parity migration continues.'
+};
+
+function toLowerText(value: unknown): string {
+  return String(value || '').trim().toLowerCase();
+}
+
+function parsePositiveInt(value: string | null): number {
+  const parsed = Number(value || 0);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : 0;
+}
+
+function buildRouteKey(bootstrap: UIModeBootstrap): string {
+  return `${toLowerText(bootstrap.targetModule)}.${toLowerText(bootstrap.targetAction)}`;
+}
+
+function resolveBackLink(bootstrap: UIModeBootstrap, query: URLSearchParams): BackLink | null {
+  const moduleKey = toLowerText(bootstrap.targetModule);
+  if (moduleKey === 'candidates') {
+    const candidateID =
+      parsePositiveInt(query.get('candidateID')) ||
+      parsePositiveInt(query.get('newCandidateID')) ||
+      parsePositiveInt(query.get('oldCandidateID')) ||
+      parsePositiveInt(query.get('duplicateCandidateID'));
+
+    if (candidateID > 0) {
+      return {
+        label: 'Back To Candidate',
+        href: ensureModernUIURL(`${bootstrap.indexName}?m=candidates&a=show&candidateID=${candidateID}`)
+      };
+    }
+
+    return {
+      label: 'Back To Candidates',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=candidates&a=listByView`)
+    };
+  }
+
+  if (moduleKey === 'joborders') {
+    const jobOrderID = parsePositiveInt(query.get('jobOrderID'));
+    if (jobOrderID > 0) {
+      return {
+        label: 'Back To Job Order Edit',
+        href: ensureModernUIURL(`${bootstrap.indexName}?m=joborders&a=edit&jobOrderID=${jobOrderID}`)
+      };
+    }
+
+    return {
+      label: 'Back To Job Orders',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=joborders&a=listByView`)
+    };
+  }
+
+  if (moduleKey === 'reports') {
+    return {
+      label: 'Back To Reports',
+      href: ensureModernUIURL(`${bootstrap.indexName}?m=reports&a=reports`)
+    };
+  }
+
+  return null;
+}
+
+export function LegacyActionWorkspacePage({ bootstrap }: Props) {
+  const routeKey = useMemo(() => buildRouteKey(bootstrap), [bootstrap]);
+  const copy = COPY_BY_ROUTE_KEY[routeKey] || FALLBACK_COPY;
+  const query = useMemo(() => new URLSearchParams(window.location.search), []);
+  const backLink = useMemo(() => resolveBackLink(bootstrap, query), [bootstrap, query]);
+  const legacyURL = useMemo(() => ensureUIURL(bootstrap.legacyURL, 'legacy'), [bootstrap.legacyURL]);
+  const embeddedURL = useMemo(() => buildEmbeddedLegacyURL(legacyURL), [legacyURL]);
+  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
+
+  return (
+    <div className="avel-dashboard-page">
+      <PageContainer
+        title={copy.title}
+        subtitle={copy.subtitle}
+        actions={(
+          <>
+            {backLink ? <a className="modern-btn modern-btn--secondary" href={backLink.href}>{backLink.label}</a> : null}
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="modern-compat-page">
+            <header className="modern-compat-page__header">
+              <div>
+                <h2 className="modern-compat-page__title">{copy.panelTitle}</h2>
+                <p className="modern-compat-page__subtitle">{copy.panelSubtitle}</p>
+              </div>
+              <div className="modern-compat-page__meta">ui_embed=1</div>
+            </header>
+
+            <div className="modern-compat-page__actions">
+              {backLink ? <a className="modern-btn modern-btn--secondary" href={backLink.href}>{backLink.label}</a> : null}
+              <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>Reload</button>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">Open In New Tab</a>
+              <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+            </div>
+
+            <div className={`modern-compat-page__frame-wrap${frameLoading ? ' is-loading' : ''}`}>
+              {frameLoading ? (
+                <div className="modern-compat-page__frame-loader" aria-live="polite">
+                  Loading legacy workspace...
+                </div>
+              ) : null}
+              <iframe
+                key={frameReloadToken}
+                title={`${copy.title} legacy workspace`}
+                className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
+                src={embeddedURL}
+                onLoad={handleFrameLoad}
+              />
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
