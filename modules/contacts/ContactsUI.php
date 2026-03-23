@@ -1930,10 +1930,26 @@ class ContactsUI extends UserInterface
      */
     private function onDelete()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
 
         /* Bail out if we don't have a valid contact ID. */
         if (!$this->isRequiredIDValid('contactID', $_GET))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidContactID',
+                    'message' => 'Invalid contact ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid contact ID.');
         }
 
@@ -1950,6 +1966,22 @@ class ContactsUI extends UserInterface
         );
 
         if (!eval(Hooks::get('CONTACTS_DELETE_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'deleted',
+                'message' => 'Contact deleted.',
+                'redirectURL' => CATSUtility::getIndexName() . '?m=contacts&a=listByView&ui=modern'
+            ));
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=contacts&a=listByView');
     }

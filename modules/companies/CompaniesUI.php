@@ -1636,9 +1636,26 @@ class CompaniesUI extends UserInterface
      */
     private function onDelete()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
         /* Bail out if we don't have a valid company ID. */
         if (!$this->isRequiredIDValid('companyID', $_GET))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCompanyID',
+                    'message' => 'Invalid company ID.'
+                ));
+                return;
+            }
             $this->listByView('Invalid company ID.');
             return;
         }
@@ -1650,12 +1667,42 @@ class CompaniesUI extends UserInterface
 
         if (empty($rs))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 404 Not Found');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'companyNotFound',
+                    'message' => 'The specified company ID could not be found.'
+                ));
+                return;
+            }
             $this->listByView('The specified company ID could not be found.');
             return;
         }
 
         if ($rs['defaultCompany'] == 1)
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'defaultCompanyDeleteBlocked',
+                    'message' => 'Cannot delete default company.'
+                ));
+                return;
+            }
             $this->listByView('Cannot delete default company.');
             return;
         }
@@ -1670,6 +1717,22 @@ class CompaniesUI extends UserInterface
         );
 
        if (!eval(Hooks::get('CLIENTS_ON_DELETE_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'deleted',
+                'message' => 'Company deleted.',
+                'redirectURL' => CATSUtility::getIndexName() . '?m=companies&a=listByView&ui=modern'
+            ));
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=companies&a=listByView');
     }

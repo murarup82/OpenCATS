@@ -3717,8 +3717,25 @@ class CandidatesUI extends UserInterface
      */
     private function onDelete()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
         /* Bail out if we don't have a valid candidate ID. */
         if (!$this->isRequiredIDValid('candidateID', $_GET)) {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidCandidateID',
+                    'message' => 'Invalid candidate ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid candidate ID.');
         }
 
@@ -3734,6 +3751,22 @@ class CandidatesUI extends UserInterface
             DATA_ITEM_CANDIDATE,
             $candidateID
         );
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'deleted',
+                'message' => 'Candidate deleted.',
+                'redirectURL' => CATSUtility::getIndexName() . '?m=candidates&a=listByView&ui=modern'
+            ));
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=candidates&a=listByView');
     }

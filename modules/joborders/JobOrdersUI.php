@@ -3209,9 +3209,26 @@ class JobOrdersUI extends UserInterface
      */
     private function onDelete()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+
         /* Bail out if we don't have a valid job order ID. */
         if (!$this->isRequiredIDValid('jobOrderID', $_GET))
         {
+            if ($isModernJSON)
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidJobOrderID',
+                    'message' => 'Invalid job order ID.'
+                ));
+                return;
+            }
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid job order ID.');
         }
 
@@ -3228,6 +3245,22 @@ class JobOrdersUI extends UserInterface
         );
 
         if (!eval(Hooks::get('JO_ON_DELETE_POST'))) return;
+
+        if ($isModernJSON)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'deleted',
+                'message' => 'Job order deleted.',
+                'redirectURL' => CATSUtility::getIndexName() . '?m=joborders&a=listByView&ui=modern'
+            ));
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=joborders&a=listByView');
     }
