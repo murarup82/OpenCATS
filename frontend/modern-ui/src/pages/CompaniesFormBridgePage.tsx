@@ -1,7 +1,6 @@
+import { useEffect } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import type { UIModeBootstrap } from '../types';
-import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
-import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import '../dashboard-avel.css';
 
 type Props = {
@@ -23,12 +22,68 @@ function resolvePageCopy(actionName: string): { title: string; subtitle: string 
   };
 }
 
+function CompanyForwardPanel({
+  legacyURL
+}: {
+  legacyURL: string;
+}) {
+  const canContinue = legacyURL !== '';
+
+  useEffect(() => {
+    if (!canContinue) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      window.location.assign(legacyURL);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [canContinue, legacyURL]);
+
+  return (
+    <section className="modern-compat-page modern-compat-page--forward">
+      <header className="modern-compat-page__header">
+        <div>
+          <h2 className="modern-compat-page__title">Company Form Redirect</h2>
+          <p className="modern-compat-page__subtitle">
+            The company form continues in the legacy endpoint while the modern shell keeps the handoff visible.
+          </p>
+        </div>
+        <div className="modern-compat-page__meta">legacy_forward=1</div>
+      </header>
+
+      <div className="modern-compat-page__actions">
+        {canContinue ? (
+          <>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Continue to Legacy UI
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+              Open In New Tab
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        ) : null}
+      </div>
+
+      <section className="avel-list-panel">
+        <div className={`modern-state${canContinue ? '' : ' modern-state--error'}`} aria-live="polite">
+          {canContinue
+            ? 'Preparing legacy company form redirect...'
+            : 'Legacy company form URL is unavailable for this route.'}
+        </div>
+      </section>
+    </section>
+  );
+}
+
 export function CompaniesFormBridgePage({ bootstrap }: Props) {
   const contentCopy = resolvePageCopy(bootstrap.targetAction);
-  const embeddedURL = buildEmbeddedLegacyURL(bootstrap.legacyURL);
   const listURL = `${bootstrap.indexName}?m=companies&a=listByView&ui=modern`;
   const dashboardURL = `${bootstrap.indexName}?m=dashboard&a=my&ui=modern`;
-  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
 
   return (
     <div className="avel-dashboard-page">
@@ -47,30 +102,12 @@ export function CompaniesFormBridgePage({ bootstrap }: Props) {
         )}
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="modern-compat-page">
-            <header className="modern-compat-page__header">
-              <div>
-                <h2 className="modern-compat-page__title">Company Form Compatibility Workspace</h2>
-                <p className="modern-compat-page__subtitle">
-                  This form is rendered from legacy code for full feature parity while modernization continues.
-                </p>
-              </div>
-              <div className="modern-compat-page__meta">ui_embed=1</div>
-            </header>
-
-            <div className="modern-compat-page__actions">
-              <button
-                type="button"
-                className="modern-btn modern-btn--secondary"
-                onClick={reloadFrame}
-              >
-                Reload Form
-              </button>
-              <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL} target="_blank" rel="noreferrer">
-                Open Current Form In New Tab
-              </a>
+          <CompanyForwardPanel legacyURL={bootstrap.legacyURL} />
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Quick Navigation</h2>
+              <p className="avel-list-panel__hint">Use these links to move between the modern shell and the company list.</p>
             </div>
-
             <nav className="modern-compat-page__nav" aria-label="Quick navigation">
               <a className="modern-chip modern-chip--info" href={dashboardURL}>
                 Dashboard
@@ -79,25 +116,9 @@ export function CompaniesFormBridgePage({ bootstrap }: Props) {
                 Company List
               </a>
             </nav>
-
-            <div className={`modern-compat-page__frame-wrap${frameLoading ? ' is-loading' : ''}`}>
-              {frameLoading ? (
-                <div className="modern-compat-page__frame-loader" aria-live="polite">
-                  Loading company form...
-                </div>
-              ) : null}
-              <iframe
-                key={frameReloadToken}
-                title={`Company form ${bootstrap.targetAction || 'edit'}`}
-                className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
-                src={embeddedURL}
-                onLoad={handleFrameLoad}
-              />
-            </div>
           </section>
         </div>
       </PageContainer>
     </div>
   );
 }
-

@@ -1,13 +1,13 @@
 # Modern UI Unexpected Legacy Redirect Guard
 
-Generated: 2026-03-23T13:18:20.652Z
+Generated: 2026-03-23T15:01:46.077Z
 
 This guard tracks runtime `window.location.assign/replace` redirects that target legacy URLs.
 
 ## Totals
 
-- Redirect findings: 12
-- Expected legacy-redirect pages: 11
+- Redirect findings: 16
+- Expected legacy-redirect pages: 15
 - Unexpected redirect findings: 0
 - Expected pages without redirect findings: 0
 
@@ -15,9 +15,13 @@ This guard tracks runtime `window.location.assign/replace` redirects that target
 
 | File | Line | Method | Argument Preview | Status |
 | --- | ---: | --- | --- | --- |
+| `src/pages/CandidatesFormBridgePage.tsx` | 38 | `assign` | `legacyURL` | Expected |
+| `src/pages/CompaniesFormBridgePage.tsx` | 38 | `assign` | `legacyURL` | Expected |
+| `src/pages/ContactsFormBridgePage.tsx` | 38 | `assign` | `legacyURL` | Expected |
 | `src/pages/ContactVCardActionPage.tsx` | 39 | `assign` | `legacyDownloadURL` | Expected |
 | `src/pages/ImportWorkflowActionPage.tsx` | 217 | `assign` | `legacyURL` | Expected |
 | `src/pages/ImportWorkflowActionPage.tsx` | 227 | `assign` | `legacyURL` | Expected |
+| `src/pages/JobOrdersFormBridgePage.tsx` | 38 | `assign` | `legacyURL` | Expected |
 | `src/pages/LegacyDownloadForwardActionPage.tsx` | 41 | `assign` | `legacyURL` | Expected |
 | `src/pages/LoginLegacyActionPage.tsx` | 16 | `replace` | `legacyURL` | Expected |
 | `src/pages/OperationsWorkspaceActionPage.tsx` | 140 | `assign` | `legacyURL` | Expected |

@@ -1,6 +1,6 @@
 # Modern UI Next 50 Changes Plan
 
-Generated: 2026-03-23T13:18:17.427Z
+Generated: 2026-03-23T15:01:42.994Z
 
 This file is generated from `docs/modern-ui-legacy-route-gap-report.json` by `npm run modernization:board`.
 

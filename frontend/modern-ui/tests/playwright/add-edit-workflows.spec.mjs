@@ -87,6 +87,22 @@ function buildURL(moduleName, actionName, extras = {}) {
   return `${joinURL(baseURL, indexPath)}?${query.toString()}`;
 }
 
+function buildPageURL(moduleName, actionName, extras = {}) {
+  const query = new URLSearchParams({
+    m: moduleName,
+    a: actionName,
+    ui: 'modern'
+  });
+
+  Object.entries(extras).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && String(value) !== '') {
+      query.set(key, String(value));
+    }
+  });
+
+  return `${joinURL(baseURL, indexPath)}?${query.toString()}`;
+}
+
 async function assertModernContract(request, definition, extras = {}) {
   const url = buildURL(definition.module, definition.action, extras);
   const response = await request.get(url, {
@@ -105,6 +121,19 @@ async function assertModernContract(request, definition, extras = {}) {
   expect(String(meta.modernPage || '').trim()).not.toBe('');
   expect(String(actions.submitURL || '').trim()).not.toBe('');
   expect(String(actions.legacyURL || '').trim()).not.toBe('');
+}
+
+async function assertForwardAddRoute(page, moduleName, actionName) {
+  await page.goto(buildPageURL(moduleName, actionName), {
+    waitUntil: 'domcontentloaded'
+  });
+
+  await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
+  await expect(page.locator('.modern-compat-page--forward')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open Legacy UI' }).first()).toBeVisible();
+  await expect(page.locator('iframe')).toHaveCount(0);
+  await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+  await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
 }
 
 test.describe('Modern add/edit workflow contract smoke', () => {
@@ -135,6 +164,19 @@ test.describe('Modern add/edit workflow contract smoke', () => {
         },
         { [workflow.edit.idParam]: requiredID }
       );
+    });
+  });
+});
+
+test.describe('Modern add/edit workflow route smoke', () => {
+  test.skip(baseURL === '', 'Set OPENCATS_BASE_URL to run Playwright route smoke checks.');
+
+  workflows.forEach((workflow) => {
+    test(`${workflow.module}.add ui=modern forwards without an iframe`, async ({ context, page }) => {
+      await context.setExtraHTTPHeaders(buildHeaders());
+      await page.setViewportSize({ width: 1366, height: 900 });
+
+      await assertForwardAddRoute(page, workflow.module, workflow.add.action);
     });
   });
 });
