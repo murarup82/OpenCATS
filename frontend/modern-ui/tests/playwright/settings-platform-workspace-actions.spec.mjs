@@ -73,7 +73,7 @@ test.describe('Settings platform workspace action smoke', () => {
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
   });
 
-  test('settings.rolepagepermissions ui=modern forwards without an iframe', async ({ context, page }) => {
+  test('settings.rolepagepermissions ui=modern mounts natively without a forward redirect', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
@@ -81,16 +81,13 @@ test.describe('Settings platform workspace action smoke', () => {
       waitUntil: 'domcontentloaded'
     });
 
-    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
-    await expect(page.getByRole('heading', { name: 'Role Permissions Workspace' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Continue to Legacy UI' })).toBeVisible();
-    await expect(page.locator('iframe')).toHaveCount(0);
-    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByText('Role Access Matrix')).toHaveCount(1);
+    await expect(page.locator('.modern-compat-page--forward')).toHaveCount(0);
   });
 
-  test('settings.schemamigrations ui=modern forwards without an iframe', async ({ context, page }) => {
+  test('settings.schemamigrations ui=modern mounts natively without a forward redirect', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
@@ -98,12 +95,9 @@ test.describe('Settings platform workspace action smoke', () => {
       waitUntil: 'domcontentloaded'
     });
 
-    await page.waitForSelector('.modern-compat-page--forward', { state: 'visible' });
-    await expect(page.getByRole('heading', { name: 'Schema Migrations Workspace' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Continue to Legacy UI' })).toBeVisible();
-    await expect(page.locator('iframe')).toHaveCount(0);
-    await page.waitForURL((url) => url.searchParams.get('ui') === 'legacy', { timeout: 5000 });
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByText('Schema Migrations')).toHaveCount(1);
+    await expect(page.locator('.modern-compat-page--forward')).toHaveCount(0);
   });
 });

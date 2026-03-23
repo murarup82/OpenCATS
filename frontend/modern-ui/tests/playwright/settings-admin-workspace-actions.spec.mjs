@@ -7,6 +7,9 @@ const contractVersion = 1;
 const settingsAdministrationContractKey = 'settings.administration.v1';
 const settingsMyProfileContractKey = 'settings.myprofile.v1';
 const settingsMyProfileChangePasswordContractKey = 'settings.myprofile.changePassword.v1';
+const settingsLoginActivityContractKey = 'settings.loginActivity.v1';
+const settingsRejectionReasonsContractKey = 'settings.rejectionReasons.v1';
+const settingsTagsContractKey = 'settings.tags.v1';
 
 function joinURL(root, path) {
   const normalizedRoot = root.endsWith('/') ? root.slice(0, -1) : root;
@@ -29,6 +32,25 @@ function buildModernRouteURL(action, query = {}) {
     m: 'settings',
     a: action,
     ui: 'modern'
+  });
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && String(value) !== '') {
+      params.set(key, String(value));
+    }
+  });
+
+  return `${joinURL(baseURL, indexPath)}?${params.toString()}`;
+}
+
+function buildModernJSONURL(action, modernPage, query = {}) {
+  const params = new URLSearchParams({
+    m: 'settings',
+    a: action,
+    format: 'modern-json',
+    modernPage,
+    contractVersion: String(contractVersion),
+    ui: 'legacy'
   });
 
   Object.entries(query).forEach(([key, value]) => {
@@ -97,6 +119,40 @@ test.describe('Settings admin workspace action smoke', () => {
     expect(String(actions.submitURL || '').trim()).not.toBe('');
     expect(String(actions.backURL || '').trim()).not.toBe('');
     expect(String(actions.legacyURL || '').trim()).not.toBe('');
+  });
+
+  test('settings.loginactivity modern-json returns the settings.loginActivity.v1 contract', async ({ request }) => {
+    const response = await request.get(buildModernJSONURL('loginActivity', 'settings-login-activity'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { actions } = await assertModernContract(response, settingsLoginActivityContractKey);
+    expect(String(actions.routeURL || '').trim()).not.toBe('');
+    expect(String(actions.legacyURL || '').trim()).not.toBe('');
+  });
+
+  test('settings.rejectionreasons modern-json returns the settings.rejectionReasons.v1 contract', async ({ request }) => {
+    const response = await request.get(buildModernJSONURL('rejectionReasons', 'settings-rejection-reasons'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { actions } = await assertModernContract(response, settingsRejectionReasonsContractKey);
+    expect(String(actions.submitURL || '').trim()).not.toBe('');
+    expect(String(actions.legacyURL || '').trim()).not.toBe('');
+  });
+
+  test('settings.tags modern-json returns the settings.tags.v1 contract', async ({ request }) => {
+    const response = await request.get(buildModernJSONURL('tags', 'settings-tags'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { actions } = await assertModernContract(response, settingsTagsContractKey);
+    expect(String(actions.addURL || '').trim()).not.toBe('');
+    expect(String(actions.deleteURL || '').trim()).not.toBe('');
+    expect(String(actions.updateURL || '').trim()).not.toBe('');
   });
 
   test('settings.administration ui=modern mounts without a runtime boundary', async ({ context, page }) => {
@@ -173,5 +229,44 @@ test.describe('Settings admin workspace action smoke', () => {
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
     await expect(page.getByText('Password Form')).toHaveCount(1);
+  });
+
+  test('settings.loginactivity ui=modern mounts without a runtime boundary', async ({ context, page }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    await page.goto(buildModernRouteURL('loginActivity'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByText('Recent Entries')).toHaveCount(1);
+  });
+
+  test('settings.rejectionreasons ui=modern mounts without a runtime boundary', async ({ context, page }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    await page.goto(buildModernRouteURL('rejectionReasons'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByText('Existing Reasons')).toHaveCount(1);
+  });
+
+  test('settings.tags ui=modern mounts without a runtime boundary', async ({ context, page }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    await page.goto(buildModernRouteURL('tags'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByText('Tag Hierarchy')).toHaveCount(1);
   });
 });

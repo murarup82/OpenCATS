@@ -219,8 +219,32 @@ class SettingsUI extends UserInterface
      */
     private function changeTags()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $tags = new Tags($this->_siteID);
         $tagsRS = $tags->getAll();
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-tags')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernTagsJSON('settings-tags', $tagsRS);
+            return;
+        }
 
         //if (!eval(Hooks::get('SETTINGS_EMAIL_TEMPLATES'))) return;
 
@@ -2610,10 +2634,41 @@ class SettingsUI extends UserInterface
 
     private function rejectionReasons()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $rejectionReasons = $this->getRejectionReasonsList();
+        $saved = isset($_GET['saved']);
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-rejection-reasons')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernRejectionReasonsJSON(
+                'settings-rejection-reasons',
+                $rejectionReasons,
+                $saved
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
-        $this->_template->assign('rejectionReasons', $this->getRejectionReasonsList());
-        $this->_template->assign('saved', isset($_GET['saved']));
+        $this->_template->assign('rejectionReasons', $rejectionReasons);
+        $this->_template->assign('saved', $saved);
         $this->_template->display('./modules/settings/RejectionReasons.tpl');
     }
 
@@ -3007,17 +3062,49 @@ class SettingsUI extends UserInterface
 
     private function rolePagePermissions()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $rolePagePermissions = new RolePagePermissions($this->_siteID);
         $matrixData = $rolePagePermissions->getRoleMatrix();
+        $rolePermissionsEnabled = $rolePagePermissions->isSchemaAvailable() ? 1 : 0;
+        $message = isset($_GET['message']) ? $_GET['message'] : '';
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-role-page-permissions')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernRolePagePermissionsJSON(
+                'settings-role-page-permissions',
+                $rolePermissionsEnabled,
+                $matrixData,
+                RolePagePermissions::getAccessOptions(),
+                $message
+            );
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
-        $this->_template->assign('rolePermissionsEnabled', $rolePagePermissions->isSchemaAvailable() ? 1 : 0);
+        $this->_template->assign('rolePermissionsEnabled', $rolePermissionsEnabled);
         $this->_template->assign('roles', $matrixData['roles']);
         $this->_template->assign('pages', $matrixData['pages']);
         $this->_template->assign('matrix', $matrixData['matrix']);
         $this->_template->assign('accessOptions', RolePagePermissions::getAccessOptions());
-        $this->_template->assign('message', isset($_GET['message']) ? $_GET['message'] : '');
+        $this->_template->assign('message', $message);
         $this->_template->display('./modules/settings/RolePagePermissions.tpl');
     }
 
@@ -3757,6 +3844,8 @@ class SettingsUI extends UserInterface
 
     private function schemaMigrations()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $indexByVersion = array();
         $dirMissing = false;
         $migrations = $this->loadSchemaMigrations($indexByVersion, $dirMissing);
@@ -3772,6 +3861,35 @@ class SettingsUI extends UserInterface
 
         $message = $this->getTrimmedInput('message', $_GET);
         $errorMessage = $this->getTrimmedInput('error', $_GET);
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-schema-migrations')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernSchemaMigrationsJSON(
+                'settings-schema-migrations',
+                $migrations,
+                $pendingCount,
+                $dirMissing ? 1 : 0,
+                $message,
+                $errorMessage
+            );
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
@@ -4644,7 +4762,7 @@ class SettingsUI extends UserInterface
             $this->buildModernAdministrationItem(
                 'Schema Migrations',
                 'Review and apply pending schema migrations.',
-                sprintf('%s?m=settings&a=schemaMigrations&ui=legacy', $baseURL),
+                sprintf('%s?m=settings&a=schemaMigrations&ui=modern', $baseURL),
                 $newVersion ? 'Update available' : '',
                 $newVersion
             )
@@ -4675,12 +4793,12 @@ class SettingsUI extends UserInterface
             $this->buildModernAdministrationItem(
                 'Configure Tags',
                 'Add/Remove tags, description for tags',
-                sprintf('%s?m=settings&a=tags&ui=legacy', $baseURL)
+                sprintf('%s?m=settings&a=tags&ui=modern', $baseURL)
             ),
             $this->buildModernAdministrationItem(
                 'Rejection Reasons',
                 'Add or rename rejection reasons for pipeline status changes.',
-                sprintf('%s?m=settings&a=rejectionReasons&ui=legacy', $baseURL)
+                sprintf('%s?m=settings&a=rejectionReasons&ui=modern', $baseURL)
             ),
             $this->buildModernAdministrationItem(
                 'TalentFitFlow Integration',
@@ -4707,13 +4825,13 @@ class SettingsUI extends UserInterface
             $userManagementItems[] = $this->buildModernAdministrationItem(
                 'Role Access Matrix',
                 'Configure page visibility and minimum access level by role.',
-                sprintf('%s?m=settings&a=rolePagePermissions&ui=legacy', $baseURL)
+                sprintf('%s?m=settings&a=rolePagePermissions&ui=modern', $baseURL)
             );
         }
         $userManagementItems[] = $this->buildModernAdministrationItem(
             'Login Activity',
             'Shows you the login history for your site.',
-            sprintf('%s?m=settings&a=loginActivity&ui=legacy', $baseURL)
+            sprintf('%s?m=settings&a=loginActivity&ui=modern', $baseURL)
         );
         $userManagementItems[] = $this->buildModernAdministrationItem(
             'Google SSO / Access Request',
@@ -4879,6 +4997,393 @@ class SettingsUI extends UserInterface
         );
 
         $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernLoginActivityJSON(
+        $modernPage,
+        $view,
+        $currentPage,
+        $totalPages,
+        $totalRows,
+        $sortBy,
+        $sortDirection,
+        $validSortByFields,
+        $rows
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedView = (strtolower((string) $view) === 'unsuccessful') ? 'unsuccessful' : 'successful';
+        $normalizedRows = array();
+
+        foreach ($rows as $row)
+        {
+            $normalizedRows[] = array(
+                'userLoginID' => (int) $row['userLoginID'],
+                'userID' => (int) $row['userID'],
+                'firstName' => (string) $row['firstName'],
+                'lastName' => (string) $row['lastName'],
+                'ip' => (string) $row['ip'],
+                'hostname' => (string) $row['hostname'],
+                'shortUserAgent' => (string) $row['shortUserAgent'],
+                'date' => (string) $row['date'],
+                'dateSort' => (string) $row['dateSort'],
+                'userURL' => sprintf(
+                    '%s?m=settings&a=showUser&userID=%d&ui=legacy',
+                    $baseURL,
+                    (int) $row['userID']
+                )
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.loginActivity.v1',
+                'modernPage' => $modernPage,
+                'view' => $normalizedView,
+                'page' => (int) $currentPage,
+                'totalPages' => (int) $totalPages,
+                'totalRows' => (int) $totalRows,
+                'entriesPerPage' => (int) LOGIN_ENTRIES_PER_PAGE,
+                'sortBy' => (string) $sortBy,
+                'sortDirection' => strtoupper((string) $sortDirection),
+                'validSortByFields' => $validSortByFields
+            ),
+            'actions' => array(
+                'routeURL' => sprintf('%s?m=settings&a=loginActivity&ui=modern', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=loginActivity&ui=legacy', $baseURL)
+            ),
+            'rows' => $normalizedRows
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernRejectionReasonsJSON($modernPage, $rejectionReasons, $saved)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalized = array();
+        foreach ($rejectionReasons as $reason)
+        {
+            $normalized[] = array(
+                'rejectionReasonID' => (int) $reason['rejectionReasonID'],
+                'label' => (string) $reason['label']
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.rejectionReasons.v1',
+                'modernPage' => $modernPage
+            ),
+            'flash' => array(
+                'saved' => ($saved ? true : false),
+                'message' => ($saved ? 'Rejection reasons saved successfully.' : '')
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=rejectionReasons', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=rejectionReasons&ui=legacy', $baseURL)
+            ),
+            'rejectionReasons' => $normalized
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernTagsJSON($modernPage, $tagsRS)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedTags = array();
+        foreach ($tagsRS as $tag)
+        {
+            $parentTagID = 0;
+            if (isset($tag['tag_parent_id']) && $tag['tag_parent_id'] !== '' && $tag['tag_parent_id'] !== null)
+            {
+                $parentTagID = (int) $tag['tag_parent_id'];
+            }
+
+            $normalizedTags[] = array(
+                'tagID' => (int) $tag['tag_id'],
+                'parentTagID' => $parentTagID,
+                'parentTagTitle' => isset($tag['tag_parent_title']) ? (string) $tag['tag_parent_title'] : '',
+                'tagTitle' => (string) $tag['tag_title']
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.tags.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=tags&ui=legacy', $baseURL),
+                'addURL' => sprintf('%s?m=settings&a=ajax_tags_add', $baseURL),
+                'updateURL' => sprintf('%s?m=settings&a=ajax_tags_upd', $baseURL),
+                'deleteURL' => sprintf('%s?m=settings&a=ajax_tags_del', $baseURL)
+            ),
+            'tags' => $normalizedTags
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernRolePagePermissionsJSON(
+        $modernPage,
+        $rolePermissionsEnabled,
+        $matrixData,
+        $accessOptions,
+        $message
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $roles = isset($matrixData['roles']) ? $matrixData['roles'] : array();
+        $pages = isset($matrixData['pages']) ? $matrixData['pages'] : array();
+        $matrix = isset($matrixData['matrix']) ? $matrixData['matrix'] : array();
+
+        $normalizedRoles = array();
+        foreach ($roles as $role)
+        {
+            $normalizedRoles[] = array(
+                'roleID' => (int) $role['roleID'],
+                'roleKey' => isset($role['roleKey']) ? (string) $role['roleKey'] : '',
+                'roleName' => isset($role['roleName']) ? (string) $role['roleName'] : '',
+                'accessLevel' => isset($role['accessLevel']) ? (int) $role['accessLevel'] : 0
+            );
+        }
+
+        $normalizedPages = array();
+        foreach ($pages as $pageKey => $pageData)
+        {
+            $normalizedPages[] = array(
+                'pageKey' => (string) $pageKey,
+                'label' => isset($pageData['label']) ? (string) $pageData['label'] : (string) $pageKey,
+                'module' => isset($pageData['module']) ? (string) $pageData['module'] : '',
+                'action' => isset($pageData['action']) ? (string) $pageData['action'] : ''
+            );
+        }
+
+        $normalizedOptions = array();
+        foreach ($accessOptions as $optionKey => $optionData)
+        {
+            $normalizedOptions[] = array(
+                'optionKey' => (string) $optionKey,
+                'label' => isset($optionData['label']) ? (string) $optionData['label'] : (string) $optionKey,
+                'isVisible' => isset($optionData['isVisible']) ? (int) $optionData['isVisible'] : 0,
+                'requiredAccessLevel' => isset($optionData['requiredAccessLevel']) ? (int) $optionData['requiredAccessLevel'] : 0
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.rolePagePermissions.v1',
+                'modernPage' => $modernPage
+            ),
+            'message' => (string) $message,
+            'rolePermissionsEnabled' => ((int) $rolePermissionsEnabled === 1),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=rolePagePermissions', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=rolePagePermissions&ui=legacy', $baseURL),
+                'schemaMigrationsURL' => sprintf('%s?m=settings&a=schemaMigrations&ui=modern', $baseURL)
+            ),
+            'roles' => $normalizedRoles,
+            'pages' => $normalizedPages,
+            'accessOptions' => $normalizedOptions,
+            'matrix' => $matrix
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernSchemaMigrationsJSON(
+        $modernPage,
+        $migrations,
+        $pendingCount,
+        $dirMissing,
+        $message,
+        $errorMessage
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedMigrations = array();
+        foreach ($migrations as $migration)
+        {
+            $normalizedMigrations[] = array(
+                'version' => (string) $migration['version'],
+                'checksum' => (string) $migration['checksum'],
+                'applied' => (!empty($migration['applied'])),
+                'appliedAt' => isset($migration['appliedAt']) ? (string) $migration['appliedAt'] : '',
+                'appliedBy' => isset($migration['appliedBy']) ? (string) $migration['appliedBy'] : '',
+                'checksumMatches' => (!empty($migration['checksumMatches']))
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.schemaMigrations.v1',
+                'modernPage' => $modernPage
+            ),
+            'message' => (string) $message,
+            'errorMessage' => (string) $errorMessage,
+            'dirMissing' => ((int) $dirMissing === 1),
+            'pendingCount' => (int) $pendingCount,
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=schemaMigrations', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=schemaMigrations&ui=legacy', $baseURL)
+            ),
+            'migrations' => $normalizedMigrations
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernViewItemHistoryJSON(
+        $modernPage,
+        $dataItemType,
+        $dataItemID,
+        $data,
+        $revisionRS
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $title = 'Item History';
+        $subtitle = '';
+
+        switch ((int) $dataItemType)
+        {
+            case DATA_ITEM_CANDIDATE:
+                $title = 'Candidate History';
+                $subtitle = trim((string) ($data['firstName'] . ' ' . $data['lastName']));
+                break;
+
+            case DATA_ITEM_JOBORDER:
+                $title = 'Job Order History';
+                $subtitle = isset($data['title']) ? (string) $data['title'] : '';
+                break;
+
+            case DATA_ITEM_COMPANY:
+                $title = 'Company History';
+                $subtitle = isset($data['name']) ? (string) $data['name'] : '';
+                break;
+
+            case DATA_ITEM_CONTACT:
+                $title = 'Contact History';
+                $subtitle = trim((string) ($data['firstName'] . ' ' . $data['lastName']));
+                break;
+        }
+
+        $longFields = array('description', 'notes');
+        $fields = array();
+        foreach ($data as $field => $value)
+        {
+            $fields[] = array(
+                'key' => (string) $field,
+                'label' => (string) $field,
+                'value' => $this->normalizeModernHistoryValue($value),
+                'isLongField' => in_array($field, $longFields)
+            );
+        }
+
+        $revisions = array();
+        foreach ($revisionRS as $revisionID => $revision)
+        {
+            $description = '';
+            if (isset($revision['description']) && $revision['description'] !== '')
+            {
+                $description = str_replace(
+                    '(USER)',
+                    isset($revision['enteredByFullName']) ? $revision['enteredByFullName'] : '',
+                    $revision['description']
+                );
+            }
+
+            $theField = isset($revision['theField']) ? (string) $revision['theField'] : '';
+            $revisions[] = array(
+                'revisionID' => (int) $revisionID,
+                'theField' => $theField,
+                'dateModified' => isset($revision['dateModified']) ? (string) $revision['dateModified'] : '',
+                'enteredByFullName' => isset($revision['enteredByFullName']) ? (string) $revision['enteredByFullName'] : '',
+                'description' => (string) $description,
+                'previousValue' => $this->normalizeModernHistoryValue(isset($revision['previousValue']) ? $revision['previousValue'] : ''),
+                'newValue' => $this->normalizeModernHistoryValue(isset($revision['newValue']) ? $revision['newValue'] : ''),
+                'isFieldRevision' => ($theField !== '' && $theField !== strtoupper($theField))
+            );
+        }
+
+        $backURL = sprintf('%s?m=settings&a=administration&ui=modern', $baseURL);
+        switch ((int) $dataItemType)
+        {
+            case DATA_ITEM_CANDIDATE:
+                $backURL = sprintf('%s?m=candidates&a=show&candidateID=%d&ui=modern', $baseURL, (int) $dataItemID);
+                break;
+
+            case DATA_ITEM_JOBORDER:
+                $backURL = sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, (int) $dataItemID);
+                break;
+
+            case DATA_ITEM_COMPANY:
+                $backURL = sprintf('%s?m=companies&a=show&companyID=%d&ui=modern', $baseURL, (int) $dataItemID);
+                break;
+
+            case DATA_ITEM_CONTACT:
+                $backURL = sprintf('%s?m=contacts&a=show&contactID=%d&ui=modern', $baseURL, (int) $dataItemID);
+                break;
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.viewItemHistory.v1',
+                'modernPage' => $modernPage,
+                'dataItemType' => (int) $dataItemType,
+                'dataItemID' => (int) $dataItemID
+            ),
+            'summary' => array(
+                'title' => $title,
+                'subtitle' => $subtitle
+            ),
+            'actions' => array(
+                'backURL' => $backURL,
+                'legacyURL' => sprintf(
+                    '%s?m=settings&a=viewItemHistory&dataItemType=%d&dataItemID=%d&ui=legacy',
+                    $baseURL,
+                    (int) $dataItemType,
+                    (int) $dataItemID
+                )
+            ),
+            'fields' => $fields,
+            'revisions' => $revisions
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function normalizeModernHistoryValue($value)
+    {
+        if (is_null($value))
+        {
+            return '';
+        }
+
+        if (is_bool($value))
+        {
+            return ($value ? '1' : '0');
+        }
+
+        if (is_scalar($value))
+        {
+            return (string) $value;
+        }
+
+        return json_encode($value);
     }
 
     private function buildModernAdministrationSection($key, $title, $description, $items)
@@ -5181,6 +5686,9 @@ class SettingsUI extends UserInterface
      */
     private function loginActivity()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
         if (isset($_GET['view']) && !empty($_GET['view']))
         {
             $view = $_GET['view'];
@@ -5244,6 +5752,38 @@ class SettingsUI extends UserInterface
 
         $rs = $loginActivityPager->getPage();
 
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-login-activity')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernLoginActivityJSON(
+                'settings-login-activity',
+                $view,
+                $currentPage,
+                $totalPages,
+                (int) $loginActivityPager->getTotalRows(),
+                $sortBy,
+                $sortDirection,
+                $validSortByFields,
+                $rs
+            );
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Login Activity');
         $this->_template->assign('rs', $rs);
@@ -5259,6 +5799,9 @@ class SettingsUI extends UserInterface
      */
     private function viewItemHistory()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
         /* Bail out if we don't have a valid data item type. */
         if (!$this->isRequiredIDValid('dataItemType', $_GET))
         {
@@ -5304,6 +5847,34 @@ class SettingsUI extends UserInterface
         /* Get revision information. */
         $history = new History($this->_siteID);
         $revisionRS = $history->getAll($dataItemType, $dataItemID);
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-view-item-history')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernViewItemHistoryJSON(
+                'settings-view-item-history',
+                $dataItemType,
+                $dataItemID,
+                $data,
+                $revisionRS
+            );
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Login Activity');

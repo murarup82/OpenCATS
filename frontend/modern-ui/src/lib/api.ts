@@ -33,6 +33,11 @@ import type {
   ImportBulkResumesModernMutationResponse,
   ImportDeleteBulkResumesModernMutationResponse,
   SettingsAdministrationModernDataResponse,
+  SettingsLoginActivityModernDataResponse,
+  SettingsRejectionReasonsModernDataResponse,
+  SettingsRolePagePermissionsModernDataResponse,
+  SettingsSchemaMigrationsModernDataResponse,
+  SettingsTagsModernDataResponse,
   SettingsWizardAddUserModernDataResponse,
   SettingsWizardCheckKeyModernDataResponse,
   SettingsWizardDeleteUserModernDataResponse,
@@ -75,6 +80,7 @@ import type {
   SourcingSaveMutationResponse,
   SettingsMyProfileChangePasswordModernDataResponse,
   SettingsMyProfileModernDataResponse,
+  SettingsViewItemHistoryModernDataResponse,
   UIModeBootstrap
 } from '../types';
 import { getJSON } from './httpClient';
@@ -121,8 +127,14 @@ import {
   MODERN_REPORTS_GRAPH_VIEW_PAGE,
   MODERN_REPORTS_PAGE,
   MODERN_SETTINGS_ADMINISTRATION_PAGE,
+  MODERN_SETTINGS_LOGIN_ACTIVITY_PAGE,
   MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE,
   MODERN_SETTINGS_MYPROFILE_PAGE,
+  MODERN_SETTINGS_REJECTION_REASONS_PAGE,
+  MODERN_SETTINGS_ROLE_PAGE_PERMISSIONS_PAGE,
+  MODERN_SETTINGS_SCHEMA_MIGRATIONS_PAGE,
+  MODERN_SETTINGS_TAGS_PAGE,
+  MODERN_SETTINGS_VIEW_ITEM_HISTORY_PAGE,
   MODERN_SOURCING_PAGE,
   MODERN_KPIS_DETAILS_PAGE,
   buildModernJSONRequestQuery
@@ -392,6 +404,114 @@ export async function fetchSettingsMyProfileChangePasswordModernData(
     'settings.myprofile.changePassword.v1',
     'settings my profile change password data'
   );
+
+  return data;
+}
+
+export async function fetchSettingsLoginActivityModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsLoginActivityModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'loginActivity',
+    modernPage: MODERN_SETTINGS_LOGIN_ACTIVITY_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsLoginActivityModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.loginActivity.v1', 'settings login activity data');
+
+  return data;
+}
+
+export async function fetchSettingsRejectionReasonsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsRejectionReasonsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'rejectionReasons',
+    modernPage: MODERN_SETTINGS_REJECTION_REASONS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsRejectionReasonsModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.rejectionReasons.v1', 'settings rejection reasons data');
+
+  return data;
+}
+
+export async function fetchSettingsTagsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsTagsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'tags',
+    modernPage: MODERN_SETTINGS_TAGS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsTagsModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.tags.v1', 'settings tags data');
+
+  return data;
+}
+
+export async function fetchSettingsRolePagePermissionsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsRolePagePermissionsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'rolePagePermissions',
+    modernPage: MODERN_SETTINGS_ROLE_PAGE_PERMISSIONS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsRolePagePermissionsModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.rolePagePermissions.v1', 'settings role page permissions data');
+
+  return data;
+}
+
+export async function fetchSettingsSchemaMigrationsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsSchemaMigrationsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'schemaMigrations',
+    modernPage: MODERN_SETTINGS_SCHEMA_MIGRATIONS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsSchemaMigrationsModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.schemaMigrations.v1', 'settings schema migrations data');
+
+  return data;
+}
+
+export async function fetchSettingsViewItemHistoryModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsViewItemHistoryModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'viewItemHistory',
+    modernPage: MODERN_SETTINGS_VIEW_ITEM_HISTORY_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsViewItemHistoryModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.viewItemHistory.v1', 'settings item history data');
 
   return data;
 }

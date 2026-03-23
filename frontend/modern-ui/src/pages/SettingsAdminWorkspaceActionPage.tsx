@@ -3,16 +3,28 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
 import {
+  fetchSettingsLoginActivityModernData,
+  fetchSettingsRejectionReasonsModernData,
+  fetchSettingsRolePagePermissionsModernData,
+  fetchSettingsSchemaMigrationsModernData,
   fetchSettingsMyProfileChangePasswordModernData,
   fetchSettingsAdministrationModernData,
-  fetchSettingsMyProfileModernData
+  fetchSettingsMyProfileModernData,
+  fetchSettingsTagsModernData,
+  fetchSettingsViewItemHistoryModernData
 } from '../lib/api';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
 import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import type {
   SettingsAdministrationModernDataResponse,
+  SettingsLoginActivityModernDataResponse,
+  SettingsRejectionReasonsModernDataResponse,
+  SettingsRolePagePermissionsModernDataResponse,
+  SettingsSchemaMigrationsModernDataResponse,
+  SettingsTagsModernDataResponse,
   SettingsMyProfileChangePasswordModernDataResponse,
   SettingsMyProfileModernDataResponse,
+  SettingsViewItemHistoryModernDataResponse,
   UIModeBootstrap
 } from '../types';
 import '../dashboard-avel.css';
@@ -100,10 +112,10 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.loginactivity': {
     title: 'Login Activity',
-    subtitle: 'Review user login activity in compatibility mode.',
+    subtitle: 'Review recent successful and unsuccessful login attempts.',
     panelTitle: 'Login Activity Workspace',
-    panelSubtitle: 'Legacy login-activity view remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native login-activity view keeps sorting and paging while preserving legacy actions.',
+    mode: 'embed'
   },
   'settings.myprofile': {
     title: 'My Profile',
@@ -135,24 +147,24 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.rejectionreasons': {
     title: 'Rejection Reasons',
-    subtitle: 'Manage rejection reason lists in compatibility mode.',
+    subtitle: 'Manage rejection reason labels used in pipeline workflows.',
     panelTitle: 'Rejection Reasons Workspace',
-    panelSubtitle: 'Legacy rejection-reason workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native rejection-reason editing keeps legacy submit payloads unchanged.',
+    mode: 'embed'
   },
   'settings.tags': {
     title: 'Tags',
-    subtitle: 'Manage settings tags in compatibility mode.',
+    subtitle: 'Manage parent and child tags used across candidate workflows.',
     panelTitle: 'Tags Workspace',
-    panelSubtitle: 'Legacy tags workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native tags management calls the existing legacy AJAX endpoints.',
+    mode: 'embed'
   },
   'settings.viewitemhistory': {
     title: 'Item History',
-    subtitle: 'Review configuration item history in compatibility mode.',
+    subtitle: 'Review revision history for candidates, job orders, companies, and contacts.',
     panelTitle: 'Item History Workspace',
-    panelSubtitle: 'Legacy item-history workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native history timeline mirrors legacy revision data while preserving fallback access.',
+    mode: 'embed'
   },
   'settings.emailsettings': {
     title: 'Email Settings',
@@ -296,17 +308,17 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.rolepagepermissions': {
     title: 'Role Page Permissions',
-    subtitle: 'Configure role-to-page permissions in compatibility mode.',
+    subtitle: 'Configure page visibility and minimum access by application role.',
     panelTitle: 'Role Permissions Workspace',
-    panelSubtitle: 'Legacy role-permissions workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native role matrix posts the same perm[role][page] payload structure.',
+    mode: 'embed'
   },
   'settings.schemamigrations': {
     title: 'Schema Migrations',
-    subtitle: 'Review and run schema migrations in compatibility mode.',
+    subtitle: 'Review migration status and apply pending schema updates.',
     panelTitle: 'Schema Migrations Workspace',
-    panelSubtitle: 'Legacy schema-migration workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native migration controls preserve legacy postback and action semantics.',
+    mode: 'embed'
   },
   'settings.talentfitflowsettings': {
     title: 'Talent Fit Flow Settings',
@@ -332,7 +344,17 @@ const FALLBACK_COPY: PageCopy = {
   mode: 'embed'
 };
 
-type NativeSettingsRouteMode = 'administration' | 'myprofile' | 'changePassword' | 'fallback';
+type NativeSettingsRouteMode =
+  | 'administration'
+  | 'myprofile'
+  | 'changePassword'
+  | 'loginActivity'
+  | 'rejectionReasons'
+  | 'tags'
+  | 'rolePagePermissions'
+  | 'schemaMigrations'
+  | 'viewItemHistory'
+  | 'fallback';
 
 function toBooleanLabel(value: boolean, onLabel: string, offLabel: string): string {
   return value ? onLabel : offLabel;
@@ -525,6 +547,11 @@ function getRequestedSubpage(): string {
   return toLowerText(new URLSearchParams(window.location.search).get('s'));
 }
 
+function hasPositiveIntParam(query: URLSearchParams, key: string): boolean {
+  const value = Number(query.get(key) || 0);
+  return Number.isFinite(value) && value > 0;
+}
+
 function buildNativeRouteMode(routeKey: string, requestedSubpage: string): NativeSettingsRouteMode {
   if (routeKey === 'settings.administration' && requestedSubpage === '') {
     return 'administration';
@@ -536,6 +563,33 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
 
   if (routeKey === 'settings.myprofile' && requestedSubpage === '') {
     return 'myprofile';
+  }
+
+  if (routeKey === 'settings.loginactivity') {
+    return 'loginActivity';
+  }
+
+  if (routeKey === 'settings.rejectionreasons') {
+    return 'rejectionReasons';
+  }
+
+  if (routeKey === 'settings.tags') {
+    return 'tags';
+  }
+
+  if (routeKey === 'settings.rolepagepermissions') {
+    return 'rolePagePermissions';
+  }
+
+  if (routeKey === 'settings.schemamigrations') {
+    return 'schemaMigrations';
+  }
+
+  if (routeKey === 'settings.viewitemhistory') {
+    const query = new URLSearchParams(window.location.search);
+    if (hasPositiveIntParam(query, 'dataItemType') && hasPositiveIntParam(query, 'dataItemID')) {
+      return 'viewItemHistory';
+    }
   }
 
   return 'fallback';
@@ -757,6 +811,887 @@ function SettingsChangePasswordNativeShell({
   );
 }
 
+function buildRouteWithParams(
+  routeURL: string,
+  params: Record<string, string | number | null | undefined>
+): string {
+  const url = new URL(routeURL, window.location.href);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || String(value).trim() === '') {
+      url.searchParams.delete(key);
+      return;
+    }
+    url.searchParams.set(key, String(value));
+  });
+  return ensureModernUIURL(url.toString());
+}
+
+function SettingsLoginActivityNativeShell({
+  data
+}: {
+  data: SettingsLoginActivityModernDataResponse;
+}) {
+  const routeURL = ensureModernUIURL(data.actions.routeURL);
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const currentSortDirection = data.meta.sortDirection === 'ASC' ? 'ASC' : 'DESC';
+
+  const buildPageURL = (page: number): string => buildRouteWithParams(routeURL, {
+    view: data.meta.view,
+    page,
+    sortBy: data.meta.sortBy,
+    sortDirection: currentSortDirection
+  });
+
+  const buildSortURL = (sortBy: string): string => {
+    const nextDirection = data.meta.sortBy === sortBy && currentSortDirection === 'ASC' ? 'DESC' : 'ASC';
+    return buildRouteWithParams(routeURL, {
+      view: data.meta.view,
+      page: data.meta.page,
+      sortBy,
+      sortDirection: nextDirection
+    });
+  };
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Login Activity"
+        subtitle="Track successful and unsuccessful logins without leaving the modern workspace."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="avel-settings-admin-summary">
+            <article className="avel-settings-admin-summary-card is-info">
+              <span className="avel-settings-admin-summary-label">Current View</span>
+              <strong className="avel-settings-admin-summary-value">
+                {data.meta.view === 'unsuccessful' ? 'Unsuccessful Logins' : 'Successful Logins'}
+              </strong>
+              <span className="avel-settings-admin-summary-note">Switch views without leaving this page.</span>
+            </article>
+            <article className="avel-settings-admin-summary-card is-info">
+              <span className="avel-settings-admin-summary-label">Rows</span>
+              <strong className="avel-settings-admin-summary-value">{data.meta.totalRows}</strong>
+              <span className="avel-settings-admin-summary-note">
+                Page {data.meta.page} of {Math.max(1, data.meta.totalPages)}
+              </span>
+            </article>
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">View</h2>
+              <p className="avel-list-panel__hint">Choose which login stream to inspect.</p>
+            </div>
+            <div className="modern-compat-page__actions">
+              <a
+                className={`modern-btn ${data.meta.view === 'successful' ? 'modern-btn--emphasis' : 'modern-btn--secondary'}`}
+                href={buildRouteWithParams(routeURL, { view: 'successful', page: 1 })}
+              >
+                Successful Logins
+              </a>
+              <a
+                className={`modern-btn ${data.meta.view === 'unsuccessful' ? 'modern-btn--emphasis' : 'modern-btn--secondary'}`}
+                href={buildRouteWithParams(routeURL, { view: 'unsuccessful', page: 1 })}
+              >
+                Unsuccessful Logins
+              </a>
+            </div>
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Recent Entries</h2>
+              <p className="avel-list-panel__hint">Sort by user, endpoint, browser fingerprint, or timestamp.</p>
+            </div>
+
+            <div className="avel-settings-table-wrap">
+              <table className="avel-settings-table">
+                <thead>
+                  <tr>
+                    <th><a href={buildSortURL('firstName')}>First Name</a></th>
+                    <th><a href={buildSortURL('lastName')}>Last Name</a></th>
+                    <th><a href={buildSortURL('ip')}>IP</a></th>
+                    <th><a href={buildSortURL('hostname')}>Hostname</a></th>
+                    <th><a href={buildSortURL('shortUserAgent')}>User Agent</a></th>
+                    <th><a href={buildSortURL('dateSort')}>Date / Time</a></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={6}>No login entries found for this view.</td>
+                    </tr>
+                  ) : (
+                    data.rows.map((row) => (
+                      <tr key={row.userLoginID}>
+                        <td><a href={ensureUIURL(row.userURL, 'legacy')}>{row.firstName || '--'}</a></td>
+                        <td><a href={ensureUIURL(row.userURL, 'legacy')}>{row.lastName || '--'}</a></td>
+                        <td>{row.ip || '--'}</td>
+                        <td>{row.hostname || '--'}</td>
+                        <td>{row.shortUserAgent || '--'}</td>
+                        <td>{row.date || '--'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="modern-compat-page__actions">
+              <a
+                className="modern-btn modern-btn--secondary"
+                href={buildPageURL(Math.max(1, data.meta.page - 1))}
+                aria-disabled={data.meta.page <= 1}
+              >
+                Previous
+              </a>
+              <span className="avel-settings-page-indicator">
+                Page {data.meta.page} / {Math.max(1, data.meta.totalPages)}
+              </span>
+              <a
+                className="modern-btn modern-btn--secondary"
+                href={buildPageURL(Math.min(Math.max(1, data.meta.totalPages), data.meta.page + 1))}
+                aria-disabled={data.meta.page >= data.meta.totalPages}
+              >
+                Next
+              </a>
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsRejectionReasonsNativeShell({
+  data
+}: {
+  data: SettingsRejectionReasonsModernDataResponse;
+}) {
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Rejection Reasons"
+        subtitle="Maintain pipeline rejection labels while preserving the legacy postback contract."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.flash.saved ? (
+            <section className="avel-settings-admin-flash is-success" aria-live="polite">
+              <strong>Saved</strong>
+              <span>{data.flash.message}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Add New Reason</h2>
+              <p className="avel-list-panel__hint">Adds a reusable reason for rejection flows.</p>
+            </div>
+            <form className="avel-settings-inline-form" action={data.actions.submitURL} method="post" autoComplete="off">
+              <input type="hidden" name="postback" value="postback" />
+              <input type="hidden" name="action" value="add" />
+              <label className="avel-settings-inline-field" htmlFor="newLabel">
+                <span>New Reason</span>
+                <input className="avel-form-control" type="text" name="newLabel" id="newLabel" />
+              </label>
+              <button type="submit" className="modern-btn modern-btn--emphasis">Add</button>
+            </form>
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Existing Reasons</h2>
+              <p className="avel-list-panel__hint">Reasons cannot be deleted; update labels to keep history intact.</p>
+            </div>
+
+            <div className="avel-settings-form-stack">
+              {data.rejectionReasons.map((reason) => (
+                <form key={reason.rejectionReasonID} className="avel-settings-inline-form" action={data.actions.submitURL} method="post" autoComplete="off">
+                  <input type="hidden" name="postback" value="postback" />
+                  <input type="hidden" name="action" value="update" />
+                  <input type="hidden" name="reasonID" value={reason.rejectionReasonID} />
+                  <label className="avel-settings-inline-field">
+                    <span>Reason Label</span>
+                    <input className="avel-form-control" type="text" name="label" defaultValue={reason.label} />
+                  </label>
+                  <button type="submit" className="modern-btn modern-btn--secondary">Save</button>
+                </form>
+              ))}
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsTagsNativeShell({
+  data,
+  onReload
+}: {
+  data: SettingsTagsModernDataResponse;
+  onReload: () => void;
+}) {
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [newRootTag, setNewRootTag] = useState('');
+  const [childDraftByParentID, setChildDraftByParentID] = useState<Record<string, string>>({});
+  const [editDraftByTagID, setEditDraftByTagID] = useState<Record<string, string>>({});
+  const [busyAction, setBusyAction] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const parentTags = useMemo(
+    () => data.tags.filter((tag) => Number(tag.parentTagID || 0) <= 0),
+    [data.tags]
+  );
+
+  const childTagsByParentID = useMemo(() => {
+    const map: Record<number, Array<SettingsTagsModernDataResponse['tags'][number]>> = {};
+    data.tags.forEach((tag) => {
+      const parentID = Number(tag.parentTagID || 0);
+      if (parentID <= 0) {
+        return;
+      }
+      if (!map[parentID]) {
+        map[parentID] = [];
+      }
+      map[parentID].push(tag);
+    });
+    return map;
+  }, [data.tags]);
+
+  const runTagMutation = useCallback(async (actionLabel: string, url: string, body: URLSearchParams) => {
+    setBusyAction(actionLabel);
+    setErrorMessage('');
+    setFeedback('');
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body.toString()
+      });
+
+      if (!response.ok) {
+        throw new Error(`${actionLabel} failed (${response.status}).`);
+      }
+
+      setFeedback(`${actionLabel} complete.`);
+      onReload();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : `${actionLabel} failed.`;
+      setErrorMessage(message);
+    } finally {
+      setBusyAction('');
+    }
+  }, [onReload]);
+
+  const addRootTag = useCallback(() => {
+    const title = newRootTag.trim();
+    if (title === '') {
+      return;
+    }
+
+    const body = new URLSearchParams();
+    body.set('tag_title', title);
+    void runTagMutation('Add tag', data.actions.addURL, body).then(() => {
+      setNewRootTag('');
+    });
+  }, [data.actions.addURL, newRootTag, runTagMutation]);
+
+  const addChildTag = useCallback((parentID: number) => {
+    const key = String(parentID);
+    const title = String(childDraftByParentID[key] || '').trim();
+    if (title === '') {
+      return;
+    }
+
+    const body = new URLSearchParams();
+    body.set('tag_parent_id', String(parentID));
+    body.set('tag_title', title);
+    void runTagMutation('Add child tag', data.actions.addURL, body).then(() => {
+      setChildDraftByParentID((current) => ({
+        ...current,
+        [key]: ''
+      }));
+    });
+  }, [childDraftByParentID, data.actions.addURL, runTagMutation]);
+
+  const updateTag = useCallback((tagID: number, fallbackTitle: string) => {
+    const key = String(tagID);
+    const title = String(editDraftByTagID[key] || fallbackTitle || '').trim();
+    if (title === '') {
+      return;
+    }
+
+    const body = new URLSearchParams();
+    body.set('tag_id', String(tagID));
+    body.set('tag_title', title);
+    void runTagMutation('Update tag', data.actions.updateURL, body);
+  }, [data.actions.updateURL, editDraftByTagID, runTagMutation]);
+
+  const deleteTag = useCallback((tagID: number) => {
+    if (!window.confirm('Are you sure you want to delete this tag?')) {
+      return;
+    }
+
+    const body = new URLSearchParams();
+    body.set('tag_id', String(tagID));
+    void runTagMutation('Delete tag', data.actions.deleteURL, body);
+  }, [data.actions.deleteURL, runTagMutation]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Tags"
+        subtitle="Add, rename, and remove hierarchical tags with legacy-compatible endpoints."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {feedback !== '' ? (
+            <section className="avel-settings-admin-flash is-success" aria-live="polite">
+              <strong>Saved</strong>
+              <span>{feedback}</span>
+            </section>
+          ) : null}
+          {errorMessage !== '' ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Warning</strong>
+              <span>{errorMessage}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Top-Level Tags</h2>
+              <p className="avel-list-panel__hint">Create root tags first, then nest child tags below each parent.</p>
+            </div>
+            <div className="avel-settings-inline-form">
+              <label className="avel-settings-inline-field" htmlFor="newRootTag">
+                <span>Tag Name</span>
+                <input
+                  id="newRootTag"
+                  className="avel-form-control"
+                  type="text"
+                  value={newRootTag}
+                  onChange={(event) => setNewRootTag(event.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className="modern-btn modern-btn--emphasis"
+                onClick={addRootTag}
+                disabled={busyAction !== '' || newRootTag.trim() === ''}
+              >
+                Add Tag
+              </button>
+            </div>
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Tag Hierarchy</h2>
+              <p className="avel-list-panel__hint">Delete a parent to remove it together with all child tags.</p>
+            </div>
+
+            <div className="avel-settings-tag-groups">
+              {parentTags.map((parent) => {
+                const childTags = childTagsByParentID[parent.tagID] || [];
+                return (
+                  <article key={parent.tagID} className="avel-settings-tag-group">
+                    <header className="avel-settings-tag-group__header">
+                      <strong>{parent.tagTitle || '--'}</strong>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--danger"
+                        onClick={() => deleteTag(parent.tagID)}
+                        disabled={busyAction !== ''}
+                      >
+                        Delete
+                      </button>
+                    </header>
+
+                    <div className="avel-settings-tag-group__children">
+                      {childTags.map((tag) => {
+                        const tagKey = String(tag.tagID);
+                        const value = editDraftByTagID[tagKey] ?? tag.tagTitle;
+                        return (
+                          <div key={tag.tagID} className="avel-settings-tag-row">
+                            <input
+                              className="avel-form-control"
+                              type="text"
+                              value={value}
+                              onChange={(event) => {
+                                const next = event.target.value;
+                                setEditDraftByTagID((current) => ({
+                                  ...current,
+                                  [tagKey]: next
+                                }));
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--secondary"
+                              onClick={() => updateTag(tag.tagID, tag.tagTitle)}
+                              disabled={busyAction !== '' || String(value || '').trim() === ''}
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--danger"
+                              onClick={() => deleteTag(tag.tagID)}
+                              disabled={busyAction !== ''}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="avel-settings-inline-form">
+                      <label className="avel-settings-inline-field">
+                        <span>Add Child Tag</span>
+                        <input
+                          className="avel-form-control"
+                          type="text"
+                          value={childDraftByParentID[String(parent.tagID)] || ''}
+                          onChange={(event) => {
+                            const next = event.target.value;
+                            setChildDraftByParentID((current) => ({
+                              ...current,
+                              [String(parent.tagID)]: next
+                            }));
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--secondary"
+                        onClick={() => addChildTag(parent.tagID)}
+                        disabled={busyAction !== '' || String(childDraftByParentID[String(parent.tagID)] || '').trim() === ''}
+                      >
+                        Add Child
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsRolePagePermissionsNativeShell({
+  data
+}: {
+  data: SettingsRolePagePermissionsModernDataResponse;
+}) {
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const schemaMigrationsURL = ensureModernUIURL(data.actions.schemaMigrationsURL);
+  const hasWarning = toLowerText(data.message).includes('failed');
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Role Access Matrix"
+        subtitle="Control page visibility and minimum access level for each user role."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.message.trim() !== '' ? (
+            <section className={`avel-settings-admin-flash ${hasWarning ? 'is-warning' : 'is-success'}`} aria-live="polite">
+              <strong>{hasWarning ? 'Warning' : 'Saved'}</strong>
+              <span>{data.message}</span>
+            </section>
+          ) : null}
+
+          {!data.rolePermissionsEnabled ? (
+            <section className="avel-list-panel">
+              <div className="modern-state modern-state--error">
+                Role/page permission schema is not available yet.
+              </div>
+              <p className="reports-workflow-forward__note">
+                Apply pending migrations first, then return to this matrix page.
+              </p>
+              <div className="modern-compat-page__actions">
+                <a className="modern-btn modern-btn--secondary" href={schemaMigrationsURL}>
+                  Open Schema Migrations
+                </a>
+              </div>
+            </section>
+          ) : (
+            <form action={data.actions.submitURL} method="post" className="avel-list-panel">
+              <div className="avel-list-panel__header">
+                <h2 className="avel-list-panel__title">Permissions Matrix</h2>
+                <p className="avel-list-panel__hint">Each cell maps to `perm[roleID][pageKey]` in the legacy submit payload.</p>
+              </div>
+
+              <input type="hidden" name="postback" value="postback" />
+
+              <div className="avel-settings-table-wrap">
+                <table className="avel-settings-table avel-settings-table--dense">
+                  <thead>
+                    <tr>
+                      <th>Page</th>
+                      {data.roles.map((role) => (
+                        <th key={role.roleID}>{role.roleName}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.pages.map((page) => (
+                      <tr key={page.pageKey}>
+                        <td>{page.label}</td>
+                        {data.roles.map((role) => {
+                          const roleMatrix = data.matrix[String(role.roleID)] || {};
+                          const selectedOption = roleMatrix[page.pageKey]?.option || 'read';
+                          return (
+                            <td key={`${role.roleID}:${page.pageKey}`}>
+                              <select
+                                className="avel-form-control"
+                                name={`perm[${role.roleID}][${page.pageKey}]`}
+                                defaultValue={selectedOption}
+                              >
+                                {data.accessOptions.map((option) => (
+                                  <option key={option.optionKey} value={option.optionKey}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis">
+                  Save Matrix
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
+                  Back
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </form>
+          )}
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsSchemaMigrationsNativeShell({
+  data
+}: {
+  data: SettingsSchemaMigrationsModernDataResponse;
+}) {
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Schema Migrations"
+        subtitle="Review migration status and apply pending scripts with legacy-compatible submit actions."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.errorMessage.trim() !== '' ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Error</strong>
+              <span>{data.errorMessage}</span>
+            </section>
+          ) : data.message.trim() !== '' ? (
+            <section className="avel-settings-admin-flash is-success" aria-live="polite">
+              <strong>Notice</strong>
+              <span>{data.message}</span>
+            </section>
+          ) : null}
+
+          {data.dirMissing ? (
+            <section className="avel-list-panel">
+              <div className="modern-state modern-state--error">Migrations directory not found.</div>
+            </section>
+          ) : (
+            <>
+              <section className="avel-list-panel">
+                <div className="avel-list-panel__header">
+                  <h2 className="avel-list-panel__title">Pending Migrations</h2>
+                  <p className="avel-list-panel__hint">{data.pendingCount} pending migration(s).</p>
+                </div>
+                <form className="modern-compat-page__actions" method="post" action={data.actions.submitURL}>
+                  <input type="hidden" name="postback" value="postback" />
+                  <input type="hidden" name="applyAll" value="1" />
+                  <button
+                    type="submit"
+                    className="modern-btn modern-btn--emphasis"
+                    disabled={data.pendingCount <= 0}
+                  >
+                    Apply All Pending
+                  </button>
+                </form>
+              </section>
+
+              <section className="avel-list-panel">
+                <div className="avel-settings-table-wrap">
+                  <table className="avel-settings-table avel-settings-table--dense">
+                    <thead>
+                      <tr>
+                        <th>Version</th>
+                        <th>Status</th>
+                        <th>Applied At</th>
+                        <th>Applied By</th>
+                        <th>Checksum</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.migrations.length === 0 ? (
+                        <tr>
+                          <td colSpan={6}>No migrations found.</td>
+                        </tr>
+                      ) : (
+                        data.migrations.map((migration) => {
+                          const statusLabel = migration.applied
+                            ? (migration.checksumMatches ? 'Applied' : 'Applied (checksum mismatch)')
+                            : 'Pending';
+                          return (
+                            <tr key={migration.version}>
+                              <td>{migration.version}</td>
+                              <td>{statusLabel}</td>
+                              <td>{migration.appliedAt || '--'}</td>
+                              <td>{migration.appliedBy || '--'}</td>
+                              <td className="avel-settings-code-cell">{migration.checksum}</td>
+                              <td>
+                                <form className="avel-settings-inline-actions" method="post" action={data.actions.submitURL}>
+                                  <input type="hidden" name="postback" value="postback" />
+                                  <input type="hidden" name="version" value={migration.version} />
+                                  <button
+                                    type="submit"
+                                    className="modern-btn modern-btn--secondary"
+                                    disabled={migration.applied}
+                                  >
+                                    Apply
+                                  </button>
+                                  <button
+                                    type="submit"
+                                    className="modern-btn modern-btn--secondary"
+                                    name="markApplied"
+                                    value="Mark Applied"
+                                    disabled={migration.applied}
+                                    onClick={(event) => {
+                                      if (!window.confirm('Mark this migration as applied without running it?')) {
+                                        event.preventDefault();
+                                      }
+                                    }}
+                                  >
+                                    Mark Applied
+                                  </button>
+                                </form>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </>
+          )}
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsViewItemHistoryNativeShell({
+  data
+}: {
+  data: SettingsViewItemHistoryModernDataResponse;
+}) {
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const shortFields = data.fields.filter((field) => !field.isLongField);
+  const longFields = data.fields.filter((field) => field.isLongField);
+  const fieldRevisions = data.revisions.filter((revision) => revision.isFieldRevision && revision.description.trim() !== '');
+  const otherRevisions = data.revisions.filter((revision) => !revision.isFieldRevision && revision.description.trim() !== '');
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title={data.summary.title || 'Item History'}
+        subtitle={data.summary.subtitle || 'Review item-level revision activity.'}
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Item
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Current Snapshot</h2>
+              <p className="avel-list-panel__hint">Latest field values for the selected item.</p>
+            </div>
+            <div className="avel-settings-table-wrap">
+              <table className="avel-settings-table avel-settings-table--dense">
+                <tbody>
+                  {shortFields.map((field) => (
+                    <tr key={field.key}>
+                      <th>{field.label}</th>
+                      <td className="avel-settings-prewrap">{field.value || '--'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {longFields.map((field) => (
+              <article key={field.key} className="avel-settings-long-field">
+                <h3>{field.label}</h3>
+                <div className="avel-settings-prewrap">{field.value || '--'}</div>
+              </article>
+            ))}
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Field Revision History</h2>
+              <p className="avel-list-panel__hint">Chronological list of field-level changes.</p>
+            </div>
+            <div className="avel-settings-history-list">
+              {fieldRevisions.length === 0 ? (
+                <div className="modern-state">No field-level revision history available.</div>
+              ) : (
+                fieldRevisions.map((revision) => (
+                  <article key={revision.revisionID} className="avel-settings-history-item">
+                    <header>
+                      <strong>{revision.dateModified || '--'}</strong>
+                      <span>{revision.description || revision.theField}</span>
+                    </header>
+                    <div className="avel-settings-history-values">
+                      <div>
+                        <span>Old Value</span>
+                        <p className="avel-settings-prewrap">{revision.previousValue || '--'}</p>
+                      </div>
+                      <div>
+                        <span>New Value</span>
+                        <p className="avel-settings-prewrap">{revision.newValue || '--'}</p>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Other History</h2>
+              <p className="avel-list-panel__hint">System events, workflow actions, and non-field history entries.</p>
+            </div>
+            <div className="avel-settings-history-list">
+              {otherRevisions.length === 0 ? (
+                <div className="modern-state">No additional history entries.</div>
+              ) : (
+                otherRevisions.map((revision) => (
+                  <article key={revision.revisionID} className="avel-settings-history-item">
+                    <header>
+                      <strong>{revision.dateModified || '--'}</strong>
+                      <span>{revision.description || revision.theField || 'History entry'}</span>
+                    </header>
+                    <div className="avel-settings-history-values">
+                      <div>
+                        <span>Old Value</span>
+                        <p className="avel-settings-prewrap">{revision.previousValue || '--'}</p>
+                      </div>
+                      <div>
+                        <span>New Value</span>
+                        <p className="avel-settings-prewrap">{revision.newValue || '--'}</p>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
 function SettingsForwardPanel({
   copy,
   backLink,
@@ -839,7 +1774,16 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
   const isForwardRoute = copy.mode === 'forward';
   const isNativeRoute = nativeRouteMode !== 'fallback';
   const [nativeData, setNativeData] = useState<
-    SettingsAdministrationModernDataResponse | SettingsMyProfileModernDataResponse | SettingsMyProfileChangePasswordModernDataResponse | null
+    | SettingsAdministrationModernDataResponse
+    | SettingsMyProfileModernDataResponse
+    | SettingsMyProfileChangePasswordModernDataResponse
+    | SettingsLoginActivityModernDataResponse
+    | SettingsRejectionReasonsModernDataResponse
+    | SettingsTagsModernDataResponse
+    | SettingsRolePagePermissionsModernDataResponse
+    | SettingsSchemaMigrationsModernDataResponse
+    | SettingsViewItemHistoryModernDataResponse
+    | null
   >(null);
   const [nativeError, setNativeError] = useState('');
   const [nativeLoading, setNativeLoading] = useState(isNativeRoute);
@@ -879,6 +1823,18 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           return fetchSettingsMyProfileModernData(bootstrap, query);
         case 'changePassword':
           return fetchSettingsMyProfileChangePasswordModernData(bootstrap, query);
+        case 'loginActivity':
+          return fetchSettingsLoginActivityModernData(bootstrap, query);
+        case 'rejectionReasons':
+          return fetchSettingsRejectionReasonsModernData(bootstrap, query);
+        case 'tags':
+          return fetchSettingsTagsModernData(bootstrap, query);
+        case 'rolePagePermissions':
+          return fetchSettingsRolePagePermissionsModernData(bootstrap, query);
+        case 'schemaMigrations':
+          return fetchSettingsSchemaMigrationsModernData(bootstrap, query);
+        case 'viewItemHistory':
+          return fetchSettingsViewItemHistoryModernData(bootstrap, query);
         default:
           throw new Error('Unsupported settings native route.');
       }
@@ -932,6 +1888,55 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
       return (
         <SettingsChangePasswordNativeShell
           data={nativeData as SettingsMyProfileChangePasswordModernDataResponse}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'loginActivity') {
+      return (
+        <SettingsLoginActivityNativeShell
+          data={nativeData as SettingsLoginActivityModernDataResponse}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'rejectionReasons') {
+      return (
+        <SettingsRejectionReasonsNativeShell
+          data={nativeData as SettingsRejectionReasonsModernDataResponse}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'tags') {
+      return (
+        <SettingsTagsNativeShell
+          data={nativeData as SettingsTagsModernDataResponse}
+          onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'rolePagePermissions') {
+      return (
+        <SettingsRolePagePermissionsNativeShell
+          data={nativeData as SettingsRolePagePermissionsModernDataResponse}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'schemaMigrations') {
+      return (
+        <SettingsSchemaMigrationsNativeShell
+          data={nativeData as SettingsSchemaMigrationsModernDataResponse}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'viewItemHistory') {
+      return (
+        <SettingsViewItemHistoryNativeShell
+          data={nativeData as SettingsViewItemHistoryModernDataResponse}
         />
       );
     }

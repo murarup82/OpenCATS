@@ -3001,6 +3001,219 @@
   }
 }
 
+.avel-settings-workflow-page .avel-settings-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+
+.avel-settings-workflow-page .avel-settings-inline-field {
+  min-width: 240px;
+  flex: 1 1 320px;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-settings-workflow-page .avel-settings-inline-field > span {
+  color: var(--avel-text-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.avel-settings-workflow-page .avel-settings-form-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-settings-workflow-page .avel-settings-table-wrap {
+  overflow-x: auto;
+}
+
+.avel-settings-workflow-page .avel-settings-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--avel-border);
+  background: #fff;
+}
+
+.avel-settings-workflow-page .avel-settings-table th,
+.avel-settings-workflow-page .avel-settings-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--avel-border);
+  vertical-align: top;
+}
+
+.avel-settings-workflow-page .avel-settings-table thead th {
+  background: #f4f9fd;
+  color: var(--avel-900);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.avel-settings-workflow-page .avel-settings-table tbody tr:nth-child(even) {
+  background: #fbfdff;
+}
+
+.avel-settings-workflow-page .avel-settings-table tbody tr:last-child td,
+.avel-settings-workflow-page .avel-settings-table tbody tr:last-child th {
+  border-bottom: none;
+}
+
+.avel-settings-workflow-page .avel-settings-table th a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.avel-settings-workflow-page .avel-settings-table th a:hover {
+  text-decoration: underline;
+}
+
+.avel-settings-workflow-page .avel-settings-table--dense th,
+.avel-settings-workflow-page .avel-settings-table--dense td {
+  padding: 8px 10px;
+}
+
+.avel-settings-workflow-page .avel-settings-page-indicator {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--avel-border);
+  background: #f7fbff;
+  color: var(--avel-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 12px;
+}
+
+.avel-settings-workflow-page .avel-settings-tag-groups {
+  display: grid;
+  gap: 12px;
+}
+
+.avel-settings-workflow-page .avel-settings-tag-group {
+  border: 1px solid var(--avel-border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fcff 100%);
+  box-shadow: var(--avel-shadow-sm);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.avel-settings-workflow-page .avel-settings-tag-group__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.avel-settings-workflow-page .avel-settings-tag-group__children {
+  display: grid;
+  gap: 8px;
+}
+
+.avel-settings-workflow-page .avel-settings-tag-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
+.avel-settings-workflow-page .avel-settings-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.avel-settings-workflow-page .avel-settings-code-cell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
+}
+
+.avel-settings-workflow-page .avel-settings-prewrap {
+  white-space: pre-wrap;
+}
+
+.avel-settings-workflow-page .avel-settings-long-field {
+  margin-top: 10px;
+  border: 1px solid var(--avel-border);
+  border-radius: 12px;
+  background: #fcfeff;
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-settings-workflow-page .avel-settings-long-field h3 {
+  margin: 0;
+  color: var(--avel-900);
+  font-size: 0.86rem;
+}
+
+.avel-settings-workflow-page .avel-settings-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-settings-workflow-page .avel-settings-history-item {
+  border: 1px solid var(--avel-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--avel-shadow-sm);
+  padding: 10px 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.avel-settings-workflow-page .avel-settings-history-item > header {
+  display: grid;
+  gap: 2px;
+}
+
+.avel-settings-workflow-page .avel-settings-history-item > header strong {
+  color: var(--avel-900);
+  font-size: 0.82rem;
+}
+
+.avel-settings-workflow-page .avel-settings-history-item > header span {
+  color: var(--avel-text-soft);
+  font-size: 0.8rem;
+}
+
+.avel-settings-workflow-page .avel-settings-history-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.avel-settings-workflow-page .avel-settings-history-values span {
+  color: var(--avel-text-soft);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.avel-settings-workflow-page .avel-settings-history-values p {
+  margin: 4px 0 0;
+}
+
+@media (max-width: 980px) {
+  .avel-settings-workflow-page .avel-settings-tag-row {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-settings-workflow-page .avel-settings-history-values {
+    grid-template-columns: 1fr;
+  }
+}
+
 .avel-joborders-page .modern-chip--openings {
   border-color: #8fc8a7;
   background: linear-gradient(180deg, #ddf4e7 0%, #c9ecd9 100%);

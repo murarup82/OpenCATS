@@ -1856,6 +1856,179 @@ export type SettingsAdministrationModernDataResponse = {
   };
 };
 
+export type SettingsLoginActivityModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    view: 'successful' | 'unsuccessful';
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    entriesPerPage: number;
+    sortBy: string;
+    sortDirection: 'ASC' | 'DESC';
+    validSortByFields: string[];
+  };
+  actions: {
+    routeURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  rows: Array<{
+    userLoginID: number;
+    userID: number;
+    firstName: string;
+    lastName: string;
+    ip: string;
+    hostname: string;
+    shortUserAgent: string;
+    date: string;
+    dateSort: string;
+    userURL: string;
+  }>;
+};
+
+export type SettingsRejectionReasonsModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  flash: {
+    saved: boolean;
+    message: string;
+  };
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  rejectionReasons: Array<{
+    rejectionReasonID: number;
+    label: string;
+  }>;
+};
+
+export type SettingsTagsModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  actions: {
+    backURL: string;
+    legacyURL: string;
+    addURL: string;
+    updateURL: string;
+    deleteURL: string;
+  };
+  tags: Array<{
+    tagID: number;
+    parentTagID: number;
+    parentTagTitle: string;
+    tagTitle: string;
+  }>;
+};
+
+export type SettingsRolePagePermissionsModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  message: string;
+  rolePermissionsEnabled: boolean;
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+    schemaMigrationsURL: string;
+  };
+  roles: Array<{
+    roleID: number;
+    roleKey: string;
+    roleName: string;
+    accessLevel: number;
+  }>;
+  pages: Array<{
+    pageKey: string;
+    label: string;
+    module: string;
+    action: string;
+  }>;
+  accessOptions: Array<{
+    optionKey: string;
+    label: string;
+    isVisible: number;
+    requiredAccessLevel: number;
+  }>;
+  matrix: Record<string, Record<string, {
+    isVisible: number;
+    requiredAccessLevel: number;
+    option: string;
+  }>>;
+};
+
+export type SettingsSchemaMigrationsModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+  };
+  message: string;
+  errorMessage: string;
+  dirMissing: boolean;
+  pendingCount: number;
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  migrations: Array<{
+    version: string;
+    checksum: string;
+    applied: boolean;
+    appliedAt: string;
+    appliedBy: string;
+    checksumMatches: boolean;
+  }>;
+};
+
+export type SettingsViewItemHistoryModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    dataItemType: number;
+    dataItemID: number;
+  };
+  summary: {
+    title: string;
+    subtitle: string;
+  };
+  actions: {
+    backURL: string;
+    legacyURL: string;
+  };
+  fields: Array<{
+    key: string;
+    label: string;
+    value: string;
+    isLongField: boolean;
+  }>;
+  revisions: Array<{
+    revisionID: number;
+    theField: string;
+    dateModified: string;
+    enteredByFullName: string;
+    description: string;
+    previousValue: string;
+    newValue: string;
+    isFieldRevision: boolean;
+  }>;
+};
+
 export type LoginModernDataResponse = {
   meta: {
     contractVersion: number;

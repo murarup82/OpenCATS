@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-23T15:34:25.725Z
-Finished: 2026-03-23T15:35:02.633Z
+Started: 2026-03-23T16:00:37.402Z
+Finished: 2026-03-23T16:01:16.384Z
 Overall Status: **Pass**
 
 ## Summary
@@ -129,7 +129,7 @@ Command: `npm.cmd run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 62 tests using 1 worker
+Running 68 tests using 1 worker
 
   -   1 tests\playwright\add-edit-workflows.spec.mjs:143:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
   -   2 tests\playwright\add-edit-workflows.spec.mjs:151:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
@@ -174,27 +174,33 @@ Running 62 tests using 1 worker
   -  41 tests\playwright\reports-workflow-actions.spec.mjs:85:3 › Reports workflow action smoke › reports.generatejoborderreportpdf ui=modern forwards to the legacy download endpoint
   -  42 tests\playwright\reports-workflow-actions.spec.mjs:101:3 › Reports workflow action smoke › reports.showPlacementReport ui=modern exposes an explicit legacy fallback before redirecting
   -  43 tests\playwright\reports-workflow-actions.spec.mjs:121:3 › Reports workflow action smoke › reports.showSubmissionReport ui=modern exposes an explicit legacy fallback before redirecting
-  -  44 tests\playwright\settings-admin-workspace-actions.spec.mjs:60:3 › Settings admin workspace action smoke › settings.administration modern-json returns the settings.administration.v1 contract
-  -  45 tests\playwright\settings-admin-workspace-actions.spec.mjs:71:3 › Settings admin workspace action smoke › settings.myprofile modern-json returns the settings.myprofile.v1 contract
-  -  46 tests\playwright\settings-admin-workspace-actions.spec.mjs:83:3 › Settings admin workspace action smoke › settings.myprofile?s=changePassword modern-json returns the settings.myprofile.changePassword.v1 contract
-  -  47 tests\playwright\settings-admin-workspace-actions.spec.mjs:102:3 › Settings admin workspace action smoke › settings.administration ui=modern mounts without a runtime boundary
-  -  48 tests\playwright\settings-admin-workspace-actions.spec.mjs:116:3 › Settings admin workspace action smoke › settings.myprofile ui=modern mounts without a runtime boundary
-  -  49 tests\playwright\settings-admin-workspace-actions.spec.mjs:129:3 › Settings admin workspace action smoke › settings.manageusers ui=modern mounts without a runtime boundary
-  -  50 tests\playwright\settings-admin-workspace-actions.spec.mjs:146:3 › Settings admin workspace action smoke › settings.emailtemplates ui=modern forwards without an iframe
-  -  51 tests\playwright\settings-admin-workspace-actions.spec.mjs:163:3 › Settings admin workspace action smoke › settings.myprofile?s=changePassword ui=modern mounts without a runtime boundary
-  -  52 tests\playwright\settings-platform-workspace-actions.spec.mjs:42:3 › Settings platform workspace action smoke › settings.careerportalsettings ui=modern forwards without an iframe
-  -  53 tests\playwright\settings-platform-workspace-actions.spec.mjs:59:3 › Settings platform workspace action smoke › settings.createbackup ui=modern forwards without an iframe
-  -  54 tests\playwright\settings-platform-workspace-actions.spec.mjs:76:3 › Settings platform workspace action smoke › settings.rolepagepermissions ui=modern forwards without an iframe
-  -  55 tests\playwright\settings-platform-workspace-actions.spec.mjs:93:3 › Settings platform workspace action smoke › settings.schemamigrations ui=modern forwards without an iframe
-  -  56 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
-  -  57 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
-  -  58 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
-  -  59 tests\playwright\utility-endpoint-forward-actions.spec.mjs:42:3 › Utility endpoint forward action smoke › calendar.dynamicdata ui=modern mounts without a runtime boundary
-  -  60 tests\playwright\utility-endpoint-forward-actions.spec.mjs:54:3 › Utility endpoint forward action smoke › wizard.ajax_getpage ui=modern mounts without a runtime boundary
-  -  61 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
-  -  62 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
+  -  44 tests\playwright\settings-admin-workspace-actions.spec.mjs:82:3 › Settings admin workspace action smoke › settings.administration modern-json returns the settings.administration.v1 contract
+  -  45 tests\playwright\settings-admin-workspace-actions.spec.mjs:93:3 › Settings admin workspace action smoke › settings.myprofile modern-json returns the settings.myprofile.v1 contract
+  -  46 tests\playwright\settings-admin-workspace-actions.spec.mjs:105:3 › Settings admin workspace action smoke › settings.myprofile?s=changePassword modern-json returns the settings.myprofile.changePassword.v1 contract
+  -  47 tests\playwright\settings-admin-workspace-actions.spec.mjs:124:3 › Settings admin workspace action smoke › settings.loginactivity modern-json returns the settings.loginActivity.v1 contract
+  -  48 tests\playwright\settings-admin-workspace-actions.spec.mjs:135:3 › Settings admin workspace action smoke › settings.rejectionreasons modern-json returns the settings.rejectionReasons.v1 contract
+  -  49 tests\playwright\settings-admin-workspace-actions.spec.mjs:146:3 › Settings admin workspace action smoke › settings.tags modern-json returns the settings.tags.v1 contract
+  -  50 tests\playwright\settings-admin-workspace-actions.spec.mjs:158:3 › Settings admin workspace action smoke › settings.administration ui=modern mounts without a runtime boundary
+  -  51 tests\playwright\settings-admin-workspace-actions.spec.mjs:172:3 › Settings admin workspace action smoke › settings.myprofile ui=modern mounts without a runtime boundary
+  -  52 tests\playwright\settings-admin-workspace-actions.spec.mjs:185:3 › Settings admin workspace action smoke › settings.manageusers ui=modern mounts without a runtime boundary
+  -  53 tests\playwright\settings-admin-workspace-actions.spec.mjs:202:3 › Settings admin workspace action smoke › settings.emailtemplates ui=modern forwards without an iframe
+  -  54 tests\playwright\settings-admin-workspace-actions.spec.mjs:219:3 › Settings admin workspace action smoke › settings.myprofile?s=changePassword ui=modern mounts without a runtime boundary
+  -  55 tests\playwright\settings-admin-workspace-actions.spec.mjs:234:3 › Settings admin workspace action smoke › settings.loginactivity ui=modern mounts without a runtime boundary
+  -  56 tests\playwright\settings-admin-workspace-actions.spec.mjs:247:3 › Settings admin workspace action smoke › settings.rejectionreasons ui=modern mounts without a runtime boundary
+  -  57 tests\playwright\settings-admin-workspace-actions.spec.mjs:260:3 › Settings admin workspace action smoke › settings.tags ui=modern mounts without a runtime boundary
+  -  58 tests\playwright\settings-platform-workspace-actions.spec.mjs:42:3 › Settings platform workspace action smoke › settings.careerportalsettings ui=modern forwards without an iframe
+  -  59 tests\playwright\settings-platform-workspace-actions.spec.mjs:59:3 › Settings platform workspace action smoke › settings.createbackup ui=modern forwards without an iframe
+  -  60 tests\playwright\settings-platform-workspace-actions.spec.mjs:76:3 › Settings platform workspace action smoke › settings.rolepagepermissions ui=modern mounts natively without a forward redirect
+  -  61 tests\playwright\settings-platform-workspace-actions.spec.mjs:90:3 › Settings platform workspace action smoke › settings.schemamigrations ui=modern mounts natively without a forward redirect
+  -  62 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
+  -  63 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
+  -  64 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
+  -  65 tests\playwright\utility-endpoint-forward-actions.spec.mjs:42:3 › Utility endpoint forward action smoke › calendar.dynamicdata ui=modern mounts without a runtime boundary
+  -  66 tests\playwright\utility-endpoint-forward-actions.spec.mjs:54:3 › Utility endpoint forward action smoke › wizard.ajax_getpage ui=modern mounts without a runtime boundary
+  -  67 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
+  -  68 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
 
-  62 skipped
+  68 skipped
 ```
 
 **stderr**
