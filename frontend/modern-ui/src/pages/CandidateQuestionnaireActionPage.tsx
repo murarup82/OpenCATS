@@ -1,9 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
-import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
-import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import type { UIModeBootstrap } from '../types';
 import '../dashboard-avel.css';
 
@@ -56,13 +54,23 @@ export function CandidateQuestionnaireActionPage({ bootstrap }: Props) {
     () => toLegacyRouteURL(bootstrap.indexName, candidateID, questionnaireTitle, printMode),
     [bootstrap.indexName, candidateID, printMode, questionnaireTitle]
   );
-  const embeddedURL = useMemo(() => buildEmbeddedLegacyURL(legacyRouteURL), [legacyRouteURL]);
   const candidateURL = useMemo(
     () => ensureModernUIURL(`${bootstrap.indexName}?m=candidates&a=show&candidateID=${candidateID}`),
     [bootstrap.indexName, candidateID]
   );
+  const canContinue = legacyRouteURL !== '';
 
-  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
+  useEffect(() => {
+    if (!canContinue) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      window.location.assign(legacyRouteURL);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [canContinue, legacyRouteURL]);
 
   if (!Number.isFinite(candidateID) || candidateID <= 0 || questionnaireTitle.trim() === '') {
     return (
@@ -84,20 +92,24 @@ export function CandidateQuestionnaireActionPage({ bootstrap }: Props) {
             <a className="modern-btn modern-btn--secondary" href={candidateURL}>
               Back To Candidate
             </a>
-            <a className="modern-btn modern-btn--secondary" href={legacyRouteURL}>
-              Open Legacy UI
-            </a>
+            {canContinue ? (
+              <a className="modern-btn modern-btn--secondary" href={legacyRouteURL}>
+                Open Legacy UI
+              </a>
+            ) : null}
           </>
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="modern-compat-page">
+          <section className="modern-compat-page modern-compat-page--forward">
             <header className="modern-compat-page__header">
               <div>
-                <h2 className="modern-compat-page__title">Candidate Questionnaire</h2>
-                <p className="modern-compat-page__subtitle">Native action wrapper with embedded legacy rendering.</p>
+                <h2 className="modern-compat-page__title">Candidate Questionnaire Redirect</h2>
+                <p className="modern-compat-page__subtitle">
+                  The questionnaire now forwards to the legacy endpoint while preserving the view and print route links.
+                </p>
               </div>
-              <div className="modern-compat-page__meta">ui_embed=1</div>
+              <div className="modern-compat-page__meta">legacy_forward=1</div>
             </header>
 
             <div className="modern-compat-page__actions">
@@ -107,28 +119,28 @@ export function CandidateQuestionnaireActionPage({ bootstrap }: Props) {
               <a className="modern-btn modern-btn--secondary" href={printURL}>
                 Print Mode
               </a>
-              <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>
-                Reload
-              </button>
-              <a className="modern-btn modern-btn--secondary" href={legacyRouteURL} target="_blank" rel="noreferrer">
-                Open In New Tab
-              </a>
+              {canContinue ? (
+                <>
+                  <a className="modern-btn modern-btn--secondary" href={legacyRouteURL}>
+                    Continue to Legacy UI
+                  </a>
+                  <a className="modern-btn modern-btn--secondary" href={legacyRouteURL} target="_blank" rel="noreferrer">
+                    Open In New Tab
+                  </a>
+                  <a className="modern-btn modern-btn--secondary" href={legacyRouteURL}>
+                    Open Legacy UI
+                  </a>
+                </>
+              ) : null}
             </div>
 
-            <div className={`modern-compat-page__frame-wrap${frameLoading ? ' is-loading' : ''}`}>
-              {frameLoading ? (
-                <div className="modern-compat-page__frame-loader" aria-live="polite">
-                  Loading questionnaire...
-                </div>
-              ) : null}
-              <iframe
-                key={frameReloadToken}
-                title={`Questionnaire ${questionnaireTitle}`}
-                className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
-                src={embeddedURL}
-                onLoad={handleFrameLoad}
-              />
-            </div>
+            <section className="avel-list-panel">
+              <div className={`modern-state${canContinue ? '' : ' modern-state--error'}`} aria-live="polite">
+                {canContinue
+                  ? 'Preparing legacy questionnaire redirect...'
+                  : 'Legacy questionnaire URL is unavailable for this route.'}
+              </div>
+            </section>
           </section>
         </div>
       </PageContainer>

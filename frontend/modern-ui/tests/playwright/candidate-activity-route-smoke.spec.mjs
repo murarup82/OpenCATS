@@ -20,10 +20,10 @@ function buildHeaders() {
   return headers;
 }
 
-function buildModernRouteURL(action, query = {}) {
+function buildModernRouteURL(moduleName, actionName, query = {}) {
   const params = new URLSearchParams({
-    m: 'candidates',
-    a: action,
+    m: moduleName,
+    a: actionName,
     ui: 'modern'
   });
 
@@ -36,8 +36,8 @@ function buildModernRouteURL(action, query = {}) {
   return `${joinURL(baseURL, indexPath)}?${params.toString()}`;
 }
 
-async function assertForwardRoute(page, action, query = {}) {
-  await page.goto(buildModernRouteURL(action, query), {
+async function assertForwardRoute(page, moduleName, actionName, query = {}) {
+  await page.goto(buildModernRouteURL(moduleName, actionName, query), {
     waitUntil: 'domcontentloaded'
   });
 
@@ -51,23 +51,27 @@ async function assertForwardRoute(page, action, query = {}) {
   await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
 }
 
-test.describe('Candidates workspace action smoke', () => {
-  test.skip(baseURL === '', 'Set OPENCATS_BASE_URL to run candidates workspace smoke checks.');
+test.describe('Candidate route smoke', () => {
+  test.skip(baseURL === '', 'Set OPENCATS_BASE_URL to run candidate route smoke checks.');
 
-  test('candidates.merge ui=modern forwards without an iframe', async ({ context, page }) => {
+  test('candidates.show_questionnaire ui=modern forwards without an iframe', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
-    await assertForwardRoute(page, 'merge', {
-      oldCandidateID: 1,
-      newCandidateID: 2
+    await assertForwardRoute(page, 'candidates', 'show_questionnaire', {
+      candidateID: 1,
+      questionnaireTitle: 'Engineering Questionnaire',
+      print: 'yes'
     });
   });
 
-  test('candidates.savesources ui=modern forwards without an iframe', async ({ context, page }) => {
+  test('contacts.addActivityScheduleEvent ui=modern forwards without an iframe', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
     await page.setViewportSize({ width: 1366, height: 900 });
 
-    await assertForwardRoute(page, 'saveSources');
+    await assertForwardRoute(page, 'contacts', 'addActivityScheduleEvent', {
+      contactID: 1,
+      onlyScheduleEvent: 'true'
+    });
   });
 });

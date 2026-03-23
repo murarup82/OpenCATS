@@ -1,9 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
-import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
-import { useEmbeddedLegacyFrame } from '../lib/useEmbeddedLegacyFrame';
 import type { UIModeBootstrap } from '../types';
 import '../dashboard-avel.css';
 
@@ -49,7 +47,6 @@ export function ContactActivityActionPage({ bootstrap }: Props) {
     () => buildLegacyActivityURL(bootstrap.indexName, contactID, onlyScheduleEvent),
     [bootstrap.indexName, contactID, onlyScheduleEvent]
   );
-  const embeddedURL = useMemo(() => buildEmbeddedLegacyURL(legacyURL), [legacyURL]);
   const contactURL = useMemo(
     () => ensureModernUIURL(`${bootstrap.indexName}?m=contacts&a=show&contactID=${contactID}`),
     [bootstrap.indexName, contactID]
@@ -62,8 +59,19 @@ export function ContactActivityActionPage({ bootstrap }: Props) {
     () => buildModeURL(bootstrap.indexName, contactID, true),
     [bootstrap.indexName, contactID]
   );
+  const canContinue = legacyURL !== '';
 
-  const { frameReloadToken, frameLoading, reloadFrame, handleFrameLoad } = useEmbeddedLegacyFrame();
+  useEffect(() => {
+    if (!canContinue) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      window.location.assign(legacyURL);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [canContinue, legacyURL]);
 
   if (!Number.isFinite(contactID) || contactID <= 0) {
     return (
@@ -85,20 +93,24 @@ export function ContactActivityActionPage({ bootstrap }: Props) {
             <a className="modern-btn modern-btn--secondary" href={contactURL}>
               Back To Contact
             </a>
-            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
-              Open Legacy UI
-            </a>
+            {canContinue ? (
+              <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                Open Legacy UI
+              </a>
+            ) : null}
           </>
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="modern-compat-page">
+          <section className="modern-compat-page modern-compat-page--forward">
             <header className="modern-compat-page__header">
               <div>
-                <h2 className="modern-compat-page__title">Contact Activity Workspace</h2>
-                <p className="modern-compat-page__subtitle">Native action wrapper for contact activity and event scheduling.</p>
+                <h2 className="modern-compat-page__title">Contact Activity Redirect</h2>
+                <p className="modern-compat-page__subtitle">
+                  The contact activity workflow now forwards to the legacy endpoint while preserving the mode links.
+                </p>
               </div>
-              <div className="modern-compat-page__meta">ui_embed=1</div>
+              <div className="modern-compat-page__meta">legacy_forward=1</div>
             </header>
 
             <div className="modern-compat-page__actions">
@@ -108,28 +120,28 @@ export function ContactActivityActionPage({ bootstrap }: Props) {
               <a className="modern-btn modern-btn--secondary" href={scheduleOnlyURL}>
                 Schedule-Only Mode
               </a>
-              <button type="button" className="modern-btn modern-btn--secondary" onClick={reloadFrame}>
-                Reload
-              </button>
-              <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
-                Open In New Tab
-              </a>
+              {canContinue ? (
+                <>
+                  <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                    Continue to Legacy UI
+                  </a>
+                  <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+                    Open In New Tab
+                  </a>
+                  <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                    Open Legacy UI
+                  </a>
+                </>
+              ) : null}
             </div>
 
-            <div className={`modern-compat-page__frame-wrap${frameLoading ? ' is-loading' : ''}`}>
-              {frameLoading ? (
-                <div className="modern-compat-page__frame-loader" aria-live="polite">
-                  Loading contact activity workspace...
-                </div>
-              ) : null}
-              <iframe
-                key={frameReloadToken}
-                title={`Contact activity ${contactID}`}
-                className={`modern-compat-page__frame${frameLoading ? ' is-loading' : ''}`}
-                src={embeddedURL}
-                onLoad={handleFrameLoad}
-              />
-            </div>
+            <section className="avel-list-panel">
+              <div className={`modern-state${canContinue ? '' : ' modern-state--error'}`} aria-live="polite">
+                {canContinue
+                  ? 'Preparing legacy contact activity redirect...'
+                  : 'Legacy contact activity URL is unavailable for this route.'}
+              </div>
+            </section>
           </section>
         </div>
       </PageContainer>

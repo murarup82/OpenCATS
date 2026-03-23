@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-23T15:01:11.487Z
-Finished: 2026-03-23T15:01:52.789Z
+Started: 2026-03-23T15:34:25.725Z
+Finished: 2026-03-23T15:35:02.633Z
 Overall Status: **Pass**
 
 ## Summary
@@ -129,7 +129,7 @@ Command: `npm.cmd run smoke:playwright`
 > playwright test --config=playwright.config.mjs
 
 
-Running 60 tests using 1 worker
+Running 62 tests using 1 worker
 
   -   1 tests\playwright\add-edit-workflows.spec.mjs:143:5 › Modern add/edit workflow contract smoke › candidates.add modern contract
   -   2 tests\playwright\add-edit-workflows.spec.mjs:151:5 › Modern add/edit workflow contract smoke › candidates.edit modern contract
@@ -143,56 +143,58 @@ Running 60 tests using 1 worker
   -  10 tests\playwright\add-edit-workflows.spec.mjs:175:5 › Modern add/edit workflow route smoke › companies.add ui=modern forwards without an iframe
   -  11 tests\playwright\add-edit-workflows.spec.mjs:175:5 › Modern add/edit workflow route smoke › contacts.add ui=modern forwards without an iframe
   -  12 tests\playwright\add-edit-workflows.spec.mjs:175:5 › Modern add/edit workflow route smoke › joborders.add ui=modern forwards without an iframe
-  -  13 tests\playwright\candidates-workspace-actions.spec.mjs:42:3 › Candidates workspace action smoke › candidates.merge ui=modern mounts without a runtime boundary
-  -  14 tests\playwright\candidates-workspace-actions.spec.mjs:60:3 › Candidates workspace action smoke › candidates.savesources ui=modern mounts without a runtime boundary
-  -  15 tests\playwright\gdpr-consent-visual.spec.mjs:56:3 › GDPR consent visual snapshots › invalid-link state
-  -  16 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › active state
-  -  17 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › accepted state
-  -  18 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › declined state
-  -  19 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › expired state
-  -  20 tests\playwright\graphs-workspace-actions.spec.mjs:42:3 › Graphs workspace action smoke › graphs.generic ui=modern mounts without a runtime boundary
-  -  21 tests\playwright\graphs-workspace-actions.spec.mjs:54:3 › Graphs workspace action smoke › graphs.wordverify ui=modern mounts without a runtime boundary
-  -  22 tests\playwright\import-workflow-actions.spec.mjs:89:3 › Import workflow route smoke › import.viewpending ui=modern mounts without a runtime boundary
-  -  23 tests\playwright\import-workflow-actions.spec.mjs:101:3 › Import workflow route smoke › import.viewerrors ui=modern forwards without an iframe
-  -  24 tests\playwright\import-workflow-actions.spec.mjs:118:3 › Import workflow route smoke › import.revert ui=modern mounts without a runtime boundary and no iframe
-  -  25 tests\playwright\import-workflow-actions.spec.mjs:143:3 › Import workflow route smoke › import.revert modern-json returns the import.revert.v1 contract
-  -  26 tests\playwright\import-workflow-actions.spec.mjs:170:3 › Import workflow route smoke › import.deletebulkresumes ui=modern mounts without a runtime boundary and no iframe
-  -  27 tests\playwright\import-workflow-actions.spec.mjs:190:3 › Import workflow route smoke › import.deleteBulkResumes modern-json returns the import.deleteBulkResumes.v1 contract
-  -  28 tests\playwright\import-workflow-actions.spec.mjs:221:3 › Import workflow route smoke › import.importbulkresumes ui=modern forwards without a runtime boundary and no iframe
-  -  29 tests\playwright\import-workflow-actions.spec.mjs:241:3 › Import workflow route smoke › import.importBulkResumes modern-json returns the import.bulkResumes.v1 contract
-  -  30 tests\playwright\import-workflow-advanced-actions.spec.mjs:42:3 › Import workflow advanced route smoke › import.massimport ui=modern mounts without a runtime boundary
-  -  31 tests\playwright\import-workflow-advanced-actions.spec.mjs:54:3 › Import workflow advanced route smoke › import.massimportdocument ui=modern mounts without a runtime boundary
-  -  32 tests\playwright\operations-workspace-actions.spec.mjs:60:3 › Operations workspace action smoke › joborders.edithiringplan ui=modern forwards without an iframe
-  -  33 tests\playwright\operations-workspace-actions.spec.mjs:83:3 › Operations workspace action smoke › settings.previewpagetop ui=modern forwards without an iframe
-  -  34 tests\playwright\operations-workspace-actions.spec.mjs:102:3 › Operations workspace action smoke › gdpr.requests ui=modern mounts and returns the gdpr.requests.v1 contract
-  -  35 tests\playwright\pipeline-matrix-runtime.spec.mjs:46:3 › Pipeline matrix runtime smoke › joborders.pipelineMatrix modern contract
-  -  36 tests\playwright\pipeline-matrix-runtime.spec.mjs:66:3 › Pipeline matrix runtime smoke › pipeline matrix route mounts without runtime boundary
-  -  37 tests\playwright\reports-workflow-actions.spec.mjs:42:3 › Reports workflow action smoke › reports.showhirereport ui=modern exposes an explicit legacy fallback before redirecting
-  -  38 tests\playwright\reports-workflow-actions.spec.mjs:64:3 › Reports workflow action smoke › reports.customizejoborderreport ui=modern exposes an explicit legacy fallback before redirecting
-  -  39 tests\playwright\reports-workflow-actions.spec.mjs:85:3 › Reports workflow action smoke › reports.generatejoborderreportpdf ui=modern forwards to the legacy download endpoint
-  -  40 tests\playwright\reports-workflow-actions.spec.mjs:101:3 › Reports workflow action smoke › reports.showPlacementReport ui=modern exposes an explicit legacy fallback before redirecting
-  -  41 tests\playwright\reports-workflow-actions.spec.mjs:121:3 › Reports workflow action smoke › reports.showSubmissionReport ui=modern exposes an explicit legacy fallback before redirecting
-  -  42 tests\playwright\settings-admin-workspace-actions.spec.mjs:60:3 › Settings admin workspace action smoke › settings.administration modern-json returns the settings.administration.v1 contract
-  -  43 tests\playwright\settings-admin-workspace-actions.spec.mjs:71:3 › Settings admin workspace action smoke › settings.myprofile modern-json returns the settings.myprofile.v1 contract
-  -  44 tests\playwright\settings-admin-workspace-actions.spec.mjs:83:3 › Settings admin workspace action smoke › settings.myprofile?s=changePassword modern-json returns the settings.myprofile.changePassword.v1 contract
-  -  45 tests\playwright\settings-admin-workspace-actions.spec.mjs:102:3 › Settings admin workspace action smoke › settings.administration ui=modern mounts without a runtime boundary
-  -  46 tests\playwright\settings-admin-workspace-actions.spec.mjs:116:3 › Settings admin workspace action smoke › settings.myprofile ui=modern mounts without a runtime boundary
-  -  47 tests\playwright\settings-admin-workspace-actions.spec.mjs:129:3 › Settings admin workspace action smoke › settings.manageusers ui=modern mounts without a runtime boundary
-  -  48 tests\playwright\settings-admin-workspace-actions.spec.mjs:146:3 › Settings admin workspace action smoke › settings.emailtemplates ui=modern forwards without an iframe
-  -  49 tests\playwright\settings-admin-workspace-actions.spec.mjs:163:3 › Settings admin workspace action smoke › settings.myprofile?s=changePassword ui=modern mounts without a runtime boundary
-  -  50 tests\playwright\settings-platform-workspace-actions.spec.mjs:42:3 › Settings platform workspace action smoke › settings.careerportalsettings ui=modern forwards without an iframe
-  -  51 tests\playwright\settings-platform-workspace-actions.spec.mjs:59:3 › Settings platform workspace action smoke › settings.createbackup ui=modern forwards without an iframe
-  -  52 tests\playwright\settings-platform-workspace-actions.spec.mjs:76:3 › Settings platform workspace action smoke › settings.rolepagepermissions ui=modern forwards without an iframe
-  -  53 tests\playwright\settings-platform-workspace-actions.spec.mjs:93:3 › Settings platform workspace action smoke › settings.schemamigrations ui=modern forwards without an iframe
-  -  54 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
-  -  55 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
-  -  56 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
-  -  57 tests\playwright\utility-endpoint-forward-actions.spec.mjs:42:3 › Utility endpoint forward action smoke › calendar.dynamicdata ui=modern mounts without a runtime boundary
-  -  58 tests\playwright\utility-endpoint-forward-actions.spec.mjs:54:3 › Utility endpoint forward action smoke › wizard.ajax_getpage ui=modern mounts without a runtime boundary
-  -  59 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
-  -  60 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
+  -  13 tests\playwright\candidate-activity-route-smoke.spec.mjs:57:3 › Candidate route smoke › candidates.show_questionnaire ui=modern forwards without an iframe
+  -  14 tests\playwright\candidate-activity-route-smoke.spec.mjs:68:3 › Candidate route smoke › contacts.addActivityScheduleEvent ui=modern forwards without an iframe
+  -  15 tests\playwright\candidates-workspace-actions.spec.mjs:57:3 › Candidates workspace action smoke › candidates.merge ui=modern forwards without an iframe
+  -  16 tests\playwright\candidates-workspace-actions.spec.mjs:67:3 › Candidates workspace action smoke › candidates.savesources ui=modern forwards without an iframe
+  -  17 tests\playwright\gdpr-consent-visual.spec.mjs:56:3 › GDPR consent visual snapshots › invalid-link state
+  -  18 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › active state
+  -  19 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › accepted state
+  -  20 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › declined state
+  -  21 tests\playwright\gdpr-consent-visual.spec.mjs:70:5 › GDPR consent visual snapshots › expired state
+  -  22 tests\playwright\graphs-workspace-actions.spec.mjs:42:3 › Graphs workspace action smoke › graphs.generic ui=modern mounts without a runtime boundary
+  -  23 tests\playwright\graphs-workspace-actions.spec.mjs:54:3 › Graphs workspace action smoke › graphs.wordverify ui=modern mounts without a runtime boundary
+  -  24 tests\playwright\import-workflow-actions.spec.mjs:89:3 › Import workflow route smoke › import.viewpending ui=modern mounts without a runtime boundary
+  -  25 tests\playwright\import-workflow-actions.spec.mjs:101:3 › Import workflow route smoke › import.viewerrors ui=modern forwards without an iframe
+  -  26 tests\playwright\import-workflow-actions.spec.mjs:118:3 › Import workflow route smoke › import.revert ui=modern mounts without a runtime boundary and no iframe
+  -  27 tests\playwright\import-workflow-actions.spec.mjs:143:3 › Import workflow route smoke › import.revert modern-json returns the import.revert.v1 contract
+  -  28 tests\playwright\import-workflow-actions.spec.mjs:170:3 › Import workflow route smoke › import.deletebulkresumes ui=modern mounts without a runtime boundary and no iframe
+  -  29 tests\playwright\import-workflow-actions.spec.mjs:190:3 › Import workflow route smoke › import.deleteBulkResumes modern-json returns the import.deleteBulkResumes.v1 contract
+  -  30 tests\playwright\import-workflow-actions.spec.mjs:221:3 › Import workflow route smoke › import.importbulkresumes ui=modern forwards without a runtime boundary and no iframe
+  -  31 tests\playwright\import-workflow-actions.spec.mjs:241:3 › Import workflow route smoke › import.importBulkResumes modern-json returns the import.bulkResumes.v1 contract
+  -  32 tests\playwright\import-workflow-advanced-actions.spec.mjs:42:3 › Import workflow advanced route smoke › import.massimport ui=modern mounts without a runtime boundary
+  -  33 tests\playwright\import-workflow-advanced-actions.spec.mjs:54:3 › Import workflow advanced route smoke › import.massimportdocument ui=modern mounts without a runtime boundary
+  -  34 tests\playwright\operations-workspace-actions.spec.mjs:60:3 › Operations workspace action smoke › joborders.edithiringplan ui=modern forwards without an iframe
+  -  35 tests\playwright\operations-workspace-actions.spec.mjs:83:3 › Operations workspace action smoke › settings.previewpagetop ui=modern forwards without an iframe
+  -  36 tests\playwright\operations-workspace-actions.spec.mjs:102:3 › Operations workspace action smoke › gdpr.requests ui=modern mounts and returns the gdpr.requests.v1 contract
+  -  37 tests\playwright\pipeline-matrix-runtime.spec.mjs:46:3 › Pipeline matrix runtime smoke › joborders.pipelineMatrix modern contract
+  -  38 tests\playwright\pipeline-matrix-runtime.spec.mjs:66:3 › Pipeline matrix runtime smoke › pipeline matrix route mounts without runtime boundary
+  -  39 tests\playwright\reports-workflow-actions.spec.mjs:42:3 › Reports workflow action smoke › reports.showhirereport ui=modern exposes an explicit legacy fallback before redirecting
+  -  40 tests\playwright\reports-workflow-actions.spec.mjs:64:3 › Reports workflow action smoke › reports.customizejoborderreport ui=modern exposes an explicit legacy fallback before redirecting
+  -  41 tests\playwright\reports-workflow-actions.spec.mjs:85:3 › Reports workflow action smoke › reports.generatejoborderreportpdf ui=modern forwards to the legacy download endpoint
+  -  42 tests\playwright\reports-workflow-actions.spec.mjs:101:3 › Reports workflow action smoke › reports.showPlacementReport ui=modern exposes an explicit legacy fallback before redirecting
+  -  43 tests\playwright\reports-workflow-actions.spec.mjs:121:3 › Reports workflow action smoke › reports.showSubmissionReport ui=modern exposes an explicit legacy fallback before redirecting
+  -  44 tests\playwright\settings-admin-workspace-actions.spec.mjs:60:3 › Settings admin workspace action smoke › settings.administration modern-json returns the settings.administration.v1 contract
+  -  45 tests\playwright\settings-admin-workspace-actions.spec.mjs:71:3 › Settings admin workspace action smoke › settings.myprofile modern-json returns the settings.myprofile.v1 contract
+  -  46 tests\playwright\settings-admin-workspace-actions.spec.mjs:83:3 › Settings admin workspace action smoke › settings.myprofile?s=changePassword modern-json returns the settings.myprofile.changePassword.v1 contract
+  -  47 tests\playwright\settings-admin-workspace-actions.spec.mjs:102:3 › Settings admin workspace action smoke › settings.administration ui=modern mounts without a runtime boundary
+  -  48 tests\playwright\settings-admin-workspace-actions.spec.mjs:116:3 › Settings admin workspace action smoke › settings.myprofile ui=modern mounts without a runtime boundary
+  -  49 tests\playwright\settings-admin-workspace-actions.spec.mjs:129:3 › Settings admin workspace action smoke › settings.manageusers ui=modern mounts without a runtime boundary
+  -  50 tests\playwright\settings-admin-workspace-actions.spec.mjs:146:3 › Settings admin workspace action smoke › settings.emailtemplates ui=modern forwards without an iframe
+  -  51 tests\playwright\settings-admin-workspace-actions.spec.mjs:163:3 › Settings admin workspace action smoke › settings.myprofile?s=changePassword ui=modern mounts without a runtime boundary
+  -  52 tests\playwright\settings-platform-workspace-actions.spec.mjs:42:3 › Settings platform workspace action smoke › settings.careerportalsettings ui=modern forwards without an iframe
+  -  53 tests\playwright\settings-platform-workspace-actions.spec.mjs:59:3 › Settings platform workspace action smoke › settings.createbackup ui=modern forwards without an iframe
+  -  54 tests\playwright\settings-platform-workspace-actions.spec.mjs:76:3 › Settings platform workspace action smoke › settings.rolepagepermissions ui=modern forwards without an iframe
+  -  55 tests\playwright\settings-platform-workspace-actions.spec.mjs:93:3 › Settings platform workspace action smoke › settings.schemamigrations ui=modern forwards without an iframe
+  -  56 tests\playwright\settings-wizard-actions.spec.mjs:80:3 › Settings wizard action smoke › settings.ajax_wizardImport modern-json GET returns mutation-like JSON
+  -  57 tests\playwright\settings-wizard-actions.spec.mjs:92:3 › Settings wizard action smoke › settings.ajax_wizardCheckKey rejects an intentionally invalid key with modern-json GET
+  -  58 tests\playwright\settings-wizard-actions.spec.mjs:107:3 › Settings wizard action smoke › settings.ajax_wizardImport ui=modern mounts without a runtime boundary
+  -  59 tests\playwright\utility-endpoint-forward-actions.spec.mjs:42:3 › Utility endpoint forward action smoke › calendar.dynamicdata ui=modern mounts without a runtime boundary
+  -  60 tests\playwright\utility-endpoint-forward-actions.spec.mjs:54:3 › Utility endpoint forward action smoke › wizard.ajax_getpage ui=modern mounts without a runtime boundary
+  -  61 tests\playwright\utility-forward-actions.spec.mjs:40:3 › Utility forward route smoke › xml.jobOrders ui=modern mounts without a runtime boundary
+  -  62 tests\playwright\utility-forward-actions.spec.mjs:52:3 › Utility forward route smoke › settings.ajax_tags_add ui=modern mounts without a runtime boundary
 
-  60 skipped
+  62 skipped
 ```
 
 **stderr**

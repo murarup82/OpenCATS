@@ -11,7 +11,10 @@ const outputPath = resolve(repoRoot, 'docs', 'modern-ui-unexpected-legacy-redire
 const expectedLegacyRedirectPages = new Set([
   'src/pages/ContactVCardActionPage.tsx',
   'src/pages/CandidatesFormBridgePage.tsx',
+  'src/pages/CandidatesWorkspaceActionPage.tsx',
+  'src/pages/CandidateQuestionnaireActionPage.tsx',
   'src/pages/ContactsFormBridgePage.tsx',
+  'src/pages/ContactActivityActionPage.tsx',
   'src/pages/ImportWorkflowActionPage.tsx',
   'src/pages/LegacyDownloadForwardActionPage.tsx',
   'src/pages/LoginLegacyActionPage.tsx',
