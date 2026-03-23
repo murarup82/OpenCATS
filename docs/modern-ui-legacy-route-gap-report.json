@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T10:02:07.449Z",
+  "generatedAt": "2026-03-23T10:11:22.853Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -1642,7 +1642,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.addemailtemplate",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1651,7 +1651,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.adduser",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1660,7 +1660,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.administration",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1849,7 +1849,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.changepassword",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1894,7 +1894,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deleteemailtemplate",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1903,7 +1903,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.deleteuser",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1912,7 +1912,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.edituser",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1930,7 +1930,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.emailsettings",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1939,7 +1939,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.emailtemplates",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1948,7 +1948,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.feedbacksettings",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1957,7 +1957,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.forceemail",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1966,7 +1966,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.gdprsettings",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1984,7 +1984,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.googleoidcsettings",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -1993,7 +1993,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.loginactivity",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2002,7 +2002,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.manageusers",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2011,7 +2011,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.myprofile",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2083,7 +2083,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.rejectionreasons",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2119,7 +2119,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.showuser",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2128,7 +2128,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.tags",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
@@ -2155,7 +2155,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.viewitemhistory",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false
     },
     {
