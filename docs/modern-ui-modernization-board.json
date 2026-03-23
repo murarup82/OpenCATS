@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T09:46:23.311Z",
+  "generatedAt": "2026-03-23T09:53:29.399Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 228,
@@ -11,11 +11,11 @@
   "bucketSummaries": [
     {
       "bucket": "native-action",
-      "count": 50
+      "count": 55
     },
     {
       "bucket": "native-surface",
-      "count": 178
+      "count": 173
     }
   ],
   "moduleSummaries": [
@@ -336,6 +336,71 @@
       "routeKey": "gdpr.export",
       "resolution": "native",
       "component": "LegacyDownloadForwardActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "import",
+      "action": "deleteBulkResumes",
+      "classification": "native-explicit",
+      "routeKey": "import.deletebulkresumes",
+      "resolution": "native",
+      "component": "ImportWorkflowActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "import",
+      "action": "importBulkResumes",
+      "classification": "native-explicit",
+      "routeKey": "import.importbulkresumes",
+      "resolution": "native",
+      "component": "ImportWorkflowActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "import",
+      "action": "revert",
+      "classification": "native-explicit",
+      "routeKey": "import.revert",
+      "resolution": "native",
+      "component": "ImportWorkflowActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "import",
+      "action": "viewerrors",
+      "classification": "native-explicit",
+      "routeKey": "import.viewerrors",
+      "resolution": "native",
+      "component": "ImportWorkflowActionPage",
+      "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-action",
+      "modernizationRank": 9,
+      "legacyDependent": false
+    },
+    {
+      "module": "import",
+      "action": "viewpending",
+      "classification": "native-explicit",
+      "routeKey": "import.viewpending",
+      "resolution": "native",
+      "component": "ImportWorkflowActionPage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-action",
@@ -1787,37 +1852,11 @@
     },
     {
       "module": "import",
-      "action": "deleteBulkResumes",
-      "classification": "native-explicit",
-      "routeKey": "import.deletebulkresumes",
-      "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-surface",
-      "modernizationRank": 10,
-      "legacyDependent": false
-    },
-    {
-      "module": "import",
       "action": "import",
       "classification": "native-explicit",
       "routeKey": "import.import",
       "resolution": "native",
       "component": "ImportLauncherPage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-surface",
-      "modernizationRank": 10,
-      "legacyDependent": false
-    },
-    {
-      "module": "import",
-      "action": "importBulkResumes",
-      "classification": "native-explicit",
-      "routeKey": "import.importbulkresumes",
-      "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-surface",
@@ -1904,48 +1943,9 @@
     },
     {
       "module": "import",
-      "action": "revert",
-      "classification": "native-explicit",
-      "routeKey": "import.revert",
-      "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-surface",
-      "modernizationRank": 10,
-      "legacyDependent": false
-    },
-    {
-      "module": "import",
       "action": "showMassImport",
       "classification": "native-explicit",
       "routeKey": "import.showmassimport",
-      "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-surface",
-      "modernizationRank": 10,
-      "legacyDependent": false
-    },
-    {
-      "module": "import",
-      "action": "viewerrors",
-      "classification": "native-explicit",
-      "routeKey": "import.viewerrors",
-      "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
-      "guarded": false,
-      "modernizationStatus": "modern-native",
-      "modernizationBucket": "native-surface",
-      "modernizationRank": 10,
-      "legacyDependent": false
-    },
-    {
-      "module": "import",
-      "action": "viewpending",
-      "classification": "native-explicit",
-      "routeKey": "import.viewpending",
       "resolution": "native",
       "component": "LegacyActionWorkspacePage",
       "guarded": false,

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T09:46:22.497Z",
+  "generatedAt": "2026-03-23T09:53:28.665Z",
   "totals": {
     "actions": 228,
     "nativeExplicit": 228,
@@ -1003,7 +1003,7 @@
       "classification": "native-explicit",
       "routeKey": "import.deletebulkresumes",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1021,7 +1021,7 @@
       "classification": "native-explicit",
       "routeKey": "import.importbulkresumes",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1084,7 +1084,7 @@
       "classification": "native-explicit",
       "routeKey": "import.revert",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1102,7 +1102,7 @@
       "classification": "native-explicit",
       "routeKey": "import.viewerrors",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {
@@ -1111,7 +1111,7 @@
       "classification": "native-explicit",
       "routeKey": "import.viewpending",
       "resolution": "native",
-      "component": "LegacyActionWorkspacePage",
+      "component": "ImportWorkflowActionPage",
       "guarded": false
     },
     {

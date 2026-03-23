@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-23T09:46:22.497Z
+Generated: 2026-03-23T09:53:28.665Z
 
 ## Summary
 
@@ -138,19 +138,19 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | home | updatePersonalNote | native-explicit | home.updatepersonalnote | HomeMyNotesPage |
 | home | updatePersonalTodo | native-explicit | home.updatepersonaltodo | HomeMyNotesPage |
 | import | commit | native-explicit | import.commit | ImportLauncherPage |
-| import | deleteBulkResumes | native-explicit | import.deletebulkresumes | LegacyActionWorkspacePage |
+| import | deleteBulkResumes | native-explicit | import.deletebulkresumes | ImportWorkflowActionPage |
 | import | import | native-explicit | import.import | ImportLauncherPage |
-| import | importBulkResumes | native-explicit | import.importbulkresumes | LegacyActionWorkspacePage |
+| import | importBulkResumes | native-explicit | import.importbulkresumes | ImportWorkflowActionPage |
 | import | importSelectType | native-explicit | import.importselecttype | LegacyActionWorkspacePage |
 | import | importUploadFile | native-explicit | import.importuploadfile | ImportLauncherPage |
 | import | importUploadResume | native-explicit | import.importuploadresume | LegacyActionWorkspacePage |
 | import | massImport | native-explicit | import.massimport | LegacyActionWorkspacePage |
 | import | massImportDocument | native-explicit | import.massimportdocument | LegacyActionWorkspacePage |
 | import | massImportEdit | native-explicit | import.massimportedit | LegacyActionWorkspacePage |
-| import | revert | native-explicit | import.revert | LegacyActionWorkspacePage |
+| import | revert | native-explicit | import.revert | ImportWorkflowActionPage |
 | import | showMassImport | native-explicit | import.showmassimport | LegacyActionWorkspacePage |
-| import | viewerrors | native-explicit | import.viewerrors | LegacyActionWorkspacePage |
-| import | viewpending | native-explicit | import.viewpending | LegacyActionWorkspacePage |
+| import | viewerrors | native-explicit | import.viewerrors | ImportWorkflowActionPage |
+| import | viewpending | native-explicit | import.viewpending | ImportWorkflowActionPage |
 | import | whatIsBulkResumes | native-explicit | import.whatisbulkresumes | LegacyActionWorkspacePage |
 | joborders | add | native-explicit | joborders.add | JobOrdersAddPage |
 | joborders | addActivityChangeStatus | native-explicit-guarded | joborders.addactivitychangestatus | JobOrdersShowPage |

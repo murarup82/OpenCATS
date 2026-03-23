@@ -49,6 +49,7 @@ import { LoginLegacyActionPage } from '../pages/LoginLegacyActionPage';
 import { LegacyActionWorkspacePage } from '../pages/LegacyActionWorkspacePage';
 import { LegacyUtilityForwardActionPage } from '../pages/LegacyUtilityForwardActionPage';
 import { LegacyDownloadForwardActionPage } from '../pages/LegacyDownloadForwardActionPage';
+import { ImportWorkflowActionPage } from '../pages/ImportWorkflowActionPage';
 import { SettingsTagsActionPage } from '../pages/SettingsTagsActionPage';
 import { SettingsWizardActionPage } from '../pages/SettingsWizardActionPage';
 import { RssJobOrdersPage } from '../pages/RssJobOrdersPage';
@@ -196,17 +197,17 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'graphs.joborderreportgraph': LegacyActionWorkspacePage,
   'graphs.testgraph': LegacyActionWorkspacePage,
   'graphs.wordverify': LegacyActionWorkspacePage,
-  'import.deletebulkresumes': LegacyActionWorkspacePage,
-  'import.importbulkresumes': LegacyActionWorkspacePage,
+  'import.deletebulkresumes': ImportWorkflowActionPage,
+  'import.importbulkresumes': ImportWorkflowActionPage,
   'import.importselecttype': LegacyActionWorkspacePage,
   'import.importuploadresume': LegacyActionWorkspacePage,
   'import.massimport': LegacyActionWorkspacePage,
   'import.massimportdocument': LegacyActionWorkspacePage,
   'import.massimportedit': LegacyActionWorkspacePage,
-  'import.revert': LegacyActionWorkspacePage,
+  'import.revert': ImportWorkflowActionPage,
   'import.showmassimport': LegacyActionWorkspacePage,
-  'import.viewerrors': LegacyActionWorkspacePage,
-  'import.viewpending': LegacyActionWorkspacePage,
+  'import.viewerrors': ImportWorkflowActionPage,
+  'import.viewpending': ImportWorkflowActionPage,
   'import.whatisbulkresumes': LegacyActionWorkspacePage,
   'settings.addemailtemplate': LegacyActionWorkspacePage,
   'settings.adduser': LegacyActionWorkspacePage,
