@@ -372,6 +372,11 @@ type NativeSettingsRouteMode =
   | 'forceEmail'
   | 'googleOIDCSettings'
   | 'deleteUser'
+  | 'customizeCalendar'
+  | 'eeo'
+  | 'talentFitFlowSettings'
+  | 'newInstallPassword'
+  | 'newSiteName'
   | 'rejectionReasons'
   | 'tags'
   | 'rolePagePermissions'
@@ -436,6 +441,75 @@ async function submitLegacyForm(url: string, payload: URLSearchParams): Promise<
 
   const html = await response.text();
   return new DOMParser().parseFromString(html, 'text/html');
+}
+
+function buildSettingsModernJSONURL(
+  bootstrap: UIModeBootstrap,
+  action: string,
+  modernPage: string,
+  query: Record<string, string | number | boolean | null | undefined> = {}
+): string {
+  const params = new URLSearchParams({
+    m: 'settings',
+    a: action,
+    format: 'modern-json',
+    modernPage,
+    contractVersion: '1',
+    ui: 'legacy'
+  });
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && String(value) !== '') {
+      params.set(key, String(value));
+    }
+  });
+
+  return `${bootstrap.indexName}?${params.toString()}`;
+}
+
+async function fetchSettingsModernJSON<T>(
+  bootstrap: UIModeBootstrap,
+  action: string,
+  modernPage: string,
+  query: Record<string, string | number | boolean | null | undefined> = {}
+): Promise<T> {
+  const response = await fetch(buildSettingsModernJSONURL(bootstrap, action, modernPage, query), {
+    credentials: 'same-origin'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to load settings workspace (${response.status}).`);
+  }
+
+  const payload = await response.json() as T;
+  if (!isObjectRecord(payload) || !isObjectRecord((payload as { meta?: unknown }).meta)) {
+    throw new Error('Unable to parse settings workspace JSON.');
+  }
+
+  return payload;
+}
+
+async function submitSettingsModernJSON<T>(
+  bootstrap: UIModeBootstrap,
+  action: string,
+  modernPage: string,
+  payload: URLSearchParams,
+  query: Record<string, string | number | boolean | null | undefined> = {}
+): Promise<T> {
+  const response = await fetch(buildSettingsModernJSONURL(bootstrap, action, modernPage, query), {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: payload.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}).`);
+  }
+
+  return response.json() as Promise<T>;
 }
 
 function readInputValue(root: ParentNode, selector: string): string {
@@ -688,6 +762,73 @@ type SettingsDeleteUserNativeData = {
   flash?: {
     success: boolean;
     message: string;
+  };
+};
+
+type SettingsModernJSONMeta = {
+  contractVersion: number;
+  contractKey: string;
+  modernPage: string;
+};
+
+type SettingsModernJSONActionData = {
+  submitURL?: string;
+  legacyURL?: string;
+  backURL?: string;
+  routeURL?: string;
+  testURL?: string;
+};
+
+type SettingsCustomizeCalendarModernData = {
+  meta: SettingsModernJSONMeta;
+  actions: SettingsModernJSONActionData & {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  settings: Record<string, string>;
+  calendarViewOptions: SettingsLegacySelectOption[];
+  hourOptions: SettingsLegacySelectOption[];
+};
+
+type SettingsEEOModernData = {
+  meta: SettingsModernJSONMeta;
+  actions: SettingsModernJSONActionData & {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  settings: Record<string, string>;
+};
+
+type SettingsTalentFitFlowModernData = {
+  meta: SettingsModernJSONMeta;
+  state: {
+    saved: boolean;
+    testOk?: boolean;
+    testMessage?: string;
+  };
+  actions: SettingsModernJSONActionData & {
+    submitURL: string;
+    testURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  settings: Record<string, string>;
+};
+
+type SettingsWizardModernData = {
+  meta: SettingsModernJSONMeta;
+  wizard: {
+    inputType: 'password' | 'siteName';
+    inputTypeTextParam?: string;
+    title: string;
+    prompt: string;
+    home: string;
+  };
+  actions: SettingsModernJSONActionData & {
+    submitURL: string;
+    legacyURL: string;
   };
 };
 
@@ -1133,6 +1274,26 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
 
   if (routeKey === 'settings.deleteuser') {
     return 'deleteUser';
+  }
+
+  if (routeKey === 'settings.customizecalendar') {
+    return 'customizeCalendar';
+  }
+
+  if (routeKey === 'settings.eeo') {
+    return 'eeo';
+  }
+
+  if (routeKey === 'settings.talentfitflowsettings') {
+    return 'talentFitFlowSettings';
+  }
+
+  if (routeKey === 'settings.newinstallpassword') {
+    return 'newInstallPassword';
+  }
+
+  if (routeKey === 'settings.newsitename') {
+    return 'newSiteName';
   }
 
   if (routeKey === 'settings.manageusers') {
@@ -2582,6 +2743,508 @@ function buildRouteWithParams(
     url.searchParams.set(key, String(value));
   });
   return ensureModernUIURL(url.toString());
+}
+
+function SettingsCustomizeCalendarNativeShell({
+  data,
+  bootstrap
+}: {
+  data: SettingsCustomizeCalendarModernData;
+  bootstrap: UIModeBootstrap;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [calendarSettings, setCalendarSettings] = useState({
+    noAjax: isTruthyText(data.settings.noAjax),
+    defaultPublic: isTruthyText(data.settings.defaultPublic),
+    firstDayMonday: isTruthyText(data.settings.firstDayMonday),
+    dayStart: String(data.settings.dayStart || '0'),
+    dayStop: String(data.settings.dayStop || '0'),
+    calendarView: String(data.settings.calendarView || 'DAYVIEW')
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useState<ModernMutationResponse | null>(null);
+  const resetForm = useCallback(() => {
+    setCalendarSettings({
+      noAjax: isTruthyText(data.settings.noAjax),
+      defaultPublic: isTruthyText(data.settings.defaultPublic),
+      firstDayMonday: isTruthyText(data.settings.firstDayMonday),
+      dayStart: String(data.settings.dayStart || '0'),
+      dayStop: String(data.settings.dayStop || '0'),
+      calendarView: String(data.settings.calendarView || 'DAYVIEW')
+    });
+    setFlash(null);
+  }, [data.settings]);
+  const saveSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    setFlash(null);
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      if (calendarSettings.noAjax) payload.set('noAjax', '1');
+      if (calendarSettings.defaultPublic) payload.set('defaultPublic', '1');
+      if (calendarSettings.firstDayMonday) payload.set('firstDayMonday', '1');
+      payload.set('dayStart', calendarSettings.dayStart);
+      payload.set('dayStop', calendarSettings.dayStop);
+      payload.set('calendarView', calendarSettings.calendarView);
+      const response = await submitSettingsModernJSON<ModernMutationResponse>(bootstrap, 'customizeCalendar', 'settings-customize-calendar', payload);
+      setFlash({ success: response.success, message: response.message || (response.success ? 'Calendar customization saved.' : 'Unable to save calendar settings.') });
+    } catch (error: unknown) {
+      setFlash({ success: false, message: error instanceof Error ? error.message : 'Unable to save calendar settings.' });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [bootstrap, calendarSettings, isSaving]);
+  const checkboxRows = [
+    { name: 'noAjax', label: 'Disable AJAX dynamic event loading' },
+    { name: 'defaultPublic', label: 'By default, all events are public' },
+    { name: 'firstDayMonday', label: 'First day of the week is Monday' }
+  ] as const;
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Customize Calendar"
+        subtitle="Adjust calendar defaults while preserving the legacy field names and postback behavior."
+        actions={(
+          <>
+            <button type="submit" form="customizeCalendarForm" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Settings'}</button>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>Back To Settings</a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite"><strong>{flash.success ? 'Saved' : 'Warning'}</strong><span>{flash.message}</span></section> : null}
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Calendar Defaults</h2>
+              <p className="avel-list-panel__hint">The native shell posts the same `customizeCalendar` payload as the legacy form.</p>
+            </div>
+            <form id="customizeCalendarForm" className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off" onSubmit={saveSettings}>
+              <input type="hidden" name="postback" value="postback" />
+              <div className="avel-settings-user-grid">
+                {checkboxRows.map((field) => (
+                  <label key={field.name} className="modern-checkbox avel-settings-user-field avel-settings-user-field--full">
+                    <input type="checkbox" name={field.name} checked={Boolean(calendarSettings[field.name as keyof typeof calendarSettings])} onChange={(event) => setCalendarSettings((current) => ({ ...current, [field.name]: event.target.checked } as typeof current))} />
+                    <span>{field.label}</span>
+                  </label>
+                ))}
+                <label className="avel-settings-user-field" htmlFor="dayStart"><span>Work day start time</span><select className="avel-form-control" id="dayStart" name="dayStart" value={calendarSettings.dayStart} onChange={(event) => setCalendarSettings((current) => ({ ...current, dayStart: event.target.value }))}>{data.hourOptions.map((option) => <option key={`day-start-${option.value}`} value={option.value}>{option.label}</option>)}</select></label>
+                <label className="avel-settings-user-field" htmlFor="dayStop"><span>Work day stop time</span><select className="avel-form-control" id="dayStop" name="dayStop" value={calendarSettings.dayStop} onChange={(event) => setCalendarSettings((current) => ({ ...current, dayStop: event.target.value }))}>{data.hourOptions.map((option) => <option key={`day-stop-${option.value}`} value={option.value}>{option.label}</option>)}</select></label>
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="calendarView"><span>Default calendar view</span><select className="avel-form-control" id="calendarView" name="calendarView" value={calendarSettings.calendarView} onChange={(event) => setCalendarSettings((current) => ({ ...current, calendarView: event.target.value }))}>{data.calendarViewOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+              </div>
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Settings'}</button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={resetForm} disabled={isSaving}>Reset</button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>Back To Settings</a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsEEONativeShell({
+  data,
+  bootstrap
+}: {
+  data: SettingsEEOModernData;
+  bootstrap: UIModeBootstrap;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [eeoSettings, setEEOSettings] = useState({
+    enabled: isTruthyText(data.settings.enabled),
+    genderTracking: isTruthyText(data.settings.genderTracking),
+    ethnicTracking: isTruthyText(data.settings.ethnicTracking),
+    veteranTracking: isTruthyText(data.settings.veteranTracking),
+    disabilityTracking: isTruthyText(data.settings.disabilityTracking)
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useState<ModernMutationResponse | null>(null);
+
+  useEffect(() => {
+    setEEOSettings({
+      enabled: isTruthyText(data.settings.enabled),
+      genderTracking: isTruthyText(data.settings.genderTracking),
+      ethnicTracking: isTruthyText(data.settings.ethnicTracking),
+      veteranTracking: isTruthyText(data.settings.veteranTracking),
+      disabilityTracking: isTruthyText(data.settings.disabilityTracking)
+    });
+  }, [data.settings]);
+
+  const resetForm = useCallback(() => {
+    setEEOSettings({
+      enabled: isTruthyText(data.settings.enabled),
+      genderTracking: isTruthyText(data.settings.genderTracking),
+      ethnicTracking: isTruthyText(data.settings.ethnicTracking),
+      veteranTracking: isTruthyText(data.settings.veteranTracking),
+      disabilityTracking: isTruthyText(data.settings.disabilityTracking)
+    });
+    setFlash(null);
+  }, [data.settings]);
+
+  const enableTracking = useCallback((field: keyof typeof eeoSettings, value: boolean) => {
+    setEEOSettings((current) => {
+      const next = { ...current, [field]: value } as typeof current;
+      if (field !== 'enabled' && value) next.enabled = true;
+      if (field === 'enabled' && !value) next.genderTracking = next.ethnicTracking = next.veteranTracking = next.disabilityTracking = false;
+      return next;
+    });
+  }, []);
+
+  const saveSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    setFlash(null);
+
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      if (eeoSettings.enabled) payload.set('enabled', '1');
+      if (eeoSettings.genderTracking) payload.set('genderTracking', '1');
+      if (eeoSettings.ethnicTracking) payload.set('ethnicTracking', '1');
+      if (eeoSettings.veteranTracking) payload.set('veteranTracking', '1');
+      if (eeoSettings.disabilityTracking) payload.set('disabilityTracking', '1');
+      const response = await submitSettingsModernJSON<ModernMutationResponse>(bootstrap, 'eeo', 'settings-eeo', payload);
+      setFlash({ success: response.success, message: response.message || (response.success ? 'EEO settings saved.' : 'Unable to save EEO settings.') });
+    } catch (error: unknown) {
+      setFlash({ success: false, message: error instanceof Error ? error.message : 'Unable to save EEO settings.' });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [bootstrap, eeoSettings, isSaving]);
+
+  const rows = [
+    { name: 'enabled', label: 'Enable Candidate EEO Tracking' },
+    { name: 'genderTracking', label: 'Track Gender' },
+    { name: 'ethnicTracking', label: 'Track Ethnic Background' },
+    { name: 'veteranTracking', label: 'Track Veteran Status' },
+    { name: 'disabilityTracking', label: 'Track Disability Status' }
+  ] as const;
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="EEO Settings"
+        subtitle="Keep candidate EEO tracking aligned with the legacy form fields and toggle behavior."
+        actions={(
+          <>
+            <button type="submit" form="eeoSettingsForm" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Settings'}</button>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>Back To Settings</a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite"><strong>{flash.success ? 'Saved' : 'Warning'}</strong><span>{flash.message}</span></section> : null}
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">EEO Tracking</h2>
+              <p className="avel-list-panel__hint">The native card preserves the same `eeo` contract and checkbox names.</p>
+            </div>
+            <form id="eeoSettingsForm" className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off" onSubmit={saveSettings}>
+              <input type="hidden" name="postback" value="postback" />
+              <div className="avel-settings-user-grid">
+                {rows.map((field) => (
+                  <label key={field.name} className="modern-checkbox avel-settings-user-field avel-settings-user-field--full">
+                    <input type="checkbox" name={field.name} checked={Boolean(eeoSettings[field.name as keyof typeof eeoSettings])} onChange={(event) => enableTracking(field.name, event.target.checked)} />
+                    <span>{field.label}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Settings'}</button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={resetForm} disabled={isSaving}>Reset</button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>Back To Settings</a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsTalentFitFlowNativeShell({
+  data,
+  bootstrap
+}: {
+  data: SettingsTalentFitFlowModernData;
+  bootstrap: UIModeBootstrap;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [formState, setFormState] = useState({
+    baseUrl: String(data.settings.baseUrl || ''),
+    apiKey: String(data.settings.apiKey || ''),
+    hmacSecret: String(data.settings.hmacSecret || '')
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useState<{ success: boolean; message: string } | null>(data.state.saved ? { success: true, message: 'TalentFitFlow settings saved successfully.' } : null);
+  const [testFeedback, setTestFeedback] = useState<string>(data.state.testMessage || '');
+
+  useEffect(() => {
+    setFormState({
+      baseUrl: String(data.settings.baseUrl || ''),
+      apiKey: String(data.settings.apiKey || ''),
+      hmacSecret: String(data.settings.hmacSecret || '')
+    });
+    setFlash(data.state.saved ? { success: true, message: 'TalentFitFlow settings saved successfully.' } : null);
+    setTestFeedback(data.state.testMessage || '');
+  }, [data.settings, data.state.saved, data.state.testMessage]);
+
+  const resetForm = useCallback(() => {
+    setFormState({
+      baseUrl: String(data.settings.baseUrl || ''),
+      apiKey: String(data.settings.apiKey || ''),
+      hmacSecret: String(data.settings.hmacSecret || '')
+    });
+    setFlash(null);
+    setTestFeedback('');
+  }, [data.settings]);
+
+  const submitSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    setFlash(null);
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      payload.set('baseUrl', formState.baseUrl);
+      payload.set('apiKey', formState.apiKey);
+      payload.set('hmacSecret', formState.hmacSecret);
+      const response = await submitSettingsModernJSON<ModernMutationResponse & { state?: { saved?: boolean; testOk?: boolean; testMessage?: string } }>(bootstrap, 'talentFitFlowSettings', 'settings-talent-fit-flow-settings', payload);
+      setFlash({ success: response.success, message: response.message || (response.success ? 'TalentFitFlow settings saved.' : 'Unable to save TalentFitFlow settings.') });
+      if (typeof response.state?.testMessage === 'string' && response.state.testMessage !== '') setTestFeedback(response.state.testMessage);
+    } catch (error: unknown) {
+      setFlash({ success: false, message: error instanceof Error ? error.message : 'Unable to save TalentFitFlow settings.' });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [bootstrap, formState.apiKey, formState.baseUrl, formState.hmacSecret, isSaving]);
+
+  const testConnection = useCallback(async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    setFlash(null);
+    setTestFeedback('');
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      payload.set('baseUrl', formState.baseUrl);
+      payload.set('apiKey', formState.apiKey);
+      payload.set('hmacSecret', formState.hmacSecret);
+      payload.set('testConnection', '1');
+      const response = await submitSettingsModernJSON<ModernMutationResponse & { state?: { saved?: boolean; testOk?: boolean; testMessage?: string } }>(bootstrap, 'talentFitFlowSettings', 'settings-talent-fit-flow-settings', payload);
+      setFlash({ success: response.success, message: response.message || (response.success ? 'TalentFitFlow connection test completed.' : 'Unable to test TalentFitFlow connection.') });
+      setTestFeedback(response.state?.testMessage || response.message || (response.success ? 'Ping OK.' : 'Unable to test connection.'));
+    } catch (error: unknown) {
+      setFlash({ success: false, message: error instanceof Error ? error.message : 'Unable to test TalentFitFlow connection.' });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [bootstrap, formState.apiKey, formState.baseUrl, formState.hmacSecret, isSaving]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="TalentFitFlow Settings"
+        subtitle="Keep the integration form native while preserving the legacy save and test behavior."
+        actions={(
+          <>
+            <button type="submit" form="tffSettingsForm" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Settings'}</button>
+            <button type="button" className="modern-btn modern-btn--secondary" onClick={() => { void testConnection(); }} disabled={isSaving}>Test Connection</button>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>Back To Settings</a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite"><strong>{flash.success ? 'Saved' : 'Warning'}</strong><span>{flash.message}</span></section> : null}
+          {testFeedback !== '' ? <section className="avel-settings-admin-flash is-info" aria-live="polite"><strong>Test</strong><span>{testFeedback}</span></section> : null}
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Integration Settings</h2>
+              <p className="avel-list-panel__hint">The native shell keeps the legacy field names and test payload intact.</p>
+            </div>
+            <form id="tffSettingsForm" className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off" onSubmit={submitSettings}>
+              <input type="hidden" name="postback" value="postback" />
+              <div className="avel-settings-user-grid">
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="baseUrl"><span>Base URL</span><input className="avel-form-control" type="text" id="baseUrl" name="baseUrl" value={formState.baseUrl} onChange={(event) => setFormState((current) => ({ ...current, baseUrl: event.target.value }))} /><div className="noteUnsized">Leave blank to use `TALENTFIT_BASE_URL` from the environment.</div></label>
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="apiKey"><span>API Key</span><input className="avel-form-control" type="text" id="apiKey" name="apiKey" value={formState.apiKey} onChange={(event) => setFormState((current) => ({ ...current, apiKey: event.target.value }))} /><div className="noteUnsized">Leave blank to use `OPENCATS_API_KEY` from the environment.</div></label>
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="hmacSecret"><span>HMAC Secret</span><input className="avel-form-control" type="password" id="hmacSecret" name="hmacSecret" value={formState.hmacSecret} onChange={(event) => setFormState((current) => ({ ...current, hmacSecret: event.target.value }))} /><div className="noteUnsized">Leave blank to use `OPENCATS_HMAC_SECRET` from the environment.</div></label>
+              </div>
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Settings'}</button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={resetForm} disabled={isSaving}>Reset</button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>Back To Settings</a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsNewInstallPasswordNativeShell({
+  data,
+  bootstrap
+}: {
+  data: SettingsWizardModernData;
+  bootstrap: UIModeBootstrap;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [password1, setPassword1] = useState('');
+  const [password2, setPassword2] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useState<ModernMutationResponse | null>(null);
+
+  const submitSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    setFlash(null);
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      payload.set('password1', password1);
+      payload.set('password2', password2);
+      const response = await submitSettingsModernJSON<ModernMutationResponse & { actions?: { routeURL?: string } }>(bootstrap, 'newInstallPassword', 'settings-new-install-password', payload);
+      if (response.success && response.actions?.routeURL) {
+        window.location.assign(response.actions.routeURL);
+        return;
+      }
+      setFlash({ success: response.success, message: response.message || (response.success ? 'Administrator password saved.' : 'Unable to save administrator password.') });
+    } catch (error: unknown) {
+      setFlash({ success: false, message: error instanceof Error ? error.message : 'Unable to save administrator password.' });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [bootstrap, isSaving, password1, password2]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title={data.wizard.title}
+        subtitle="Create the initial administrator password without changing the legacy wizard fields."
+        actions={(
+          <>
+            <button type="submit" form="newInstallPasswordForm" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Password'}</button>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite"><strong>{flash.success ? 'Saved' : 'Warning'}</strong><span>{flash.message}</span></section> : null}
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">{data.wizard.title}</h2>
+              <p className="avel-list-panel__hint">{data.wizard.prompt}</p>
+            </div>
+            <form id="newInstallPasswordForm" className="avel-settings-password-form" action={submitURL} method="post" autoComplete="off" onSubmit={submitSettings}>
+              <input type="hidden" name="postback" value="postback" />
+              <div className="avel-settings-password-grid">
+                <label className="avel-settings-password-field" htmlFor="password1"><span>New Password</span><input className="avel-form-control" type="password" id="password1" name="password1" value={password1} onChange={(event) => setPassword1(event.target.value)} autoComplete="new-password" /></label>
+                <label className="avel-settings-password-field" htmlFor="password2"><span>Confirm New Password</span><input className="avel-form-control" type="password" id="password2" name="password2" value={password2} onChange={(event) => setPassword2(event.target.value)} autoComplete="new-password" /></label>
+              </div>
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Password'}</button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={() => { setPassword1(''); setPassword2(''); setFlash(null); }} disabled={isSaving}>Reset</button>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsNewSiteNameNativeShell({
+  data,
+  bootstrap
+}: {
+  data: SettingsWizardModernData;
+  bootstrap: UIModeBootstrap;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [siteName, setSiteName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useState<ModernMutationResponse | null>(null);
+
+  const submitSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    setFlash(null);
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      payload.set('siteName', siteName);
+      const response = await submitSettingsModernJSON<ModernMutationResponse & { actions?: { routeURL?: string } }>(bootstrap, 'newSiteName', 'settings-new-site-name', payload);
+      if (response.success && response.actions?.routeURL) {
+        window.location.assign(response.actions.routeURL);
+        return;
+      }
+      setFlash({ success: response.success, message: response.message || (response.success ? 'Site name saved.' : 'Unable to save site name.') });
+    } catch (error: unknown) {
+      setFlash({ success: false, message: error instanceof Error ? error.message : 'Unable to save site name.' });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [bootstrap, isSaving, siteName]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title={data.wizard.title}
+        subtitle="Set the site name to finish initial setup without leaving the native wizard shell."
+        actions={(
+          <>
+            <button type="submit" form="newSiteNameForm" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Site Name'}</button>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite"><strong>{flash.success ? 'Saved' : 'Warning'}</strong><span>{flash.message}</span></section> : null}
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">{data.wizard.title}</h2>
+              <p className="avel-list-panel__hint">{data.wizard.prompt}</p>
+            </div>
+            <form id="newSiteNameForm" className="avel-settings-password-form" action={submitURL} method="post" autoComplete="off" onSubmit={submitSettings}>
+              <input type="hidden" name="postback" value="postback" />
+              <div className="avel-settings-password-grid">
+                <label className="avel-settings-password-field" htmlFor="siteName"><span>{data.wizard.inputTypeTextParam || 'Site Name'}</span><input className="avel-form-control" type="text" id="siteName" name="siteName" value={siteName} onChange={(event) => setSiteName(event.target.value)} autoComplete="organization" /></label>
+              </div>
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Site Name'}</button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={() => { setSiteName(''); setFlash(null); }} disabled={isSaving}>Reset</button>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>Open Legacy UI</a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
 }
 
 function SettingsLoginActivityNativeShell({
@@ -5127,6 +5790,10 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     | SettingsGoogleOIDCSettingsNativeData
     | SettingsForceEmailNativeData
     | SettingsDeleteUserNativeData
+    | SettingsCustomizeCalendarModernData
+    | SettingsEEOModernData
+    | SettingsTalentFitFlowModernData
+    | SettingsWizardModernData
     | SettingsRejectionReasonsModernDataResponse
     | SettingsTagsModernDataResponse
     | SettingsRolePagePermissionsModernDataResponse
@@ -5196,6 +5863,16 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           return fetchNativeGoogleOIDCSettingsData(bootstrap, legacyURL);
         case 'deleteUser':
           return buildDeleteUserNativeData(bootstrap, legacyURL);
+        case 'customizeCalendar':
+          return fetchSettingsModernJSON<SettingsCustomizeCalendarModernData>(bootstrap, 'customizeCalendar', 'settings-customize-calendar');
+        case 'eeo':
+          return fetchSettingsModernJSON<SettingsEEOModernData>(bootstrap, 'eeo', 'settings-eeo');
+        case 'talentFitFlowSettings':
+          return fetchSettingsModernJSON<SettingsTalentFitFlowModernData>(bootstrap, 'talentFitFlowSettings', 'settings-talent-fit-flow-settings');
+        case 'newInstallPassword':
+          return fetchSettingsModernJSON<SettingsWizardModernData>(bootstrap, 'newInstallPassword', 'settings-new-install-password');
+        case 'newSiteName':
+          return fetchSettingsModernJSON<SettingsWizardModernData>(bootstrap, 'newSiteName', 'settings-new-site-name');
         case 'rejectionReasons':
           return fetchSettingsRejectionReasonsModernData(bootstrap, query);
         case 'tags':
@@ -5366,6 +6043,51 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           data={nativeData as SettingsDeleteUserNativeData}
           bootstrap={bootstrap}
           onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'customizeCalendar') {
+      return (
+        <SettingsCustomizeCalendarNativeShell
+          data={nativeData as SettingsCustomizeCalendarModernData}
+          bootstrap={bootstrap}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'eeo') {
+      return (
+        <SettingsEEONativeShell
+          data={nativeData as SettingsEEOModernData}
+          bootstrap={bootstrap}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'talentFitFlowSettings') {
+      return (
+        <SettingsTalentFitFlowNativeShell
+          data={nativeData as SettingsTalentFitFlowModernData}
+          bootstrap={bootstrap}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'newInstallPassword') {
+      return (
+        <SettingsNewInstallPasswordNativeShell
+          data={nativeData as SettingsWizardModernData}
+          bootstrap={bootstrap}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'newSiteName') {
+      return (
+        <SettingsNewSiteNameNativeShell
+          data={nativeData as SettingsWizardModernData}
+          bootstrap={bootstrap}
         />
       );
     }
