@@ -250,10 +250,10 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.createbackup': {
     title: 'Create Backup',
-    subtitle: 'Create system backups in compatibility mode.',
+    subtitle: 'Create system backups from a native settings shell.',
     panelTitle: 'Backup Creation Workspace',
-    panelSubtitle: 'Legacy backup creation workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wrapper keeps the backup runner available through an explicit legacy escape hatch.',
+    mode: 'embed'
   },
   'settings.customizecalendar': {
     title: 'Customize Calendar',
@@ -264,17 +264,17 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.customizeextrafields': {
     title: 'Customize Extra Fields',
-    subtitle: 'Configure extra field definitions in compatibility mode.',
+    subtitle: 'Configure extra field definitions from a native settings shell.',
     panelTitle: 'Extra Fields Workspace',
-    panelSubtitle: 'Legacy extra-field customization workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wrapper keeps the legacy field editor available through an explicit escape hatch.',
+    mode: 'embed'
   },
   'settings.deletebackup': {
     title: 'Delete Backup',
-    subtitle: 'Remove backup files in compatibility mode.',
+    subtitle: 'Remove backup files from a native settings shell.',
     panelTitle: 'Backup Deletion Workspace',
-    panelSubtitle: 'Legacy backup deletion workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wrapper keeps the destructive action behind an explicit legacy confirmation path.',
+    mode: 'embed'
   },
   'settings.eeo': {
     title: 'EEO Settings',
@@ -285,10 +285,10 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.newinstallfinished': {
     title: 'New Install Finished',
-    subtitle: 'Complete installation finalization steps in compatibility mode.',
+    subtitle: 'Complete installation finalization from a native completion shell.',
     panelTitle: 'Install Finalization Workspace',
-    panelSubtitle: 'Legacy installation finalization workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native completion shell keeps the final handoff visible without a redirect loop.',
+    mode: 'embed'
   },
   'settings.newinstallpassword': {
     title: 'New Install Password',
@@ -341,10 +341,10 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.upgradesitename': {
     title: 'Upgrade Site Name',
-    subtitle: 'Apply site-name upgrade changes in compatibility mode.',
+    subtitle: 'Apply site-name upgrade changes from a native wizard shell.',
     panelTitle: 'Upgrade Site Name Workspace',
-    panelSubtitle: 'Legacy site-name upgrade workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wizard shell preserves the existing postback and hidden-field semantics.',
+    mode: 'embed'
   }
 };
 
@@ -377,6 +377,11 @@ type NativeSettingsRouteMode =
   | 'talentFitFlowSettings'
   | 'newInstallPassword'
   | 'newSiteName'
+  | 'createBackup'
+  | 'deleteBackup'
+  | 'customizeExtraFields'
+  | 'newInstallFinished'
+  | 'upgradeSiteName'
   | 'rejectionReasons'
   | 'tags'
   | 'rolePagePermissions'
@@ -827,6 +832,49 @@ type SettingsWizardModernData = {
     home: string;
   };
   actions: SettingsModernJSONActionData & {
+    submitURL: string;
+    legacyURL: string;
+  };
+};
+
+type SettingsLegacyNoticeData = {
+  actions: {
+    backURL: string;
+    legacyURL: string;
+  };
+  state: {
+    title: string;
+    message: string;
+  };
+};
+
+type SettingsDeleteBackupNativeData = SettingsLegacyNoticeData & {
+  actions: SettingsLegacyNoticeData['actions'] & {
+    deleteURL: string;
+  };
+  state: SettingsLegacyNoticeData['state'] & {
+    warning: string;
+  };
+};
+
+type SettingsNewInstallFinishedNativeData = {
+  actions: {
+    homeURL: string;
+    legacyURL: string;
+  };
+  state: {
+    message: string;
+  };
+};
+
+type SettingsUpgradeSiteNameNativeData = {
+  wizard: {
+    inputTypeTextParam: string;
+    title: string;
+    prompt: string;
+    home: string;
+  };
+  actions: {
     submitURL: string;
     legacyURL: string;
   };
@@ -1296,6 +1344,26 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
     return 'newSiteName';
   }
 
+  if (routeKey === 'settings.createbackup') {
+    return 'createBackup';
+  }
+
+  if (routeKey === 'settings.deletebackup') {
+    return 'deleteBackup';
+  }
+
+  if (routeKey === 'settings.customizeextrafields') {
+    return 'customizeExtraFields';
+  }
+
+  if (routeKey === 'settings.newinstallfinished') {
+    return 'newInstallFinished';
+  }
+
+  if (routeKey === 'settings.upgradesitename') {
+    return 'upgradeSiteName';
+  }
+
   if (routeKey === 'settings.manageusers') {
     return 'manageUsers';
   }
@@ -1520,6 +1588,61 @@ function buildDeleteUserNativeData(bootstrap: UIModeBootstrap, legacyURL: string
       userID,
       requested: userID > 0,
       automatedTester: isTruthyText(query.get('iAmTheAutomatedTester'))
+    }
+  };
+}
+
+function buildLegacyNoticeData(bootstrap: UIModeBootstrap, legacyURL: string, title: string, message: string): SettingsLegacyNoticeData {
+  return {
+    actions: {
+      backURL: `${bootstrap.indexName}?m=settings&a=administration&ui=modern`,
+      legacyURL
+    },
+    state: {
+      title,
+      message
+    }
+  };
+}
+
+function buildDeleteBackupNativeData(bootstrap: UIModeBootstrap, legacyURL: string): SettingsDeleteBackupNativeData {
+  return {
+    actions: {
+      backURL: `${bootstrap.indexName}?m=settings&a=administration&ui=modern`,
+      legacyURL,
+      deleteURL: `${bootstrap.indexName}?m=settings&a=deleteBackup&ui=legacy`
+    },
+    state: {
+      title: 'Delete Backup',
+      message: 'Deleting the stored backup is destructive and cannot be undone.',
+      warning: 'Use the legacy confirmation path if you really need to remove the stored backup.'
+    }
+  };
+}
+
+function buildNewInstallFinishedNativeData(bootstrap: UIModeBootstrap, legacyURL: string): SettingsNewInstallFinishedNativeData {
+  return {
+    actions: {
+      homeURL: `${bootstrap.indexName}?m=home`,
+      legacyURL
+    },
+    state: {
+      message: 'Initial setup is complete. Continue into OpenCATS or open the legacy finish screen.'
+    }
+  };
+}
+
+function buildUpgradeSiteNameNativeData(bootstrap: UIModeBootstrap, legacyURL: string): SettingsUpgradeSiteNameNativeData {
+  return {
+    wizard: {
+      inputTypeTextParam: 'Site Name',
+      title: 'Site Name',
+      prompt: 'Your administrator password has been changed. Next, create a name for your OpenCATS installation.',
+      home: 'home'
+    },
+    actions: {
+      submitURL: `${bootstrap.indexName}?m=settings&a=upgradeSiteName`,
+      legacyURL
     }
   };
 }
@@ -2723,6 +2846,259 @@ function SettingsDeleteUserNativeShell({
             <div className="modern-state">
               {isRunning ? 'Deleting user...' : data.state.requested ? `Requested delete for user #${data.state.userID}.` : 'No user ID supplied.'}
             </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsCreateBackupNativeShell({
+  data,
+  backLink
+}: {
+  data: SettingsLegacyNoticeData;
+  backLink: BackLink;
+}) {
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title={data.state.title}
+        subtitle="Backup creation remains available through a native wrapper and an explicit legacy escape hatch."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+              {backLink.label}
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Backup Workspace</h2>
+              <p className="avel-list-panel__hint">{data.state.message}</p>
+            </div>
+            <div className="modern-compat-page__actions">
+              <a className="modern-btn modern-btn--emphasis" href={data.actions.legacyURL}>
+                Open Backup Runner
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL} target="_blank" rel="noreferrer">
+                Open In New Tab
+              </a>
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsDeleteBackupNativeShell({
+  data,
+  backLink
+}: {
+  data: SettingsDeleteBackupNativeData;
+  backLink: BackLink;
+}) {
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title={data.state.title}
+        subtitle="Deletion stays behind an explicit confirmation step and the legacy escape hatch."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+              {backLink.label}
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+            <strong>Warning</strong>
+            <span>{data.state.warning}</span>
+          </section>
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Delete Backup</h2>
+              <p className="avel-list-panel__hint">{data.state.message}</p>
+            </div>
+            <div className="modern-compat-page__actions">
+              <button
+                type="button"
+                className="modern-btn modern-btn--danger"
+                onClick={() => {
+                  if (window.confirm('Delete this backup?')) {
+                    window.location.assign(data.actions.deleteURL);
+                  }
+                }}
+              >
+                Delete Backup
+              </button>
+              <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+                Open Legacy UI
+              </a>
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsCustomizeExtraFieldsNativeShell({
+  data,
+  backLink
+}: {
+  data: SettingsLegacyNoticeData;
+  backLink: BackLink;
+}) {
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title={data.state.title}
+        subtitle="The native wrapper keeps the advanced extra-field editor one click away."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backLink.href}>
+              {backLink.label}
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Extra Fields</h2>
+              <p className="avel-list-panel__hint">{data.state.message}</p>
+            </div>
+            <div className="modern-compat-page__actions">
+              <a className="modern-btn modern-btn--emphasis" href={data.actions.legacyURL}>
+                Open Field Builder
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL} target="_blank" rel="noreferrer">
+                Open In New Tab
+              </a>
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsNewInstallFinishedNativeShell({
+  data
+}: {
+  data: { actions: { homeURL: string; legacyURL: string }; state: { message: string } };
+}) {
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="New Install Finished"
+        subtitle="Finish the wizard and continue into OpenCATS."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--emphasis" href={data.actions.homeURL}>
+              Continue Using OpenCATS
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Setup Complete</h2>
+              <p className="avel-list-panel__hint">{data.state.message}</p>
+            </div>
+            <div className="modern-compat-page__actions">
+              <a className="modern-btn modern-btn--emphasis" href={data.actions.homeURL}>
+                Continue Using OpenCATS
+              </a>
+              <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+                Open Legacy UI
+              </a>
+            </div>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsUpgradeSiteNameNativeShell({
+  data
+}: {
+  data: SettingsUpgradeSiteNameNativeData;
+}) {
+  const [siteName, setSiteName] = useState('');
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title={data.wizard.title}
+        subtitle="Set the installation name with the same postback semantics the legacy wizard expects."
+        actions={(
+          <>
+            <button type="submit" form="upgradeSiteNameForm" className="modern-btn modern-btn--emphasis">
+              Save Site Name
+            </button>
+            <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">{data.wizard.title}</h2>
+              <p className="avel-list-panel__hint">{data.wizard.prompt}</p>
+            </div>
+
+            <form id="upgradeSiteNameForm" className="avel-settings-password-form" action={data.actions.submitURL} method="post" autoComplete="off">
+              <input type="hidden" name="postback" value="postback" />
+              <div className="avel-settings-password-grid">
+                <label className="avel-settings-password-field" htmlFor="siteName">
+                  <span>{data.wizard.inputTypeTextParam}</span>
+                  <input
+                    className="avel-form-control"
+                    type="text"
+                    id="siteName"
+                    name="siteName"
+                    value={siteName}
+                    onChange={(event) => setSiteName(event.target.value)}
+                    autoComplete="organization"
+                  />
+                </label>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis">
+                  Save Site Name
+                </button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={() => setSiteName('')}>
+                  Reset
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </form>
           </section>
         </div>
       </PageContainer>
@@ -5790,6 +6166,10 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     | SettingsGoogleOIDCSettingsNativeData
     | SettingsForceEmailNativeData
     | SettingsDeleteUserNativeData
+    | SettingsLegacyNoticeData
+    | SettingsDeleteBackupNativeData
+    | SettingsNewInstallFinishedNativeData
+    | SettingsUpgradeSiteNameNativeData
     | SettingsCustomizeCalendarModernData
     | SettingsEEOModernData
     | SettingsTalentFitFlowModernData
@@ -5863,6 +6243,35 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           return fetchNativeGoogleOIDCSettingsData(bootstrap, legacyURL);
         case 'deleteUser':
           return buildDeleteUserNativeData(bootstrap, legacyURL);
+        case 'createBackup':
+          return buildLegacyNoticeData(
+            bootstrap,
+            `${bootstrap.indexName}?m=settings&a=createBackup&ui=legacy`,
+            'Create Backup',
+            'Use the legacy backup runner for full database or attachments backups.'
+          );
+        case 'deleteBackup':
+          return buildDeleteBackupNativeData(
+            bootstrap,
+            `${bootstrap.indexName}?m=settings&a=deleteBackup&ui=legacy`
+          );
+        case 'customizeExtraFields':
+          return buildLegacyNoticeData(
+            bootstrap,
+            `${bootstrap.indexName}?m=settings&a=customizeExtraFields&ui=legacy`,
+            'Customize Extra Fields',
+            'Use the legacy field builder for add, remove, rename, and reorder operations.'
+          );
+        case 'newInstallFinished':
+          return buildNewInstallFinishedNativeData(
+            bootstrap,
+            `${bootstrap.indexName}?m=settings&a=newInstallFinished&ui=legacy`
+          );
+        case 'upgradeSiteName':
+          return buildUpgradeSiteNameNativeData(
+            bootstrap,
+            `${bootstrap.indexName}?m=settings&a=upgradeSiteName&ui=legacy`
+          );
         case 'customizeCalendar':
           return fetchSettingsModernJSON<SettingsCustomizeCalendarModernData>(bootstrap, 'customizeCalendar', 'settings-customize-calendar');
         case 'eeo':
@@ -6043,6 +6452,49 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           data={nativeData as SettingsDeleteUserNativeData}
           bootstrap={bootstrap}
           onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'createBackup') {
+      return (
+        <SettingsCreateBackupNativeShell
+          data={nativeData as SettingsLegacyNoticeData}
+          backLink={backLink}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'deleteBackup') {
+      return (
+        <SettingsDeleteBackupNativeShell
+          data={nativeData as SettingsDeleteBackupNativeData}
+          backLink={backLink}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'customizeExtraFields') {
+      return (
+        <SettingsCustomizeExtraFieldsNativeShell
+          data={nativeData as SettingsLegacyNoticeData}
+          backLink={backLink}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'newInstallFinished') {
+      return (
+        <SettingsNewInstallFinishedNativeShell
+          data={nativeData as SettingsNewInstallFinishedNativeData}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'upgradeSiteName') {
+      return (
+        <SettingsUpgradeSiteNameNativeShell
+          data={nativeData as SettingsUpgradeSiteNameNativeData}
         />
       );
     }
