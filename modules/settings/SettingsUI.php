@@ -2937,8 +2937,22 @@ class SettingsUI extends UserInterface
      */
     private function EEOEOCSettings()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $EEOSettings = new EEOSettings($this->_siteID);
         $EEOSettingsRS = $EEOSettings->getAll();
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-eeo')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernEEOJSON('settings-eeo', $EEOSettingsRS);
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
@@ -2950,6 +2964,7 @@ class SettingsUI extends UserInterface
     //FIXME: Document me.
     private function onEEOEOCSettings()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $EEOSettings = new EEOSettings($this->_siteID);
         $EEOSettingsRS = $EEOSettings->getAll();
 
@@ -2963,6 +2978,22 @@ class SettingsUI extends UserInterface
             {
                 $EEOSettings->set($setting, '0');
             }
+        }
+
+        if ($isModernJSON)
+        {
+            $this->renderModernMutationJSON(
+                'settings.eeo.mutation.v1',
+                'settings-eeo',
+                sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'EEO settings saved.',
+                array(
+                    'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                    'legacyURL' => sprintf('%s?m=settings&a=eeo&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
         }
 
         CATSUtility::transferRelativeURI('m=settings&a=administration');
@@ -3336,8 +3367,28 @@ class SettingsUI extends UserInterface
      */
     private function talentFitFlowSettings()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $tffSettings = new TalentFitFlowSettings($this->_siteID);
         $tffSettingsRS = $tffSettings->getAll();
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-talent-fit-flow-settings')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernTalentFitFlowSettingsJSON(
+                'settings-talent-fit-flow-settings',
+                $tffSettingsRS,
+                isset($_GET['saved']),
+                null,
+                null
+            );
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
@@ -3351,6 +3402,7 @@ class SettingsUI extends UserInterface
      */
     private function onTalentFitFlowSettings()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $tffSettings = new TalentFitFlowSettings($this->_siteID);
 
         $baseUrl = $this->getTrimmedInput('baseUrl', $_POST);
@@ -3378,6 +3430,21 @@ class SettingsUI extends UserInterface
                 $this->_template->assign('tffTestMessage', 'Ping OK. opencatsUserConfigured: ' . $configured);
             }
 
+            if ($isModernJSON)
+            {
+                $this->renderModernTalentFitFlowSettingsMutationJSON(
+                    (isset($testResult['ok']) && $testResult['ok']),
+                    (isset($testResult['ok']) && $testResult['ok']) ? 'Ping OK.' : $client->getLastError(),
+                    sprintf('%s?m=settings&a=talentFitFlowSettings&ui=modern', CATSUtility::getIndexName()),
+                    false,
+                    (isset($testResult['ok']) && $testResult['ok']),
+                    isset($testResult['ok']) && $testResult['ok']
+                        ? 'Ping OK. opencatsUserConfigured: ' . $configured
+                        : $client->getLastError()
+                );
+                return;
+            }
+
             $this->_template->assign('active', $this);
             $this->_template->assign('subActive', 'Administration');
             $this->_template->assign('tffSettings', array(
@@ -3393,6 +3460,19 @@ class SettingsUI extends UserInterface
         $tffSettings->set('baseUrl', $baseUrl);
         $tffSettings->set('apiKey', $apiKey);
         $tffSettings->set('hmacSecret', $hmacSecret);
+
+        if ($isModernJSON)
+        {
+            $this->renderModernTalentFitFlowSettingsMutationJSON(
+                true,
+                'TalentFitFlow settings saved.',
+                sprintf('%s?m=settings&a=talentFitFlowSettings&ui=modern&saved=1', CATSUtility::getIndexName()),
+                true,
+                null,
+                null
+            );
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=settings&a=talentFitFlowSettings&saved=1');
     }
@@ -3964,8 +4044,25 @@ class SettingsUI extends UserInterface
      */
     private function customizeCalendar()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $calendarSettings = new CalendarSettings($this->_siteID);
         $calendarSettingsRS = $calendarSettings->getAll();
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-customize-calendar')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernCustomizeCalendarJSON(
+                'settings-customize-calendar',
+                $calendarSettingsRS
+            );
+            return;
+        }
 
         $this->_template->assign('calendarSettingsRS', $calendarSettingsRS);
         $this->_template->assign('active', $this);
@@ -3979,6 +4076,7 @@ class SettingsUI extends UserInterface
      */
     private function onCustomizeCalendar()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $calendarSettings = new CalendarSettings($this->_siteID);
         $calendarSettingsRS = $calendarSettings->getAll();
 
@@ -4002,6 +4100,22 @@ class SettingsUI extends UserInterface
                     $calendarSettings->set($setting, $_POST[$setting]);
                 }
             }
+        }
+
+        if ($isModernJSON)
+        {
+            $this->renderModernMutationJSON(
+                'settings.customizeCalendar.mutation.v1',
+                'settings-customize-calendar',
+                sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Calendar customization saved.',
+                array(
+                    'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                    'legacyURL' => sprintf('%s?m=settings&a=customizeCalendar&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
         }
 
         $this->_template->assign('active', $this);
@@ -4059,6 +4173,21 @@ class SettingsUI extends UserInterface
      */
     private function newInstallPassword()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-new-install-password')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernNewInstallPasswordJSON('settings-new-install-password');
+            return;
+        }
+
         $this->_template->assign('inputType', 'password');
         $this->_template->assign('title', 'Create Administrator Password');
         $this->_template->assign('prompt', 'Congratulations! You have successfully logged onto CATS for the first time. Please create a new administrator password. Note that you cannot use \'cats\' as a password.');
@@ -4069,6 +4198,21 @@ class SettingsUI extends UserInterface
 
     private function newSiteName()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-new-site-name')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernNewSiteNameJSON('settings-new-site-name');
+            return;
+        }
+
         $this->_template->assign('inputType', 'siteName');
         $this->_template->assign('inputTypeTextParam', 'Please choose your site name.');
         $this->_template->assign('title', 'Site Name');
@@ -4208,6 +4352,208 @@ class SettingsUI extends UserInterface
         }
     }
 
+    private function renderModernCustomizeCalendarJSON($modernPage, $calendarSettingsRS)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedSettings = array();
+        foreach ($calendarSettingsRS as $setting => $value)
+        {
+            $normalizedSettings[$setting] = (string) $value;
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.customizeCalendar.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=customizeCalendar', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=customizeCalendar&ui=legacy', $baseURL)
+            ),
+            'settings' => $normalizedSettings,
+            'calendarViewOptions' => array(
+                array('value' => 'DAYVIEW', 'label' => 'Day View'),
+                array('value' => 'WEEKVIEW', 'label' => 'Week View'),
+                array('value' => 'MONTHVIEW', 'label' => 'Month View')
+            ),
+            'hourOptions' => $this->buildModernCalendarHourOptions()
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernEEOJSON($modernPage, $eeoSettingsRS)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedSettings = array();
+        foreach ($eeoSettingsRS as $setting => $value)
+        {
+            $normalizedSettings[$setting] = (string) $value;
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.eeo.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=eeo', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=eeo&ui=legacy', $baseURL)
+            ),
+            'settings' => $normalizedSettings
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernTalentFitFlowSettingsJSON($modernPage, $tffSettingsRS, $tffSaved, $testOk, $testMessage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedSettings = array();
+        foreach ($tffSettingsRS as $setting => $value)
+        {
+            $normalizedSettings[$setting] = (string) $value;
+        }
+
+        $state = array(
+            'saved' => (bool) $tffSaved
+        );
+        if ($testMessage !== null)
+        {
+            $state['testOk'] = (bool) $testOk;
+            $state['testMessage'] = (string) $testMessage;
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.talentFitFlowSettings.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => $state,
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=talentFitFlowSettings', $baseURL),
+                'testURL' => sprintf('%s?m=settings&a=talentFitFlowSettings', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=talentFitFlowSettings&ui=legacy', $baseURL)
+            ),
+            'settings' => $normalizedSettings
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernTalentFitFlowSettingsMutationJSON(
+        $success,
+        $message,
+        $routeURL,
+        $saved,
+        $testOk,
+        $testMessage
+    )
+    {
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.talentFitFlowSettings.mutation.v1',
+                'modernPage' => 'settings-talent-fit-flow-settings'
+            ),
+            'success' => (bool) $success,
+            'message' => (string) $message,
+            'state' => array(
+                'saved' => (bool) $saved
+            ),
+            'actions' => array(
+                'routeURL' => (string) $routeURL,
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                'legacyURL' => sprintf('%s?m=settings&a=talentFitFlowSettings&ui=legacy', CATSUtility::getIndexName()),
+                'submitURL' => sprintf('%s?m=settings&a=talentFitFlowSettings', CATSUtility::getIndexName()),
+                'testURL' => sprintf('%s?m=settings&a=talentFitFlowSettings', CATSUtility::getIndexName())
+            )
+        );
+
+        if ($testMessage !== null)
+        {
+            $payload['state']['testOk'] = (bool) $testOk;
+            $payload['state']['testMessage'] = (string) $testMessage;
+        }
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernNewInstallPasswordJSON($modernPage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.newInstallPassword.v1',
+                'modernPage' => $modernPage
+            ),
+            'wizard' => array(
+                'inputType' => 'password',
+                'title' => 'Create Administrator Password',
+                'prompt' => 'Congratulations! You have successfully logged onto CATS for the first time. Please create a new administrator password. Note that you cannot use \'cats\' as a password.',
+                'home' => 'home'
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=newInstallPassword', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=newInstallPassword&ui=legacy', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernNewSiteNameJSON($modernPage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.newSiteName.v1',
+                'modernPage' => $modernPage
+            ),
+            'wizard' => array(
+                'inputType' => 'siteName',
+                'inputTypeTextParam' => 'Please choose your site name.',
+                'title' => 'Site Name',
+                'prompt' => 'Your administrator password has been changed. Next, please create a name for your CATS installation (for example, MyCompany, Inc.). This will be displayed in the top right corner of all CATS pages.',
+                'home' => 'home'
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=newSiteName', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=newSiteName&ui=legacy', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function buildModernCalendarHourOptions()
+    {
+        $options = array();
+        for ($hour = 0; $hour < 24; $hour++)
+        {
+            $displayHour = $hour % 12;
+            if ($displayHour === 0)
+            {
+                $displayHour = 12;
+            }
+
+            $options[] = array(
+                'value' => (string) $hour,
+                'label' => sprintf('%d %s', $displayHour, ($hour < 12 ? 'AM' : 'PM'))
+            );
+        }
+
+        return $options;
+    }
+
     private function newInstallFinished()
     {
         NewVersionCheck::checkForUpdate();
@@ -4240,6 +4586,7 @@ class SettingsUI extends UserInterface
      */
     private function onNewInstallPassword()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $error = '';
 
         $newPassword = $this->getTrimmedInput(
@@ -4275,22 +4622,68 @@ class SettingsUI extends UserInterface
 
         if ($error)
         {
+            if ($isModernJSON)
+            {
+                $this->renderModernMutationJSON(
+                    'settings.newInstallPassword.mutation.v1',
+                    'settings-new-install-password',
+                    sprintf('%s?m=settings&a=newInstallPassword&ui=modern', CATSUtility::getIndexName()),
+                    false,
+                    $error,
+                    array(
+                        'legacyURL' => sprintf('%s?m=settings&a=newInstallPassword&ui=legacy', CATSUtility::getIndexName())
+                    )
+                );
+                return;
+            }
+
             $this->_template->assign('message', $error);
             $this->_template->assign('messageSuccess', false);
             $this->newInstallPassword();
         }
         else
         {
+            if ($isModernJSON)
+            {
+                $this->renderModernMutationJSON(
+                    'settings.newInstallPassword.mutation.v1',
+                    'settings-new-install-password',
+                    sprintf('%s?m=settings&a=newSiteName&ui=modern', CATSUtility::getIndexName()),
+                    true,
+                    'Administrator password saved.',
+                    array(
+                        'legacyURL' => sprintf('%s?m=settings&a=newInstallPassword&ui=legacy', CATSUtility::getIndexName())
+                    )
+                );
+                return;
+            }
+
             CATSUtility::transferRelativeURI('m=settings&a=newSiteName');
         }
     }
 
     private function onNewSiteName()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $newSiteName = $this->getTrimmedInput('siteName', $_POST);
 
         if (empty($newSiteName) || $newSiteName === 'default_site')
         {
+            if ($isModernJSON)
+            {
+                $this->renderModernMutationJSON(
+                    'settings.newSiteName.mutation.v1',
+                    'settings-new-site-name',
+                    sprintf('%s?m=settings&a=newSiteName&ui=modern', CATSUtility::getIndexName()),
+                    false,
+                    'Please enter a site name.',
+                    array(
+                        'legacyURL' => sprintf('%s?m=settings&a=newSiteName&ui=legacy', CATSUtility::getIndexName())
+                    )
+                );
+                return;
+            }
+
             $this->_template->assign('message', "Please enter a site name.");
             $this->_template->assign('messageSuccess', false);
             $this->upgradeSiteName();
@@ -4313,10 +4706,40 @@ class SettingsUI extends UserInterface
             /* If no E-Mail set for current user, make user set E-Mail address. */
             if (trim($_SESSION['CATS']->getEmail()) == '')
             {
+                if ($isModernJSON)
+                {
+                    $this->renderModernMutationJSON(
+                        'settings.newSiteName.mutation.v1',
+                        'settings-new-site-name',
+                        sprintf('%s?m=settings&a=forceEmail&ui=modern', CATSUtility::getIndexName()),
+                        true,
+                        'Site name saved. E-mail address is required to finish setup.',
+                        array(
+                            'legacyURL' => sprintf('%s?m=settings&a=newSiteName&ui=legacy', CATSUtility::getIndexName())
+                        )
+                    );
+                    return;
+                }
+
                 CATSUtility::transferRelativeURI('m=settings&a=forceEmail');
             }
             else
             {
+                if ($isModernJSON)
+                {
+                    $this->renderModernMutationJSON(
+                        'settings.newSiteName.mutation.v1',
+                        'settings-new-site-name',
+                        sprintf('%s?m=settings&a=newInstallFinished&ui=legacy', CATSUtility::getIndexName()),
+                        true,
+                        'Site name saved.',
+                        array(
+                            'legacyURL' => sprintf('%s?m=settings&a=newSiteName&ui=legacy', CATSUtility::getIndexName())
+                        )
+                    );
+                    return;
+                }
+
                 CATSUtility::transferRelativeURI('m=settings&a=newInstallFinished');
             }
         }
