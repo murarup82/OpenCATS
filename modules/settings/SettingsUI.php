@@ -2116,6 +2116,7 @@ class SettingsUI extends UserInterface
      */
     private function onDeleteUser()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         /* Bail out if we don't have a valid user ID. */
         if (!$this->isRequiredIDValid('userID', $_GET))
         {
@@ -2132,6 +2133,21 @@ class SettingsUI extends UserInterface
 
         $users = new Users($this->_siteID);
         $users->delete($userID);
+
+        if ($isModernJSON)
+        {
+            $this->renderModernMutationJSON(
+                'settings.deleteUser.mutation.v1',
+                'settings-delete-user',
+                sprintf('%s?m=settings&a=manageUsers&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'User deleted.',
+                array(
+                    'legacyURL' => sprintf('%s?m=settings&a=manageUsers&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=settings&a=manageUsers');
     }
@@ -2382,6 +2398,149 @@ class SettingsUI extends UserInterface
             'actions' => array(
                 'routeURL' => sprintf('%s?m=settings&a=emailTemplates&ui=modern', $baseURL)
             )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernEmailSettingsJSON($modernPage, $mailerSettingsRS, $candidateJoborderStatusSendsMessage, $emailTemplatesRS, $saved)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedMailerSettings = array();
+        foreach ($mailerSettingsRS as $setting => $value)
+        {
+            $normalizedMailerSettings[$setting] = (string) $value;
+        }
+
+        $normalizedStatusMessages = array();
+        foreach ($candidateJoborderStatusSendsMessage as $statusID => $isEnabled)
+        {
+            $normalizedStatusMessages[(string) $statusID] = ((int) $isEnabled === 1);
+        }
+
+        $normalizedTemplates = array();
+        foreach ($emailTemplatesRS as $template)
+        {
+            $normalizedTemplates[] = array(
+                'emailTemplateID' => (int) $template['emailTemplateID'],
+                'emailTemplateTitle' => isset($template['emailTemplateTitle']) ? (string) $template['emailTemplateTitle'] : '',
+                'emailTemplateTag' => isset($template['emailTemplateTag']) ? (string) $template['emailTemplateTag'] : '',
+                'disabled' => isset($template['disabled']) ? (int) $template['disabled'] : 0,
+                'isActive' => !(isset($template['disabled']) && (int) $template['disabled'] === 1)
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.emailSettings.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'saved' => (bool) $saved,
+                'sessionCookie' => (string) $_SESSION['CATS']->getCookie()
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=emailSettings', $baseURL),
+                'testURL' => sprintf('%s?m=settings&a=emailSettings', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=emailSettings&ui=legacy', $baseURL)
+            ),
+            'settings' => $normalizedMailerSettings,
+            'candidateJoborderStatusSendsMessage' => $normalizedStatusMessages,
+            'emailTemplates' => $normalizedTemplates
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernFeedbackSettingsJSON($modernPage, $recipientOptions, $feedbackRecipientUserID, $saved)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedRecipientOptions = array();
+        foreach ($recipientOptions as $recipientOption)
+        {
+            $normalizedRecipientOptions[] = array(
+                'userID' => isset($recipientOption['userID']) ? (int) $recipientOption['userID'] : 0,
+                'fullName' => isset($recipientOption['fullName']) ? (string) $recipientOption['fullName'] : ''
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.feedbackSettings.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'saved' => (bool) $saved,
+                'feedbackRecipientUserID' => (int) $feedbackRecipientUserID
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=feedbackSettings', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=feedbackSettings&ui=legacy', $baseURL)
+            ),
+            'recipientOptions' => $normalizedRecipientOptions
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernForceEmailJSON($modernPage, $message, $messageSuccess)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.forceEmail.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'message' => (string) $message,
+                'messageSuccess' => (bool) $messageSuccess,
+                'inputType' => 'siteName',
+                'inputTypeTextParam' => 'E-Mail Address',
+                'title' => 'E-Mail Address',
+                'prompt' => 'CATS does not know what your e-mail address is for sending notifications. Please type your e-mail address in the box below.'
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=forceEmail', $baseURL),
+                'homeURL' => sprintf('%s?m=home', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=forceEmail&ui=legacy', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernGoogleOIDCSettingsJSON($modernPage, $googleOIDCSettingsRS, $saved, $testOk, $testMessage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $normalizedSettings = array();
+        foreach ($googleOIDCSettingsRS as $setting => $value)
+        {
+            $normalizedSettings[$setting] = (string) $value;
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.googleOIDCSettings.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'saved' => (bool) $saved,
+                'testOk' => (bool) $testOk,
+                'testMessage' => (string) $testMessage
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=googleOIDCSettings', $baseURL),
+                'testURL' => sprintf('%s?m=settings&a=googleOIDCSettings', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=googleOIDCSettings&ui=legacy', $baseURL)
+            ),
+            'settings' => $normalizedSettings
         );
 
         $this->respondModernJSON(200, $payload);
@@ -2889,6 +3048,8 @@ class SettingsUI extends UserInterface
 
     private function feedbackSettings()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $feedbackSettings = new FeedbackSettings($this->_siteID);
         $feedbackSettingsRS = $feedbackSettings->getAll();
 
@@ -2927,11 +3088,30 @@ class SettingsUI extends UserInterface
             (int) $feedbackSettingsRS[FeedbackSettings::SETTING_RECIPIENT_USER_ID]
         );
         $this->_template->assign('feedbackSaved', isset($_GET['saved']));
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-feedback-settings')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernFeedbackSettingsJSON(
+                'settings-feedback-settings',
+                $recipientOptions,
+                (int) $feedbackSettingsRS[FeedbackSettings::SETTING_RECIPIENT_USER_ID],
+                isset($_GET['saved'])
+            );
+            return;
+        }
+
         $this->_template->display('./modules/settings/FeedbackSettings.tpl');
     }
 
     private function onFeedbackSettings()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $recipientUserID = (int) $this->getTrimmedInput('feedbackRecipientUserID', $_POST);
         if ($recipientUserID > 0)
         {
@@ -2945,6 +3125,21 @@ class SettingsUI extends UserInterface
 
         $feedbackSettings = new FeedbackSettings($this->_siteID);
         $feedbackSettings->setRecipientUserID($recipientUserID);
+
+        if ($isModernJSON)
+        {
+            $this->renderModernMutationJSON(
+                'settings.feedbackSettings.mutation.v1',
+                'settings-feedback-settings',
+                sprintf('%s?m=settings&a=feedbackSettings&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Feedback settings saved.',
+                array(
+                    'legacyURL' => sprintf('%s?m=settings&a=feedbackSettings&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=settings&a=feedbackSettings&saved=1');
     }
@@ -3157,8 +3352,28 @@ class SettingsUI extends UserInterface
      */
     private function googleOIDCSettings()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $googleOIDCSettings = new GoogleOIDCSettings($this->_siteID);
         $googleOIDCSettingsRS = $googleOIDCSettings->getAll();
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-google-oidc-settings')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernGoogleOIDCSettingsJSON(
+                'settings-google-oidc-settings',
+                $googleOIDCSettingsRS,
+                isset($_GET['saved']),
+                false,
+                ''
+            );
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
@@ -3172,6 +3387,7 @@ class SettingsUI extends UserInterface
      */
     private function onGoogleOIDCSettings()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $enabled = (UserInterface::isChecked('enabled', $_POST) ? '1' : '0');
         $clientId = $this->getTrimmedInput('clientId', $_POST);
         $clientSecret = $this->getTrimmedInput('clientSecret', $_POST);
@@ -3201,6 +3417,18 @@ class SettingsUI extends UserInterface
         {
             $testResult = $this->testGoogleOIDCSettings($settingsPayload);
 
+            if ($isModernJSON)
+            {
+                $this->renderModernGoogleOIDCSettingsJSON(
+                    'settings-google-oidc-settings',
+                    $settingsPayload,
+                    false,
+                    $testResult['ok'],
+                    $testResult['message']
+                );
+                return;
+            }
+
             $this->_template->assign('active', $this);
             $this->_template->assign('subActive', 'Administration');
             $this->_template->assign('googleOIDCSettings', $settingsPayload);
@@ -3222,6 +3450,21 @@ class SettingsUI extends UserInterface
         $googleOIDCSettings->set('notifyEmail', $notifyEmail);
         $googleOIDCSettings->set('fromEmail', $fromEmail);
         $googleOIDCSettings->set('requestSubject', $requestSubject);
+
+        if ($isModernJSON)
+        {
+            $this->renderModernMutationJSON(
+                'settings.googleOIDCSettings.mutation.v1',
+                'settings-google-oidc-settings',
+                sprintf('%s?m=settings&a=googleOIDCSettings&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Google OIDC settings saved.',
+                array(
+                    'legacyURL' => sprintf('%s?m=settings&a=googleOIDCSettings&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=settings&a=googleOIDCSettings&saved=1');
     }
@@ -3542,6 +3785,8 @@ class SettingsUI extends UserInterface
      */
     private function emailSettings()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $mailerSettings = new MailerSettings($this->_siteID);
         $mailerSettingsRS = $mailerSettings->getAll();
 
@@ -3575,6 +3820,24 @@ class SettingsUI extends UserInterface
         $emailTemplates = new EmailTemplates($this->_siteID);
         $emailTemplatesRS = $emailTemplates->getAll();
 
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-email-settings')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernEmailSettingsJSON(
+                'settings-email-settings',
+                $mailerSettingsRS,
+                $candidateJoborderStatusSendsMessage,
+                $emailTemplatesRS,
+                isset($_GET['saved'])
+            );
+            return;
+        }
+
         $this->_template->assign('emailTemplatesRS', $emailTemplatesRS);
         $this->_template->assign('candidateJoborderStatusSendsMessage', $candidateJoborderStatusSendsMessage);
         $this->_template->assign('active', $this);
@@ -3589,6 +3852,7 @@ class SettingsUI extends UserInterface
      */
     private function onEmailSettings()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $mailerSettings = new MailerSettings($this->_siteID);
         $mailerSettingsRS = $mailerSettings->getAll();
 
@@ -3621,6 +3885,21 @@ class SettingsUI extends UserInterface
         foreach ($emailTemplatesRS as $index => $data)
         {
             $emailTemplates->updateIsActive($data['emailTemplateID'], (UserInterface::isChecked('useThisTemplate'.$data['emailTemplateID'], $_POST) ? 0 : 1));
+        }
+
+        if ($isModernJSON)
+        {
+            $this->renderModernMutationJSON(
+                'settings.emailSettings.mutation.v1',
+                'settings-email-settings',
+                sprintf('%s?m=settings&a=emailSettings&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'E-Mail settings saved.',
+                array(
+                    'legacyURL' => sprintf('%s?m=settings&a=emailSettings&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
         }
 
         $this->_template->assign('active', $this);
@@ -3792,6 +4071,25 @@ class SettingsUI extends UserInterface
 
     private function forceEmail()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-force-email')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernForceEmailJSON(
+                'settings-force-email',
+                '',
+                false
+            );
+            return;
+        }
+
         $this->_template->assign('inputType', 'siteName');
         $this->_template->assign('inputTypeTextParam', 'E-Mail Address');
         $this->_template->assign('title', 'E-Mail Address');
@@ -3803,10 +4101,21 @@ class SettingsUI extends UserInterface
 
     private function onForceEmail()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $emailAddress = $this->getTrimmedInput('siteName', $_POST);
 
         if (empty($emailAddress))
         {
+            if ($isModernJSON)
+            {
+                $this->renderModernForceEmailJSON(
+                    'settings-force-email',
+                    'Please enter an e-mail address.',
+                    false
+                );
+                return;
+            }
+
             $this->_template->assign('message', 'Please enter an e-mail address.');
             $this->_template->assign('messageSuccess', false);
             $this->forceEmail();
@@ -3821,6 +4130,17 @@ class SettingsUI extends UserInterface
             $this->_template->assign('prompt', "Your e-mail settings have been saved. This concludes the CATS initial configuration wizard.");
             $this->_template->assign('action', $this->getAction());
             $this->_template->assign('home', 'home');
+
+            if ($isModernJSON)
+            {
+                $this->renderModernForceEmailJSON(
+                    'settings-force-email',
+                    'Your e-mail settings have been saved. This concludes the CATS initial configuration wizard.',
+                    true
+                );
+                return;
+            }
+
             $this->_template->display('./modules/settings/NewInstallWizard.tpl');
         }
     }
@@ -6103,6 +6423,43 @@ class SettingsUI extends UserInterface
         }
 
         echo json_encode($payload);
+    }
+
+    private function rejectUnsupportedModernPage($modernPage)
+    {
+        if (!headers_sent())
+        {
+            header('HTTP/1.1 400 Bad Request');
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+
+        echo json_encode(array(
+            'error' => true,
+            'message' => 'Unsupported modern page contract.',
+            'requestedPage' => $modernPage
+        ));
+    }
+
+    private function renderModernMutationJSON($contractKey, $modernPage, $routeURL, $success, $message, $actions = array())
+    {
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => (string) $contractKey,
+                'modernPage' => (string) $modernPage
+            ),
+            'success' => (bool) $success,
+            'message' => (string) $message,
+            'actions' => array_merge(
+                array(
+                    'routeURL' => (string) $routeURL
+                ),
+                $actions
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
     }
 
     /*
