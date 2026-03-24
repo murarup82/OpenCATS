@@ -16,6 +16,11 @@ const settingsManageUsersContractKey = 'settings.manageUsers.v1';
 const settingsAddUserContractKey = 'settings.addUser.v1';
 const settingsEditUserContractKey = 'settings.editUser.v1';
 const settingsShowUserContractKey = 'settings.showUser.v1';
+const settingsEmailSettingsContractKey = 'settings.emailSettings.v1';
+const settingsFeedbackSettingsContractKey = 'settings.feedbackSettings.v1';
+const settingsForceEmailContractKey = 'settings.forceEmail.v1';
+const settingsGoogleOIDCSettingsContractKey = 'settings.googleOIDCSettings.v1';
+const settingsDeleteUserContractKey = 'settings.deleteUser.v1';
 
 function joinURL(root, path) {
   const normalizedRoot = root.endsWith('/') ? root.slice(0, -1) : root;
@@ -96,6 +101,39 @@ function getFirstUserID(rows) {
 
   return 0;
 }
+
+const modernSettingsRoutes = [
+  {
+    action: 'emailSettings',
+    modernPage: 'settings-email-settings',
+    contractKey: settingsEmailSettingsContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'feedbackSettings',
+    modernPage: 'settings-feedback-settings',
+    contractKey: settingsFeedbackSettingsContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'forceEmail',
+    modernPage: 'settings-force-email',
+    contractKey: settingsForceEmailContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'googleOIDCSettings',
+    modernPage: 'settings-google-oidc-settings',
+    contractKey: settingsGoogleOIDCSettingsContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'deleteUser',
+    modernPage: 'settings-delete-user',
+    contractKey: settingsDeleteUserContractKey,
+    requiredActions: ['deleteActionURL', 'legacyURL']
+  }
+];
 
 test.describe('Settings admin workspace action smoke', () => {
   test.skip(baseURL === '', 'Set OPENCATS_BASE_URL to run settings admin workspace smoke checks.');
@@ -304,6 +342,41 @@ test.describe('Settings admin workspace action smoke', () => {
     expect(String(actions.settingsURL || '').trim()).not.toBe('');
     expect(String(actions.legacyURL || '').trim()).not.toBe('');
   });
+
+  for (const routeDefinition of modernSettingsRoutes) {
+    test(`settings.${routeDefinition.action.toLowerCase()} modern-json returns the ${routeDefinition.contractKey} contract`, async ({
+      request
+    }) => {
+      const response = await request.get(buildModernJSONURL(routeDefinition.action, routeDefinition.modernPage), {
+        headers: buildHeaders(),
+        failOnStatusCode: false
+      });
+
+      const { actions } = await assertModernContract(response, routeDefinition.contractKey);
+
+      for (const actionName of routeDefinition.requiredActions) {
+        expect(String(actions[actionName] || '').trim()).not.toBe('');
+      }
+    });
+
+    test(`settings.${routeDefinition.action.toLowerCase()} ui=modern mounts natively without a forward redirect`, async ({
+      context,
+      page
+    }) => {
+      await context.setExtraHTTPHeaders(buildHeaders());
+      await page.setViewportSize({ width: 1366, height: 900 });
+
+      await page.goto(buildModernRouteURL(routeDefinition.action), {
+        waitUntil: 'domcontentloaded'
+      });
+
+      await page.waitForTimeout(200);
+      await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+      await expect(page.getByRole('link', { name: 'Open Legacy UI' })).toBeVisible();
+      await expect(page.locator('.modern-compat-page--forward')).toHaveCount(0);
+      await expect(page.locator('iframe')).toHaveCount(0);
+    });
+  }
 
   test('settings.administration ui=modern mounts without a runtime boundary', async ({ context, page }) => {
     await context.setExtraHTTPHeaders(buildHeaders());
