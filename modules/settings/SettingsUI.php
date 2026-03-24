@@ -2210,6 +2210,15 @@ class SettingsUI extends UserInterface
      */
     private function onCustomizeExtraFields()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+
+        if ($isModernJSON && $modernPage !== '' && $modernPage !== 'settings-customize-extra-fields')
+        {
+            $this->rejectUnsupportedModernPage($modernPage);
+            return;
+        }
+
         $extraFieldsMaintScript = $this->getTrimmedInput('commandList', $_POST);
         $extraFieldsMaintScriptArray = explode(',', $extraFieldsMaintScript);
 
@@ -2269,6 +2278,22 @@ class SettingsUI extends UserInterface
                     $extraFields->renameColumn(urldecode($args2[0]), urldecode($args2[1]));
                     break;
             }
+        }
+
+        if ($isModernJSON)
+        {
+            $this->renderModernMutationJSON(
+                'settings.customizeExtraFields.mutation.v1',
+                'settings-customize-extra-fields',
+                sprintf('%s?m=settings&a=customizeExtraFields&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Extra fields saved.',
+                array(
+                    'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                    'legacyURL' => sprintf('%s?m=settings&a=customizeExtraFields&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
         }
 
         CATSUtility::transferRelativeURI('m=settings&a=customizeExtraFields');
@@ -4224,6 +4249,21 @@ class SettingsUI extends UserInterface
 
     private function upgradeSiteName()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-upgrade-site-name')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernUpgradeSiteNameJSON('settings-upgrade-site-name');
+            return;
+        }
+
         $this->_template->assign('inputType', 'siteName');
         $this->_template->assign('inputTypeTextParam', 'Site Name');
         $this->_template->assign('title', 'Site Name');
@@ -4235,6 +4275,9 @@ class SettingsUI extends UserInterface
 
     private function createBackup()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
         /* Attachments */
         $attachments = new Attachments(CATS_ADMIN_SITE);
         $attachmentsRS = $attachments->getAll(
@@ -4248,6 +4291,18 @@ class SettingsUI extends UserInterface
             );
         }
 
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-create-backup')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernCreateBackupJSON('settings-create-backup', $attachmentsRS);
+            return;
+        }
+
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
         $this->_template->assign('attachmentsRS', $attachmentsRS);
@@ -4256,12 +4311,37 @@ class SettingsUI extends UserInterface
 
     private function deleteBackup()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
+        if ($responseFormat === 'modern-json' && $modernPage !== '' && $modernPage !== 'settings-delete-backup')
+        {
+            $this->rejectUnsupportedModernPage($modernPage);
+            return;
+        }
+
         $attachments = new Attachments(CATS_ADMIN_SITE);
         $attachments->deleteAll(
             DATA_ITEM_COMPANY,
             $_SESSION['CATS']->getSiteCompanyID(),
             "AND content_type = 'catsbackup'"
         );
+
+        if ($responseFormat === 'modern-json')
+        {
+            $this->renderModernMutationJSON(
+                'settings.deleteBackup.mutation.v1',
+                'settings-delete-backup',
+                sprintf('%s?m=settings&a=createBackup&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Backup deleted.',
+                array(
+                    'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                    'legacyURL' => sprintf('%s?m=settings&a=deleteBackup&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
+        }
 
         CATSUtility::transferRelativeURI('m=settings&a=createBackup');
     }
@@ -4534,6 +4614,119 @@ class SettingsUI extends UserInterface
         $this->respondModernJSON(200, $payload);
     }
 
+    private function renderModernUpgradeSiteNameJSON($modernPage)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.upgradeSiteName.v1',
+                'modernPage' => $modernPage
+            ),
+            'wizard' => array(
+                'inputType' => 'siteName',
+                'inputTypeTextParam' => 'Site Name',
+                'title' => 'Site Name',
+                'prompt' => 'You have no site name defined. Please create a name for your CATS installation (for example, MyCompany, Inc.). This will be displayed in the top right corner of all CATS pages.',
+                'home' => 'home'
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=upgradeSiteName', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=upgradeSiteName&ui=legacy', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernCreateBackupJSON($modernPage, $attachmentsRS)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $attachments = array();
+
+        foreach ($attachmentsRS as $attachment)
+        {
+            $attachments[] = array(
+                'retrievalURL' => isset($attachment['retrievalURL']) ? (string) $attachment['retrievalURL'] : '',
+                'retrievalURLLocal' => isset($attachment['retrievalURLLocal']) ? (string) $attachment['retrievalURLLocal'] : '',
+                'originalFilename' => isset($attachment['originalFilename']) ? (string) $attachment['originalFilename'] : '',
+                'fileSize' => isset($attachment['fileSize']) ? (string) $attachment['fileSize'] : '',
+                'dateCreated' => isset($attachment['dateCreated']) ? (string) $attachment['dateCreated'] : ''
+            );
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.createBackup.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'attachmentCount' => count($attachments)
+            ),
+            'actions' => array(
+                'backupAjaxURL' => sprintf('%s?f=settings:backup', $baseURL),
+                'deleteBackupURL' => sprintf('%s?m=settings&a=deleteBackup&ui=modern', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=createBackup&ui=legacy', $baseURL)
+            ),
+            'attachments' => $attachments
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernCustomizeExtraFieldsJSON($modernPage, $candidatesRS, $contactsRS, $companiesRS, $jobOrdersRS, $extraFieldTypes)
+    {
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.customizeExtraFields.v1',
+                'modernPage' => $modernPage
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=customizeExtraFields', CATSUtility::getIndexName()),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                'legacyURL' => sprintf('%s?m=settings&a=customizeExtraFields&ui=legacy', CATSUtility::getIndexName())
+            ),
+            'extraFieldSettings' => array(
+                'candidates' => $candidatesRS,
+                'contacts' => $contactsRS,
+                'companies' => $companiesRS,
+                'jobOrders' => $jobOrdersRS
+            ),
+            'extraFieldTypes' => $extraFieldTypes
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernNewInstallFinishedJSON($modernPage, $prompt, $showEmailWarning)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.newInstallFinished.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'showEmailWarning' => (bool) $showEmailWarning
+            ),
+            'summary' => array(
+                'title' => 'Settings Saved',
+                'prompt' => (string) $prompt,
+                'home' => 'home'
+            ),
+            'actions' => array(
+                'homeURL' => sprintf('%s?m=home&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=newInstallFinished&ui=legacy', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
     private function buildModernCalendarHourOptions()
     {
         $options = array();
@@ -4556,26 +4749,46 @@ class SettingsUI extends UserInterface
 
     private function newInstallFinished()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+
         NewVersionCheck::checkForUpdate();
 
         $accessLevel = $_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT);
 
         $mailerSettings = new MailerSettings($this->_siteID);
         $mailerSettingsRS = $mailerSettings->getAll();
+        $showEmailWarning = ($mailerSettingsRS['configured'] == '0' &&
+            $accessLevel >= ACCESS_LEVEL_SA);
+        $prompt = 'Your site name has been saved. This concludes the required CATS configuration wizard.';
+        $modernPrompt = 'Your site name has been saved. This concludes the required CATS configuration wizard.';
 
         $this->_template->assign('inputType', 'conclusion');
         $this->_template->assign('title', 'Settings Saved');
 
-        if ($mailerSettingsRS['configured'] == '0' &&
-            $accessLevel >= ACCESS_LEVEL_SA)
+        if ($showEmailWarning)
         {
-            $this->_template->assign('prompt', 'Your site name has been saved. This concludes the required CATS configuration wizard.<BR><BR><span style="font-weight: bold;">Warning:</span><BR><BR> E-mail features are disabled. In order to enable e-mail features (such as e-mail notifications), please configure your e-mail settings by clicking on the Settings tab and then clicking on Administration.');
-        }
-        else
-        {
-            $this->_template->assign('prompt', 'Your site name has been saved. This concludes the required CATS configuration wizard.');
+            $prompt = 'Your site name has been saved. This concludes the required CATS configuration wizard.<BR><BR><span style="font-weight: bold;">Warning:</span><BR><BR> E-mail features are disabled. In order to enable e-mail features (such as e-mail notifications), please configure your e-mail settings by clicking on the Settings tab and then clicking on Administration.';
+            $modernPrompt = 'Your site name has been saved. This concludes the required CATS configuration wizard. E-mail features are disabled. In order to enable e-mail features (such as e-mail notifications), please configure your e-mail settings by clicking on the Settings tab and then clicking on Administration.';
         }
 
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-new-install-finished')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernNewInstallFinishedJSON(
+                'settings-new-install-finished',
+                $modernPrompt,
+                $showEmailWarning
+            );
+            return;
+        }
+
+        $this->_template->assign('prompt', $prompt);
         $this->_template->assign('action', $this->getAction());
         $this->_template->assign('home', 'home');
         $this->_template->display('./modules/settings/NewInstallWizard.tpl');
@@ -4665,20 +4878,38 @@ class SettingsUI extends UserInterface
     private function onNewSiteName()
     {
         $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $routeAction = strtolower($this->getAction());
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $expectedModernPage = ($routeAction === 'upgradesitename') ? 'settings-upgrade-site-name' : 'settings-new-site-name';
+        $modernContractKey = ($routeAction === 'upgradesitename')
+            ? 'settings.upgradeSiteName.mutation.v1'
+            : 'settings.newSiteName.mutation.v1';
+        $modernRouteURL = ($routeAction === 'upgradesitename')
+            ? sprintf('%s?m=settings&a=upgradeSiteName&ui=modern', CATSUtility::getIndexName())
+            : sprintf('%s?m=settings&a=newSiteName&ui=modern', CATSUtility::getIndexName());
+        $modernLegacyURL = ($routeAction === 'upgradesitename')
+            ? sprintf('%s?m=settings&a=upgradeSiteName&ui=legacy', CATSUtility::getIndexName())
+            : sprintf('%s?m=settings&a=newSiteName&ui=legacy', CATSUtility::getIndexName());
         $newSiteName = $this->getTrimmedInput('siteName', $_POST);
+
+        if ($isModernJSON && $modernPage !== '' && $modernPage !== $expectedModernPage)
+        {
+            $this->rejectUnsupportedModernPage($modernPage);
+            return;
+        }
 
         if (empty($newSiteName) || $newSiteName === 'default_site')
         {
             if ($isModernJSON)
             {
                 $this->renderModernMutationJSON(
-                    'settings.newSiteName.mutation.v1',
-                    'settings-new-site-name',
-                    sprintf('%s?m=settings&a=newSiteName&ui=modern', CATSUtility::getIndexName()),
+                    $modernContractKey,
+                    $expectedModernPage,
+                    $modernRouteURL,
                     false,
                     'Please enter a site name.',
                     array(
-                        'legacyURL' => sprintf('%s?m=settings&a=newSiteName&ui=legacy', CATSUtility::getIndexName())
+                        'legacyURL' => $modernLegacyURL
                     )
                 );
                 return;
@@ -4709,13 +4940,13 @@ class SettingsUI extends UserInterface
                 if ($isModernJSON)
                 {
                     $this->renderModernMutationJSON(
-                        'settings.newSiteName.mutation.v1',
-                        'settings-new-site-name',
+                        $modernContractKey,
+                        $expectedModernPage,
                         sprintf('%s?m=settings&a=forceEmail&ui=modern', CATSUtility::getIndexName()),
                         true,
                         'Site name saved. E-mail address is required to finish setup.',
                         array(
-                            'legacyURL' => sprintf('%s?m=settings&a=newSiteName&ui=legacy', CATSUtility::getIndexName())
+                            'legacyURL' => $modernLegacyURL
                         )
                     );
                     return;
@@ -4728,13 +4959,13 @@ class SettingsUI extends UserInterface
                 if ($isModernJSON)
                 {
                     $this->renderModernMutationJSON(
-                        'settings.newSiteName.mutation.v1',
-                        'settings-new-site-name',
-                        sprintf('%s?m=settings&a=newInstallFinished&ui=legacy', CATSUtility::getIndexName()),
+                        $modernContractKey,
+                        $expectedModernPage,
+                        sprintf('%s?m=settings&a=newInstallFinished&ui=modern', CATSUtility::getIndexName()),
                         true,
                         'Site name saved.',
                         array(
-                            'legacyURL' => sprintf('%s?m=settings&a=newSiteName&ui=legacy', CATSUtility::getIndexName())
+                            'legacyURL' => $modernLegacyURL
                         )
                     );
                     return;
@@ -4747,6 +4978,28 @@ class SettingsUI extends UserInterface
 
     private function onNewInstallFinished()
     {
+        if (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json')
+        {
+            $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+            if ($modernPage !== '' && $modernPage !== 'settings-new-install-finished')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernMutationJSON(
+                'settings.newInstallFinished.mutation.v1',
+                'settings-new-install-finished',
+                sprintf('%s?m=home&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Setup complete.',
+                array(
+                    'legacyURL' => sprintf('%s?m=settings&a=newInstallFinished&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
+        }
+
         CATSUtility::transferRelativeURI('m=home');
     }
 
