@@ -1115,6 +1115,26 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
     return 'emailTemplates';
   }
 
+  if (routeKey === 'settings.emailsettings') {
+    return 'emailSettings';
+  }
+
+  if (routeKey === 'settings.feedbacksettings') {
+    return 'feedbackSettings';
+  }
+
+  if (routeKey === 'settings.forceemail') {
+    return 'forceEmail';
+  }
+
+  if (routeKey === 'settings.googleoidcsettings') {
+    return 'googleOIDCSettings';
+  }
+
+  if (routeKey === 'settings.deleteuser') {
+    return 'deleteUser';
+  }
+
   if (routeKey === 'settings.manageusers') {
     return 'manageUsers';
   }

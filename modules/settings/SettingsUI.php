@@ -2116,15 +2116,40 @@ class SettingsUI extends UserInterface
      */
     private function onDeleteUser()
     {
-        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+        $isModernJSON = ($responseFormat === 'modern-json');
+        $hasUserID = $this->isRequiredIDValid('userID', $_GET);
+        $hasAutomatedTesterFlag = $this->isRequiredIDValid('iAmTheAutomatedTester', $_GET);
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-delete-user')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            if (!$hasUserID || !$hasAutomatedTesterFlag)
+            {
+                $this->renderModernDeleteUserJSON(
+                    'settings-delete-user',
+                    ($hasUserID ? (int) $_GET['userID'] : 0),
+                    $hasUserID,
+                    $hasAutomatedTesterFlag
+                );
+                return;
+            }
+        }
+
         /* Bail out if we don't have a valid user ID. */
-        if (!$this->isRequiredIDValid('userID', $_GET))
+        if (!$hasUserID)
         {
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Invalid user ID.');
         }
 
         /* Keep users other than the automated tester from trying this. */
-        if (!$this->isRequiredIDValid('iAmTheAutomatedTester', $_GET))
+        if (!$hasAutomatedTesterFlag)
         {
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'You are not the automated tester.');
         }
@@ -2397,6 +2422,31 @@ class SettingsUI extends UserInterface
             'message' => (string) $message,
             'actions' => array(
                 'routeURL' => sprintf('%s?m=settings&a=emailTemplates&ui=modern', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernDeleteUserJSON($modernPage, $requestedUserID, $hasUserID, $hasAutomatedTesterFlag)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.deleteUser.v1',
+                'modernPage' => (string) $modernPage
+            ),
+            'state' => array(
+                'requestedUserID' => (int) $requestedUserID,
+                'hasUserID' => ($hasUserID ? true : false),
+                'hasAutomatedTesterFlag' => ($hasAutomatedTesterFlag ? true : false)
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=deleteUser', $baseURL),
+                'deleteActionURL' => sprintf('%s?m=settings&a=deleteUser', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=manageUsers&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=deleteUser&ui=legacy', $baseURL)
             )
         );
 
@@ -3419,12 +3469,15 @@ class SettingsUI extends UserInterface
 
             if ($isModernJSON)
             {
-                $this->renderModernGoogleOIDCSettingsJSON(
+                $this->renderModernMutationJSON(
+                    'settings.googleOIDCSettings.mutation.v1',
                     'settings-google-oidc-settings',
-                    $settingsPayload,
-                    false,
+                    sprintf('%s?m=settings&a=googleOIDCSettings&ui=modern', CATSUtility::getIndexName()),
                     $testResult['ok'],
-                    $testResult['message']
+                    $testResult['message'],
+                    array(
+                        'legacyURL' => sprintf('%s?m=settings&a=googleOIDCSettings&ui=legacy', CATSUtility::getIndexName())
+                    )
                 );
                 return;
             }
@@ -4108,10 +4161,15 @@ class SettingsUI extends UserInterface
         {
             if ($isModernJSON)
             {
-                $this->renderModernForceEmailJSON(
+                $this->renderModernMutationJSON(
+                    'settings.forceEmail.mutation.v1',
                     'settings-force-email',
+                    sprintf('%s?m=settings&a=forceEmail&ui=modern', CATSUtility::getIndexName()),
+                    false,
                     'Please enter an e-mail address.',
-                    false
+                    array(
+                        'legacyURL' => sprintf('%s?m=settings&a=forceEmail&ui=legacy', CATSUtility::getIndexName())
+                    )
                 );
                 return;
             }
@@ -4133,10 +4191,15 @@ class SettingsUI extends UserInterface
 
             if ($isModernJSON)
             {
-                $this->renderModernForceEmailJSON(
+                $this->renderModernMutationJSON(
+                    'settings.forceEmail.mutation.v1',
                     'settings-force-email',
+                    sprintf('%s?m=settings&a=forceEmail&ui=modern', CATSUtility::getIndexName()),
+                    true,
                     'Your e-mail settings have been saved. This concludes the CATS initial configuration wizard.',
-                    true
+                    array(
+                        'legacyURL' => sprintf('%s?m=settings&a=forceEmail&ui=legacy', CATSUtility::getIndexName())
+                    )
                 );
                 return;
             }
