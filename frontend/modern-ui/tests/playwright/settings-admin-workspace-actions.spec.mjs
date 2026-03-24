@@ -21,6 +21,11 @@ const settingsFeedbackSettingsContractKey = 'settings.feedbackSettings.v1';
 const settingsForceEmailContractKey = 'settings.forceEmail.v1';
 const settingsGoogleOIDCSettingsContractKey = 'settings.googleOIDCSettings.v1';
 const settingsDeleteUserContractKey = 'settings.deleteUser.v1';
+const settingsCustomizeCalendarContractKey = 'settings.customizeCalendar.v1';
+const settingsEEOContractKey = 'settings.eeo.v1';
+const settingsTalentFitFlowSettingsContractKey = 'settings.talentFitFlowSettings.v1';
+const settingsNewInstallPasswordContractKey = 'settings.newInstallPassword.v1';
+const settingsNewSiteNameContractKey = 'settings.newSiteName.v1';
 
 function joinURL(root, path) {
   const normalizedRoot = root.endsWith('/') ? root.slice(0, -1) : root;
@@ -132,6 +137,36 @@ const modernSettingsRoutes = [
     modernPage: 'settings-delete-user',
     contractKey: settingsDeleteUserContractKey,
     requiredActions: ['deleteActionURL', 'legacyURL']
+  },
+  {
+    action: 'customizeCalendar',
+    modernPage: 'settings-customize-calendar',
+    contractKey: settingsCustomizeCalendarContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'eeo',
+    modernPage: 'settings-eeo',
+    contractKey: settingsEEOContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'talentFitFlowSettings',
+    modernPage: 'settings-talent-fit-flow-settings',
+    contractKey: settingsTalentFitFlowSettingsContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'newInstallPassword',
+    modernPage: 'settings-new-install-password',
+    contractKey: settingsNewInstallPasswordContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'newSiteName',
+    modernPage: 'settings-new-site-name',
+    contractKey: settingsNewSiteNameContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
   }
 ];
 
