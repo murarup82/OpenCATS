@@ -96,10 +96,10 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.deleteuser': {
     title: 'Delete User',
-    subtitle: 'Remove user accounts in compatibility mode.',
+    subtitle: 'Remove user accounts in the native settings shell.',
     panelTitle: 'Delete User Workspace',
-    panelSubtitle: 'Legacy user-deletion workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native user-deletion action keeps the legacy escape path available.',
+    mode: 'embed'
   },
   'settings.emailtemplates': {
     title: 'Email Templates',
@@ -180,31 +180,31 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.emailsettings': {
     title: 'Email Settings',
-    subtitle: 'Configure email delivery settings in compatibility mode.',
+    subtitle: 'Configure email delivery settings in the native settings shell.',
     panelTitle: 'Email Settings Workspace',
-    panelSubtitle: 'Legacy email-settings workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native email settings preserve the legacy field names and submit path.',
+    mode: 'embed'
   },
   'settings.feedbacksettings': {
     title: 'Feedback Settings',
-    subtitle: 'Configure feedback settings in compatibility mode.',
+    subtitle: 'Configure feedback settings in the native settings shell.',
     panelTitle: 'Feedback Settings Workspace',
-    panelSubtitle: 'Legacy feedback-settings workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native feedback settings preserve the legacy recipient selector and submit path.',
+    mode: 'embed'
   },
   'settings.forceemail': {
     title: 'Force Email',
-    subtitle: 'Run force-email operations in compatibility mode.',
+    subtitle: 'Update the current account e-mail address in the native settings shell.',
     panelTitle: 'Force Email Workspace',
-    panelSubtitle: 'Legacy force-email workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native force-email action preserves the legacy field name and submit path.',
+    mode: 'embed'
   },
   'settings.googleoidcsettings': {
     title: 'Google OIDC Settings',
-    subtitle: 'Configure Google OIDC authentication settings in compatibility mode.',
+    subtitle: 'Configure Google OIDC authentication settings in the native settings shell.',
     panelTitle: 'Google OIDC Workspace',
-    panelSubtitle: 'Legacy Google OIDC workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native Google OIDC settings preserve the legacy form fields and test action.',
+    mode: 'embed'
   },
   'settings.asplocalization': {
     title: 'ASP Localization',
@@ -367,6 +367,11 @@ type NativeSettingsRouteMode =
   | 'showUser'
   | 'loginActivity'
   | 'emailTemplates'
+  | 'emailSettings'
+  | 'feedbackSettings'
+  | 'forceEmail'
+  | 'googleOIDCSettings'
+  | 'deleteUser'
   | 'rejectionReasons'
   | 'tags'
   | 'rolePagePermissions'
@@ -389,6 +394,110 @@ function isTruthyText(value: unknown): boolean {
   const text = String(value ?? '').trim().toLowerCase();
   return text === '1' || text === 'true' || text === 'yes' || text === 'y';
 }
+
+function getCookieValue(cookieName: string): string {
+  const normalizedName = `${cookieName}=`;
+  return document.cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(normalizedName))
+    ?.substring(normalizedName.length) || '';
+}
+
+async function fetchHTMLDocument(url: string): Promise<Document> {
+  const response = await fetch(url, {
+    credentials: 'same-origin'
+  });
+  if (!response.ok) {
+    throw new Error(`Unable to load legacy settings page (${response.status}).`);
+  }
+
+  const html = await response.text();
+  const document = new DOMParser().parseFromString(html, 'text/html');
+  if (document.querySelector('parsererror')) {
+    throw new Error('Unable to parse legacy settings page HTML.');
+  }
+  return document;
+}
+
+async function submitLegacyForm(url: string, payload: URLSearchParams): Promise<Document> {
+  const response = await fetch(url, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: payload.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}).`);
+  }
+
+  const html = await response.text();
+  return new DOMParser().parseFromString(html, 'text/html');
+}
+
+function readInputValue(root: ParentNode, selector: string): string {
+  const input = root.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(selector);
+  if (!input) {
+    return '';
+  }
+
+  if (input instanceof HTMLSelectElement) {
+    return input.value || '';
+  }
+
+  return input.value || '';
+}
+
+function readCheckboxValue(root: ParentNode, selector: string): boolean {
+  const input = root.querySelector<HTMLInputElement>(selector);
+  return Boolean(input?.checked);
+}
+
+function readSelectOptions(root: ParentNode, selector: string): SettingsLegacySelectOption[] {
+  const select = root.querySelector<HTMLSelectElement>(selector);
+  if (!select) {
+    return [];
+  }
+
+  return Array.from(select.options).map((option) => ({
+    value: option.value,
+    label: option.textContent?.trim() || option.value
+  }));
+}
+
+function readSelectedOptionValue(root: ParentNode, selector: string): string {
+  const select = root.querySelector<HTMLSelectElement>(selector);
+  return select?.value || '';
+}
+
+function readLegacyMessage(root: ParentNode): string {
+  const messageNode = root.querySelector('.noteGood, .warning, .success, .failure');
+  return messageNode?.textContent?.trim() || '';
+}
+
+function hasLegacyFailure(root: ParentNode): boolean {
+  return root.querySelector('.warning, .failure') !== null;
+}
+
+function getLegacyRouteURL(indexName: string, action: string): string {
+  return `${indexName}?m=settings&a=${action}&ui=legacy`;
+}
+
+const EMAIL_SETTINGS_STATUS_TOGGLES = [
+  { name: 'statusChangeAllocated', label: 'Status Change: Allocated' },
+  { name: 'statusChangeDeliveryValidated', label: 'Status Change: Delivery Validated' },
+  { name: 'statusChangeProposedToCustomer', label: 'Status Change: Proposed to Customer' },
+  { name: 'statusChangeCustomerInterview', label: 'Status Change: Customer Interview' },
+  { name: 'statusChangeCustomerApproved', label: 'Status Change: Customer Approved' },
+  { name: 'statusChangeAvelApproved', label: 'Status Change: Avel Approved' },
+  { name: 'statusChangeOfferNegotiation', label: 'Status Change: Offer Negotiation' },
+  { name: 'statusChangeOfferAccepted', label: 'Status Change: Offer Accepted' },
+  { name: 'statusChangeHired', label: 'Status Change: Hired' },
+  { name: 'statusChangeRejected', label: 'Status Change: Rejected' }
+] as const;
 
 type SettingsSummaryCard = {
   label: string;
@@ -471,6 +580,115 @@ type SettingsEmailTemplatesModernDataResponse = {
     mergeFields: SettingsEmailTemplateToken[];
   };
   templates: SettingsEmailTemplate[];
+};
+
+type SettingsLegacySelectOption = {
+  value: string;
+  label: string;
+};
+
+type SettingsLegacyToggle = {
+  name: string;
+  label: string;
+  checked: boolean;
+};
+
+type SettingsEmailSettingsNativeData = {
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL: string;
+  };
+  form: {
+    fromAddress: string;
+    testEmailAddress: string;
+    statusToggles: SettingsLegacyToggle[];
+    templateToggles: Array<{
+      emailTemplateID: number;
+      title: string;
+      checked: boolean;
+    }>;
+  };
+  flash?: {
+    success: boolean;
+    message: string;
+  };
+};
+
+type SettingsFeedbackSettingsNativeData = {
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL: string;
+  };
+  form: {
+    recipientUserID: string;
+    recipientOptions: SettingsLegacySelectOption[];
+  };
+  flash?: {
+    success: boolean;
+    message: string;
+  };
+};
+
+type SettingsGoogleOIDCSettingsNativeData = {
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL: string;
+  };
+  form: {
+    enabled: boolean;
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    hostedDomain: string;
+    siteId: string;
+    autoProvisionEnabled: boolean;
+    notifyEmail: string;
+    fromEmail: string;
+    requestSubject: string;
+  };
+  flash?: {
+    success: boolean;
+    message: string;
+  };
+  testFeedback?: {
+    success: boolean;
+    message: string;
+  };
+};
+
+type SettingsForceEmailNativeData = {
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL: string;
+  };
+  form: {
+    siteName: string;
+  };
+  flash?: {
+    success: boolean;
+    message: string;
+  };
+};
+
+type SettingsDeleteUserNativeData = {
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL: string;
+  };
+  state: {
+    userID: number;
+    requested: boolean;
+    automatedTester: boolean;
+  };
+  flash?: {
+    success: boolean;
+    message: string;
+  };
 };
 
 const EMAIL_TEMPLATE_FORMATTING_TOKENS: SettingsEmailTemplateToken[] = [
@@ -985,6 +1203,146 @@ function resolveBackLink(routeKey: string, bootstrap: UIModeBootstrap): BackLink
   };
 }
 
+async function fetchNativeEmailSettingsData(bootstrap: UIModeBootstrap, legacyURL: string): Promise<SettingsEmailSettingsNativeData> {
+  const document = await fetchHTMLDocument(legacyURL);
+  const form = document.querySelector<HTMLFormElement>('#emailSettingsForm');
+  if (!form) {
+    throw new Error('Unable to locate the email settings form.');
+  }
+
+  const fromAddress = readInputValue(form, '#fromAddress');
+  const testEmailAddress = readInputValue(form, '#testEmailAddress');
+  const statusToggles = EMAIL_SETTINGS_STATUS_TOGGLES.map((toggle) => ({
+    name: toggle.name,
+    label: toggle.label,
+    checked: readCheckboxValue(form, `input[name="${toggle.name}"]`)
+  }));
+  const templateToggles = Array.from(form.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name^="useThisTemplate"]'))
+    .map((checkbox) => {
+      const emailTemplateID = Number(checkbox.name.replace('useThisTemplate', '') || 0);
+      const rawLabel = checkbox.nextSibling?.textContent || checkbox.parentElement?.textContent || '';
+      const title = String(rawLabel || '').replace(/\s+/g, ' ').trim().replace(/^:?\s*/, '');
+      if (emailTemplateID <= 0) {
+        return null;
+      }
+      return {
+        emailTemplateID,
+        title: title === '' ? `Template ${emailTemplateID}` : title,
+        checked: checkbox.checked
+      };
+    })
+    .filter((item): item is { emailTemplateID: number; title: string; checked: boolean } => item !== null);
+
+  return {
+    actions: {
+      submitURL: `${bootstrap.indexName}?m=settings&a=emailSettings`,
+      legacyURL,
+      backURL: `${bootstrap.indexName}?m=settings&a=administration&ui=modern`
+    },
+    form: {
+      fromAddress,
+      testEmailAddress,
+      statusToggles,
+      templateToggles
+    }
+  };
+}
+
+async function fetchNativeFeedbackSettingsData(bootstrap: UIModeBootstrap, legacyURL: string): Promise<SettingsFeedbackSettingsNativeData> {
+  const document = await fetchHTMLDocument(legacyURL);
+  const form = document.querySelector<HTMLFormElement>('form[action*="feedbackSettings"]');
+  if (!form) {
+    throw new Error('Unable to locate the feedback settings form.');
+  }
+
+  return {
+    actions: {
+      submitURL: `${bootstrap.indexName}?m=settings&a=feedbackSettings`,
+      legacyURL,
+      backURL: `${bootstrap.indexName}?m=settings&a=administration&ui=modern`
+    },
+    form: {
+      recipientUserID: readSelectedOptionValue(form, '#feedbackRecipientUserID'),
+      recipientOptions: readSelectOptions(form, '#feedbackRecipientUserID')
+    },
+    flash: (() => {
+      const message = readLegacyMessage(document);
+      return message === '' ? undefined : {
+        success: document.querySelector('.noteGood') !== null,
+        message
+      };
+    })()
+  };
+}
+
+async function fetchNativeGoogleOIDCSettingsData(bootstrap: UIModeBootstrap, legacyURL: string): Promise<SettingsGoogleOIDCSettingsNativeData> {
+  const document = await fetchHTMLDocument(legacyURL);
+  const form = document.querySelector<HTMLFormElement>('form[action*="googleOIDCSettings"]');
+  if (!form) {
+    throw new Error('Unable to locate the Google OIDC settings form.');
+  }
+
+  const message = readLegacyMessage(document);
+
+  return {
+    actions: {
+      submitURL: `${bootstrap.indexName}?m=settings&a=googleOIDCSettings`,
+      legacyURL,
+      backURL: `${bootstrap.indexName}?m=settings&a=administration&ui=modern`
+    },
+    form: {
+      enabled: readCheckboxValue(form, 'input[name="enabled"]'),
+      clientId: readInputValue(form, '#clientId'),
+      clientSecret: readInputValue(form, '#clientSecret'),
+      redirectUri: readInputValue(form, '#redirectUri'),
+      hostedDomain: readInputValue(form, '#hostedDomain'),
+      siteId: readInputValue(form, '#siteId'),
+      autoProvisionEnabled: readCheckboxValue(form, 'input[name="autoProvisionEnabled"]'),
+      notifyEmail: readInputValue(form, '#notifyEmail'),
+      fromEmail: readInputValue(form, '#fromEmail'),
+      requestSubject: readInputValue(form, '#requestSubject')
+    },
+    flash: message === '' ? undefined : {
+      success: document.querySelector('.noteGood') !== null,
+      message
+    },
+    testFeedback: message === '' ? undefined : {
+      success: document.querySelector('.noteGood') !== null,
+      message
+    }
+  };
+}
+
+function buildForceEmailNativeData(bootstrap: UIModeBootstrap, legacyURL: string): SettingsForceEmailNativeData {
+  return {
+    actions: {
+      submitURL: `${bootstrap.indexName}?m=settings&a=forceEmail`,
+      legacyURL,
+      backURL: `${bootstrap.indexName}?m=settings&a=administration&ui=modern`
+    },
+    form: {
+      siteName: ''
+    }
+  };
+}
+
+function buildDeleteUserNativeData(bootstrap: UIModeBootstrap, legacyURL: string): SettingsDeleteUserNativeData {
+  const query = new URLSearchParams(window.location.search);
+  const userID = toSafeNumber(query.get('userID') || query.get('id'));
+  return {
+    actions: {
+      submitURL: `${bootstrap.indexName}?m=settings&a=deleteUser`,
+      legacyURL,
+      backURL: `${bootstrap.indexName}?m=settings&a=manageUsers&ui=modern`
+    },
+    state: {
+      userID,
+      requested: userID > 0,
+      automatedTester: isTruthyText(query.get('iAmTheAutomatedTester'))
+    }
+  };
+}
+
 function SettingsMyProfileNativeShell({
   data
 }: {
@@ -1323,6 +1681,867 @@ function SettingsGdprSettingsNativeShell({
                 </a>
               </div>
             </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsEmailSettingsNativeShell({
+  data,
+  bootstrap,
+  onReload
+}: {
+  data: SettingsEmailSettingsNativeData;
+  bootstrap: UIModeBootstrap;
+  onReload: () => void;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [fromAddress, setFromAddress] = useState(data.form.fromAddress);
+  const [testEmailAddress, setTestEmailAddress] = useState(data.form.testEmailAddress);
+  const [statusToggles, setStatusToggles] = useState(data.form.statusToggles);
+  const [templateToggles, setTemplateToggles] = useState(data.form.templateToggles);
+  const [isSaving, setIsSaving] = useState(false);
+  const [testFeedback, setTestFeedback] = useState('');
+  const [testRunning, setTestRunning] = useState(false);
+  const [flash, setFlash] = useState<SettingsEmailSettingsNativeData['flash'] | null>(null);
+
+  useEffect(() => {
+    setFromAddress(data.form.fromAddress);
+    setTestEmailAddress(data.form.testEmailAddress);
+    setStatusToggles(data.form.statusToggles);
+    setTemplateToggles(data.form.templateToggles);
+  }, [data.form.fromAddress, data.form.testEmailAddress, data.form.statusToggles, data.form.templateToggles]);
+
+  const resetForm = useCallback(() => {
+    setFromAddress(data.form.fromAddress);
+    setTestEmailAddress(data.form.testEmailAddress);
+    setStatusToggles(data.form.statusToggles);
+    setTemplateToggles(data.form.templateToggles);
+    setFlash(null);
+    setTestFeedback('');
+  }, [data.form.fromAddress, data.form.testEmailAddress, data.form.statusToggles, data.form.templateToggles]);
+
+  const saveSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    setFlash(null);
+
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      payload.set('configured', '1');
+      payload.set('fromAddress', fromAddress);
+      statusToggles.forEach((toggle) => {
+        if (toggle.checked) {
+          payload.set(toggle.name, '1');
+        }
+      });
+      templateToggles.forEach((template) => {
+        if (template.checked) {
+          payload.set(`useThisTemplate${template.emailTemplateID}`, 'on');
+        }
+      });
+
+      const document = await submitLegacyForm(submitURL, payload);
+      const message = readLegacyMessage(document);
+      const success = !hasLegacyFailure(document);
+      setFlash({
+        success,
+        message: message === '' ? (success ? 'Email settings saved.' : 'Unable to save email settings.') : message
+      });
+      onReload();
+    } catch (error: unknown) {
+      setFlash({
+        success: false,
+        message: error instanceof Error ? error.message : 'Unable to save email settings.'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [fromAddress, isSaving, onReload, statusToggles, submitURL, templateToggles]);
+
+  const runEmailTest = useCallback(async () => {
+    if (testRunning) {
+      return;
+    }
+
+    setTestRunning(true);
+    setTestFeedback('');
+
+    try {
+      const sessionCookie = getCookieValue('CATS');
+      const response = await settingsApi.callLegacyAjaxFunction(
+        'testEmailSettings',
+        {
+          testEmailAddress,
+          fromAddress
+        },
+        sessionCookie
+      );
+      setTestFeedback(response.response || 'Test reported success.');
+    } catch (error: unknown) {
+      setTestFeedback(error instanceof Error ? error.message : 'Unable to test e-mail settings.');
+    } finally {
+      setTestRunning(false);
+    }
+  }, [fromAddress, testEmailAddress, testRunning]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Email Settings"
+        subtitle="Configure delivery settings while preserving the legacy field names and test workflow."
+        actions={(
+          <>
+            <button
+              type="submit"
+              form="emailSettingsForm"
+              className="modern-btn modern-btn--emphasis"
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Settings'}
+            </button>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? (
+            <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite">
+              <strong>{flash.success ? 'Saved' : 'Warning'}</strong>
+              <span>{flash.message}</span>
+            </section>
+          ) : null}
+          {testFeedback !== '' ? (
+            <section className="avel-settings-admin-flash is-info" aria-live="polite">
+              <strong>Test</strong>
+              <span>{testFeedback}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Delivery Settings</h2>
+              <p className="avel-list-panel__hint">
+                The form keeps the legacy field names, submit endpoint, and e-mail test action intact.
+              </p>
+            </div>
+
+            <form id="emailSettingsForm" className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off" onSubmit={saveSettings}>
+              <input type="hidden" name="postback" value="postback" />
+              <input type="hidden" name="configured" value="1" />
+
+              <div className="avel-settings-user-grid">
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="fromAddress">
+                  <span>From E-Mail Address for Outgoing Messages</span>
+                  <input
+                    className="avel-form-control"
+                    type="email"
+                    id="fromAddress"
+                    name="fromAddress"
+                    value={fromAddress}
+                    onChange={(event) => setFromAddress(event.target.value)}
+                    autoComplete="email"
+                  />
+                </label>
+
+                <div className="avel-settings-user-field avel-settings-user-field--full">
+                  <span>Send Test E-Mail To</span>
+                  <div className="modern-compat-page__actions">
+                    <input
+                      className="avel-form-control"
+                      type="email"
+                      id="testEmailAddress"
+                      name="testEmailAddress"
+                      value={testEmailAddress}
+                      onChange={(event) => setTestEmailAddress(event.target.value)}
+                      autoComplete="email"
+                    />
+                    <button type="button" className="modern-btn modern-btn--secondary" onClick={() => {
+                      void runEmailTest();
+                    }} disabled={testRunning}>
+                      {testRunning ? 'Testing...' : 'Test Configuration'}
+                    </button>
+                  </div>
+                </div>
+
+                <fieldset className="avel-settings-user-field avel-settings-user-field--full">
+                  <legend>E-Mail Messages Generated For</legend>
+                  <div className="avel-settings-form-stack">
+                    {statusToggles.map((toggle, index) => (
+                      <label key={toggle.name} className="modern-checkbox">
+                        <input
+                          type="checkbox"
+                          name={toggle.name}
+                          checked={toggle.checked}
+                          onChange={(event) => {
+                            const next = event.target.checked;
+                            setStatusToggles((current) => current.map((item, itemIndex) => (
+                              itemIndex === index ? { ...item, checked: next } : item
+                            )));
+                          }}
+                        />
+                        <span>{toggle.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <fieldset className="avel-settings-user-field avel-settings-user-field--full">
+                  <legend>Template Activation</legend>
+                  <div className="avel-settings-form-stack">
+                    {templateToggles.map((template, index) => (
+                      <label key={template.emailTemplateID} className="modern-checkbox">
+                        <input
+                          type="checkbox"
+                          name={`useThisTemplate${template.emailTemplateID}`}
+                          checked={template.checked}
+                          onChange={(event) => {
+                            const next = event.target.checked;
+                            setTemplateToggles((current) => current.map((item, itemIndex) => (
+                              itemIndex === index ? { ...item, checked: next } : item
+                            )));
+                          }}
+                        />
+                        <span>{template.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Settings'}
+                </button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={resetForm} disabled={isSaving}>
+                  Reset
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
+                  Back To Settings
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsFeedbackSettingsNativeShell({
+  data,
+  bootstrap,
+  onReload
+}: {
+  data: SettingsFeedbackSettingsNativeData;
+  bootstrap: UIModeBootstrap;
+  onReload: () => void;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [recipientUserID, setRecipientUserID] = useState(data.form.recipientUserID);
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useState<SettingsFeedbackSettingsNativeData['flash'] | null>(data.flash || null);
+
+  useEffect(() => {
+    setRecipientUserID(data.form.recipientUserID);
+    setFlash(data.flash || null);
+  }, [data.form.recipientUserID, data.flash]);
+
+  const saveSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    setFlash(null);
+
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      payload.set('feedbackRecipientUserID', recipientUserID);
+      const document = await submitLegacyForm(submitURL, payload);
+      const message = readLegacyMessage(document);
+      const success = !hasLegacyFailure(document);
+      setFlash({
+        success,
+        message: message === '' ? (success ? 'Feedback settings saved.' : 'Unable to save feedback settings.') : message
+      });
+      onReload();
+    } catch (error: unknown) {
+      setFlash({
+        success: false,
+        message: error instanceof Error ? error.message : 'Unable to save feedback settings.'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [isSaving, onReload, recipientUserID, submitURL]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Feedback Settings"
+        subtitle="Route global feedback to a selected recipient while preserving the legacy submit payload."
+        actions={(
+          <>
+            <button type="submit" form="feedbackSettingsForm" className="modern-btn modern-btn--emphasis" disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Settings'}
+            </button>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? (
+            <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite">
+              <strong>{flash.success ? 'Saved' : 'Warning'}</strong>
+              <span>{flash.message}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Feedback Routing</h2>
+              <p className="avel-list-panel__hint">
+                The global footer feedback button sends notes to the selected user.
+              </p>
+            </div>
+
+            <form id="feedbackSettingsForm" className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off" onSubmit={saveSettings}>
+              <input type="hidden" name="postback" value="postback" />
+              <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="feedbackRecipientUserID">
+                <span>Feedback recipient user</span>
+                <select
+                  className="avel-form-control"
+                  id="feedbackRecipientUserID"
+                  name="feedbackRecipientUserID"
+                  value={recipientUserID}
+                  onChange={(event) => setRecipientUserID(event.target.value)}
+                >
+                  <option value="0">-- Not configured --</option>
+                  {data.form.recipientOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Settings'}
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
+                  Back To Settings
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsGoogleOIDCSettingsNativeShell({
+  data,
+  bootstrap,
+  onReload
+}: {
+  data: SettingsGoogleOIDCSettingsNativeData;
+  bootstrap: UIModeBootstrap;
+  onReload: () => void;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [enabled, setEnabled] = useState(data.form.enabled);
+  const [clientId, setClientId] = useState(data.form.clientId);
+  const [clientSecret, setClientSecret] = useState(data.form.clientSecret);
+  const [redirectUri, setRedirectUri] = useState(data.form.redirectUri);
+  const [hostedDomain, setHostedDomain] = useState(data.form.hostedDomain);
+  const [siteId, setSiteId] = useState(data.form.siteId);
+  const [autoProvisionEnabled, setAutoProvisionEnabled] = useState(data.form.autoProvisionEnabled);
+  const [notifyEmail, setNotifyEmail] = useState(data.form.notifyEmail);
+  const [fromEmail, setFromEmail] = useState(data.form.fromEmail);
+  const [requestSubject, setRequestSubject] = useState(data.form.requestSubject);
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useState<SettingsGoogleOIDCSettingsNativeData['flash'] | null>(data.flash || null);
+  const [testFeedback, setTestFeedback] = useState<SettingsGoogleOIDCSettingsNativeData['testFeedback'] | null>(data.testFeedback || null);
+
+  useEffect(() => {
+    setEnabled(data.form.enabled);
+    setClientId(data.form.clientId);
+    setClientSecret(data.form.clientSecret);
+    setRedirectUri(data.form.redirectUri);
+    setHostedDomain(data.form.hostedDomain);
+    setSiteId(data.form.siteId);
+    setAutoProvisionEnabled(data.form.autoProvisionEnabled);
+    setNotifyEmail(data.form.notifyEmail);
+    setFromEmail(data.form.fromEmail);
+    setRequestSubject(data.form.requestSubject);
+    setFlash(data.flash || null);
+    setTestFeedback(data.testFeedback || null);
+  }, [data]);
+
+  const submitSettings = useCallback(async (testConfig: boolean) => {
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    setFlash(null);
+    setTestFeedback(null);
+
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      payload.set('enabled', enabled ? '1' : '0');
+      payload.set('clientId', clientId);
+      payload.set('clientSecret', clientSecret);
+      payload.set('redirectUri', redirectUri);
+      payload.set('hostedDomain', hostedDomain);
+      payload.set('siteId', siteId);
+      payload.set('autoProvisionEnabled', autoProvisionEnabled ? '1' : '0');
+      payload.set('notifyEmail', notifyEmail);
+      payload.set('fromEmail', fromEmail);
+      payload.set('requestSubject', requestSubject);
+      if (testConfig) {
+        payload.set('testConfig', '1');
+      }
+
+      const document = await submitLegacyForm(submitURL, payload);
+      const message = readLegacyMessage(document);
+      const success = !hasLegacyFailure(document);
+
+      if (testConfig) {
+        setTestFeedback({
+          success,
+          message: message === '' ? (success ? 'Test completed.' : 'Test failed.') : message
+        });
+      } else {
+        setFlash({
+          success: true,
+          message: message === '' ? 'Google OIDC settings saved.' : message
+        });
+        onReload();
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unable to save Google OIDC settings.';
+      if (testConfig) {
+        setTestFeedback({
+          success: false,
+          message
+        });
+      } else {
+        setFlash({
+          success: false,
+          message
+        });
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }, [autoProvisionEnabled, clientId, clientSecret, enabled, fromEmail, hostedDomain, isSaving, notifyEmail, onReload, redirectUri, requestSubject, siteId, submitURL]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Google OIDC Settings"
+        subtitle="Configure Google sign-in and access-request routing while preserving the legacy submit/test actions."
+        actions={(
+          <>
+            <button type="button" className="modern-btn modern-btn--emphasis" onClick={() => {
+              void submitSettings(false);
+            }} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Settings'}
+            </button>
+            <button type="button" className="modern-btn modern-btn--secondary" onClick={() => {
+              void submitSettings(true);
+            }} disabled={isSaving}>
+              Test Google Config
+            </button>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? (
+            <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite">
+              <strong>{flash.success ? 'Saved' : 'Warning'}</strong>
+              <span>{flash.message}</span>
+            </section>
+          ) : null}
+          {testFeedback ? (
+            <section className={`avel-settings-admin-flash ${testFeedback.success ? 'is-success' : 'is-warning'}`} aria-live="polite">
+              <strong>{testFeedback.success ? 'Test Passed' : 'Test Failed'}</strong>
+              <span>{testFeedback.message}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Google Sign-In / Access Request</h2>
+              <p className="avel-list-panel__hint">
+                The native form keeps the legacy fields, test action, and submit endpoint intact.
+              </p>
+            </div>
+
+            <form className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off">
+              <input type="hidden" name="postback" value="postback" />
+
+              <div className="avel-settings-user-grid">
+                <label className="modern-checkbox avel-settings-user-field avel-settings-user-field--full">
+                  <input
+                    type="checkbox"
+                    name="enabled"
+                    checked={enabled}
+                    onChange={(event) => setEnabled(event.target.checked)}
+                  />
+                  <span>Enable Google Sign-In</span>
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="clientId">
+                  <span>Google OAuth Client ID</span>
+                  <input className="avel-form-control" type="text" id="clientId" name="clientId" value={clientId} onChange={(event) => setClientId(event.target.value)} />
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="clientSecret">
+                  <span>Google OAuth Client Secret</span>
+                  <input className="avel-form-control" type="password" id="clientSecret" name="clientSecret" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} />
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="redirectUri">
+                  <span>Redirect URI (optional override)</span>
+                  <input className="avel-form-control" type="text" id="redirectUri" name="redirectUri" value={redirectUri} onChange={(event) => setRedirectUri(event.target.value)} />
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="hostedDomain">
+                  <span>Allowed Google Workspace domain(s)</span>
+                  <input className="avel-form-control" type="text" id="hostedDomain" name="hostedDomain" value={hostedDomain} onChange={(event) => setHostedDomain(event.target.value)} />
+                </label>
+
+                <label className="avel-settings-user-field" htmlFor="siteId">
+                  <span>Default OpenCATS Site ID</span>
+                  <input className="avel-form-control" type="text" id="siteId" name="siteId" value={siteId} onChange={(event) => setSiteId(event.target.value)} inputMode="numeric" />
+                </label>
+
+                <label className="modern-checkbox avel-settings-user-field avel-settings-user-field--full">
+                  <input
+                    type="checkbox"
+                    name="autoProvisionEnabled"
+                    checked={autoProvisionEnabled}
+                    onChange={(event) => setAutoProvisionEnabled(event.target.checked)}
+                  />
+                  <span>Enable access request auto-provisioning</span>
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="notifyEmail">
+                  <span>Access request notification recipient</span>
+                  <input className="avel-form-control" type="email" id="notifyEmail" name="notifyEmail" value={notifyEmail} onChange={(event) => setNotifyEmail(event.target.value)} />
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="fromEmail">
+                  <span>Access request e-mail From address</span>
+                  <input className="avel-form-control" type="email" id="fromEmail" name="fromEmail" value={fromEmail} onChange={(event) => setFromEmail(event.target.value)} />
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="requestSubject">
+                  <span>Access request e-mail subject</span>
+                  <input className="avel-form-control" type="text" id="requestSubject" name="requestSubject" value={requestSubject} onChange={(event) => setRequestSubject(event.target.value)} />
+                </label>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                <button type="button" className="modern-btn modern-btn--emphasis" onClick={() => {
+                  void submitSettings(false);
+                }} disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Settings'}
+                </button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={() => {
+                  void submitSettings(true);
+                }} disabled={isSaving}>
+                  Test Google Config
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
+                  Back To Settings
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsForceEmailNativeShell({
+  data,
+  bootstrap,
+  onReload
+}: {
+  data: SettingsForceEmailNativeData;
+  bootstrap: UIModeBootstrap;
+  onReload: () => void;
+}) {
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [siteName, setSiteName] = useState(data.form.siteName);
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useState<SettingsForceEmailNativeData['flash'] | null>(data.flash || null);
+
+  useEffect(() => {
+    setSiteName(data.form.siteName);
+    setFlash(data.flash || null);
+  }, [data]);
+
+  const saveSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    setFlash(null);
+
+    try {
+      const payload = new URLSearchParams();
+      payload.set('postback', 'postback');
+      payload.set('siteName', siteName);
+      const document = await submitLegacyForm(submitURL, payload);
+      const message = readLegacyMessage(document);
+      const success = !hasLegacyFailure(document);
+      setFlash({
+        success,
+        message: message === '' ? (success ? 'E-Mail address saved.' : 'Please enter an e-mail address.') : message
+      });
+      onReload();
+    } catch (error: unknown) {
+      setFlash({
+        success: false,
+        message: error instanceof Error ? error.message : 'Please enter an e-mail address.'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [isSaving, onReload, siteName, submitURL]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Force Email"
+        subtitle="Set the current account e-mail address using the legacy wizard payload."
+        actions={(
+          <>
+            <button type="submit" form="forceEmailForm" className="modern-btn modern-btn--emphasis" disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Email'}
+            </button>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? (
+            <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite">
+              <strong>{flash.success ? 'Saved' : 'Warning'}</strong>
+              <span>{flash.message}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">E-Mail Address</h2>
+              <p className="avel-list-panel__hint">
+                This preserves the legacy `siteName` field name and postback behavior.
+              </p>
+            </div>
+
+            <form id="forceEmailForm" className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off" onSubmit={saveSettings}>
+              <input type="hidden" name="postback" value="postback" />
+
+              <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="siteName">
+                <span>E-Mail Address</span>
+                <input
+                  className="avel-form-control"
+                  type="email"
+                  id="siteName"
+                  name="siteName"
+                  value={siteName}
+                  onChange={(event) => setSiteName(event.target.value)}
+                />
+              </label>
+
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Email'}
+                </button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={() => setSiteName(data.form.siteName)} disabled={isSaving}>
+                  Reset
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
+                  Back To Settings
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsDeleteUserNativeShell({
+  data,
+  bootstrap,
+  onReload
+}: {
+  data: SettingsDeleteUserNativeData;
+  bootstrap: UIModeBootstrap;
+  onReload: () => void;
+}) {
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const [flash, setFlash] = useState<SettingsDeleteUserNativeData['flash'] | null>(data.flash || null);
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    if (!data.state.requested || !data.state.automatedTester || data.state.userID <= 0 || isRunning) {
+      return;
+    }
+
+    let isMounted = true;
+    setIsRunning(true);
+    setFlash(null);
+
+    const runDelete = async () => {
+      try {
+        const query = new URLSearchParams();
+        query.set('m', 'settings');
+        query.set('a', 'deleteUser');
+        query.set('format', 'modern-json');
+        query.set('modernPage', 'settings-delete-user');
+        query.set('userID', String(data.state.userID));
+        query.set('iAmTheAutomatedTester', '1');
+        const response = await fetch(`${bootstrap.indexName}?${query.toString()}`, {
+          credentials: 'same-origin'
+        });
+        if (!response.ok) {
+          throw new Error(`Delete request failed (${response.status}).`);
+        }
+
+        const payload = await response.json() as ModernMutationResponse;
+        if (!isMounted) {
+          return;
+        }
+
+        setFlash({
+          success: Boolean(payload.success),
+          message: payload.message || (payload.success ? 'User deleted.' : 'Unable to delete user.')
+        });
+        if (payload.success) {
+          onReload();
+        }
+      } catch (error: unknown) {
+        if (!isMounted) {
+          return;
+        }
+        setFlash({
+          success: false,
+          message: error instanceof Error ? error.message : 'Unable to delete user.'
+        });
+      } finally {
+        if (isMounted) {
+          setIsRunning(false);
+        }
+      }
+    };
+
+    void runDelete();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [bootstrap.indexName, data.state.automatedTester, data.state.requested, data.state.userID, isRunning, onReload]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="Delete User"
+        subtitle="Execute the automated delete-user action through the native modern shell."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Users
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {flash ? (
+            <section className={`avel-settings-admin-flash ${flash.success ? 'is-success' : 'is-warning'}`} aria-live="polite">
+              <strong>{flash.success ? 'Done' : 'Warning'}</strong>
+              <span>{flash.message}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Delete User Action</h2>
+              <p className="avel-list-panel__hint">
+                This route remains tester-gated and executes only when the required query parameters are present.
+              </p>
+            </div>
+            <div className="modern-state">
+              {isRunning ? 'Deleting user...' : data.state.requested ? `Requested delete for user #${data.state.userID}.` : 'No user ID supplied.'}
+            </div>
           </section>
         </div>
       </PageContainer>
@@ -3883,6 +5102,11 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     | SettingsLoginActivityModernDataResponse
     | SettingsGdprSettingsModernData
     | SettingsEmailTemplatesModernDataResponse
+    | SettingsEmailSettingsNativeData
+    | SettingsFeedbackSettingsNativeData
+    | SettingsGoogleOIDCSettingsNativeData
+    | SettingsForceEmailNativeData
+    | SettingsDeleteUserNativeData
     | SettingsRejectionReasonsModernDataResponse
     | SettingsTagsModernDataResponse
     | SettingsRolePagePermissionsModernDataResponse
@@ -3942,6 +5166,16 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           return fetchSettingsGdprSettingsModernData(bootstrap, query);
         case 'emailTemplates':
           return fetchSettingsEmailTemplatesNativeData(bootstrap, query);
+        case 'emailSettings':
+          return fetchNativeEmailSettingsData(bootstrap, legacyURL);
+        case 'feedbackSettings':
+          return fetchNativeFeedbackSettingsData(bootstrap, legacyURL);
+        case 'forceEmail':
+          return buildForceEmailNativeData(bootstrap, legacyURL);
+        case 'googleOIDCSettings':
+          return fetchNativeGoogleOIDCSettingsData(bootstrap, legacyURL);
+        case 'deleteUser':
+          return buildDeleteUserNativeData(bootstrap, legacyURL);
         case 'rejectionReasons':
           return fetchSettingsRejectionReasonsModernData(bootstrap, query);
         case 'tags':
@@ -4062,6 +5296,56 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
       return (
         <SettingsGdprSettingsNativeShell
           data={nativeData as SettingsGdprSettingsModernData}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'emailSettings') {
+      return (
+        <SettingsEmailSettingsNativeShell
+          data={nativeData as SettingsEmailSettingsNativeData}
+          bootstrap={bootstrap}
+          onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'feedbackSettings') {
+      return (
+        <SettingsFeedbackSettingsNativeShell
+          data={nativeData as SettingsFeedbackSettingsNativeData}
+          bootstrap={bootstrap}
+          onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'forceEmail') {
+      return (
+        <SettingsForceEmailNativeShell
+          data={nativeData as SettingsForceEmailNativeData}
+          bootstrap={bootstrap}
+          onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'googleOIDCSettings') {
+      return (
+        <SettingsGoogleOIDCSettingsNativeShell
+          data={nativeData as SettingsGoogleOIDCSettingsNativeData}
+          bootstrap={bootstrap}
+          onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'deleteUser') {
+      return (
+        <SettingsDeleteUserNativeShell
+          data={nativeData as SettingsDeleteUserNativeData}
+          bootstrap={bootstrap}
+          onReload={refreshNativeRoute}
         />
       );
     }
