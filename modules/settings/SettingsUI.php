@@ -2650,6 +2650,8 @@ class SettingsUI extends UserInterface
      */
     private function careerPortalTemplateEdit()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $templateName = $this->getTrimmedInput('templateName', $_GET);
         if (empty($templateName))
         {
@@ -2714,12 +2716,36 @@ class SettingsUI extends UserInterface
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
         $this->_template->assign('extraFieldsForJobOrders', $extraFieldsForJobOrders);
         $this->_template->assign('extraFieldsForCandidates', $extraFieldsForCandidates);
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-template-edit')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernCareerPortalTemplateEditJSON(
+                'settings-career-portal-template-edit',
+                $templateName,
+                $template,
+                $extraFieldsForJobOrders,
+                $extraFieldsForCandidates,
+                $EEOSettingsRS['enabled'],
+                $EEOSettingsRS,
+                $_SESSION['CATS']->getCookie()
+            );
+            return;
+        }
+
         $this->_template->display('./modules/settings/CareerPortalTemplateEdit.tpl');
     }
 
     //FIXME: Document me.
     private function onCareerPortalTemplateEdit()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
         $templateName = $this->getTrimmedInput('templateName', $_POST);
         if (empty($templateName) || !isset($_POST['continueEdit']))
         {
@@ -2757,6 +2783,38 @@ class SettingsUI extends UserInterface
             }
         }
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-template-edit')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernMutationJSON(
+                'settings.careerPortalTemplateEdit.mutation.v1',
+                'settings-career-portal-template-edit',
+                ($continueEdit == '1')
+                    ? sprintf(
+                        '%s?m=settings&a=careerPortalTemplateEdit&templateName=%s&ui=modern',
+                        CATSUtility::getIndexName(),
+                        urlencode($templateName)
+                    )
+                    : sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Template saved.',
+                array(
+                    'backURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', CATSUtility::getIndexName()),
+                    'legacyURL' => sprintf(
+                        '%s?m=settings&a=careerPortalTemplateEdit&templateName=%s&ui=legacy',
+                        CATSUtility::getIndexName(),
+                        urlencode($templateName)
+                    )
+                )
+            );
+            return;
+        }
+
         if ($continueEdit == '1')
         {
             CATSUtility::transferRelativeURI(
@@ -2776,6 +2834,8 @@ class SettingsUI extends UserInterface
      */
     private function careerPortalSettings()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $careerPortalSettings = new CareerPortalSettings($this->_siteID);
         $careerPortalSettingsRS = $careerPortalSettings->getAll();
         $careerPortalTemplateNames = $careerPortalSettings->getDefaultTemplates();
@@ -2796,12 +2856,37 @@ class SettingsUI extends UserInterface
         $this->_template->assign('careerPortalTemplateCustomNames', $careerPortalTemplateCustomNames);
         $this->_template->assign('careerPortalURL', $careerPortalURL);
         $this->_template->assign('sessionCookie', $_SESSION['CATS']->getCookie());
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-settings')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $questionnaires = new Questionnaire($this->_siteID);
+            $data = $questionnaires->getAll(true);
+
+            $this->renderModernCareerPortalSettingsJSON(
+                'settings-career-portal-settings',
+                $careerPortalSettingsRS,
+                $careerPortalTemplateNames,
+                $careerPortalTemplateCustomNames,
+                $careerPortalURL,
+                $data
+            );
+            return;
+        }
+
         $this->_template->display('./modules/settings/CareerPortalSettings.tpl');
     }
 
     //FIXME: Document me.
     private function onCareerPortalSettings()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
         $careerPortalSettings = new CareerPortalSettings($this->_siteID);
         $careerPortalSettingsRS = $careerPortalSettings->getAll();
 
@@ -2815,6 +2900,28 @@ class SettingsUI extends UserInterface
                     $careerPortalSettings->set($setting, '1');
                     if($value != '1')
                     {
+                        if ($isModernJSON)
+                        {
+                            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-settings')
+                            {
+                                $this->rejectUnsupportedModernPage($modernPage);
+                                return;
+                            }
+
+                            $this->renderModernMutationJSON(
+                                'settings.careerPortalSettings.mutation.v1',
+                                'settings-career-portal-settings',
+                                sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', CATSUtility::getIndexName()),
+                                true,
+                                'Career portal settings saved.',
+                                array(
+                                    'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                                    'legacyURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=legacy', CATSUtility::getIndexName())
+                                )
+                            );
+                            return;
+                        }
+
                         CATSUtility::transferRelativeURI('m=settings&a=careerPortalSettings');
                     }
                 }
@@ -2823,6 +2930,28 @@ class SettingsUI extends UserInterface
                     $careerPortalSettings->set($setting, '0');
                     if($value != '0')
                     {
+                        if ($isModernJSON)
+                        {
+                            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-settings')
+                            {
+                                $this->rejectUnsupportedModernPage($modernPage);
+                                return;
+                            }
+
+                            $this->renderModernMutationJSON(
+                                'settings.careerPortalSettings.mutation.v1',
+                                'settings-career-portal-settings',
+                                sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', CATSUtility::getIndexName()),
+                                true,
+                                'Career portal settings saved.',
+                                array(
+                                    'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                                    'legacyURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=legacy', CATSUtility::getIndexName())
+                                )
+                            );
+                            return;
+                        }
+
                         CATSUtility::transferRelativeURI('m=settings&a=careerPortalSettings');
                     }
                 }
@@ -2878,6 +3007,28 @@ class SettingsUI extends UserInterface
                     $careerPortalSettings->set($setting, $_POST[$setting]);
                 }
             }
+        }
+
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-settings')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernMutationJSON(
+                'settings.careerPortalSettings.mutation.v1',
+                'settings-career-portal-settings',
+                sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Career portal settings saved.',
+                array(
+                    'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', CATSUtility::getIndexName()),
+                    'legacyURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
         }
 
         CATSUtility::transferRelativeURI('m=settings&a=administration');
@@ -7201,6 +7352,207 @@ class SettingsUI extends UserInterface
         $this->respondModernJSON(200, $payload);
     }
 
+    private function renderModernCareerPortalSettingsJSON(
+        $modernPage,
+        $careerPortalSettingsRS,
+        $careerPortalTemplateNames,
+        $careerPortalTemplateCustomNames,
+        $careerPortalURL,
+        $questionnaires
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.careerPortalSettings.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'careerPortalSettingsRS' => $careerPortalSettingsRS,
+                'careerPortalTemplateNames' => $careerPortalTemplateNames,
+                'careerPortalTemplateCustomNames' => $careerPortalTemplateCustomNames,
+                'careerPortalURL' => (string) $careerPortalURL,
+                'questionnaires' => $questionnaires,
+                'sessionCookie' => (string) $_SESSION['CATS']->getCookie()
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=careerPortalSettings', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=legacy', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernCareerPortalTemplateEditJSON(
+        $modernPage,
+        $templateName,
+        $template,
+        $extraFieldsForJobOrders,
+        $extraFieldsForCandidates,
+        $eeoEnabled,
+        $EEOSettingsRS,
+        $sessionCookie
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $encodedTemplateName = urlencode($templateName);
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.careerPortalTemplateEdit.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'templateName' => (string) $templateName,
+                'template' => $template,
+                'extraFieldsForJobOrders' => $extraFieldsForJobOrders,
+                'extraFieldsForCandidates' => $extraFieldsForCandidates,
+                'eeoEnabled' => (bool) $eeoEnabled,
+                'EEOSettingsRS' => $EEOSettingsRS,
+                'sessionCookie' => (string) $sessionCookie
+            ),
+            'actions' => array(
+                'submitURL' => sprintf(
+                    '%s?m=settings&a=careerPortalTemplateEdit&templateName=%s',
+                    $baseURL,
+                    $encodedTemplateName
+                ),
+                'backURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', $baseURL),
+                'legacyURL' => sprintf(
+                    '%s?m=settings&a=careerPortalTemplateEdit&templateName=%s&ui=legacy',
+                    $baseURL,
+                    $encodedTemplateName
+                )
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernCareerPortalQuestionnaireJSON(
+        $modernPage,
+        $questionnaireID,
+        $title,
+        $description,
+        $isActive,
+        $questions,
+        $scrollX = '',
+        $scrollY = ''
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $questionnaireURL = sprintf('%s?m=settings&a=careerPortalQuestionnaire', $baseURL);
+        if ((string) $questionnaireID !== '')
+        {
+            $questionnaireURL .= '&questionnaireID=' . urlencode((string) $questionnaireID);
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.careerPortalQuestionnaire.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'questionnaireID' => (string) $questionnaireID,
+                'questionnaire' => array(
+                    'title' => (string) $title,
+                    'description' => (string) $description,
+                    'isActive' => (bool) $isActive,
+                    'scrollX' => (string) $scrollX,
+                    'scrollY' => (string) $scrollY,
+                    'questions' => $questions
+                )
+            ),
+            'actions' => array(
+                'submitURL' => $questionnaireURL,
+                'backURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s&ui=legacy', $questionnaireURL)
+            )
+        );
+
+        if ((string) $questionnaireID !== '')
+        {
+            $payload['actions']['previewURL'] = sprintf(
+                '%s?m=settings&a=careerPortalQuestionnairePreview&questionnaireID=%s&ui=modern',
+                $baseURL,
+                urlencode((string) $questionnaireID)
+            );
+        }
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernCareerPortalQuestionnaireUpdateJSON($modernPage, $questionnaires)
+    {
+        $baseURL = CATSUtility::getIndexName();
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.careerPortalQuestionnaireUpdate.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'questionnaires' => $questionnaires
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=careerPortalQuestionnaireUpdate', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=careerPortalQuestionnaireUpdate&ui=legacy', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernCareerPortalQuestionnairePreviewJSON(
+        $modernPage,
+        $questionnaireID,
+        $data,
+        $questions
+    )
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $questionnaireID = (string) $questionnaireID;
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.careerPortalQuestionnairePreview.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'questionnaireID' => $questionnaireID,
+                'questionnaire' => array(
+                    'title' => isset($data['title']) ? (string) $data['title'] : '',
+                    'description' => isset($data['description']) ? (string) $data['description'] : '',
+                    'isActive' => isset($data['isActive']) ? (bool) $data['isActive'] : false,
+                    'questions' => $questions
+                )
+            ),
+            'actions' => array(
+                'backURL' => sprintf(
+                    '%s?m=settings&a=careerPortalQuestionnaire&questionnaireID=%s&ui=modern',
+                    $baseURL,
+                    urlencode($questionnaireID)
+                ),
+                'legacyURL' => sprintf(
+                    '%s?m=settings&a=careerPortalQuestionnairePreview&questionnaireID=%s&ui=legacy',
+                    $baseURL,
+                    urlencode($questionnaireID)
+                )
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
     /*
      * Called by handleRequest() to process loading the site users page.
      */
@@ -8295,16 +8647,18 @@ class SettingsUI extends UserInterface
 
     private function careerPortalQuestionnaire($fromPostback = false)
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         // Get the ID if provided, otherwise we're adding a questionnaire
         $questionnaireID = isset($_GET[$id='questionnaireID']) ? $_GET[$id] : '';
 
         $questions = array();
+        $title = '';
+        $description = '';
+        $isActive = 1;
 
         if (!$fromPostback)
         {
-            $title = $description = '';
-            $isActive = 1;
-
             // If questionairreID is provided, this is an edit
             if ($questionnaireID != '')
             {
@@ -8372,11 +8726,35 @@ class SettingsUI extends UserInterface
         $this->_template->assign('questionnaireID', $questionnaireID);
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', '');
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-questionnaire')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernCareerPortalQuestionnaireJSON(
+                'settings-career-portal-questionnaire',
+                $questionnaireID,
+                isset($_SESSION['CATS_QUESTIONNAIRE']['title']) ? $_SESSION['CATS_QUESTIONNAIRE']['title'] : $title,
+                isset($_SESSION['CATS_QUESTIONNAIRE']['description']) ? $_SESSION['CATS_QUESTIONNAIRE']['description'] : $description,
+                isset($_SESSION['CATS_QUESTIONNAIRE']['isActive']) ? $_SESSION['CATS_QUESTIONNAIRE']['isActive'] : $isActive,
+                $questions,
+                isset($scrollX) ? $scrollX : '',
+                isset($scrollY) ? $scrollY : ''
+            );
+            return;
+        }
+
         $this->_template->display('./modules/settings/CareerPortalQuestionnaire.tpl');
     }
 
     private function onCareerPortalQuestionnaire()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
         if (!isset($_SESSION['CATS_QUESTIONNAIRE']) || empty($_SESSION['CATS_QUESTIONNAIRE']))
         {
             CommonErrors::fatal(COMMONERROR_BADINDEX, 'Please return to your careers website '
@@ -8798,14 +9176,67 @@ class SettingsUI extends UserInterface
             $_SESSION['CATS_QUESTIONNAIRE']['questions'] = $questions;
         }
 
+        if ($isModernJSON)
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-questionnaire')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $questionnaireID = $_SESSION['CATS_QUESTIONNAIRE']['id'];
+            $questionnaireRouteURL = sprintf(
+                '%s?m=settings&a=careerPortalQuestionnaire',
+                CATSUtility::getIndexName()
+            );
+            if ((string) $questionnaireID !== '')
+            {
+                $questionnaireRouteURL .= '&questionnaireID=' . urlencode((string) $questionnaireID);
+            }
+
+            $this->renderModernMutationJSON(
+                'settings.careerPortalQuestionnaire.mutation.v1',
+                'settings-career-portal-questionnaire',
+                isset($_POST[$id = 'saveChanges']) && !strcasecmp($_POST[$id], 'yes')
+                    ? sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', CATSUtility::getIndexName())
+                    : sprintf('%s&ui=modern', $questionnaireRouteURL),
+                true,
+                isset($_POST[$id = 'saveChanges']) && !strcasecmp($_POST[$id], 'yes')
+                    ? 'Questionnaire saved.'
+                    : 'Questionnaire updated.',
+                array(
+                    'backURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', CATSUtility::getIndexName()),
+                    'legacyURL' => sprintf('%s&ui=legacy', $questionnaireRouteURL)
+                )
+            );
+            return;
+        }
+
         // Now view the page as if we've just loaded it from the database
         $this->careerPortalQuestionnaire(true);
     }
 
     private function careerPortalQuestionnaireUpdate()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_REQUEST));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
         $questionnaire = new Questionnaire($this->_siteID);
         $data = $questionnaire->getAll(true);
+
+        if ($responseFormat === 'modern-json' && !$this->isPostBack())
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-questionnaire-update')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernCareerPortalQuestionnaireUpdateJSON(
+                'settings-career-portal-questionnaire-update',
+                $data
+            );
+            return;
+        }
 
         for ($i = 0; $i < count($data); $i++)
         {
@@ -8816,11 +9247,35 @@ class SettingsUI extends UserInterface
             }
         }
 
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-questionnaire-update')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            $this->renderModernMutationJSON(
+                'settings.careerPortalQuestionnaireUpdate.mutation.v1',
+                'settings-career-portal-questionnaire-update',
+                sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', CATSUtility::getIndexName()),
+                true,
+                'Questionnaires updated.',
+                array(
+                    'backURL' => sprintf('%s?m=settings&a=careerPortalSettings&ui=modern', CATSUtility::getIndexName()),
+                    'legacyURL' => sprintf('%s?m=settings&a=careerPortalQuestionnaireUpdate&ui=legacy', CATSUtility::getIndexName())
+                )
+            );
+            return;
+        }
+
         CATSUtility::transferRelativeURI('m=settings&a=careerPortalSettings');
     }
 
     private function careerPortalQuestionnairePreview()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         if (!isset($_GET['questionnaireID']))
         {
             CommonErrors::fatal(COMMONERROR_BADINDEX, $this, 'Bad index.');
@@ -8843,6 +9298,31 @@ class SettingsUI extends UserInterface
         $this->_template->assign('questionnaireID', $questionnaireID);
         $this->_template->assign('data', $data);
         $this->_template->assign('questions', $questions);
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-career-portal-questionnaire-preview')
+            {
+                $this->rejectUnsupportedModernPage($modernPage);
+                return;
+            }
+
+            for ($i = 0; $i < count($questions); $i++)
+            {
+                $questions[$i]['questionTypeLabel'] = $questionnaire->convertQuestionConstantToType(
+                    $questions[$i]['questionType']
+                );
+            }
+
+            $this->renderModernCareerPortalQuestionnairePreviewJSON(
+                'settings-career-portal-questionnaire-preview',
+                $questionnaireID,
+                $data,
+                $questions
+            );
+            return;
+        }
+
         $this->_template->display('./modules/settings/CareerPortalQuestionnaireShow.tpl');
     }
 }
