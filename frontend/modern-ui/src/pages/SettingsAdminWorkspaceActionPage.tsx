@@ -215,38 +215,38 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.careerportalquestionnaire': {
     title: 'Career Portal Questionnaire',
-    subtitle: 'Configure career portal questionnaire settings in compatibility mode.',
+    subtitle: 'Manage questionnaire workflow from the native settings shell.',
     panelTitle: 'Career Portal Questionnaire Workspace',
-    panelSubtitle: 'Legacy career portal questionnaire workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wrapper keeps questionnaire editing visible while the legacy form remains one click away.',
+    mode: 'embed'
   },
   'settings.careerportalquestionnairepreview': {
     title: 'Career Portal Questionnaire Preview',
-    subtitle: 'Preview the career portal questionnaire in compatibility mode.',
+    subtitle: 'Preview questionnaire changes from the native settings shell.',
     panelTitle: 'Questionnaire Preview Workspace',
-    panelSubtitle: 'Legacy questionnaire preview workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wrapper keeps previewing and editing linked together without auto-forwarding.',
+    mode: 'embed'
   },
   'settings.careerportalquestionnaireupdate': {
     title: 'Career Portal Questionnaire Update',
-    subtitle: 'Apply questionnaire updates in compatibility mode.',
+    subtitle: 'Apply questionnaire changes from the native settings shell.',
     panelTitle: 'Questionnaire Update Workspace',
-    panelSubtitle: 'Legacy questionnaire update workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wrapper keeps the update workflow explicit while the legacy submit path remains available.',
+    mode: 'embed'
   },
   'settings.careerportalsettings': {
     title: 'Career Portal Settings',
-    subtitle: 'Configure career portal behavior in compatibility mode.',
+    subtitle: 'Configure career portal behavior from the native settings shell.',
     panelTitle: 'Career Portal Settings Workspace',
-    panelSubtitle: 'Legacy career portal settings workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wrapper keeps the portal settings visible while related editors stay a click away.',
+    mode: 'embed'
   },
   'settings.careerportaltemplateedit': {
     title: 'Career Portal Template',
-    subtitle: 'Edit career portal templates in compatibility mode.',
+    subtitle: 'Edit career portal templates from the native settings shell.',
     panelTitle: 'Career Portal Template Workspace',
-    panelSubtitle: 'Legacy template-edit workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native wrapper keeps template editing safe while the legacy form remains available.',
+    mode: 'embed'
   },
   'settings.createbackup': {
     title: 'Create Backup',
@@ -372,6 +372,11 @@ type NativeSettingsRouteMode =
   | 'forceEmail'
   | 'googleOIDCSettings'
   | 'deleteUser'
+  | 'careerPortalSettings'
+  | 'careerPortalTemplateEdit'
+  | 'careerPortalQuestionnaire'
+  | 'careerPortalQuestionnairePreview'
+  | 'careerPortalQuestionnaireUpdate'
   | 'customizeCalendar'
   | 'eeo'
   | 'talentFitFlowSettings'
@@ -841,6 +846,21 @@ type SettingsLegacyNoticeData = {
   actions: {
     backURL: string;
     legacyURL: string;
+  };
+  state: {
+    title: string;
+    message: string;
+  };
+};
+
+type SettingsCareerPortalWorkflowData = {
+  actions: {
+    backURL: string;
+    legacyURL: string;
+    primaryURL: string;
+    primaryLabel: string;
+    secondaryURL?: string;
+    secondaryLabel?: string;
   };
   state: {
     title: string;
@@ -1324,6 +1344,26 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
     return 'deleteUser';
   }
 
+  if (routeKey === 'settings.careerportalsettings') {
+    return 'careerPortalSettings';
+  }
+
+  if (routeKey === 'settings.careerportaltemplateedit') {
+    return 'careerPortalTemplateEdit';
+  }
+
+  if (routeKey === 'settings.careerportalquestionnaire') {
+    return 'careerPortalQuestionnaire';
+  }
+
+  if (routeKey === 'settings.careerportalquestionnairepreview') {
+    return 'careerPortalQuestionnairePreview';
+  }
+
+  if (routeKey === 'settings.careerportalquestionnaireupdate') {
+    return 'careerPortalQuestionnaireUpdate';
+  }
+
   if (routeKey === 'settings.customizecalendar') {
     return 'customizeCalendar';
   }
@@ -1603,6 +1643,122 @@ function buildLegacyNoticeData(bootstrap: UIModeBootstrap, legacyURL: string, ti
       message
     }
   };
+}
+
+function buildModernSettingsActionURL(
+  bootstrap: UIModeBootstrap,
+  action: string,
+  query: URLSearchParams
+): string {
+  const modernQuery = new URLSearchParams(query);
+  modernQuery.set('m', 'settings');
+  modernQuery.set('a', action);
+  return ensureModernUIURL(`${bootstrap.indexName}?${modernQuery.toString()}`);
+}
+
+function buildCareerPortalWorkflowData(
+  bootstrap: UIModeBootstrap,
+  legacyURL: string,
+  routeMode: NativeSettingsRouteMode,
+  query: URLSearchParams
+): SettingsCareerPortalWorkflowData {
+  const settingsURL = buildModernSettingsActionURL(bootstrap, 'careerPortalSettings', query);
+  const templateEditURL = buildModernSettingsActionURL(bootstrap, 'careerPortalTemplateEdit', query);
+  const questionnaireURL = buildModernSettingsActionURL(bootstrap, 'careerPortalQuestionnaire', query);
+  const previewURL = buildModernSettingsActionURL(bootstrap, 'careerPortalQuestionnairePreview', query);
+  const updateURL = buildModernSettingsActionURL(bootstrap, 'careerPortalQuestionnaireUpdate', query);
+  const backToAdministrationURL = ensureModernUIURL(`${bootstrap.indexName}?m=settings&a=administration&ui=modern`);
+
+  switch (routeMode) {
+    case 'careerPortalSettings':
+      return {
+        actions: {
+          backURL: backToAdministrationURL,
+          legacyURL,
+          primaryURL: questionnaireURL,
+          primaryLabel: 'Open Questionnaire Editor',
+          secondaryURL: templateEditURL,
+          secondaryLabel: 'Open Template Editor'
+        },
+        state: {
+          title: 'Career Portal Settings',
+          message: 'Use the native shell to navigate the career portal workflow. Detailed edits remain in the legacy editor.'
+        }
+      };
+    case 'careerPortalTemplateEdit':
+      return {
+        actions: {
+          backURL: settingsURL,
+          legacyURL,
+          primaryURL: settingsURL,
+          primaryLabel: 'Back to Career Portal Settings',
+          secondaryURL: questionnaireURL,
+          secondaryLabel: 'Open Questionnaire Editor'
+        },
+        state: {
+          title: 'Career Portal Template',
+          message: 'Template edits stay behind the legacy form, while the native shell keeps related workflow actions visible.'
+        }
+      };
+    case 'careerPortalQuestionnaire':
+      return {
+        actions: {
+          backURL: settingsURL,
+          legacyURL,
+          primaryURL: previewURL,
+          primaryLabel: 'Preview Questionnaire',
+          secondaryURL: updateURL,
+          secondaryLabel: 'Open Update Workflow'
+        },
+        state: {
+          title: 'Career Portal Questionnaire',
+          message: 'Questionnaire editing remains in the legacy form. Use the native shell for safe navigation and preview.'
+        }
+      };
+    case 'careerPortalQuestionnairePreview':
+      return {
+        actions: {
+          backURL: questionnaireURL,
+          legacyURL,
+          primaryURL: questionnaireURL,
+          primaryLabel: 'Edit Questionnaire',
+          secondaryURL: settingsURL,
+          secondaryLabel: 'Open Career Portal Settings'
+        },
+        state: {
+          title: 'Career Portal Questionnaire Preview',
+          message: 'Preview the questionnaire from the native shell and jump back to editing without a redirect loop.'
+        }
+      };
+    case 'careerPortalQuestionnaireUpdate':
+      return {
+        actions: {
+          backURL: settingsURL,
+          legacyURL,
+          primaryURL: settingsURL,
+          primaryLabel: 'Back to Career Portal Settings',
+          secondaryURL: questionnaireURL,
+          secondaryLabel: 'Open Questionnaire Editor'
+        },
+        state: {
+          title: 'Career Portal Questionnaire Update',
+          message: 'Use the explicit legacy submit path to apply questionnaire updates while the native shell remains readable.'
+        }
+      };
+    default:
+      return {
+        actions: {
+          backURL: backToAdministrationURL,
+          legacyURL,
+          primaryURL: settingsURL,
+          primaryLabel: 'Open Career Portal Settings'
+        },
+        state: {
+          title: 'Career Portal Workflow',
+          message: 'Open the related legacy editor from the native shell.'
+        }
+      };
+  }
 }
 
 function buildDeleteBackupNativeData(bootstrap: UIModeBootstrap, legacyURL: string): SettingsDeleteBackupNativeData {
@@ -3099,6 +3255,63 @@ function SettingsUpgradeSiteNameNativeShell({
                 </a>
               </div>
             </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsCareerPortalWorkflowNativeShell({
+  data
+}: {
+  data: SettingsCareerPortalWorkflowData;
+}) {
+  const backURL = ensureUIURL(data.actions.backURL, 'modern');
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const primaryURL = ensureUIURL(data.actions.primaryURL, 'modern');
+  const secondaryURL = data.actions.secondaryURL ? ensureUIURL(data.actions.secondaryURL, 'modern') : '';
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title={data.state.title}
+        subtitle="Native wrapper shell for the career portal workflow."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">{data.state.title}</h2>
+              <p className="avel-list-panel__hint">{data.state.message}</p>
+            </div>
+
+            <div className="modern-compat-page__actions">
+              <a className="modern-btn modern-btn--emphasis" href={primaryURL}>
+                {data.actions.primaryLabel}
+              </a>
+              {secondaryURL !== '' && data.actions.secondaryLabel ? (
+                <a className="modern-btn modern-btn--secondary" href={secondaryURL}>
+                  {data.actions.secondaryLabel}
+                </a>
+              ) : null}
+              <a className="modern-btn modern-btn--secondary" href={legacyURL} target="_blank" rel="noreferrer">
+                Open In New Tab
+              </a>
+            </div>
+
+            <div className="modern-state" aria-live="polite">
+              {data.state.message}
+            </div>
           </section>
         </div>
       </PageContainer>
@@ -6166,6 +6379,7 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     | SettingsGoogleOIDCSettingsNativeData
     | SettingsForceEmailNativeData
     | SettingsDeleteUserNativeData
+    | SettingsCareerPortalWorkflowData
     | SettingsLegacyNoticeData
     | SettingsDeleteBackupNativeData
     | SettingsNewInstallFinishedNativeData
@@ -6243,6 +6457,12 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           return fetchNativeGoogleOIDCSettingsData(bootstrap, legacyURL);
         case 'deleteUser':
           return buildDeleteUserNativeData(bootstrap, legacyURL);
+        case 'careerPortalSettings':
+        case 'careerPortalTemplateEdit':
+        case 'careerPortalQuestionnaire':
+        case 'careerPortalQuestionnairePreview':
+        case 'careerPortalQuestionnaireUpdate':
+          return buildCareerPortalWorkflowData(bootstrap, legacyURL, nativeRouteMode, query);
         case 'createBackup':
           return buildLegacyNoticeData(
             bootstrap,
@@ -6452,6 +6672,20 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           data={nativeData as SettingsDeleteUserNativeData}
           bootstrap={bootstrap}
           onReload={refreshNativeRoute}
+        />
+      );
+    }
+
+    if (
+      nativeRouteMode === 'careerPortalSettings' ||
+      nativeRouteMode === 'careerPortalTemplateEdit' ||
+      nativeRouteMode === 'careerPortalQuestionnaire' ||
+      nativeRouteMode === 'careerPortalQuestionnairePreview' ||
+      nativeRouteMode === 'careerPortalQuestionnaireUpdate'
+    ) {
+      return (
+        <SettingsCareerPortalWorkflowNativeShell
+          data={nativeData as SettingsCareerPortalWorkflowData}
         />
       );
     }
