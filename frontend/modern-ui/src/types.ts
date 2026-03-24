@@ -2128,6 +2128,129 @@ export type SettingsDeleteUserMutationResponse = ModernMutationResponse & {
   };
 };
 
+export type SettingsCustomizeCalendarModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.customizeCalendar.v1'>;
+  settings: {
+    noAjax: boolean | string;
+    defaultPublic: boolean | string;
+    firstDayMonday: boolean | string;
+    dayStart: number | string;
+    dayStop: number | string;
+    calendarView: string;
+  };
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsCustomizeCalendarMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.customizeCalendar.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
+export type SettingsEEOModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.eeo.v1'>;
+  settings: {
+    enabled: boolean | string;
+    genderTracking: boolean | string;
+    ethnicTracking: boolean | string;
+    veteranTracking: boolean | string;
+    disabilityTracking: boolean | string;
+  };
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsEEOMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.eeo.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
+export type SettingsTalentFitFlowSettingsModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.talentFitFlowSettings.v1'>;
+  state: {
+    tffSaved: boolean;
+    tffTestOk?: boolean;
+    tffTestMessage?: string;
+  };
+  settings: {
+    baseUrl: string;
+    apiKey: string;
+    hmacSecret: string;
+  };
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsTalentFitFlowSettingsMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.talentFitFlowSettings.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+  tffTestOk?: boolean;
+  tffTestMessage?: string;
+};
+
+export type SettingsNewInstallPasswordModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.newInstallPassword.v1'>;
+  state: {
+    inputType: 'password';
+    title: string;
+    prompt: string;
+    message?: string;
+    messageSuccess?: boolean;
+  };
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsNewInstallPasswordMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.newInstallPassword.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
+export type SettingsNewSiteNameModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.newSiteName.v1'>;
+  state: {
+    inputType: 'siteName';
+    inputTypeTextParam: string;
+    title: string;
+    prompt: string;
+    message?: string;
+    messageSuccess?: boolean;
+  };
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsNewSiteNameMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.newSiteName.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
 export type SettingsTagsModernDataResponse = {
   meta: {
     contractVersion: number;

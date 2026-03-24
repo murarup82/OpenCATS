@@ -38,9 +38,13 @@ import type {
   SettingsDeleteUserModernDataResponse,
   SettingsDeleteUserMutationResponse,
   SettingsDeleteEmailTemplateMutationResponse,
+  SettingsCustomizeCalendarModernDataResponse,
+  SettingsCustomizeCalendarMutationResponse,
   SettingsEmailTemplatesModernDataResponse,
   SettingsEmailSettingsModernDataResponse,
   SettingsEmailSettingsMutationResponse,
+  SettingsEEOModernDataResponse,
+  SettingsEEOMutationResponse,
   SettingsEditUserModernDataResponse,
   SettingsFeedbackSettingsModernDataResponse,
   SettingsFeedbackSettingsMutationResponse,
@@ -48,6 +52,10 @@ import type {
   SettingsGdprSettingsMutationResponse,
   SettingsForceEmailModernDataResponse,
   SettingsForceEmailMutationResponse,
+  SettingsNewInstallPasswordModernDataResponse,
+  SettingsNewInstallPasswordMutationResponse,
+  SettingsNewSiteNameModernDataResponse,
+  SettingsNewSiteNameMutationResponse,
   SettingsLoginActivityModernDataResponse,
   SettingsManageUsersModernDataResponse,
   SettingsGoogleOIDCSettingsModernDataResponse,
@@ -55,6 +63,8 @@ import type {
   SettingsRejectionReasonsModernDataResponse,
   SettingsRolePagePermissionsModernDataResponse,
   SettingsSchemaMigrationsModernDataResponse,
+  SettingsTalentFitFlowSettingsModernDataResponse,
+  SettingsTalentFitFlowSettingsMutationResponse,
   SettingsTagsModernDataResponse,
   SettingsShowUserModernDataResponse,
   SettingsUpdateEmailTemplateMutationResponse,
@@ -151,11 +161,17 @@ import {
   MODERN_SETTINGS_DELETE_USER_CONTRACT_KEY,
   MODERN_SETTINGS_DELETE_USER_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_DELETE_USER_PAGE,
+  MODERN_SETTINGS_CUSTOMIZE_CALENDAR_CONTRACT_KEY,
+  MODERN_SETTINGS_CUSTOMIZE_CALENDAR_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_CUSTOMIZE_CALENDAR_PAGE,
   MODERN_SETTINGS_EDIT_USER_PAGE,
   MODERN_SETTINGS_EMAIL_SETTINGS_CONTRACT_KEY,
   MODERN_SETTINGS_EMAIL_SETTINGS_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_EMAIL_SETTINGS_PAGE,
   MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE,
+  MODERN_SETTINGS_EEO_CONTRACT_KEY,
+  MODERN_SETTINGS_EEO_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_EEO_PAGE,
   MODERN_SETTINGS_FEEDBACK_SETTINGS_CONTRACT_KEY,
   MODERN_SETTINGS_FEEDBACK_SETTINGS_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_FEEDBACK_SETTINGS_PAGE,
@@ -166,6 +182,12 @@ import {
   MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_CONTRACT_KEY,
   MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_PAGE,
+  MODERN_SETTINGS_NEW_INSTALL_PASSWORD_CONTRACT_KEY,
+  MODERN_SETTINGS_NEW_INSTALL_PASSWORD_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_NEW_INSTALL_PASSWORD_PAGE,
+  MODERN_SETTINGS_NEW_SITE_NAME_CONTRACT_KEY,
+  MODERN_SETTINGS_NEW_SITE_NAME_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_NEW_SITE_NAME_PAGE,
   MODERN_SETTINGS_LOGIN_ACTIVITY_PAGE,
   MODERN_SETTINGS_MANAGE_USERS_PAGE,
   MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE,
@@ -173,6 +195,9 @@ import {
   MODERN_SETTINGS_REJECTION_REASONS_PAGE,
   MODERN_SETTINGS_ROLE_PAGE_PERMISSIONS_PAGE,
   MODERN_SETTINGS_SCHEMA_MIGRATIONS_PAGE,
+  MODERN_SETTINGS_TALENT_FIT_FLOW_SETTINGS_CONTRACT_KEY,
+  MODERN_SETTINGS_TALENT_FIT_FLOW_SETTINGS_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_TALENT_FIT_FLOW_SETTINGS_PAGE,
   MODERN_SETTINGS_TAGS_PAGE,
   MODERN_SETTINGS_SHOW_USER_PAGE,
   MODERN_SETTINGS_VIEW_ITEM_HISTORY_PAGE,
@@ -924,6 +949,326 @@ export async function updateSettingsGoogleOIDCSettings(
     result.meta,
     MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_MUTATION_CONTRACT_KEY,
     'settings Google OIDC settings mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsCustomizeCalendarModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsCustomizeCalendarModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'customizeCalendar',
+    modernPage: MODERN_SETTINGS_CUSTOMIZE_CALENDAR_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsCustomizeCalendarModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_CUSTOMIZE_CALENDAR_CONTRACT_KEY,
+    'settings customize calendar data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsCustomizeCalendar(
+  submitURL: string,
+  payload: {
+    noAjax: boolean;
+    defaultPublic: boolean;
+    firstDayMonday: boolean;
+    dayStart: number | string;
+    dayStop: number | string;
+    calendarView: string;
+  }
+): Promise<SettingsCustomizeCalendarMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_CUSTOMIZE_CALENDAR_PAGE);
+  if (payload.noAjax) body.set('noAjax', '1');
+  if (payload.defaultPublic) body.set('defaultPublic', '1');
+  if (payload.firstDayMonday) body.set('firstDayMonday', '1');
+  body.set('dayStart', String(payload.dayStart ?? ''));
+  body.set('dayStop', String(payload.dayStop ?? ''));
+  body.set('calendarView', String(payload.calendarView || ''));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'customizeCalendar',
+    modernPage: MODERN_SETTINGS_CUSTOMIZE_CALENDAR_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update calendar customization'
+  )) as SettingsCustomizeCalendarMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_CUSTOMIZE_CALENDAR_MUTATION_CONTRACT_KEY,
+    'settings customize calendar mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsEEOModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsEEOModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'eeo',
+    modernPage: MODERN_SETTINGS_EEO_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsEEOModernDataResponse>(url);
+  assertModernContract(data.meta, MODERN_SETTINGS_EEO_CONTRACT_KEY, 'settings EEO data');
+
+  return data;
+}
+
+export async function updateSettingsEEO(
+  submitURL: string,
+  payload: {
+    enabled: boolean;
+    genderTracking: boolean;
+    ethnicTracking: boolean;
+    veteranTracking: boolean;
+    disabilityTracking: boolean;
+  }
+): Promise<SettingsEEOMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_EEO_PAGE);
+  if (payload.enabled) body.set('enabled', '1');
+  if (payload.genderTracking) body.set('genderTracking', '1');
+  if (payload.ethnicTracking) body.set('ethnicTracking', '1');
+  if (payload.veteranTracking) body.set('veteranTracking', '1');
+  if (payload.disabilityTracking) body.set('disabilityTracking', '1');
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'eeo',
+    modernPage: MODERN_SETTINGS_EEO_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(response, 'Update EEO settings')) as SettingsEEOMutationResponse;
+  assertModernContract(result.meta, MODERN_SETTINGS_EEO_MUTATION_CONTRACT_KEY, 'settings EEO mutation');
+
+  return result;
+}
+
+export async function fetchSettingsTalentFitFlowSettingsModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsTalentFitFlowSettingsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'talentFitFlowSettings',
+    modernPage: MODERN_SETTINGS_TALENT_FIT_FLOW_SETTINGS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsTalentFitFlowSettingsModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_TALENT_FIT_FLOW_SETTINGS_CONTRACT_KEY,
+    'settings TalentFitFlow settings data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsTalentFitFlowSettings(
+  submitURL: string,
+  payload: {
+    baseUrl: string;
+    apiKey: string;
+    hmacSecret: string;
+    testConnection?: boolean;
+  }
+): Promise<SettingsTalentFitFlowSettingsMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_TALENT_FIT_FLOW_SETTINGS_PAGE);
+  body.set('baseUrl', String(payload.baseUrl || ''));
+  body.set('apiKey', String(payload.apiKey || ''));
+  body.set('hmacSecret', String(payload.hmacSecret || ''));
+  if (payload.testConnection) {
+    body.set('testConnection', '1');
+  }
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'talentFitFlowSettings',
+    modernPage: MODERN_SETTINGS_TALENT_FIT_FLOW_SETTINGS_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    payload.testConnection ? 'Test TalentFitFlow settings' : 'Update TalentFitFlow settings'
+  )) as SettingsTalentFitFlowSettingsMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_TALENT_FIT_FLOW_SETTINGS_MUTATION_CONTRACT_KEY,
+    'settings TalentFitFlow settings mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsNewInstallPasswordModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsNewInstallPasswordModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'newInstallPassword',
+    modernPage: MODERN_SETTINGS_NEW_INSTALL_PASSWORD_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsNewInstallPasswordModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_NEW_INSTALL_PASSWORD_CONTRACT_KEY,
+    'settings new install password data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsNewInstallPassword(
+  submitURL: string,
+  payload: {
+    password1: string;
+    password2: string;
+  }
+): Promise<SettingsNewInstallPasswordMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_NEW_INSTALL_PASSWORD_PAGE);
+  body.set('password1', String(payload.password1 || ''));
+  body.set('password2', String(payload.password2 || ''));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'newInstallPassword',
+    modernPage: MODERN_SETTINGS_NEW_INSTALL_PASSWORD_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update new install password'
+  )) as SettingsNewInstallPasswordMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_NEW_INSTALL_PASSWORD_MUTATION_CONTRACT_KEY,
+    'settings new install password mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsNewSiteNameModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsNewSiteNameModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'newSiteName',
+    modernPage: MODERN_SETTINGS_NEW_SITE_NAME_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsNewSiteNameModernDataResponse>(url);
+  assertModernContract(data.meta, MODERN_SETTINGS_NEW_SITE_NAME_CONTRACT_KEY, 'settings new site name data');
+
+  return data;
+}
+
+export async function updateSettingsNewSiteName(
+  submitURL: string,
+  payload: {
+    siteName: string;
+  }
+): Promise<SettingsNewSiteNameMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_NEW_SITE_NAME_PAGE);
+  body.set('siteName', String(payload.siteName || ''));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'newSiteName',
+    modernPage: MODERN_SETTINGS_NEW_SITE_NAME_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(response, 'Update new site name')) as SettingsNewSiteNameMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_NEW_SITE_NAME_MUTATION_CONTRACT_KEY,
+    'settings new site name mutation'
   );
 
   return result;
