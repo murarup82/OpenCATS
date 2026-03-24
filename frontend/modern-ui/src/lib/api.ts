@@ -42,6 +42,19 @@ import type {
   SettingsCustomizeCalendarMutationResponse,
   SettingsCreateBackupModernDataResponse,
   SettingsDeleteBackupMutationResponse,
+  SettingsCareerPortalSettingsModernDataResponse,
+  SettingsCareerPortalSettingsMutationResponse,
+  SettingsCareerPortalTemplateEditModernDataResponse,
+  SettingsCareerPortalTemplateEditMutationResponse,
+  SettingsCareerPortalQuestionnaireModernDataResponse,
+  SettingsCareerPortalQuestionnaireMutationResponse,
+  SettingsCareerPortalQuestionnairePreviewModernDataResponse,
+  SettingsCareerPortalQuestionnaireUpdateModernDataResponse,
+  SettingsCareerPortalQuestionnaireUpdateMutationResponse,
+  SettingsCareerPortalQuestionnaireQuestion,
+  SettingsCareerPortalQuestionnaireAnswer,
+  SettingsCareerPortalQuestionnaireListItem,
+  SettingsCareerPortalTemplateRecord,
   SettingsEmailTemplatesModernDataResponse,
   SettingsEmailSettingsModernDataResponse,
   SettingsEmailSettingsMutationResponse,
@@ -196,6 +209,20 @@ import {
   MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_PAGE,
   MODERN_SETTINGS_DELETE_BACKUP_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_DELETE_BACKUP_PAGE,
+  MODERN_SETTINGS_CAREER_PORTAL_SETTINGS_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_SETTINGS_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_SETTINGS_PAGE,
+  MODERN_SETTINGS_CAREER_PORTAL_TEMPLATE_EDIT_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_TEMPLATE_EDIT_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_TEMPLATE_EDIT_PAGE,
+  MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_PAGE,
+  MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_PREVIEW_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_PREVIEW_PAGE,
+  MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_UPDATE_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_UPDATE_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_UPDATE_PAGE,
   MODERN_SETTINGS_NEW_INSTALL_PASSWORD_CONTRACT_KEY,
   MODERN_SETTINGS_NEW_INSTALL_PASSWORD_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_NEW_INSTALL_PASSWORD_PAGE,
@@ -244,6 +271,22 @@ function buildModernMutationURL(
   });
 
   return url.toString();
+}
+
+function appendModernFormFields(
+  body: URLSearchParams,
+  fields: Record<string, string | number | boolean | undefined>
+): void {
+  Object.entries(fields).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      return;
+    }
+    const textValue = String(value).trim();
+    if (textValue === '') {
+      return;
+    }
+    body.set(key, textValue);
+  });
 }
 
 function compactResponsePreview(bodyText: string, maxLength = 220): string {
@@ -1476,6 +1519,287 @@ export async function updateSettingsUpgradeSiteName(
     result.meta,
     MODERN_SETTINGS_UPGRADE_SITE_NAME_MUTATION_CONTRACT_KEY,
     'settings upgrade site name mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsCareerPortalSettingsModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsCareerPortalSettingsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'careerPortalSettings',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_SETTINGS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsCareerPortalSettingsModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_SETTINGS_CONTRACT_KEY,
+    'settings career portal settings data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsCareerPortalSettings(
+  submitURL: string,
+  payload: {
+    enabled: boolean;
+    allowBrowse: boolean;
+    candidateRegistration: boolean;
+    showCompany: boolean;
+    showDepartment: boolean;
+  }
+): Promise<SettingsCareerPortalSettingsMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_CAREER_PORTAL_SETTINGS_PAGE);
+  body.set('configured', '1');
+  if (payload.enabled) body.set('enabled', '1');
+  if (payload.allowBrowse) body.set('allowBrowse', '1');
+  if (payload.candidateRegistration) body.set('candidateRegistration', '1');
+  if (payload.showCompany) body.set('showCompany', '1');
+  if (payload.showDepartment) body.set('showDepartment', '1');
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'careerPortalSettings',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_SETTINGS_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update career portal settings'
+  )) as SettingsCareerPortalSettingsMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_SETTINGS_MUTATION_CONTRACT_KEY,
+    'settings career portal settings mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsCareerPortalTemplateEditModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsCareerPortalTemplateEditModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'careerPortalTemplateEdit',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_TEMPLATE_EDIT_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsCareerPortalTemplateEditModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_TEMPLATE_EDIT_CONTRACT_KEY,
+    'settings career portal template edit data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsCareerPortalTemplateEdit(
+  submitURL: string,
+  payload: {
+    templateName: string;
+    continueEdit?: boolean;
+    fields: Record<string, string>;
+  }
+): Promise<SettingsCareerPortalTemplateEditMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_CAREER_PORTAL_TEMPLATE_EDIT_PAGE);
+  body.set('templateName', String(payload.templateName || ''));
+  body.set('continueEdit', payload.continueEdit ? '1' : '0');
+  appendModernFormFields(body, payload.fields);
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'careerPortalTemplateEdit',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_TEMPLATE_EDIT_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update career portal template'
+  )) as SettingsCareerPortalTemplateEditMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_TEMPLATE_EDIT_MUTATION_CONTRACT_KEY,
+    'settings career portal template edit mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsCareerPortalQuestionnaireModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsCareerPortalQuestionnaireModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'careerPortalQuestionnaire',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsCareerPortalQuestionnaireModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_CONTRACT_KEY,
+    'settings career portal questionnaire data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsCareerPortalQuestionnaire(
+  submitURL: string,
+  payload: {
+    fields: Record<string, string | number | boolean | undefined>;
+  }
+): Promise<SettingsCareerPortalQuestionnaireMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', '1');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_PAGE);
+  appendModernFormFields(body, payload.fields);
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'careerPortalQuestionnaire',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update career portal questionnaire'
+  )) as SettingsCareerPortalQuestionnaireMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_MUTATION_CONTRACT_KEY,
+    'settings career portal questionnaire mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsCareerPortalQuestionnairePreviewModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsCareerPortalQuestionnairePreviewModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'careerPortalQuestionnairePreview',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_PREVIEW_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsCareerPortalQuestionnairePreviewModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_PREVIEW_CONTRACT_KEY,
+    'settings career portal questionnaire preview data'
+  );
+
+  return data;
+}
+
+export async function fetchSettingsCareerPortalQuestionnaireUpdateModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsCareerPortalQuestionnaireUpdateModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'careerPortalQuestionnaireUpdate',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_UPDATE_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsCareerPortalQuestionnaireUpdateModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_UPDATE_CONTRACT_KEY,
+    'settings career portal questionnaire update data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsCareerPortalQuestionnaireUpdate(
+  submitURL: string,
+  payload: Record<string, string | number | boolean | undefined>
+): Promise<SettingsCareerPortalQuestionnaireUpdateMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_UPDATE_PAGE);
+  appendModernFormFields(body, payload);
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'careerPortalQuestionnaireUpdate',
+    modernPage: MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_UPDATE_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update career portal questionnaire list'
+  )) as SettingsCareerPortalQuestionnaireUpdateMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_CAREER_PORTAL_QUESTIONNAIRE_UPDATE_MUTATION_CONTRACT_KEY,
+    'settings career portal questionnaire update mutation'
   );
 
   return result;

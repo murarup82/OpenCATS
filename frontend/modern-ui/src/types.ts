@@ -2365,6 +2365,175 @@ export type SettingsUpgradeSiteNameMutationResponse = ModernMutationResponse & {
   };
 };
 
+export type SettingsCareerPortalTemplateRecord = {
+  careerPortalName: string;
+};
+
+export type SettingsCareerPortalQuestionnaireListItem = {
+  questionnaireID: number;
+  title: string;
+  description: string;
+  isActive: boolean | number | string;
+};
+
+export type SettingsCareerPortalQuestionnaireAnswer = {
+  answerID: number;
+  answerText: string;
+  answerPosition: number;
+  actionSource: string;
+  actionNotes: string;
+  actionIsHot: number | boolean;
+  actionIsActive: number | boolean;
+  actionCanRelocate: number | boolean;
+  actionKeySkills: string;
+};
+
+export type SettingsCareerPortalQuestionnaireQuestion = {
+  questionID: number;
+  questionPosition: number;
+  questionType: string;
+  questionTypeLabel?: string;
+  questionText: string;
+  minimumLength: number;
+  maximumLength: number;
+  answers: SettingsCareerPortalQuestionnaireAnswer[];
+};
+
+export type SettingsCareerPortalTemplateEditSetting = {
+  setting: string;
+  value: string;
+};
+
+export type SettingsCareerPortalSettingsModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.careerPortalSettings.v1'>;
+  settings: {
+    enabled: boolean | string;
+    allowBrowse: boolean | string;
+    candidateRegistration: boolean | string;
+    showCompany: boolean | string;
+    showDepartment: boolean | string;
+    activeBoard?: string;
+  };
+  questionnaires: SettingsCareerPortalQuestionnaireListItem[];
+  templateNames: SettingsCareerPortalTemplateRecord[];
+  templateCustomNames: SettingsCareerPortalTemplateRecord[];
+  careerPortalURL: string;
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL?: string;
+    questionnaireURL?: string;
+    questionnaireUpdateURL?: string;
+    templateEditURL?: string;
+    tweakURL?: string;
+    setActiveURL?: string;
+  };
+};
+
+export type SettingsCareerPortalSettingsMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.careerPortalSettings.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+    legacyURL?: string;
+  };
+};
+
+export type SettingsCareerPortalTemplateEditModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.careerPortalTemplateEdit.v1'>;
+  templateName: string;
+  template: Record<string, string>;
+  eeoEnabled: boolean | string;
+  EEOSettingsRS: {
+    enabled: boolean | string;
+    genderTracking: boolean | string;
+    ethnicTracking: boolean | string;
+    veteranTracking: boolean | string;
+    disabilityTracking: boolean | string;
+  };
+  extraFieldsForJobOrders: Array<{
+    fieldName: string;
+  }>;
+  extraFieldsForCandidates: Array<{
+    fieldName: string;
+  }>;
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL?: string;
+  };
+};
+
+export type SettingsCareerPortalTemplateEditMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.careerPortalTemplateEdit.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+    legacyURL?: string;
+  };
+};
+
+export type SettingsCareerPortalQuestionnaireModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.careerPortalQuestionnaire.v1'>;
+  questionnaireID: number | string;
+  title: string;
+  description: string;
+  isActive: boolean | number | string;
+  questions: SettingsCareerPortalQuestionnaireQuestion[];
+  scrollX?: number | string;
+  scrollY?: number | string;
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL?: string;
+  };
+};
+
+export type SettingsCareerPortalQuestionnaireMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.careerPortalQuestionnaire.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+    legacyURL?: string;
+  };
+};
+
+export type SettingsCareerPortalQuestionnairePreviewModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.careerPortalQuestionnairePreview.v1'>;
+  questionnaireID: number | string;
+  data: {
+    questionnaireID?: number | string;
+    title?: string;
+    description: string;
+    isActive?: boolean | number | string;
+  };
+  questions: SettingsCareerPortalQuestionnaireQuestion[];
+  actions: {
+    legacyURL: string;
+    backURL?: string;
+  };
+};
+
+export type SettingsCareerPortalQuestionnaireUpdateModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.careerPortalQuestionnaireUpdate.v1'>;
+  questionnaires: SettingsCareerPortalQuestionnaireListItem[];
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+    backURL?: string;
+    addQuestionnaireURL?: string;
+  };
+};
+
+export type SettingsCareerPortalQuestionnaireUpdateMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.careerPortalQuestionnaireUpdate.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+    legacyURL?: string;
+  };
+};
+
 export type SettingsTagsModernDataResponse = {
   meta: {
     contractVersion: number;
