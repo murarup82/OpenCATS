@@ -35,13 +35,23 @@ import type {
   SettingsAdministrationModernDataResponse,
   SettingsAddEmailTemplateMutationResponse,
   SettingsAddUserModernDataResponse,
+  SettingsDeleteUserModernDataResponse,
+  SettingsDeleteUserMutationResponse,
   SettingsDeleteEmailTemplateMutationResponse,
   SettingsEmailTemplatesModernDataResponse,
+  SettingsEmailSettingsModernDataResponse,
+  SettingsEmailSettingsMutationResponse,
   SettingsEditUserModernDataResponse,
+  SettingsFeedbackSettingsModernDataResponse,
+  SettingsFeedbackSettingsMutationResponse,
   SettingsGdprSettingsModernDataResponse,
   SettingsGdprSettingsMutationResponse,
+  SettingsForceEmailModernDataResponse,
+  SettingsForceEmailMutationResponse,
   SettingsLoginActivityModernDataResponse,
   SettingsManageUsersModernDataResponse,
+  SettingsGoogleOIDCSettingsModernDataResponse,
+  SettingsGoogleOIDCSettingsMutationResponse,
   SettingsRejectionReasonsModernDataResponse,
   SettingsRolePagePermissionsModernDataResponse,
   SettingsSchemaMigrationsModernDataResponse,
@@ -138,9 +148,24 @@ import {
   MODERN_REPORTS_PAGE,
   MODERN_SETTINGS_ADMINISTRATION_PAGE,
   MODERN_SETTINGS_ADD_USER_PAGE,
+  MODERN_SETTINGS_DELETE_USER_CONTRACT_KEY,
+  MODERN_SETTINGS_DELETE_USER_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_DELETE_USER_PAGE,
   MODERN_SETTINGS_EDIT_USER_PAGE,
+  MODERN_SETTINGS_EMAIL_SETTINGS_CONTRACT_KEY,
+  MODERN_SETTINGS_EMAIL_SETTINGS_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_EMAIL_SETTINGS_PAGE,
   MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE,
+  MODERN_SETTINGS_FEEDBACK_SETTINGS_CONTRACT_KEY,
+  MODERN_SETTINGS_FEEDBACK_SETTINGS_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_FEEDBACK_SETTINGS_PAGE,
+  MODERN_SETTINGS_FORCE_EMAIL_CONTRACT_KEY,
+  MODERN_SETTINGS_FORCE_EMAIL_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_FORCE_EMAIL_PAGE,
   MODERN_SETTINGS_GDPR_SETTINGS_PAGE,
+  MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_CONTRACT_KEY,
+  MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_PAGE,
   MODERN_SETTINGS_LOGIN_ACTIVITY_PAGE,
   MODERN_SETTINGS_MANAGE_USERS_PAGE,
   MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE,
@@ -623,6 +648,327 @@ export async function updateSettingsEmailTemplate(
     'settings.emailTemplates.mutation.v1',
     'settings update email template mutation'
   );
+
+  return result;
+}
+
+export async function fetchSettingsEmailSettingsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsEmailSettingsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'emailSettings',
+    modernPage: MODERN_SETTINGS_EMAIL_SETTINGS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsEmailSettingsModernDataResponse>(url);
+  assertModernContract(data.meta, MODERN_SETTINGS_EMAIL_SETTINGS_CONTRACT_KEY, 'settings email settings data');
+
+  return data;
+}
+
+export async function updateSettingsEmailSettings(
+  submitURL: string,
+  payload: {
+    fromAddress: string;
+    statusChangeAllocated: boolean;
+    statusChangeDeliveryValidated: boolean;
+    statusChangeProposedToCustomer: boolean;
+    statusChangeCustomerInterview: boolean;
+    statusChangeCustomerApproved: boolean;
+    statusChangeAvelApproved: boolean;
+    statusChangeOfferNegotiation: boolean;
+    statusChangeOfferAccepted: boolean;
+    statusChangeHired: boolean;
+    statusChangeRejected: boolean;
+    templates: Array<{
+      emailTemplateID: number;
+      useThisTemplate: boolean;
+    }>;
+  }
+): Promise<SettingsEmailSettingsMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_EMAIL_SETTINGS_PAGE);
+  body.set('fromAddress', String(payload.fromAddress || ''));
+  if (payload.statusChangeAllocated) body.set('statusChangeAllocated', '1');
+  if (payload.statusChangeDeliveryValidated) body.set('statusChangeDeliveryValidated', '1');
+  if (payload.statusChangeProposedToCustomer) body.set('statusChangeProposedToCustomer', '1');
+  if (payload.statusChangeCustomerInterview) body.set('statusChangeCustomerInterview', '1');
+  if (payload.statusChangeCustomerApproved) body.set('statusChangeCustomerApproved', '1');
+  if (payload.statusChangeAvelApproved) body.set('statusChangeAvelApproved', '1');
+  if (payload.statusChangeOfferNegotiation) body.set('statusChangeOfferNegotiation', '1');
+  if (payload.statusChangeOfferAccepted) body.set('statusChangeOfferAccepted', '1');
+  if (payload.statusChangeHired) body.set('statusChangeHired', '1');
+  if (payload.statusChangeRejected) body.set('statusChangeRejected', '1');
+  payload.templates.forEach((template) => {
+    if (template.useThisTemplate) {
+      body.set(`useThisTemplate${template.emailTemplateID}`, '1');
+    }
+  });
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'emailSettings',
+    modernPage: MODERN_SETTINGS_EMAIL_SETTINGS_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(response, 'Update email settings')) as SettingsEmailSettingsMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_EMAIL_SETTINGS_MUTATION_CONTRACT_KEY,
+    'settings email settings mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsFeedbackSettingsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsFeedbackSettingsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'feedbackSettings',
+    modernPage: MODERN_SETTINGS_FEEDBACK_SETTINGS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsFeedbackSettingsModernDataResponse>(url);
+  assertModernContract(data.meta, MODERN_SETTINGS_FEEDBACK_SETTINGS_CONTRACT_KEY, 'settings feedback settings data');
+
+  return data;
+}
+
+export async function updateSettingsFeedbackSettings(
+  submitURL: string,
+  payload: {
+    feedbackRecipientUserID: number;
+  }
+): Promise<SettingsFeedbackSettingsMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_FEEDBACK_SETTINGS_PAGE);
+  body.set('feedbackRecipientUserID', String(Number(payload.feedbackRecipientUserID || 0)));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'feedbackSettings',
+    modernPage: MODERN_SETTINGS_FEEDBACK_SETTINGS_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update feedback settings'
+  )) as SettingsFeedbackSettingsMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_FEEDBACK_SETTINGS_MUTATION_CONTRACT_KEY,
+    'settings feedback settings mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsForceEmailModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsForceEmailModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'forceEmail',
+    modernPage: MODERN_SETTINGS_FORCE_EMAIL_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsForceEmailModernDataResponse>(url);
+  assertModernContract(data.meta, MODERN_SETTINGS_FORCE_EMAIL_CONTRACT_KEY, 'settings force-email data');
+
+  return data;
+}
+
+export async function updateSettingsForceEmail(
+  submitURL: string,
+  payload: {
+    siteName: string;
+  }
+): Promise<SettingsForceEmailMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_FORCE_EMAIL_PAGE);
+  body.set('siteName', String(payload.siteName || ''));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'forceEmail',
+    modernPage: MODERN_SETTINGS_FORCE_EMAIL_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(response, 'Update force email')) as SettingsForceEmailMutationResponse;
+  assertModernContract(result.meta, MODERN_SETTINGS_FORCE_EMAIL_MUTATION_CONTRACT_KEY, 'settings force-email mutation');
+
+  return result;
+}
+
+export async function fetchSettingsGoogleOIDCSettingsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsGoogleOIDCSettingsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'googleOIDCSettings',
+    modernPage: MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsGoogleOIDCSettingsModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_CONTRACT_KEY,
+    'settings Google OIDC settings data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsGoogleOIDCSettings(
+  submitURL: string,
+  payload: {
+    enabled: boolean;
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    hostedDomain: string;
+    siteId: number | string;
+    autoProvisionEnabled: boolean;
+    notifyEmail: string;
+    fromEmail: string;
+    requestSubject: string;
+    testConfig?: boolean;
+  }
+): Promise<SettingsGoogleOIDCSettingsMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_PAGE);
+  body.set('enabled', payload.enabled ? '1' : '0');
+  body.set('clientId', String(payload.clientId || ''));
+  body.set('clientSecret', String(payload.clientSecret || ''));
+  body.set('redirectUri', String(payload.redirectUri || ''));
+  body.set('hostedDomain', String(payload.hostedDomain || ''));
+  body.set('siteId', String(payload.siteId || ''));
+  body.set('autoProvisionEnabled', payload.autoProvisionEnabled ? '1' : '0');
+  body.set('notifyEmail', String(payload.notifyEmail || ''));
+  body.set('fromEmail', String(payload.fromEmail || ''));
+  body.set('requestSubject', String(payload.requestSubject || ''));
+  if (payload.testConfig) {
+    body.set('testConfig', '1');
+  }
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'googleOIDCSettings',
+    modernPage: MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    payload.testConfig ? 'Test Google OIDC settings' : 'Update Google OIDC settings'
+  )) as SettingsGoogleOIDCSettingsMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_MUTATION_CONTRACT_KEY,
+    'settings Google OIDC settings mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsDeleteUserModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsDeleteUserModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'deleteUser',
+    modernPage: MODERN_SETTINGS_DELETE_USER_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsDeleteUserModernDataResponse>(url);
+  assertModernContract(data.meta, MODERN_SETTINGS_DELETE_USER_CONTRACT_KEY, 'settings delete user data');
+
+  return data;
+}
+
+export async function deleteSettingsUser(
+  submitURL: string,
+  payload: {
+    userID: number;
+    iAmTheAutomatedTester?: boolean;
+  }
+): Promise<SettingsDeleteUserMutationResponse> {
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'deleteUser',
+    userID: Number(payload.userID || 0),
+    iAmTheAutomatedTester: payload.iAmTheAutomatedTester ? 1 : undefined,
+    modernPage: MODERN_SETTINGS_DELETE_USER_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'GET',
+    credentials: 'same-origin'
+  });
+
+  const result = (await parseModernMutationResponse(response, 'Delete user')) as SettingsDeleteUserMutationResponse;
+  assertModernContract(result.meta, MODERN_SETTINGS_DELETE_USER_MUTATION_CONTRACT_KEY, 'settings delete user mutation');
 
   return result;
 }

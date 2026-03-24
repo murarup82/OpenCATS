@@ -2001,6 +2001,133 @@ export type SettingsUpdateEmailTemplateMutationResponse = SettingsEmailTemplateM
   };
 };
 
+export type SettingsModernContractMeta<ContractKey extends string = string> = {
+  contractVersion: number;
+  contractKey: ContractKey;
+  modernPage: string;
+};
+
+export type SettingsEmailSettingsModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.emailSettings.v1'>;
+  settings: {
+    fromAddress: string;
+    configured: boolean | string;
+    candidateJoborderStatusSendsMessage: Record<string, boolean | number | string>;
+  };
+  templates: SettingsEmailTemplatesModernDataResponse['templates'];
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsEmailSettingsMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.emailSettings.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
+export type SettingsFeedbackSettingsModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.feedbackSettings.v1'>;
+  state: {
+    feedbackSaved: boolean;
+  };
+  settings: {
+    feedbackRecipientUserID: number;
+    recipientOptions: Array<{
+      userID: number;
+      fullName: string;
+    }>;
+  };
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsFeedbackSettingsMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.feedbackSettings.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
+export type SettingsForceEmailModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.forceEmail.v1'>;
+  state: {
+    title: string;
+    prompt: string;
+    inputTypeTextParam: string;
+  };
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsForceEmailMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.forceEmail.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
+export type SettingsGoogleOIDCSettingsModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.googleOIDCSettings.v1'>;
+  state: {
+    googleOIDCSaved: boolean;
+    googleOIDCTestOk?: boolean;
+    googleOIDCTestMessage?: string;
+  };
+  settings: {
+    enabled: boolean | string;
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    hostedDomain: string;
+    siteId: number | string;
+    autoProvisionEnabled: boolean | string;
+    notifyEmail: string;
+    fromEmail: string;
+    requestSubject: string;
+  };
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsGoogleOIDCSettingsMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.googleOIDCSettings.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
+export type SettingsDeleteUserModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.deleteUser.v1'>;
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsDeleteUserMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.deleteUser.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
 export type SettingsTagsModernDataResponse = {
   meta: {
     contractVersion: number;
