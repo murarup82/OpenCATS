@@ -2251,6 +2251,120 @@ export type SettingsNewSiteNameMutationResponse = ModernMutationResponse & {
   };
 };
 
+export type SettingsBackupAttachment = {
+  attachmentID: number;
+  originalFilename: string;
+  fileSize: string;
+  dateCreated: string;
+  retrievalURL: string;
+  retrievalURLLocal: string;
+};
+
+export type SettingsCreateBackupModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.createBackup.v1'>;
+  actions: {
+    backURL: string;
+    deleteBackupURL: string;
+    legacyURL: string;
+  };
+  attachments: SettingsBackupAttachment[];
+};
+
+export type SettingsDeleteBackupMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.deleteBackup.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsExtraFieldType = {
+  extraFieldType: number;
+  name: string;
+  hasOptions: boolean;
+};
+
+export type SettingsExtraFieldSetting = {
+  fieldName: string;
+  extraFieldType: number;
+  extraFieldTypeName: string;
+  extraFieldOptions: string[];
+};
+
+export type SettingsExtraFieldGroup = {
+  name: string;
+  type: number;
+  rows: SettingsExtraFieldSetting[];
+};
+
+export type SettingsCustomizeExtraFieldsModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.customizeExtraFields.v1'>;
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  extraFieldTypes: SettingsExtraFieldType[];
+  groups: SettingsExtraFieldGroup[];
+};
+
+export type SettingsCustomizeExtraFieldsMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.customizeExtraFields.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsNewInstallFinishedModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.newInstallFinished.v1'>;
+  wizard: {
+    inputType: 'conclusion';
+    title: string;
+    prompt: string;
+    home: string;
+  };
+  actions: {
+    homeURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsNewInstallFinishedMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.newInstallFinished.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+    legacyURL?: string;
+  };
+};
+
+export type SettingsUpgradeSiteNameModernDataResponse = {
+  meta: SettingsModernContractMeta<'settings.upgradeSiteName.v1'>;
+  state: {
+    inputType: 'siteName';
+    inputTypeTextParam: string;
+    title: string;
+    prompt: string;
+    message?: string;
+    messageSuccess?: boolean;
+  };
+  actions: {
+    submitURL: string;
+    legacyURL: string;
+  };
+};
+
+export type SettingsUpgradeSiteNameMutationResponse = ModernMutationResponse & {
+  meta: SettingsModernContractMeta<'settings.upgradeSiteName.mutation.v1'>;
+  message: string;
+  actions: {
+    routeURL: string;
+  };
+};
+
 export type SettingsTagsModernDataResponse = {
   meta: {
     contractVersion: number;

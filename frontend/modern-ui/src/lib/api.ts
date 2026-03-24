@@ -40,9 +40,13 @@ import type {
   SettingsDeleteEmailTemplateMutationResponse,
   SettingsCustomizeCalendarModernDataResponse,
   SettingsCustomizeCalendarMutationResponse,
+  SettingsCreateBackupModernDataResponse,
+  SettingsDeleteBackupMutationResponse,
   SettingsEmailTemplatesModernDataResponse,
   SettingsEmailSettingsModernDataResponse,
   SettingsEmailSettingsMutationResponse,
+  SettingsCustomizeExtraFieldsModernDataResponse,
+  SettingsCustomizeExtraFieldsMutationResponse,
   SettingsEEOModernDataResponse,
   SettingsEEOMutationResponse,
   SettingsEditUserModernDataResponse,
@@ -52,10 +56,13 @@ import type {
   SettingsGdprSettingsMutationResponse,
   SettingsForceEmailModernDataResponse,
   SettingsForceEmailMutationResponse,
+  SettingsNewInstallFinishedModernDataResponse,
   SettingsNewInstallPasswordModernDataResponse,
   SettingsNewInstallPasswordMutationResponse,
   SettingsNewSiteNameModernDataResponse,
   SettingsNewSiteNameMutationResponse,
+  SettingsUpgradeSiteNameModernDataResponse,
+  SettingsUpgradeSiteNameMutationResponse,
   SettingsLoginActivityModernDataResponse,
   SettingsManageUsersModernDataResponse,
   SettingsGoogleOIDCSettingsModernDataResponse,
@@ -164,6 +171,8 @@ import {
   MODERN_SETTINGS_CUSTOMIZE_CALENDAR_CONTRACT_KEY,
   MODERN_SETTINGS_CUSTOMIZE_CALENDAR_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_CUSTOMIZE_CALENDAR_PAGE,
+  MODERN_SETTINGS_CREATE_BACKUP_CONTRACT_KEY,
+  MODERN_SETTINGS_CREATE_BACKUP_PAGE,
   MODERN_SETTINGS_EDIT_USER_PAGE,
   MODERN_SETTINGS_EMAIL_SETTINGS_CONTRACT_KEY,
   MODERN_SETTINGS_EMAIL_SETTINGS_MUTATION_CONTRACT_KEY,
@@ -182,9 +191,16 @@ import {
   MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_CONTRACT_KEY,
   MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_GOOGLE_OIDC_SETTINGS_PAGE,
+  MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_CONTRACT_KEY,
+  MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_PAGE,
+  MODERN_SETTINGS_DELETE_BACKUP_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_DELETE_BACKUP_PAGE,
   MODERN_SETTINGS_NEW_INSTALL_PASSWORD_CONTRACT_KEY,
   MODERN_SETTINGS_NEW_INSTALL_PASSWORD_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_NEW_INSTALL_PASSWORD_PAGE,
+  MODERN_SETTINGS_NEW_INSTALL_FINISHED_CONTRACT_KEY,
+  MODERN_SETTINGS_NEW_INSTALL_FINISHED_PAGE,
   MODERN_SETTINGS_NEW_SITE_NAME_CONTRACT_KEY,
   MODERN_SETTINGS_NEW_SITE_NAME_MUTATION_CONTRACT_KEY,
   MODERN_SETTINGS_NEW_SITE_NAME_PAGE,
@@ -202,6 +218,9 @@ import {
   MODERN_SETTINGS_SHOW_USER_PAGE,
   MODERN_SETTINGS_VIEW_ITEM_HISTORY_PAGE,
   MODERN_SOURCING_PAGE,
+  MODERN_SETTINGS_UPGRADE_SITE_NAME_CONTRACT_KEY,
+  MODERN_SETTINGS_UPGRADE_SITE_NAME_MUTATION_CONTRACT_KEY,
+  MODERN_SETTINGS_UPGRADE_SITE_NAME_PAGE,
   MODERN_KPIS_DETAILS_PAGE,
   buildModernJSONRequestQuery
 } from './modernContract';
@@ -1269,6 +1288,194 @@ export async function updateSettingsNewSiteName(
     result.meta,
     MODERN_SETTINGS_NEW_SITE_NAME_MUTATION_CONTRACT_KEY,
     'settings new site name mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsCreateBackupModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsCreateBackupModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'createBackup',
+    modernPage: MODERN_SETTINGS_CREATE_BACKUP_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsCreateBackupModernDataResponse>(url);
+  assertModernContract(data.meta, MODERN_SETTINGS_CREATE_BACKUP_CONTRACT_KEY, 'settings create backup data');
+
+  return data;
+}
+
+export async function deleteSettingsBackup(
+  deleteURL: string
+): Promise<SettingsDeleteBackupMutationResponse> {
+  const requestURL = buildModernMutationURL(deleteURL, {
+    m: 'settings',
+    a: 'deleteBackup',
+    modernPage: MODERN_SETTINGS_DELETE_BACKUP_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'GET',
+    credentials: 'same-origin'
+  });
+
+  const result = (await parseModernMutationResponse(response, 'Delete backup')) as SettingsDeleteBackupMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_DELETE_BACKUP_MUTATION_CONTRACT_KEY,
+    'settings delete backup mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsCustomizeExtraFieldsModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsCustomizeExtraFieldsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'customizeExtraFields',
+    modernPage: MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsCustomizeExtraFieldsModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_CONTRACT_KEY,
+    'settings customize extra fields data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsCustomizeExtraFields(
+  submitURL: string,
+  payload: {
+    commandList: string;
+  }
+): Promise<SettingsCustomizeExtraFieldsMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_PAGE);
+  body.set('commandList', String(payload.commandList || ''));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'customizeExtraFields',
+    modernPage: MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update custom extra fields'
+  )) as SettingsCustomizeExtraFieldsMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_CUSTOMIZE_EXTRA_FIELDS_MUTATION_CONTRACT_KEY,
+    'settings customize extra fields mutation'
+  );
+
+  return result;
+}
+
+export async function fetchSettingsNewInstallFinishedModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsNewInstallFinishedModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'newInstallFinished',
+    modernPage: MODERN_SETTINGS_NEW_INSTALL_FINISHED_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsNewInstallFinishedModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_NEW_INSTALL_FINISHED_CONTRACT_KEY,
+    'settings new install finished data'
+  );
+
+  return data;
+}
+
+export async function fetchSettingsUpgradeSiteNameModernData(
+  bootstrap: UIModeBootstrap,
+  query?: URLSearchParams
+): Promise<SettingsUpgradeSiteNameModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'upgradeSiteName',
+    modernPage: MODERN_SETTINGS_UPGRADE_SITE_NAME_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsUpgradeSiteNameModernDataResponse>(url);
+  assertModernContract(
+    data.meta,
+    MODERN_SETTINGS_UPGRADE_SITE_NAME_CONTRACT_KEY,
+    'settings upgrade site name data'
+  );
+
+  return data;
+}
+
+export async function updateSettingsUpgradeSiteName(
+  submitURL: string,
+  payload: {
+    siteName: string;
+  }
+): Promise<SettingsUpgradeSiteNameMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_UPGRADE_SITE_NAME_PAGE);
+  body.set('siteName', String(payload.siteName || ''));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'upgradeSiteName',
+    modernPage: MODERN_SETTINGS_UPGRADE_SITE_NAME_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update upgrade site name'
+  )) as SettingsUpgradeSiteNameMutationResponse;
+  assertModernContract(
+    result.meta,
+    MODERN_SETTINGS_UPGRADE_SITE_NAME_MUTATION_CONTRACT_KEY,
+    'settings upgrade site name mutation'
   );
 
   return result;
