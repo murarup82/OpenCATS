@@ -1934,6 +1934,40 @@ export type SettingsEmailTemplatesModernDataResponse = {
   }>;
 };
 
+export type SettingsGdprSettingsModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: 'settings.gdprSettings.v1';
+    modernPage: string;
+  };
+  state: {
+    gdprSaved: boolean;
+  };
+  actions: {
+    submitURL: string;
+    backURL: string;
+    legacyURL: string;
+  };
+  settings: {
+    gdprExpirationYears: string | number;
+    gdprFromAddress: string;
+  };
+};
+
+export type SettingsGdprSettingsMutationResponse = ModernMutationResponse & {
+  meta: {
+    contractVersion: number;
+    contractKey: 'settings.gdprSettings.mutation.v1';
+    modernPage: string;
+  };
+  message?: string;
+  actions?: {
+    routeURL?: string;
+    backURL?: string;
+    legacyURL?: string;
+  };
+};
+
 export type SettingsEmailTemplateMutationResponse = ModernMutationResponse & {
   meta: {
     contractVersion: number;

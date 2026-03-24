@@ -38,6 +38,8 @@ import type {
   SettingsDeleteEmailTemplateMutationResponse,
   SettingsEmailTemplatesModernDataResponse,
   SettingsEditUserModernDataResponse,
+  SettingsGdprSettingsModernDataResponse,
+  SettingsGdprSettingsMutationResponse,
   SettingsLoginActivityModernDataResponse,
   SettingsManageUsersModernDataResponse,
   SettingsRejectionReasonsModernDataResponse,
@@ -138,6 +140,7 @@ import {
   MODERN_SETTINGS_ADD_USER_PAGE,
   MODERN_SETTINGS_EDIT_USER_PAGE,
   MODERN_SETTINGS_EMAIL_TEMPLATES_PAGE,
+  MODERN_SETTINGS_GDPR_SETTINGS_PAGE,
   MODERN_SETTINGS_LOGIN_ACTIVITY_PAGE,
   MODERN_SETTINGS_MANAGE_USERS_PAGE,
   MODERN_SETTINGS_MYPROFILE_CHANGE_PASSWORD_PAGE,
@@ -457,6 +460,24 @@ export async function fetchSettingsEmailTemplatesModernData(
   return data;
 }
 
+export async function fetchSettingsGdprSettingsModernData(
+  bootstrap: UIModeBootstrap,
+  query: URLSearchParams
+): Promise<SettingsGdprSettingsModernDataResponse> {
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'settings',
+    action: 'gdprSettings',
+    modernPage: MODERN_SETTINGS_GDPR_SETTINGS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<SettingsGdprSettingsModernDataResponse>(url);
+  assertModernContract(data.meta, 'settings.gdprSettings.v1', 'settings GDPR settings data');
+
+  return data;
+}
+
 export async function addSettingsEmailTemplate(
   addURL: string
 ): Promise<SettingsAddEmailTemplateMutationResponse> {
@@ -508,6 +529,48 @@ export async function deleteSettingsEmailTemplate(
     result.meta,
     'settings.deleteEmailTemplate.mutation.v1',
     'settings delete email template mutation'
+  );
+
+  return result;
+}
+
+export async function updateSettingsGdprSettings(
+  submitURL: string,
+  payload: {
+    gdprExpirationYears: number | string;
+    gdprFromAddress: string;
+  }
+): Promise<SettingsGdprSettingsMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('postback', 'postback');
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_SETTINGS_GDPR_SETTINGS_PAGE);
+  body.set('gdprExpirationYears', String(payload.gdprExpirationYears ?? '').trim());
+  body.set('gdprFromAddress', String(payload.gdprFromAddress || ''));
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'settings',
+    a: 'gdprSettings',
+    modernPage: MODERN_SETTINGS_GDPR_SETTINGS_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  const result = (await parseModernMutationResponse(
+    response,
+    'Update GDPR settings'
+  )) as SettingsGdprSettingsMutationResponse;
+  assertModernContract(
+    result.meta,
+    'settings.gdprSettings.mutation.v1',
+    'settings GDPR settings mutation'
   );
 
   return result;

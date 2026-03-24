@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { buildEmbeddedLegacyURL } from '../lib/embeddedLegacy';
 import { ensureModernUIURL, ensureUIURL } from '../lib/navigation';
@@ -8,6 +8,7 @@ import {
   fetchSettingsAddUserModernData,
   fetchSettingsEditUserModernData,
   fetchSettingsShowUserModernData,
+  fetchSettingsGdprSettingsModernData,
   fetchSettingsRejectionReasonsModernData,
   fetchSettingsRolePagePermissionsModernData,
   fetchSettingsSchemaMigrationsModernData,
@@ -15,7 +16,8 @@ import {
   fetchSettingsAdministrationModernData,
   fetchSettingsMyProfileModernData,
   fetchSettingsTagsModernData,
-  fetchSettingsViewItemHistoryModernData
+  fetchSettingsViewItemHistoryModernData,
+  updateSettingsGdprSettings
 } from '../lib/api';
 import * as settingsApi from '../lib/api';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
@@ -150,10 +152,10 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
   },
   'settings.gdprsettings': {
     title: 'GDPR Settings',
-    subtitle: 'Configure GDPR settings in compatibility mode.',
+    subtitle: 'Configure GDPR consent defaults in the native settings shell.',
     panelTitle: 'GDPR Settings Workspace',
-    panelSubtitle: 'Legacy GDPR settings workflow remains available while modernization continues.',
-    mode: 'forward'
+    panelSubtitle: 'Native GDPR settings preserves the legacy submit payload and fallback links.',
+    mode: 'embed'
   },
   'settings.rejectionreasons': {
     title: 'Rejection Reasons',
@@ -358,6 +360,7 @@ type NativeSettingsRouteMode =
   | 'administration'
   | 'myprofile'
   | 'changePassword'
+  | 'gdprSettings'
   | 'manageUsers'
   | 'addUser'
   | 'editUser'
@@ -370,6 +373,8 @@ type NativeSettingsRouteMode =
   | 'schemaMigrations'
   | 'viewItemHistory'
   | 'fallback';
+
+type SettingsGdprSettingsModernData = Awaited<ReturnType<typeof fetchSettingsGdprSettingsModernData>>;
 
 function toBooleanLabel(value: boolean, onLabel: string, offLabel: string): string {
   return value ? onLabel : offLabel;
@@ -880,6 +885,10 @@ function buildNativeRouteMode(routeKey: string, requestedSubpage: string): Nativ
     return 'loginActivity';
   }
 
+  if (routeKey === 'settings.gdprsettings') {
+    return 'gdprSettings';
+  }
+
   if (
     routeKey === 'settings.emailtemplates' ||
     routeKey === 'settings.addemailtemplate' ||
@@ -1157,6 +1166,157 @@ function SettingsChangePasswordNativeShell({
                 </button>
                 <a className="modern-btn modern-btn--secondary" href={backURL}>
                   Back
+                </a>
+                <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+                  Open Legacy UI
+                </a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </PageContainer>
+    </div>
+  );
+}
+
+function SettingsGdprSettingsNativeShell({
+  data
+}: {
+  data: SettingsGdprSettingsModernData;
+}) {
+  const backURL = ensureModernUIURL(data.actions.backURL);
+  const legacyURL = ensureUIURL(data.actions.legacyURL, 'legacy');
+  const submitURL = ensureUIURL(data.actions.submitURL, 'legacy');
+  const [gdprExpirationYears, setGdprExpirationYears] = useState(String(data.settings.gdprExpirationYears || ''));
+  const [gdprFromAddress, setGdprFromAddress] = useState(String(data.settings.gdprFromAddress || ''));
+  const [isSaving, setIsSaving] = useState(false);
+  const [mutationFeedback, setMutationFeedback] = useState<ModernMutationResponse | null>(null);
+  const [submitError, setSubmitError] = useState('');
+
+  useEffect(() => {
+    setGdprExpirationYears(String(data.settings.gdprExpirationYears || ''));
+    setGdprFromAddress(String(data.settings.gdprFromAddress || ''));
+  }, [data.settings.gdprExpirationYears, data.settings.gdprFromAddress]);
+
+  const resetToContractValues = useCallback(() => {
+    setGdprExpirationYears(String(data.settings.gdprExpirationYears || ''));
+    setGdprFromAddress(String(data.settings.gdprFromAddress || ''));
+    setMutationFeedback(null);
+    setSubmitError('');
+  }, [data.settings.gdprExpirationYears, data.settings.gdprFromAddress]);
+
+  const submitSettings = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    setMutationFeedback(null);
+    setSubmitError('');
+
+    try {
+      const response = await updateSettingsGdprSettings(submitURL, {
+        gdprExpirationYears,
+        gdprFromAddress
+      });
+      setMutationFeedback(response);
+    } catch (error: unknown) {
+      setSubmitError(error instanceof Error ? error.message : 'Unable to save GDPR settings.');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [gdprExpirationYears, gdprFromAddress, isSaving, submitURL]);
+
+  return (
+    <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
+      <PageContainer
+        title="GDPR Settings"
+        subtitle="Configure consent defaults while preserving legacy-compatible submit semantics."
+        actions={(
+          <>
+            <a className="modern-btn modern-btn--secondary" href={backURL}>
+              Back To Settings
+            </a>
+            <a className="modern-btn modern-btn--secondary" href={legacyURL}>
+              Open Legacy UI
+            </a>
+          </>
+        )}
+      >
+        <div className="modern-dashboard avel-dashboard-shell">
+          {data.state.gdprSaved ? (
+            <section className="avel-settings-admin-flash is-success" aria-live="polite">
+              <strong>Saved</strong>
+              <span>GDPR settings saved successfully.</span>
+            </section>
+          ) : null}
+          {mutationFeedback ? (
+            <section className={`avel-settings-admin-flash ${mutationFeedback.success ? 'is-success' : 'is-warning'}`} aria-live="polite">
+              <strong>{mutationFeedback.success ? 'Saved' : 'Warning'}</strong>
+              <span>{mutationFeedback.message || (mutationFeedback.success ? 'GDPR settings saved.' : 'Unable to save GDPR settings.')}</span>
+            </section>
+          ) : null}
+          {submitError !== '' ? (
+            <section className="avel-settings-admin-flash is-warning" aria-live="polite">
+              <strong>Warning</strong>
+              <span>{submitError}</span>
+            </section>
+          ) : null}
+
+          <section className="avel-list-panel">
+            <div className="avel-list-panel__header">
+              <h2 className="avel-list-panel__title">Consent Defaults</h2>
+              <p className="avel-list-panel__hint">
+                Field names and postback semantics match the legacy GDPR settings form.
+              </p>
+            </div>
+
+            <form className="avel-settings-user-form" action={submitURL} method="post" autoComplete="off" onSubmit={submitSettings}>
+              <input type="hidden" name="postback" value="postback" />
+
+              <div className="avel-settings-user-grid">
+                <label className="avel-settings-user-field" htmlFor="gdprExpirationYears">
+                  <span>Consent Expiration (Years)</span>
+                  <input
+                    className="avel-form-control"
+                    type="text"
+                    id="gdprExpirationYears"
+                    name="gdprExpirationYears"
+                    value={gdprExpirationYears}
+                    onChange={(event) => setGdprExpirationYears(event.target.value)}
+                    inputMode="numeric"
+                  />
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="gdprFromAddress">
+                  <span>GDPR Consent From Address (Optional)</span>
+                  <input
+                    className="avel-form-control"
+                    type="text"
+                    id="gdprFromAddress"
+                    name="gdprFromAddress"
+                    value={gdprFromAddress}
+                    onChange={(event) => setGdprFromAddress(event.target.value)}
+                    autoComplete="email"
+                  />
+                </label>
+              </div>
+
+              <div className="modern-compat-page__actions">
+                <button type="submit" className="modern-btn modern-btn--emphasis" disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Settings'}
+                </button>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--secondary"
+                  onClick={resetToContractValues}
+                  disabled={isSaving}
+                >
+                  Reset
+                </button>
+                <a className="modern-btn modern-btn--secondary" href={backURL}>
+                  Back To Settings
                 </a>
                 <a className="modern-btn modern-btn--secondary" href={legacyURL}>
                   Open Legacy UI
@@ -3721,6 +3881,7 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
     | SettingsEditUserModernDataResponse
     | SettingsShowUserModernDataResponse
     | SettingsLoginActivityModernDataResponse
+    | SettingsGdprSettingsModernData
     | SettingsEmailTemplatesModernDataResponse
     | SettingsRejectionReasonsModernDataResponse
     | SettingsTagsModernDataResponse
@@ -3777,6 +3938,8 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
           return fetchSettingsShowUserModernData(bootstrap, query);
         case 'loginActivity':
           return fetchSettingsLoginActivityModernData(bootstrap, query);
+        case 'gdprSettings':
+          return fetchSettingsGdprSettingsModernData(bootstrap, query);
         case 'emailTemplates':
           return fetchSettingsEmailTemplatesNativeData(bootstrap, query);
         case 'rejectionReasons':
@@ -3891,6 +4054,14 @@ export function SettingsAdminWorkspaceActionPage({ bootstrap }: Props) {
       return (
         <SettingsLoginActivityNativeShell
           data={nativeData as SettingsLoginActivityModernDataResponse}
+        />
+      );
+    }
+
+    if (nativeRouteMode === 'gdprSettings') {
+      return (
+        <SettingsGdprSettingsNativeShell
+          data={nativeData as SettingsGdprSettingsModernData}
         />
       );
     }

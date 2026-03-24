@@ -9,6 +9,7 @@ const settingsMyProfileContractKey = 'settings.myprofile.v1';
 const settingsMyProfileChangePasswordContractKey = 'settings.myprofile.changePassword.v1';
 const settingsLoginActivityContractKey = 'settings.loginActivity.v1';
 const settingsEmailTemplatesContractKey = 'settings.emailTemplates.v1';
+const settingsGdprSettingsContractKey = 'settings.gdprSettings.v1';
 const settingsRejectionReasonsContractKey = 'settings.rejectionReasons.v1';
 const settingsTagsContractKey = 'settings.tags.v1';
 const settingsManageUsersContractKey = 'settings.manageUsers.v1';
@@ -174,6 +175,22 @@ test.describe('Settings admin workspace action smoke', () => {
     }
   });
 
+  test('settings.gdprsettings modern-json returns the settings.gdprSettings.v1 contract', async ({ request }) => {
+    const response = await request.get(buildModernJSONURL('gdprSettings', 'settings-gdpr-settings'), {
+      headers: buildHeaders(),
+      failOnStatusCode: false
+    });
+
+    const { payload, actions } = await assertModernContract(response, settingsGdprSettingsContractKey);
+    expect(String(actions.submitURL || '').trim()).not.toBe('');
+    expect(String(actions.backURL || '').trim()).not.toBe('');
+    expect(String(actions.legacyURL || '').trim()).not.toBe('');
+    expect(payload && typeof payload === 'object').toBeTruthy();
+    expect(payload.settings && typeof payload.settings === 'object').toBeTruthy();
+    expect(Object.prototype.hasOwnProperty.call(payload.settings || {}, 'gdprExpirationYears')).toBeTruthy();
+    expect(Object.prototype.hasOwnProperty.call(payload.settings || {}, 'gdprFromAddress')).toBeTruthy();
+  });
+
   test('settings.rejectionreasons modern-json returns the settings.rejectionReasons.v1 contract', async ({ request }) => {
     const response = await request.get(buildModernJSONURL('rejectionReasons', 'settings-rejection-reasons'), {
       headers: buildHeaders(),
@@ -325,7 +342,7 @@ test.describe('Settings admin workspace action smoke', () => {
 
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'User Management Workspace' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Manage Users' })).toBeVisible();
     await expect(page.locator('.modern-compat-page--forward')).toHaveCount(0);
     await expect(page.locator('iframe')).toHaveCount(0);
   });
@@ -340,7 +357,23 @@ test.describe('Settings admin workspace action smoke', () => {
 
     await page.waitForTimeout(200);
     await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Email Templates Workspace' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Email Templates' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open Legacy UI' })).toBeVisible();
+    await expect(page.locator('.modern-compat-page--forward')).toHaveCount(0);
+    await expect(page.locator('iframe')).toHaveCount(0);
+  });
+
+  test('settings.gdprsettings ui=modern mounts natively without a forward redirect', async ({ context, page }) => {
+    await context.setExtraHTTPHeaders(buildHeaders());
+    await page.setViewportSize({ width: 1366, height: 900 });
+
+    await page.goto(buildModernRouteURL('gdprSettings'), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.waitForTimeout(200);
+    await expect(page.getByText('Modern UI encountered a runtime error.')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'GDPR Settings' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Open Legacy UI' })).toBeVisible();
     await expect(page.locator('.modern-compat-page--forward')).toHaveCount(0);
     await expect(page.locator('iframe')).toHaveCount(0);

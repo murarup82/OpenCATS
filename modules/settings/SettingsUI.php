@@ -2764,18 +2764,48 @@ class SettingsUI extends UserInterface
      */
     private function gdprSettings()
     {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
         $gdprSettings = new GDPRSettings($this->_siteID);
         $gdprSettingsRS = $gdprSettings->getAll();
+        $gdprSaved = isset($_GET['saved']);
+
+        if ($responseFormat === 'modern-json')
+        {
+            if ($modernPage !== '' && $modernPage !== 'settings-gdpr-settings')
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'error' => true,
+                    'message' => 'Unsupported modern page contract.',
+                    'requestedPage' => $modernPage
+                ));
+                return;
+            }
+
+            $this->renderModernGDPRSettingsJSON(
+                'settings-gdpr-settings',
+                $gdprSettingsRS,
+                $gdprSaved
+            );
+            return;
+        }
 
         $this->_template->assign('active', $this);
         $this->_template->assign('subActive', 'Administration');
         $this->_template->assign('gdprSettings', $gdprSettingsRS);
-        $this->_template->assign('gdprSaved', isset($_GET['saved']));
+        $this->_template->assign('gdprSaved', $gdprSaved);
         $this->_template->display('./modules/settings/GDPRSettings.tpl');
     }
 
     private function onGDPRSettings()
     {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
         $gdprSettings = new GDPRSettings($this->_siteID);
 
         $expirationYears = $this->getTrimmedInput('gdprExpirationYears', $_POST);
@@ -2793,7 +2823,68 @@ class SettingsUI extends UserInterface
         $gdprSettings->set('gdprExpirationYears', (string) (int) $expirationYears);
         $gdprSettings->set(GDPRSettings::SETTING_FROM_ADDRESS, $gdprFromAddress);
 
+        if ($isModernJSON)
+        {
+            $this->renderModernGDPRSettingsMutationJSON(
+                true,
+                'GDPR settings saved.'
+            );
+            return;
+        }
+
         CATSUtility::transferRelativeURI('m=settings&a=gdprSettings&saved=1');
+    }
+
+    private function renderModernGDPRSettingsJSON($modernPage, $gdprSettingsRS, $gdprSaved)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $gdprExpirationYears = isset($gdprSettingsRS['gdprExpirationYears'])
+            ? (string) $gdprSettingsRS['gdprExpirationYears']
+            : '';
+        $gdprFromAddress = isset($gdprSettingsRS[GDPRSettings::SETTING_FROM_ADDRESS])
+            ? (string) $gdprSettingsRS[GDPRSettings::SETTING_FROM_ADDRESS]
+            : '';
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.gdprSettings.v1',
+                'modernPage' => $modernPage
+            ),
+            'state' => array(
+                'gdprSaved' => ($gdprSaved ? true : false)
+            ),
+            'actions' => array(
+                'submitURL' => sprintf('%s?m=settings&a=gdprSettings', $baseURL),
+                'backURL' => sprintf('%s?m=settings&a=administration&ui=modern', $baseURL),
+                'legacyURL' => sprintf('%s?m=settings&a=gdprSettings&ui=legacy', $baseURL)
+            ),
+            'settings' => array(
+                'gdprExpirationYears' => $gdprExpirationYears,
+                'gdprFromAddress' => $gdprFromAddress
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
+    }
+
+    private function renderModernGDPRSettingsMutationJSON($success, $message)
+    {
+        $baseURL = CATSUtility::getIndexName();
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'settings.gdprSettings.mutation.v1',
+                'modernPage' => 'settings-gdpr-settings'
+            ),
+            'success' => (bool) $success,
+            'message' => (string) $message,
+            'actions' => array(
+                'routeURL' => sprintf('%s?m=settings&a=gdprSettings&ui=modern', $baseURL)
+            )
+        );
+
+        $this->respondModernJSON(200, $payload);
     }
 
     private function feedbackSettings()
@@ -5009,7 +5100,7 @@ class SettingsUI extends UserInterface
             $this->buildModernAdministrationItem(
                 'GDPR Settings',
                 'Configure GDPR consent defaults such as expiration timeline.',
-                sprintf('%s?m=settings&a=gdprSettings&ui=legacy', $baseURL)
+                sprintf('%s?m=settings&a=gdprSettings&ui=modern', $baseURL)
             ),
             $this->buildModernAdministrationItem(
                 'Feedback Settings',
