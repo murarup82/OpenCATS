@@ -78,7 +78,7 @@ function buildModernJSONURL(action, modernPage, query = {}) {
   return `${joinURL(baseURL, indexPath)}?${params.toString()}`;
 }
 
-async function assertModernContract(response, expectedContractKey) {
+async function assertModernContract(response, expectedContractKey, expectedModernPage = '') {
   expect(response.ok(), 'modern-json request should return HTTP 200').toBeTruthy();
 
   const payload = await response.json();
@@ -88,6 +88,9 @@ async function assertModernContract(response, expectedContractKey) {
   expect(Number(meta.contractVersion || 0)).toBe(contractVersion);
   expect(String(meta.contractKey || '').trim()).toBe(expectedContractKey);
   expect(String(meta.modernPage || '').trim()).not.toBe('');
+  if (expectedModernPage !== '') {
+    expect(String(meta.modernPage || '').trim()).toBe(expectedModernPage);
+  }
 
   return { payload, actions };
 }
@@ -166,6 +169,36 @@ const modernSettingsRoutes = [
     action: 'newSiteName',
     modernPage: 'settings-new-site-name',
     contractKey: settingsNewSiteNameContractKey,
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'createBackup',
+    modernPage: 'settings-create-backup',
+    contractKey: 'settings.createBackup.v1',
+    requiredActions: ['routeURL', 'legacyURL']
+  },
+  {
+    action: 'deleteBackup',
+    modernPage: 'settings-delete-backup',
+    contractKey: 'settings.deleteBackup.mutation.v1',
+    requiredActions: ['routeURL', 'legacyURL']
+  },
+  {
+    action: 'customizeExtraFields',
+    modernPage: 'settings-customize-extra-fields',
+    contractKey: 'settings.customizeExtraFields.v1',
+    requiredActions: ['submitURL', 'legacyURL']
+  },
+  {
+    action: 'newInstallFinished',
+    modernPage: 'settings-new-install-finished',
+    contractKey: 'settings.newInstallFinished.v1',
+    requiredActions: ['routeURL', 'legacyURL']
+  },
+  {
+    action: 'upgradeSiteName',
+    modernPage: 'settings-upgrade-site-name',
+    contractKey: 'settings.upgradeSiteName.v1',
     requiredActions: ['submitURL', 'legacyURL']
   }
 ];
@@ -387,7 +420,11 @@ test.describe('Settings admin workspace action smoke', () => {
         failOnStatusCode: false
       });
 
-      const { actions } = await assertModernContract(response, routeDefinition.contractKey);
+      const { actions } = await assertModernContract(
+        response,
+        routeDefinition.contractKey,
+        routeDefinition.modernPage
+      );
 
       for (const actionName of routeDefinition.requiredActions) {
         expect(String(actions[actionName] || '').trim()).not.toBe('');
