@@ -311,12 +311,33 @@ const COPY_BY_ROUTE_KEY: Record<string, PageCopy> = {
     panelSubtitle: 'Legacy career portal tweak workflow remains available while modernization continues.',
     mode: 'forward'
   },
+  'settings.previewpage': {
+    title: 'Career Portal Preview',
+    subtitle: 'Preview career portal pages in compatibility mode.',
+    panelTitle: 'Career Portal Preview Workspace',
+    panelSubtitle: 'Legacy career portal preview workflow remains embedded while modernization continues.',
+    mode: 'embed'
+  },
+  'settings.previewpagetop': {
+    title: 'Career Portal Preview Frame',
+    subtitle: 'Preview career portal frame in compatibility mode.',
+    panelTitle: 'Career Portal Preview Frame Workspace',
+    panelSubtitle: 'Legacy career portal preview frame remains embedded while modernization continues.',
+    mode: 'embed'
+  },
   'settings.professional': {
     title: 'Professional Settings',
     subtitle: 'Manage professional package settings in compatibility mode.',
     panelTitle: 'Professional Settings Workspace',
     panelSubtitle: 'Legacy professional settings workflow remains available while modernization continues.',
     mode: 'forward'
+  },
+  'settings.reports': {
+    title: 'Reports Settings',
+    subtitle: 'Configure report settings in compatibility mode.',
+    panelTitle: 'Reports Settings Workspace',
+    panelSubtitle: 'Legacy reports settings workflow remains embedded while modernization continues.',
+    mode: 'embed'
   },
   'settings.rolepagepermissions': {
     title: 'Role Page Permissions',

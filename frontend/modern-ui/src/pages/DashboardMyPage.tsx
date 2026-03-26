@@ -15,8 +15,9 @@ import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
-import { DashboardAssignCandidateLauncherModal } from '../components/primitives/DashboardAssignCandidateLauncherModal';
-import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
+import { PipelineStatusChangeModal } from '../components/primitives/PipelineStatusChangeModal';
+import type { FullStatusChangePayload } from '../components/primitives/PipelineStatusChangeModal';
+import { QuickAssignModal } from '../components/primitives/QuickAssignModal';
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { PipelineRejectionModal } from '../components/primitives/PipelineRejectionModal';
@@ -102,11 +103,16 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [localStatusID, setLocalStatusID] = useState<string>('all');
   const [reloadToken, setReloadToken] = useState(0);
-  const [statusModal, setStatusModal] = useState<{
-    url: string;
-    candidateName: string;
+  const [fullStatusModal, setFullStatusModal] = useState<{
+    row: DashboardRow;
+    targetStatusID: number;
+    title: string;
     currentStatusLabel: string;
+    statusOptions: Array<{ statusID: number; statusLabel: string }>;
+    legacyFormURL: string;
   } | null>(null);
+  const [fullStatusPending, setFullStatusPending] = useState(false);
+  const [fullStatusError, setFullStatusError] = useState('');
   const [quickStatusModal, setQuickStatusModal] = useState<{
     row: DashboardRow;
     title: string;
@@ -131,12 +137,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
   } | null>(null);
   const [kanbanCommentPending, setKanbanCommentPending] = useState<boolean>(false);
   const [kanbanCommentError, setKanbanCommentError] = useState<string>('');
-  const [assignModal, setAssignModal] = useState<{
-    url: string;
-    jobOrderName: string;
-    initialCandidateQuery: string;
-  } | null>(null);
-  const [assignLauncherOpen, setAssignLauncherOpen] = useState<boolean>(false);
+  const [quickAssignOpen, setQuickAssignOpen] = useState<boolean>(false);
   const [detailsModal, setDetailsModal] = useState<{
     url: string;
     title: string;
@@ -252,37 +253,112 @@ export function DashboardMyPage({ bootstrap }: Props) {
   }, []);
   usePageRefreshEvents(refreshDashboard);
 
-  const openStatusModal = useCallback(
+  const openFullStatusModal = useCallback(
     (row: DashboardRow, targetStatusID: number | null) => {
-      const enforceOwner = data?.meta.scope === 'mine' ? 1 : 0;
-      let url = `${bootstrap.indexName}?m=joborders&a=addActivityChangeStatus`;
-      url += `&jobOrderID=${encodeURIComponent(String(row.jobOrderID))}`;
-      url += `&candidateID=${encodeURIComponent(String(row.candidateID))}`;
-      url += `&enforceOwner=${encodeURIComponent(String(enforceOwner))}`;
-      url += '&refreshParent=1';
-      url += '&display=popup';
-      url += '&ui=legacy';
+      if (!data) return;
+      const enforceOwner = data.meta.scope === 'mine' ? 1 : 0;
+      let legacyURL = `${bootstrap.indexName}?m=joborders&a=addActivityChangeStatus`;
+      legacyURL += `&jobOrderID=${encodeURIComponent(String(row.jobOrderID))}`;
+      legacyURL += `&candidateID=${encodeURIComponent(String(row.candidateID))}`;
+      legacyURL += `&enforceOwner=${encodeURIComponent(String(enforceOwner))}`;
+      legacyURL += '&refreshParent=1&display=popup&ui=legacy';
       if (targetStatusID !== null && targetStatusID > 0) {
-        url += `&statusID=${encodeURIComponent(String(targetStatusID))}`;
+        legacyURL += `&statusID=${encodeURIComponent(String(targetStatusID))}`;
       }
 
-      setStatusModal({
-        url,
-        candidateName: toDisplayText(row.candidateName),
-        currentStatusLabel: toDisplayText(row.statusLabel)
+      const currentStatusID = Number(row.statusID || 0);
+      const rjStatusID = Number(data.meta.statusRules?.rejectedStatusID || 0);
+      const orderedIDs = Array.isArray(data.meta.statusRules?.orderedStatusIDs)
+        ? data.meta.statusRules.orderedStatusIDs
+        : [];
+      const byStatus = new Map<number, string>();
+      (data.options.statuses ?? []).forEach((s) => byStatus.set(Number(s.statusID), s.status || ''));
+      (data.rows ?? []).forEach((r) => {
+        if (!byStatus.has(Number(r.statusID))) byStatus.set(Number(r.statusID), r.statusLabel || '');
+      });
+      const statusOptions = Array.from(byStatus.entries())
+        .filter(([sid]) => {
+          if (sid <= 0 || sid === currentStatusID) return false;
+          if (currentStatusID === rjStatusID) return false;
+          if (sid === rjStatusID) return true;
+          const ci = orderedIDs.indexOf(currentStatusID);
+          const ti = orderedIDs.indexOf(sid);
+          if (ci < 0 || ti < 0) return true;
+          return ti > ci;
+        })
+        .sort(([a], [b]) => {
+          const ai = orderedIDs.indexOf(a);
+          const bi = orderedIDs.indexOf(b);
+          return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
+        })
+        .map(([statusID, statusLabel]) => ({ statusID, statusLabel }));
+
+      const preferredID =
+        targetStatusID !== null && targetStatusID > 0
+          ? targetStatusID
+          : (statusOptions[0]?.statusID ?? 0);
+
+      setFullStatusError('');
+      setFullStatusModal({
+        row,
+        targetStatusID: preferredID,
+        title: `Change Status: ${toDisplayText(row.candidateName)}`,
+        currentStatusLabel: toDisplayText(row.statusLabel),
+        statusOptions,
+        legacyFormURL: legacyURL
       });
     },
-    [bootstrap.indexName, data?.meta.scope]
+    [bootstrap.indexName, data]
   );
 
-  const closeStatusModal = useCallback(
-    (refreshOnClose: boolean) => {
-      setStatusModal(null);
-      if (refreshOnClose) {
-        refreshDashboard();
+  const submitFullStatus = useCallback(
+    async (payload: FullStatusChangePayload) => {
+      if (!fullStatusModal || !data || fullStatusPending) return;
+      const mutationToken = data.actions?.setPipelineStatusToken || '';
+      if (!mutationToken) {
+        setFullStatusError('Security token unavailable. Use the "Open Legacy Form" button to continue.');
+        return;
+      }
+      setFullStatusError('');
+      setFullStatusPending(true);
+      try {
+        const result = await setDashboardPipelineStatus(bootstrap, {
+          url: data.actions?.setPipelineStatusURL,
+          securityToken: mutationToken,
+          candidateID: Number(fullStatusModal.row.candidateID || 0),
+          jobOrderID: Number(fullStatusModal.row.jobOrderID || 0),
+          statusID: payload.statusID,
+          enforceOwner: data.meta.scope === 'mine',
+          statusComment: payload.statusComment,
+          requireStatusComment: false,
+          rejectionReasonIDs: payload.rejectionReasonIDs,
+          rejectionReasonOther: payload.rejectionReasonOther
+        });
+        if (result.success) {
+          setFullStatusModal(null);
+          setInteractionError('');
+          refreshDashboard();
+          const label =
+            typeof result.updatedStatusLabel === 'string' && result.updatedStatusLabel.trim() !== ''
+              ? result.updatedStatusLabel.trim()
+              : 'updated';
+          showToast(`Status changed to ${label}.`);
+          return;
+        }
+        if (result.code === 'requiresModal') {
+          setFullStatusError(
+            'This transition requires additional data. Use the \u201cOpen Legacy Form\u201d button to complete it.'
+          );
+          return;
+        }
+        setFullStatusError(result.message || 'Unable to change pipeline status.');
+      } catch (err: unknown) {
+        setFullStatusError(err instanceof Error ? err.message : 'Unable to change pipeline status.');
+      } finally {
+        setFullStatusPending(false);
       }
     },
-    [refreshDashboard]
+    [bootstrap, data, fullStatusModal, fullStatusPending, refreshDashboard, showToast]
   );
 
   const openRejectionModal = useCallback((row: DashboardRow) => {
@@ -406,14 +482,9 @@ export function DashboardMyPage({ bootstrap }: Props) {
   );
 
   const openAssignWorkspace = useCallback(() => {
-    const availableJobOrders = data?.options.jobOrders || [];
-    if (availableJobOrders.length === 0) {
-      setInteractionError('No job orders are available for assignment in this filter scope.');
-      return;
-    }
-    setAssignLauncherOpen(true);
+    setQuickAssignOpen(true);
     setInteractionError('');
-  }, [data?.options.jobOrders]);
+  }, []);
 
   const byStatusID = new Map<number, StatusCatalogEntry>();
   (data?.options.statuses ?? []).forEach((statusOption) => {
@@ -476,11 +547,11 @@ export function DashboardMyPage({ bootstrap }: Props) {
       }
 
       if (targetStatusID === null || targetStatusID <= 0) {
-        openStatusModal(row, null);
+        openFullStatusModal(row, null);
         return {
           success: false,
-          openedLegacy: true,
-          openedInline: false,
+          openedLegacy: false,
+          openedInline: true,
           message: ''
         };
       }
@@ -496,11 +567,11 @@ export function DashboardMyPage({ bootstrap }: Props) {
 
       if (targetStatusID === rejectedStatusID) {
         if (rejectionReasons.length === 0) {
-          openStatusModal(row, targetStatusID);
+          openFullStatusModal(row, targetStatusID);
           return {
             success: false,
-            openedLegacy: true,
-            openedInline: false,
+            openedLegacy: false,
+            openedInline: true,
             message: ''
           };
         }
@@ -515,11 +586,11 @@ export function DashboardMyPage({ bootstrap }: Props) {
 
       const mutationToken = data.actions?.setPipelineStatusToken || '';
       if (mutationToken === '') {
-        openStatusModal(row, targetStatusID);
+        openFullStatusModal(row, targetStatusID);
         return {
           success: false,
-          openedLegacy: true,
-          openedInline: false,
+          openedLegacy: false,
+          openedInline: true,
           message: ''
         };
       }
@@ -553,11 +624,11 @@ export function DashboardMyPage({ bootstrap }: Props) {
         }
 
         if (mutationResult.code === 'requiresModal') {
-          openStatusModal(row, targetStatusID);
+          openFullStatusModal(row, targetStatusID);
           return {
             success: false,
-            openedLegacy: true,
-            openedInline: false,
+            openedLegacy: false,
+            openedInline: true,
             message: ''
           };
         }
@@ -587,8 +658,8 @@ export function DashboardMyPage({ bootstrap }: Props) {
       data?.actions?.setPipelineStatusToken,
       data?.actions?.setPipelineStatusURL,
       data?.meta.scope,
+      openFullStatusModal,
       openRejectionModal,
-      openStatusModal,
       rejectionReasons.length,
       refreshDashboard,
       rejectedStatusID,
@@ -727,7 +798,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
       const mutationToken = data.actions?.setPipelineStatusToken || '';
       if (mutationToken === '') {
         setRejectionModal(null);
-        openStatusModal(rejectionModal.row, rejectedStatusID);
+        openFullStatusModal(rejectionModal.row, rejectedStatusID);
         return;
       }
 
@@ -757,7 +828,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
 
         if (mutationResult.code === 'requiresModal') {
           setRejectionModal(null);
-          openStatusModal(rejectionModal.row, rejectedStatusID);
+          openFullStatusModal(rejectionModal.row, rejectedStatusID);
           return;
         }
 
@@ -773,7 +844,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
       data?.actions?.setPipelineStatusToken,
       data?.actions?.setPipelineStatusURL,
       data?.meta.scope,
-      openStatusModal,
+      openFullStatusModal,
       refreshDashboard,
       rejectedStatusID,
       rejectionModal,
@@ -1074,8 +1145,10 @@ export function DashboardMyPage({ bootstrap }: Props) {
                     return;
                   }
                   setQuickStatusError('');
+                  const row = quickStatusModal.row;
+                  const firstStatusID = quickStatusModal.statusOptions[0]?.statusID ?? 0;
                   setQuickStatusModal(null);
-                  openStatusModal(quickStatusModal.row, null);
+                  openFullStatusModal(row, firstStatusID > 0 ? firstStatusID : null);
                 }
               : undefined
           }
@@ -1106,51 +1179,38 @@ export function DashboardMyPage({ bootstrap }: Props) {
                   setRejectionError('');
                   const row = rejectionModal.row;
                   setRejectionModal(null);
-                  openStatusModal(row, rejectedStatusID);
+                  openFullStatusModal(row, rejectedStatusID);
                 }
               : undefined
           }
         />
 
-        <LegacyFrameModal
-          isOpen={!!statusModal}
-          title={`Change Status${statusModal ? `: ${statusModal.candidateName}` : ''}`}
-          subtitle={statusModal ? `Current status: ${statusModal.currentStatusLabel}` : undefined}
-          url={statusModal?.url || ''}
-          onClose={closeStatusModal}
+        <PipelineStatusChangeModal
+          isOpen={!!fullStatusModal}
+          title={fullStatusModal?.title || 'Change Status'}
+          currentStatusLabel={fullStatusModal?.currentStatusLabel || '--'}
+          initialStatusID={fullStatusModal?.targetStatusID ?? 0}
+          statusOptions={fullStatusModal?.statusOptions || []}
+          rejectedStatusID={rejectedStatusID}
+          rejectionReasons={rejectionReasons}
+          rejectionOtherReasonID={rejectionOtherReasonID}
+          legacyFormURL={fullStatusModal?.legacyFormURL || ''}
+          pending={fullStatusPending}
+          error={fullStatusError}
+          onClose={() => { setFullStatusModal(null); setFullStatusError(''); }}
+          onSubmit={submitFullStatus}
         />
 
-        <JobOrderAssignCandidateModal
-          isOpen={!!assignModal}
+        <QuickAssignModal
+          isOpen={quickAssignOpen}
           bootstrap={bootstrap}
-          sourceURL={assignModal?.url || ''}
-          subtitle={assignModal?.jobOrderName}
-          initialSearchTerm={assignModal?.initialCandidateQuery || ''}
-          onClose={() => setAssignModal(null)}
-          onAssigned={() => {
-            refreshDashboard();
-            showToast('Candidate assigned to job order.');
-          }}
-        />
-
-        <DashboardAssignCandidateLauncherModal
-          isOpen={assignLauncherOpen}
           jobOrders={data?.options.jobOrders || []}
           initialJobOrderID={Number(data?.filters.jobOrderID || 0)}
           initialCandidateQuery={searchTerm}
-          onClose={() => setAssignLauncherOpen(false)}
-          onStart={({ jobOrderID, candidateQuery }) => {
-            const selectedJobOrder = (data?.options.jobOrders || []).find(
-              (jobOrder) => Number(jobOrder.jobOrderID) === Number(jobOrderID)
-            );
-            setAssignModal({
-              url: `${bootstrap.indexName}?m=joborders&a=considerCandidateSearch&jobOrderID=${encodeURIComponent(
-                String(jobOrderID)
-              )}`,
-              jobOrderName: toDisplayText(selectedJobOrder?.title, `Job Order #${jobOrderID}`),
-              initialCandidateQuery: candidateQuery
-            });
-            setAssignLauncherOpen(false);
+          onClose={() => setQuickAssignOpen(false)}
+          onAssigned={(message) => {
+            refreshDashboard();
+            showToast(message || 'Candidate assigned to job order.');
           }}
         />
 

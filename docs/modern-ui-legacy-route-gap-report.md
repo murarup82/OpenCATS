@@ -1,6 +1,6 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-24T05:11:10.862Z
+Generated: 2026-03-26T05:32:05.111Z
 
 ## Summary
 
@@ -255,8 +255,8 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | settings | newInstallPassword | native-explicit | settings.newinstallpassword | SettingsAdminWorkspaceActionPage |
 | settings | newSiteName | native-explicit | settings.newsitename | SettingsAdminWorkspaceActionPage |
 | settings | onCareerPortalTweak | native-explicit | settings.oncareerportaltweak | SettingsAdminWorkspaceActionPage |
-| settings | previewPage | native-explicit | settings.previewpage | OperationsWorkspaceActionPage |
-| settings | previewPageTop | native-explicit | settings.previewpagetop | OperationsWorkspaceActionPage |
+| settings | previewPage | native-explicit | settings.previewpage | SettingsAdminWorkspaceActionPage |
+| settings | previewPageTop | native-explicit | settings.previewpagetop | SettingsAdminWorkspaceActionPage |
 | settings | professional | native-explicit | settings.professional | SettingsAdminWorkspaceActionPage |
 | settings | rejectionReasons | native-explicit | settings.rejectionreasons | SettingsAdminWorkspaceActionPage |
 | settings | reports | native-explicit | settings.reports | SettingsAdminWorkspaceActionPage |

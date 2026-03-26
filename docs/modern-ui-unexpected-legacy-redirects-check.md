@@ -1,6 +1,6 @@
 # Modern UI Unexpected Legacy Redirect Guard
 
-Generated: 2026-03-24T05:11:14.587Z
+Generated: 2026-03-26T05:32:07.988Z
 
 This guard tracks runtime `window.location.assign/replace` redirects that target legacy URLs.
 
@@ -31,7 +31,7 @@ This guard tracks runtime `window.location.assign/replace` redirects that target
 | `src/pages/PipelineStatusActionPage.tsx` | 165 | `assign` | `ensureUIURL(decodeLegacyURL(details.actions.legacyDetailsURL), 'legacy')` | Expected |
 | `src/pages/ReportsJobOrderPdfActionPage.tsx` | 24 | `assign` | `legacyURL` | Expected |
 | `src/pages/ReportsWorkflowActionPage.tsx` | 169 | `assign` | `legacyURL` | Expected |
-| `src/pages/SettingsAdminWorkspaceActionPage.tsx` | 3811 | `assign` | `legacyURL` | Expected |
+| `src/pages/SettingsAdminWorkspaceActionPage.tsx` | 6323 | `assign` | `legacyURL` | Expected |
 | `src/pages/SettingsTagsActionPage.tsx` | 42 | `assign` | `legacyURL` | Expected |
 | `src/pages/UtilityEndpointForwardActionPage.tsx` | 86 | `assign` | `legacyURL` | Expected |
 

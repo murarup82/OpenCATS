@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-26T04:02:38.754Z",
+  "generatedAt": "2026-03-26T05:32:05.691Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
     "actions": 228,
@@ -1531,7 +1531,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.previewpage",
       "resolution": "native",
-      "component": "OperationsWorkspaceActionPage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-action",
@@ -1544,7 +1544,7 @@
       "classification": "native-explicit",
       "routeKey": "settings.previewpagetop",
       "resolution": "native",
-      "component": "OperationsWorkspaceActionPage",
+      "component": "SettingsAdminWorkspaceActionPage",
       "guarded": false,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-action",

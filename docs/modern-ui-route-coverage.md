@@ -1,6 +1,6 @@
 # Modern UI Route Coverage Matrix
 
-Generated: 2026-03-24T05:10:53.487Z
+Generated: 2026-03-26T05:31:52.203Z
 
 This report classifies routeRegistry mappings into true native UI routes, intentional legacy-forward endpoints/wrappers, and bridge fallbacks.
 
@@ -133,8 +133,8 @@ This report classifies routeRegistry mappings into true native UI routes, intent
 | `settings.newinstallpassword` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.newsitename` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.oncareerportaltweak` | `SettingsAdminWorkspaceActionPage` | no |
-| `settings.previewpage` | `OperationsWorkspaceActionPage` | no |
-| `settings.previewpagetop` | `OperationsWorkspaceActionPage` | no |
+| `settings.previewpage` | `SettingsAdminWorkspaceActionPage` | no |
+| `settings.previewpagetop` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.professional` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.rejectionreasons` | `SettingsAdminWorkspaceActionPage` | no |
 | `settings.reports` | `SettingsAdminWorkspaceActionPage` | no |
@@ -394,8 +394,8 @@ This report classifies routeRegistry mappings into true native UI routes, intent
 | `settings.newinstallpassword` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.newsitename` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.oncareerportaltweak` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
-| `settings.previewpage` | `OperationsWorkspaceActionPage` | legacy-forward | - |
-| `settings.previewpagetop` | `OperationsWorkspaceActionPage` | legacy-forward | - |
+| `settings.previewpage` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
+| `settings.previewpagetop` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.professional` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.rejectionreasons` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |
 | `settings.reports` | `SettingsAdminWorkspaceActionPage` | legacy-forward | - |

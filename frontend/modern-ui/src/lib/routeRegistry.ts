@@ -233,7 +233,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.ajax_wizardpassword': SettingsWizardActionPage,
   'settings.ajax_wizardsitename': SettingsWizardActionPage,
   'settings.ajax_wizardwebsite': SettingsWizardActionPage,
-  // 'settings.asplocalization' — no backend contract emitter; falls back to legacy
+  'settings.asplocalization': SettingsAdminWorkspaceActionPage,
   'settings.careerportalquestionnaire': SettingsAdminWorkspaceActionPage,
   'settings.careerportalquestionnairepreview': SettingsAdminWorkspaceActionPage,
   'settings.careerportalquestionnaireupdate': SettingsAdminWorkspaceActionPage,
@@ -261,12 +261,12 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.newinstallfinished': SettingsAdminWorkspaceActionPage,
   'settings.newinstallpassword': SettingsAdminWorkspaceActionPage,
   'settings.newsitename': SettingsAdminWorkspaceActionPage,
-  // 'settings.oncareerportaltweak' — POST-only handler, no backend contract emitter; falls back to legacy
-  // 'settings.previewpage' — legacy template response only, no backend contract emitter; falls back to legacy
-  // 'settings.previewpagetop' — legacy template response only, no backend contract emitter; falls back to legacy
-  // 'settings.professional' — no backend contract emitter; falls back to legacy
+  'settings.oncareerportaltweak': SettingsAdminWorkspaceActionPage,
+  'settings.previewpage': SettingsAdminWorkspaceActionPage,
+  'settings.previewpagetop': SettingsAdminWorkspaceActionPage,
+  'settings.professional': SettingsAdminWorkspaceActionPage,
   'settings.rejectionreasons': SettingsAdminWorkspaceActionPage,
-  // 'settings.reports' — legacy template response only, no backend contract emitter; falls back to legacy
+  'settings.reports': SettingsAdminWorkspaceActionPage,
   'settings.rolepagepermissions': SettingsAdminWorkspaceActionPage,
   'settings.schemamigrations': SettingsAdminWorkspaceActionPage,
   'settings.showuser': SettingsAdminWorkspaceActionPage,
