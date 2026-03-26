@@ -1,4 +1,4 @@
-version: '2'
+version: '3.8'
 services:
     opencats:
       container_name: opencats_web
@@ -8,13 +8,19 @@ services:
           - "443:443"
       volumes_from:
         - opencatsdata
+      depends_on:
+        opencatsdb:
+          condition: service_healthy
 
     php:
       container_name: opencats_php
-      image: opencats/php-base:7.2-fpm-alpine
+      image: opencats/php-base:8.2-fpm-alpine
       volumes_from:
         - opencatsdata
       entrypoint: ["/bin/sh", "/var/www/public/tools/docker-start.sh"]
+      depends_on:
+        opencatsdb:
+          condition: service_healthy
 
     opencatsdata:
       container_name: opencats_data
@@ -25,7 +31,7 @@ services:
 
     opencatsdb:
       container_name: opencats_mariadb
-      image: mariadb
+      image: mariadb:10.11
       ports:
         - 3306:3306
       environment:
@@ -36,6 +42,11 @@ services:
       volumes:
         - ../test/data:/docker-entrypoint-initdb.d
         - ./persist/mysql:/var/lib/mysql
+      healthcheck:
+        test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
 
     phpmyadmin:
       container_name: opencats_phpmyadmin

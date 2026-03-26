@@ -14,4 +14,7 @@ uploads/*
 /vendor/
 *.diff
 *.rej
-/package-lock.json
+.env
+.env.*
+.idea/
+.vscode/

@@ -1,4 +1,4 @@
-version: '2'
+version: '3.8'
 services:
     opencats:
       container_name: opencats_test_web
@@ -8,12 +8,18 @@ services:
           - "443:443"
       volumes_from:
         - opencatsdata
+      depends_on:
+        opencatsdb:
+          condition: service_healthy
 
     php:
       container_name: opencats_test_php
-      image: opencats/php-base:7.2-fpm-alpine
+      image: opencats/php-base:8.2-fpm-alpine
       volumes_from:
         - opencatsdata
+      depends_on:
+        opencatsdb:
+          condition: service_healthy
 
     opencatsdata:
       container_name: opencats_test_data
@@ -26,7 +32,7 @@ services:
 
     opencatsdb:
       container_name: opencats_test_mariadb
-      image: mariadb:10.7
+      image: mariadb:10.11
       ports:
         - 3306
       environment:
@@ -39,9 +45,14 @@ services:
         - ../test/scripts/:/test/scripts
         - ../test/data/test.sql:/docker-entrypoint-initdb.d/000_initDB.sql
         - ../test/data/securityTests.sql:/docker-entrypoint-initdb.d/001_addUsers.sql
+      healthcheck:
+        test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
 
     integrationtestdb:
-      image: mariadb:10.7
+      image: mariadb:10.11
       ports:
         - 3307:3306
       environment:
@@ -49,13 +60,17 @@ services:
         - MYSQL_USER=dev
         - MYSQL_PASSWORD=dev
         - MYSQL_DATABASE=cats_integrationtest
+      healthcheck:
+        test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
 
     selenium:
       container_name: selenium_test
-      image: mlespiau/standalone-chrome:2.53.1-cd2.23
+      image: selenium/standalone-chrome:latest
       environment:
-        # Required to avoid container startup hanging sometimes in
-        # some environments
-        JAVA_OPTS: -Djava.security.egd=file:/dev/./urandom
+        - SE_NODE_MAX_SESSIONS=2
       ports:
         - 4444
+      shm_size: '2gb'

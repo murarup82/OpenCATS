@@ -30,7 +30,7 @@ export default defineConfig({
   build: {
     outDir: outputDir,
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: false,
     target: 'es2019',
     cssCodeSplit: false,
     reportCompressedSize: false,
