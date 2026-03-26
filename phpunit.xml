@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/7.5/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         stopOnFailure="false">
+    <testsuites>
+        <testsuite name="Unit Tests">
+            <directory>src/OpenCATS/Tests/UnitTests</directory>
+        </testsuite>
+        <testsuite name="Integration Tests">
+            <directory>src/OpenCATS/Tests/IntegrationTests</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">lib</directory>
+            <directory suffix=".php">src/OpenCATS</directory>
+            <exclude>
+                <directory>src/OpenCATS/Tests</directory>
+            </exclude>
+        </whitelist>
+    </filter>
+</phpunit>

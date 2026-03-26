@@ -309,7 +309,7 @@ export function QueuePage({ bootstrap }: Props) {
                     <td>{row.queueID}</td>
                     <td>
                       <div>{toText(row.task)}</div>
-                      <div style={{ fontSize: '11px', color: '#5f7482' }}>Site: {row.siteID}</div>
+                      <div style={{ fontSize: '11px', color: '#526475' }}>Site: {row.siteID}</div>
                     </td>
                     <td>
                       <span
