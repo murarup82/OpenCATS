@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchDashboardModernData,
   fetchPipelineStatusDetailsModernData,
@@ -26,6 +26,7 @@ import { MutationToast } from '../components/primitives/MutationToast';
 import { DashboardToolbar } from '../components/dashboard/DashboardToolbar';
 import { KanbanBoard } from '../components/dashboard/KanbanBoard';
 import { DashboardKanbanSkeleton } from '../components/dashboard/DashboardKanbanSkeleton';
+import { DashboardListView } from '../components/dashboard/DashboardListView';
 import type { DashboardRow, DashboardStatusColumn } from '../components/dashboard/types';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
@@ -153,6 +154,10 @@ export function DashboardMyPage({ bootstrap }: Props) {
   const [interactionError, setInteractionError] = useState<string>('');
   const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'error' | 'info' } | null>(null);
   const loadRequestRef = useRef(0);
+  const listStorageKey = useMemo(
+    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:dashboard:list-view:v1`,
+    [bootstrap.siteID, bootstrap.userID]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -1040,67 +1045,13 @@ export function DashboardMyPage({ bootstrap }: Props) {
                 onInteractionError={setInteractionError}
               />
             ) : (
-              <div className="modern-table-animated avel-list-panel">
-                <div className="avel-list-panel__header">
-                  <h2 className="avel-list-panel__title">Candidate List View</h2>
-                  <p className="avel-list-panel__hint">Flat view for quick scanning and exporting.</p>
-                </div>
-                <DataTable
-                  columns={[
-                    { key: 'candidate', title: 'Candidate' },
-                    { key: 'jobOrder', title: 'Job Order' },
-                    { key: 'company', title: 'Company' },
-                    { key: 'status', title: 'Status' },
-                    { key: 'lastUpdated', title: 'Last Updated' },
-                    { key: 'actions', title: 'Actions' }
-                  ]}
-                  hasRows={filteredRows.length > 0}
-                  emptyMessage="No rows for this selection."
-                >
-                  {filteredRows.map((row) => (
-                    <tr key={`${row.candidateID}-${row.jobOrderID}-${row.statusID}`}>
-                      <td>
-                        <a className="modern-link" href={row.candidateURL}>
-                          {toDisplayText(row.candidateName)}
-                        </a>
-                      </td>
-                      <td>
-                        <a className="modern-link" href={ensureModernUIURL(row.jobOrderURL)}>
-                          {toDisplayText(row.jobOrderTitle)}
-                        </a>
-                      </td>
-                      <td>{toDisplayText(row.companyName)}</td>
-                      <td>
-                        <span className={createStatusClassName(toDisplayText(row.statusLabel))}>
-                          {toDisplayText(row.statusLabel)}
-                        </span>
-                      </td>
-                      <td>{toDisplayText(row.lastStatusChangeDisplay)}</td>
-                      <td>
-                        <div className="modern-table-actions">
-                          {canChangeStatus ? (
-                            <button
-                              type="button"
-                              className="modern-btn modern-btn--mini modern-btn--secondary"
-                              onClick={() => openQuickStatusModal(row)}
-                            >
-                              Change Status
-                            </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            className="modern-btn modern-btn--mini modern-btn--secondary"
-                            onClick={() => openPipelineDetails(row)}
-                            disabled={Number(row.candidateJobOrderID || 0) <= 0}
-                          >
-                            Details
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </DataTable>
-              </div>
+              <DashboardListView
+                rows={filteredRows}
+                canChangeStatus={canChangeStatus}
+                storageKey={listStorageKey}
+                onChangeStatus={openQuickStatusModal}
+                onOpenDetails={openPipelineDetails}
+              />
             )}
           </>
         )}

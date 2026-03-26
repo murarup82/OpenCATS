@@ -2567,7 +2567,9 @@
 }
 
 .avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu {
-  margin-top: 8px;
+  position: absolute;
+  top: 100%;
+  left: 0;
   display: grid;
   gap: 8px;
   background: #f6fbff;
@@ -2576,7 +2578,7 @@
   box-shadow: 0 12px 24px rgba(17, 52, 68, 0.18);
   padding: 10px;
   min-width: 220px;
-  z-index: 30;
+  z-index: 50;
 }
 
 .avel-pipeline-matrix-page .avel-pipeline-matrix__header-menu label {
@@ -2704,6 +2706,273 @@
   padding: 3px 7px;
   cursor: pointer;
 }
+
+/* ─── Dashboard List View (Pipeline Matrix style) ─────────────────────────── */
+
+.avel-dashboard-page .avel-dashboard-list {
+  position: relative;
+  border: 1px solid #9fbfd3;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #dcecf7 0%, #d2e5f2 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.72) inset,
+    0 12px 24px rgba(0, 66, 91, 0.1);
+  padding: 13px;
+}
+
+.avel-dashboard-page .avel-dashboard-list::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 4px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(90deg, #2f89b2 0%, #1aa680 100%);
+  pointer-events: none;
+}
+
+.avel-dashboard-page .avel-dashboard-list__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.avel-dashboard-page .avel-dashboard-list__header-left {
+  display: grid;
+  gap: 3px;
+}
+
+.avel-dashboard-page .avel-dashboard-list__header-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.avel-dashboard-page .avel-dashboard-list__clear-btn {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  border: 1px solid #7ab8d4;
+  background: #d6eef8;
+  color: #0e4460;
+}
+
+.avel-dashboard-page .avel-dashboard-list__clear-btn:hover {
+  background: #c1e1f3;
+  border-color: #5fa8ca;
+}
+
+.avel-dashboard-page .avel-dashboard-list__table-wrap {
+  overflow-x: auto;
+}
+
+/* th needs position:relative so the absolute filter dropdown is anchored to it */
+.avel-dashboard-page .avel-dashboard-list__table th {
+  position: relative;
+  vertical-align: top;
+}
+
+.avel-dashboard-page .avel-dashboard-list__actions-th {
+  white-space: nowrap;
+}
+
+.avel-dashboard-page .avel-dashboard-list__empty {
+  text-align: center;
+  color: #668392;
+  font-size: 0.82rem;
+  padding: 24px 0;
+}
+
+/* Re-use avel-pipeline-matrix__ class names inside the dashboard list,
+   scoped under .avel-dashboard-page .avel-dashboard-list */
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__th-shell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__th-title {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Columns panel toggle */
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__columns-menu {
+  position: relative;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__columns-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__columns-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__columns-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 35;
+  min-width: 230px;
+  border: 1px solid #9ec0d4;
+  border-radius: 10px;
+  background: #f6fbff;
+  box-shadow: 0 10px 22px rgba(0, 66, 91, 0.16);
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__column-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__column-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #173b4a;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__column-move {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__column-move button {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d3f4f;
+  font: inherit;
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+/* Filter dropdown — absolutely positioned so it doesn't resize the <th> */
+.avel-dashboard-page .avel-dashboard-list .adl-header-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: grid;
+  gap: 8px;
+  background: #f6fbff;
+  border: 1px solid #9ec0d4;
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(17, 52, 68, 0.18);
+  padding: 10px;
+  min-width: 220px;
+  z-index: 50;
+}
+
+.avel-dashboard-page .avel-dashboard-list .adl-header-menu > label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #4a6a7a;
+}
+
+.avel-dashboard-page .avel-dashboard-list .adl-header-menu input[type='text'] {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  color: #1d3f4f;
+  background: #fff;
+}
+
+.avel-dashboard-page .avel-dashboard-list .adl-header-menu__options {
+  display: grid;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__header-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid #d6e6ef;
+  background: #ffffff;
+  padding: 5px 8px;
+  font-size: 0.74rem;
+  color: #2b4c5d;
+  cursor: default;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__header-menu-option input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__header-empty {
+  border: 1px dashed #c1d5e2;
+  border-radius: 8px;
+  background: #f9fcff;
+  color: #5d7a8b;
+  font-size: 0.73rem;
+  padding: 8px;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__header-menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__header-menu-actions button {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d3f4f;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.avel-dashboard-page .avel-dashboard-list .avel-pipeline-matrix__header-menu-actions button:hover {
+  background: #eef7fc;
+  border-color: #8bbdd4;
+}
+
+/* modern-chip inside dashboard list header */
+.avel-dashboard-page .avel-dashboard-list .modern-chip--column-toggle {
+  padding: 5px 10px;
+  font-size: 0.74rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ─── End Dashboard List View ─────────────────────────────────────────────── */
 
 .avel-candidates-page .modern-state {
   border-style: dashed;
