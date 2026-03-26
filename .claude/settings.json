@@ -6,6 +6,8 @@
       "Bash(cd *)",
       "Bash(echo *)",
       "Bash(git diff *)",
+      "Bash(cat *)",
+      "Bash(*)",
       "Bash(git status *)"
     ]
   }
