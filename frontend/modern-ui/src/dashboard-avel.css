@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
+/* Anchor height for the adaptive kanban flex chain.
+   72px accounts for the legacy navbar + shell layout gaps outside the React root.
+   Everything inside (.avel-dashboard-page and below) uses flex: 1 to distribute
+   remaining height dynamically — no hardcoded offset needed for KPI cards or toolbar. */
+.modern-shell-app-root:has(.avel-dashboard-page) {
+  height: calc(100dvh - 72px);
+}
+
 .avel-dashboard-page {
   --avel-50: #f4fbff;
   --avel-100: #e6f4fa;
@@ -28,6 +36,10 @@
   position: relative;
   isolation: isolate;
   font-family: 'Manrope', 'Segoe UI', Tahoma, sans-serif;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .avel-dashboard-page::before {
@@ -49,6 +61,19 @@
   margin: 0;
   padding: clamp(10px, 1vw, 16px);
   gap: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* Unnamed content wrapper div inside PageContainer */
+.avel-dashboard-page .modern-page > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .avel-dashboard-page .modern-page__header {
@@ -86,8 +111,11 @@
 }
 
 .avel-dashboard-page .modern-dashboard {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
+  flex: 1;
+  min-height: 0;
 }
 
 .avel-dashboard-shell > * {
@@ -1643,6 +1671,10 @@
     0 1px 0 rgba(255, 255, 255, 0.7) inset,
     0 12px 26px rgba(0, 66, 91, 0.1);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .avel-dashboard-page .modern-kanban-board__header {
@@ -1710,6 +1742,8 @@
   cursor: grab;
   scrollbar-width: auto;
   scrollbar-color: #7caec9 #e5f1f8;
+  flex: 1;
+  min-height: 0;
 }
 
 .avel-dashboard-page .modern-kanban-board__viewport:active {
@@ -1740,6 +1774,8 @@
   gap: 8px;
   width: max-content;
   min-width: 100%;
+  align-items: stretch;
+  height: 100%;
 }
 
 .avel-dashboard-page .modern-kanban-column {
@@ -1763,6 +1799,8 @@
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.68) inset,
     0 8px 18px rgba(0, 66, 91, 0.11);
+  display: flex;
+  flex-direction: column;
 }
 
 .avel-dashboard-page .modern-kanban-column__header {
@@ -1935,8 +1973,8 @@
 }
 
 .avel-dashboard-page .modern-kanban-column__body {
-  height: calc(100dvh - 260px);
-  min-height: 400px;
+  flex: 1;
+  min-height: 300px;
   overflow-y: auto;
   overscroll-behavior: contain;
   transition: background-color 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
