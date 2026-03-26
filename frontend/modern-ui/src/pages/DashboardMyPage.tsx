@@ -876,7 +876,10 @@ export function DashboardMyPage({ bootstrap }: Props) {
     return <EmptyState message="No data available." />;
   }
 
-  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const stripDiacritics = (s: string) =>
+    s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+
+  const normalizedSearch = stripDiacritics(searchTerm.trim().toLowerCase());
 
   // Base filter: search/scope only, no localStatusID — used for chip counts so tokens stay visible while focused
   const baseFilteredRows = data.rows
@@ -889,9 +892,8 @@ export function DashboardMyPage({ bootstrap }: Props) {
         row.location,
         row.statusLabel
       ]
-        .map((value) => toSearchText(value))
-        .join(' ')
-        .toLowerCase();
+        .map((value) => stripDiacritics(toSearchText(value).toLowerCase()))
+        .join(' ');
       return searchable.includes(normalizedSearch);
     })
     .map((row) => ({
