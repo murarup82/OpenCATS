@@ -2126,7 +2126,7 @@
   justify-content: center;
   color: #ffffff;
   font: 700 0.73rem / 1 'Space Grotesk', 'Segoe UI', sans-serif;
-  background: var(--avel-500);
+  background: var(--avel-700);
 }
 
 .avel-dashboard-page .modern-kanban-card__identity-content {
@@ -2193,25 +2193,65 @@
   color: #1d5f79;
 }
 
-.avel-dashboard-page .modern-status--rejected {
-  border-color: #efc0c0;
-  background: #fff3f3;
-  color: #9f4646;
+.avel-dashboard-page .modern-status--allocated {
+  border-color: #7ecbea;
+  background: #d2eef8;
+  color: #0a4f66;
 }
 
-.avel-dashboard-page .modern-status--offer-accepted,
-.avel-dashboard-page .modern-status--hired {
-  border-color: #b2dfc4;
-  background: #eefbf3;
-  color: #1f7843;
+.avel-dashboard-page .modern-status--delivery-validated {
+  border-color: #78ccbf;
+  background: #ceeee9;
+  color: #0e4d45;
+}
+
+.avel-dashboard-page .modern-status--proposed-to-customer {
+  border-color: #b4a6ea;
+  background: #e3dff8;
+  color: #3d2a8c;
+}
+
+.avel-dashboard-page .modern-status--customer-interview {
+  border-color: #e8b47e;
+  background: #fae4cf;
+  color: #7a3d0e;
+}
+
+.avel-dashboard-page .modern-status--customer-approved {
+  border-color: #a4abe8;
+  background: #dde1f8;
+  color: #2a3593;
+}
+
+.avel-dashboard-page .modern-status--avel-approved {
+  border-color: #82bae6;
+  background: #d6eaf8;
+  color: #1a4a76;
 }
 
 .avel-dashboard-page .modern-status--offer-negotiation,
-.avel-dashboard-page .modern-status--offer-negociation,
-.avel-dashboard-page .modern-status--customer-interview {
-  border-color: #efcfb4;
-  background: #fff6ec;
-  color: #9a6226;
+.avel-dashboard-page .modern-status--offer-negociation {
+  border-color: #e4ad7a;
+  background: #f8e5d0;
+  color: #6b3a0a;
+}
+
+.avel-dashboard-page .modern-status--offer-accepted {
+  border-color: #7ecba0;
+  background: #d2eddf;
+  color: #154d2e;
+}
+
+.avel-dashboard-page .modern-status--hired {
+  border-color: #78c49c;
+  background: #ceeadc;
+  color: #0d4025;
+}
+
+.avel-dashboard-page .modern-status--rejected {
+  border-color: #e09ea3;
+  background: #f5dde0;
+  color: #6b1f26;
 }
 
 .avel-dashboard-page .modern-chip--aging-green {
