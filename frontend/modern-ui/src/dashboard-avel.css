@@ -60,6 +60,9 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  /* Hard horizontal boundary: nothing may escape to the page level.
+     Using clip (not hidden) so no BFC is created and sticky/z-index are unaffected. */
+  overflow-x: clip;
 }
 
 .avel-dashboard-page::before {
@@ -1836,8 +1839,12 @@
   --lane-count-border: #8ebad1;
   --lane-count-ink: #0f4a63;
 
-  flex: 1 1 220px;
-  min-width: 200px;
+  /* flex-basis: 0 lets columns divide available space equally (grows with flex-grow:1).
+     min-width: 160px is the smallest before horizontal scroll kicks in.
+     This matches the "dynamic scaling" behavior of other pages — at wider
+     windows columns grow; they only trigger horizontal scroll below 160px each. */
+  flex: 1 1 0;
+  min-width: 160px;
   min-height: 0;
   border: 1px solid #9cbfd4;
   border-radius: 14px;
