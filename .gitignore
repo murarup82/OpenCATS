@@ -1,4 +1,5 @@
 INSTALL_BLOCK
+.claude/settings.local.json
 .buildpath
 .project
 .settings/*
