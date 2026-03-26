@@ -2043,6 +2043,12 @@
   padding: 7px;
 }
 
+/* When a priority chip is selected only one column is rendered.
+   Use the full width to show cards in a responsive multi-column grid. */
+.avel-dashboard-page .modern-kanban-board:has(.modern-kanban-column:only-child) .modern-kanban-column__cards {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
 .avel-dashboard-page .modern-kanban-column__empty {
   margin: 9px;
   border: 1px dashed #c3d8e5;
