@@ -31,12 +31,14 @@ type Props = {
   columns: DashboardStatusColumn[];
   totalVisibleRows: number;
   priorityChips?: PriorityChip[];
+  focusedStatusID?: number | null;
   getStatusClassName: (statusLabel: string) => string;
   canChangeStatus: boolean;
   statusOrder: number[];
   rejectedStatusID: number;
   onRequestStatusChange: (row: DashboardRow, targetStatusID: number | null) => void;
   onOpenDetails: (row: DashboardRow) => void;
+  onFocusStatus?: (statusID: number | null) => void;
   onInteractionError?: (message: string) => void;
 };
 
@@ -52,12 +54,14 @@ export function KanbanBoard({
   columns,
   totalVisibleRows,
   priorityChips,
+  focusedStatusID,
   getStatusClassName,
   canChangeStatus,
   statusOrder,
   rejectedStatusID,
   onRequestStatusChange,
   onOpenDetails,
+  onFocusStatus,
   onInteractionError
 }: Props) {
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -202,19 +206,24 @@ export function KanbanBoard({
         <div className="modern-kanban-board__header-left">
           <span className="modern-kanban-board__title">Pipeline Lanes</span>
           {priorityChips && priorityChips.length > 0 ? (
-            <div className="modern-kanban-board__priority-chips" aria-label="Top pipeline stages">
+            <div className="modern-kanban-board__priority-chips" aria-label="Filter by pipeline stage">
               {priorityChips.map((chip) => {
                 const colors = CHIP_COLORS[chip.statusSlug] ?? { accent: '#0097bd', bg: '#d2ecf8', border: '#7ec8e8', text: '#003f58' };
+                const isActive = focusedStatusID === chip.statusID;
                 return (
-                  <span
+                  <button
                     key={chip.statusID}
-                    className="modern-kanban-board__priority-chip"
+                    type="button"
+                    className={`modern-kanban-board__priority-chip${isActive ? ' is-active' : ''}`}
                     style={{ '--chip-accent': colors.accent, '--chip-bg': colors.bg, '--chip-border': colors.border, '--chip-text': colors.text } as React.CSSProperties}
+                    aria-pressed={isActive}
+                    title={isActive ? `Clear focus on ${chip.statusLabel}` : `Focus on ${chip.statusLabel}`}
+                    onClick={() => onFocusStatus?.(isActive ? null : chip.statusID)}
                   >
                     <span className="modern-kanban-board__priority-chip-dot" aria-hidden="true" />
                     <span className="modern-kanban-board__priority-chip-label">{chip.statusLabel}</span>
                     <span className="modern-kanban-board__priority-chip-count">{chip.count}</span>
-                  </span>
+                  </button>
                 );
               })}
             </div>
@@ -253,7 +262,6 @@ export function KanbanBoard({
               column={column}
               totalVisibleRows={totalVisibleRows}
               getStatusClassName={getStatusClassName}
-              canChangeStatus={canChangeStatus}
               canDropHere={
                 !!draggedRow &&
                 canMove(Number(draggedRow.statusID || 0), Number(column.statusID || 0))
@@ -269,7 +277,6 @@ export function KanbanBoard({
               }
               onCardDragStart={handleCardDragStart}
               onCardDragEnd={handleCardDragEnd}
-              onRequestStatusChange={onRequestStatusChange}
               onOpenDetails={onOpenDetails}
               onDragOverColumn={handleDragOverColumn}
               onDragLeaveColumn={handleDragLeaveColumn}

@@ -872,16 +872,11 @@ export function DashboardMyPage({ bootstrap }: Props) {
   }
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredRows = data.rows
+
+  // Base filter: search/scope only, no localStatusID — used for chip counts so tokens stay visible while focused
+  const baseFilteredRows = data.rows
     .filter((row) => {
-      if (localStatusID !== 'all' && String(row.statusID) !== localStatusID) {
-        return false;
-      }
-
-      if (normalizedSearch === '') {
-        return true;
-      }
-
+      if (normalizedSearch === '') return true;
       const searchable = [
         row.candidateName,
         row.jobOrderTitle,
@@ -892,13 +887,16 @@ export function DashboardMyPage({ bootstrap }: Props) {
         .map((value) => toSearchText(value))
         .join(' ')
         .toLowerCase();
-
       return searchable.includes(normalizedSearch);
     })
     .map((row) => ({
       ...row,
       candidateURL: ensureModernUIURL(row.candidateURL)
     }));
+
+  const filteredRows = localStatusID === 'all'
+    ? baseFilteredRows
+    : baseFilteredRows.filter((row) => String(row.statusID) === localStatusID);
 
   const visibleStatuses = localStatusID === 'all'
     ? statusCatalog
@@ -918,14 +916,20 @@ export function DashboardMyPage({ bootstrap }: Props) {
     rows: groupedByStatus.get(status.statusID) || []
   }));
 
-  const localStatusOptions = statusCatalog.map((status) => ({
-    value: String(status.statusID),
-    label: status.statusLabel
-  }));
+  // Chip counts from base (unfiltered by status) so tokens remain visible when one is active
+  const baseCountByStatus = new Map<number, number>();
+  baseFilteredRows.forEach((row) => {
+    baseCountByStatus.set(row.statusID, (baseCountByStatus.get(row.statusID) || 0) + 1);
+  });
 
-  const topStatuses = [...columns]
-    .sort((left, right) => right.rows.length - left.rows.length)
-    .slice(0, 3);
+  const allStatusChips = statusCatalog
+    .filter((status) => (baseCountByStatus.get(status.statusID) || 0) > 0)
+    .map((status) => ({
+      statusID: status.statusID,
+      statusLabel: status.statusLabel,
+      statusSlug: status.statusSlug,
+      count: baseCountByStatus.get(status.statusID) || 0
+    }));
 
 
   const activeServerFilters: string[] = [];
@@ -960,13 +964,10 @@ export function DashboardMyPage({ bootstrap }: Props) {
         actions={
           <>
             {canAssignToJobOrder ? (
-              <button type="button" className="modern-btn modern-btn--secondary" onClick={openAssignWorkspace}>
+              <button type="button" className="modern-btn modern-btn--emphasis" onClick={openAssignWorkspace}>
                 Assign Candidate
               </button>
             ) : null}
-            <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
-              Open Legacy UI
-            </a>
           </>
         }
       >
@@ -992,8 +993,6 @@ export function DashboardMyPage({ bootstrap }: Props) {
             }))
           ]}
           searchTerm={searchTerm}
-          localStatusID={localStatusID}
-          localStatusOptions={[{ value: 'all', label: 'All statuses' }, ...localStatusOptions]}
           activeServerFilters={activeServerFilters}
           activeLocalFilters={activeLocalFilters}
           viewMode={viewMode}
@@ -1002,7 +1001,6 @@ export function DashboardMyPage({ bootstrap }: Props) {
           onJobOrderChange={(jobOrderID) => navigateWithFilters({ jobOrderID, page: 1 })}
           onShowClosedChange={(showClosed) => navigateWithFilters({ showClosed, page: 1 })}
           onSearchTermChange={setSearchTerm}
-          onLocalStatusChange={setLocalStatusID}
           onViewModeChange={setViewMode}
           onResetServerFilters={() =>
             navigateWithFilters({
@@ -1030,7 +1028,9 @@ export function DashboardMyPage({ bootstrap }: Props) {
               <KanbanBoard
                 columns={columns}
                 totalVisibleRows={filteredRows.length}
-                priorityChips={topStatuses.map((s) => ({ statusID: s.statusID, statusLabel: s.statusLabel, statusSlug: s.statusSlug, count: s.rows.length }))}
+                priorityChips={allStatusChips}
+              focusedStatusID={localStatusID === 'all' ? null : Number(localStatusID)}
+              onFocusStatus={(id) => setLocalStatusID(id === null ? 'all' : String(id))}
                 getStatusClassName={createStatusClassName}
                 canChangeStatus={canChangeStatus}
                 statusOrder={orderedStatusIDs}

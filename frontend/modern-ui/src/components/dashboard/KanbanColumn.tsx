@@ -6,14 +6,12 @@ type Props = {
   column: DashboardStatusColumn;
   totalVisibleRows: number;
   getStatusClassName: (statusLabel: string) => string;
-  canChangeStatus: boolean;
   canDropHere: boolean;
   isDropTarget: boolean;
   isCardDragging: (row: DashboardRow) => boolean;
   canDragCard: (row: DashboardRow) => boolean;
   onCardDragStart: (event: ReactDragEvent<HTMLElement>, row: DashboardRow) => void;
   onCardDragEnd: () => void;
-  onRequestStatusChange: (row: DashboardRow, targetStatusID: number | null) => void;
   onOpenDetails: (row: DashboardRow) => void;
   onDragOverColumn: (event: ReactDragEvent<HTMLDivElement>, targetStatusID: number) => void;
   onDragLeaveColumn: (targetStatusID: number) => void;
@@ -24,14 +22,12 @@ export function KanbanColumn({
   column,
   totalVisibleRows,
   getStatusClassName,
-  canChangeStatus,
   canDropHere,
   isDropTarget,
   isCardDragging,
   canDragCard,
   onCardDragStart,
   onCardDragEnd,
-  onRequestStatusChange,
   onOpenDetails,
   onDragOverColumn,
   onDragLeaveColumn,
@@ -84,13 +80,11 @@ export function KanbanColumn({
                 key={`${row.candidateID}-${row.jobOrderID}-${row.statusID}`}
                 row={row}
                 statusClassName={getStatusClassName(row.statusLabel || '')}
-                canChangeStatus={canChangeStatus}
                 canDrag={canDragCard(row)}
                 isDragging={isCardDragging(row)}
                 onDragStart={onCardDragStart}
                 onDragEnd={onCardDragEnd}
                 onOpenDetails={onOpenDetails}
-                onRequestStatusChange={onRequestStatusChange}
               />
             ))}
           </div>

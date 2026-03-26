@@ -1171,6 +1171,27 @@ class TemplateUtility
             'logs' => 'activity',
             'settings' => 'settings'
         );
+        $abbrMap = array(
+            'dashboard'                  => 'MD',
+            'home'                       => 'OV',
+            'home_inbox'                 => 'IN',
+            'home_notes'                 => 'NT',
+            'activity'                   => 'AC',
+            'candidates'                 => 'CA',
+            'joborders'                  => 'JO',
+            'companies'                  => 'CO',
+            'contacts'                   => 'CT',
+            'sourcing'                   => 'SR',
+            'lists'                      => 'LI',
+            'kpis'                       => 'KP',
+            'reports_customer_dashboard' => 'CD',
+            'reports'                    => 'RE',
+            'calendar'                   => 'CL',
+            'logs'                       => 'LG',
+            'gdpr_consents'              => 'GD',
+            'settings'                   => 'ST',
+            'settings_admin'             => 'AD',
+        );
 
         if ($_SESSION['CATS']->getAccessLevel('settings.administration') >= ACCESS_LEVEL_DEMO)
         {
@@ -1278,7 +1299,7 @@ class TemplateUtility
             {
                 if (isset($itemsByKey[$moduleName]))
                 {
-                    $groupItems[] = $itemsByKey[$moduleName];
+                    $groupItems[] = $itemsByKey[$moduleName] + array('_key' => $moduleName);
                 }
             }
 
@@ -1332,7 +1353,17 @@ class TemplateUtility
 
                 $class = 'ui2-sidebar-link' . ($isActive ? ' is-active' : '');
                 $iconKey = isset($item['icon']) ? $item['icon'] : (isset($iconMap[$item['module']]) ? $iconMap[$item['module']] : 'default');
-                echo '<a class="', $class, '" href="', $item['href'], '"><span class="ui2-sidebar-icon ui2-sidebar-icon--', $iconKey, '" aria-hidden="true"></span>', $item['label'], '</a>', "\n";
+                $itemKey = isset($item['_key']) ? $item['_key'] : $item['module'];
+                $words = preg_split('/\s+/', trim($item['label']));
+                $defaultAbbr = count($words) >= 2
+                    ? strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1))
+                    : strtoupper(substr($item['label'], 0, 2));
+                $abbr = isset($abbrMap[$itemKey]) ? $abbrMap[$itemKey] : $defaultAbbr;
+                echo '<a class="', $class, '" href="', $item['href'], '">',
+                    '<span class="ui2-sidebar-icon ui2-sidebar-icon--', $iconKey, '" aria-hidden="true"></span>',
+                    '<span class="ui2-sidebar-abbr" aria-hidden="true">', htmlspecialchars($abbr), '</span>',
+                    '<span class="ui2-sidebar-link-label">', htmlspecialchars($item['label']), '</span>',
+                    '</a>', "\n";
             }
 
             echo '</div>', "\n";
@@ -1340,7 +1371,11 @@ class TemplateUtility
 
         echo '<div class="ui2-sidebar-group ui2-sidebar-group--bottom">', "\n";
         echo '<div class="ui2-sidebar-user">', htmlspecialchars($fullName), '<br /><span>', htmlspecialchars($username), '</span></div>', "\n";
-        echo '<a class="ui2-sidebar-link ui2-sidebar-link--utility" href="', $indexName, '?m=logout"><span class="ui2-sidebar-icon ui2-sidebar-icon--default" aria-hidden="true"></span>Logout</a>', "\n";
+        echo '<a class="ui2-sidebar-link ui2-sidebar-link--utility" href="', $indexName, '?m=logout">',
+            '<span class="ui2-sidebar-icon ui2-sidebar-icon--default" aria-hidden="true"></span>',
+            '<span class="ui2-sidebar-abbr" aria-hidden="true">LO</span>',
+            '<span class="ui2-sidebar-link-label">Logout</span>',
+            '</a>', "\n";
         echo '</div>', "\n";
         echo '</nav>', "\n";
     }

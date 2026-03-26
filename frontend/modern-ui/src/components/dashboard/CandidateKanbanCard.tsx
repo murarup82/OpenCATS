@@ -5,13 +5,11 @@ import { ensureModernUIURL } from '../../lib/navigation';
 type Props = {
   row: DashboardRow;
   statusClassName: string;
-  canChangeStatus: boolean;
   canDrag: boolean;
   isDragging: boolean;
   onDragStart: (event: ReactDragEvent<HTMLElement>, row: DashboardRow) => void;
   onDragEnd: () => void;
   onOpenDetails: (row: DashboardRow) => void;
-  onRequestStatusChange: (row: DashboardRow, targetStatusID: number | null) => void;
 };
 
 function toDisplayText(value: unknown, fallback = '--'): string {
@@ -104,13 +102,11 @@ function getAgingInfo(display: string): { days: number | null; tone: AgingTone; 
 export function CandidateKanbanCard({
   row,
   statusClassName,
-  canChangeStatus,
   canDrag,
   isDragging,
   onDragStart,
   onDragEnd,
-  onOpenDetails,
-  onRequestStatusChange
+  onOpenDetails
 }: Props) {
   const statusSlug = toDisplayText(row.statusSlug, 'unknown');
   const candidateName = toDisplayText(row.candidateName);
@@ -140,10 +136,20 @@ export function CandidateKanbanCard({
             {initials}
           </div>
           <div className="modern-kanban-card__identity-content">
-            <a className="modern-link modern-kanban-card__candidate" href={ensureModernUIURL(row.candidateURL)}>
-              {candidateName}
-            </a>
-            <div className="modern-kanban-card__identity-hint">Candidate profile</div>
+            <div className="modern-kanban-card__name-row">
+              <a className="modern-link modern-kanban-card__candidate" href={ensureModernUIURL(row.candidateURL)}>
+                {candidateName}
+              </a>
+              <button
+                type="button"
+                className="modern-kanban-card__details-btn"
+                onClick={() => onOpenDetails(row)}
+                disabled={!hasDetails}
+                title="View pipeline details"
+              >
+                Details
+              </button>
+            </div>
           </div>
         </div>
 
@@ -168,28 +174,6 @@ export function CandidateKanbanCard({
           <span className="modern-kanban-card__fact-key">Company</span>
           <span className="modern-kanban-card__fact-value">{companyName}</span>
         </div>
-      </div>
-
-      <div className="modern-kanban-card__actions">
-        {canChangeStatus ? (
-          <button
-            type="button"
-            className="modern-btn modern-btn--mini modern-btn--secondary"
-            onClick={() => onRequestStatusChange(row, null)}
-          >
-            Change Status
-          </button>
-        ) : (
-          <span className="modern-kanban-card__actions-note">No access</span>
-        )}
-        <button
-          type="button"
-          className="modern-btn modern-btn--mini modern-btn--secondary"
-          onClick={() => onOpenDetails(row)}
-          disabled={!hasDetails}
-        >
-          Details
-        </button>
       </div>
     </article>
   );

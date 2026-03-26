@@ -444,7 +444,7 @@ body.ui2-theme-avel #contents.ui2-page {
 }
 
 .ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-group-title,
-.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-link span:not(.ui2-sidebar-icon):not(.ui2-sidebar-badge),
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-link span:not(.ui2-sidebar-icon):not(.ui2-sidebar-badge):not(.ui2-sidebar-abbr),
 .ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-user,
 .ui2-body.modern-shell-sidebar-collapsed .modern-shell-sidebar-label {
     display: none;
@@ -460,8 +460,40 @@ body.ui2-theme-avel #contents.ui2-page {
     display: none;
 }
 
+.ui2-body .ui2-sidebar-abbr {
+    display: none;
+}
+
 .ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-icon {
-    margin-right: 0;
+    display: none;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-abbr {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    font: 700 0.7rem/1 'Space Grotesk', 'Segoe UI', sans-serif;
+    letter-spacing: 0.05em;
+    transition: background 150ms, border-color 150ms;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-link:hover .ui2-sidebar-abbr {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+}
+
+.ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-link.is-active .ui2-sidebar-abbr {
+    background: rgba(56, 177, 204, 0.4);
+    border-color: rgba(164, 222, 242, 0.55);
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(0, 48, 68, 0.25);
 }
 
 .ui2-body.modern-shell-sidebar-collapsed .ui2-sidebar-badge {

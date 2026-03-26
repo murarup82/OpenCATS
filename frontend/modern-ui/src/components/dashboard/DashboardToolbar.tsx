@@ -10,8 +10,6 @@ type Props = {
   customers: SelectMenuOption[];
   jobOrders: SelectMenuOption[];
   searchTerm: string;
-  localStatusID: string;
-  localStatusOptions: SelectMenuOption[];
   activeServerFilters: string[];
   activeLocalFilters: string[];
   viewMode: 'kanban' | 'list';
@@ -20,7 +18,6 @@ type Props = {
   onJobOrderChange: (jobOrderID: string) => void;
   onShowClosedChange: (showClosed: boolean) => void;
   onSearchTermChange: (value: string) => void;
-  onLocalStatusChange: (value: string) => void;
   onViewModeChange: (mode: 'kanban' | 'list') => void;
   onResetServerFilters: () => void;
   onClearLocalFilters: () => void;
@@ -36,8 +33,6 @@ export function DashboardToolbar(props: Props) {
     customers,
     jobOrders,
     searchTerm,
-    localStatusID,
-    localStatusOptions,
     activeServerFilters,
     activeLocalFilters,
     viewMode,
@@ -46,7 +41,6 @@ export function DashboardToolbar(props: Props) {
     onJobOrderChange,
     onShowClosedChange,
     onSearchTermChange,
-    onLocalStatusChange,
     onViewModeChange,
     onResetServerFilters,
     onClearLocalFilters
@@ -154,13 +148,6 @@ export function DashboardToolbar(props: Props) {
           value={jobOrderID}
           options={jobOrders}
           onChange={onJobOrderChange}
-        />
-
-        <SelectMenu
-          label="Board Focus"
-          value={localStatusID}
-          options={localStatusOptions}
-          onChange={onLocalStatusChange}
         />
 
         <label className="modern-command-toggle">
