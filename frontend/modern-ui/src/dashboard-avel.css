@@ -5,8 +5,10 @@
    overflow:clip prevents page-level scroll in both axes without creating a stacking
    context or disabling child scroll containers (unlike overflow:hidden).
    Column body overflow-y:auto works because .modern-kanban-column now has
-   min-height:0, which bounds the column height so the scroll activates correctly. */
-.modern-shell-app-root:has(.avel-dashboard-page) {
+   min-height:0, which bounds the column height so the scroll activates correctly.
+   NOTE: .avel-my-dashboard is unique to DashboardMyPage. Do NOT use .avel-dashboard-page
+   here — that class is applied by every page as a shared theme marker. */
+.modern-shell-app-root:has(.avel-my-dashboard) {
   height: calc(100dvh - 72px);
   overflow: clip;
 }
@@ -2866,7 +2868,7 @@
 
 /* Hide the global feedback footer — dashboard is full-height and the footer
    would overlap kanban content or show through transparent lanes. */
-.modern-shell-app-root:has(.avel-dashboard-page) .modern-global-feedback {
+.modern-shell-app-root:has(.avel-my-dashboard) .modern-global-feedback {
   display: none;
 }
 

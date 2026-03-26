@@ -962,7 +962,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
     activeLocalFilters.push(`Quick status: ${localStatus ? localStatus.statusLabel : localStatusID}`);
   }
   return (
-    <div className="avel-dashboard-page">
+    <div className="avel-dashboard-page avel-my-dashboard">
       <PageContainer
         title="MyDashboard"
         subtitle="Avel recruiting control center"
