@@ -2,11 +2,10 @@
 
 /* Anchor height for the adaptive kanban flex chain.
    72px accounts for the legacy navbar + shell layout gaps outside the React root.
-   overflow: clip prevents page-level scroll (which would push content behind the
-   command bar); it does NOT affect position:absolute dropdowns or position:fixed modals. */
+   No overflow:clip here — the flex chain keeps content in-bounds, and column bodies
+   need overflow-y:auto to scroll freely within their lane. */
 .modern-shell-app-root:has(.avel-dashboard-page) {
   height: calc(100dvh - 72px);
-  overflow: clip;
 }
 
 .avel-dashboard-page {
