@@ -10,11 +10,13 @@
      avel-dashboard-page    → flex:1, min-height:0 (see below)
      modern-page / children → fill remaining space, kanban/list scroll inside
 
-   overflow:clip prevents page-level scroll in both axes without creating a
-   stacking context or disabling child scroll containers. */
+   overflow:hidden creates a BFC that seals overflow — unlike overflow:clip it
+   prevents the board's wide column content from contributing to the body's
+   scroll area, which eliminates the page-level horizontal scrollbar in kanban
+   mode and keeps the toolbar controls fully visible. */
 .modern-shell-app-root:has(.avel-my-dashboard) {
   height: calc(100dvh - 72px);
-  overflow: clip;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
