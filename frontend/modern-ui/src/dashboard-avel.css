@@ -1815,6 +1815,10 @@
 .avel-dashboard-page .modern-kanban-board {
   display: flex;
   gap: 8px;
+  /* Reset global overflow-x:auto — only the .modern-kanban-board__viewport should scroll.
+     Without this, both the board AND the viewport are scroll containers; at narrow widths
+     the board clipped columns internally and the viewport's styled scrollbar stayed inactive. */
+  overflow: visible;
   min-width: 100%;
   align-items: stretch;
   height: 100%;
