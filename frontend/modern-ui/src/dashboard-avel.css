@@ -1816,6 +1816,7 @@
   flex: 0 0 276px;
   width: 276px;
   min-width: 276px;
+  min-height: 0;
   border: 1px solid #9cbfd4;
   border-radius: 14px;
   background: linear-gradient(180deg, #d8e9f5 0%, #cde2f1 100%);
