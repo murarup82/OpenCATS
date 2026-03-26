@@ -2446,10 +2446,10 @@
 
 .avel-dashboard-page .modern-table th {
   background: #edf7fd;
-  color: #4f6f80;
+  color: var(--avel-800);
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 800;
   text-align: left;
   padding: 9px 10px;
