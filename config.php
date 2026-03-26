@@ -54,11 +54,11 @@ define('GOOGLE_OIDC_ENABLED', false);
 define('GOOGLE_OIDC_CLIENT_ID', '');
 define('GOOGLE_OIDC_CLIENT_SECRET', '');
 define('GOOGLE_OIDC_REDIRECT_URI', '');
-define('GOOGLE_OIDC_HOSTED_DOMAIN', 'aveltechnologies.com');
+define('GOOGLE_OIDC_HOSTED_DOMAIN', '');
 define('GOOGLE_OIDC_SITE_ID', 1);
-define('GOOGLE_AUTO_PROVISION_ENABLED', true);
-define('GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL', 'security@aveltechnologies.com');
-define('GOOGLE_ACCESS_REQUEST_FROM_EMAIL', 'recruitment@aveltechnologies.com');
+define('GOOGLE_AUTO_PROVISION_ENABLED', false);
+define('GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL', '');
+define('GOOGLE_ACCESS_REQUEST_FROM_EMAIL', '');
 define('GOOGLE_ACCESS_REQUEST_SUBJECT', 'OpenCATS Access Request');
 
 /* Resfly.com Resume Import Services Enabled */

@@ -968,10 +968,19 @@ class ImportUI extends UserInterface
             CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
         }
 
-        $filePath = CATS_TEMP_DIR . '/' . $_POST['fileName'];
+        $fileName = basename($_POST['fileName']);
+        if (!isset($_SESSION['CATS']->validImportFileIDs) ||
+            !in_array($fileName, $_SESSION['CATS']->validImportFileIDs, true)) {
+            $this->_template->assign('errorMessage', 'Invalid file ID. (Security error)');
+            $this->import();
+            return;
+        }
+
+        $filePath = CATS_TEMP_DIR . '/' . $fileName;
         if (!is_file($filePath)) {
             $this->_template->assign('errorMessage', 'Invalid filename. (Internal error)');
             $this->import();
+            return;
         }
 
         $dataContaining = $this->getTrimmedInput('dataContaining', $_POST);

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
 import { fetchHomeInboxModernData } from '../lib/api';
 import { useServerQueryState } from '../lib/useServerQueryState';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -152,7 +153,7 @@ export function HomeInboxPage({ bootstrap }: Props) {
                             @{message.mentionedUsers}
                           </div>
                         ) : null}
-                        <div dangerouslySetInnerHTML={{ __html: message.bodyHTML || '' }} />
+                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.bodyHTML || '') }} />
                       </article>
                     ))}
                   </div>

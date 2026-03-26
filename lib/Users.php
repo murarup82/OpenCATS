@@ -97,16 +97,7 @@ class Users
 
     private function hashPassword($password)
     {
-        if (function_exists('password_hash'))
-        {
-            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            if ($passwordHash !== false)
-            {
-                return $passwordHash;
-            }
-        }
-
-        return md5($password);
+        return password_hash($password, PASSWORD_DEFAULT);
     }
 
     private function verifyPassword($password, $storedHash)

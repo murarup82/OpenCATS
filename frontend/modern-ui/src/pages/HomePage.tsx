@@ -1,4 +1,5 @@
 import { KeyboardEvent, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import DOMPurify from 'dompurify';
 import { fetchHomeOverviewModernData } from '../lib/api';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
@@ -435,12 +436,12 @@ export function HomePage({ bootstrap }: Props) {
                 <div className="avel-list-panel__header">
                   <h3 className="avel-list-panel__title">Upcoming Events</h3>
                 </div>
-                <div dangerouslySetInnerHTML={{ __html: data.events.upcomingEventsHTML || '<p>No events.</p>' }} />
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.events.upcomingEventsHTML || '<p>No events.</p>') }} />
                 <div className="modern-divider" />
                 <div className="avel-list-panel__header">
                   <h3 className="avel-list-panel__title">Follow-up</h3>
                 </div>
-                <div dangerouslySetInnerHTML={{ __html: data.events.followUpEventsHTML || '<p>No follow-ups.</p>' }} />
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.events.followUpEventsHTML || '<p>No follow-ups.</p>') }} />
               </article>
             </div>
 
