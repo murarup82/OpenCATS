@@ -2812,6 +2812,48 @@
   padding: 24px 0;
 }
 
+/* Grouped candidate rows */
+.avel-dashboard-page .avel-dashboard-list__table tbody tr.adl-group-first td,
+.avel-dashboard-page .avel-dashboard-list__table tbody tr.adl-group-first th {
+  border-top: 2px solid rgba(0, 151, 189, 0.18);
+}
+
+.avel-dashboard-page .avel-dashboard-list__table tbody tr.adl-group-continuation td {
+  border-top: 1px dashed rgba(0, 100, 140, 0.12);
+  background: rgba(245, 251, 255, 0.6);
+}
+
+/* Candidate cell spanning multiple sub-rows */
+.avel-dashboard-page .avel-dashboard-list__table .adl-candidate-cell {
+  vertical-align: top;
+  padding-top: 10px;
+  background: rgba(240, 249, 255, 0.7);
+  border-right: 2px solid rgba(0, 151, 189, 0.15);
+}
+
+.avel-dashboard-page .avel-dashboard-list__table .adl-candidate-name {
+  display: block;
+  font-weight: 600;
+}
+
+/* Badge showing number of assignments on a multi-row candidate */
+.avel-dashboard-page .adl-candidate-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(0, 151, 189, 0.12);
+  border: 1px solid rgba(0, 151, 189, 0.25);
+  color: #005f7a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 /* Re-use avel-pipeline-matrix__ class names inside the dashboard list,
    scoped under .avel-dashboard-page .avel-dashboard-list */
 

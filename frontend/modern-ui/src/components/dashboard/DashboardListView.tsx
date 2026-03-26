@@ -5,6 +5,13 @@ import { ensureModernUIURL } from '../../lib/navigation';
 type ListColumnKey = 'candidate' | 'jobOrder' | 'company' | 'status' | 'location' | 'lastUpdated';
 type SortDirection = 'asc' | 'desc';
 
+type CandidateGroup = {
+  candidateID: number;
+  candidateName: string;
+  candidateURL: string;
+  rows: DashboardRow[];
+};
+
 const COLUMN_KEYS: ListColumnKey[] = ['candidate', 'jobOrder', 'company', 'status', 'location', 'lastUpdated'];
 
 const DEFAULT_ORDER: ListColumnKey[] = ['candidate', 'jobOrder', 'company', 'status', 'location', 'lastUpdated'];
@@ -250,6 +257,8 @@ export function DashboardListView({ rows, canChangeStatus, storageKey, onChangeS
     return cols.length > 0 ? cols : ['candidate' as ListColumnKey];
   }, [columnOrder, visibleColumns]);
 
+  const candidateColVisible = visibleColumnOrder.includes('candidate');
+
   // Build per-column filter options from the rows passed in (already server-filtered)
   const filterOptions = useMemo(() => {
     const opts: Record<ListColumnKey, string[]> = emptyFilters() as unknown as Record<ListColumnKey, string[]>;
@@ -296,6 +305,27 @@ export function DashboardListView({ rows, canChangeStatus, storageKey, onChangeS
     return result;
   }, [rows, columnFilters, filterOptionTokens, sortBy, sortDir]);
 
+  // Group consecutive rows by candidateID, preserving sorted order of first appearance
+  const groupedRows = useMemo((): CandidateGroup[] => {
+    const groups = new Map<number, CandidateGroup>();
+    const order: number[] = [];
+    filteredRows.forEach((row) => {
+      if (!groups.has(row.candidateID)) {
+        groups.set(row.candidateID, {
+          candidateID: row.candidateID,
+          candidateName: row.candidateName,
+          candidateURL: row.candidateURL,
+          rows: []
+        });
+        order.push(row.candidateID);
+      }
+      groups.get(row.candidateID)!.rows.push(row);
+    });
+    return order.map((id) => groups.get(id)!);
+  }, [filteredRows]);
+
+  const totalCandidates = groupedRows.length;
+  const totalRows = filteredRows.length;
   const activeFilterCount = (Object.keys(columnFilters) as ListColumnKey[]).filter((k) => (columnFilters[k] || '').trim() !== '').length;
 
   return (
@@ -304,9 +334,9 @@ export function DashboardListView({ rows, canChangeStatus, storageKey, onChangeS
         <div className="avel-dashboard-list__header-left">
           <h2 className="avel-list-panel__title">Pipeline Matrix</h2>
           <p className="avel-list-panel__hint">
-            {filteredRows.length === rows.length
-              ? `${rows.length} candidate${rows.length !== 1 ? 's' : ''}`
-              : `${filteredRows.length} of ${rows.length} candidates`}
+            {totalRows === rows.length
+              ? `${totalCandidates} candidate${totalCandidates !== 1 ? 's' : ''}${totalRows !== totalCandidates ? `, ${totalRows} assignment${totalRows !== 1 ? 's' : ''}` : ''}`
+              : `${totalCandidates} of ${new Set(rows.map((r) => r.candidateID)).size} candidates (${totalRows} of ${rows.length} assignments)`}
           </p>
         </div>
         <div className="avel-dashboard-list__header-right">
@@ -426,66 +456,88 @@ export function DashboardListView({ rows, canChangeStatus, storageKey, onChangeS
             </tr>
           </thead>
           <tbody>
-            {filteredRows.length === 0 ? (
+            {groupedRows.length === 0 ? (
               <tr>
                 <td colSpan={visibleColumnOrder.length + 1} className="avel-dashboard-list__empty">
                   No candidates match the current filters.
                 </td>
               </tr>
             ) : (
-              filteredRows.map((row) => (
-                <tr key={`${row.candidateID}-${row.jobOrderID}-${row.statusID}`}>
-                  {visibleColumnOrder.map((key) => {
-                    if (key === 'candidate') {
-                      return (
-                        <td key={`${row.candidateJobOrderID}-${key}`}>
-                          <a className="modern-link" href={row.candidateURL}>{toDisplayText(row.candidateName)}</a>
-                        </td>
-                      );
-                    }
-                    if (key === 'jobOrder') {
-                      return (
-                        <td key={`${row.candidateJobOrderID}-${key}`}>
-                          <a className="modern-link" href={ensureModernUIURL(row.jobOrderURL)}>{toDisplayText(row.jobOrderTitle)}</a>
-                        </td>
-                      );
-                    }
-                    if (key === 'status') {
-                      return (
-                        <td key={`${row.candidateJobOrderID}-${key}`}>
-                          <span className={`modern-status modern-status--${row.statusSlug || normalizeToken(row.statusLabel || '').replace(/\s+/g, '-')}`}>
-                            {toDisplayText(row.statusLabel)}
-                          </span>
-                        </td>
-                      );
-                    }
-                    return (
-                      <td key={`${row.candidateJobOrderID}-${key}`}>{toDisplayText(getRowValue(row, key))}</td>
-                    );
-                  })}
-                  <td>
-                    <div className="modern-table-actions">
-                      {canChangeStatus ? (
-                        <button
-                          type="button"
-                          className="modern-btn modern-btn--mini modern-btn--secondary"
-                          onClick={() => onChangeStatus(row)}
-                        >
-                          Change Status
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() => onOpenDetails(row)}
-                        disabled={Number(row.candidateJobOrderID || 0) <= 0}
-                      >
-                        Details
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              groupedRows.map((group) =>
+                group.rows.map((row, rowIndex) => {
+                  const isFirstInGroup = rowIndex === 0;
+                  const isLastInGroup = rowIndex === group.rows.length - 1;
+                  const rowSpan = group.rows.length;
+                  const rowKey = `${row.candidateID}-${row.jobOrderID}-${row.statusID}`;
+
+                  return (
+                    <tr
+                      key={rowKey}
+                      className={[
+                        isFirstInGroup ? 'adl-group-first' : 'adl-group-continuation',
+                        isLastInGroup ? 'adl-group-last' : ''
+                      ].filter(Boolean).join(' ')}
+                    >
+                      {visibleColumnOrder.map((key) => {
+                        // Candidate cell: spans all rows in the group, only rendered on first sub-row
+                        if (key === 'candidate') {
+                          if (!isFirstInGroup) return null;
+                          return (
+                            <td key={`${rowKey}-candidate`} rowSpan={rowSpan} className="adl-candidate-cell">
+                              <a className="modern-link adl-candidate-name" href={row.candidateURL}>
+                                {toDisplayText(row.candidateName)}
+                              </a>
+                              {rowSpan > 1 ? (
+                                <span className="adl-candidate-count" title={`${rowSpan} assignments`}>{rowSpan}</span>
+                              ) : null}
+                            </td>
+                          );
+                        }
+                        if (key === 'jobOrder') {
+                          return (
+                            <td key={`${rowKey}-jobOrder`} className="adl-subrow-cell">
+                              <a className="modern-link" href={ensureModernUIURL(row.jobOrderURL)}>{toDisplayText(row.jobOrderTitle)}</a>
+                            </td>
+                          );
+                        }
+                        if (key === 'status') {
+                          return (
+                            <td key={`${rowKey}-status`} className="adl-subrow-cell">
+                              <span className={`modern-status modern-status--${row.statusSlug || normalizeToken(row.statusLabel || '').replace(/\s+/g, '-')}`}>
+                                {toDisplayText(row.statusLabel)}
+                              </span>
+                            </td>
+                          );
+                        }
+                        return (
+                          <td key={`${rowKey}-${key}`} className="adl-subrow-cell">{toDisplayText(getRowValue(row, key))}</td>
+                        );
+                      })}
+                      <td className="adl-subrow-cell">
+                        <div className="modern-table-actions">
+                          {canChangeStatus ? (
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--secondary"
+                              onClick={() => onChangeStatus(row)}
+                            >
+                              Change Status
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            onClick={() => onOpenDetails(row)}
+                            disabled={Number(row.candidateJobOrderID || 0) <= 0}
+                          >
+                            Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )
             )}
           </tbody>
         </table>
