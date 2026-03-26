@@ -2305,6 +2305,12 @@
   color: #4c6270;
 }
 
+/* Normalise all modern-chip sizes in dashboard to match modern-status (0.57rem / 3px 7px) */
+.avel-dashboard-page .modern-chip {
+  font-size: 0.57rem;
+  padding: 3px 7px;
+}
+
 /* GDPR chips */
 .avel-dashboard-page .modern-chip--gdpr-signed {
   border-color: #78c49c;
@@ -2317,8 +2323,9 @@
   color: #6b1f26;
 }
 
-/* Source chips */
-.avel-dashboard-page .modern-chip[class*='modern-chip--source-'] {
+/* Source chips — no catch-all attribute selector (it outranks slug rules).
+   modern-chip--source-other is the explicit fallback. */
+.avel-dashboard-page .modern-chip--source-other {
   border-color: #a4abe8;
   background: #dde1f8;
   color: #2a3593;
@@ -2501,7 +2508,7 @@
   color: var(--avel-800);
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 800;
   text-align: left;
   padding: 9px 10px;
