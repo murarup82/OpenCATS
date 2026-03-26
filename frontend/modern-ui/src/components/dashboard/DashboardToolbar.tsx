@@ -53,10 +53,7 @@ export function DashboardToolbar(props: Props) {
   } = props;
 
   const activeFilterCount = activeServerFilters.length + activeLocalFilters.length;
-  const hasServerFilters = activeServerFilters.length > 0;
-  const hasLocalFilters = activeLocalFilters.length > 0;
-  const canClearLocal = hasLocalFilters || searchTerm.trim() !== '';
-  const canResetServer = hasServerFilters || showClosed;
+  const canClear = activeFilterCount > 0 || searchTerm.trim() !== '' || showClosed;
 
   return (
     <section className="modern-command-bar modern-command-bar--sticky" aria-label="Dashboard controls">
@@ -135,19 +132,11 @@ export function DashboardToolbar(props: Props) {
         <div className="modern-command-actions modern-command-actions--primary">
           <button
             type="button"
-            className="modern-btn modern-btn--secondary"
-            onClick={onClearLocalFilters}
-            disabled={!canClearLocal}
-          >
-            Clear Local
-          </button>
-          <button
-            type="button"
             className="modern-btn modern-btn--secondary modern-btn--emphasis"
-            onClick={onResetServerFilters}
-            disabled={!canResetServer}
+            onClick={() => { onClearLocalFilters(); onResetServerFilters(); }}
+            disabled={!canClear}
           >
-            Reset Filters
+            Clear Filters
           </button>
         </div>
       </div>
