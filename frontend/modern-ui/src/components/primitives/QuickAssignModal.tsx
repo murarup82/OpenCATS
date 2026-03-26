@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { assignCandidateToJobOrder, fetchJobOrderAssignCandidateData } from '../../lib/api';
 import type { JobOrderAssignCandidateModernDataResponse, UIModeBootstrap } from '../../types';
 import { Modal } from '../../ui-core';
@@ -39,17 +39,16 @@ export function QuickAssignModal({
   const [candidateQuery, setCandidateQuery] = useState('');
   const [candidateData, setCandidateData] = useState<JobOrderAssignCandidateModernDataResponse | null>(null);
   const [selectedCandidateID, setSelectedCandidateID] = useState(0);
-  const [selectedStatusID, setSelectedStatusID] = useState(0);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [confirmRequired, setConfirmRequired] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState('');
 
-  // Keep a ref to candidateQuery so the auto-search effect can read the current value
-  // without listing it as a dependency (auto-search fires on JO change only, not on every keystroke)
-  const candidateQueryRef = useRef('');
-  candidateQueryRef.current = candidateQuery;
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks the job order ID that triggered the last search so debounce doesn't
+  // re-fire after a job order change already triggered an immediate search.
+  const lastSearchedJobOrderRef = useRef(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -60,12 +59,12 @@ export function QuickAssignModal({
     setCandidateQuery(toStr(initialCandidateQuery).trim());
     setCandidateData(null);
     setSelectedCandidateID(0);
-    setSelectedStatusID(0);
     setLoadingCandidates(false);
     setPending(false);
     setError('');
     setConfirmRequired(false);
     setConfirmMessage('');
+    lastSearchedJobOrderRef.current = 0;
   }, [isOpen, initialJobOrderID, initialCandidateQuery, jobOrders]);
 
   const visibleJobOrders = useMemo(() => {
@@ -88,11 +87,6 @@ export function QuickAssignModal({
       try {
         const payload = await fetchJobOrderAssignCandidateData(bootstrap, sourceURL, query);
         setCandidateData(payload);
-        setSelectedStatusID((prev) => {
-          if (prev > 0) return prev;
-          const def = Number(payload.meta.defaultAssignmentStatusID || 0);
-          return def > 0 ? def : 0;
-        });
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Unable to load candidates.');
       } finally {
@@ -102,17 +96,35 @@ export function QuickAssignModal({
     [bootstrap]
   );
 
-  // Auto-search when job order selection changes; candidateQuery intentionally excluded
+  // Immediate search when job order changes
   useEffect(() => {
     if (!isOpen) return;
     if (selectedJobOrderID <= 0) {
       setCandidateData(null);
       setSelectedCandidateID(0);
+      lastSearchedJobOrderRef.current = 0;
       return;
     }
-    void searchCandidates(selectedJobOrderID, candidateQueryRef.current);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    lastSearchedJobOrderRef.current = selectedJobOrderID;
+    void searchCandidates(selectedJobOrderID, candidateQuery);
+    // candidateQuery intentionally excluded — job order change triggers immediate search
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, selectedJobOrderID, searchCandidates]);
+
+  // Debounced search when candidate query changes
+  useEffect(() => {
+    if (!isOpen || selectedJobOrderID <= 0) return;
+    // Skip if this effect fired because of a job order change (already searched above)
+    if (lastSearchedJobOrderRef.current !== selectedJobOrderID) return;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      void searchCandidates(selectedJobOrderID, candidateQuery);
+    }, 350);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [isOpen, candidateQuery, selectedJobOrderID, searchCandidates]);
 
   const submitAssign = async (forceConfirm: boolean) => {
     if (!candidateData || selectedCandidateID <= 0) return;
@@ -124,7 +136,7 @@ export function QuickAssignModal({
         jobOrderID: Number(candidateData.meta.jobOrderID || 0),
         securityToken: candidateData.actions.securityToken || '',
         confirmReapplyRejected: forceConfirm,
-        assignmentStatusID: selectedStatusID > 0 ? selectedStatusID : undefined
+        assignmentStatusID: undefined
       });
       if (result.success) {
         onAssigned(result.message || 'Candidate added to job order.');
@@ -258,54 +270,23 @@ export function QuickAssignModal({
                 </span>
               </div>
 
-              <form
-                className="modern-command-search avel-quick-assign__panel-search"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void searchCandidates(selectedJobOrderID, candidateQuery);
-                }}
-              >
+              <span className="modern-command-search avel-quick-assign__panel-search">
                 <span className="modern-command-search__shell">
                   <input
                     type="search"
                     value={candidateQuery}
                     onChange={(e) => setCandidateQuery(e.target.value)}
-                    placeholder="Type name and press Search…"
-                    aria-label="Search candidates"
-                    disabled={selectedJobOrderID <= 0 || loadingCandidates || pending}
+                    placeholder="Filter by name…"
+                    aria-label="Filter candidates"
+                    disabled={selectedJobOrderID <= 0 || pending}
                   />
-                  <button
-                    type="submit"
-                    className="avel-quick-assign__search-btn"
-                    disabled={selectedJobOrderID <= 0 || loadingCandidates || pending}
-                  >
-                    Search
-                  </button>
                 </span>
-              </form>
-
-              {candidateData?.meta.canSetStatusOnAdd ? (
-                <label className="modern-command-field avel-quick-assign__status-field">
-                  <span className="modern-command-label">Initial Status</span>
-                  <select
-                    className="avel-form-control"
-                    value={selectedStatusID > 0 ? String(selectedStatusID) : ''}
-                    onChange={(e) => setSelectedStatusID(Number(e.target.value || 0))}
-                    disabled={loadingCandidates || pending}
-                  >
-                    {candidateData.options.assignmentStatuses.map((s) => (
-                      <option key={s.statusID} value={String(s.statusID)}>
-                        {s.status}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
+              </span>
 
               {loadingCandidates ? <div className="modern-state">Searching candidates…</div> : null}
 
               {!loadingCandidates && selectedJobOrderID > 0 && !candidateData ? (
-                <div className="avel-quick-assign__empty">Type a name and click Search to find candidates.</div>
+                <div className="avel-quick-assign__empty">Loading candidates…</div>
               ) : null}
 
               {!loadingCandidates && candidateData && !hasRows ? (
@@ -350,14 +331,6 @@ export function QuickAssignModal({
                       </button>
                     );
                   })}
-                </div>
-              ) : null}
-
-              {candidateData ? (
-                <div className="modern-table-actions">
-                  <a className="modern-btn modern-btn--mini modern-btn--secondary" href={candidateData.actions.legacyURL}>
-                    Open Legacy Assignment
-                  </a>
                 </div>
               ) : null}
             </div>
