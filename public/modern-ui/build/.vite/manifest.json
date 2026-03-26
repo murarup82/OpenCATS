@@ -6,7 +6,7 @@
     "isEntry": true
   },
   "style.css": {
-    "file": "style.css",
+    "file": "opencats-modern-ui.css",
     "src": "style.css"
   }
 }

@@ -233,7 +233,7 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.ajax_wizardpassword': SettingsWizardActionPage,
   'settings.ajax_wizardsitename': SettingsWizardActionPage,
   'settings.ajax_wizardwebsite': SettingsWizardActionPage,
-  'settings.asplocalization': SettingsAdminWorkspaceActionPage,
+  // 'settings.asplocalization' — no backend contract emitter; falls back to legacy
   'settings.careerportalquestionnaire': SettingsAdminWorkspaceActionPage,
   'settings.careerportalquestionnairepreview': SettingsAdminWorkspaceActionPage,
   'settings.careerportalquestionnaireupdate': SettingsAdminWorkspaceActionPage,
@@ -261,12 +261,12 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'settings.newinstallfinished': SettingsAdminWorkspaceActionPage,
   'settings.newinstallpassword': SettingsAdminWorkspaceActionPage,
   'settings.newsitename': SettingsAdminWorkspaceActionPage,
-  'settings.oncareerportaltweak': SettingsAdminWorkspaceActionPage,
-  'settings.previewpage': OperationsWorkspaceActionPage,
-  'settings.previewpagetop': OperationsWorkspaceActionPage,
-  'settings.professional': SettingsAdminWorkspaceActionPage,
+  // 'settings.oncareerportaltweak' — POST-only handler, no backend contract emitter; falls back to legacy
+  // 'settings.previewpage' — legacy template response only, no backend contract emitter; falls back to legacy
+  // 'settings.previewpagetop' — legacy template response only, no backend contract emitter; falls back to legacy
+  // 'settings.professional' — no backend contract emitter; falls back to legacy
   'settings.rejectionreasons': SettingsAdminWorkspaceActionPage,
-  'settings.reports': SettingsAdminWorkspaceActionPage,
+  // 'settings.reports' — legacy template response only, no backend contract emitter; falls back to legacy
   'settings.rolepagepermissions': SettingsAdminWorkspaceActionPage,
   'settings.schemamigrations': SettingsAdminWorkspaceActionPage,
   'settings.showuser': SettingsAdminWorkspaceActionPage,
