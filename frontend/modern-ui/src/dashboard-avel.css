@@ -1935,7 +1935,10 @@
 }
 
 .avel-dashboard-page .modern-kanban-column__body {
-  min-height: min(70vh, 640px);
+  height: calc(100dvh - 260px);
+  min-height: 400px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   transition: background-color 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
