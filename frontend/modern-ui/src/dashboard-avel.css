@@ -2745,6 +2745,11 @@
     0 1px 0 rgba(255, 255, 255, 0.72) inset,
     0 12px 24px rgba(0, 66, 91, 0.1);
   padding: 13px;
+  /* participate in the flex chain so overflow:clip on root doesn't cut it off */
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .avel-dashboard-page .avel-dashboard-list::before {
@@ -2796,6 +2801,9 @@
 
 .avel-dashboard-page .avel-dashboard-list__table-wrap {
   overflow-x: auto;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 /* th needs position:relative so the absolute filter dropdown is anchored to it */
