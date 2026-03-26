@@ -1816,9 +1816,8 @@
   --lane-count-border: #8ebad1;
   --lane-count-ink: #0f4a63;
 
-  flex: 0 0 276px;
-  width: 276px;
-  min-width: 276px;
+  flex: 1 1 220px;
+  min-width: 200px;
   min-height: 0;
   border: 1px solid #9cbfd4;
   border-radius: 14px;
