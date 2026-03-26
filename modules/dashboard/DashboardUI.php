@@ -115,7 +115,26 @@ class DashboardUI extends UserInterface
         $canChangeStatus = $this->canChangeStatus();
         $canAssignToJobOrder = $this->canAssignToJobOrder();
 
-        $companyOptions = $this->getDashboardCompanies($showClosed, $dashboardScope === 'all');
+        /* Top Management users viewing "All Jobs" see only Monitored job orders. */
+        $isTopManagement = ($dashboardScope === 'all' && $this->isTopManagementRole());
+        $monitoredFilter = '';
+        if ($isTopManagement)
+        {
+            $monitoredFilter = sprintf(
+                "AND EXISTS (
+                    SELECT 1 FROM extra_field ef_mon
+                    WHERE ef_mon.data_item_id = joborder.joborder_id
+                    AND ef_mon.data_item_type = %s
+                    AND ef_mon.site_id = %s
+                    AND LOWER(ef_mon.field_name) = 'monitored jo'
+                    AND LOWER(TRIM(IFNULL(ef_mon.value, ''))) IN ('yes', 'y', '1', 'true', 'on')
+                )",
+                $db->makeQueryInteger(DATA_ITEM_JOBORDER),
+                $db->makeQueryInteger($siteID)
+            );
+        }
+
+        $companyOptions = $this->getDashboardCompanies($showClosed, $dashboardScope === 'all', $monitoredFilter);
         $selectedCompanyName = '';
         foreach ($companyOptions as $companyOption)
         {
@@ -130,7 +149,7 @@ class DashboardUI extends UserInterface
             $companyID = 0;
         }
 
-        $jobOrderOptions = $this->getDashboardJobOrders($showClosed, $dashboardScope === 'all', $companyID);
+        $jobOrderOptions = $this->getDashboardJobOrders($showClosed, $dashboardScope === 'all', $companyID, $monitoredFilter);
         if ($jobOrderID > 0)
         {
             $jobOrderFound = false;
@@ -278,6 +297,7 @@ class DashboardUI extends UserInterface
             %s
             %s
             %s
+            %s
             ORDER BY
                 lastStatusChange DESC,
                 candidate_joborder.date_modified DESC
@@ -295,6 +315,7 @@ class DashboardUI extends UserInterface
             $jobOrderFilter,
             $companyFilter,
             $statusFilterByID,
+            $monitoredFilter,
             $limitSQL
         );
 
@@ -609,7 +630,7 @@ class DashboardUI extends UserInterface
         return $statusSlug;
     }
 
-    private function getDashboardJobOrders($includeClosed, $includeAll, $companyID = 0)
+    private function getDashboardJobOrders($includeClosed, $includeAll, $companyID = 0, $monitoredFilter = '')
     {
         $db = DatabaseConnection::getInstance();
         $pipelineFilter = '';
@@ -652,18 +673,20 @@ class DashboardUI extends UserInterface
             %s
             %s
             %s
+            %s
             ORDER BY
                 joborder.date_created DESC",
             $db->makeQueryInteger($this->_siteID),
             $assignmentFilter,
             $companyFilter,
-            $pipelineFilter
+            $pipelineFilter,
+            $monitoredFilter
         );
 
         return $db->getAllAssoc($sql);
     }
 
-    private function getDashboardCompanies($includeClosed, $includeAll)
+    private function getDashboardCompanies($includeClosed, $includeAll, $monitoredFilter = '')
     {
         $db = DatabaseConnection::getInstance();
         $pipelineFilter = '';
@@ -698,11 +721,13 @@ class DashboardUI extends UserInterface
                 candidate_joborder.site_id = %s
             %s
             %s
+            %s
             ORDER BY
                 company.name ASC",
             $db->makeQueryInteger($this->_siteID),
             $assignmentFilter,
-            $pipelineFilter
+            $pipelineFilter,
+            $monitoredFilter
         );
 
         return $db->getAllAssoc($sql);
@@ -721,6 +746,22 @@ class DashboardUI extends UserInterface
         }
 
         return ($this->getUserAccessLevel('joborders.show') >= ACCESS_LEVEL_DELETE);
+    }
+
+    private function isTopManagementRole()
+    {
+        $userRoles = new UserRoles($this->_siteID);
+        if ($userRoles->isSchemaAvailable())
+        {
+            $role = $userRoles->getForUser($this->_userID);
+            if (!empty($role) && !empty($role['roleKey']))
+            {
+                return $role['roleKey'] === 'top_management';
+            }
+        }
+
+        /* Fallback: top_management maps to access level < ACCESS_LEVEL_EDIT (200). */
+        return ($this->getUserAccessLevel('joborders.show') < ACCESS_LEVEL_EDIT);
     }
 
     private function canChangeStatus()
