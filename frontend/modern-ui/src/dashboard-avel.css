@@ -2,10 +2,11 @@
 
 /* Anchor height for the adaptive kanban flex chain.
    72px accounts for the legacy navbar + shell layout gaps outside the React root.
-   Everything inside (.avel-dashboard-page and below) uses flex: 1 to distribute
-   remaining height dynamically — no hardcoded offset needed for KPI cards or toolbar. */
+   overflow: clip prevents page-level scroll (which would push content behind the
+   command bar); it does NOT affect position:absolute dropdowns or position:fixed modals. */
 .modern-shell-app-root:has(.avel-dashboard-page) {
   height: calc(100dvh - 72px);
+  overflow: clip;
 }
 
 .avel-dashboard-page {
@@ -1106,9 +1107,7 @@
 }
 
 .avel-dashboard-page .modern-command-bar {
-  position: sticky;
-  top: 10px;
-  z-index: 20;
+  position: relative;
   border: 1px solid var(--avel-panel-border);
   border-radius: 18px;
   background: linear-gradient(180deg, var(--avel-panel-1) 0%, var(--avel-panel-2) 100%);
@@ -1135,12 +1134,37 @@
   align-items: end;
 }
 
+/* Primary row: flex-wrap so View + Clear Filters never get clipped on narrow windows */
 .avel-dashboard-page .modern-command-bar__row--primary {
-  grid-template-columns: minmax(210px, auto) minmax(250px, 1fr) auto auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 9px;
+}
+
+.avel-dashboard-page .modern-command-bar__row--primary .modern-command-group--scope {
+  flex: 0 0 auto;
+}
+
+.avel-dashboard-page .modern-command-bar__row--primary .modern-command-search {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+.avel-dashboard-page .modern-command-bar__row--primary .modern-command-group--view {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.avel-dashboard-page .modern-command-bar__row--primary .modern-command-actions--primary {
+  flex: 0 0 auto;
 }
 
 .avel-dashboard-page .modern-command-bar__row--primary-noscope {
-  grid-template-columns: minmax(250px, 1fr) auto auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 9px;
 }
 
 .avel-dashboard-page .modern-command-bar__row--filters {
@@ -1974,7 +1998,7 @@
 
 .avel-dashboard-page .modern-kanban-column__body {
   flex: 1;
-  min-height: 300px;
+  min-height: 200px;
   overflow-y: auto;
   overscroll-behavior: contain;
   transition: background-color 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
