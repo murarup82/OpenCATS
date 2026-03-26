@@ -2,10 +2,13 @@
 
 /* Anchor height for the adaptive kanban flex chain.
    72px accounts for the legacy navbar + shell layout gaps outside the React root.
-   No overflow:clip here — the flex chain keeps content in-bounds, and column bodies
-   need overflow-y:auto to scroll freely within their lane. */
+   overflow:clip prevents page-level scroll in both axes without creating a stacking
+   context or disabling child scroll containers (unlike overflow:hidden).
+   Column body overflow-y:auto works because .modern-kanban-column now has
+   min-height:0, which bounds the column height so the scroll activates correctly. */
 .modern-shell-app-root:has(.avel-dashboard-page) {
   height: calc(100dvh - 72px);
+  overflow: clip;
 }
 
 .avel-dashboard-page {
@@ -2852,6 +2855,12 @@
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+/* Hide the global feedback footer — dashboard is full-height and the footer
+   would overlap kanban content or show through transparent lanes. */
+.modern-shell-app-root:has(.avel-dashboard-page) .modern-global-feedback {
+  display: none;
 }
 
 /* Muted empty cells */

@@ -330,10 +330,10 @@ class DashboardUI extends UserInterface
                 lastStatusChange DESC,
                 candidate_joborder.date_modified DESC
             %s",
+            $db->makeQueryInteger($siteID),
             $db->makeQueryInteger(DATA_ITEM_CANDIDATE),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger(DATA_ITEM_JOBORDER),
-            $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
