@@ -43,32 +43,20 @@ class Hooks
 
 
     /**
-     * Executes all hooks by name, if any.
-     * Hooks are loaded through getModules.
+     * Returns a safe no-op string for eval() call sites.
      *
-     * @param string hook name
-     * @return void
+     * The hooks system was designed for third-party module extensibility but
+     * no modules register hook code in this codebase. The prior implementation
+     * read PHP code strings from $_SESSION['hooks'] and returned them for
+     * eval(), which created an arbitrary code execution risk if the session
+     * was tampered with. Since hooks are unused, the session lookup is removed.
+     *
+     * @param string $hookName
+     * @return string
      */
     public static function get($hookName)
     {
-        if (!isset($_SESSION['hooks'])) 
-        {
-            return 'return true;';
-        }        
-        
-        $hooks = @$_SESSION['hooks'];
-
-        $hookCommands = '';
-
-        if (isset($hooks[$hookName]))
-        {
-            foreach ($hooks[$hookName] as $value)
-            {
-                $hookCommands .= $value . "\n";
-            }
-        }
-
-        return $hookCommands . ' return true;';
+        return 'return true;';
     }
 }
 
