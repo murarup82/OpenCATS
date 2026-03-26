@@ -2410,8 +2410,8 @@
 
 .avel-list-panel__title {
   margin: 0;
-  color: var(--avel-800);
-  font: 700 1rem / 1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+  color: var(--avel-900);
+  font: 700 1.35rem / 1.2 'Space Grotesk', 'Segoe UI', sans-serif;
 }
 
 .avel-list-panel__hint {
