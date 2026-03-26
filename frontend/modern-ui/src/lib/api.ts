@@ -4742,3 +4742,35 @@ export async function storeTalentFitFlowTransformedAttachment(payload: {
     retrievalURL: getTextNodeValue(xml, 'retrieval_url')
   };
 }
+
+export async function sendGdprRequest(
+  sendURL: string,
+  candidateID: number
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('action', 'sendCandidate');
+  body.set('candidateID', String(candidateID || 0));
+
+  const response = await fetch(sendURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  let result: ModernMutationResponse | null = null;
+  try {
+    result = (await response.json()) as ModernMutationResponse;
+  } catch (_error) {
+    result = null;
+  }
+
+  if (!result) {
+    throw new Error(`Send GDPR request failed (${response.status}).`);
+  }
+
+  return result;
+}

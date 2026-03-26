@@ -17,7 +17,8 @@ import {
   uploadCandidateAttachmentToGoogleDrive,
   updateCandidateTags,
   uploadCandidateAttachment,
-  updatePipelineStatusHistoryDate
+  updatePipelineStatusHistoryDate,
+  sendGdprRequest
 } from '../lib/api';
 import type {
   CandidatesShowModernDataResponse,
@@ -308,6 +309,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [transformDownloadURL, setTransformDownloadURL] = useState<string>('');
   const [transformAnalysisMessage, setTransformAnalysisMessage] = useState<string>('');
   const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'error' | 'info' } | null>(null);
+  const [gdprSendPending, setGdprSendPending] = useState<boolean>(false);
+  const [gdprSendError, setGdprSendError] = useState<string>('');
   const loadRequestRef = useRef(0);
   const transformRequestIDRef = useRef(0);
   const transformSearchRequestRef = useRef(0);
@@ -1005,6 +1008,45 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       showToast
     ]
   );
+
+  const handleGdprSend = useCallback(async () => {
+    if (!data || gdprSendPending) {
+      return;
+    }
+
+    const sendURL = String(data.actions.gdprSendURL || '').trim();
+    if (sendURL === '') {
+      setGdprSendError('Send GDPR request action is not available.');
+      return;
+    }
+
+    const candidateID = Number(data.meta.candidateID || 0);
+    if (candidateID <= 0) {
+      setGdprSendError('Invalid candidate ID.');
+      return;
+    }
+
+    const confirmed = window.confirm('Send a GDPR consent request email to this candidate now?');
+    if (!confirmed) {
+      return;
+    }
+
+    setGdprSendPending(true);
+    setGdprSendError('');
+    try {
+      const result = await sendGdprRequest(sendURL, candidateID);
+      if (result.success) {
+        showToast('GDPR request sent successfully.', 'success');
+        refreshPageData();
+      } else {
+        setGdprSendError(String(result.message || 'Failed to send GDPR request.'));
+      }
+    } catch (err) {
+      setGdprSendError(err instanceof Error ? err.message : 'Failed to send GDPR request.');
+    } finally {
+      setGdprSendPending(false);
+    }
+  }, [data, gdprSendPending, refreshPageData, showToast]);
 
   const closeTransformCVModal = useCallback(() => {
     transformRequestIDRef.current += 1;
@@ -1830,12 +1872,23 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--gdpr">
               <div className="avel-list-panel__header">
                 <h2 className="avel-list-panel__title">GDPR</h2>
-                <p className="avel-list-panel__hint avel-candidate-gdpr-hint">
+                <div className="avel-list-panel__hint avel-candidate-gdpr-hint">
                   <span>Latest status:</span>
                   <span className={`modern-chip avel-candidate-gdpr-chip ${getGDPRStatusChipClass(gdpr.latestRequest.status)}`}>
                     {toDisplayText(gdpr.latestRequest.status)}
                   </span>
-                </p>
+                  {gdpr.sendEnabled ? (
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--sm modern-btn--primary"
+                      onClick={handleGdprSend}
+                      disabled={gdprSendPending || gdpr.sendDisabled}
+                      title={gdpr.sendDisabled && gdpr.sendDisabledReason !== '' ? gdpr.sendDisabledReason : 'Send GDPR consent request to this candidate'}
+                    >
+                      {gdprSendPending ? 'Sending...' : 'Send GDPR Request'}
+                    </button>
+                  ) : null}
+                </div>
               </div>
               <div className="avel-candidate-details avel-candidate-details--gdpr">
                 <div className={getDetailFieldClassName(gdpr.latestRequest.createdAt)}><strong>Request Created:</strong> {toDisplayText(gdpr.latestRequest.createdAt)}</div>
@@ -1845,6 +1898,11 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 {gdpr.sendDisabledReason !== '' ? (
                   <div className={getDetailFieldClassName(gdpr.sendDisabledReason, 'avel-candidate-details__full')}>
                     <strong>Send Disabled:</strong> {gdpr.sendDisabledReason}
+                  </div>
+                ) : null}
+                {gdprSendError !== '' ? (
+                  <div className="avel-candidate-details__full modern-inline-error">
+                    {gdprSendError}
                   </div>
                 ) : null}
                 {gdpr.legacyProof.link !== '' ? (

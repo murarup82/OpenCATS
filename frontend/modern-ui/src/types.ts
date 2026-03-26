@@ -3991,6 +3991,7 @@ export type CandidatesShowModernDataResponse = {
     removeFromPipelineToken?: string;
     setPipelineStatusURL?: string;
     setPipelineStatusToken?: string;
+    gdprSendURL?: string;
   };
   pipelineStatus: {
     rejectedStatusID: number;

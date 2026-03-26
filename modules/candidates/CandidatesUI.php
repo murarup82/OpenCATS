@@ -1370,7 +1370,8 @@ class CandidatesUI extends UserInterface
                 'deleteMessageThreadURL' => sprintf('%s?m=candidates&a=deleteMessageThread', $baseURL),
                 'removeFromPipelineToken' => $this->getCSRFToken('candidates.removeFromPipeline'),
                 'setPipelineStatusURL' => sprintf('%s?m=dashboard&a=setPipelineStatus', $baseURL),
-                'setPipelineStatusToken' => $this->getCSRFToken('dashboard.setPipelineStatus')
+                'setPipelineStatusToken' => $this->getCSRFToken('dashboard.setPipelineStatus'),
+                'gdprSendURL' => CATSUtility::getAbsoluteURI('ajax.php?f=gdpr:requests')
             ),
             'pipelineStatus' => array(
                 'rejectedStatusID' => (int) PIPELINE_STATUS_REJECTED,
