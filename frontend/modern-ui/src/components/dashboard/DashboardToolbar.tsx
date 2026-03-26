@@ -102,7 +102,7 @@ export function DashboardToolbar(props: Props) {
               type="search"
               value={searchTerm}
               onChange={(event) => onSearchTermChange(event.target.value)}
-              placeholder="Search candidate, role, company, location"
+              placeholder="Search candidate, role, company"
             />
           </span>
         </label>
