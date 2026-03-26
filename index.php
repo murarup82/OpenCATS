@@ -130,13 +130,23 @@ $_SESSION['CATS']->startTimer();
 $_SESSION['CATS']->checkForcedUpdate();
 
 /* Check to see if the user level suddenly changed. If the user was changed to disabled,
- * also log the user out.
+ * also log the user out. Check is throttled to once per 60 seconds per session to avoid
+ * a DB query on every page load.
  */
-// FIXME: This is slow!
 if ($_SESSION['CATS']->isLoggedIn())
 {
-    $users = new Users($_SESSION['CATS']->getSiteID());
-    $forceLogoutData = $users->getForceLogoutData($_SESSION['CATS']->getUserID());
+    $now = time();
+    $lastCheck = isset($_SESSION['forceLogoutCheckedAt']) ? (int) $_SESSION['forceLogoutCheckedAt'] : 0;
+    if ($now - $lastCheck >= 60)
+    {
+        $_SESSION['forceLogoutCheckedAt'] = $now;
+        $users = new Users($_SESSION['CATS']->getSiteID());
+        $forceLogoutData = $users->getForceLogoutData($_SESSION['CATS']->getUserID());
+    }
+    else
+    {
+        $forceLogoutData = null;
+    }
 
     if (!empty($forceLogoutData) && ($forceLogoutData['forceLogout'] == 1 ||
         $_SESSION['CATS']->getRealAccessLevel() != $forceLogoutData['accessLevel']))

@@ -562,6 +562,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
               <details className="avel-candidate-more-filters" ref={moreFiltersRef} open={isMoreFiltersOpen}>
                 <summary
                   className="avel-candidate-more-filters__summary"
+                  aria-expanded={isMoreFiltersOpen}
                   onClick={(event) => {
                     event.preventDefault();
                     setIsMoreFiltersOpen((current) => !current);
