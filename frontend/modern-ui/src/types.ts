@@ -68,6 +68,13 @@ export type DashboardModernDataResponse = {
     lastStatusChangeDisplay: string;
     location: string;
     isActive: number;
+    source?: string;
+    keySkills?: string;
+    ownerName?: string;
+    recruiterName?: string;
+    gdprSigned?: boolean;
+    dateAdded?: string;
+    rejectionReasons?: string;
   }>;
 };
 

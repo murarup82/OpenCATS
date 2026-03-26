@@ -216,15 +216,37 @@ class DashboardUI extends UserInterface
                 candidate.candidate_id AS candidateID,
                 candidate.first_name AS firstName,
                 candidate.last_name AS lastName,
+                candidate.city AS candidateCity,
                 candidate.country AS country,
+                candidate.source AS source,
+                candidate.key_skills AS keySkills,
+                candidate.gdpr_signed AS gdprSigned,
                 joborder.joborder_id AS jobOrderID,
                 joborder.title AS jobOrderTitle,
+                joborder.owner AS ownerUserID,
+                joborder.recruiter AS recruiterUserID,
+                owner_user.first_name AS ownerFirstName,
+                owner_user.last_name AS ownerLastName,
+                recruiter_user.first_name AS recruiterFirstName,
+                recruiter_user.last_name AS recruiterLastName,
                 company.company_id AS companyID,
                 company.name AS companyName,
                 candidate_joborder.candidate_joborder_id AS candidateJobOrderID,
                 candidate_joborder.status AS statusID,
                 candidate_joborder.is_active AS isActive,
                 candidate_joborder.rating_value AS ratingValue,
+                DATE_FORMAT(candidate_joborder.date_created, '%%m-%%d-%%y (%%h:%%i %%p)') AS dateAdded,
+                (
+                    SELECT GROUP_CONCAT(DISTINCT rr.label ORDER BY rr.label SEPARATOR ', ')
+                    FROM candidate_joborder_status_history AS cjosh_rr
+                    LEFT JOIN status_history_rejection_reason AS shrr
+                        ON shrr.status_history_id = cjosh_rr.candidate_joborder_status_history_id
+                    LEFT JOIN rejection_reason AS rr
+                        ON rr.rejection_reason_id = shrr.rejection_reason_id
+                    WHERE cjosh_rr.candidate_id = candidate_joborder.candidate_id
+                    AND cjosh_rr.joborder_id = candidate_joborder.joborder_id
+                    AND cjosh_rr.site_id = %s
+                ) AS rejectionReasons,
                 (
                     SELECT
                         COUNT(*)
@@ -270,6 +292,12 @@ class DashboardUI extends UserInterface
                 ON joborder.company_id = company.company_id
             LEFT JOIN candidate_joborder_status
                 ON candidate_joborder.status = candidate_joborder_status.candidate_joborder_status_id
+            LEFT JOIN user AS owner_user
+                ON owner_user.user_id = joborder.owner
+                AND owner_user.site_id = candidate_joborder.site_id
+            LEFT JOIN user AS recruiter_user
+                ON recruiter_user.user_id = joborder.recruiter
+                AND recruiter_user.site_id = candidate_joborder.site_id
             LEFT JOIN (
                 SELECT
                     candidate_id,
@@ -305,6 +333,7 @@ class DashboardUI extends UserInterface
             $db->makeQueryInteger(DATA_ITEM_CANDIDATE),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger(DATA_ITEM_JOBORDER),
+            $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
             $db->makeQueryInteger($siteID),
@@ -493,6 +522,41 @@ class DashboardUI extends UserInterface
                 $statusLabel = '--';
             }
 
+            $ownerName = trim(
+                (isset($row['ownerFirstName']) ? $row['ownerFirstName'] : '') . ' ' .
+                (isset($row['ownerLastName']) ? $row['ownerLastName'] : '')
+            );
+            if ($ownerName === '')
+            {
+                $ownerName = '--';
+            }
+
+            $recruiterName = trim(
+                (isset($row['recruiterFirstName']) ? $row['recruiterFirstName'] : '') . ' ' .
+                (isset($row['recruiterLastName']) ? $row['recruiterLastName'] : '')
+            );
+            if ($recruiterName === '')
+            {
+                $recruiterName = '(Unassigned)';
+            }
+
+            $locationParts = array();
+            if (isset($row['candidateCity']) && trim((string) $row['candidateCity']) !== '')
+            {
+                $locationParts[] = trim((string) $row['candidateCity']);
+            }
+            if (isset($row['country']) && trim((string) $row['country']) !== '')
+            {
+                $locationParts[] = trim((string) $row['country']);
+            }
+            $locationLabel = empty($locationParts) ? '--' : implode(', ', $locationParts);
+
+            $source = trim((string) (isset($row['source']) ? $row['source'] : ''));
+            if ($source === '')
+            {
+                $source = '--';
+            }
+
             $responseRows[] = array(
                 'candidateID' => (int) $row['candidateID'],
                 'candidateName' => $fullName,
@@ -515,8 +579,15 @@ class DashboardUI extends UserInterface
                 'statusLabel' => $statusLabel,
                 'statusSlug' => $this->toStatusSlug($statusLabel),
                 'lastStatusChangeDisplay' => (isset($row['lastStatusChangeDisplay']) ? $row['lastStatusChangeDisplay'] : '--'),
-                'location' => (isset($row['location']) ? $row['location'] : '--'),
-                'isActive' => (int) $row['isActive']
+                'location' => $locationLabel,
+                'isActive' => (int) $row['isActive'],
+                'source' => $source,
+                'keySkills' => trim((string) (isset($row['keySkills']) ? $row['keySkills'] : '')),
+                'ownerName' => $ownerName,
+                'recruiterName' => $recruiterName,
+                'gdprSigned' => (isset($row['gdprSigned']) ? ((int) $row['gdprSigned'] === 1) : false),
+                'dateAdded' => (isset($row['dateAdded']) ? $row['dateAdded'] : '--'),
+                'rejectionReasons' => trim((string) (isset($row['rejectionReasons']) ? $row['rejectionReasons'] : ''))
             );
         }
 

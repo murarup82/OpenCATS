@@ -2854,6 +2854,136 @@
   letter-spacing: 0.02em;
 }
 
+/* Muted empty cells */
+.avel-dashboard-page .adl-cell-muted {
+  color: #9eb4be;
+  font-style: italic;
+}
+
+/* Rejection reason inline text */
+.avel-dashboard-page .adl-rejection-reasons {
+  color: #8b3a3a;
+  font-size: 0.82rem;
+}
+
+/* ── Saved Views panel ───────────────────────────────────────────────────── */
+.avel-dashboard-page .adl-views-wrap {
+  position: relative;
+}
+
+.avel-dashboard-page .adl-views-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  min-width: 280px;
+  background: #ffffff;
+  border: 1px solid #b8d5e6;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 66, 91, 0.14);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.avel-dashboard-page .adl-views-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.avel-dashboard-page .adl-views-panel__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 7px;
+  background: #f4f9fd;
+  border: 1px solid #d4e8f2;
+}
+
+.avel-dashboard-page .adl-views-panel__item-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1a3f54;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avel-dashboard-page .adl-views-panel__load {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0097bd;
+  background: none;
+  border: 1px solid rgba(0, 151, 189, 0.3);
+  border-radius: 5px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.avel-dashboard-page .adl-views-panel__load:hover {
+  background: rgba(0, 151, 189, 0.08);
+}
+
+.avel-dashboard-page .adl-views-panel__delete {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #b04040;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.avel-dashboard-page .adl-views-panel__delete:hover {
+  background: rgba(176, 64, 64, 0.08);
+}
+
+.avel-dashboard-page .adl-views-panel__empty {
+  font-size: 0.8rem;
+  color: #7a9aaa;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.avel-dashboard-page .adl-views-panel__save {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid #d4e8f2;
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+
+.avel-dashboard-page .adl-views-panel__save-label {
+  font-size: 0.75rem;
+  color: #4a7a8c;
+  white-space: nowrap;
+}
+
+.avel-dashboard-page .adl-views-panel__save-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  border: 1px solid #b8d4e4;
+  border-radius: 6px;
+  padding: 3px 8px;
+  outline: none;
+}
+
+.avel-dashboard-page .adl-views-panel__save-input:focus {
+  border-color: rgba(0, 151, 189, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 151, 189, 0.12);
+}
+
 /* Re-use avel-pipeline-matrix__ class names inside the dashboard list,
    scoped under .avel-dashboard-page .avel-dashboard-list */
 

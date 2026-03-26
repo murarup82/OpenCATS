@@ -1047,10 +1047,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
             ) : (
               <DashboardListView
                 rows={filteredRows}
-                canChangeStatus={canChangeStatus}
                 storageKey={listStorageKey}
-                onChangeStatus={openQuickStatusModal}
-                onOpenDetails={openPipelineDetails}
               />
             )}
           </>
