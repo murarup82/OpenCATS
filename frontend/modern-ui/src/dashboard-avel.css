@@ -1689,10 +1689,17 @@
 .avel-dashboard-page .modern-active-filter {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   border-radius: 999px;
   font-size: 0.66rem;
   font-weight: 700;
   padding: 4px 9px;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+
+.avel-dashboard-page .modern-active-filter:hover {
+  filter: brightness(0.93);
 }
 
 .avel-dashboard-page .modern-active-filter--server {
@@ -2154,6 +2161,7 @@
 
 .avel-dashboard-page .modern-kanban-card__details-btn {
   flex-shrink: 0;
+  margin-left: auto;
   border: 1px solid #b8d8e9;
   border-radius: 4px;
   background: #eef7fc;
@@ -2295,6 +2303,50 @@
   border-color: #d6dee6;
   background: #f4f7fa;
   color: #4c6270;
+}
+
+/* GDPR chips */
+.avel-dashboard-page .modern-chip--gdpr-signed {
+  border-color: #78c49c;
+  background: #ceeadc;
+  color: #0d4025;
+}
+.avel-dashboard-page .modern-chip--gdpr-unsigned {
+  border-color: #e09ea3;
+  background: #f5dde0;
+  color: #6b1f26;
+}
+
+/* Source chips */
+.avel-dashboard-page .modern-chip[class*='modern-chip--source-'] {
+  border-color: #a4abe8;
+  background: #dde1f8;
+  color: #2a3593;
+}
+.avel-dashboard-page .modern-chip--source-linkedin {
+  border-color: #82bae6;
+  background: #d6eaf8;
+  color: #1a4a76;
+}
+.avel-dashboard-page .modern-chip--source-direct {
+  border-color: #78ccbf;
+  background: #ceeee9;
+  color: #0e4d45;
+}
+.avel-dashboard-page .modern-chip--source-internal {
+  border-color: #7ecbea;
+  background: #d2eef8;
+  color: #0a4f66;
+}
+.avel-dashboard-page .modern-chip--source-partner {
+  border-color: #b4a6ea;
+  background: #e3dff8;
+  color: #3d2a8c;
+}
+.avel-dashboard-page .modern-chip--source-network {
+  border-color: #e8b47e;
+  background: #fae4cf;
+  color: #7a3d0e;
 }
 
 .avel-dashboard-page .modern-kanban-card__job-wrap {

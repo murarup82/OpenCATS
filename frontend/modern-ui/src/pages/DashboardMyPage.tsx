@@ -947,32 +947,47 @@ export function DashboardMyPage({ bootstrap }: Props) {
     }));
 
 
-  const activeServerFilters: string[] = [];
-  if (data.meta.scope === 'all') {
-    activeServerFilters.push('Scope: All Jobs');
-  }
+  const activeServerFilters: { label: string; onRemove: () => void }[] = [];
   if (data.filters.companyID > 0) {
     const selectedCompany = data.options.companies.find((company) => company.companyID === data.filters.companyID);
-    activeServerFilters.push(`Customer: ${selectedCompany ? toDisplayText(selectedCompany.name) : data.filters.companyID}`);
+    activeServerFilters.push({
+      label: `Customer: ${selectedCompany ? toDisplayText(selectedCompany.name) : data.filters.companyID}`,
+      onRemove: () => navigateWithFilters({ companyID: '', jobOrderID: '', page: 1 })
+    });
   }
   if (data.filters.jobOrderID > 0) {
     const selectedJobOrder = data.options.jobOrders.find((jobOrder) => jobOrder.jobOrderID === data.filters.jobOrderID);
-    activeServerFilters.push(`Job: ${selectedJobOrder ? toDisplayText(selectedJobOrder.title) : data.filters.jobOrderID}`);
+    activeServerFilters.push({
+      label: `Job: ${selectedJobOrder ? toDisplayText(selectedJobOrder.title) : data.filters.jobOrderID}`,
+      onRemove: () => navigateWithFilters({ jobOrderID: '', page: 1 })
+    });
   }
   if (data.meta.showClosed) {
-    activeServerFilters.push('Show Closed');
+    activeServerFilters.push({
+      label: 'Show Closed',
+      onRemove: () => navigateWithFilters({ showClosed: false, page: 1 })
+    });
   }
   if (data.meta.showMonitored) {
-    activeServerFilters.push('Monitored Jobs Only');
+    activeServerFilters.push({
+      label: 'Monitored Only',
+      onRemove: () => navigateWithFilters({ showMonitored: false, page: 1 })
+    });
   }
 
-  const activeLocalFilters: string[] = [];
+  const activeLocalFilters: { label: string; onRemove: () => void }[] = [];
   if (searchTerm.trim() !== '') {
-    activeLocalFilters.push(`Search: "${searchTerm.trim()}"`);
+    activeLocalFilters.push({
+      label: `Search: "${searchTerm.trim()}"`,
+      onRemove: () => setSearchTerm('')
+    });
   }
   if (localStatusID !== 'all') {
     const localStatus = statusCatalog.find((status) => String(status.statusID) === localStatusID);
-    activeLocalFilters.push(`Quick status: ${localStatus ? localStatus.statusLabel : localStatusID}`);
+    activeLocalFilters.push({
+      label: `Stage: ${localStatus ? localStatus.statusLabel : localStatusID}`,
+      onRemove: () => setLocalStatusID('all')
+    });
   }
   return (
     <div className="avel-dashboard-page avel-my-dashboard">

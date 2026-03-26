@@ -12,8 +12,8 @@ type Props = {
   customers: SelectMenuOption[];
   jobOrders: SelectMenuOption[];
   searchTerm: string;
-  activeServerFilters: string[];
-  activeLocalFilters: string[];
+  activeServerFilters: { label: string; onRemove: () => void }[];
+  activeLocalFilters: { label: string; onRemove: () => void }[];
   viewMode: 'kanban' | 'list';
   onScopeChange: (scope: string) => void;
   onCustomerChange: (customerID: string) => void;
@@ -185,15 +185,27 @@ export function DashboardToolbar(props: Props) {
             <span className="modern-command-active__count is-active">
               {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
             </span>
-            {activeServerFilters.map((filterLabel, index) => (
-              <span className="modern-active-filter modern-active-filter--server" key={`server-${index}-${filterLabel}`}>
-                {filterLabel}
-              </span>
+            {activeServerFilters.map((filter, index) => (
+              <button
+                key={`server-${index}-${filter.label}`}
+                type="button"
+                className="modern-active-filter modern-active-filter--server"
+                onClick={filter.onRemove}
+                title={`Remove filter: ${filter.label}`}
+              >
+                {filter.label} <span aria-hidden="true">×</span>
+              </button>
             ))}
-            {activeLocalFilters.map((filterLabel, index) => (
-              <span className="modern-active-filter modern-active-filter--local" key={`local-${index}-${filterLabel}`}>
-                {filterLabel}
-              </span>
+            {activeLocalFilters.map((filter, index) => (
+              <button
+                key={`local-${index}-${filter.label}`}
+                type="button"
+                className="modern-active-filter modern-active-filter--local"
+                onClick={filter.onRemove}
+                title={`Remove filter: ${filter.label}`}
+              >
+                {filter.label} <span aria-hidden="true">×</span>
+              </button>
             ))}
           </div>
         ) : null}
