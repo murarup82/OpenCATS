@@ -7,6 +7,8 @@ type Props = {
   customerID: string;
   jobOrderID: string;
   showClosed: boolean;
+  showMonitored: boolean;
+  isTopManagementUser: boolean;
   customers: SelectMenuOption[];
   jobOrders: SelectMenuOption[];
   searchTerm: string;
@@ -17,6 +19,7 @@ type Props = {
   onCustomerChange: (customerID: string) => void;
   onJobOrderChange: (jobOrderID: string) => void;
   onShowClosedChange: (showClosed: boolean) => void;
+  onShowMonitoredChange: (showMonitored: boolean) => void;
   onSearchTermChange: (value: string) => void;
   onViewModeChange: (mode: 'kanban' | 'list') => void;
   onResetServerFilters: () => void;
@@ -30,6 +33,8 @@ export function DashboardToolbar(props: Props) {
     customerID,
     jobOrderID,
     showClosed,
+    showMonitored,
+    isTopManagementUser,
     customers,
     jobOrders,
     searchTerm,
@@ -40,6 +45,7 @@ export function DashboardToolbar(props: Props) {
     onCustomerChange,
     onJobOrderChange,
     onShowClosedChange,
+    onShowMonitoredChange,
     onSearchTermChange,
     onViewModeChange,
     onResetServerFilters,
@@ -47,7 +53,7 @@ export function DashboardToolbar(props: Props) {
   } = props;
 
   const activeFilterCount = activeServerFilters.length + activeLocalFilters.length;
-  const canClear = activeFilterCount > 0 || searchTerm.trim() !== '' || showClosed;
+  const canClear = activeFilterCount > 0 || searchTerm.trim() !== '' || showClosed || showMonitored;
 
   return (
     <section className="modern-command-bar modern-command-bar--sticky" aria-label="Dashboard controls">
@@ -150,15 +156,29 @@ export function DashboardToolbar(props: Props) {
           onChange={onJobOrderChange}
         />
 
-        <label className="modern-command-toggle">
-          <input
-            type="checkbox"
-            checked={showClosed}
-            onChange={(event) => onShowClosedChange(event.target.checked)}
-          />
-          <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-          <span>Include closed job orders</span>
-        </label>
+        <div className="modern-command-toggles">
+          <label className="modern-command-toggle">
+            <input
+              type="checkbox"
+              checked={showClosed}
+              onChange={(event) => onShowClosedChange(event.target.checked)}
+            />
+            <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+            <span>Include closed job orders</span>
+          </label>
+
+          {!isTopManagementUser ? (
+            <label className="modern-command-toggle">
+              <input
+                type="checkbox"
+                checked={showMonitored}
+                onChange={(event) => onShowMonitoredChange(event.target.checked)}
+              />
+              <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+              <span>Monitored jobs only</span>
+            </label>
+          ) : null}
+        </div>
 
         {activeFilterCount > 0 ? (
           <div className="modern-command-filters-meta" aria-live="polite">

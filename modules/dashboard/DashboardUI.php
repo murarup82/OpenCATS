@@ -54,6 +54,7 @@ class DashboardUI extends UserInterface
         $responseFormat = strtolower(trim($this->getTrimmedInput('format', $_GET)));
         $modernPage = strtolower(trim($this->getTrimmedInput('modernPage', $_GET)));
         $showClosed = $this->isChecked('showClosed', $_GET);
+        $showMonitored = $this->isChecked('showMonitored', $_GET);
         $companyID = (int) $this->getTrimmedInput('companyID', $_GET);
         $jobOrderID = (int) $this->getTrimmedInput('jobOrderID', $_GET);
         $statusID = (int) $this->getTrimmedInput('statusID', $_GET);
@@ -115,10 +116,12 @@ class DashboardUI extends UserInterface
         $canChangeStatus = $this->canChangeStatus();
         $canAssignToJobOrder = $this->canAssignToJobOrder();
 
-        /* Top Management users viewing "All Jobs" see only Monitored job orders. */
-        $isTopManagement = ($dashboardScope === 'all' && $this->isTopManagementRole());
+        /* Top Management users viewing "All Jobs" see only Monitored job orders.
+           Non-top-management users can opt-in via the showMonitored toggle. */
+        $isTopManagementUser = $this->isTopManagementRole();
+        $isTopManagement = ($dashboardScope === 'all' && $isTopManagementUser);
         $monitoredFilter = '';
-        if ($isTopManagement)
+        if ($isTopManagement || $showMonitored)
         {
             $monitoredFilter = sprintf(
                 "AND EXISTS (
@@ -641,6 +644,8 @@ class DashboardUI extends UserInterface
                 'scope' => $dashboardScope,
                 'view' => $dashboardView,
                 'showClosed' => ((bool) $showClosed),
+                'showMonitored' => ((bool) $showMonitored),
+                'isTopManagementUser' => ((bool) $isTopManagementUser),
                 'canViewAllScopes' => ((bool) $canViewAllDashboardRows),
                 'jobOrderScopeLabel' => $jobOrderScopeLabel,
                 'page' => (int) $page,

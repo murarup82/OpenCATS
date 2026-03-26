@@ -48,6 +48,7 @@ type NavigationFilters = {
   companyID?: string;
   jobOrderID?: string;
   showClosed?: boolean;
+  showMonitored?: boolean;
   page?: number;
 };
 
@@ -229,6 +230,13 @@ export function DashboardMyPage({ bootstrap }: Props) {
       nextQuery.set('showClosed', '1');
     } else {
       nextQuery.delete('showClosed');
+    }
+
+    const showMonitoredValue = typeof next.showMonitored === 'boolean' ? next.showMonitored : data.meta.showMonitored;
+    if (showMonitoredValue) {
+      nextQuery.set('showMonitored', '1');
+    } else {
+      nextQuery.delete('showMonitored');
     }
 
     const nextPage = typeof next.page === 'number' && next.page > 0 ? next.page : 1;
@@ -954,6 +962,9 @@ export function DashboardMyPage({ bootstrap }: Props) {
   if (data.meta.showClosed) {
     activeServerFilters.push('Show Closed');
   }
+  if (data.meta.showMonitored) {
+    activeServerFilters.push('Monitored Jobs Only');
+  }
 
   const activeLocalFilters: string[] = [];
   if (searchTerm.trim() !== '') {
@@ -985,6 +996,8 @@ export function DashboardMyPage({ bootstrap }: Props) {
           customerID={String(data.filters.companyID || '')}
           jobOrderID={String(data.filters.jobOrderID || '')}
           showClosed={data.meta.showClosed}
+          showMonitored={data.meta.showMonitored}
+          isTopManagementUser={data.meta.isTopManagementUser}
           customers={[
             { value: '', label: 'All customers' },
             ...data.options.companies.map((company) => ({
@@ -1007,6 +1020,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
           onCustomerChange={(companyID) => navigateWithFilters({ companyID, jobOrderID: '', page: 1 })}
           onJobOrderChange={(jobOrderID) => navigateWithFilters({ jobOrderID, page: 1 })}
           onShowClosedChange={(showClosed) => navigateWithFilters({ showClosed, page: 1 })}
+          onShowMonitoredChange={(showMonitored) => navigateWithFilters({ showMonitored, page: 1 })}
           onSearchTermChange={setSearchTerm}
           onViewModeChange={setViewMode}
           onResetServerFilters={() =>
@@ -1015,6 +1029,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
               companyID: '',
               jobOrderID: '',
               showClosed: false,
+              showMonitored: false,
               page: 1
             })
           }

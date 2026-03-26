@@ -1566,6 +1566,13 @@
   justify-self: end;
 }
 
+.avel-dashboard-page .modern-command-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .avel-dashboard-page .modern-command-toggle {
   position: relative;
   display: inline-flex;
