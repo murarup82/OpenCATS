@@ -7,7 +7,7 @@ if ($modernShellStyleMtime !== false && $modernShellStyleMtime > 0)
     $modernShellStyleVersioned .= '?v=' . (int) $modernShellStyleMtime;
 }
 
-$modernStylePath = 'public/modern-ui/build/style.css';
+$modernStylePath = 'public/modern-ui/build/opencats-modern-ui.css';
 $modernStyleVersioned = $modernStylePath;
 $modernStyleMtime = @filemtime('./' . $modernStylePath);
 if ($modernStyleMtime !== false && $modernStyleMtime > 0)
