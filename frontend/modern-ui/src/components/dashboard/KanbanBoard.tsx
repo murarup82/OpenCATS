@@ -6,9 +6,31 @@ import type {
 import { KanbanColumn } from './KanbanColumn';
 import type { DashboardRow, DashboardStatusColumn } from './types';
 
+type PriorityChip = {
+  statusID: number;
+  statusLabel: string;
+  statusSlug: string;
+  count: number;
+};
+
+const CHIP_COLORS: Record<string, { accent: string; bg: string; border: string; text: string }> = {
+  'allocated':            { accent: '#0f95bf', bg: '#d2eef8', border: '#7ecbea', text: '#0a4f66' },
+  'delivery-validated':   { accent: '#2f9d8c', bg: '#ceeee9', border: '#78ccbf', text: '#0e4d45' },
+  'proposed-to-customer': { accent: '#7e67d6', bg: '#e3dff8', border: '#b4a6ea', text: '#3d2a8c' },
+  'customer-interview':   { accent: '#d98b3e', bg: '#fae4cf', border: '#e8b47e', text: '#7a3d0e' },
+  'customer-approved':    { accent: '#6377dd', bg: '#dde1f8', border: '#a4abe8', text: '#2a3593' },
+  'avel-approved':        { accent: '#3f92d9', bg: '#d6eaf8', border: '#82bae6', text: '#1a4a76' },
+  'offer-negotiation':    { accent: '#cf7a32', bg: '#f8e5d0', border: '#e4ad7a', text: '#6b3a0a' },
+  'offer-negociation':    { accent: '#cf7a32', bg: '#f8e5d0', border: '#e4ad7a', text: '#6b3a0a' },
+  'offer-accepted':       { accent: '#3d9f67', bg: '#d2eddf', border: '#7ecba0', text: '#154d2e' },
+  'hired':                { accent: '#2f8d56', bg: '#ceeadc', border: '#78c49c', text: '#0d4025' },
+  'rejected':             { accent: '#c46b72', bg: '#f5dde0', border: '#e09ea3', text: '#6b1f26' },
+};
+
 type Props = {
   columns: DashboardStatusColumn[];
   totalVisibleRows: number;
+  priorityChips?: PriorityChip[];
   getStatusClassName: (statusLabel: string) => string;
   canChangeStatus: boolean;
   statusOrder: number[];
@@ -29,6 +51,7 @@ function getRowKey(row: DashboardRow): string {
 export function KanbanBoard({
   columns,
   totalVisibleRows,
+  priorityChips,
   getStatusClassName,
   canChangeStatus,
   statusOrder,
@@ -176,9 +199,29 @@ export function KanbanBoard({
   return (
     <div className="modern-kanban-board-wrap">
       <div className="modern-kanban-board__header">
-        <span className="modern-kanban-board__title">Pipeline Lanes</span>
+        <div className="modern-kanban-board__header-left">
+          <span className="modern-kanban-board__title">Pipeline Lanes</span>
+          {priorityChips && priorityChips.length > 0 ? (
+            <div className="modern-kanban-board__priority-chips" aria-label="Top pipeline stages">
+              {priorityChips.map((chip) => {
+                const colors = CHIP_COLORS[chip.statusSlug] ?? { accent: '#0097bd', bg: '#d2ecf8', border: '#7ec8e8', text: '#003f58' };
+                return (
+                  <span
+                    key={chip.statusID}
+                    className="modern-kanban-board__priority-chip"
+                    style={{ '--chip-accent': colors.accent, '--chip-bg': colors.bg, '--chip-border': colors.border, '--chip-text': colors.text } as React.CSSProperties}
+                  >
+                    <span className="modern-kanban-board__priority-chip-dot" aria-hidden="true" />
+                    <span className="modern-kanban-board__priority-chip-label">{chip.statusLabel}</span>
+                    <span className="modern-kanban-board__priority-chip-count">{chip.count}</span>
+                  </span>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
         <div className="modern-kanban-board__header-actions">
-          <span className="modern-kanban-board__hint">Horizontal scroll enabled for all workflow stages</span>
+          <span className="modern-kanban-board__hint">Scroll to see all stages</span>
           <button
             type="button"
             className="modern-kanban-board__scroll-btn"

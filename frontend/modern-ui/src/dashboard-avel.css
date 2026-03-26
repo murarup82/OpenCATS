@@ -996,52 +996,61 @@
   color: #285d4f;
 }
 
-.avel-priority-band {
-  border: 1px solid #a9c4d6;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #dfeef8 0%, #d3e6f3 100%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.72) inset;
-  padding: 13px;
-  display: grid;
-  gap: 8px;
+/* Priority chips — now rendered inside the kanban board header */
+.avel-dashboard-page .modern-kanban-board__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
-.avel-priority-band__title {
-  margin: 0;
-  color: var(--avel-800);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.avel-priority-band__chips {
+.avel-dashboard-page .modern-kanban-board__priority-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
-.avel-priority-band__chip {
+.avel-dashboard-page .modern-kanban-board__priority-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   border-radius: 999px;
-  border: 1px solid #88b6ce;
-  background: linear-gradient(180deg, #d6eaf7 0%, #c8e2f2 100%);
-  padding: 5px 11px;
-  color: #1f4f67;
-  font-size: 0.75rem;
-}
-
-.avel-priority-band__chip strong {
-  color: var(--avel-800);
+  border: 1px solid var(--chip-border, #a0c4d8);
+  background: var(--chip-bg, #d8eef8);
+  color: var(--chip-text, #1a4d65);
+  padding: 3px 10px 3px 5px;
+  font-size: 0.72rem;
   font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 50, 80, 0.1);
 }
 
-.avel-priority-band__empty {
-  margin: 0;
-  color: #5f7988;
-  font-size: 0.8rem;
+.avel-dashboard-page .modern-kanban-board__priority-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 8px;
+  background: var(--chip-accent, #0097bd);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
+.avel-dashboard-page .modern-kanban-board__priority-chip-label {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.avel-dashboard-page .modern-kanban-board__priority-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--chip-accent, #0097bd);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0 4px;
 }
 
 .avel-dashboard-page .modern-command-bar {
@@ -1055,9 +1064,9 @@
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.75) inset,
     0 14px 28px rgba(0, 66, 91, 0.12);
-  padding: 12px;
+  padding: 10px;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .avel-dashboard-page .modern-command-bar::before {
@@ -1086,13 +1095,6 @@
   grid-template-columns: repeat(3, minmax(140px, 1fr)) auto;
 }
 
-.avel-dashboard-page .modern-command-bar__row--meta {
-  border: 1px solid #b4cddd;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #dbeaf5 0%, #d2e4f2 100%);
-  padding: 9px;
-}
-
 .avel-dashboard-page .modern-command-bar__row--primary,
 .avel-dashboard-page .modern-command-bar__row--filters {
   border: 1px solid #b0cada;
@@ -1102,6 +1104,18 @@
     linear-gradient(180deg, #e6f1f9 0%, #d9e9f5 100%);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.72) inset;
   padding: 9px;
+}
+
+/* Inline active filters — rendered inside the filters row card when filters are active */
+.avel-dashboard-page .modern-command-filters-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 7px;
+  margin-top: 1px;
+  border-top: 1px solid rgba(160, 196, 216, 0.55);
 }
 
 .avel-dashboard-page .modern-command-group,
@@ -1611,8 +1625,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 9px 12px;
   border-bottom: 1px solid #aec8d9;
   background: linear-gradient(180deg, #d9eaf5 0%, #cde2f1 100%);
 }

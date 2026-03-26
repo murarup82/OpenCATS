@@ -183,30 +183,24 @@ export function DashboardToolbar(props: Props) {
           <span className="modern-command-toggle__switch" aria-hidden="true"></span>
           <span>Include closed job orders</span>
         </label>
-      </div>
 
-      <div className="modern-command-bar__row modern-command-bar__row--meta">
-        <div className="modern-command-active">
-          <div className={`modern-command-active__count${activeFilterCount > 0 ? ' is-active' : ''}`} aria-live="polite">
-            {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
+        {activeFilterCount > 0 ? (
+          <div className="modern-command-filters-meta" aria-live="polite">
+            <span className="modern-command-active__count is-active">
+              {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
+            </span>
+            {activeServerFilters.map((filterLabel, index) => (
+              <span className="modern-active-filter modern-active-filter--server" key={`server-${index}-${filterLabel}`}>
+                {filterLabel}
+              </span>
+            ))}
+            {activeLocalFilters.map((filterLabel, index) => (
+              <span className="modern-active-filter modern-active-filter--local" key={`local-${index}-${filterLabel}`}>
+                {filterLabel}
+              </span>
+            ))}
           </div>
-          {activeFilterCount > 0 ? (
-            <div className="modern-command-active__list">
-              {activeServerFilters.map((filterLabel, index) => (
-                <span className="modern-active-filter modern-active-filter--server" key={`server-${index}-${filterLabel}`}>
-                  {filterLabel}
-                </span>
-              ))}
-              {activeLocalFilters.map((filterLabel, index) => (
-                <span className="modern-active-filter modern-active-filter--local" key={`local-${index}-${filterLabel}`}>
-                  {filterLabel}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <div className="modern-command-active__empty">No active filters. Board is showing the full available slice.</div>
-          )}
-        </div>
+        ) : null}
       </div>
     </section>
   );

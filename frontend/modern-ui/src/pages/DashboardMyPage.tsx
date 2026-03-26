@@ -900,23 +900,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-        <section className="avel-priority-band" aria-label="Priority stages">
-          <h2 className="avel-priority-band__title">Priority Stages</h2>
-          {topStatuses.length > 0 ? (
-            <div className="avel-priority-band__chips">
-              {topStatuses.map((status) => (
-                <span key={`priority-${status.statusID}`} className="avel-priority-band__chip">
-                  <strong>{status.statusLabel}</strong>
-                  <span>{status.rows.length} candidates</span>
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="avel-priority-band__empty">No stages available for this filter selection.</p>
-          )}
-        </section>
-
-        <DashboardToolbar
+<DashboardToolbar
           canViewAllScopes={data.meta.canViewAllScopes}
           scope={data.meta.scope}
           customerID={String(data.filters.companyID || '')}
@@ -975,6 +959,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
               <KanbanBoard
                 columns={columns}
                 totalVisibleRows={filteredRows.length}
+                priorityChips={topStatuses.map((s) => ({ statusID: s.statusID, statusLabel: s.statusLabel, statusSlug: s.statusSlug, count: s.rows.length }))}
                 getStatusClassName={createStatusClassName}
                 canChangeStatus={canChangeStatus}
                 statusOrder={orderedStatusIDs}
