@@ -16,8 +16,8 @@
    mode and keeps the toolbar controls fully visible. */
 .modern-shell-app-root:has(.avel-my-dashboard) {
   height: calc(100dvh - 72px);
-  min-height: 820px;
-  overflow: hidden;
+  min-height: 1100px;
+  overflow: hidden auto;
   display: flex;
   flex-direction: column;
 }
@@ -2029,7 +2029,7 @@
 
 .avel-dashboard-page .modern-kanban-column__body {
   flex: 1;
-  min-height: 680px;
+  min-height: 900px;
   overflow-y: auto;
   overscroll-behavior: contain;
   transition: background-color 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
