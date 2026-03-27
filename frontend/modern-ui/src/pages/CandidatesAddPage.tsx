@@ -1259,9 +1259,15 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                           }
                           setAiPrefillStatus('');
                           setAiPrefillError('');
+                          setAiUndoSnapshot(null);
+                          setFieldSources({});
+                          setAiUpdatedExtraFieldKeys([]);
+                          if (data) {
+                            setFormState(toFormState(data));
+                          }
                         }}
                       >
-                        Clear Resume
+                        Reset Form
                       </button>
                     </div>
 
