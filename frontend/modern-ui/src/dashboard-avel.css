@@ -8714,6 +8714,14 @@
   box-sizing: border-box;
 }
 
+/* AI-updated extra field highlight */
+.avel-form-field--ai-updated {
+  border-left: 3px solid #78c49c;
+  padding-left: 8px;
+  border-radius: 6px;
+  background: #f4fbf7;
+}
+
 /* ── Form grids inside cards ── */
 .avel-candidate-add-grid {
   display: grid;

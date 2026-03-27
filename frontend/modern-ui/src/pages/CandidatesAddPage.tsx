@@ -1593,12 +1593,13 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 <section className="avel-candidate-add-card avel-candidate-add-card--sidebar">
                   <h2>Additional Details</h2>
                   {data.extraFields.map((field) => {
+                    const isAiUpdated = aiUpdatedExtraFieldKeys.includes(field.postKey);
                     const fieldClassName = getFieldContainerClassName(
                       `modern-command-field${
                         field.inputType === 'textarea' || field.inputType === 'radio'
                           ? ' avel-candidate-add-field--full'
                           : ''
-                      }`,
+                      }${isAiUpdated ? ' avel-form-field--ai-updated' : ''}`,
                       formState.extraFields[field.postKey] || ''
                     );
                     if (field.inputType === 'dropdown') {
@@ -1611,10 +1612,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                         }))
                       ];
                       return (
-                        <div key={field.postKey}>
+                        <div key={field.postKey} className={isAiUpdated ? 'avel-form-field--ai-updated' : ''}>
                           <input type="hidden" name={field.postKey} value={value} />
                           <SelectMenu
-                            label={field.fieldName}
+                            label={<>{field.fieldName}{isAiUpdated ? <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span> : null}</>}
                             value={value}
                             options={extraFieldOptions}
                             className={fieldClassName}
@@ -1626,7 +1627,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
 
                     return (
                       <label key={field.postKey} className={fieldClassName}>
-                        <span className="modern-command-label">{field.fieldName}</span>
+                        <span className="modern-command-label">
+                          {field.fieldName}
+                          {isAiUpdated ? <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span> : null}
+                        </span>
                         {renderExtraFieldControl(field)}
                       </label>
                     );
