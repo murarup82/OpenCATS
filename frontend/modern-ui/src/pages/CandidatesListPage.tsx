@@ -426,7 +426,16 @@ export function CandidatesListPage({ bootstrap }: Props) {
     if (key === 'source') {
       navigateWithFilters({ sourceFilter: trimmed, page: 1 });
     } else if (key === 'gdpr') {
-      navigateWithFilters({ onlyGdprUnsigned: normalizeToken(trimmed) === 'not signed', page: 1 });
+      const token = normalizeToken(trimmed);
+      if (token === 'not signed') {
+        navigateWithFilters({ onlyGdprUnsigned: true, page: 1 });
+      } else if (token === 'signed') {
+        // No server-side "only signed" filter — clear the GDPR filter and search for "signed"
+        navigateWithFilters({ onlyGdprUnsigned: false, page: 1 });
+      } else {
+        // Clear — show all
+        navigateWithFilters({ onlyGdprUnsigned: false, page: 1 });
+      }
     } else {
       // candidate, skills, pipeline, owner → use wildCardString
       skipNextAutoSearchRef.current = true;
