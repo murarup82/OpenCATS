@@ -8627,3 +8627,318 @@
   padding: 20px 12px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   Candidate Add Page — two-column card layout
+   ═══════════════════════════════════════════════════════════════════ */
+
+.avel-candidate-add-page .modern-page {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Two-column grid: 8/12 left, 4/12 right */
+.avel-candidate-add-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Main (left) column */
+.avel-candidate-add-main {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Sidebar (right) column */
+.avel-candidate-add-sidebar {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Card base */
+.avel-candidate-add-card {
+  border: 1px solid var(--avel-border, #c7ddea);
+  border-radius: 14px;
+  background: var(--avel-surface, #ffffff);
+  box-shadow: 0 4px 14px rgba(10, 63, 90, 0.06);
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+/* Card header row with title + optional chips */
+.avel-candidate-add-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.avel-candidate-add-card__header h2 {
+  margin: 0;
+  color: var(--avel-900, #00425b);
+  font: 700 1rem/1.3 'Space Grotesk', 'Segoe UI', sans-serif;
+  flex-shrink: 0;
+}
+
+/* Card action row (buttons under dropzone) */
+.avel-candidate-add-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Sidebar cards: tighter padding */
+.avel-candidate-add-card--sidebar {
+  padding: 16px;
+  gap: 12px;
+}
+
+.avel-candidate-add-card--sidebar h2 {
+  margin: 0;
+  color: var(--avel-800, #005471);
+  font: 700 0.88rem/1.3 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+/* Accent left border for the Logistics sidebar card */
+.avel-candidate-add-card--accent-left {
+  border-left: 3px solid var(--avel-500, #38b1cc);
+}
+
+/* Skills card — minimal padding around textarea */
+.avel-candidate-add-card--skills {
+  padding: 16px 20px;
+}
+
+.avel-candidate-add-card--skills textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Form grids inside cards ── */
+.avel-candidate-add-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.avel-candidate-add-grid--2col {
+  grid-template-columns: 1fr 1fr;
+}
+
+.avel-candidate-add-grid--3col {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Full-width span inside any grid */
+.avel-candidate-add-field--full {
+  grid-column: 1 / -1;
+}
+
+/* 2-column span inside 3-col grid */
+.avel-candidate-add-field--span-2 {
+  grid-column: span 2;
+}
+
+/* ── Dropzone ── */
+.avel-candidate-add-dropzone {
+  position: relative;
+  border: 2px dashed var(--avel-border-strong, #9bc4d9);
+  border-radius: 12px;
+  background: var(--avel-50, #f4fbff);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.avel-candidate-add-dropzone:hover {
+  border-color: var(--avel-500, #38b1cc);
+  background: var(--avel-100, #e6f4fa);
+}
+
+.avel-candidate-add-dropzone__hint {
+  margin: 0 0 6px;
+  color: var(--avel-text, #0d3344);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.avel-candidate-add-dropzone__formats {
+  margin: 0;
+  color: var(--avel-text-soft, #446677);
+  font-size: 0.78rem;
+}
+
+.avel-candidate-add-dropzone__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ── Footer actions ── */
+.avel-candidate-add-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0 8px;
+  border-top: 1px solid var(--avel-border, #c7ddea);
+  margin-top: 8px;
+}
+
+/* ── Inherit field styles from candidate-edit-page scoping ── */
+.avel-candidate-add-page .modern-command-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.avel-candidate-add-page .modern-command-field .modern-command-label {
+  font-size: 0.78rem;
+}
+
+.avel-candidate-add-page .avel-form-control {
+  padding: 7px 10px;
+  border: 1px solid var(--avel-border, #c7ddea);
+  border-radius: 8px;
+  background: var(--avel-surface, #ffffff);
+  font-size: 0.84rem;
+  color: var(--avel-text, #0d3344);
+}
+
+.avel-candidate-add-page textarea.avel-form-control {
+  resize: vertical;
+}
+
+.avel-candidate-add-page .avel-form-control:focus {
+  outline: 2px solid var(--avel-500, #38b1cc);
+  outline-offset: -1px;
+}
+
+/* Source add row */
+.avel-candidate-add-page .avel-candidate-source-add__row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Field source badges */
+.avel-candidate-add-page .avel-field-source-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--avel-200, #d9efff);
+  color: var(--avel-700, #006d90);
+}
+
+.avel-candidate-add-page .avel-field-source-badge--ai-prefill {
+  background: #e3f5e1;
+  color: #1e6b1e;
+}
+
+.avel-candidate-add-page .avel-field-source-help {
+  font-size: 0.74rem;
+  color: var(--avel-text-soft, #446677);
+}
+
+.avel-candidate-add-page .modern-command-label .avel-field-source-badge {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* AI source highlighting */
+.avel-candidate-add-page .avel-form-control.avel-form-control--source-ai {
+  border-color: #7ecb7e;
+  background: #f5fdf5;
+  box-shadow: 0 0 0 1px rgba(126, 203, 126, 0.35);
+}
+
+.avel-candidate-add-page .avel-markdown-field--source-ai .toastui-editor-defaultUI {
+  border-color: #7ecb7e;
+}
+
+.avel-candidate-add-page .avel-markdown-field--source-ai .toastui-editor-main-container {
+  background: #f5fdf5;
+}
+
+/* Missing field highlighting */
+.avel-candidate-add-page .modern-command-field.avel-candidate-field--missing,
+.avel-candidate-add-page .modern-command-field.avel-candidate-field--missing .modern-command-field__trigger {
+  border-color: #edc583;
+}
+
+.avel-candidate-add-page .avel-form-control.avel-form-control--missing {
+  border-color: #edc583;
+  background: #fffdf8;
+}
+
+.avel-candidate-add-page .avel-markdown-field--missing .toastui-editor-defaultUI {
+  border-color: #edc583;
+}
+
+.avel-candidate-add-page .avel-markdown-field--missing .toastui-editor-main-container {
+  background: #fffdf8;
+}
+
+/* Duplicate detection (re-scoped to add page) */
+.avel-candidate-add-page .avel-candidate-duplicates {
+  border: 1px solid #e5c97a;
+  border-radius: 12px;
+  background: #fefcf5;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.avel-candidate-add-page .avel-candidate-duplicates--hard {
+  border-color: #e8998b;
+  background: #fef7f5;
+}
+
+/* Extra field types */
+.avel-candidate-add-page .avel-candidate-extra-radio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.avel-candidate-add-page .avel-candidate-extra-radio__item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.avel-candidate-add-page .avel-candidate-extra-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Responsive: collapse to single column on narrow viewports ── */
+@media (max-width: 900px) {
+  .avel-candidate-add-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-candidate-add-grid--2col,
+  .avel-candidate-add-grid--3col {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-candidate-add-field--span-2 {
+    grid-column: span 1;
+  }
+}
+
