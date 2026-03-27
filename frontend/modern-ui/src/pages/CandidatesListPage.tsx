@@ -143,6 +143,9 @@ export function CandidatesListPage({ bootstrap }: Props) {
     setError('');
 
     const query = new URLSearchParams(serverQueryString);
+    if (!query.get('maxResults')) {
+      query.set('maxResults', '100');
+    }
     fetchCandidatesListModernData(bootstrap, query)
       .then((result) => {
         if (!isMounted) {
