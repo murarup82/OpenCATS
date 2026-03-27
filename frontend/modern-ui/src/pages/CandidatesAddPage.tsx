@@ -1394,7 +1394,27 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </div>
               </section>
 
-              {/* Card 3: Professional Context */}
+              {/* Card 3: Key Skills */}
+              <section className="avel-candidate-add-card avel-candidate-add-card--skills">
+                <div className="avel-candidate-add-card__header">
+                  <h2>Key Skills</h2>
+                  {fieldSources.keySkills === 'ai-prefill' ? (
+                    <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span>
+                  ) : null}
+                </div>
+                <textarea
+                  className={getFieldClassName('keySkills', formState.keySkills)}
+                  name="keySkills"
+                  value={formState.keySkills}
+                  onChange={(event) => {
+                    clearFieldSource('keySkills');
+                    setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current));
+                  }}
+                  rows={3}
+                />
+              </section>
+
+              {/* Card 4: Professional Context & Notes */}
               <section className="avel-candidate-add-card">
                 <div className="avel-candidate-add-card__header">
                   <h2>Professional Context</h2>
@@ -1451,26 +1471,6 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                     />
                   </label>
                 </div>
-              </section>
-
-              {/* Card 4: Key Skills */}
-              <section className="avel-candidate-add-card avel-candidate-add-card--skills">
-                <div className="avel-candidate-add-card__header">
-                  <h2>Key Skills</h2>
-                  {fieldSources.keySkills === 'ai-prefill' ? (
-                    <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span>
-                  ) : null}
-                </div>
-                <textarea
-                  className={getFieldClassName('keySkills', formState.keySkills)}
-                  name="keySkills"
-                  value={formState.keySkills}
-                  onChange={(event) => {
-                    clearFieldSource('keySkills');
-                    setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current));
-                  }}
-                  rows={3}
-                />
               </section>
             </div>
 
