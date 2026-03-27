@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createTalentFitFlowCandidateParseJob,
   fetchCandidateDuplicateCheck,
@@ -440,6 +440,88 @@ function mergeAIPrefillIntoFormState(
   setExtraFieldDefaultIfBlank(next, extraFields, 'Preferred Work Model', 'Hybrid Office 3-4 Days');
 
   return next;
+}
+
+const AI_FUN_MESSAGES = [
+  'Reading between the lines...',
+  'Decoding career trajectory...',
+  'Mapping skill constellations...',
+  'Analyzing experience depth...',
+  'Cross-referencing qualifications...',
+  'Evaluating leadership signals...',
+  'Parsing certification matrix...',
+  'Extracting key competencies...',
+  'Calibrating seniority level...',
+  'Scanning for hidden strengths...',
+  'Processing professional timeline...',
+  'Almost there, refining results...'
+];
+
+function AIExtractionOverlay({ status }: { status: string }) {
+  const [elapsed, setElapsed] = useState(0);
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [dots, setDots] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const [score, setScore] = useState(0);
+  const nextDotId = useRef(0);
+  const gameAreaRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setMsgIndex((i) => (i + 1) % AI_FUN_MESSAGES.length), 3000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const spawn = () => {
+      const id = nextDotId.current++;
+      const x = 10 + Math.random() * 80;
+      const y = 10 + Math.random() * 80;
+      setDots((prev) => [...prev.slice(-5), { id, x, y }]);
+    };
+    spawn();
+    const t = setInterval(spawn, 1400);
+    return () => clearInterval(t);
+  }, []);
+
+  const catchDot = (id: number) => {
+    setScore((s) => s + 1);
+    setDots((prev) => prev.filter((d) => d.id !== id));
+  };
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+
+  return (
+    <div className="avel-ai-overlay">
+      <div className="avel-ai-overlay__panel">
+        <div className="avel-ai-overlay__spinner" />
+        <h3 className="avel-ai-overlay__title">AI Extraction In Progress</h3>
+        <p className="avel-ai-overlay__message">{AI_FUN_MESSAGES[msgIndex]}</p>
+        <p className="avel-ai-overlay__status">{status}</p>
+        <div className="avel-ai-overlay__timer">{mm}:{ss}</div>
+
+        <div className="avel-ai-overlay__game">
+          <p className="avel-ai-overlay__game-label">While you wait... catch the dots! Score: <strong>{score}</strong></p>
+          <div className="avel-ai-overlay__game-area" ref={gameAreaRef}>
+            {dots.map((dot) => (
+              <button
+                key={dot.id}
+                type="button"
+                className="avel-ai-overlay__dot"
+                style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
+                onClick={() => catchDot(dot.id)}
+                aria-label="Catch!"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function sleep(ms: number): Promise<void> {
@@ -1746,6 +1828,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
             ) : null}
           </div>
         </form>
+        {aiPrefillPending ? <AIExtractionOverlay status={aiPrefillStatus} /> : null}
       </PageContainer>
     </div>
   );
