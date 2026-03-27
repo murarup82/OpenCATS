@@ -94,28 +94,6 @@ function getRowColumnValue(row: CandidatesListModernDataResponse['rows'][0], key
 
 const stripDiacritics = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
-const MULTI_FILTER_PREFIX = 'multi:';
-
-function encodeFilterSelection(values: string[]): string {
-  if (values.length === 0) return '';
-  return MULTI_FILTER_PREFIX + JSON.stringify(values);
-}
-
-function parseFilterSelection(raw: string): { values: string[] } {
-  if (!raw || raw === '') return { values: [] };
-  if (raw.startsWith(MULTI_FILTER_PREFIX)) {
-    try {
-      const arr = JSON.parse(raw.slice(MULTI_FILTER_PREFIX.length));
-      return { values: Array.isArray(arr) ? arr : [] };
-    } catch { return { values: [] }; }
-  }
-  return { values: [raw] };
-}
-
-function normalizeToken(s: string): string {
-  return stripDiacritics(s.toLowerCase().trim());
-}
-
 export function CandidatesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -127,14 +105,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
     url: string;
     title: string;
   } | null>(null);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [menuSearch, setMenuSearch] = useState('');
-  const [columnFilters] = useState<Record<string, string>>({});
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
-    candidate: true, source: true, skills: true, pipeline: true,
-    gdpr: true, owner: true, created: true, updated: true, actions: true
-  });
-  const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
+  const [columnFilterOpen, setColumnFilterOpen] = useState<string | null>(null);
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const skipNextAutoSearchRef = useRef(false);
 
   useEffect(() => {
@@ -317,19 +289,15 @@ export function CandidatesListPage({ bootstrap }: Props) {
   }, [data, navigateWithFilters, searchDraft]);
 
   useEffect(() => {
-    if (!activeMenu) return;
+    if (!columnFilterOpen) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest('.avel-col-filter')) {
-        setActiveMenu(null);
-        setMenuSearch('');
+        setColumnFilterOpen(null);
       }
     };
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setActiveMenu(null);
-        setMenuSearch('');
-      }
+      if (e.key === 'Escape') setColumnFilterOpen(null);
     };
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleEscape);
@@ -337,28 +305,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [activeMenu]);
-
-  useEffect(() => {
-    const el = columnsMenuRef.current;
-    if (!el || !el.open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (!el.contains(e.target as Node)) {
-        el.open = false;
-      }
-    };
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        el.open = false;
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  });
+  }, [columnFilterOpen]);
 
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {
     if (!data) {
@@ -402,87 +349,18 @@ export function CandidatesListPage({ bootstrap }: Props) {
     }));
   }, [data]);
 
-  // Columns with fixed/backend-provided options (server-side filterable)
-  const discreteFilterOptions = useMemo(() => {
-    if (!data) return {} as Record<string, string[]>;
-
-    // Unique owners from current data (usually a small set of recruiters)
-    const ownerSeen = new Map<string, string>();
-    for (const row of data.rows) {
-      const o = String(row.ownerName || '').trim();
-      if (o !== '' && o !== '--') {
-        const token = normalizeToken(o);
-        if (!ownerSeen.has(token)) ownerSeen.set(token, o);
-      }
-    }
-
-    // Individual skills extracted from comma-separated values
-    const skillSeen = new Map<string, string>();
-    for (const row of data.rows) {
-      const raw = String(row.keySkills || '');
-      for (const part of raw.split(/[,;]+/)) {
-        const s = part.trim();
-        if (s !== '' && s.length < 60) {
-          const token = normalizeToken(s);
-          if (!skillSeen.has(token)) skillSeen.set(token, s);
-        }
-      }
-    }
-
-    return {
-      source: data.options.sources
-        .map((s) => s.label)
-        .filter((l) => l !== '' && l !== '(none)' && l !== 'All sources'),
-      gdpr: ['Signed', 'Not Signed'],
-      pipeline: ['Allocated', 'Unassigned'],
-      owner: Array.from(ownerSeen.values()).sort((a, b) =>
-        a.localeCompare(b, undefined, { sensitivity: 'base' })
-      ),
-      skills: Array.from(skillSeen.values()).sort((a, b) =>
-        a.localeCompare(b, undefined, { sensitivity: 'base' })
-      )
-    };
-  }, [data]);
-
-  // Only candidate name uses free-text search (names are unique)
-  const textSearchColumns = new Set(['candidate']);
-
-  const applyServerColumnFilter = useCallback((key: string, value: string) => {
-    const trimmed = value.trim();
-    if (key === 'source') {
-      navigateWithFilters({ sourceFilter: trimmed, page: 1 });
-    } else if (key === 'gdpr') {
-      const token = normalizeToken(trimmed);
-      if (token === 'not signed') {
-        navigateWithFilters({ onlyGdprUnsigned: true, page: 1 });
-      } else if (token === 'signed') {
-        // No server-side "only signed" filter — clear the GDPR filter and search for "signed"
-        navigateWithFilters({ onlyGdprUnsigned: false, page: 1 });
-      } else {
-        // Clear — show all
-        navigateWithFilters({ onlyGdprUnsigned: false, page: 1 });
-      }
-    } else {
-      // candidate, skills, pipeline, owner → use wildCardString
-      skipNextAutoSearchRef.current = true;
-      setSearchDraft(trimmed);
-      navigateWithFilters({ quickSearch: trimmed, page: 1 });
-    }
-    setActiveMenu(null);
-    setMenuSearch('');
-  }, [navigateWithFilters]);
-
-  const toggleFilterValue = useCallback((key: string, value: string, checked: boolean) => {
-    const normalized = String(value || '').trim();
-    if (normalized === '') return;
-    applyServerColumnFilter(key, checked ? normalized : '');
-  }, [applyServerColumnFilter]);
-
-  const setFilterSelection = useCallback((key: string, values: string[]) => {
-    applyServerColumnFilter(key, values.length > 0 ? values[0] : '');
-  }, [applyServerColumnFilter]);
-
-  const filteredRows = data ? data.rows : [];
+  const filteredRows = useMemo(() => {
+    if (!data) return [];
+    const activeColumnFilters = Object.entries(columnFilters).filter(([, v]) => v.trim() !== '');
+    if (activeColumnFilters.length === 0) return data.rows;
+    return data.rows.filter((row) =>
+      activeColumnFilters.every(([key, query]) => {
+        const value = stripDiacritics(getRowColumnValue(row, key).toLowerCase());
+        const search = stripDiacritics(query.trim().toLowerCase());
+        return value.includes(search);
+      })
+    );
+  }, [data, columnFilters]);
 
   if (loading && !data) {
     return <div className="modern-state">Loading candidates...</div>;
@@ -508,53 +386,32 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const canEditCandidate = isCapabilityEnabled(permissions.canEditCandidate);
   const canAddToList = isCapabilityEnabled(permissions.canAddToList);
   const canAddToJobOrder = isCapabilityEnabled(permissions.canAddToJobOrder);
-  const activeFilterItems: Array<{ label: string; onRemove: () => void }> = [];
+  const activeFilterLabels: string[] = [];
   if (filters.quickSearch.trim() !== '') {
-    activeFilterItems.push({
-      label: `Search: "${filters.quickSearch.trim()}"`,
-      onRemove: () => { skipNextAutoSearchRef.current = true; setSearchDraft(''); navigateWithFilters({ quickSearch: '', page: 1 }); }
-    });
+    activeFilterLabels.push(`Search: "${filters.quickSearch.trim()}"`);
   }
   if (filters.sourceFilter !== '') {
-    activeFilterItems.push({
-      label: `Source: ${filters.sourceFilter}`,
-      onRemove: () => navigateWithFilters({ sourceFilter: '', page: 1 })
-    });
+    activeFilterLabels.push(`Source: ${filters.sourceFilter}`);
   }
   if (filters.onlyMyCandidates) {
-    activeFilterItems.push({
-      label: 'Only My Candidates',
-      onRemove: () => navigateWithFilters({ onlyMyCandidates: false, page: 1 })
-    });
+    activeFilterLabels.push('Only My Candidates');
   }
   if (filters.onlyHotCandidates) {
-    activeFilterItems.push({
-      label: 'Only Hot Candidates',
-      onRemove: () => navigateWithFilters({ onlyHotCandidates: false, page: 1 })
-    });
+    activeFilterLabels.push('Only Hot Candidates');
   }
   if (filters.onlyGdprUnsigned) {
-    activeFilterItems.push({
-      label: 'GDPR Not Signed',
-      onRemove: () => navigateWithFilters({ onlyGdprUnsigned: false, page: 1 })
-    });
+    activeFilterLabels.push('GDPR Not Signed');
   }
   if (filters.onlyInternalCandidates) {
-    activeFilterItems.push({
-      label: 'Internal Candidates',
-      onRemove: () => navigateWithFilters({ onlyInternalCandidates: false, page: 1 })
-    });
+    activeFilterLabels.push('Internal Candidates');
   }
   if (filters.onlyActiveCandidates) {
-    activeFilterItems.push({
-      label: 'Only Active',
-      onRemove: () => navigateWithFilters({ onlyActiveCandidates: false, page: 1 })
-    });
+    activeFilterLabels.push('Only Active');
   }
 
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
-  const hasActiveFilters = activeFilterItems.length > 0;
+  const hasActiveFilters = activeFilterLabels.length > 0;
 
   const gdprSignedCount = data.rows.filter((row) => row.gdprSigned).length;
   const pipelineAllocatedCount = data.rows.filter((row) => row.isInPipeline).length;
@@ -651,8 +508,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 onClick={() => {
                   skipNextAutoSearchRef.current = true;
                   setSearchDraft('');
-                  setActiveMenu(null);
-                  setMenuSearch('');
+                  setColumnFilters({});
                   navigateWithFilters({
                     quickSearch: '',
                     sourceFilter: '',
@@ -702,17 +558,12 @@ export function CandidatesListPage({ bootstrap }: Props) {
             {hasActiveFilters ? (
               <div className="avel-candidate-toolbar__active-strip">
                 <span className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
-                  {activeFilterItems.length} active filter{activeFilterItems.length === 1 ? '' : 's'}
+                  {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
                 </span>
-                {activeFilterItems.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    className="modern-active-filter modern-active-filter--server"
-                    onClick={item.onRemove}
-                  >
-                    {item.label} &times;
-                  </button>
+                {activeFilterLabels.map((label) => (
+                  <span className="modern-active-filter modern-active-filter--server" key={label}>
+                    {label}
+                  </span>
                 ))}
               </div>
             ) : null}
@@ -730,37 +581,9 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 </h2>
                 <p className="avel-list-panel__hint">
                   Showing {rangeStart}–{rangeEnd} of {data.meta.totalRows}
-                  {Object.values(columnFilters).some((v) => parseFilterSelection(v).values.length > 0) ? ` (${filteredRows.length} matching column filters)` : ''}
+                  {Object.values(columnFilters).some((v) => v.trim() !== '') ? ` (${filteredRows.length} matching column filters)` : ''}
                 </p>
               </div>
-              <details className="avel-candidate-columns-menu" ref={columnsMenuRef}>
-                <summary className="modern-btn modern-btn--mini modern-btn--secondary">Columns</summary>
-                <div className="avel-candidate-columns-panel">
-                  {[
-                    { key: 'candidate', title: 'Candidate' },
-                    { key: 'source', title: 'Source' },
-                    { key: 'skills', title: 'Key Skills' },
-                    { key: 'pipeline', title: 'Pipeline' },
-                    { key: 'gdpr', title: 'GDPR' },
-                    { key: 'owner', title: 'Owner' },
-                    { key: 'created', title: 'Added' },
-                    { key: 'updated', title: 'Updated' },
-                  ].map((col) => (
-                    <label key={`vis-${col.key}`} className="avel-candidate-columns-item">
-                      <input
-                        type="checkbox"
-                        checked={visibleColumns[col.key] !== false}
-                        onChange={() => setVisibleColumns((current) => {
-                          const visCount = Object.values(current).filter(Boolean).length;
-                          if (current[col.key] && visCount <= 2) return current;
-                          return { ...current, [col.key]: !current[col.key] };
-                        })}
-                      />
-                      <span>{col.title}</span>
-                    </label>
-                  ))}
-                </div>
-              </details>
               <div className="avel-candidates-pagination">
                 <button
                   type="button"
@@ -801,11 +624,11 @@ export function CandidatesListPage({ bootstrap }: Props) {
                         { key: 'created', title: 'Added', sortKey: 'dateCreatedSort' },
                         { key: 'updated', title: 'Updated', sortKey: 'dateModifiedSort' },
                         { key: 'actions', title: 'Actions', sortKey: '' }
-                      ].filter((col) => col.key === 'actions' || visibleColumns[col.key] !== false).map((col) => {
+                      ].map((col) => {
                         const isSorted = col.sortKey !== '' && data.meta.sortBy === col.sortKey;
                         const canFilter = ['candidate', 'source', 'skills', 'pipeline', 'gdpr', 'owner'].includes(col.key);
-                        const isFilterOpen = activeMenu === col.key;
-                        const hasFilterValues = parseFilterSelection(columnFilters[col.key] || '').values.length > 0;
+                        const isFilterOpen = columnFilterOpen === col.key;
+                        const filterValue = columnFilters[col.key] || '';
 
                         return (
                           <th key={col.key} className={isFilterOpen ? 'avel-col-filter--active' : ''}>
@@ -839,8 +662,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                 <div className="avel-col-filter">
                                   <button
                                     type="button"
-                                    className={`avel-col-filter__toggle${hasFilterValues ? ' is-active' : ''}`}
-                                    onClick={() => { setActiveMenu(activeMenu === col.key ? null : col.key); setMenuSearch(''); }}
+                                    className={`avel-col-filter__toggle${filterValue ? ' is-active' : ''}`}
+                                    onClick={() => setColumnFilterOpen(isFilterOpen ? null : col.key)}
                                     aria-label={`Filter ${col.title}`}
                                     aria-expanded={isFilterOpen}
                                   >
@@ -848,84 +671,29 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                       <path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5z" fill="currentColor" />
                                     </svg>
                                   </button>
-                                  {canFilter && activeMenu === col.key ? (
+                                  {isFilterOpen ? (
                                     <div className="avel-col-filter__dropdown">
-                                      {textSearchColumns.has(col.key) ? (
-                                        <>
-                                          <form onSubmit={(e) => { e.preventDefault(); applyServerColumnFilter(col.key, menuSearch); }}>
-                                            <label className="avel-col-filter__search-label">
-                                              Search all candidates
-                                              <input
-                                                type="text"
-                                                className="avel-col-filter__input"
-                                                value={menuSearch}
-                                                onChange={(e) => setMenuSearch(e.target.value)}
-                                                placeholder={`Type ${col.title.toLowerCase()} to search…`}
-                                                autoFocus
-                                              />
-                                            </label>
-                                          </form>
-                                          <div className="avel-col-filter__actions">
-                                            <button type="button" onClick={() => applyServerColumnFilter(col.key, menuSearch)} disabled={menuSearch.trim() === ''}>Search</button>
-                                            <button type="button" onClick={() => { applyServerColumnFilter(col.key, ''); }}>Clear</button>
-                                            {col.sortKey !== '' ? (
-                                              <>
-                                                <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'ASC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort A–Z</button>
-                                                <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort Z–A</button>
-                                              </>
-                                            ) : null}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <label className="avel-col-filter__search-label">
-                                            Filter by value
-                                            <input
-                                              type="text"
-                                              className="avel-col-filter__input"
-                                              value={menuSearch}
-                                              onChange={(e) => setMenuSearch(e.target.value)}
-                                              placeholder={`Find ${col.title.toLowerCase()}…`}
-                                              autoFocus
-                                            />
-                                          </label>
-                                          <div className="avel-col-filter__options">
-                                            {(() => {
-                                              const options = discreteFilterOptions[col.key as keyof typeof discreteFilterOptions] || [];
-                                              const searchNorm = normalizeToken(menuSearch);
-                                              const rendered = searchNorm ? options.filter((o) => normalizeToken(o).includes(searchNorm)) : options;
-                                              if (rendered.length === 0) return <div className="avel-col-filter__empty">No matching values.</div>;
-                                              return rendered.map((opt) => (
-                                                <button
-                                                  key={`f-${col.key}-${opt}`}
-                                                  type="button"
-                                                  className="avel-col-filter__option"
-                                                  onClick={() => applyServerColumnFilter(col.key, opt)}
-                                                >
-                                                  {col.key === 'source' ? (
-                                                    <span className={`modern-chip ${getSourceChipClass(opt)}`}>{opt}</span>
-                                                  ) : col.key === 'gdpr' ? (
-                                                    <span className={opt === 'Signed' ? 'modern-chip modern-chip--gdpr-signed' : 'modern-chip modern-chip--gdpr-unsigned'}>{opt}</span>
-                                                  ) : col.key === 'pipeline' ? (
-                                                    <span className={opt === 'Allocated' ? 'modern-chip modern-chip--pipeline' : 'modern-chip modern-chip--pipeline-idle'}>{opt}</span>
-                                                  ) : (
-                                                    <span>{opt}</span>
-                                                  )}
-                                                </button>
-                                              ));
-                                            })()}
-                                          </div>
-                                          <div className="avel-col-filter__actions">
-                                            <button type="button" onClick={() => applyServerColumnFilter(col.key, '')}>Clear</button>
-                                            {col.sortKey !== '' ? (
-                                              <>
-                                                <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'ASC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort A–Z</button>
-                                                <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort Z–A</button>
-                                              </>
-                                            ) : null}
-                                          </div>
-                                        </>
-                                      )}
+                                      <input
+                                        type="text"
+                                        className="avel-col-filter__input"
+                                        placeholder={`Filter ${col.title.toLowerCase()}…`}
+                                        value={filterValue}
+                                        onChange={(e) => setColumnFilters((prev) => ({ ...prev, [col.key]: e.target.value }))}
+                                        autoFocus
+                                      />
+                                      {filterValue ? (
+                                        <button
+                                          type="button"
+                                          className="avel-col-filter__clear"
+                                          onClick={() => setColumnFilters((prev) => {
+                                            const next = { ...prev };
+                                            delete next[col.key];
+                                            return next;
+                                          })}
+                                        >
+                                          Clear
+                                        </button>
+                                      ) : null}
                                     </div>
                                   ) : null}
                                 </div>
@@ -945,61 +713,45 @@ export function CandidatesListPage({ bootstrap }: Props) {
 
                       return (
                         <tr key={row.candidateID}>
-                          {visibleColumns['candidate'] !== false ? (
-                            <td className="avel-candidate-table__candidate">
-                              <div className="avel-candidate-table__title-row">
-                                <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
-                                  {toDisplayText(row.fullName)} <span className="avel-candidate-table__id">#{row.candidateID}</span>
-                                </a>
-                                <div className="avel-candidate-table__quick-tags">
-                                  {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
-                                  {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
-                                  {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                                  {row.commentCount > 0 ? (
-                                    <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
-                                  ) : null}
-                                </div>
+                          <td className="avel-candidate-table__candidate">
+                            <div className="avel-candidate-table__title-row">
+                              <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
+                                {toDisplayText(row.fullName)} <span className="avel-candidate-table__id">#{row.candidateID}</span>
+                              </a>
+                              <div className="avel-candidate-table__quick-tags">
+                                {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
+                                {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
+                                {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
+                                {row.commentCount > 0 ? (
+                                  <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
+                                ) : null}
                               </div>
-                              <div className="avel-candidate-table__meta">{locationText}</div>
-                            </td>
-                          ) : null}
-                          {visibleColumns['source'] !== false ? (
-                            <td>
-                              <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
-                            </td>
-                          ) : null}
-                          {visibleColumns['skills'] !== false ? (
-                            <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
-                          ) : null}
-                          {visibleColumns['pipeline'] !== false ? (
-                            <td>
-                              {row.isInPipeline ? (
-                                <span className="modern-chip modern-chip--pipeline">
-                                  Allocated ({row.pipelineActiveCount})
-                                </span>
-                              ) : (
-                                <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
-                              )}
-                            </td>
-                          ) : null}
-                          {visibleColumns['gdpr'] !== false ? (
-                            <td>
-                              {row.gdprSigned ? (
-                                <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
-                              ) : (
-                                <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
-                              )}
-                            </td>
-                          ) : null}
-                          {visibleColumns['owner'] !== false ? (
-                            <td>{toDisplayText(row.ownerName)}</td>
-                          ) : null}
-                          {visibleColumns['created'] !== false ? (
-                            <td>{toDisplayText(row.createdDate)}</td>
-                          ) : null}
-                          {visibleColumns['updated'] !== false ? (
-                            <td>{toDisplayText(row.modifiedDate)}</td>
-                          ) : null}
+                            </div>
+                            <div className="avel-candidate-table__meta">{locationText}</div>
+                          </td>
+                          <td>
+                            <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
+                          </td>
+                          <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
+                          <td>
+                            {row.isInPipeline ? (
+                              <span className="modern-chip modern-chip--pipeline">
+                                Allocated ({row.pipelineActiveCount})
+                              </span>
+                            ) : (
+                              <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
+                            )}
+                          </td>
+                          <td>
+                            {row.gdprSigned ? (
+                              <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
+                            ) : (
+                              <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
+                            )}
+                          </td>
+                          <td>{toDisplayText(row.ownerName)}</td>
+                          <td>{toDisplayText(row.createdDate)}</td>
+                          <td>{toDisplayText(row.modifiedDate)}</td>
                           <td>
                             <div className="modern-table-actions">
                               {canAddToJobOrder ? (
