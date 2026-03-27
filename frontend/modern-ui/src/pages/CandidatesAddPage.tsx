@@ -1078,20 +1078,9 @@ export function CandidatesAddPage({ bootstrap }: Props) {
         title={pageTitle}
         subtitle={pageSubtitle}
         actions={(
-          <>
-            <button
-              type="button"
-              className="modern-btn modern-btn--emphasis avel-candidate-edit-ai-top"
-              onClick={runAIPrefill}
-              disabled={!aiCanRunPrefillTopAction}
-              title={aiTopActionDisabledReason || 'Extract CV details with AI'}
-            >
-              {aiPrefillPending ? 'AI Extraction Running...' : 'Extract with AI'}
-            </button>
-            <a className="modern-btn modern-btn--secondary" href={backURL}>
-              {backLabel}
-            </a>
-          </>
+          <a className="modern-btn modern-btn--secondary" href={backURL}>
+            {backLabel}
+          </a>
         )}
       >
         <form
@@ -1197,22 +1186,24 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                         name="documentFile"
                         id="documentFile"
                         ref={resumeFileInputRef}
-                        onChange={(event) => setResumeUploadFile(event.target.files?.[0] || null)}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0] || null;
+                          setResumeUploadFile(file);
+                          if (file) {
+                            setTimeout(() => runResumeAction('upload'), 0);
+                          }
+                        }}
                       />
                     </div>
+
+                    {resumeActionPending === 'upload' ? (
+                      <div className="modern-state">Uploading CV...</div>
+                    ) : null}
 
                     <div className="avel-candidate-add-card__actions">
                       <button
                         type="button"
-                        className="modern-btn modern-btn--secondary"
-                        onClick={() => runResumeAction('upload')}
-                        disabled={resumeActionPending !== 'none' || aiPrefillPending}
-                      >
-                        {resumeActionPending === 'upload' ? 'Uploading...' : 'Upload CV'}
-                      </button>
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--secondary"
+                        className="modern-btn modern-btn--emphasis"
                         onClick={runAIPrefill}
                         disabled={aiPrefillPending || resumeActionPending !== 'none'}
                       >
@@ -1221,7 +1212,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       {aiUndoSnapshot ? (
                         <button
                           type="button"
-                          className="modern-btn modern-btn--secondary"
+                          className="modern-btn modern-btn--ghost"
                           onClick={() => {
                             if (!aiUndoSnapshot) {
                               return;
@@ -1245,7 +1236,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                             setAiPrefillError('');
                           }}
                         >
-                          Undo AI Extraction
+                          Undo AI
                         </button>
                       ) : null}
                       <button
@@ -1487,7 +1478,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
             <div className="avel-candidate-add-sidebar">
 
               {/* Sidebar Card 1: Logistics */}
-              <section className="avel-candidate-add-card avel-candidate-add-card--sidebar avel-candidate-add-card--accent-left">
+              <section className="avel-candidate-add-card avel-candidate-add-card--sidebar">
                 <h2>Logistics</h2>
 
                 <label className={getFieldContainerClassName('modern-command-field', formState.bestTimeToCall)}>
