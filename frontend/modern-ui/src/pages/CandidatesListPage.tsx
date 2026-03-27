@@ -898,7 +898,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                             <td className="avel-candidate-table__candidate">
                               <div className="avel-candidate-table__title-row">
                                 <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
-                                  {toDisplayText(row.fullName)}
+                                  {toDisplayText(row.fullName)} <span className="avel-candidate-table__id">#{row.candidateID}</span>
                                 </a>
                                 <div className="avel-candidate-table__quick-tags">
                                   {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}

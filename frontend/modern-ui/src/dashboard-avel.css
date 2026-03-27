@@ -4681,6 +4681,13 @@
   min-width: 0;
 }
 
+.avel-candidates-page .avel-candidate-table__id {
+  color: var(--avel-text-soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
 .avel-candidates-page .avel-candidate-table__quick-tags {
   display: inline-flex;
   align-items: center;
