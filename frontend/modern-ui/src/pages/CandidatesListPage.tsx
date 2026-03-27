@@ -4,7 +4,6 @@ import type { CandidatesListModernDataResponse, UIModeBootstrap } from '../types
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
-import { DataTable } from '../components/primitives/DataTable';
 import { CandidateAssignJobOrderModal } from '../components/primitives/CandidateAssignJobOrderModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
@@ -38,17 +37,7 @@ type AddToListCompletedDetail = {
   listIDs?: Array<number | string>;
 };
 
-type LocalFocusFilter = 'all' | 'hot' | 'submitted' | 'duplicates' | 'resume';
-
 const SEARCH_APPLY_DEBOUNCE_MS = 420;
-
-const sortOptions: Array<{ value: string; label: string }> = [
-  { value: 'dateModifiedSort', label: 'Updated' },
-  { value: 'dateCreatedSort', label: 'Added' },
-  { value: 'lastName', label: 'Name' },
-  { value: 'ownerSort', label: 'Owner' },
-  { value: 'source', label: 'Source' }
-];
 
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
@@ -91,6 +80,20 @@ function getSourceChipClass(source: string): string {
   return 'modern-chip--source-other';
 }
 
+function getRowColumnValue(row: CandidatesListModernDataResponse['rows'][0], key: string): string {
+  switch (key) {
+    case 'candidate': return String(row.fullName || '');
+    case 'source': return String(row.source || '');
+    case 'skills': return String(row.keySkills || '');
+    case 'pipeline': return row.isInPipeline ? `Allocated (${row.pipelineActiveCount})` : 'Unassigned';
+    case 'gdpr': return row.gdprSigned ? 'Signed' : 'Not Signed';
+    case 'owner': return String(row.ownerName || '');
+    default: return '';
+  }
+}
+
+const stripDiacritics = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+
 export function CandidatesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -102,9 +105,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
     url: string;
     title: string;
   } | null>(null);
-  const [localFocus, setLocalFocus] = useState<LocalFocusFilter>('all');
-  const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
-  const moreFiltersRef = useRef<HTMLDetailsElement | null>(null);
+  const [columnFilterOpen, setColumnFilterOpen] = useState<string | null>(null);
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const skipNextAutoSearchRef = useRef(false);
 
   useEffect(() => {
@@ -284,37 +286,23 @@ export function CandidatesListPage({ bootstrap }: Props) {
   }, [data, navigateWithFilters, searchDraft]);
 
   useEffect(() => {
-    if (!isMoreFiltersOpen) {
-      return;
-    }
-
-    const handleDocumentPointerDown = (event: MouseEvent | TouchEvent) => {
-      const container = moreFiltersRef.current;
-      const target = event.target as Node | null;
-      if (!container || !target) {
-        return;
-      }
-      if (!container.contains(target)) {
-        setIsMoreFiltersOpen(false);
+    if (!columnFilterOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.avel-col-filter')) {
+        setColumnFilterOpen(null);
       }
     };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsMoreFiltersOpen(false);
-      }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setColumnFilterOpen(null);
     };
-
-    document.addEventListener('mousedown', handleDocumentPointerDown);
-    document.addEventListener('touchstart', handleDocumentPointerDown, { passive: true });
+    document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleEscape);
-
     return () => {
-      document.removeEventListener('mousedown', handleDocumentPointerDown);
-      document.removeEventListener('touchstart', handleDocumentPointerDown);
+      document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isMoreFiltersOpen]);
+  }, [columnFilterOpen]);
 
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {
     if (!data) {
@@ -340,6 +328,37 @@ export function CandidatesListPage({ bootstrap }: Props) {
     { value: '100', label: '100 rows' }
   ];
 
+  // Source distribution (from current page rows)
+  const sourceDistribution = useMemo(() => {
+    if (!data) return [];
+    const counts = new Map<string, number>();
+    for (const row of data.rows) {
+      const src = String(row.source || '').trim();
+      const key = src === '' ? 'Other' : src;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    // Sort by count descending, take top 5 + "Other"
+    const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    return entries.slice(0, 6).map(([label, count]) => ({
+      label,
+      count,
+      chipClass: getSourceChipClass(label)
+    }));
+  }, [data]);
+
+  const filteredRows = useMemo(() => {
+    if (!data) return [];
+    const activeColumnFilters = Object.entries(columnFilters).filter(([, v]) => v.trim() !== '');
+    if (activeColumnFilters.length === 0) return data.rows;
+    return data.rows.filter((row) =>
+      activeColumnFilters.every(([key, query]) => {
+        const value = stripDiacritics(getRowColumnValue(row, key).toLowerCase());
+        const search = stripDiacritics(query.trim().toLowerCase());
+        return value.includes(search);
+      })
+    );
+  }, [data, columnFilters]);
+
   if (loading && !data) {
     return <div className="modern-state">Loading candidates...</div>;
   }
@@ -357,10 +376,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
   if (!data) {
     return <EmptyState message="No candidates available." />;
   }
-
-  const selectedSortBy = sortOptions.some((option) => option.value === data.meta.sortBy) ? data.meta.sortBy : 'dateModifiedSort';
-  const selectedSortDirection = data.meta.sortDirection === 'ASC' ? 'ASC' : 'DESC';
-  const selectedSortLabel = sortOptions.find((option) => option.value === selectedSortBy)?.label || 'Updated';
 
   const filters = data.filters;
   const permissions = data.meta.permissions;
@@ -394,37 +409,15 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
   const hasActiveFilters = activeFilterLabels.length > 0;
-  const visibleHotCount = data.rows.filter((row) => row.isHot).length;
-  const visibleDuplicateCount = data.rows.filter((row) => row.hasDuplicate).length;
-  const visibleSubmittedCount = data.rows.filter((row) => row.isSubmitted).length;
-  const visibleResumeCount = data.rows.filter((row) => row.hasAttachment).length;
-  const visibleRows = data.rows.filter((row) => {
-    switch (localFocus) {
-      case 'hot':
-        return row.isHot;
-      case 'submitted':
-        return row.isSubmitted;
-      case 'duplicates':
-        return row.hasDuplicate;
-      case 'resume':
-        return row.hasAttachment;
-      case 'all':
-      default:
-        return true;
-    }
-  });
-  const hasVisibleRows = visibleRows.length > 0;
-  const candidateTableColumns = [
-    { key: 'candidate', title: 'Candidate' },
-    { key: 'source', title: 'Source' },
-    { key: 'skills', title: 'Key Skills' },
-    { key: 'pipeline', title: 'Pipeline' },
-    { key: 'gdpr', title: 'GDPR' },
-    { key: 'owner', title: 'Owner' },
-    { key: 'created', title: 'Added' },
-    { key: 'updated', title: 'Updated' },
-    { key: 'actions', title: 'Actions' }
-  ];
+
+  const gdprSignedCount = data.rows.filter((row) => row.gdprSigned).length;
+  const pipelineAllocatedCount = data.rows.filter((row) => row.isInPipeline).length;
+
+  // Pagination range text
+  const rangeStart = (data.meta.page - 1) * data.meta.entriesPerPage + 1;
+  const rangeEnd = Math.min(rangeStart + data.rows.length - 1, data.meta.totalRows);
+
+  const hasVisibleRows = filteredRows.length > 0;
 
   return (
     <div className="avel-dashboard-page avel-candidates-page">
@@ -445,35 +438,30 @@ export function CandidatesListPage({ bootstrap }: Props) {
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-candidate-hero" aria-label="Candidates overview">
-            <div className="avel-candidate-hero__intro">
-              <p className="avel-candidate-hero__eyebrow">Candidate Intelligence</p>
-              <h2 className="avel-candidate-hero__title">Move from search to action faster</h2>
-              <p className="avel-candidate-hero__subtitle">
-                Filter quickly, inspect key signals, and trigger next steps directly from each profile card.
-              </p>
+          <section className="avel-candidate-stats-bar" aria-label="Candidate pool overview">
+            <div className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--total">
+              <span className="avel-candidate-stats-bar__label">Candidates</span>
+              <strong className="avel-candidate-stats-bar__value">{data.meta.totalRows}</strong>
             </div>
-            <div className="avel-candidate-hero__stats">
-              <article className="avel-candidate-stat">
-                <span className="avel-candidate-stat__label">Visible Candidates</span>
-                <strong className="avel-candidate-stat__value">{data.meta.totalRows}</strong>
-              </article>
-              <article className="avel-candidate-stat">
-                <span className="avel-candidate-stat__label">Hot Profiles</span>
-                <strong className="avel-candidate-stat__value">{visibleHotCount}</strong>
-              </article>
-              <article className="avel-candidate-stat">
-                <span className="avel-candidate-stat__label">Submitted</span>
-                <strong className="avel-candidate-stat__value">{visibleSubmittedCount}</strong>
-              </article>
-              <article className="avel-candidate-stat">
-                <span className="avel-candidate-stat__label">Possible Duplicates</span>
-                <strong className="avel-candidate-stat__value">{visibleDuplicateCount}</strong>
-              </article>
+            <span className="avel-candidate-stats-bar__sep" aria-hidden="true" />
+            {sourceDistribution.map(({ label, count, chipClass }) => (
+              <div key={label} className={`avel-candidate-stats-bar__item avel-candidate-stats-bar__chip ${chipClass}`}>
+                <span className="avel-candidate-stats-bar__chip-label">{label}</span>
+                <strong className="avel-candidate-stats-bar__chip-value">{count}</strong>
+              </div>
+            ))}
+            <span className="avel-candidate-stats-bar__sep" aria-hidden="true" />
+            <div className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--gdpr">
+              <span className="avel-candidate-stats-bar__label">GDPR Signed</span>
+              <strong className="avel-candidate-stats-bar__value">{gdprSignedCount}/{data.rows.length}</strong>
+            </div>
+            <div className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline">
+              <span className="avel-candidate-stats-bar__label">In Pipeline</span>
+              <strong className="avel-candidate-stats-bar__value">{pipelineAllocatedCount}</strong>
             </div>
           </section>
 
-          <section className="avel-candidate-toolbar modern-command-bar modern-command-bar--sticky" aria-label="Candidates filters and controls">
+          <section className="avel-candidate-toolbar modern-command-bar" aria-label="Candidates filters and controls">
             <div className="avel-candidate-toolbar__primary">
               <form
                 className="modern-command-search avel-candidate-toolbar__search"
@@ -483,7 +471,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   navigateWithFilters({ quickSearch: searchDraft, page: 1 });
                 }}
               >
-                <span className="modern-command-label">Search Talent</span>
+                <span className="modern-command-label">Search</span>
                 <span className="modern-command-search__shell">
                   <span className="modern-command-search__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="14" height="14" role="presentation" style={{ width: 14, height: 14 }}>
@@ -520,6 +508,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 onClick={() => {
                   skipNextAutoSearchRef.current = true;
                   setSearchDraft('');
+                  setColumnFilters({});
                   navigateWithFilters({
                     quickSearch: '',
                     sourceFilter: '',
@@ -538,140 +527,46 @@ export function CandidatesListPage({ bootstrap }: Props) {
               </button>
             </div>
 
-            <div className="avel-candidate-toolbar__filters">
+            <div className="avel-candidate-toolbar__toggles-row">
               <label className="modern-command-toggle">
-                <input
-                  type="checkbox"
-                  checked={filters.onlyActiveCandidates}
-                  onChange={(event) => navigateWithFilters({ onlyActiveCandidates: event.target.checked, page: 1 })}
-                />
+                <input type="checkbox" checked={filters.onlyActiveCandidates} onChange={(event) => navigateWithFilters({ onlyActiveCandidates: event.target.checked, page: 1 })} />
                 <span className="modern-command-toggle__switch" aria-hidden="true"></span>
                 <span>Only Active</span>
               </label>
-
               <label className="modern-command-toggle">
-                <input
-                  type="checkbox"
-                  checked={filters.onlyMyCandidates}
-                  onChange={(event) => navigateWithFilters({ onlyMyCandidates: event.target.checked, page: 1 })}
-                />
+                <input type="checkbox" checked={filters.onlyMyCandidates} onChange={(event) => navigateWithFilters({ onlyMyCandidates: event.target.checked, page: 1 })} />
                 <span className="modern-command-toggle__switch" aria-hidden="true"></span>
                 <span>My Candidates Only</span>
               </label>
-
-              <details className="avel-candidate-more-filters" ref={moreFiltersRef} open={isMoreFiltersOpen}>
-                <summary
-                  className="avel-candidate-more-filters__summary"
-                  aria-expanded={isMoreFiltersOpen}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setIsMoreFiltersOpen((current) => !current);
-                  }}
-                >
-                  More Filters
-                </summary>
-                <div className="avel-candidate-more-filters__panel">
-                  <label className="modern-command-toggle">
-                    <input
-                      type="checkbox"
-                      checked={filters.onlyHotCandidates}
-                      onChange={(event) => {
-                        setIsMoreFiltersOpen(false);
-                        navigateWithFilters({ onlyHotCandidates: event.target.checked, page: 1 });
-                      }}
-                    />
-                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                    <span>Hot Candidates</span>
-                  </label>
-
-                  <label className="modern-command-toggle">
-                    <input
-                      type="checkbox"
-                      checked={filters.onlyGdprUnsigned}
-                      onChange={(event) => {
-                        setIsMoreFiltersOpen(false);
-                        navigateWithFilters({ onlyGdprUnsigned: event.target.checked, page: 1 });
-                      }}
-                    />
-                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                    <span>GDPR Not Signed</span>
-                  </label>
-
-                  <label className="modern-command-toggle">
-                    <input
-                      type="checkbox"
-                      checked={filters.onlyInternalCandidates}
-                      onChange={(event) => {
-                        setIsMoreFiltersOpen(false);
-                        navigateWithFilters({ onlyInternalCandidates: event.target.checked, page: 1 });
-                      }}
-                    />
-                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                    <span>Internal Candidates</span>
-                  </label>
-                </div>
-              </details>
+              <label className="modern-command-toggle">
+                <input type="checkbox" checked={filters.onlyHotCandidates} onChange={(event) => navigateWithFilters({ onlyHotCandidates: event.target.checked, page: 1 })} />
+                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                <span>Hot Candidates</span>
+              </label>
+              <label className="modern-command-toggle">
+                <input type="checkbox" checked={filters.onlyGdprUnsigned} onChange={(event) => navigateWithFilters({ onlyGdprUnsigned: event.target.checked, page: 1 })} />
+                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                <span>GDPR Not Signed</span>
+              </label>
+              <label className="modern-command-toggle">
+                <input type="checkbox" checked={filters.onlyInternalCandidates} onChange={(event) => navigateWithFilters({ onlyInternalCandidates: event.target.checked, page: 1 })} />
+                <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                <span>Internal Candidates</span>
+              </label>
             </div>
 
-            <div className="avel-candidate-toolbar__compact-meta">
-              <div className="avel-candidate-toolbar__focus" aria-label="Quick focus filters">
-                <button
-                  type="button"
-                  className={`avel-candidate-focus-chip${localFocus === 'all' ? ' is-active' : ''}`}
-                  onClick={() => setLocalFocus('all')}
-                  aria-pressed={localFocus === 'all'}
-                >
-                  All <strong>{data.rows.length}</strong>
-                </button>
-                <button
-                  type="button"
-                  className={`avel-candidate-focus-chip${localFocus === 'hot' ? ' is-active' : ''}`}
-                  onClick={() => setLocalFocus('hot')}
-                  aria-pressed={localFocus === 'hot'}
-                >
-                  Hot <strong>{visibleHotCount}</strong>
-                </button>
-                <button
-                  type="button"
-                  className={`avel-candidate-focus-chip${localFocus === 'submitted' ? ' is-active' : ''}`}
-                  onClick={() => setLocalFocus('submitted')}
-                  aria-pressed={localFocus === 'submitted'}
-                >
-                  Submitted <strong>{visibleSubmittedCount}</strong>
-                </button>
-                <button
-                  type="button"
-                  className={`avel-candidate-focus-chip${localFocus === 'duplicates' ? ' is-active' : ''}`}
-                  onClick={() => setLocalFocus('duplicates')}
-                  aria-pressed={localFocus === 'duplicates'}
-                >
-                  Duplicates <strong>{visibleDuplicateCount}</strong>
-                </button>
-                <button
-                  type="button"
-                  className={`avel-candidate-focus-chip${localFocus === 'resume' ? ' is-active' : ''}`}
-                  onClick={() => setLocalFocus('resume')}
-                  aria-pressed={localFocus === 'resume'}
-                >
-                  Resume <strong>{visibleResumeCount}</strong>
-                </button>
+            {hasActiveFilters ? (
+              <div className="avel-candidate-toolbar__active-strip">
+                <span className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
+                  {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
+                </span>
+                {activeFilterLabels.map((label) => (
+                  <span className="modern-active-filter modern-active-filter--server" key={label}>
+                    {label}
+                  </span>
+                ))}
               </div>
-
-              {hasActiveFilters ? (
-                <div className="avel-candidate-toolbar__active">
-                  <div className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
-                    {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
-                  </div>
-                  <div className="modern-command-active__list">
-                    {activeFilterLabels.map((label) => (
-                      <span className="modern-active-filter modern-active-filter--server" key={label}>
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
+            ) : null}
           </section>
 
           {toDisplayText(data.state.topLog, '') !== '' ? (
@@ -680,45 +575,14 @@ export function CandidatesListPage({ bootstrap }: Props) {
 
           <section className="avel-list-panel avel-candidate-results">
             <div className="avel-list-panel__header">
-              <h2 className="avel-list-panel__title">
-                Candidates {data.meta.totalRows > 0 ? `(${data.meta.totalRows})` : ''}
-              </h2>
-              <p className="avel-list-panel__hint">
-                Showing {visibleRows.length} of {data.rows.length} on this page
-                {' | '}
-                Sorted by {selectedSortLabel} ({selectedSortDirection === 'ASC' ? 'ascending' : 'descending'})
-                {localFocus !== 'all' ? ` | focus: ${localFocus}` : ''}
-              </p>
-              <div className="avel-candidate-inline-sort" aria-label="Inline sort controls">
-                <span className="avel-candidate-inline-sort__label">Sort</span>
-                <div className="avel-candidate-inline-sort__chips" role="group" aria-label="Sort field">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      className={`avel-candidate-inline-sort__chip${selectedSortBy === option.value ? ' is-active' : ''}`}
-                      onClick={() => navigateWithFilters({ sortBy: option.value, page: 1 })}
-                      aria-pressed={selectedSortBy === option.value}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  className="avel-candidate-inline-sort__direction"
-                  onClick={() =>
-                    navigateWithFilters({
-                      sortDirection: selectedSortDirection === 'DESC' ? 'ASC' : 'DESC',
-                      page: 1
-                    })
-                  }
-                  aria-label={`Switch sort direction. Current: ${
-                    selectedSortDirection === 'DESC' ? 'descending' : 'ascending'
-                  }`}
-                >
-                  {selectedSortDirection === 'DESC' ? 'DESC' : 'ASC'}
-                </button>
+              <div className="avel-list-panel__header-left">
+                <h2 className="avel-list-panel__title">
+                  Candidates {data.meta.totalRows > 0 ? `(${data.meta.totalRows})` : ''}
+                </h2>
+                <p className="avel-list-panel__hint">
+                  Showing {rangeStart}–{rangeEnd} of {data.meta.totalRows}
+                  {Object.values(columnFilters).some((v) => v.trim() !== '') ? ` (${filteredRows.length} matching column filters)` : ''}
+                </p>
               </div>
               <div className="avel-candidates-pagination">
                 <button
@@ -727,10 +591,10 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   disabled={!canGoPrev}
                   onClick={() => navigateWithFilters({ page: data.meta.page - 1 })}
                 >
-                  Prev
+                  ‹ Prev
                 </button>
                 <span className="avel-candidates-pagination__label">
-                  Page {data.meta.page} / {data.meta.totalPages}
+                  {data.meta.page} / {data.meta.totalPages}
                 </span>
                 <button
                   type="button"
@@ -738,111 +602,197 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   disabled={!canGoNext}
                   onClick={() => navigateWithFilters({ page: data.meta.page + 1 })}
                 >
-                  Next
+                  Next ›
                 </button>
               </div>
             </div>
 
             {!hasVisibleRows ? (
-              <EmptyState
-                message={
-                  localFocus === 'all'
-                    ? 'No candidates match current filters.'
-                    : `No candidates match the "${localFocus}" focus on this page.`
-                }
-              />
+              <EmptyState message="No candidates match current filters." />
             ) : (
-              <DataTable
-                columns={candidateTableColumns}
-                hasRows={hasVisibleRows}
-                emptyMessage="No candidates match current filters."
-              >
-                {visibleRows.map((row) => {
-                  const locationParts = [row.city, row.country]
-                    .map((value) => String(value || '').trim())
-                    .filter((value) => value !== '');
-                  const locationText = locationParts.length > 0 ? locationParts.join(', ') : '--';
+              <div className="modern-table-wrap">
+                <table className="modern-table">
+                  <thead>
+                    <tr>
+                      {[
+                        { key: 'candidate', title: 'Candidate', sortKey: 'lastName' },
+                        { key: 'source', title: 'Source', sortKey: 'source' },
+                        { key: 'skills', title: 'Key Skills', sortKey: '' },
+                        { key: 'pipeline', title: 'Pipeline', sortKey: '' },
+                        { key: 'gdpr', title: 'GDPR', sortKey: '' },
+                        { key: 'owner', title: 'Owner', sortKey: 'ownerSort' },
+                        { key: 'created', title: 'Added', sortKey: 'dateCreatedSort' },
+                        { key: 'updated', title: 'Updated', sortKey: 'dateModifiedSort' },
+                        { key: 'actions', title: 'Actions', sortKey: '' }
+                      ].map((col) => {
+                        const isSorted = col.sortKey !== '' && data.meta.sortBy === col.sortKey;
+                        const canFilter = ['candidate', 'source', 'skills', 'pipeline', 'gdpr', 'owner'].includes(col.key);
+                        const isFilterOpen = columnFilterOpen === col.key;
+                        const filterValue = columnFilters[col.key] || '';
 
-                  return (
-                    <tr key={row.candidateID}>
-                      <td className="avel-candidate-table__candidate">
-                        <div className="avel-candidate-table__title-row">
-                          <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
-                            {toDisplayText(row.fullName)}
-                          </a>
-                          <div className="avel-candidate-table__quick-tags">
-                            {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
-                            {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
-                            {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                            {row.commentCount > 0 ? (
-                              <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
-                            ) : null}
-                          </div>
-                        </div>
-                        <div className="avel-candidate-table__meta">{locationText}</div>
-                      </td>
-                      <td>
-                        <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
-                      </td>
-                      <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
-                      <td>
-                        {row.isInPipeline ? (
-                          <span className="modern-chip modern-chip--pipeline">
-                            Allocated ({row.pipelineActiveCount})
-                          </span>
-                        ) : (
-                          <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
-                        )}
-                      </td>
-                      <td>
-                        {row.gdprSigned ? (
-                          <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
-                        ) : (
-                          <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
-                        )}
-                      </td>
-                      <td>{toDisplayText(row.ownerName)}</td>
-                      <td>{toDisplayText(row.createdDate)}</td>
-                      <td>{toDisplayText(row.modifiedDate)}</td>
-                      <td>
-                        <div className="modern-table-actions">
-                          {canAddToJobOrder ? (
-                            <button
-                              type="button"
-                              className="modern-btn modern-btn--mini modern-btn--emphasis avel-candidate-action avel-candidate-action--primary"
-                              onClick={() =>
-                                setAssignJobModal({
-                                  url: decodeLegacyURL(row.addToJobOrderURL),
-                                  title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
-                                })
-                              }
-                            >
-                              Add To Job
-                            </button>
-                          ) : null}
-                          {canEditCandidate ? (
-                            <a
-                              className="modern-btn modern-btn--mini modern-btn--secondary avel-candidate-action avel-candidate-action--edit"
-                              href={ensureModernUIURL(row.candidateEditURL)}
-                            >
-                              Edit
-                            </a>
-                          ) : null}
-                          {canAddToList ? (
-                            <button
-                              type="button"
-                              className="modern-btn modern-btn--mini modern-btn--ghost avel-candidate-action avel-candidate-action--tertiary"
-                              onClick={() => openAddToListOverlay(row.addToListURL)}
-                            >
-                              Add To List
-                            </button>
-                          ) : null}
-                        </div>
-                      </td>
+                        return (
+                          <th key={col.key} className={isFilterOpen ? 'avel-col-filter--active' : ''}>
+                            <div className="avel-col-header">
+                              {col.sortKey !== '' ? (
+                                <button
+                                  type="button"
+                                  className="avel-col-header__sort"
+                                  onClick={() => {
+                                    if (isSorted) {
+                                      navigateWithFilters({
+                                        sortDirection: data.meta.sortDirection === 'DESC' ? 'ASC' : 'DESC',
+                                        page: 1
+                                      });
+                                    } else {
+                                      navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 });
+                                    }
+                                  }}
+                                >
+                                  {col.title}
+                                  {isSorted ? (
+                                    <span className="avel-col-header__arrow" aria-hidden="true">
+                                      {data.meta.sortDirection === 'ASC' ? ' ▲' : ' ▼'}
+                                    </span>
+                                  ) : null}
+                                </button>
+                              ) : (
+                                <span>{col.title}</span>
+                              )}
+                              {canFilter ? (
+                                <div className="avel-col-filter">
+                                  <button
+                                    type="button"
+                                    className={`avel-col-filter__toggle${filterValue ? ' is-active' : ''}`}
+                                    onClick={() => setColumnFilterOpen(isFilterOpen ? null : col.key)}
+                                    aria-label={`Filter ${col.title}`}
+                                    aria-expanded={isFilterOpen}
+                                  >
+                                    <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
+                                      <path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5z" fill="currentColor" />
+                                    </svg>
+                                  </button>
+                                  {isFilterOpen ? (
+                                    <div className="avel-col-filter__dropdown">
+                                      <input
+                                        type="text"
+                                        className="avel-col-filter__input"
+                                        placeholder={`Filter ${col.title.toLowerCase()}…`}
+                                        value={filterValue}
+                                        onChange={(e) => setColumnFilters((prev) => ({ ...prev, [col.key]: e.target.value }))}
+                                        autoFocus
+                                      />
+                                      {filterValue ? (
+                                        <button
+                                          type="button"
+                                          className="avel-col-filter__clear"
+                                          onClick={() => setColumnFilters((prev) => {
+                                            const next = { ...prev };
+                                            delete next[col.key];
+                                            return next;
+                                          })}
+                                        >
+                                          Clear
+                                        </button>
+                                      ) : null}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ) : null}
+                            </div>
+                          </th>
+                        );
+                      })}
                     </tr>
-                  );
-                })}
-              </DataTable>
+                  </thead>
+                  <tbody>
+                    {filteredRows.map((row) => {
+                      const locationParts = [row.city, row.country]
+                        .map((value) => String(value || '').trim())
+                        .filter((value) => value !== '');
+                      const locationText = locationParts.length > 0 ? locationParts.join(', ') : '--';
+
+                      return (
+                        <tr key={row.candidateID}>
+                          <td className="avel-candidate-table__candidate">
+                            <div className="avel-candidate-table__title-row">
+                              <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
+                                {toDisplayText(row.fullName)}
+                              </a>
+                              <div className="avel-candidate-table__quick-tags">
+                                {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
+                                {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
+                                {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
+                                {row.commentCount > 0 ? (
+                                  <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className="avel-candidate-table__meta">{locationText}</div>
+                          </td>
+                          <td>
+                            <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
+                          </td>
+                          <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
+                          <td>
+                            {row.isInPipeline ? (
+                              <span className="modern-chip modern-chip--pipeline">
+                                Allocated ({row.pipelineActiveCount})
+                              </span>
+                            ) : (
+                              <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
+                            )}
+                          </td>
+                          <td>
+                            {row.gdprSigned ? (
+                              <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
+                            ) : (
+                              <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
+                            )}
+                          </td>
+                          <td>{toDisplayText(row.ownerName)}</td>
+                          <td>{toDisplayText(row.createdDate)}</td>
+                          <td>{toDisplayText(row.modifiedDate)}</td>
+                          <td>
+                            <div className="modern-table-actions">
+                              {canAddToJobOrder ? (
+                                <button
+                                  type="button"
+                                  className="modern-btn modern-btn--mini modern-btn--emphasis avel-candidate-action avel-candidate-action--primary"
+                                  onClick={() =>
+                                    setAssignJobModal({
+                                      url: decodeLegacyURL(row.addToJobOrderURL),
+                                      title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
+                                    })
+                                  }
+                                >
+                                  Add To Job
+                                </button>
+                              ) : null}
+                              {canEditCandidate ? (
+                                <a
+                                  className="modern-btn modern-btn--mini modern-btn--secondary avel-candidate-action avel-candidate-action--edit"
+                                  href={ensureModernUIURL(row.candidateEditURL)}
+                                >
+                                  Edit
+                                </a>
+                              ) : null}
+                              {canAddToList ? (
+                                <button
+                                  type="button"
+                                  className="modern-btn modern-btn--mini modern-btn--ghost avel-candidate-action avel-candidate-action--tertiary"
+                                  onClick={() => openAddToListOverlay(row.addToListURL)}
+                                >
+                                  Add To List
+                                </button>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
         </div>
