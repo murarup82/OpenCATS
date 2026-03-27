@@ -129,7 +129,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
   } | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [menuSearch, setMenuSearch] = useState('');
-  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [columnFilters] = useState<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
     candidate: true, source: true, skills: true, pipeline: true,
     gdpr: true, owner: true, created: true, updated: true, actions: true
@@ -421,81 +421,33 @@ export function CandidatesListPage({ bootstrap }: Props) {
     return opts;
   }, [data]);
 
+  const applyServerColumnFilter = useCallback((key: string, value: string) => {
+    const trimmed = value.trim();
+    if (key === 'source') {
+      navigateWithFilters({ sourceFilter: trimmed, page: 1 });
+    } else if (key === 'gdpr') {
+      navigateWithFilters({ onlyGdprUnsigned: normalizeToken(trimmed) === 'not signed', page: 1 });
+    } else {
+      // candidate, skills, pipeline, owner → use wildCardString
+      skipNextAutoSearchRef.current = true;
+      setSearchDraft(trimmed);
+      navigateWithFilters({ quickSearch: trimmed, page: 1 });
+    }
+    setActiveMenu(null);
+    setMenuSearch('');
+  }, [navigateWithFilters]);
+
   const toggleFilterValue = useCallback((key: string, value: string, checked: boolean) => {
     const normalized = String(value || '').trim();
     if (normalized === '') return;
-
-    // Source → server-side filter (single value)
-    if (key === 'source') {
-      navigateWithFilters({ sourceFilter: checked ? normalized : '', page: 1 });
-      setActiveMenu(null);
-      setMenuSearch('');
-      return;
-    }
-
-    // GDPR → server-side toggle
-    if (key === 'gdpr') {
-      if (normalized === 'Not Signed') {
-        navigateWithFilters({ onlyGdprUnsigned: checked, page: 1 });
-      }
-      setActiveMenu(null);
-      setMenuSearch('');
-      return;
-    }
-
-    // Other columns → client-side multi-select
-    setColumnFilters((current) => {
-      const existing = parseFilterSelection(current[key] || '').values;
-      const map = new Map(existing.map((e) => [normalizeToken(e), e]));
-      const token = normalizeToken(normalized);
-      if (checked) map.set(token, normalized);
-      else map.delete(token);
-      return { ...current, [key]: encodeFilterSelection(Array.from(map.values())) };
-    });
-  }, [navigateWithFilters]);
+    applyServerColumnFilter(key, checked ? normalized : '');
+  }, [applyServerColumnFilter]);
 
   const setFilterSelection = useCallback((key: string, values: string[]) => {
-    // Source → server-side
-    if (key === 'source') {
-      navigateWithFilters({ sourceFilter: values.length === 1 ? values[0] : '', page: 1 });
-      setActiveMenu(null);
-      setMenuSearch('');
-      return;
-    }
+    applyServerColumnFilter(key, values.length > 0 ? values[0] : '');
+  }, [applyServerColumnFilter]);
 
-    // GDPR → server-side
-    if (key === 'gdpr') {
-      const hasNotSigned = values.some((v) => normalizeToken(v) === 'not signed');
-      navigateWithFilters({ onlyGdprUnsigned: hasNotSigned, page: 1 });
-      setActiveMenu(null);
-      setMenuSearch('');
-      return;
-    }
-
-    setColumnFilters((current) => ({ ...current, [key]: encodeFilterSelection(values) }));
-  }, [navigateWithFilters]);
-
-  const filteredRows = useMemo(() => {
-    if (!data) return [];
-    const activeKeys = Object.keys(columnFilters).filter((k) => {
-      const sel = parseFilterSelection(columnFilters[k]);
-      return sel.values.length > 0;
-    });
-    if (activeKeys.length === 0) return data.rows;
-    // Text-heavy columns use substring matching; discrete columns use exact match
-    const textColumns = new Set(['candidate', 'skills']);
-    return data.rows.filter((row) =>
-      activeKeys.every((key) => {
-        const sel = parseFilterSelection(columnFilters[key]);
-        if (sel.values.length === 0) return true;
-        const rowVal = normalizeToken(getRowColumnValue(row, key));
-        if (textColumns.has(key)) {
-          return sel.values.some((v) => rowVal.includes(normalizeToken(v)));
-        }
-        return sel.values.some((v) => normalizeToken(v) === rowVal);
-      })
-    );
-  }, [data, columnFilters]);
+  const filteredRows = data ? data.rows : [];
 
   if (loading && !data) {
     return <div className="modern-state">Loading candidates...</div>;
@@ -664,7 +616,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 onClick={() => {
                   skipNextAutoSearchRef.current = true;
                   setSearchDraft('');
-                  setColumnFilters({});
                   setActiveMenu(null);
                   setMenuSearch('');
                   navigateWithFilters({
