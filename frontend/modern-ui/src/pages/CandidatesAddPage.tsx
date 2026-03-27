@@ -1307,7 +1307,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </div>
                 <div className="avel-candidate-add-grid avel-candidate-add-grid--2col">
                   <label className={getFieldContainerClassName('modern-command-field', formState.firstName)}>
-                    {renderFieldLabel('First Name *', 'firstName')}
+                    {renderFieldLabel(<>First Name <span className="avel-field-required-hint">required</span></>, 'firstName')}
                     <input
                       className={getFieldClassName('firstName', formState.firstName)}
                       type="text"
@@ -1322,7 +1322,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                   </label>
 
                   <label className={getFieldContainerClassName('modern-command-field', formState.lastName)}>
-                    {renderFieldLabel('Last Name *', 'lastName')}
+                    {renderFieldLabel(<>Last Name <span className="avel-field-required-hint">required</span></>, 'lastName')}
                     <input
                       className={getFieldClassName('lastName', formState.lastName)}
                       type="text"
@@ -1522,7 +1522,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
 
                 <input type="hidden" name="source" value={formState.source} />
                 <SelectMenu
-                  label="Source"
+                  label={<>Source <span className="avel-field-required-hint">required</span></>}
                   value={formState.source}
                   options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
                   className={getFieldContainerClassName('modern-command-field', formState.source, true)}
@@ -1564,7 +1564,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 />
 
                 <label className={getFieldContainerClassName('modern-command-field', formState.gdprExpirationDate)}>
-                  <span className="modern-command-label">GDPR Expiration <span className="avel-field-default-hint">default</span></span>
+                  <span className="modern-command-label">GDPR Expiration <span className="avel-field-default-hint">default</span>{formState.gdprSigned === '1' ? <span className="avel-field-required-hint">required</span> : null}</span>
                   <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
                   <input
                     className={`avel-form-control${isBlankValue(formState.gdprExpirationDate) ? ' avel-form-control--missing' : ''}`}

@@ -8716,6 +8716,23 @@
   box-sizing: border-box;
 }
 
+/* Required field badge */
+.avel-field-required-hint {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  border-radius: 999px;
+  border: 1px solid #e6b0b0;
+  background: #fff2f2;
+  color: #a54040;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  text-transform: none;
+  vertical-align: middle;
+}
+
 /* Default value hint badge */
 .avel-field-default-hint {
   display: inline-flex;
