@@ -402,24 +402,20 @@ export function CandidatesListPage({ bootstrap }: Props) {
     }));
   }, [data]);
 
-  const filterOptions = useMemo(() => {
+  // Columns with fixed/backend-provided options (server-side filterable)
+  const discreteFilterOptions = useMemo(() => {
     if (!data) return {} as Record<string, string[]>;
-    const filterable = ['candidate', 'source', 'skills', 'pipeline', 'gdpr', 'owner'] as const;
-    const opts: Record<string, string[]> = {};
-    for (const key of filterable) {
-      const seen = new Map<string, string>();
-      for (const row of data.rows) {
-        const v = getRowColumnValue(row, key).trim();
-        if (v === '') continue;
-        const token = normalizeToken(v);
-        if (!seen.has(token)) seen.set(token, v);
-      }
-      opts[key] = Array.from(seen.values()).sort((a, b) =>
-        a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true })
-      );
-    }
-    return opts;
+    return {
+      source: data.options.sources
+        .map((s) => s.label)
+        .filter((l) => l !== '' && l !== '(none)' && l !== 'All sources'),
+      gdpr: ['Signed', 'Not Signed'],
+      pipeline: ['Allocated', 'Unassigned']
+    };
   }, [data]);
+
+  // Columns that use free-text server search (no checkbox list)
+  const textSearchColumns = new Set(['candidate', 'skills', 'owner']);
 
   const applyServerColumnFilter = useCallback((key: string, value: string) => {
     const trimmed = value.trim();
@@ -824,57 +820,82 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                   </button>
                                   {canFilter && activeMenu === col.key ? (
                                     <div className="avel-col-filter__dropdown">
-                                      <label className="avel-col-filter__search-label">
-                                        Search values
-                                        <input
-                                          type="text"
-                                          className="avel-col-filter__input"
-                                          value={menuSearch}
-                                          onChange={(e) => setMenuSearch(e.target.value)}
-                                          placeholder={`Find ${col.title.toLowerCase()}`}
-                                          autoFocus
-                                        />
-                                      </label>
-                                      <div className="avel-col-filter__options">
-                                        {(() => {
-                                          const options = filterOptions[col.key] || [];
-                                          const searchNorm = normalizeToken(menuSearch);
-                                          const rendered = searchNorm ? options.filter((o) => normalizeToken(o).includes(searchNorm)) : options;
-                                          const selectedTokens = new Set(parseFilterSelection(columnFilters[col.key] || '').values.map(normalizeToken));
-                                          if (rendered.length === 0) return <div className="avel-col-filter__empty">No matching values.</div>;
-                                          return rendered.map((opt) => {
-                                            const token = normalizeToken(opt);
-                                            return (
-                                              <label key={`f-${col.key}-${opt}`} className="avel-col-filter__option">
-                                                <input
-                                                  type="checkbox"
-                                                  checked={selectedTokens.has(token)}
-                                                  onChange={(e) => toggleFilterValue(col.key, opt, e.target.checked)}
-                                                />
-                                                {col.key === 'source' ? (
-                                                  <span className={`modern-chip ${getSourceChipClass(opt)}`}>{opt}</span>
-                                                ) : col.key === 'gdpr' ? (
-                                                  <span className={opt === 'Signed' ? 'modern-chip modern-chip--gdpr-signed' : 'modern-chip modern-chip--gdpr-unsigned'}>{opt}</span>
-                                                ) : col.key === 'pipeline' ? (
-                                                  <span className={opt.startsWith('Allocated') ? 'modern-chip modern-chip--pipeline' : 'modern-chip modern-chip--pipeline-idle'}>{opt}</span>
-                                                ) : (
-                                                  <span>{opt}</span>
-                                                )}
-                                              </label>
-                                            );
-                                          });
-                                        })()}
-                                      </div>
-                                      <div className="avel-col-filter__actions">
-                                        <button type="button" onClick={() => { const options = filterOptions[col.key] || []; const searchNorm = normalizeToken(menuSearch); const rendered = searchNorm ? options.filter((o) => normalizeToken(o).includes(searchNorm)) : options; setFilterSelection(col.key, rendered); }}>Select Visible</button>
-                                        <button type="button" onClick={() => setFilterSelection(col.key, [])}>Clear</button>
-                                        {col.sortKey !== '' ? (
-                                          <>
-                                            <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'ASC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort A–Z</button>
-                                            <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort Z–A</button>
-                                          </>
-                                        ) : null}
-                                      </div>
+                                      {textSearchColumns.has(col.key) ? (
+                                        <>
+                                          <form onSubmit={(e) => { e.preventDefault(); applyServerColumnFilter(col.key, menuSearch); }}>
+                                            <label className="avel-col-filter__search-label">
+                                              Search all candidates
+                                              <input
+                                                type="text"
+                                                className="avel-col-filter__input"
+                                                value={menuSearch}
+                                                onChange={(e) => setMenuSearch(e.target.value)}
+                                                placeholder={`Type ${col.title.toLowerCase()} to search…`}
+                                                autoFocus
+                                              />
+                                            </label>
+                                          </form>
+                                          <div className="avel-col-filter__actions">
+                                            <button type="button" onClick={() => applyServerColumnFilter(col.key, menuSearch)} disabled={menuSearch.trim() === ''}>Search</button>
+                                            <button type="button" onClick={() => { applyServerColumnFilter(col.key, ''); }}>Clear</button>
+                                            {col.sortKey !== '' ? (
+                                              <>
+                                                <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'ASC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort A–Z</button>
+                                                <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort Z–A</button>
+                                              </>
+                                            ) : null}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <label className="avel-col-filter__search-label">
+                                            Filter by value
+                                            <input
+                                              type="text"
+                                              className="avel-col-filter__input"
+                                              value={menuSearch}
+                                              onChange={(e) => setMenuSearch(e.target.value)}
+                                              placeholder={`Find ${col.title.toLowerCase()}…`}
+                                              autoFocus
+                                            />
+                                          </label>
+                                          <div className="avel-col-filter__options">
+                                            {(() => {
+                                              const options = discreteFilterOptions[col.key as keyof typeof discreteFilterOptions] || [];
+                                              const searchNorm = normalizeToken(menuSearch);
+                                              const rendered = searchNorm ? options.filter((o) => normalizeToken(o).includes(searchNorm)) : options;
+                                              if (rendered.length === 0) return <div className="avel-col-filter__empty">No matching values.</div>;
+                                              return rendered.map((opt) => (
+                                                <button
+                                                  key={`f-${col.key}-${opt}`}
+                                                  type="button"
+                                                  className="avel-col-filter__option"
+                                                  onClick={() => applyServerColumnFilter(col.key, opt)}
+                                                >
+                                                  {col.key === 'source' ? (
+                                                    <span className={`modern-chip ${getSourceChipClass(opt)}`}>{opt}</span>
+                                                  ) : col.key === 'gdpr' ? (
+                                                    <span className={opt === 'Signed' ? 'modern-chip modern-chip--gdpr-signed' : 'modern-chip modern-chip--gdpr-unsigned'}>{opt}</span>
+                                                  ) : col.key === 'pipeline' ? (
+                                                    <span className={opt === 'Allocated' ? 'modern-chip modern-chip--pipeline' : 'modern-chip modern-chip--pipeline-idle'}>{opt}</span>
+                                                  ) : (
+                                                    <span>{opt}</span>
+                                                  )}
+                                                </button>
+                                              ));
+                                            })()}
+                                          </div>
+                                          <div className="avel-col-filter__actions">
+                                            <button type="button" onClick={() => applyServerColumnFilter(col.key, '')}>Clear</button>
+                                            {col.sortKey !== '' ? (
+                                              <>
+                                                <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'ASC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort A–Z</button>
+                                                <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort Z–A</button>
+                                              </>
+                                            ) : null}
+                                          </div>
+                                        </>
+                                      )}
                                     </div>
                                   ) : null}
                                 </div>
