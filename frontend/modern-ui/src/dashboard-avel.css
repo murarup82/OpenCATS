@@ -2958,20 +2958,20 @@
 
 .avel-dashboard-page .avel-dashboard-list__table tbody tr.adl-group-continuation td {
   border-top: 1px dashed rgba(0, 100, 140, 0.12);
-  background: rgba(245, 251, 255, 0.6);
 }
 
 /* Candidate cell spanning multiple sub-rows */
 .avel-dashboard-page .avel-dashboard-list__table .adl-candidate-cell {
   vertical-align: top;
   padding-top: 10px;
-  background: rgba(240, 249, 255, 0.7);
-  border-right: 2px solid rgba(0, 151, 189, 0.15);
+  background: #ffffff;
 }
 
 .avel-dashboard-page .avel-dashboard-list__table .adl-candidate-name {
   display: block;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 /* Badge showing number of assignments on a multi-row candidate */
