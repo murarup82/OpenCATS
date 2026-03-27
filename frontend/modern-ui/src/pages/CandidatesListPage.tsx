@@ -405,17 +405,47 @@ export function CandidatesListPage({ bootstrap }: Props) {
   // Columns with fixed/backend-provided options (server-side filterable)
   const discreteFilterOptions = useMemo(() => {
     if (!data) return {} as Record<string, string[]>;
+
+    // Unique owners from current data (usually a small set of recruiters)
+    const ownerSeen = new Map<string, string>();
+    for (const row of data.rows) {
+      const o = String(row.ownerName || '').trim();
+      if (o !== '' && o !== '--') {
+        const token = normalizeToken(o);
+        if (!ownerSeen.has(token)) ownerSeen.set(token, o);
+      }
+    }
+
+    // Individual skills extracted from comma-separated values
+    const skillSeen = new Map<string, string>();
+    for (const row of data.rows) {
+      const raw = String(row.keySkills || '');
+      for (const part of raw.split(/[,;]+/)) {
+        const s = part.trim();
+        if (s !== '' && s.length < 60) {
+          const token = normalizeToken(s);
+          if (!skillSeen.has(token)) skillSeen.set(token, s);
+        }
+      }
+    }
+
     return {
       source: data.options.sources
         .map((s) => s.label)
         .filter((l) => l !== '' && l !== '(none)' && l !== 'All sources'),
       gdpr: ['Signed', 'Not Signed'],
-      pipeline: ['Allocated', 'Unassigned']
+      pipeline: ['Allocated', 'Unassigned'],
+      owner: Array.from(ownerSeen.values()).sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: 'base' })
+      ),
+      skills: Array.from(skillSeen.values()).sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: 'base' })
+      )
     };
   }, [data]);
 
-  // Columns that use free-text server search (no checkbox list)
-  const textSearchColumns = new Set(['candidate', 'skills', 'owner']);
+  // Only candidate name uses free-text search (names are unique)
+  const textSearchColumns = new Set(['candidate']);
 
   const applyServerColumnFilter = useCallback((key: string, value: string) => {
     const trimmed = value.trim();
