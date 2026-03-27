@@ -421,11 +421,16 @@ export function CandidatesListPage({ bootstrap }: Props) {
       return sel.values.length > 0;
     });
     if (activeKeys.length === 0) return data.rows;
+    // Text-heavy columns use substring matching; discrete columns use exact match
+    const textColumns = new Set(['candidate', 'skills']);
     return data.rows.filter((row) =>
       activeKeys.every((key) => {
         const sel = parseFilterSelection(columnFilters[key]);
         if (sel.values.length === 0) return true;
         const rowVal = normalizeToken(getRowColumnValue(row, key));
+        if (textColumns.has(key)) {
+          return sel.values.some((v) => rowVal.includes(normalizeToken(v)));
+        }
         return sel.values.some((v) => normalizeToken(v) === rowVal);
       })
     );
