@@ -2516,6 +2516,7 @@
   padding: 9px 10px;
   border-bottom: 1px solid #c5dbea;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 .avel-dashboard-page .modern-table td {
