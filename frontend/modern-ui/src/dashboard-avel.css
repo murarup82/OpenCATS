@@ -6639,7 +6639,9 @@
   background: #ffffff;
   color: var(--avel-text);
   padding: 9px 11px;
+  font-family: 'Manrope', 'Segoe UI', Tahoma, sans-serif;
   font-size: 0.82rem;
+  font-weight: 600;
   line-height: 1.25;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.66) inset;
   transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
