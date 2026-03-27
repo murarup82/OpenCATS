@@ -1556,7 +1556,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
 
                 <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
                 <SelectMenu
-                  label="GDPR Signed"
+                  label={<>GDPR Signed <span className="avel-field-default-hint">default</span></>}
                   value={formState.gdprSigned}
                   options={gdprOptions}
                   className="modern-command-field"
@@ -1564,7 +1564,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 />
 
                 <label className={getFieldContainerClassName('modern-command-field', formState.gdprExpirationDate)}>
-                  <span className="modern-command-label">GDPR Expiration</span>
+                  <span className="modern-command-label">GDPR Expiration <span className="avel-field-default-hint">default</span></span>
                   <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
                   <input
                     className={`avel-form-control${isBlankValue(formState.gdprExpirationDate) ? ' avel-form-control--missing' : ''}`}
@@ -1593,8 +1593,14 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       }${isAiUpdated ? ' avel-form-field--ai-updated' : ''}`,
                       formState.extraFields[field.postKey] || ''
                     );
+                    const hasDefaultValue = !isAiUpdated && value !== '' && /notice period|preferred work model/i.test(field.fieldName);
+                    const badge = isAiUpdated
+                      ? <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span>
+                      : hasDefaultValue
+                        ? <span className="avel-field-default-hint">default</span>
+                        : null;
+
                     if (field.inputType === 'dropdown') {
-                      const value = formState.extraFields[field.postKey] || '';
                       const extraFieldOptions: SelectMenuOption[] = [
                         { value: '', label: '- Select from List -' },
                         ...field.options.map((option) => ({
@@ -1606,7 +1612,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                         <div key={field.postKey} className={isAiUpdated ? 'avel-form-field--ai-updated' : ''}>
                           <input type="hidden" name={field.postKey} value={value} />
                           <SelectMenu
-                            label={<>{field.fieldName}{isAiUpdated ? <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span> : null}</>}
+                            label={<>{field.fieldName}{badge}</>}
                             value={value}
                             options={extraFieldOptions}
                             className={fieldClassName}
@@ -1620,7 +1626,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       <label key={field.postKey} className={fieldClassName}>
                         <span className="modern-command-label">
                           {field.fieldName}
-                          {isAiUpdated ? <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span> : null}
+                          {badge}
                         </span>
                         {renderExtraFieldControl(field)}
                       </label>
