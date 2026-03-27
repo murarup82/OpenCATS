@@ -336,6 +336,27 @@ export function CandidatesListPage({ bootstrap }: Props) {
     };
   }, [activeMenu]);
 
+  useEffect(() => {
+    const el = columnsMenuRef.current;
+    if (!el || !el.open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (!el.contains(e.target as Node)) {
+        el.open = false;
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        el.open = false;
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  });
+
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {
     if (!data) {
       return [{ value: '', label: 'All sources' }];
