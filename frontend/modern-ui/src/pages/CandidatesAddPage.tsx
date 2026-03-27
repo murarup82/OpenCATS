@@ -1501,7 +1501,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                 </label>
 
                 <label className={getFieldContainerClassName('modern-command-field', formState.dateAvailable)}>
-                  <span className="modern-command-label">Date Available</span>
+                  <span className="modern-command-label">Date Available <span className="avel-field-default-hint">default +30d</span></span>
                   <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
                   <input
                     className={`avel-form-control${isBlankValue(formState.dateAvailable) ? ' avel-form-control--missing' : ''}`}
