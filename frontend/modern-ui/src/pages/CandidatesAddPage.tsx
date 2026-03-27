@@ -1463,21 +1463,6 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                       onChange={(event) => setFormState((current) => (current ? { ...current, desiredPay: event.target.value } : current))}
                     />
                   </label>
-
-                  <label className={getFieldContainerClassName('modern-command-field avel-candidate-add-field--full', formState.notes)}>
-                    {renderFieldLabel('Notes', 'notes')}
-                    <MarkdownTextarea
-                      name="notes"
-                      value={formState.notes}
-                      rows={6}
-                      className={getEditorClassName('notes', formState.notes)}
-                      ariaLabel="Candidate notes"
-                      onChange={(nextValue) => {
-                        clearFieldSource('notes');
-                        setFormState((current) => (current ? { ...current, notes: nextValue } : current));
-                      }}
-                    />
-                  </label>
                 </div>
               </section>
             </div>
@@ -1639,6 +1624,27 @@ export function CandidatesAddPage({ bootstrap }: Props) {
               ) : null}
             </div>
           </div>
+
+          {/* Notes — full-width section below the two-column layout */}
+          <section className="avel-candidate-add-card avel-candidate-add-card--notes">
+            <div className="avel-candidate-add-card__header">
+              <h2>Notes</h2>
+              {fieldSources.notes === 'ai-prefill' ? (
+                <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span>
+              ) : null}
+            </div>
+            <MarkdownTextarea
+              name="notes"
+              value={formState.notes}
+              rows={8}
+              className={getEditorClassName('notes', formState.notes)}
+              ariaLabel="Candidate notes"
+              onChange={(nextValue) => {
+                clearFieldSource('notes');
+                setFormState((current) => (current ? { ...current, notes: nextValue } : current));
+              }}
+            />
+          </section>
 
           {/* Duplicate detection */}
           {duplicateChecking ? <div className="modern-state">Checking for potential duplicates...</div> : null}
