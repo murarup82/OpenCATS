@@ -1667,13 +1667,14 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                   <h2>Additional Details</h2>
                   {data.extraFields.map((field) => {
                     const isAiUpdated = aiUpdatedExtraFieldKeys.includes(field.postKey);
+                    const value = formState.extraFields[field.postKey] || '';
                     const fieldClassName = getFieldContainerClassName(
                       `modern-command-field${
                         field.inputType === 'textarea' || field.inputType === 'radio'
                           ? ' avel-candidate-add-field--full'
                           : ''
                       }${isAiUpdated ? ' avel-form-field--ai-updated' : ''}`,
-                      formState.extraFields[field.postKey] || ''
+                      value
                     );
                     const hasDefaultValue = !isAiUpdated && value !== '' && /notice period|preferred work model/i.test(field.fieldName);
                     const badge = isAiUpdated
