@@ -424,6 +424,26 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const toggleFilterValue = useCallback((key: string, value: string, checked: boolean) => {
     const normalized = String(value || '').trim();
     if (normalized === '') return;
+
+    // Source → server-side filter (single value)
+    if (key === 'source') {
+      navigateWithFilters({ sourceFilter: checked ? normalized : '', page: 1 });
+      setActiveMenu(null);
+      setMenuSearch('');
+      return;
+    }
+
+    // GDPR → server-side toggle
+    if (key === 'gdpr') {
+      if (normalized === 'Not Signed') {
+        navigateWithFilters({ onlyGdprUnsigned: checked, page: 1 });
+      }
+      setActiveMenu(null);
+      setMenuSearch('');
+      return;
+    }
+
+    // Other columns → client-side multi-select
     setColumnFilters((current) => {
       const existing = parseFilterSelection(current[key] || '').values;
       const map = new Map(existing.map((e) => [normalizeToken(e), e]));
@@ -432,11 +452,28 @@ export function CandidatesListPage({ bootstrap }: Props) {
       else map.delete(token);
       return { ...current, [key]: encodeFilterSelection(Array.from(map.values())) };
     });
-  }, []);
+  }, [navigateWithFilters]);
 
   const setFilterSelection = useCallback((key: string, values: string[]) => {
+    // Source → server-side
+    if (key === 'source') {
+      navigateWithFilters({ sourceFilter: values.length === 1 ? values[0] : '', page: 1 });
+      setActiveMenu(null);
+      setMenuSearch('');
+      return;
+    }
+
+    // GDPR → server-side
+    if (key === 'gdpr') {
+      const hasNotSigned = values.some((v) => normalizeToken(v) === 'not signed');
+      navigateWithFilters({ onlyGdprUnsigned: hasNotSigned, page: 1 });
+      setActiveMenu(null);
+      setMenuSearch('');
+      return;
+    }
+
     setColumnFilters((current) => ({ ...current, [key]: encodeFilterSelection(values) }));
-  }, []);
+  }, [navigateWithFilters]);
 
   const filteredRows = useMemo(() => {
     if (!data) return [];
