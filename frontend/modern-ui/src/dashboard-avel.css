@@ -4262,11 +4262,11 @@
   top: calc(100% + 6px);
   left: 0;
   z-index: 50;
-  min-width: 200px;
-  border: 1px solid #8fb9cf;
+  min-width: 220px;
+  border: 1px solid #9ec0d4;
   border-radius: 10px;
-  background: #fafdff;
-  box-shadow: 0 10px 24px rgba(0, 66, 91, 0.16);
+  background: #f6fbff;
+  box-shadow: 0 12px 24px rgba(17, 52, 68, 0.18);
   padding: 8px;
   display: grid;
   gap: 6px;
@@ -4301,9 +4301,125 @@
   cursor: pointer;
 }
 
+.avel-candidates-page .avel-col-filter__search-label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4a6a7a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.avel-candidates-page .avel-col-filter__options {
+  display: grid;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.avel-candidates-page .avel-col-filter__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid #d6e6ef;
+  background: #ffffff;
+  padding: 5px 8px;
+  font-size: 0.74rem;
+  color: #2b4c5d;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-col-filter__option input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-col-filter__empty {
+  border: 1px dashed #c1d5e2;
+  border-radius: 8px;
+  background: #f9fcff;
+  color: #5d7a8b;
+  font-size: 0.73rem;
+  padding: 8px;
+}
+
+.avel-candidates-page .avel-col-filter__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.avel-candidates-page .avel-col-filter__actions button {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d3f4f;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-col-filter__actions button:hover {
+  background: #eef7fc;
+  border-color: #8bbdd4;
+}
+
 .avel-candidates-page .avel-col-filter__clear:hover {
   background: #eef7fc;
   border-color: #8bbdd4;
+}
+
+/* ─── Column selector ────────────────────────────────────────────────── */
+
+.avel-candidates-page .avel-candidate-columns-menu {
+  position: relative;
+}
+
+.avel-candidates-page .avel-candidate-columns-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-candidate-columns-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.avel-candidates-page .avel-candidate-columns-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 35;
+  min-width: 210px;
+  border: 1px solid #9ec0d4;
+  border-radius: 10px;
+  background: #f6fbff;
+  box-shadow: 0 10px 22px rgba(0, 66, 91, 0.16);
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-candidates-page .avel-candidate-columns-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #173b4a;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-candidate-columns-item input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
 }
 
 /* ─── Improved list panel header ─────────────────────────────────────── */
