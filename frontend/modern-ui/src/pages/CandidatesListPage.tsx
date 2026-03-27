@@ -94,6 +94,28 @@ function getRowColumnValue(row: CandidatesListModernDataResponse['rows'][0], key
 
 const stripDiacritics = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
+const MULTI_FILTER_PREFIX = 'multi:';
+
+function encodeFilterSelection(values: string[]): string {
+  if (values.length === 0) return '';
+  return MULTI_FILTER_PREFIX + JSON.stringify(values);
+}
+
+function parseFilterSelection(raw: string): { values: string[] } {
+  if (!raw || raw === '') return { values: [] };
+  if (raw.startsWith(MULTI_FILTER_PREFIX)) {
+    try {
+      const arr = JSON.parse(raw.slice(MULTI_FILTER_PREFIX.length));
+      return { values: Array.isArray(arr) ? arr : [] };
+    } catch { return { values: [] }; }
+  }
+  return { values: [raw] };
+}
+
+function normalizeToken(s: string): string {
+  return stripDiacritics(s.toLowerCase().trim());
+}
+
 export function CandidatesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -105,8 +127,14 @@ export function CandidatesListPage({ bootstrap }: Props) {
     url: string;
     title: string;
   } | null>(null);
-  const [columnFilterOpen, setColumnFilterOpen] = useState<string | null>(null);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [menuSearch, setMenuSearch] = useState('');
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    candidate: true, source: true, skills: true, pipeline: true,
+    gdpr: true, owner: true, created: true, updated: true, actions: true
+  });
+  const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
   const skipNextAutoSearchRef = useRef(false);
 
   useEffect(() => {
@@ -286,15 +314,19 @@ export function CandidatesListPage({ bootstrap }: Props) {
   }, [data, navigateWithFilters, searchDraft]);
 
   useEffect(() => {
-    if (!columnFilterOpen) return;
+    if (!activeMenu) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest('.avel-col-filter')) {
-        setColumnFilterOpen(null);
+        setActiveMenu(null);
+        setMenuSearch('');
       }
     };
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setColumnFilterOpen(null);
+      if (e.key === 'Escape') {
+        setActiveMenu(null);
+        setMenuSearch('');
+      }
     };
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleEscape);
@@ -302,7 +334,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [columnFilterOpen]);
+  }, [activeMenu]);
 
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {
     if (!data) {
@@ -346,15 +378,55 @@ export function CandidatesListPage({ bootstrap }: Props) {
     }));
   }, [data]);
 
+  const filterOptions = useMemo(() => {
+    if (!data) return {} as Record<string, string[]>;
+    const filterable = ['candidate', 'source', 'skills', 'pipeline', 'gdpr', 'owner'] as const;
+    const opts: Record<string, string[]> = {};
+    for (const key of filterable) {
+      const seen = new Map<string, string>();
+      for (const row of data.rows) {
+        const v = getRowColumnValue(row, key).trim();
+        if (v === '') continue;
+        const token = normalizeToken(v);
+        if (!seen.has(token)) seen.set(token, v);
+      }
+      opts[key] = Array.from(seen.values()).sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true })
+      );
+    }
+    return opts;
+  }, [data]);
+
+  const toggleFilterValue = useCallback((key: string, value: string, checked: boolean) => {
+    const normalized = String(value || '').trim();
+    if (normalized === '') return;
+    setColumnFilters((current) => {
+      const existing = parseFilterSelection(current[key] || '').values;
+      const map = new Map(existing.map((e) => [normalizeToken(e), e]));
+      const token = normalizeToken(normalized);
+      if (checked) map.set(token, normalized);
+      else map.delete(token);
+      return { ...current, [key]: encodeFilterSelection(Array.from(map.values())) };
+    });
+  }, []);
+
+  const setFilterSelection = useCallback((key: string, values: string[]) => {
+    setColumnFilters((current) => ({ ...current, [key]: encodeFilterSelection(values) }));
+  }, []);
+
   const filteredRows = useMemo(() => {
     if (!data) return [];
-    const activeColumnFilters = Object.entries(columnFilters).filter(([, v]) => v.trim() !== '');
-    if (activeColumnFilters.length === 0) return data.rows;
+    const activeKeys = Object.keys(columnFilters).filter((k) => {
+      const sel = parseFilterSelection(columnFilters[k]);
+      return sel.values.length > 0;
+    });
+    if (activeKeys.length === 0) return data.rows;
     return data.rows.filter((row) =>
-      activeColumnFilters.every(([key, query]) => {
-        const value = stripDiacritics(getRowColumnValue(row, key).toLowerCase());
-        const search = stripDiacritics(query.trim().toLowerCase());
-        return value.includes(search);
+      activeKeys.every((key) => {
+        const sel = parseFilterSelection(columnFilters[key]);
+        if (sel.values.length === 0) return true;
+        const rowVal = normalizeToken(getRowColumnValue(row, key));
+        return sel.values.some((v) => normalizeToken(v) === rowVal);
       })
     );
   }, [data, columnFilters]);
@@ -383,32 +455,53 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const canEditCandidate = isCapabilityEnabled(permissions.canEditCandidate);
   const canAddToList = isCapabilityEnabled(permissions.canAddToList);
   const canAddToJobOrder = isCapabilityEnabled(permissions.canAddToJobOrder);
-  const activeFilterLabels: string[] = [];
+  const activeFilterItems: Array<{ label: string; onRemove: () => void }> = [];
   if (filters.quickSearch.trim() !== '') {
-    activeFilterLabels.push(`Search: "${filters.quickSearch.trim()}"`);
+    activeFilterItems.push({
+      label: `Search: "${filters.quickSearch.trim()}"`,
+      onRemove: () => { skipNextAutoSearchRef.current = true; setSearchDraft(''); navigateWithFilters({ quickSearch: '', page: 1 }); }
+    });
   }
   if (filters.sourceFilter !== '') {
-    activeFilterLabels.push(`Source: ${filters.sourceFilter}`);
+    activeFilterItems.push({
+      label: `Source: ${filters.sourceFilter}`,
+      onRemove: () => navigateWithFilters({ sourceFilter: '', page: 1 })
+    });
   }
   if (filters.onlyMyCandidates) {
-    activeFilterLabels.push('Only My Candidates');
+    activeFilterItems.push({
+      label: 'Only My Candidates',
+      onRemove: () => navigateWithFilters({ onlyMyCandidates: false, page: 1 })
+    });
   }
   if (filters.onlyHotCandidates) {
-    activeFilterLabels.push('Only Hot Candidates');
+    activeFilterItems.push({
+      label: 'Only Hot Candidates',
+      onRemove: () => navigateWithFilters({ onlyHotCandidates: false, page: 1 })
+    });
   }
   if (filters.onlyGdprUnsigned) {
-    activeFilterLabels.push('GDPR Not Signed');
+    activeFilterItems.push({
+      label: 'GDPR Not Signed',
+      onRemove: () => navigateWithFilters({ onlyGdprUnsigned: false, page: 1 })
+    });
   }
   if (filters.onlyInternalCandidates) {
-    activeFilterLabels.push('Internal Candidates');
+    activeFilterItems.push({
+      label: 'Internal Candidates',
+      onRemove: () => navigateWithFilters({ onlyInternalCandidates: false, page: 1 })
+    });
   }
   if (filters.onlyActiveCandidates) {
-    activeFilterLabels.push('Only Active');
+    activeFilterItems.push({
+      label: 'Only Active',
+      onRemove: () => navigateWithFilters({ onlyActiveCandidates: false, page: 1 })
+    });
   }
 
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
-  const hasActiveFilters = activeFilterLabels.length > 0;
+  const hasActiveFilters = activeFilterItems.length > 0;
 
   const gdprSignedCount = data.rows.filter((row) => row.gdprSigned).length;
   const pipelineAllocatedCount = data.rows.filter((row) => row.isInPipeline).length;
@@ -509,6 +602,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   skipNextAutoSearchRef.current = true;
                   setSearchDraft('');
                   setColumnFilters({});
+                  setActiveMenu(null);
+                  setMenuSearch('');
                   navigateWithFilters({
                     quickSearch: '',
                     sourceFilter: '',
@@ -558,12 +653,17 @@ export function CandidatesListPage({ bootstrap }: Props) {
             {hasActiveFilters ? (
               <div className="avel-candidate-toolbar__active-strip">
                 <span className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
-                  {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
+                  {activeFilterItems.length} active filter{activeFilterItems.length === 1 ? '' : 's'}
                 </span>
-                {activeFilterLabels.map((label) => (
-                  <span className="modern-active-filter modern-active-filter--server" key={label}>
-                    {label}
-                  </span>
+                {activeFilterItems.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    className="modern-active-filter modern-active-filter--server"
+                    onClick={item.onRemove}
+                  >
+                    {item.label} &times;
+                  </button>
                 ))}
               </div>
             ) : null}
@@ -581,9 +681,37 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 </h2>
                 <p className="avel-list-panel__hint">
                   Showing {rangeStart}–{rangeEnd} of {data.meta.totalRows}
-                  {Object.values(columnFilters).some((v) => v.trim() !== '') ? ` (${filteredRows.length} matching column filters)` : ''}
+                  {Object.values(columnFilters).some((v) => parseFilterSelection(v).values.length > 0) ? ` (${filteredRows.length} matching column filters)` : ''}
                 </p>
               </div>
+              <details className="avel-candidate-columns-menu" ref={columnsMenuRef}>
+                <summary className="modern-btn modern-btn--mini modern-btn--secondary">Columns</summary>
+                <div className="avel-candidate-columns-panel">
+                  {[
+                    { key: 'candidate', title: 'Candidate' },
+                    { key: 'source', title: 'Source' },
+                    { key: 'skills', title: 'Key Skills' },
+                    { key: 'pipeline', title: 'Pipeline' },
+                    { key: 'gdpr', title: 'GDPR' },
+                    { key: 'owner', title: 'Owner' },
+                    { key: 'created', title: 'Added' },
+                    { key: 'updated', title: 'Updated' },
+                  ].map((col) => (
+                    <label key={`vis-${col.key}`} className="avel-candidate-columns-item">
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns[col.key] !== false}
+                        onChange={() => setVisibleColumns((current) => {
+                          const visCount = Object.values(current).filter(Boolean).length;
+                          if (current[col.key] && visCount <= 2) return current;
+                          return { ...current, [col.key]: !current[col.key] };
+                        })}
+                      />
+                      <span>{col.title}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
               <div className="avel-candidates-pagination">
                 <button
                   type="button"
@@ -624,11 +752,11 @@ export function CandidatesListPage({ bootstrap }: Props) {
                         { key: 'created', title: 'Added', sortKey: 'dateCreatedSort' },
                         { key: 'updated', title: 'Updated', sortKey: 'dateModifiedSort' },
                         { key: 'actions', title: 'Actions', sortKey: '' }
-                      ].map((col) => {
+                      ].filter((col) => col.key === 'actions' || visibleColumns[col.key] !== false).map((col) => {
                         const isSorted = col.sortKey !== '' && data.meta.sortBy === col.sortKey;
                         const canFilter = ['candidate', 'source', 'skills', 'pipeline', 'gdpr', 'owner'].includes(col.key);
-                        const isFilterOpen = columnFilterOpen === col.key;
-                        const filterValue = columnFilters[col.key] || '';
+                        const isFilterOpen = activeMenu === col.key;
+                        const hasFilterValues = parseFilterSelection(columnFilters[col.key] || '').values.length > 0;
 
                         return (
                           <th key={col.key} className={isFilterOpen ? 'avel-col-filter--active' : ''}>
@@ -662,8 +790,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                 <div className="avel-col-filter">
                                   <button
                                     type="button"
-                                    className={`avel-col-filter__toggle${filterValue ? ' is-active' : ''}`}
-                                    onClick={() => setColumnFilterOpen(isFilterOpen ? null : col.key)}
+                                    className={`avel-col-filter__toggle${hasFilterValues ? ' is-active' : ''}`}
+                                    onClick={() => { setActiveMenu(activeMenu === col.key ? null : col.key); setMenuSearch(''); }}
                                     aria-label={`Filter ${col.title}`}
                                     aria-expanded={isFilterOpen}
                                   >
@@ -671,29 +799,59 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                       <path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5z" fill="currentColor" />
                                     </svg>
                                   </button>
-                                  {isFilterOpen ? (
+                                  {canFilter && activeMenu === col.key ? (
                                     <div className="avel-col-filter__dropdown">
-                                      <input
-                                        type="text"
-                                        className="avel-col-filter__input"
-                                        placeholder={`Filter ${col.title.toLowerCase()}…`}
-                                        value={filterValue}
-                                        onChange={(e) => setColumnFilters((prev) => ({ ...prev, [col.key]: e.target.value }))}
-                                        autoFocus
-                                      />
-                                      {filterValue ? (
-                                        <button
-                                          type="button"
-                                          className="avel-col-filter__clear"
-                                          onClick={() => setColumnFilters((prev) => {
-                                            const next = { ...prev };
-                                            delete next[col.key];
-                                            return next;
-                                          })}
-                                        >
-                                          Clear
-                                        </button>
-                                      ) : null}
+                                      <label className="avel-col-filter__search-label">
+                                        Search values
+                                        <input
+                                          type="text"
+                                          className="avel-col-filter__input"
+                                          value={menuSearch}
+                                          onChange={(e) => setMenuSearch(e.target.value)}
+                                          placeholder={`Find ${col.title.toLowerCase()}`}
+                                          autoFocus
+                                        />
+                                      </label>
+                                      <div className="avel-col-filter__options">
+                                        {(() => {
+                                          const options = filterOptions[col.key] || [];
+                                          const searchNorm = normalizeToken(menuSearch);
+                                          const rendered = searchNorm ? options.filter((o) => normalizeToken(o).includes(searchNorm)) : options;
+                                          const selectedTokens = new Set(parseFilterSelection(columnFilters[col.key] || '').values.map(normalizeToken));
+                                          if (rendered.length === 0) return <div className="avel-col-filter__empty">No matching values.</div>;
+                                          return rendered.map((opt) => {
+                                            const token = normalizeToken(opt);
+                                            return (
+                                              <label key={`f-${col.key}-${opt}`} className="avel-col-filter__option">
+                                                <input
+                                                  type="checkbox"
+                                                  checked={selectedTokens.has(token)}
+                                                  onChange={(e) => toggleFilterValue(col.key, opt, e.target.checked)}
+                                                />
+                                                {col.key === 'source' ? (
+                                                  <span className={`modern-chip ${getSourceChipClass(opt)}`}>{opt}</span>
+                                                ) : col.key === 'gdpr' ? (
+                                                  <span className={opt === 'Signed' ? 'modern-chip modern-chip--gdpr-signed' : 'modern-chip modern-chip--gdpr-unsigned'}>{opt}</span>
+                                                ) : col.key === 'pipeline' ? (
+                                                  <span className={opt.startsWith('Allocated') ? 'modern-chip modern-chip--pipeline' : 'modern-chip modern-chip--pipeline-idle'}>{opt}</span>
+                                                ) : (
+                                                  <span>{opt}</span>
+                                                )}
+                                              </label>
+                                            );
+                                          });
+                                        })()}
+                                      </div>
+                                      <div className="avel-col-filter__actions">
+                                        <button type="button" onClick={() => { const options = filterOptions[col.key] || []; const searchNorm = normalizeToken(menuSearch); const rendered = searchNorm ? options.filter((o) => normalizeToken(o).includes(searchNorm)) : options; setFilterSelection(col.key, rendered); }}>Select Visible</button>
+                                        <button type="button" onClick={() => setFilterSelection(col.key, [])}>Clear</button>
+                                        {col.sortKey !== '' ? (
+                                          <>
+                                            <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'ASC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort A–Z</button>
+                                            <button type="button" onClick={() => { navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 }); setActiveMenu(null); setMenuSearch(''); }}>Sort Z–A</button>
+                                          </>
+                                        ) : null}
+                                      </div>
                                     </div>
                                   ) : null}
                                 </div>
@@ -713,45 +871,61 @@ export function CandidatesListPage({ bootstrap }: Props) {
 
                       return (
                         <tr key={row.candidateID}>
-                          <td className="avel-candidate-table__candidate">
-                            <div className="avel-candidate-table__title-row">
-                              <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
-                                {toDisplayText(row.fullName)}
-                              </a>
-                              <div className="avel-candidate-table__quick-tags">
-                                {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
-                                {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
-                                {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                                {row.commentCount > 0 ? (
-                                  <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
-                                ) : null}
+                          {visibleColumns['candidate'] !== false ? (
+                            <td className="avel-candidate-table__candidate">
+                              <div className="avel-candidate-table__title-row">
+                                <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
+                                  {toDisplayText(row.fullName)}
+                                </a>
+                                <div className="avel-candidate-table__quick-tags">
+                                  {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
+                                  {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
+                                  {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
+                                  {row.commentCount > 0 ? (
+                                    <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
+                                  ) : null}
+                                </div>
                               </div>
-                            </div>
-                            <div className="avel-candidate-table__meta">{locationText}</div>
-                          </td>
-                          <td>
-                            <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
-                          </td>
-                          <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
-                          <td>
-                            {row.isInPipeline ? (
-                              <span className="modern-chip modern-chip--pipeline">
-                                Allocated ({row.pipelineActiveCount})
-                              </span>
-                            ) : (
-                              <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
-                            )}
-                          </td>
-                          <td>
-                            {row.gdprSigned ? (
-                              <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
-                            ) : (
-                              <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
-                            )}
-                          </td>
-                          <td>{toDisplayText(row.ownerName)}</td>
-                          <td>{toDisplayText(row.createdDate)}</td>
-                          <td>{toDisplayText(row.modifiedDate)}</td>
+                              <div className="avel-candidate-table__meta">{locationText}</div>
+                            </td>
+                          ) : null}
+                          {visibleColumns['source'] !== false ? (
+                            <td>
+                              <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
+                            </td>
+                          ) : null}
+                          {visibleColumns['skills'] !== false ? (
+                            <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
+                          ) : null}
+                          {visibleColumns['pipeline'] !== false ? (
+                            <td>
+                              {row.isInPipeline ? (
+                                <span className="modern-chip modern-chip--pipeline">
+                                  Allocated ({row.pipelineActiveCount})
+                                </span>
+                              ) : (
+                                <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
+                              )}
+                            </td>
+                          ) : null}
+                          {visibleColumns['gdpr'] !== false ? (
+                            <td>
+                              {row.gdprSigned ? (
+                                <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
+                              ) : (
+                                <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
+                              )}
+                            </td>
+                          ) : null}
+                          {visibleColumns['owner'] !== false ? (
+                            <td>{toDisplayText(row.ownerName)}</td>
+                          ) : null}
+                          {visibleColumns['created'] !== false ? (
+                            <td>{toDisplayText(row.createdDate)}</td>
+                          ) : null}
+                          {visibleColumns['updated'] !== false ? (
+                            <td>{toDisplayText(row.modifiedDate)}</td>
+                          ) : null}
                           <td>
                             <div className="modern-table-actions">
                               {canAddToJobOrder ? (
