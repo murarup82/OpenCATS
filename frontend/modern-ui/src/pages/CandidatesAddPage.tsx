@@ -859,12 +859,13 @@ export function CandidatesAddPage({ bootstrap }: Props) {
     setValidationError('');
   }, [formState?.firstName, formState?.lastName, formState?.email1, formState?.phoneCell, formState?.city, formState?.country]);
 
-  const runResumeAction = async (mode: 'upload') => {
+  const runResumeAction = async (mode: 'upload', directFile?: File | null) => {
     if (!data || !formState || resumeActionPending !== 'none') {
       return;
     }
 
-    if (mode === 'upload' && !resumeUploadFile) {
+    const fileToUpload = directFile || resumeUploadFile;
+    if (mode === 'upload' && !fileToUpload) {
       setResumeActionError('Select a CV file first.');
       return;
     }
@@ -904,10 +905,10 @@ export function CandidatesAddPage({ bootstrap }: Props) {
       formData.set(postKey, value);
     });
 
-    if (mode === 'upload' || resumeUploadFile) {
+    if (mode === 'upload' || fileToUpload) {
       formData.set('loadDocument', 'true');
-      if (resumeUploadFile) {
-        formData.set('documentFile', resumeUploadFile);
+      if (fileToUpload) {
+        formData.set('documentFile', fileToUpload);
       }
     }
     setResumeActionPending(mode);
@@ -1197,7 +1198,7 @@ export function CandidatesAddPage({ bootstrap }: Props) {
                           const file = event.target.files?.[0] || null;
                           setResumeUploadFile(file);
                           if (file) {
-                            setTimeout(() => runResumeAction('upload'), 0);
+                            runResumeAction('upload', file);
                           }
                         }}
                       />
