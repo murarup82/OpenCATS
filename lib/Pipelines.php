@@ -424,6 +424,71 @@ class Pipelines
     }
 
     /**
+     * Hard-deletes a candidate's pipeline entry and all related history.
+     * This permanently erases the association as if it never existed.
+     * Restricted to ACCESS_LEVEL_SA (400) and above.
+     *
+     * @param integer candidate ID
+     * @param integer job order ID
+     * @param integer acting user ID (for audit)
+     */
+    public function purge($candidateID, $jobOrderID, $userID = 0)
+    {
+        $candidateID = (int) $candidateID;
+        $jobOrderID = (int) $jobOrderID;
+
+        /* 1. Delete status history */
+        $sql = sprintf(
+            "DELETE FROM candidate_joborder_status_history
+             WHERE candidate_id = %s AND joborder_id = %s AND site_id = %s",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_siteID
+        );
+        $this->_db->query($sql);
+
+        /* 2. Delete activity entries linked to this candidate + job order */
+        $sql = sprintf(
+            "DELETE FROM activity
+             WHERE data_item_id = %s AND data_item_type = %s AND joborder_id = %s AND site_id = %s",
+            $this->_db->makeQueryInteger($candidateID),
+            DATA_ITEM_CANDIDATE,
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_siteID
+        );
+        $this->_db->query($sql);
+
+        /* 3. Delete the pipeline entry itself */
+        $sql = sprintf(
+            "DELETE FROM candidate_joborder
+             WHERE candidate_id = %s AND joborder_id = %s AND site_id = %s",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($jobOrderID),
+            $this->_siteID
+        );
+        $this->_db->query($sql);
+
+        /* 4. Record the purge in history for audit trail */
+        $history = new History($this->_siteID);
+        $history->storeHistoryData(
+            DATA_ITEM_CANDIDATE,
+            $candidateID,
+            'PIPELINE',
+            $jobOrderID,
+            '(PURGE)',
+            '(USER) permanently purged candidate pipeline entry for job order ' . $jobOrderID . '. All history erased.'
+        );
+        $history->storeHistoryData(
+            DATA_ITEM_JOBORDER,
+            $jobOrderID,
+            'PIPELINE',
+            $candidateID,
+            '(PURGE)',
+            '(USER) permanently purged job order pipeline entry for candidate ' . $candidateID . '. All history erased.'
+        );
+    }
+
+    /**
      * Returns a single pipeline row.
      *
      * @param integer candidate ID

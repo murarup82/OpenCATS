@@ -9122,3 +9122,47 @@
   }
 }
 
+/* ─── Pipeline Purge Warning ─────────────────────────────────────────── */
+
+.avel-purge-warning {
+  border: 1px solid #e6b0b0;
+  border-radius: 10px;
+  background: #fff2f2;
+  color: #8b2f2f;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.avel-purge-warning strong {
+  color: #6b1f1f;
+}
+
+.avel-purge-warning ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.avel-purge-warning li {
+  margin-bottom: 2px;
+}
+
+.modern-btn--danger {
+  border: 1px solid #c46b72;
+  background: #c46b72;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(196, 107, 114, 0.3);
+}
+
+.modern-btn--danger:hover {
+  background: #a85058;
+  border-color: #a85058;
+}
+
+.modern-btn--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+

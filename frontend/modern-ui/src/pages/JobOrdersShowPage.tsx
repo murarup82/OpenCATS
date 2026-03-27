@@ -29,6 +29,7 @@ import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDet
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { PipelineRejectionModal } from '../components/primitives/PipelineRejectionModal';
 import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
+import { PipelinePurgeModal } from '../components/primitives/PipelinePurgeModal';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { MutationToast } from '../components/primitives/MutationToast';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -130,6 +131,14 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [removePipelinePending, setRemovePipelinePending] = useState<boolean>(false);
   const [removePipelineError, setRemovePipelineError] = useState<string>('');
+  const [purgeModal, setPurgeModal] = useState<{
+    candidateID: number;
+    candidateName: string;
+    jobOrderTitle: string;
+    removeURL: string;
+  } | null>(null);
+  const [purgePending, setPurgePending] = useState(false);
+  const [purgeError, setPurgeError] = useState('');
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [commentCategory, setCommentCategory] = useState<string>('General');
@@ -838,6 +847,62 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
     [data, removePipelineModal, removePipelinePending, refreshPageData, showToast]
   );
 
+  const submitPurgeFromPipeline = useCallback(
+    async () => {
+      if (!data || !purgeModal || purgePending) {
+        return;
+      }
+
+      const token = data.actions.removeFromPipelineToken || '';
+      if (token === '') {
+        setPurgeError('Security token is not available.');
+        return;
+      }
+
+      setPurgeError('');
+      setPurgePending(true);
+      try {
+        const parsedURL = new URL(
+          decodeLegacyURL(purgeModal.removeURL),
+          window.location.href
+        );
+        parsedURL.searchParams.set('a', 'purgeFromPipeline');
+        parsedURL.searchParams.set('format', 'modern-json');
+        parsedURL.searchParams.delete('display');
+
+        const candidateID = parsedURL.searchParams.get('candidateID') || String(purgeModal.candidateID);
+        const jobOrderID = parsedURL.searchParams.get('jobOrderID') || String(data.meta.jobOrderID);
+
+        const body = new URLSearchParams();
+        body.set('candidateID', candidateID);
+        body.set('jobOrderID', jobOrderID);
+        body.set('securityToken', token);
+
+        const response = await fetch(parsedURL.toString(), {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+          setPurgeError(result.message || 'Purge failed.');
+          return;
+        }
+
+        setPurgeModal(null);
+        refreshPageData();
+        showToast('Candidate permanently purged from pipeline.');
+      } catch (err: unknown) {
+        setPurgeError(err instanceof Error ? err.message : 'Purge failed.');
+      } finally {
+        setPurgePending(false);
+      }
+    },
+    [data, purgeModal, purgePending, refreshPageData, showToast]
+  );
+
   const navigateWithShowClosed = (showClosed: boolean) => {
     if (!data) {
       return;
@@ -1125,6 +1190,20 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                           onClick={() => handleRemoveFromPipeline(item)}
                         >
                           Remove
+                        </button>
+                      ) : null}
+                      {permissions.canPurgeFromPipeline ? (
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--danger"
+                          onClick={() => setPurgeModal({
+                            candidateID: item.candidateID,
+                            candidateName: toDisplayText(item.candidateName),
+                            jobOrderTitle: data.jobOrder.title || 'Job Order',
+                            removeURL: item.actions.removeFromPipelineURL
+                          })}
+                        >
+                          Purge
                         </button>
                       ) : null}
                       <button
@@ -1649,6 +1728,16 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
             setRemovePipelineModal(null);
           }}
           onSubmit={submitRemoveFromPipeline}
+        />
+
+        <PipelinePurgeModal
+          isOpen={!!purgeModal}
+          candidateName={purgeModal?.candidateName || ''}
+          jobOrderTitle={purgeModal?.jobOrderTitle || ''}
+          pending={purgePending}
+          error={purgeError}
+          onCancel={() => { setPurgeModal(null); setPurgeError(''); }}
+          onConfirm={submitPurgeFromPipeline}
         />
 
         <LegacyFrameModal

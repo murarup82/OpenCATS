@@ -334,6 +334,15 @@ class JobOrdersUI extends UserInterface
                 $this->onRemoveFromPipeline();
                 break;
 
+            /* Purge a candidate from a pipeline (hard delete — admin/SA only). */
+            case 'purgeFromPipeline':
+                if ($this->getUserAccessLevel('pipelines.removeFromPipeline') < ACCESS_LEVEL_SA)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Purge requires Site Admin or Root access.');
+                }
+                $this->onPurgeFromPipeline();
+                break;
+
             /* Add an attachment */
             case 'createAttachment':
                 if ($this->getUserAccessLevel('joborders.createAttachment') < ACCESS_LEVEL_EDIT)
@@ -3539,6 +3548,7 @@ class JobOrdersUI extends UserInterface
                     'canAddCandidateToPipeline' => ($this->getUserAccessLevel('joborders.considerCandidateSearch') >= ACCESS_LEVEL_EDIT),
                     'canChangePipelineStatus' => ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT),
                     'canRemoveFromPipeline' => ($this->getUserAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_DELETE),
+                    'canPurgeFromPipeline' => ($this->getUserAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_SA),
                     'canAddComment' => (!$isPopup && $this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
                     'canAdministrativeHideShow' => ($this->getUserAccessLevel('joborders.hidden') >= ACCESS_LEVEL_MULTI_SA),
                     'canCreateAttachment' => ($this->getUserAccessLevel('joborders.createAttachment') >= ACCESS_LEVEL_EDIT),
@@ -5305,6 +5315,71 @@ class JobOrdersUI extends UserInterface
         CATSUtility::transferRelativeURI(
             'm=joborders&a=show&jobOrderID=' . $jobOrderID
         );
+    }
+
+    /*
+     * Called by handleRequest() to permanently purge a candidate from a pipeline.
+     * Hard-deletes the pipeline entry, status history, and activity entries.
+     * Restricted to ACCESS_LEVEL_SA (400+) — admin/HR manager only.
+     */
+    private function onPurgeFromPipeline()
+    {
+        $input = $_POST;
+        if (!$this->isRequiredIDValid('candidateID', $input))
+        {
+            $input = $_GET;
+        }
+
+        if (!$this->isRequiredIDValid('candidateID', $input) || !$this->isRequiredIDValid('jobOrderID', $input))
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 400 Bad Request');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'invalidParams',
+                'message' => 'Invalid candidate or job order ID.'
+            ));
+            return;
+        }
+
+        $candidateID = $input['candidateID'];
+        $jobOrderID  = $input['jobOrderID'];
+
+        $securityToken = $this->getTrimmedInput('securityToken', $input);
+        if (!$this->isCSRFTokenValid('joborders.removeFromPipeline', $securityToken))
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 403 Forbidden');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'invalidToken',
+                'message' => 'Invalid security token.'
+            ));
+            return;
+        }
+
+        $pipelines = new Pipelines($this->_siteID);
+        $pipelines->purge($candidateID, $jobOrderID, $this->_userID);
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode(array(
+            'success' => true,
+            'message' => 'Candidate permanently purged from pipeline. All history erased.',
+            'candidateID' => (int) $candidateID,
+            'jobOrderID' => (int) $jobOrderID
+        ));
     }
 
     private function renderRemoveFromPipelineForm($candidateID, $jobOrderID)

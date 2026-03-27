@@ -3552,6 +3552,7 @@ export type JobOrdersShowModernDataResponse = {
       canAddCandidateToPipeline: boolean;
       canChangePipelineStatus: boolean;
       canRemoveFromPipeline: boolean;
+      canPurgeFromPipeline: boolean;
       canAddComment: boolean;
       canAdministrativeHideShow: boolean;
       canCreateAttachment: boolean;
