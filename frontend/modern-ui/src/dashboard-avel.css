@@ -2146,6 +2146,8 @@
 .avel-dashboard-page .modern-kanban-card__identity-content {
   display: grid;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .avel-dashboard-page .modern-kanban-card__candidate {
