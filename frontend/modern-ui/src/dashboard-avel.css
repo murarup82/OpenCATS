@@ -15,7 +15,8 @@
    scroll area, which eliminates the page-level horizontal scrollbar in kanban
    mode and keeps the toolbar controls fully visible. */
 .modern-shell-app-root:has(.avel-my-dashboard) {
-  min-height: calc(100dvh - 72px);
+  height: calc(100dvh - 72px);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -1720,10 +1721,11 @@
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.7) inset,
     0 12px 26px rgba(0, 66, 91, 0.1);
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
 }
 
 .avel-dashboard-page .modern-kanban-board__header {
@@ -1784,7 +1786,7 @@
 
 .avel-dashboard-page .modern-kanban-board__viewport {
   overflow-x: scroll;
-  overflow-y: visible;
+  overflow-y: hidden;
   padding: 8px 8px 14px;
   scrollbar-gutter: stable both-edges;
   scroll-behavior: smooth;
@@ -2026,8 +2028,8 @@
 
 .avel-dashboard-page .modern-kanban-column__body {
   flex: 1;
-  min-height: 920px;
-  overflow-y: visible;
+  min-height: 200px;
+  overflow-y: auto;
   overscroll-behavior: contain;
   transition: background-color 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
