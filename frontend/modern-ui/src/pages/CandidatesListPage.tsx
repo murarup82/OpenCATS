@@ -524,9 +524,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 Add Candidate
               </a>
             ) : null}
-            <a className="modern-btn modern-btn--secondary" href={bootstrap.legacyURL}>
-              Open Legacy UI
-            </a>
           </>
         }
       >

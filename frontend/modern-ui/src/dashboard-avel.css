@@ -3414,8 +3414,8 @@
 }
 
 .avel-candidates-page .modern-chip {
-  padding: 3px 9px;
-  font-size: 0.67rem;
+  padding: 3px 7px;
+  font-size: 0.57rem;
 }
 
 .avel-joborders-page .modern-chip {
@@ -3475,17 +3475,7 @@
   color: #4f6676;
 }
 
-.avel-candidates-page .modern-chip--gdpr-signed {
-  border-color: #9fd0b1;
-  background: #e5f5ec;
-  color: #1f6a41;
-}
-
-.avel-candidates-page .modern-chip--gdpr-unsigned {
-  border-color: #e1bf96;
-  background: #fff4e6;
-  color: #8b5416;
-}
+/* GDPR chips: inherit colors from .avel-dashboard-page .modern-chip--gdpr-* (global) */
 
 .avel-joborders-page .modern-chip--info {
   border-color: #b5d8e8;
@@ -4386,6 +4376,21 @@
 .avel-candidates-page .avel-candidate-columns-menu > summary {
   list-style: none;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--avel-border);
+  background: var(--avel-surface);
+  color: var(--avel-text);
+  padding: 5px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  user-select: none;
+}
+
+.avel-candidates-page .avel-candidate-columns-menu > summary:hover {
+  border-color: var(--avel-border-strong);
+  background: #f2f9fd;
 }
 
 .avel-candidates-page .avel-candidate-columns-menu > summary::-webkit-details-marker {
@@ -4394,7 +4399,7 @@
 
 .avel-candidates-page .avel-candidate-columns-panel {
   position: absolute;
-  right: 0;
+  left: 0;
   top: calc(100% + 6px);
   z-index: 35;
   min-width: 210px;
@@ -4855,49 +4860,7 @@
   font-weight: 800;
 }
 
-.avel-candidates-page .modern-chip[class*='modern-chip--source-'] {
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 3px 8px;
-}
-
-.avel-candidates-page .modern-chip--source-linkedin {
-  border-color: #98c8eb;
-  background: #e9f5ff;
-  color: #0f567f;
-}
-
-.avel-candidates-page .modern-chip--source-partner {
-  border-color: #dac0ea;
-  background: #f6ecfc;
-  color: #6f3f8e;
-}
-
-.avel-candidates-page .modern-chip--source-direct {
-  border-color: #9fd7cb;
-  background: #eafaf6;
-  color: #18684e;
-}
-
-.avel-candidates-page .modern-chip--source-internal {
-  border-color: #f0c98d;
-  background: #fff6e8;
-  color: #8b4f13;
-}
-
-.avel-candidates-page .modern-chip--source-network {
-  border-color: #b7d8e9;
-  background: #eff8fe;
-  color: #2e607d;
-}
-
-.avel-candidates-page .modern-chip--source-other {
-  border-color: #c7dbe8;
-  background: #f4faff;
-  color: #3b6075;
-}
+/* Source chips: inherit colors from .avel-dashboard-page .modern-chip--source-* (global) */
 
 .avel-joborders-page .modern-chip--success {
   border-color: #b8dfc8;
