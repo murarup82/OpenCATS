@@ -523,7 +523,7 @@ export function MarkdownTextarea({
       initialValue: '',
       placeholder,
       toolbarItems: [
-        ['heading', 'bold', 'italic', 'strike'],
+        ['bold', 'italic', 'strike'],
         ['quote'],
         ['ul', 'ol', 'task'],
         ['table', 'link'],

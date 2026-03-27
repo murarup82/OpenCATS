@@ -362,7 +362,7 @@ function mergeAIPrefillIntoFormState(
 
   const summary = readAIValue(candidate.summary);
   if (summary.value !== '' && summary.confidence >= confidenceThreshold && normalizeAIText(next.notes) === '') {
-    next.notes = summary.value;
+    next.notes = summary.value + '\n\n---\n\n**Recruiter Notes:**\n\n';
   }
 
   const currentEmployer = readAIValue(candidate.current_employer);
