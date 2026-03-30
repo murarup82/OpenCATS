@@ -667,7 +667,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                     </td>
                   ) : null}
                   {visibleColumns.openings ? (
-                    <td>
+                    <td style={{ textAlign: 'center' }}>
                       <span
                         className={`modern-chip ${row.openings > 0 ? 'modern-chip--openings modern-chip--success' : 'modern-chip--openings-zero'}`}
                       >
@@ -676,7 +676,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                     </td>
                   ) : null}
                   {visibleColumns.remainingOpenings ? (
-                    <td>
+                    <td style={{ textAlign: 'center' }}>
                       <span
                         className={`modern-chip ${row.remainingOpenings > 0 ? 'modern-chip--openings modern-chip--info' : 'modern-chip--openings-zero'}`}
                       >
@@ -684,10 +684,26 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                       </span>
                     </td>
                   ) : null}
-                  {visibleColumns.internalValidation ? <td>{row.internalValidation}</td> : null}
-                  {visibleColumns.proposed ? <td>{row.proposed}</td> : null}
+                  {visibleColumns.internalValidation ? (
+                    <td style={{ textAlign: 'center' }}>
+                      <span
+                        className={`modern-chip ${row.internalValidation > 0 ? 'modern-chip--success' : 'modern-chip--openings-zero'}`}
+                      >
+                        {row.internalValidation}
+                      </span>
+                    </td>
+                  ) : null}
+                  {visibleColumns.proposed ? (
+                    <td style={{ textAlign: 'center' }}>
+                      <span
+                        className={`modern-chip ${row.proposed > 0 ? 'modern-chip--success' : 'modern-chip--openings-zero'}`}
+                      >
+                        {row.proposed}
+                      </span>
+                    </td>
+                  ) : null}
                   {visibleColumns.hired ? (
-                    <td>
+                    <td style={{ textAlign: 'center' }}>
                       <span
                         className={`modern-chip ${row.hired > 0 ? 'modern-chip--success' : 'modern-chip--openings-zero'}`}
                       >
