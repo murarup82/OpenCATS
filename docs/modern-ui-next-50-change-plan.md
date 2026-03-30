@@ -1,6 +1,6 @@
 # Modern UI Next 50 Changes Plan
 
-Generated: 2026-03-27T06:56:59.156Z
+Generated: 2026-03-30T16:07:52.328Z
 
 This file is generated from `docs/modern-ui-legacy-route-gap-report.json` by `npm run modernization:board`.
 
@@ -10,3 +10,4 @@ Prioritized legacy-dependent route actions that still rely on redirect/wrapper/b
 
 ## 50 Planned Changes
 
+1. `joborders.purgefrompipeline` (`ModuleBridgePage`, `bridge`) -> Add explicit native route mapping and remove wildcard bridge resolution.

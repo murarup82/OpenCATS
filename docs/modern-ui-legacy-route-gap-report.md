@@ -1,15 +1,15 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-03-27T06:56:58.610Z
+Generated: 2026-03-30T16:07:51.677Z
 
 ## Summary
 
-- Legacy handleRequest actions discovered: 228
+- Legacy handleRequest actions discovered: 229
 - Native explicit modern coverage: 228
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 0
+- Bridge coverage (explicit + fallback): 1
 - Bridge explicit route mapping: 0
-- Bridge wildcard fallback mapping: 0
+- Bridge wildcard fallback mapping: 1
 - Legacy unresolved: 0
 
 ## Module Coverage
@@ -28,7 +28,7 @@ Generated: 2026-03-27T06:56:58.610Z
 | graphs | 5 | 5 | 0 | 0 | 0 |
 | home | 22 | 22 | 0 | 0 | 0 |
 | import | 15 | 15 | 0 | 0 | 0 |
-| joborders | 27 | 27 | 0 | 0 | 0 |
+| joborders | 28 | 27 | 0 | 1 | 0 |
 | kpis | 1 | 1 | 0 | 0 | 0 |
 | lists | 8 | 8 | 0 | 0 | 0 |
 | login | 8 | 8 | 0 | 0 | 0 |
@@ -44,7 +44,12 @@ Generated: 2026-03-27T06:56:58.610Z
 
 These are legacy actions for modernized modules that are not mapped as explicit native routes.
 
-- None.
+### joborders
+
+| Action | Classification | Resolved Route | Component |
+| --- | --- | --- | --- |
+| purgeFromPipeline | bridge-global-fallback | *.* | ModuleBridgePage |
+
 ## Full Action Matrix
 
 | Module | Action | Classification | Resolved Route | Component |
@@ -174,6 +179,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | pipelineStatusDetails | native-explicit-guarded | joborders.pipelinestatusdetails | PipelineStatusActionPage |
 | joborders | pipelineStatusEditDate | native-explicit-guarded | joborders.pipelinestatuseditdate | PipelineStatusActionPage |
 | joborders | postMessage | native-explicit-guarded | joborders.postmessage | JobOrdersShowPage |
+| joborders | purgeFromPipeline | bridge-global-fallback | *.* | ModuleBridgePage |
 | joborders | recruiterAllocation | native-explicit | joborders.recruiterallocation | JobOrdersRecruiterAllocationPage |
 | joborders | removeFromPipeline | native-explicit-guarded | joborders.removefrompipeline | JobOrdersShowPage |
 | joborders | search | native-explicit | joborders.search | JobOrdersListPage |

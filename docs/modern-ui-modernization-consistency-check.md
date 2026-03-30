@@ -1,20 +1,20 @@
 # Modern UI Modernization Consistency Check
 
-Generated: 2026-03-27T06:56:59.674Z
+Generated: 2026-03-30T16:07:52.982Z
 
 ## Checks
 
 | Check | Status | Detail |
 | --- | --- | --- |
-| Gap actions equals board actions | Pass | 228 vs 228 |
-| Board row count equals board actions | Pass | 228 vs 228 |
-| Board modernNative + legacyDependent equals board actions | Pass | 228 + 0 vs 228 |
-| Board legacyDependent equals legacyDependent rows | Pass | 0 vs 0 |
+| Gap actions equals board actions | Pass | 229 vs 229 |
+| Board row count equals board actions | Pass | 229 vs 229 |
+| Board modernNative + legacyDependent equals board actions | Pass | 228 + 1 vs 229 |
+| Board legacyDependent equals legacyDependent rows | Pass | 1 vs 1 |
 | Board modernNative equals non-legacy rows | Pass | 228 vs 228 |
-| Board module totals equal board actions | Pass | 228 vs 228 |
-| Board bucket totals equal board actions | Pass | 228 vs 228 |
-| Gap coverage totals equal gap actions | Pass | 228 vs 228 |
-| When legacyDependent is zero, next50 targets is empty | Pass | legacyDependent=0, next50Targets=0 |
+| Board module totals equal board actions | Pass | 229 vs 229 |
+| Board bucket totals equal board actions | Pass | 229 vs 229 |
+| Gap coverage totals equal gap actions | Pass | 229 vs 229 |
+| When legacyDependent is zero, next50 targets is empty | Pass | legacyDependent=1, next50Targets=1 |
 
 ## Result
 

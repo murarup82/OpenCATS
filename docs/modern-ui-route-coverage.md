@@ -1,6 +1,6 @@
 # Modern UI Route Coverage Matrix
 
-Generated: 2026-03-27T06:56:46.757Z
+Generated: 2026-03-30T16:07:36.344Z
 
 This report classifies routeRegistry mappings into true native UI routes, intentional legacy-forward endpoints/wrappers, and bridge fallbacks.
 

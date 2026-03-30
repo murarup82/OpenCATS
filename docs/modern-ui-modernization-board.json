@@ -1,14 +1,18 @@
 {
-  "generatedAt": "2026-03-27T06:56:59.156Z",
+  "generatedAt": "2026-03-30T16:07:52.328Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
-    "actions": 228,
+    "actions": 229,
     "modernNative": 228,
-    "legacyDependent": 0,
-    "bridge": 0,
+    "legacyDependent": 1,
+    "bridge": 1,
     "unresolved": 0
   },
   "bucketSummaries": [
+    {
+      "bucket": "bridge",
+      "count": 1
+    },
     {
       "bucket": "native-action",
       "count": 127
@@ -93,9 +97,9 @@
     },
     {
       "module": "joborders",
-      "totalActions": 27,
+      "totalActions": 28,
       "modernNative": 27,
-      "legacyDependent": 0
+      "legacyDependent": 1
     },
     {
       "module": "kpis",
@@ -158,8 +162,31 @@
       "legacyDependent": 0
     }
   ],
-  "next50Targets": [],
+  "next50Targets": [
+    {
+      "order": 1,
+      "module": "joborders",
+      "action": "purgeFromPipeline",
+      "routeKey": "joborders.purgefrompipeline",
+      "component": "ModuleBridgePage",
+      "bucket": "bridge",
+      "guidance": "Add explicit native route mapping and remove wildcard bridge resolution."
+    }
+  ],
   "rows": [
+    {
+      "module": "joborders",
+      "action": "purgeFromPipeline",
+      "classification": "bridge-global-fallback",
+      "routeKey": "joborders.purgefrompipeline",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
+      "guarded": false,
+      "modernizationStatus": "bridge",
+      "modernizationBucket": "bridge",
+      "modernizationRank": 0,
+      "legacyDependent": true
+    },
     {
       "module": "attachments",
       "action": "getAttachment",

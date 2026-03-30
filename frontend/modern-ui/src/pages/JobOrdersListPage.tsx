@@ -30,8 +30,10 @@ type ColumnVisibility = {
   company: boolean;
   status: boolean;
   openings: boolean;
-  pipeline: boolean;
+  remainingOpenings: boolean;
+  internalValidation: boolean;
   proposed: boolean;
+  hired: boolean;
   owner: boolean;
   recruiter: boolean;
   monitor: boolean;
@@ -44,8 +46,10 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
     company: true,
     status: true,
     openings: true,
-    pipeline: true,
+    remainingOpenings: true,
+    internalValidation: true,
     proposed: true,
+    hired: true,
     owner: true,
     recruiter: true,
     monitor: true
@@ -54,8 +58,10 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
     company: true,
     status: true,
     openings: true,
-    pipeline: true,
+    remainingOpenings: true,
+    internalValidation: true,
     proposed: true,
+    hired: true,
     owner: true,
     recruiter: false,
     monitor: true
@@ -64,8 +70,10 @@ const columnPresets: Record<ColumnPresetKey, ColumnVisibility> = {
     company: false,
     status: true,
     openings: true,
-    pipeline: true,
+    remainingOpenings: true,
+    internalValidation: true,
     proposed: true,
+    hired: true,
     owner: false,
     recruiter: false,
     monitor: false
@@ -88,8 +96,10 @@ function isColumnVisibility(value: unknown): value is ColumnVisibility {
     typeof candidate.company === 'boolean' &&
     typeof candidate.status === 'boolean' &&
     typeof candidate.openings === 'boolean' &&
-    typeof candidate.pipeline === 'boolean' &&
+    typeof candidate.remainingOpenings === 'boolean' &&
+    typeof candidate.internalValidation === 'boolean' &&
     typeof candidate.proposed === 'boolean' &&
+    typeof candidate.hired === 'boolean' &&
     typeof candidate.owner === 'boolean' &&
     typeof candidate.recruiter === 'boolean' &&
     typeof candidate.monitor === 'boolean'
@@ -104,8 +114,10 @@ function detectPreset(visibility: ColumnVisibility): ColumnPresetKey | 'custom' 
       preset.company === visibility.company &&
       preset.status === visibility.status &&
       preset.openings === visibility.openings &&
-      preset.pipeline === visibility.pipeline &&
+      preset.remainingOpenings === visibility.remainingOpenings &&
+      preset.internalValidation === visibility.internalValidation &&
       preset.proposed === visibility.proposed &&
+      preset.hired === visibility.hired &&
       preset.owner === visibility.owner &&
       preset.recruiter === visibility.recruiter &&
       preset.monitor === visibility.monitor
@@ -182,7 +194,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
   const [monitorToggleError, setMonitorToggleError] = useState('');
   const columnStorageKey = useMemo(
-    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:columns:v3`,
+    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:columns:v4`,
     [bootstrap.siteID, bootstrap.userID]
   );
 
@@ -375,9 +387,11 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     { key: 'title', title: 'Job Order' },
     ...(visibleColumns.company ? [{ key: 'company', title: 'Company' }] : []),
     ...(visibleColumns.status ? [{ key: 'status', title: 'Status' }] : []),
-    ...(visibleColumns.openings ? [{ key: 'openings', title: 'Openings' }] : []),
-    ...(visibleColumns.pipeline ? [{ key: 'pipeline', title: 'Pipeline' }] : []),
+    ...(visibleColumns.openings ? [{ key: 'openings', title: 'Total Openings' }] : []),
+    ...(visibleColumns.remainingOpenings ? [{ key: 'remainingOpenings', title: 'Remaining Openings' }] : []),
+    ...(visibleColumns.internalValidation ? [{ key: 'internalValidation', title: 'Internal Validation' }] : []),
     ...(visibleColumns.proposed ? [{ key: 'proposed', title: 'Proposed' }] : []),
+    ...(visibleColumns.hired ? [{ key: 'hired', title: 'Hired' }] : []),
     ...(visibleColumns.owner ? [{ key: 'owner', title: 'Owner' }] : []),
     ...(visibleColumns.recruiter ? [{ key: 'recruiter', title: 'Recruiter' }] : []),
     ...(visibleColumns.monitor ? [{ key: 'monitor', title: 'Monitor' }] : [])
@@ -385,9 +399,11 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const columnToggleItems: Array<{ key: keyof ColumnVisibility; label: string }> = [
     { key: 'company', label: 'Company' },
     { key: 'status', label: 'Status' },
-    { key: 'openings', label: 'Openings' },
-    { key: 'pipeline', label: 'Pipeline' },
+    { key: 'openings', label: 'Total Openings' },
+    { key: 'remainingOpenings', label: 'Remaining Openings' },
+    { key: 'internalValidation', label: 'Internal Validation' },
     { key: 'proposed', label: 'Proposed' },
+    { key: 'hired', label: 'Hired' },
     { key: 'owner', label: 'Owner' },
     { key: 'recruiter', label: 'Recruiter' },
     { key: 'monitor', label: 'Monitor' }
@@ -659,8 +675,26 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                       </span>
                     </td>
                   ) : null}
-                  {visibleColumns.pipeline ? <td>{row.pipeline}</td> : null}
-                  {visibleColumns.proposed ? <td>{row.submitted}</td> : null}
+                  {visibleColumns.remainingOpenings ? (
+                    <td>
+                      <span
+                        className={`modern-chip ${row.remainingOpenings > 0 ? 'modern-chip--openings modern-chip--info' : 'modern-chip--openings-zero'}`}
+                      >
+                        {row.remainingOpenings}
+                      </span>
+                    </td>
+                  ) : null}
+                  {visibleColumns.internalValidation ? <td>{row.internalValidation}</td> : null}
+                  {visibleColumns.proposed ? <td>{row.proposed}</td> : null}
+                  {visibleColumns.hired ? (
+                    <td>
+                      <span
+                        className={`modern-chip ${row.hired > 0 ? 'modern-chip--success' : 'modern-chip--openings-zero'}`}
+                      >
+                        {row.hired}
+                      </span>
+                    </td>
+                  ) : null}
                   {visibleColumns.owner ? <td>{toDisplayText(row.ownerName)}</td> : null}
                   {visibleColumns.recruiter ? <td>{toDisplayText(row.recruiterName)}</td> : null}
                   {visibleColumns.monitor ? (

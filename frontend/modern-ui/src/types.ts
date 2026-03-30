@@ -3351,8 +3351,10 @@ export type JobOrdersListModernDataResponse = {
     daysOld: number;
     dateCreated: string;
     openings: number;
-    submitted: number;
-    pipeline: number;
+    remainingOpenings: number;
+    internalValidation: number;
+    proposed: number;
+    hired: number;
     ownerName: string;
     recruiterName: string;
     showURL: string;

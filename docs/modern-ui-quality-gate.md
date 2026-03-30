@@ -1,8 +1,8 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-27T06:56:42.949Z
-Finished: 2026-03-27T06:57:06.102Z
-Overall Status: **Pass**
+Started: 2026-03-30T16:07:31.297Z
+Finished: 2026-03-30T16:08:01.075Z
+Overall Status: **Fail**
 
 ## Summary
 
@@ -19,10 +19,10 @@ Overall Status: **Pass**
 | Command: No Legacy-Wrapper Route Guard | Pass | 0 |
 | Command: Intentional Legacy-Forward Endpoint Guard | Pass | 0 |
 | Command: Unexpected Legacy Redirect Guard | Pass | 0 |
-| Command: Zero Legacy-Dependent Guard | Pass | 0 |
-| Command: In-Scope Route Fallback Guard | Pass | 0 |
+| Command: Zero Legacy-Dependent Guard | Fail | 1 |
+| Command: In-Scope Route Fallback Guard | Fail | 1 |
 | Command: Bridge Wildcard Retirement Guard | Pass | 0 |
-| Command: No-Bridge Action Guard | Pass | 0 |
+| Command: No-Bridge Action Guard | Fail | 1 |
 | Command: Legacy Fallback Link Guard | Pass | 0 |
 | Command: Shell No-JS Fallback Guard | Pass | 0 |
 | Command: Cutover Evidence Snapshot | Pass | 0 |
@@ -345,7 +345,7 @@ Command: `npm.cmd run verify:no-unexpected-legacy-redirects`
 **stderr**
 `(no output)`
 
-### Zero Legacy-Dependent Guard (Pass)
+### Zero Legacy-Dependent Guard (Fail)
 
 Command: `npm.cmd run verify:zero-legacy-dependent`
 
@@ -358,9 +358,11 @@ Command: `npm.cmd run verify:zero-legacy-dependent`
 ```
 
 **stderr**
-`(no output)`
+```text
+[modern-ui] Legacy-dependent routes detected (totals.legacyDependent=1, rows=1).
+```
 
-### In-Scope Route Fallback Guard (Pass)
+### In-Scope Route Fallback Guard (Fail)
 
 Command: `npm.cmd run verify:in-scope-routes`
 
@@ -368,12 +370,13 @@ Command: `npm.cmd run verify:in-scope-routes`
 ```text
 > opencats-modern-ui@0.1.0 verify:in-scope-routes
 > node ./scripts/verify-no-inscope-wildcard-fallbacks.mjs
-
-[modern-ui] No in-scope wildcard/default fallback routes detected.
 ```
 
 **stderr**
-`(no output)`
+```text
+[modern-ui] In-scope fallback routes found: 1
+- joborders.purgeFromPipeline -> bridge-global-fallback (*.*)
+```
 
 ### Bridge Wildcard Retirement Guard (Pass)
 
@@ -390,7 +393,7 @@ Command: `npm.cmd run verify:bridge-wildcards`
 **stderr**
 `(no output)`
 
-### No-Bridge Action Guard (Pass)
+### No-Bridge Action Guard (Fail)
 
 Command: `npm.cmd run verify:no-bridge-actions`
 
@@ -403,7 +406,9 @@ Command: `npm.cmd run verify:no-bridge-actions`
 ```
 
 **stderr**
-`(no output)`
+```text
+[modern-ui] Bridge actions detected (bridge=1, bridgeExplicit=0, bridgeFallback=1, rows=1).
+```
 
 ### Legacy Fallback Link Guard (Pass)
 

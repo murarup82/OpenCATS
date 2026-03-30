@@ -1,12 +1,14 @@
 # Modern UI Zero Legacy-Dependent Guard
 
-Generated: 2026-03-27T06:57:01.805Z
+Generated: 2026-03-30T16:07:55.456Z
 
 ## Totals
 
 - Modern-native routes: 228
-- Legacy-dependent routes: 0
+- Legacy-dependent routes: 1
 
-## Result
+## Legacy-Dependent Routes (Preview)
 
-No legacy-dependent routes detected in modernization board.
+| Route | Component | Bucket |
+| --- | --- | --- |
+| `joborders.purgefrompipeline` | ModuleBridgePage | bridge |

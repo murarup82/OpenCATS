@@ -854,6 +854,60 @@ class JobOrdersUI extends UserInterface
             );
         }
 
+        /* Collect job order IDs from the current page to batch-fetch
+           pipeline status counts in a single query. */
+        $pageJobOrderIDs = array();
+        foreach ($rows as $row)
+        {
+            $id = (isset($row['jobOrderID']) ? (int) $row['jobOrderID'] : 0);
+            if ($id > 0)
+            {
+                $pageJobOrderIDs[] = $id;
+            }
+        }
+
+        $pipelineStatusCounts = array();
+        if (!empty($pageJobOrderIDs))
+        {
+            $db = DatabaseConnection::getInstance();
+            $idList = implode(',', $pageJobOrderIDs);
+            $statusCountSQL = sprintf(
+                'SELECT
+                    cjo.joborder_id AS jobOrderID,
+                    SUM(IF(cjo.status IN (%s, %s), 1, 0)) AS internalValidation,
+                    SUM(IF(cjo.status IN (%s, %s, %s, %s, %s, %s), 1, 0)) AS proposed,
+                    SUM(IF(cjo.status = %s, 1, 0)) AS hired
+                FROM
+                    candidate_joborder cjo
+                WHERE
+                    cjo.joborder_id IN (%s)
+                AND
+                    cjo.site_id = %s
+                GROUP BY
+                    cjo.joborder_id',
+                PIPELINE_STATUS_ALLOCATED,
+                PIPELINE_STATUS_DELIVERY_VALIDATED,
+                PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
+                PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+                PIPELINE_STATUS_CUSTOMER_APPROVED,
+                PIPELINE_STATUS_AVEL_APPROVED,
+                PIPELINE_STATUS_OFFER_NEGOTIATION,
+                PIPELINE_STATUS_OFFER_ACCEPTED,
+                PIPELINE_STATUS_HIRED,
+                $idList,
+                $this->_siteID
+            );
+            $statusCountRS = $db->getAllAssoc($statusCountSQL);
+            foreach ($statusCountRS as $countRow)
+            {
+                $pipelineStatusCounts[(int) $countRow['jobOrderID']] = array(
+                    'internalValidation' => (int) $countRow['internalValidation'],
+                    'proposed' => (int) $countRow['proposed'],
+                    'hired' => (int) $countRow['hired']
+                );
+            }
+        }
+
         $responseRows = array();
         foreach ($rows as $row)
         {
@@ -887,6 +941,13 @@ class JobOrdersUI extends UserInterface
                 $recruiterName = '--';
             }
 
+            $openings = (isset($row['openings'])
+                ? (int) $row['openings']
+                : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : 0));
+            $counts = isset($pipelineStatusCounts[$jobOrderID])
+                ? $pipelineStatusCounts[$jobOrderID]
+                : array('internalValidation' => 0, 'proposed' => 0, 'hired' => 0);
+
             $responseRows[] = array(
                 'jobOrderID' => $jobOrderID,
                 'title' => $title,
@@ -900,11 +961,11 @@ class JobOrdersUI extends UserInterface
                 'commentCount' => (isset($row['profileCommentCount']) ? (int) $row['profileCommentCount'] : 0),
                 'daysOld' => (isset($row['daysOld']) ? (int) $row['daysOld'] : 0),
                 'dateCreated' => (isset($row['dateCreated']) ? $row['dateCreated'] : '--'),
-                'openings' => (isset($row['openings'])
-                    ? (int) $row['openings']
-                    : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : 0)),
-                'submitted' => (isset($row['submitted']) ? (int) $row['submitted'] : 0),
-                'pipeline' => (isset($row['pipeline']) ? (int) $row['pipeline'] : 0),
+                'openings' => $openings,
+                'remainingOpenings' => max(0, $openings - $counts['hired']),
+                'internalValidation' => $counts['internalValidation'],
+                'proposed' => $counts['proposed'],
+                'hired' => $counts['hired'],
                 'ownerName' => $ownerName,
                 'recruiterName' => $recruiterName,
                 'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
