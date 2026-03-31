@@ -7893,6 +7893,12 @@
   transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
 
+.modern-inline-modal .modern-field-hint {
+  color: #5b7587;
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
 .modern-inline-modal textarea.avel-form-control {
   min-height: 96px;
   resize: vertical;

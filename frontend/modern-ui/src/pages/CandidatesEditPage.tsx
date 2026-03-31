@@ -738,6 +738,10 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   } | null>(null);
   const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
+  const [candidateDeleteModalOpen, setCandidateDeleteModalOpen] = useState<boolean>(false);
+  const [candidateDeletePending, setCandidateDeletePending] = useState<boolean>(false);
+  const [candidateDeleteError, setCandidateDeleteError] = useState<string>('');
+  const [candidateDeleteConfirmation, setCandidateDeleteConfirmation] = useState<string>('');
   const [aiAttachmentID, setAiAttachmentID] = useState<number>(0);
   const [aiPrefillPending, setAiPrefillPending] = useState<boolean>(false);
   const [aiPrefillStatus, setAiPrefillStatus] = useState<string>('');
@@ -1271,6 +1275,29 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     setFieldSources({});
     setAiUpdatedExtraFieldKeys([]);
   };
+  const openCandidateDeleteModal = () => {
+    setCandidateDeleteError('');
+    setCandidateDeleteConfirmation('');
+    setCandidateDeletePending(false);
+    setCandidateDeleteModalOpen(true);
+  };
+  const closeCandidateDeleteModal = () => {
+    if (candidateDeletePending) {
+      return;
+    }
+    setCandidateDeleteError('');
+    setCandidateDeleteConfirmation('');
+    setCandidateDeleteModalOpen(false);
+  };
+  const confirmCandidateDelete = () => {
+    if (deleteURL === '') {
+      setCandidateDeleteError('Delete action is unavailable for this candidate.');
+      return;
+    }
+    setCandidateDeleteError('');
+    setCandidateDeletePending(true);
+    window.location.assign(deleteURL);
+  };
 
   return (
     <div className="avel-dashboard-page avel-candidate-add-page avel-candidate-edit-page avel-candidate-edit-page--refined">
@@ -1289,9 +1316,9 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               Back to Profile
             </a>
             {data.meta.permissions.canDeleteCandidate ? (
-              <a className="modern-btn avel-candidate-edit-page__danger-btn" href={deleteURL}>
+              <button type="button" className="modern-btn avel-candidate-edit-page__danger-btn" onClick={openCandidateDeleteModal}>
                 Delete Candidate
-              </a>
+              </button>
             ) : null}
           </>
         }
@@ -1912,6 +1939,21 @@ export function CandidatesEditPage({ bootstrap }: Props) {
             }
             handleDeleteAttachment(attachmentDeleteModal.attachmentID);
           }}
+        />
+        <ConfirmActionModal
+          isOpen={candidateDeleteModalOpen}
+          title="Delete Candidate"
+          message={`Delete ${candidateDisplayName}? This permanently removes the candidate profile.`}
+          confirmLabel="Delete Candidate"
+          pending={candidateDeletePending}
+          error={candidateDeleteError}
+          confirmationKeyword="DELETE"
+          confirmationLabel='Type DELETE to permanently remove this candidate'
+          confirmationHint="This action cannot be undone."
+          confirmationValue={candidateDeleteConfirmation}
+          onConfirmationValueChange={setCandidateDeleteConfirmation}
+          onCancel={closeCandidateDeleteModal}
+          onConfirm={confirmCandidateDelete}
         />
       </PageContainer>
     </div>
