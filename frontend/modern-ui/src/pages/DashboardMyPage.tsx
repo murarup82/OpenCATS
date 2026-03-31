@@ -532,6 +532,32 @@ export function DashboardMyPage({ bootstrap }: Props) {
     data.meta.statusRules?.orderedStatusIDs.length > 0
       ? data.meta.statusRules.orderedStatusIDs
       : statusCatalog.map((status) => status.statusID);
+  const kanbanDisplayOrder =
+    rejectedStatusID > 0
+      ? [
+          rejectedStatusID,
+          ...orderedStatusIDs.filter((statusID) => Number(statusID || 0) !== rejectedStatusID)
+        ]
+      : orderedStatusIDs;
+  const kanbanDisplayIndex = new Map<number, number>();
+  kanbanDisplayOrder.forEach((statusID, index) => {
+    const normalizedStatusID = Number(statusID || 0);
+    if (normalizedStatusID > 0 && !kanbanDisplayIndex.has(normalizedStatusID)) {
+      kanbanDisplayIndex.set(normalizedStatusID, index);
+    }
+  });
+  const sortStatusesForKanban = (statuses: StatusCatalogEntry[]) =>
+    [...statuses].sort((left, right) => {
+      const leftIndex = kanbanDisplayIndex.get(Number(left.statusID || 0));
+      const rightIndex = kanbanDisplayIndex.get(Number(right.statusID || 0));
+      const normalizedLeftIndex = typeof leftIndex === 'number' ? leftIndex : Number.MAX_SAFE_INTEGER;
+      const normalizedRightIndex = typeof rightIndex === 'number' ? rightIndex : Number.MAX_SAFE_INTEGER;
+      if (normalizedLeftIndex !== normalizedRightIndex) {
+        return normalizedLeftIndex - normalizedRightIndex;
+      }
+
+      return Number(left.statusID || 0) - Number(right.statusID || 0);
+    });
   const rejectionReasons = Array.isArray(data?.options.rejectionReasons)
     ? data.options.rejectionReasons
         .map((reason) => ({
@@ -914,8 +940,8 @@ export function DashboardMyPage({ bootstrap }: Props) {
     : baseFilteredRows.filter((row) => String(row.statusID) === localStatusID);
 
   const visibleStatuses = localStatusID === 'all'
-    ? statusCatalog
-    : statusCatalog.filter((status) => String(status.statusID) === localStatusID);
+    ? sortStatusesForKanban(statusCatalog)
+    : sortStatusesForKanban(statusCatalog.filter((status) => String(status.statusID) === localStatusID));
 
   const groupedByStatus = new Map<number, DashboardModernDataResponse['rows']>();
   filteredRows.forEach((row) => {
@@ -937,7 +963,7 @@ export function DashboardMyPage({ bootstrap }: Props) {
     baseCountByStatus.set(row.statusID, (baseCountByStatus.get(row.statusID) || 0) + 1);
   });
 
-  const allStatusChips = statusCatalog
+  const allStatusChips = sortStatusesForKanban(statusCatalog)
     .filter((status) => (baseCountByStatus.get(status.statusID) || 0) > 0)
     .map((status) => ({
       statusID: status.statusID,
