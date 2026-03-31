@@ -37,7 +37,54 @@ type AddToListCompletedDetail = {
   listIDs?: Array<number | string>;
 };
 
+type CandidateRow = CandidatesListModernDataResponse['rows'][number];
+
+type CandidateDataColumnKey =
+  | 'candidate'
+  | 'source'
+  | 'skills'
+  | 'pipeline'
+  | 'gdpr'
+  | 'owner'
+  | 'created'
+  | 'updated';
+
+type CandidateColumnKey = CandidateDataColumnKey | 'actions';
+
+type CandidateColumnConfig = {
+  key: CandidateColumnKey;
+  title: string;
+  sortKey: string;
+  filterable?: boolean;
+};
+
+type CandidateColumnVisibility = Record<CandidateDataColumnKey, boolean>;
+
 const SEARCH_APPLY_DEBOUNCE_MS = 420;
+const MULTI_FILTER_PREFIX = '__multi__:';
+
+const CANDIDATE_COLUMNS: CandidateColumnConfig[] = [
+  { key: 'candidate', title: 'Candidate', sortKey: 'lastName', filterable: true },
+  { key: 'source', title: 'Source', sortKey: 'source', filterable: true },
+  { key: 'skills', title: 'Key Skills', sortKey: '', filterable: true },
+  { key: 'pipeline', title: 'Pipeline', sortKey: '', filterable: true },
+  { key: 'gdpr', title: 'GDPR', sortKey: '', filterable: true },
+  { key: 'owner', title: 'Owner', sortKey: 'ownerSort', filterable: true },
+  { key: 'created', title: 'Added', sortKey: 'dateCreatedSort', filterable: true },
+  { key: 'updated', title: 'Updated', sortKey: 'dateModifiedSort', filterable: true },
+  { key: 'actions', title: 'Actions', sortKey: '' }
+];
+
+const DEFAULT_VISIBLE_COLUMNS: CandidateColumnVisibility = {
+  candidate: true,
+  source: true,
+  skills: true,
+  pipeline: true,
+  gdpr: true,
+  owner: true,
+  created: true,
+  updated: true
+};
 
 function toDisplayText(value: unknown, fallback = '--'): string {
   if (typeof value === 'string') {
@@ -80,7 +127,7 @@ function getSourceChipClass(source: string): string {
   return 'modern-chip--source-other';
 }
 
-function getRowColumnValue(row: CandidatesListModernDataResponse['rows'][0], key: string): string {
+function getRowColumnValue(row: CandidateRow, key: CandidateDataColumnKey): string {
   switch (key) {
     case 'candidate': return String(row.fullName || '');
     case 'source': return String(row.source || '');
@@ -88,11 +135,124 @@ function getRowColumnValue(row: CandidatesListModernDataResponse['rows'][0], key
     case 'pipeline': return row.isInPipeline ? `Allocated (${row.pipelineActiveCount})` : 'Unassigned';
     case 'gdpr': return row.gdprSigned ? 'Signed' : 'Not Signed';
     case 'owner': return String(row.ownerName || '');
+    case 'created': return String(row.createdDate || '');
+    case 'updated': return String(row.modifiedDate || '');
     default: return '';
   }
 }
 
 const stripDiacritics = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+
+function normalizeFilterToken(value: string): string {
+  return stripDiacritics(String(value || '').trim().toLowerCase());
+}
+
+function dedupeFilterValues(values: string[]): string[] {
+  const uniqueValues = new Map<string, string>();
+  values.forEach((value) => {
+    const normalized = String(value || '').trim();
+    if (normalized === '') {
+      return;
+    }
+    const token = normalizeFilterToken(normalized);
+    if (!uniqueValues.has(token)) {
+      uniqueValues.set(token, normalized);
+    }
+  });
+  return Array.from(uniqueValues.values());
+}
+
+function parseMultiFilterValues(rawValue: string): string[] | null {
+  const normalized = String(rawValue || '').trim();
+  if (!normalized.startsWith(MULTI_FILTER_PREFIX)) {
+    return null;
+  }
+  const payload = normalized.slice(MULTI_FILTER_PREFIX.length).trim();
+  if (payload === '') {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(payload) as unknown;
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    return dedupeFilterValues(parsed.map((value) => String(value || '')));
+  } catch (_error) {
+    return null;
+  }
+}
+
+function parseFilterSelection(rawValue: string): { values: string[]; isMulti: boolean } {
+  const multiValues = parseMultiFilterValues(rawValue);
+  if (multiValues !== null) {
+    return { values: multiValues, isMulti: true };
+  }
+
+  const single = String(rawValue || '').trim();
+  if (single === '') {
+    return { values: [], isMulti: false };
+  }
+  return { values: [single], isMulti: false };
+}
+
+function encodeFilterSelection(values: string[]): string {
+  const uniqueValues = dedupeFilterValues(values);
+  if (uniqueValues.length === 0) {
+    return '';
+  }
+  if (uniqueValues.length === 1) {
+    return uniqueValues[0];
+  }
+  return `${MULTI_FILTER_PREFIX}${JSON.stringify(uniqueValues)}`;
+}
+
+function splitColumnFilterValues(columnKey: CandidateDataColumnKey, rawValue: string): string[] {
+  const normalized = String(rawValue || '').trim();
+  if (normalized === '') {
+    return [];
+  }
+
+  if (columnKey === 'skills') {
+    const splitValues = normalized
+      .split(/[,;|/]+/g)
+      .map((value) => value.trim())
+      .filter((value) => value !== '');
+    if (splitValues.length > 0) {
+      return dedupeFilterValues(splitValues);
+    }
+  }
+
+  return [normalized];
+}
+
+function emptyColumnFilters(): Record<CandidateDataColumnKey, string> {
+  return {
+    candidate: '',
+    source: '',
+    skills: '',
+    pipeline: '',
+    gdpr: '',
+    owner: '',
+    created: '',
+    updated: ''
+  };
+}
+
+function normalizeVisibleColumns(visibleColumns: unknown): CandidateColumnVisibility {
+  const normalized: CandidateColumnVisibility = { ...DEFAULT_VISIBLE_COLUMNS };
+  if (!visibleColumns || typeof visibleColumns !== 'object') {
+    return normalized;
+  }
+
+  const payload = visibleColumns as Record<string, unknown>;
+  (Object.keys(DEFAULT_VISIBLE_COLUMNS) as CandidateDataColumnKey[]).forEach((columnKey) => {
+    if (Object.prototype.hasOwnProperty.call(payload, columnKey)) {
+      normalized[columnKey] = Boolean(payload[columnKey]);
+    }
+  });
+
+  return normalized;
+}
 
 export function CandidatesListPage({ bootstrap }: Props) {
   const [data, setData] = useState<CandidatesListModernDataResponse | null>(null);
@@ -105,9 +265,16 @@ export function CandidatesListPage({ bootstrap }: Props) {
     url: string;
     title: string;
   } | null>(null);
-  const [columnFilterOpen, setColumnFilterOpen] = useState<string | null>(null);
-  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [activeHeaderMenuColumn, setActiveHeaderMenuColumn] = useState<CandidateDataColumnKey | null>(null);
+  const [headerMenuSearch, setHeaderMenuSearch] = useState('');
+  const [columnFilters, setColumnFilters] = useState<Record<CandidateDataColumnKey, string>>(emptyColumnFilters());
+  const [visibleColumns, setVisibleColumns] = useState<CandidateColumnVisibility>(DEFAULT_VISIBLE_COLUMNS);
   const skipNextAutoSearchRef = useRef(false);
+  const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
+  const columnVisibilityStorageKey = useMemo(
+    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:candidates:list:columns:v1`,
+    [bootstrap.siteID, bootstrap.userID]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -289,23 +456,77 @@ export function CandidatesListPage({ bootstrap }: Props) {
   }, [data, navigateWithFilters, searchDraft]);
 
   useEffect(() => {
-    if (!columnFilterOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.avel-col-filter')) {
-        setColumnFilterOpen(null);
+    try {
+      const raw = window.localStorage.getItem(columnVisibilityStorageKey);
+      if (!raw) {
+        setVisibleColumns(DEFAULT_VISIBLE_COLUMNS);
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as { visibleColumns?: unknown };
+      setVisibleColumns(normalizeVisibleColumns(parsed.visibleColumns));
+    } catch (_error) {
+      setVisibleColumns(DEFAULT_VISIBLE_COLUMNS);
+    }
+  }, [columnVisibilityStorageKey]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        columnVisibilityStorageKey,
+        JSON.stringify({
+          visibleColumns
+        })
+      );
+    } catch (_error) {
+      // Ignore persistence issues.
+    }
+  }, [columnVisibilityStorageKey, visibleColumns]);
+
+  useEffect(() => {
+    setHeaderMenuSearch('');
+  }, [activeHeaderMenuColumn]);
+
+  useEffect(() => {
+    const closeColumnsMenu = () => {
+      if (columnsMenuRef.current?.open) {
+        columnsMenuRef.current.removeAttribute('open');
       }
     };
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setColumnFilterOpen(null);
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const targetNode = event.target as Node | null;
+      const element = targetNode instanceof Element ? targetNode : null;
+
+      if (columnsMenuRef.current && targetNode && !columnsMenuRef.current.contains(targetNode)) {
+        closeColumnsMenu();
+      }
+
+      if (
+        activeHeaderMenuColumn !== null &&
+        !element?.closest('.avel-candidates-header-menu') &&
+        !element?.closest('.avel-candidates-results__th-title')
+      ) {
+        setActiveHeaderMenuColumn(null);
+      }
     };
-    document.addEventListener('mousedown', handleClick);
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeColumnsMenu();
+        setActiveHeaderMenuColumn(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown, { passive: true });
     document.addEventListener('keydown', handleEscape);
     return () => {
-      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [columnFilterOpen]);
+  }, [activeHeaderMenuColumn]);
 
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {
     if (!data) {
@@ -349,18 +570,121 @@ export function CandidatesListPage({ bootstrap }: Props) {
     }));
   }, [data]);
 
+  const setColumnFilterSelection = useCallback((columnKey: CandidateDataColumnKey, values: string[]) => {
+    const encoded = encodeFilterSelection(values);
+    setColumnFilters((current) => ({
+      ...current,
+      [columnKey]: encoded
+    }));
+  }, []);
+
+  const toggleColumnFilterValue = useCallback(
+    (columnKey: CandidateDataColumnKey, value: string, checked: boolean) => {
+      const normalizedValue = String(value || '').trim();
+      if (normalizedValue === '') {
+        return;
+      }
+
+      setColumnFilters((current) => {
+        const existing = parseFilterSelection(current[columnKey] || '').values;
+        const nextMap = new Map(existing.map((entry) => [normalizeFilterToken(entry), entry]));
+        const token = normalizeFilterToken(normalizedValue);
+        if (checked) {
+          nextMap.set(token, normalizedValue);
+        } else {
+          nextMap.delete(token);
+        }
+        return {
+          ...current,
+          [columnKey]: encodeFilterSelection(Array.from(nextMap.values()))
+        };
+      });
+    },
+    []
+  );
+
+  const visibleColumnOrder = useMemo(() => {
+    const columns = (Object.keys(DEFAULT_VISIBLE_COLUMNS) as CandidateDataColumnKey[]).filter(
+      (columnKey) => visibleColumns[columnKey]
+    );
+    return columns.length > 0 ? columns : ['candidate'];
+  }, [visibleColumns]);
+
+  const visibleTableColumns = useMemo(() => {
+    const visibleDataColumns = visibleColumnOrder
+      .map((columnKey) => CANDIDATE_COLUMNS.find((column) => column.key === columnKey) || null)
+      .filter((column): column is CandidateColumnConfig => column !== null);
+    const actionsColumn = CANDIDATE_COLUMNS.find((column) => column.key === 'actions');
+    return actionsColumn ? [...visibleDataColumns, actionsColumn] : visibleDataColumns;
+  }, [visibleColumnOrder]);
+
+  const columnFilterOptions = useMemo(() => {
+    const options = emptyColumnFilters() as unknown as Record<CandidateDataColumnKey, string[]>;
+    if (!data) {
+      return options;
+    }
+
+    (Object.keys(options) as CandidateDataColumnKey[]).forEach((columnKey) => {
+      const values = new Map<string, string>();
+      data.rows.forEach((row) => {
+        const rowValues = splitColumnFilterValues(columnKey, getRowColumnValue(row, columnKey));
+        rowValues.forEach((rowValue) => {
+          const token = normalizeFilterToken(rowValue);
+          if (token === '') {
+            return;
+          }
+          if (!values.has(token)) {
+            values.set(token, rowValue);
+          }
+        });
+      });
+      options[columnKey] = Array.from(values.values()).sort((left, right) =>
+        left.localeCompare(right, undefined, { sensitivity: 'base', numeric: true })
+      );
+    });
+
+    return options;
+  }, [data]);
+
+  const columnFilterOptionTokens = useMemo(() => {
+    return (Object.keys(emptyColumnFilters()) as CandidateDataColumnKey[]).reduce(
+      (accumulator, columnKey) => {
+        accumulator[columnKey] = new Set(columnFilterOptions[columnKey].map((value) => normalizeFilterToken(value)));
+        return accumulator;
+      },
+      {} as Record<CandidateDataColumnKey, Set<string>>
+    );
+  }, [columnFilterOptions]);
+
   const filteredRows = useMemo(() => {
     if (!data) return [];
-    const activeColumnFilters = Object.entries(columnFilters).filter(([, v]) => v.trim() !== '');
-    if (activeColumnFilters.length === 0) return data.rows;
     return data.rows.filter((row) =>
-      activeColumnFilters.every(([key, query]) => {
-        const value = stripDiacritics(getRowColumnValue(row, key).toLowerCase());
-        const search = stripDiacritics(query.trim().toLowerCase());
-        return value.includes(search);
+      (Object.keys(columnFilters) as CandidateDataColumnKey[]).every((columnKey) => {
+        const selection = parseFilterSelection(columnFilters[columnKey] || '');
+        const selectedTokens = selection.values
+          .map((value) => normalizeFilterToken(value))
+          .filter((value) => value !== '');
+        if (selectedTokens.length === 0) {
+          return true;
+        }
+
+        const rowTokens = splitColumnFilterValues(columnKey, getRowColumnValue(row, columnKey))
+          .map((value) => normalizeFilterToken(value))
+          .filter((value) => value !== '');
+
+        if (selection.isMulti) {
+          return selectedTokens.some((token) => rowTokens.includes(token));
+        }
+
+        const filterText = selectedTokens[0];
+        const rowValue = normalizeFilterToken(getRowColumnValue(row, columnKey));
+        if (columnFilterOptionTokens[columnKey].has(filterText)) {
+          return rowTokens.includes(filterText);
+        }
+        return rowValue.includes(filterText);
       })
     );
-  }, [data, columnFilters]);
+  }, [columnFilterOptionTokens, columnFilters, data]);
 
   if (loading && !data) {
     return <div className="modern-state">Loading candidates...</div>;
@@ -412,6 +736,9 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
   const hasActiveFilters = activeFilterLabels.length > 0;
+  const activeColumnFilterCount = (Object.keys(columnFilters) as CandidateDataColumnKey[]).filter(
+    (columnKey) => (columnFilters[columnKey] || '').trim() !== ''
+  ).length;
 
   const gdprSignedCount = data.rows.filter((row) => row.gdprSigned).length;
   const pipelineAllocatedCount = data.rows.filter((row) => row.isInPipeline).length;
@@ -508,7 +835,8 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 onClick={() => {
                   skipNextAutoSearchRef.current = true;
                   setSearchDraft('');
-                  setColumnFilters({});
+                  setColumnFilters(emptyColumnFilters());
+                  setActiveHeaderMenuColumn(null);
                   navigateWithFilters({
                     quickSearch: '',
                     sourceFilter: '',
@@ -581,72 +909,125 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 </h2>
                 <p className="avel-list-panel__hint">
                   Showing {rangeStart}–{rangeEnd} of {data.meta.totalRows}
-                  {Object.values(columnFilters).some((v) => v.trim() !== '') ? ` (${filteredRows.length} matching column filters)` : ''}
+                  {activeColumnFilterCount > 0 ? ` (${filteredRows.length} matching column filters)` : ''}
                 </p>
               </div>
-              <div className="avel-candidates-pagination">
-                <button
-                  type="button"
-                  className="modern-btn modern-btn--mini modern-btn--secondary"
-                  disabled={!canGoPrev}
-                  onClick={() => navigateWithFilters({ page: data.meta.page - 1 })}
-                >
-                  ‹ Prev
-                </button>
-                <span className="avel-candidates-pagination__label">
-                  {data.meta.page} / {data.meta.totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="modern-btn modern-btn--mini modern-btn--secondary"
-                  disabled={!canGoNext}
-                  onClick={() => navigateWithFilters({ page: data.meta.page + 1 })}
-                >
-                  Next ›
-                </button>
+              <div className="avel-candidate-results__header-right">
+                {activeColumnFilterCount > 0 ? (
+                  <button
+                    type="button"
+                    className="modern-chip modern-chip--info avel-dashboard-list__clear-btn"
+                    onClick={() => {
+                      setColumnFilters(emptyColumnFilters());
+                      setActiveHeaderMenuColumn(null);
+                    }}
+                    title="Clear all column filters"
+                  >
+                    Filters: {activeColumnFilterCount} ×
+                  </button>
+                ) : null}
+                <details className="avel-pipeline-matrix__columns-menu" ref={columnsMenuRef}>
+                  <summary className="modern-chip modern-chip--column-toggle">Columns</summary>
+                  <div className="avel-pipeline-matrix__columns-panel">
+                    {(Object.keys(DEFAULT_VISIBLE_COLUMNS) as CandidateDataColumnKey[]).map((columnKey) => {
+                      const column = CANDIDATE_COLUMNS.find((entry) => entry.key === columnKey);
+                      if (!column) {
+                        return null;
+                      }
+
+                      return (
+                        <div key={`column-${columnKey}`} className="avel-pipeline-matrix__column-item">
+                          <label className="avel-pipeline-matrix__column-toggle">
+                            <input
+                              type="checkbox"
+                              checked={visibleColumns[columnKey]}
+                              onChange={() =>
+                                setVisibleColumns((current) => {
+                                  const visibleCount = (Object.keys(current) as CandidateDataColumnKey[]).reduce(
+                                    (total, key) => total + (current[key] ? 1 : 0),
+                                    0
+                                  );
+                                  if (current[columnKey] && visibleCount <= 1) {
+                                    return current;
+                                  }
+                                  return {
+                                    ...current,
+                                    [columnKey]: !current[columnKey]
+                                  };
+                                })
+                              }
+                            />
+                            <span>{column.title}</span>
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+                <div className="avel-candidates-pagination">
+                  <button
+                    type="button"
+                    className="modern-btn modern-btn--mini modern-btn--secondary"
+                    disabled={!canGoPrev}
+                    onClick={() => navigateWithFilters({ page: data.meta.page - 1 })}
+                  >
+                    ‹ Prev
+                  </button>
+                  <span className="avel-candidates-pagination__label">
+                    {data.meta.page} / {data.meta.totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="modern-btn modern-btn--mini modern-btn--secondary"
+                    disabled={!canGoNext}
+                    onClick={() => navigateWithFilters({ page: data.meta.page + 1 })}
+                  >
+                    Next ›
+                  </button>
+                </div>
               </div>
             </div>
 
             {!hasVisibleRows ? (
               <EmptyState message="No candidates match current filters." />
             ) : (
-              <div className="modern-table-wrap">
-                <table className="modern-table">
+              <div className="modern-table-wrap avel-candidate-results__table-wrap">
+                <table className="modern-table avel-candidate-results__table">
                   <thead>
                     <tr>
-                      {[
-                        { key: 'candidate', title: 'Candidate', sortKey: 'lastName' },
-                        { key: 'source', title: 'Source', sortKey: 'source' },
-                        { key: 'skills', title: 'Key Skills', sortKey: '' },
-                        { key: 'pipeline', title: 'Pipeline', sortKey: '' },
-                        { key: 'gdpr', title: 'GDPR', sortKey: '' },
-                        { key: 'owner', title: 'Owner', sortKey: 'ownerSort' },
-                        { key: 'created', title: 'Added', sortKey: 'dateCreatedSort' },
-                        { key: 'updated', title: 'Updated', sortKey: 'dateModifiedSort' },
-                        { key: 'actions', title: 'Actions', sortKey: '' }
-                      ].map((col) => {
+                      {visibleTableColumns.map((col) => {
                         const isSorted = col.sortKey !== '' && data.meta.sortBy === col.sortKey;
-                        const canFilter = ['candidate', 'source', 'skills', 'pipeline', 'gdpr', 'owner'].includes(col.key);
-                        const isFilterOpen = columnFilterOpen === col.key;
-                        const filterValue = columnFilters[col.key] || '';
+                        const columnKey = col.key === 'actions' ? null : col.key;
+                        const isFilterable = col.filterable === true && columnKey !== null;
+                        const isFilterOpen = columnKey !== null && activeHeaderMenuColumn === columnKey;
+                        const activeSelection =
+                          columnKey !== null
+                            ? parseFilterSelection(columnFilters[columnKey] || '')
+                            : { values: [], isMulti: false };
+                        const selectedTokens = new Set(activeSelection.values.map((value) => normalizeFilterToken(value)));
+                        const allOptions = columnKey !== null ? columnFilterOptions[columnKey] : [];
+                        const searchToken = normalizeFilterToken(headerMenuSearch);
+                        const visibleOptions =
+                          searchToken === ''
+                            ? allOptions
+                            : allOptions.filter((value) => normalizeFilterToken(value).includes(searchToken));
+                        const selectedUnknownValues =
+                          columnKey !== null
+                            ? activeSelection.values.filter(
+                                (value) => !columnFilterOptionTokens[columnKey].has(normalizeFilterToken(value))
+                              )
+                            : [];
+                        const renderedOptions = dedupeFilterValues([...selectedUnknownValues, ...visibleOptions]);
 
                         return (
                           <th key={col.key} className={isFilterOpen ? 'avel-col-filter--active' : ''}>
-                            <div className="avel-col-header">
-                              {col.sortKey !== '' ? (
+                            <div className="avel-pipeline-matrix__th-shell">
+                              {columnKey !== null ? (
                                 <button
                                   type="button"
-                                  className="avel-col-header__sort"
-                                  onClick={() => {
-                                    if (isSorted) {
-                                      navigateWithFilters({
-                                        sortDirection: data.meta.sortDirection === 'DESC' ? 'ASC' : 'DESC',
-                                        page: 1
-                                      });
-                                    } else {
-                                      navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 });
-                                    }
-                                  }}
+                                  className="avel-candidates-results__th-title"
+                                  onClick={() => setActiveHeaderMenuColumn((current) => (current === columnKey ? null : columnKey))}
+                                  aria-expanded={isFilterOpen}
                                 >
                                   {col.title}
                                   {isSorted ? (
@@ -656,49 +1037,88 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                   ) : null}
                                 </button>
                               ) : (
-                                <span>{col.title}</span>
+                                <span className="avel-col-header__label">{col.title}</span>
                               )}
-                              {canFilter ? (
-                                <div className="avel-col-filter">
-                                  <button
-                                    type="button"
-                                    className={`avel-col-filter__toggle${filterValue ? ' is-active' : ''}`}
-                                    onClick={() => setColumnFilterOpen(isFilterOpen ? null : col.key)}
-                                    aria-label={`Filter ${col.title}`}
-                                    aria-expanded={isFilterOpen}
-                                  >
-                                    <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
-                                      <path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5z" fill="currentColor" />
-                                    </svg>
-                                  </button>
-                                  {isFilterOpen ? (
-                                    <div className="avel-col-filter__dropdown">
-                                      <input
-                                        type="text"
-                                        className="avel-col-filter__input"
-                                        placeholder={`Filter ${col.title.toLowerCase()}…`}
-                                        value={filterValue}
-                                        onChange={(e) => setColumnFilters((prev) => ({ ...prev, [col.key]: e.target.value }))}
-                                        autoFocus
-                                      />
-                                      {filterValue ? (
-                                        <button
-                                          type="button"
-                                          className="avel-col-filter__clear"
-                                          onClick={() => setColumnFilters((prev) => {
-                                            const next = { ...prev };
-                                            delete next[col.key];
-                                            return next;
-                                          })}
-                                        >
-                                          Clear
-                                        </button>
-                                      ) : null}
-                                    </div>
-                                  ) : null}
-                                </div>
+                              {columnKey !== null && (columnFilters[columnKey] || '').trim() !== '' ? (
+                                <span className="modern-chip modern-chip--info">Filtered</span>
                               ) : null}
                             </div>
+                            {isFilterable && isFilterOpen ? (
+                              <div className="avel-candidates-header-menu">
+                                <label>
+                                  Search values
+                                  <input
+                                    type="text"
+                                    value={headerMenuSearch}
+                                    onChange={(event) => setHeaderMenuSearch(event.target.value)}
+                                    placeholder={`Find ${col.title}`}
+                                    autoFocus
+                                  />
+                                </label>
+                                <div className="avel-candidates-header-menu__options">
+                                  {renderedOptions.length === 0 ? (
+                                    <div className="avel-candidates-header-menu__empty">No matching values.</div>
+                                  ) : (
+                                    renderedOptions.map((optionValue) => {
+                                      const token = normalizeFilterToken(optionValue);
+                                      return (
+                                        <label
+                                          key={`filter-${col.key}-${optionValue}`}
+                                          className="avel-pipeline-matrix__header-menu-option"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedTokens.has(token)}
+                                            onChange={(event) =>
+                                              toggleColumnFilterValue(columnKey, optionValue, event.target.checked)
+                                            }
+                                          />
+                                          {columnKey === 'source' ? (
+                                            <span className={`modern-chip ${getSourceChipClass(optionValue)}`}>{optionValue}</span>
+                                          ) : columnKey === 'pipeline' ? (
+                                            <span className={`modern-chip ${optionValue === 'Unassigned' ? 'modern-chip--pipeline-idle' : 'modern-chip--pipeline'}`}>
+                                              {optionValue}
+                                            </span>
+                                          ) : columnKey === 'gdpr' ? (
+                                            <span className={`modern-chip ${optionValue === 'Signed' ? 'modern-chip--gdpr-signed' : 'modern-chip--gdpr-unsigned'}`}>
+                                              {optionValue}
+                                            </span>
+                                          ) : (
+                                            <span>{optionValue}</span>
+                                          )}
+                                        </label>
+                                      );
+                                    })
+                                  )}
+                                </div>
+                                <div className="avel-candidates-header-menu__actions">
+                                  <button
+                                    type="button"
+                                    onClick={() => setColumnFilterSelection(columnKey, renderedOptions)}
+                                    disabled={renderedOptions.length === 0}
+                                  >
+                                    Select Visible
+                                  </button>
+                                  <button type="button" onClick={() => setColumnFilterSelection(columnKey, [])}>
+                                    Clear
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'ASC', page: 1 })}
+                                    disabled={col.sortKey === ''}
+                                  >
+                                    Sort A-Z
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => navigateWithFilters({ sortBy: col.sortKey, sortDirection: 'DESC', page: 1 })}
+                                    disabled={col.sortKey === ''}
+                                  >
+                                    Sort Z-A
+                                  </button>
+                                </div>
+                              </div>
+                            ) : null}
                           </th>
                         );
                       })}
@@ -713,80 +1133,105 @@ export function CandidatesListPage({ bootstrap }: Props) {
 
                       return (
                         <tr key={row.candidateID}>
-                          <td className="avel-candidate-table__candidate">
-                            <div className="avel-candidate-table__title-row">
-                              <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
-                                {toDisplayText(row.fullName)} <span className="avel-candidate-table__id">#{row.candidateID}</span>
-                              </a>
-                              <div className="avel-candidate-table__quick-tags">
-                                {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
-                                {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
-                                {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                                {row.commentCount > 0 ? (
-                                  <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
-                                ) : null}
-                              </div>
-                            </div>
-                            <div className="avel-candidate-table__meta">{locationText}</div>
-                          </td>
-                          <td>
-                            <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
-                          </td>
-                          <td className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>
-                          <td>
-                            {row.isInPipeline ? (
-                              <span className="modern-chip modern-chip--pipeline">
-                                Allocated ({row.pipelineActiveCount})
-                              </span>
-                            ) : (
-                              <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
-                            )}
-                          </td>
-                          <td>
-                            {row.gdprSigned ? (
-                              <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
-                            ) : (
-                              <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
-                            )}
-                          </td>
-                          <td>{toDisplayText(row.ownerName)}</td>
-                          <td>{toDisplayText(row.createdDate)}</td>
-                          <td>{toDisplayText(row.modifiedDate)}</td>
-                          <td>
-                            <div className="modern-table-actions">
-                              {canAddToJobOrder ? (
-                                <button
-                                  type="button"
-                                  className="modern-btn modern-btn--mini modern-btn--emphasis avel-candidate-action avel-candidate-action--primary"
-                                  onClick={() =>
-                                    setAssignJobModal({
-                                      url: decodeLegacyURL(row.addToJobOrderURL),
-                                      title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
-                                    })
-                                  }
-                                >
-                                  Add To Job
-                                </button>
-                              ) : null}
-                              {canEditCandidate ? (
-                                <a
-                                  className="modern-btn modern-btn--mini modern-btn--secondary avel-candidate-action avel-candidate-action--edit"
-                                  href={ensureModernUIURL(row.candidateEditURL)}
-                                >
-                                  Edit
-                                </a>
-                              ) : null}
-                              {canAddToList ? (
-                                <button
-                                  type="button"
-                                  className="modern-btn modern-btn--mini modern-btn--ghost avel-candidate-action avel-candidate-action--tertiary"
-                                  onClick={() => openAddToListOverlay(row.addToListURL)}
-                                >
-                                  Add To List
-                                </button>
-                              ) : null}
-                            </div>
-                          </td>
+                          {visibleTableColumns.map((column) => {
+                            switch (column.key) {
+                              case 'candidate':
+                                return (
+                                  <td key={`${row.candidateID}-candidate`} className="avel-candidate-table__candidate">
+                                    <div className="avel-candidate-table__title-row">
+                                      <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.candidateURL)}>
+                                        {toDisplayText(row.fullName)} <span className="avel-candidate-table__id">#{row.candidateID}</span>
+                                      </a>
+                                      <div className="avel-candidate-table__quick-tags">
+                                        {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Resume</span> : null}
+                                        {row.hasDuplicate ? <span className="modern-chip modern-chip--critical">Duplicate</span> : null}
+                                        {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
+                                        {row.commentCount > 0 ? (
+                                          <span className="modern-chip modern-chip--success">{row.commentCount} comments</span>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                    <div className="avel-candidate-table__meta">{locationText}</div>
+                                  </td>
+                                );
+                              case 'source':
+                                return (
+                                  <td key={`${row.candidateID}-source`}>
+                                    <span className={`modern-chip ${getSourceChipClass(row.source)}`}>{toDisplayText(row.source)}</span>
+                                  </td>
+                                );
+                              case 'skills':
+                                return <td key={`${row.candidateID}-skills`} className="avel-candidate-table__skills">{toDisplayText(row.keySkills)}</td>;
+                              case 'pipeline':
+                                return (
+                                  <td key={`${row.candidateID}-pipeline`}>
+                                    {row.isInPipeline ? (
+                                      <span className="modern-chip modern-chip--pipeline">
+                                        Allocated ({row.pipelineActiveCount})
+                                      </span>
+                                    ) : (
+                                      <span className="modern-chip modern-chip--pipeline-idle">Unassigned</span>
+                                    )}
+                                  </td>
+                                );
+                              case 'gdpr':
+                                return (
+                                  <td key={`${row.candidateID}-gdpr`}>
+                                    {row.gdprSigned ? (
+                                      <span className="modern-chip modern-chip--gdpr-signed">Signed</span>
+                                    ) : (
+                                      <span className="modern-chip modern-chip--gdpr-unsigned">Not Signed</span>
+                                    )}
+                                  </td>
+                                );
+                              case 'owner':
+                                return <td key={`${row.candidateID}-owner`}>{toDisplayText(row.ownerName)}</td>;
+                              case 'created':
+                                return <td key={`${row.candidateID}-created`}>{toDisplayText(row.createdDate)}</td>;
+                              case 'updated':
+                                return <td key={`${row.candidateID}-updated`}>{toDisplayText(row.modifiedDate)}</td>;
+                              case 'actions':
+                                return (
+                                  <td key={`${row.candidateID}-actions`}>
+                                    <div className="modern-table-actions">
+                                      {canAddToJobOrder ? (
+                                        <button
+                                          type="button"
+                                          className="modern-btn modern-btn--mini modern-btn--emphasis avel-candidate-action avel-candidate-action--primary"
+                                          onClick={() =>
+                                            setAssignJobModal({
+                                              url: decodeLegacyURL(row.addToJobOrderURL),
+                                              title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
+                                            })
+                                          }
+                                        >
+                                          Add To Job
+                                        </button>
+                                      ) : null}
+                                      {canEditCandidate ? (
+                                        <a
+                                          className="modern-btn modern-btn--mini modern-btn--secondary avel-candidate-action avel-candidate-action--edit"
+                                          href={ensureModernUIURL(row.candidateEditURL)}
+                                        >
+                                          Edit
+                                        </a>
+                                      ) : null}
+                                      {canAddToList ? (
+                                        <button
+                                          type="button"
+                                          className="modern-btn modern-btn--mini modern-btn--ghost avel-candidate-action avel-candidate-action--tertiary"
+                                          onClick={() => openAddToListOverlay(row.addToListURL)}
+                                        >
+                                          Add To List
+                                        </button>
+                                      ) : null}
+                                    </div>
+                                  </td>
+                                );
+                              default:
+                                return null;
+                            }
+                          })}
                         </tr>
                       );
                     })}
@@ -810,4 +1255,3 @@ export function CandidatesListPage({ bootstrap }: Props) {
     </div>
   );
 }
-

@@ -4198,6 +4198,17 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  min-height: 20px;
+  line-height: 1;
+}
+
+.avel-candidates-page .avel-col-header__sort,
+.avel-candidates-page .avel-col-header__label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .avel-candidates-page .avel-col-header__sort {
@@ -4224,6 +4235,9 @@
 
 .avel-candidates-page .avel-col-filter {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
 }
 
 .avel-candidates-page .avel-col-filter__toggle {
@@ -4366,6 +4380,211 @@
 .avel-candidates-page .avel-col-filter__clear:hover {
   background: #eef7fc;
   border-color: #8bbdd4;
+}
+
+.avel-candidates-page .avel-candidate-results__header-right {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.avel-candidates-page .avel-candidate-results__table-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.avel-candidates-page .avel-candidate-results__table th {
+  position: relative;
+  vertical-align: top;
+}
+
+.avel-candidates-page .avel-pipeline-matrix__th-shell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.avel-candidates-page .avel-candidates-results__th-title {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.avel-candidates-page .avel-candidates-results__th-title:hover {
+  color: var(--avel-700);
+}
+
+.avel-candidates-page .avel-pipeline-matrix__columns-menu {
+  position: relative;
+}
+
+.avel-candidates-page .avel-pipeline-matrix__columns-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-pipeline-matrix__columns-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.avel-candidates-page .avel-pipeline-matrix__columns-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 35;
+  min-width: 220px;
+  border: 1px solid #9ec0d4;
+  border-radius: 10px;
+  background: #f6fbff;
+  box-shadow: 0 10px 22px rgba(0, 66, 91, 0.16);
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.avel-candidates-page .avel-pipeline-matrix__column-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.avel-candidates-page .avel-pipeline-matrix__column-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #173b4a;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-candidates-header-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: grid;
+  gap: 8px;
+  background: #f6fbff;
+  border: 1px solid #9ec0d4;
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(17, 52, 68, 0.18);
+  padding: 10px;
+  min-width: 220px;
+  z-index: 50;
+}
+
+.avel-candidates-page .avel-candidates-header-menu > label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #4a6a7a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.avel-candidates-page .avel-candidates-header-menu input[type='text'] {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  color: #1d3f4f;
+  background: #fff;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.avel-candidates-page .avel-candidates-header-menu input[type='text']:focus {
+  outline: none;
+  border-color: var(--avel-500);
+  box-shadow: 0 0 0 3px rgba(0, 151, 189, 0.2);
+}
+
+.avel-candidates-page .avel-candidates-header-menu__options {
+  display: grid;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.avel-candidates-page .avel-pipeline-matrix__header-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid #d6e6ef;
+  background: #ffffff;
+  padding: 5px 8px;
+  font-size: 0.74rem;
+  color: #2b4c5d;
+  cursor: default;
+}
+
+.avel-candidates-page .avel-pipeline-matrix__header-menu-option input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-candidates-header-menu__empty {
+  border: 1px dashed #c1d5e2;
+  border-radius: 8px;
+  background: #f9fcff;
+  color: #5d7a8b;
+  font-size: 0.73rem;
+  padding: 8px;
+}
+
+.avel-candidates-page .avel-candidates-header-menu__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.avel-candidates-page .avel-candidates-header-menu__actions button {
+  border: 1px solid #b8d0dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d3f4f;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.avel-candidates-page .avel-candidates-header-menu__actions button:hover:not(:disabled) {
+  background: #eef7fc;
+  border-color: #8bbdd4;
+}
+
+.avel-candidates-page .avel-candidates-header-menu__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.avel-candidates-page .modern-chip--column-toggle {
+  padding: 5px 10px;
+  font-size: 0.74rem;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* ─── Column selector ────────────────────────────────────────────────── */
