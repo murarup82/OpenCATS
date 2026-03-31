@@ -7436,15 +7436,15 @@
   position: relative;
   top: auto;
   z-index: auto;
-  border: 1px solid #b9d4e4;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 10px 26px rgba(8, 56, 80, 0.12);
-  padding: 14px 16px;
+  border: 1px solid var(--avel-border, #c7ddea);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(10, 63, 90, 0.06);
+  padding: 20px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 14px;
+  gap: 16px;
 }
 
 .avel-candidate-edit-page--refined .avel-candidate-edit-header__eyebrow {
@@ -7475,38 +7475,38 @@
   gap: 6px;
 }
 
-.avel-candidate-edit-page--refined .avel-candidate-edit-actions {
-  margin: 0;
-  border: 1px solid #c3d8e6;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 3px 12px rgba(10, 71, 101, 0.08);
-  padding: 6px;
-  gap: 6px;
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__actions {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.avel-candidate-edit-page--refined .avel-candidate-edit-actions--sticky {
-  top: auto;
-  justify-content: flex-end;
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__legacy-link {
+  color: #4e7285;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
 }
 
-.avel-candidate-edit-page--refined .avel-candidate-edit-panel {
-  border: 1px solid #bfd7e6;
-  border-radius: 18px;
-  background: #fbfeff;
-  box-shadow: 0 10px 24px rgba(9, 62, 88, 0.1);
-  padding: 16px;
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__legacy-link:hover {
+  color: #0f5c7a;
+  text-decoration: underline;
 }
 
-.avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 20px;
-  align-items: start;
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__danger-btn {
+  border: 1px solid #e7b2b2;
+  background: #fff4f4;
+  color: #a14c4c;
 }
 
-.avel-candidate-edit-page--refined .avel-candidate-edit-panel--workbench > .avel-candidate-edit-form {
-  grid-column: 1 / -1;
+.avel-candidate-edit-page--refined .avel-candidate-edit-header__danger-btn:hover {
+  border-color: #de9b9b;
+  background: #ffecec;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-workbench {
+  margin-top: 18px;
 }
 
 .avel-candidate-edit-page--refined .avel-candidate-edit-form {
@@ -7622,11 +7622,11 @@
 }
 
 .avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card {
-  border: 1px solid #c9ddea;
+  border: 1px solid var(--avel-border, #c7ddea);
   border-radius: 14px;
   background: #ffffff;
-  box-shadow: 0 6px 16px rgba(10, 63, 90, 0.08);
-  padding: 14px;
+  box-shadow: 0 4px 14px rgba(10, 63, 90, 0.06);
+  padding: 16px;
   display: grid;
   gap: 12px;
   border-left: 3px solid var(--avel-500, #38b1cc);
@@ -7654,27 +7654,6 @@
   gap: 8px;
 }
 
-.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card--actions {
-  border-left-color: #0f6d8f;
-  box-shadow: 0 10px 22px rgba(8, 78, 107, 0.14);
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-actions-stack {
-  display: grid;
-  gap: 8px;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-actions-stack .modern-btn,
-.avel-candidate-edit-page--refined .avel-candidate-edit-actions-danger .modern-btn {
-  width: 100%;
-  justify-content: center;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-actions-danger {
-  border-top: 1px solid #dbe8f0;
-  padding-top: 10px;
-}
-
 .avel-candidate-edit-page--refined .avel-candidate-edit-section--identity {
   --avel-section-border: #b9d7e9;
   --avel-section-surface: #ffffff;
@@ -7700,65 +7679,36 @@
   --avel-section-surface: #f5fbff;
 }
 
+.avel-candidate-edit-page--refined .avel-candidate-edit-inline-card {
+  margin-top: 4px;
+  border-top: 1px solid #d8e7f0;
+  padding-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-inline-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-inline-card__title {
+  margin: 0;
+  color: #144f6a;
+  font: 700 0.88rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-inline-card__description {
+  margin: 4px 0 0;
+  color: #5f7f90;
+  font-size: 0.74rem;
+}
+
 .avel-candidate-edit-page--refined .avel-candidate-edit-ai-upload {
   min-width: 0;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list {
-  margin: 0;
-  display: grid;
-  gap: 7px;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list > div {
-  display: grid;
-  grid-template-columns: minmax(110px, auto) 1fr;
-  gap: 8px;
-  align-items: baseline;
-  border-bottom: 1px solid #e2edf4;
-  padding-bottom: 7px;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list > div:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list dt {
-  color: #638293;
-  font-size: 0.66rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-meta-list dd {
-  margin: 0;
-  color: #174f67;
-  font-size: 0.79rem;
-  font-weight: 600;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-extra {
-  border: 1px solid #cbdfea;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 12px;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-extra__summary {
-  cursor: pointer;
-  list-style: none;
-  color: #1f5f7b;
-  font: 700 0.82rem/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-extra__summary::-webkit-details-marker {
-  display: none;
-}
-
-.avel-candidate-edit-page--refined .avel-candidate-edit-extra > .avel-list-panel__hint {
-  margin: 8px 0 0;
 }
 
 @media (max-width: 1180px) {
@@ -7795,7 +7745,7 @@
     grid-template-columns: 1fr;
   }
 
-  .avel-candidate-edit-page--refined .avel-candidate-edit-actions .modern-btn {
+  .avel-candidate-edit-page--refined .avel-candidate-edit-header__actions .modern-btn {
     flex: 1 1 auto;
     justify-content: center;
   }

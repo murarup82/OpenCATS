@@ -1234,7 +1234,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const aiUpdatedFieldSummary = [...aiUpdatedFieldKeys.map((fieldKey) => toTrackedFieldLabel(fieldKey)), ...aiUpdatedExtraFieldLabels].join(', ');
   const candidateDisplayName = `${formState.firstName} ${formState.lastName}`.trim() || 'Unnamed Candidate';
   const selectedOwnerLabel = ownerOptions.find((option) => option.value === formState.owner)?.label || '--';
-  const selectedAiAttachment = aiSourceAttachments.find((attachment) => Number(attachment.attachmentID || 0) === Number(aiAttachmentID || 0));
   const resetCandidateForm = () => {
     setFormState(toFormState(data));
     setValidationError('');
@@ -1254,7 +1253,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
         <div className="modern-dashboard avel-dashboard-shell">
           <section className="avel-candidate-edit-header">
             <div className="avel-candidate-edit-header__identity">
-              <p className="avel-candidate-edit-header__eyebrow">Edit Candidate</p>
+              <p className="avel-candidate-edit-header__eyebrow">Candidate Profile</p>
               <h2 className="avel-candidate-edit-header__title">{candidateDisplayName}</h2>
               <p className="avel-candidate-edit-header__subtitle">
                 Candidate #{data.meta.candidateID} · Required fields: First Name, Last Name, Owner
@@ -1272,9 +1271,28 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 <span className="modern-chip modern-chip--info">Owner: {toDisplayText(selectedOwnerLabel)}</span>
                 {parseLimitText !== '' ? <span className="modern-chip modern-chip--source-other">{parseLimitText}</span> : null}
               </div>
+              <div className="avel-candidate-edit-header__actions">
+                <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
+                  Save Candidate
+                </button>
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
+                  Reset Changes
+                </button>
+                <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>
+                  Back to Profile
+                </a>
+                {data.meta.permissions.canDeleteCandidate ? (
+                  <a className="modern-btn avel-candidate-edit-header__danger-btn" href={deleteURL}>
+                    Delete Candidate
+                  </a>
+                ) : null}
+              </div>
+              <a className="avel-candidate-edit-header__legacy-link" href={data.actions.legacyURL}>
+                Open Legacy UI
+              </a>
             </div>
           </section>
-          <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--edit avel-candidate-edit-panel--workbench">
+          <section className="avel-candidate-edit-workbench">
             <form
               id="candidate-edit-form"
               className="avel-candidate-edit-form"
@@ -1379,6 +1397,123 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                           Undo AI Refill
                         </button>
                       ) : null}
+                    </div>
+
+                    <div className="avel-candidate-edit-inline-card">
+                      <div className="avel-candidate-edit-inline-card__header">
+                        <div>
+                          <h4 className="avel-candidate-edit-inline-card__title">Attachments</h4>
+                          <p className="avel-candidate-edit-inline-card__description">
+                            Upload, preview, and manage candidate files without leaving the edit workflow.
+                          </p>
+                        </div>
+                        {data.meta.permissions.canCreateAttachment ? (
+                          <button
+                            type="button"
+                            className="modern-btn modern-btn--mini modern-btn--secondary"
+                            onClick={() => {
+                              setAttachmentUploadOpen((current) => !current);
+                              setAttachmentUploadError('');
+                            }}
+                          >
+                            {attachmentUploadOpen ? 'Cancel Upload' : 'Add Attachment'}
+                          </button>
+                        ) : null}
+                      </div>
+
+                      {data.meta.permissions.canCreateAttachment && attachmentUploadOpen ? (
+                        <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
+                          <label className="modern-command-field avel-candidate-edit-field--span-3">
+                            <span className="modern-command-label">Attachment File</span>
+                            <input
+                              className="avel-form-control"
+                              type="file"
+                              onChange={(event) => setAttachmentUploadFile(event.target.files?.[0] || null)}
+                            />
+                          </label>
+                          <label className="modern-command-toggle">
+                            <input
+                              type="checkbox"
+                              checked={attachmentUploadIsResume}
+                              onChange={(event) => setAttachmentUploadIsResume(event.target.checked)}
+                            />
+                            <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                            <span>Treat as resume (enable parsing/indexing)</span>
+                          </label>
+                          {attachmentUploadError ? <div className="modern-state modern-state--error" role="alert">{attachmentUploadError}</div> : null}
+                          <div className="modern-table-actions">
+                            <button
+                              type="button"
+                              className="modern-btn modern-btn--mini modern-btn--emphasis"
+                              onClick={submitAttachmentUpload}
+                              disabled={attachmentUploadPending}
+                            >
+                              {attachmentUploadPending ? 'Uploading...' : 'Upload'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <DataTable
+                        columns={[
+                          { key: 'file', title: 'File' },
+                          { key: 'created', title: 'Created' },
+                          { key: 'type', title: 'Type' },
+                          { key: 'actions', title: 'Actions' }
+                        ]}
+                        hasRows={data.attachments.length > 0}
+                        emptyMessage="No attachments."
+                      >
+                        {data.attachments.map((attachment) => (
+                          <tr key={attachment.attachmentID}>
+                            <td>
+                              {attachment.retrievalURL !== '' ? (
+                                <a className="modern-link" href={decodeLegacyURL(attachment.retrievalURL)} target="_blank" rel="noreferrer">
+                                  {toDisplayText(attachment.fileName, 'Attachment')}
+                                </a>
+                              ) : (
+                                toDisplayText(attachment.fileName, 'Attachment')
+                              )}
+                            </td>
+                            <td>{toDisplayText(attachment.dateCreated)}</td>
+                            <td>{attachment.isProfileImage ? 'Profile image' : 'Document'}</td>
+                            <td>
+                              <div className="modern-table-actions">
+                                {attachment.previewAvailable && attachment.previewURL !== '' ? (
+                                  <button
+                                    type="button"
+                                    className="modern-btn modern-btn--mini modern-btn--secondary"
+                                    onClick={() =>
+                                      setAttachmentModal({
+                                        url: decodeLegacyURL(attachment.previewURL),
+                                        title: `Preview: ${toDisplayText(attachment.fileName, 'Attachment')}`,
+                                        showRefreshClose: false
+                                      })
+                                    }
+                                  >
+                                    Preview
+                                  </button>
+                                ) : null}
+                                {data.meta.permissions.canDeleteAttachment ? (
+                                  <button
+                                    type="button"
+                                    className="modern-btn modern-btn--mini modern-btn--danger"
+                                    onClick={() => {
+                                      setAttachmentDeleteError('');
+                                      setAttachmentDeleteModal({
+                                        attachmentID: attachment.attachmentID,
+                                        fileName: toDisplayText(attachment.fileName, 'Attachment')
+                                      });
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                ) : null}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </DataTable>
                     </div>
                   </CandidateEditSectionCard>
 
@@ -1582,358 +1717,181 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </CandidateEditSectionCard>
               </div>
 
-              {data.extraFields.length > 0 ? (
-                <details className="avel-candidate-edit-extra avel-candidate-edit-extra--custom">
-                  <summary className="avel-candidate-edit-extra__summary">Advanced & Custom Fields</summary>
-                  <p className="avel-list-panel__hint">Values are saved to legacy extra fields.</p>
-                  <div className="avel-candidate-edit-grid">
-                    {data.extraFields.map((field) => {
-                      const fieldClassName = `modern-command-field${
-                        field.inputType === 'textarea' || field.inputType === 'radio'
-                          ? ' avel-candidate-edit-field--full'
-                          : ''
-                      }`;
-                      if (field.inputType === 'dropdown') {
-                        const value = formState.extraFields[field.postKey] || '';
-                        const extraFieldOptions: SelectMenuOption[] = [
-                          { value: '', label: '- Select from List -' },
-                          ...field.options.map((option) => ({
-                            value: option,
-                            label: option
-                          }))
-                        ];
-                        return (
-                          <div key={field.postKey}>
-                            <input type="hidden" name={field.postKey} value={value} />
-                            <SelectMenu
-                              label={field.fieldName}
-                              value={value}
-                              options={extraFieldOptions}
-                              onChange={(nextValue) => updateExtraFieldValue(field.postKey, nextValue)}
-                            />
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <label key={field.postKey} className={fieldClassName}>
-                          <span className="modern-command-label">{field.fieldName}</span>
-                          {renderExtraFieldControl(field)}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </details>
-              ) : null}
                 </div>
 
                 <aside className="avel-candidate-edit-sidebar">
-              <CandidateSidebarCard
-                title="Edit Actions"
-                description="Save and navigation actions stay in the right rail while you work through the profile."
-                className="avel-candidate-edit-sidebar-card--actions"
-              >
-                <div className="avel-candidate-edit-actions-stack">
-                  <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
-                    Save Candidate
-                  </button>
-                  <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
-                    Reset Changes
-                  </button>
-                  <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>
-                    Back to Profile
-                  </a>
-                  <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
-                    Open Legacy UI
-                  </a>
-                </div>
-                {data.meta.permissions.canDeleteCandidate ? (
-                  <div className="avel-candidate-edit-actions-danger">
-                    <a className="modern-btn modern-btn--danger" href={deleteURL}>
-                      Delete Candidate
-                    </a>
-                  </div>
-                ) : null}
-              </CandidateSidebarCard>
-
-              <CandidateSidebarCard
-                title="Status & GDPR"
-                description="Operational state and consent settings for the candidate profile."
-              >
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={formState.isActive}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, isActive: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Active Candidate</span>
-                </label>
-
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="isHot"
-                    checked={formState.isHot}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Hot Candidate</span>
-                </label>
-
-                <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
-                <SelectMenu
-                  label="GDPR Signed"
-                  value={formState.gdprSigned}
-                  options={gdprOptions}
-                  className="modern-command-field"
-                  onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
-                />
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">GDPR Expiration</span>
-                  <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
-                  <input
-                    className="avel-form-control"
-                    type="date"
-                    value={toISODateInput(formState.gdprExpirationDate)}
-                    onChange={(event) =>
-                      setFormState((current) => (current ? { ...current, gdprExpirationDate: toLegacyShortDate(event.target.value) } : current))
-                    }
-                  />
-                </label>
-              </CandidateSidebarCard>
-
-              <CandidateSidebarCard
-                title="Logistics"
-                description="Availability and relocation details stay near the action rail."
-              >
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Best Time To Call</span>
-                  <input
-                    className="avel-form-control"
-                    type="text"
-                    name="bestTimeToCall"
-                    value={formState.bestTimeToCall}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
-                  />
-                </label>
-
-                <label className="modern-command-field">
-                  <span className="modern-command-label">Date Available</span>
-                  <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
-                  <input
-                    className="avel-form-control"
-                    type="date"
-                    value={toISODateInput(formState.dateAvailable)}
-                    onChange={(event) =>
-                      setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
-                    }
-                  />
-                </label>
-
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    name="canRelocate"
-                    checked={formState.canRelocate}
-                    onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Open To Relocation</span>
-                </label>
-              </CandidateSidebarCard>
-
-              <CandidateSidebarCard
-                title="Sourcing & Ownership"
-                description="Assign ownership and keep source taxonomy up to date."
-              >
-                <input type="hidden" name="source" value={formState.source} />
-                <SelectMenu
-                  label="Source"
-                  value={formState.source}
-                  options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
-                  className="modern-command-field"
-                  onChange={(value) => {
-                    setSourceNotice('');
-                    setFormState((current) => (current ? { ...current, source: value } : current));
-                  }}
-                />
-                <div className="modern-command-field avel-candidate-source-add">
-                  <span className="modern-command-label">Add New Source</span>
-                  <div className="avel-candidate-source-add__row">
-                    <input
-                      className="avel-form-control"
-                      type="text"
-                      value={newSourceDraft}
-                      placeholder="Type source name"
-                      onChange={(event) => setNewSourceDraft(event.target.value)}
+                  <CandidateSidebarCard
+                    title="Sourcing & Ownership"
+                    description="Source and owner are the fastest recruiter-facing controls to adjust while editing."
+                  >
+                    <input type="hidden" name="source" value={formState.source} />
+                    <SelectMenu
+                      label="Source"
+                      value={formState.source}
+                      options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
+                      className="modern-command-field"
+                      onChange={(value) => {
+                        setSourceNotice('');
+                        setFormState((current) => (current ? { ...current, source: value } : current));
+                      }}
                     />
-                    <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={addSourceOption}>
-                      Add
-                    </button>
-                  </div>
-                  {sourceNotice !== '' ? <span className="avel-field-source-help">{sourceNotice}</span> : null}
-                </div>
+                    <div className="modern-command-field avel-candidate-source-add">
+                      <span className="modern-command-label">Add New Source</span>
+                      <div className="avel-candidate-source-add__row">
+                        <input
+                          className="avel-form-control"
+                          type="text"
+                          value={newSourceDraft}
+                          placeholder="Type source name"
+                          onChange={(event) => setNewSourceDraft(event.target.value)}
+                        />
+                        <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={addSourceOption}>
+                          Add
+                        </button>
+                      </div>
+                      {sourceNotice !== '' ? <span className="avel-field-source-help">{sourceNotice}</span> : null}
+                    </div>
 
-                <input type="hidden" name="owner" value={formState.owner} />
-                <SelectMenu
-                  label="Owner *"
-                  value={formState.owner}
-                  options={ownerOptions}
-                  onChange={(value) => setFormState((current) => (current ? { ...current, owner: value } : current))}
-                />
-              </CandidateSidebarCard>
+                    <input type="hidden" name="owner" value={formState.owner} />
+                    <SelectMenu
+                      label="Owner *"
+                      value={formState.owner}
+                      options={ownerOptions}
+                      onChange={(value) => setFormState((current) => (current ? { ...current, owner: value } : current))}
+                    />
+                  </CandidateSidebarCard>
 
-              <CandidateSidebarCard
-                title="Attachments"
-                description="Upload, preview, and manage candidate files."
-                actions={
-                  <>
-                    {data.meta.permissions.canCreateAttachment ? (
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() => {
-                          setAttachmentUploadOpen((current) => !current);
-                          setAttachmentUploadError('');
-                        }}
-                      >
-                        {attachmentUploadOpen ? 'Cancel Upload' : 'Add Attachment'}
-                      </button>
-                    ) : null}
-                    <a className="modern-btn modern-btn--mini modern-btn--secondary" href={showURL}>
-                      Manage In Profile
-                    </a>
-                  </>
-                }
-              >
-                {data.meta.permissions.canCreateAttachment && attachmentUploadOpen ? (
-                  <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
-                    <label className="modern-command-field avel-candidate-edit-field--full">
-                      <span className="modern-command-label">Attachment File</span>
-                      <input
-                        className="avel-form-control"
-                        type="file"
-                        onChange={(event) => setAttachmentUploadFile(event.target.files?.[0] || null)}
-                      />
-                    </label>
+                  <CandidateSidebarCard
+                    title="Status & GDPR"
+                    description="Operational state and GDPR controls stay close, but secondary to sourcing and main profile edits."
+                  >
                     <label className="modern-command-toggle">
                       <input
                         type="checkbox"
-                        checked={attachmentUploadIsResume}
-                        onChange={(event) => setAttachmentUploadIsResume(event.target.checked)}
+                        name="isActive"
+                        checked={formState.isActive}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, isActive: event.target.checked } : current))}
                       />
                       <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                      <span>Treat as resume (enable parsing/indexing)</span>
+                      <span>Active Candidate</span>
                     </label>
-                    {attachmentUploadError ? <div className="modern-state modern-state--error" role="alert">{attachmentUploadError}</div> : null}
-                    <div className="modern-table-actions">
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--emphasis"
-                        onClick={submitAttachmentUpload}
-                        disabled={attachmentUploadPending}
-                      >
-                        {attachmentUploadPending ? 'Uploading...' : 'Upload'}
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-                <DataTable
-                  columns={[
-                    { key: 'file', title: 'File' },
-                    { key: 'created', title: 'Created' },
-                    { key: 'type', title: 'Type' },
-                    { key: 'actions', title: 'Actions' }
-                  ]}
-                  hasRows={data.attachments.length > 0}
-                  emptyMessage="No attachments."
-                >
-                  {data.attachments.map((attachment) => (
-                    <tr key={attachment.attachmentID}>
-                      <td>
-                        {attachment.retrievalURL !== '' ? (
-                          <a className="modern-link" href={decodeLegacyURL(attachment.retrievalURL)} target="_blank" rel="noreferrer">
-                            {toDisplayText(attachment.fileName, 'Attachment')}
-                          </a>
-                        ) : (
-                          toDisplayText(attachment.fileName, 'Attachment')
-                        )}
-                      </td>
-                      <td>{toDisplayText(attachment.dateCreated)}</td>
-                      <td>{attachment.isProfileImage ? 'Profile image' : 'Document'}</td>
-                      <td>
-                        <div className="modern-table-actions">
-                          {attachment.previewAvailable && attachment.previewURL !== '' ? (
-                            <button
-                              type="button"
-                              className="modern-btn modern-btn--mini modern-btn--secondary"
-                              onClick={() =>
-                                setAttachmentModal({
-                                  url: decodeLegacyURL(attachment.previewURL),
-                                  title: `Preview: ${toDisplayText(attachment.fileName, 'Attachment')}`,
-                                  showRefreshClose: false
-                                })
-                              }
-                            >
-                              Preview
-                            </button>
-                          ) : null}
-                          {data.meta.permissions.canDeleteAttachment ? (
-                            <button
-                              type="button"
-                              className="modern-btn modern-btn--mini modern-btn--danger"
-                              onClick={() => {
-                                setAttachmentDeleteError('');
-                                setAttachmentDeleteModal({
-                                  attachmentID: attachment.attachmentID,
-                                  fileName: toDisplayText(attachment.fileName, 'Attachment')
-                                });
-                              }}
-                            >
-                              Delete
-                            </button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </DataTable>
-              </CandidateSidebarCard>
 
-              <CandidateSidebarCard
-                title="Candidate Context"
-                description="Quick metadata while editing."
-              >
-                <dl className="avel-candidate-edit-meta-list">
-                  <div>
-                    <dt>Candidate ID</dt>
-                    <dd>{data.meta.candidateID}</dd>
-                  </div>
-                  <div>
-                    <dt>Owner</dt>
-                    <dd>{toDisplayText(selectedOwnerLabel)}</dd>
-                  </div>
-                  <div>
-                    <dt>Current Source</dt>
-                    <dd>{toDisplayText(formState.source, '(None)')}</dd>
-                  </div>
-                  <div>
-                    <dt>AI Source</dt>
-                    <dd>{selectedAiAttachment ? toDisplayText(selectedAiAttachment.fileName) : 'Not selected'}</dd>
-                  </div>
-                  <div>
-                    <dt>Attachments</dt>
-                    <dd>{data.attachments.length}</dd>
-                  </div>
-                  <div>
-                    <dt>Profile State</dt>
-                    <dd>{formState.isActive ? 'Active' : 'Inactive'}</dd>
-                  </div>
-                </dl>
-              </CandidateSidebarCard>
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        name="isHot"
+                        checked={formState.isHot}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Hot Candidate</span>
+                    </label>
+
+                    <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
+                    <SelectMenu
+                      label="GDPR Signed"
+                      value={formState.gdprSigned}
+                      options={gdprOptions}
+                      className="modern-command-field"
+                      onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
+                    />
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">GDPR Expiration</span>
+                      <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
+                      <input
+                        className="avel-form-control"
+                        type="date"
+                        value={toISODateInput(formState.gdprExpirationDate)}
+                        onChange={(event) =>
+                          setFormState((current) => (current ? { ...current, gdprExpirationDate: toLegacyShortDate(event.target.value) } : current))
+                        }
+                      />
+                    </label>
+                  </CandidateSidebarCard>
+
+                  <CandidateSidebarCard
+                    title="Logistics"
+                    description="Availability and relocation stay available in the side rail, like the Add Candidate flow."
+                  >
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Best Time To Call</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="bestTimeToCall"
+                        value={formState.bestTimeToCall}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
+                      />
+                    </label>
+
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Date Available</span>
+                      <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
+                      <input
+                        className="avel-form-control"
+                        type="date"
+                        value={toISODateInput(formState.dateAvailable)}
+                        onChange={(event) =>
+                          setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
+                        }
+                      />
+                    </label>
+
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        name="canRelocate"
+                        checked={formState.canRelocate}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Open To Relocation</span>
+                    </label>
+                  </CandidateSidebarCard>
+
+                  {data.extraFields.length > 0 ? (
+                    <CandidateSidebarCard
+                      title="Additional Details"
+                      description="Extra recruiter-specific fields stay available without crowding the main profile cards."
+                    >
+                      {data.extraFields.map((field) => {
+                        const fieldClassName = `modern-command-field${
+                          field.inputType === 'textarea' || field.inputType === 'radio'
+                            ? ' avel-candidate-edit-field--full'
+                            : ''
+                        }`;
+                        if (field.inputType === 'dropdown') {
+                          const value = formState.extraFields[field.postKey] || '';
+                          const extraFieldOptions: SelectMenuOption[] = [
+                            { value: '', label: '- Select from List -' },
+                            ...field.options.map((option) => ({
+                              value: option,
+                              label: option
+                            }))
+                          ];
+                          return (
+                            <div key={field.postKey}>
+                              <input type="hidden" name={field.postKey} value={value} />
+                              <SelectMenu
+                                label={field.fieldName}
+                                value={value}
+                                options={extraFieldOptions}
+                                onChange={(nextValue) => updateExtraFieldValue(field.postKey, nextValue)}
+                              />
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <label key={field.postKey} className={fieldClassName}>
+                            <span className="modern-command-label">{field.fieldName}</span>
+                            {renderExtraFieldControl(field)}
+                          </label>
+                        );
+                      })}
+                    </CandidateSidebarCard>
+                  ) : null}
                 </aside>
               </div>
             </form>
