@@ -1301,65 +1301,91 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               <input type="hidden" name="veteran" value={formState.veteran} />
               <input type="hidden" name="disability" value={formState.disability} />
 
-              {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
-              {aiPrefillError !== '' ? <div className="modern-state modern-state--error" role="alert">{aiPrefillError}</div> : null}
+              <div className="avel-candidate-edit-layout">
+                <div className="avel-candidate-edit-main">
+                  <CandidateEditSectionCard
+                    title="Resume & AI Refill"
+                    description="Use an existing CV attachment to refresh high-confidence profile fields while you edit."
+                    className="avel-candidate-edit-section--ai"
+                  >
+                    <div className="avel-candidate-provenance">
+                      <span className="modern-chip modern-chip--success">AI-updated fields: {aiFieldCount}</span>
+                      <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span>
+                      <span className="avel-field-source-help">High-confidence values applied from selected CV.</span>
+                      {aiUpdatedFieldSummary !== '' ? (
+                        <span className="avel-field-source-help avel-field-source-help--emphasis">
+                          Updated: {aiUpdatedFieldSummary}
+                        </span>
+                      ) : null}
+                    </div>
+                    <label className="modern-command-field avel-candidate-edit-field--span-3">
+                      <span className="modern-command-label">AI Source Attachment</span>
+                      <select
+                        className="avel-form-control"
+                        value={String(aiAttachmentID || '')}
+                        onChange={(event) => setAiAttachmentID(Number(event.target.value || 0))}
+                      >
+                        <option value="">Select CV attachment...</option>
+                        {aiSourceAttachments.map((attachment) => (
+                          <option key={`ai-attachment-${attachment.attachmentID}`} value={String(attachment.attachmentID)}>
+                            {toDisplayText(attachment.fileName, `Attachment #${attachment.attachmentID}`)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {aiPrefillStatus !== '' ? <div className="modern-state">{aiPrefillStatus}</div> : null}
+                    {aiPrefillError !== '' ? <div className="modern-state modern-state--error" role="alert">{aiPrefillError}</div> : null}
+                    {aiRefillDisabledReason !== '' ? <div className="modern-state">{aiRefillDisabledReason}</div> : null}
+                    <div className="modern-table-actions">
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--emphasis avel-candidate-edit-ai-upload"
+                        onClick={runAIPrefillFromAttachment}
+                        disabled={!aiCanRunPrefill}
+                      >
+                        {aiPrefillPending ? 'AI Running...' : 'Load CV Details With AI'}
+                      </button>
+                      {aiUndoSnapshot ? (
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--secondary"
+                          onClick={() => {
+                            if (!aiUndoSnapshot) {
+                              return;
+                            }
+                            setFormState({
+                              ...aiUndoSnapshot,
+                              extraFields: { ...aiUndoSnapshot.extraFields }
+                            });
+                            formStateRef.current = {
+                              ...aiUndoSnapshot,
+                              extraFields: { ...aiUndoSnapshot.extraFields }
+                            };
+                            setFieldSources((current) => {
+                              const next = { ...current };
+                              TRACKED_FIELD_KEYS.forEach((fieldKey) => {
+                                if (next[fieldKey] === 'ai-prefill') {
+                                  delete next[fieldKey];
+                                }
+                              });
+                              return next;
+                            });
+                            setAiUpdatedExtraFieldKeys([]);
+                            setAiUndoSnapshot(null);
+                            setAiPrefillStatus('AI refill undone.');
+                            setAiPrefillError('');
+                          }}
+                        >
+                          Undo AI Refill
+                        </button>
+                      ) : null}
+                    </div>
+                  </CandidateEditSectionCard>
 
-              <div className="avel-candidate-edit-sections">
+                  <div className="avel-candidate-edit-sections">
                 {validationError !== '' ? (
                   <div className="modern-state modern-state--error" role="alert">{validationError}</div>
                 ) : null}
-                <CandidateEditSectionCard
-                  title="Status & GDPR"
-                  description="Operational state and consent settings for the candidate profile."
-                  className="avel-candidate-edit-section--status"
-                >
-                  <div className="avel-candidate-edit-grid">
-                    <label className="modern-command-toggle">
-                      <input
-                        type="checkbox"
-                        name="isActive"
-                        checked={formState.isActive}
-                        onChange={(event) => setFormState((current) => (current ? { ...current, isActive: event.target.checked } : current))}
-                      />
-                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                      <span>Active Candidate</span>
-                    </label>
-
-                    <label className="modern-command-toggle">
-                      <input
-                        type="checkbox"
-                        name="isHot"
-                        checked={formState.isHot}
-                        onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))}
-                      />
-                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                      <span>Hot Candidate</span>
-                    </label>
-
-                    <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
-                    <SelectMenu
-                      label="GDPR Signed"
-                      value={formState.gdprSigned}
-                      options={gdprOptions}
-                      className="modern-command-field avel-candidate-edit-field--span-2"
-                      onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
-                    />
-
-                    <label className="modern-command-field">
-                      <span className="modern-command-label">GDPR Expiration</span>
-                      <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
-                      <input
-                        className="avel-form-control"
-                        type="date"
-                        value={toISODateInput(formState.gdprExpirationDate)}
-                        onChange={(event) =>
-                          setFormState((current) => (current ? { ...current, gdprExpirationDate: toLegacyShortDate(event.target.value) } : current))
-                        }
-                      />
-                    </label>
-                  </div>
-                </CandidateEditSectionCard>
-
                 <CandidateEditSectionCard
                   title="Identity & Location"
                   description="Core identity, contact channels, and location details."
@@ -1452,41 +1478,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                       />
                     </label>
 
-                    <label className="modern-command-field">
-                      <span className="modern-command-label">Best Time To Call</span>
-                      <input
-                        className="avel-form-control"
-                        type="text"
-                        name="bestTimeToCall"
-                        value={formState.bestTimeToCall}
-                        onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
-                      />
-                    </label>
-
-                    <label className="modern-command-field">
-                      <span className="modern-command-label">Date Available</span>
-                      <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
-                      <input
-                        className="avel-form-control"
-                        type="date"
-                        value={toISODateInput(formState.dateAvailable)}
-                        onChange={(event) =>
-                          setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
-                        }
-                      />
-                    </label>
-
-                    <label className="modern-command-toggle">
-                      <input
-                        type="checkbox"
-                        name="canRelocate"
-                        checked={formState.canRelocate}
-                        onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
-                      />
-                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                      <span>Open To Relocation</span>
-                    </label>
-
                     <label className="modern-command-field avel-candidate-edit-field--span-3">
                       {renderFieldLabel('Address', 'address')}
                       <textarea
@@ -1504,48 +1495,32 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </CandidateEditSectionCard>
 
                 <CandidateEditSectionCard
-                  title="Sourcing & Ownership"
-                  description="Assign ownership and keep source taxonomy up to date."
-                  className="avel-candidate-edit-section--source"
+                  title="Key Skills"
+                  description="Keep the visible skills profile concise and current for search and submissions."
+                  className="avel-candidate-edit-section--skills"
+                >
+                  <label className="modern-command-field avel-candidate-edit-field--span-3">
+                    {renderFieldLabel('Key Skills', 'keySkills')}
+                    <textarea
+                      className={getFieldClassName('keySkills')}
+                      name="keySkills"
+                      value={formState.keySkills}
+                      onChange={(event) => {
+                        clearFieldSource('keySkills');
+                        setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current));
+                      }}
+                      rows={3}
+                    />
+                  </label>
+                </CandidateEditSectionCard>
+
+                <CandidateEditSectionCard
+                  title="Professional Context"
+                  description="Employer and compensation context used in recruiter conversations."
+                  className="avel-candidate-edit-section--narrative"
                 >
                   <div className="avel-candidate-edit-grid">
-                    <input type="hidden" name="source" value={formState.source} />
-                    <SelectMenu
-                      label="Source"
-                      value={formState.source}
-                      options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
-                      className="modern-command-field avel-candidate-edit-field--span-2"
-                      onChange={(value) => {
-                        setSourceNotice('');
-                        setFormState((current) => (current ? { ...current, source: value } : current));
-                      }}
-                    />
-                    <div className="modern-command-field avel-candidate-source-add">
-                      <span className="modern-command-label">Add New Source</span>
-                      <div className="avel-candidate-source-add__row">
-                        <input
-                          className="avel-form-control"
-                          type="text"
-                          value={newSourceDraft}
-                          placeholder="Type source name"
-                          onChange={(event) => setNewSourceDraft(event.target.value)}
-                        />
-                        <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={addSourceOption}>
-                          Add
-                        </button>
-                      </div>
-                      {sourceNotice !== '' ? <span className="avel-field-source-help">{sourceNotice}</span> : null}
-                    </div>
-
-                    <input type="hidden" name="owner" value={formState.owner} />
-                    <SelectMenu
-                      label="Owner *"
-                      value={formState.owner}
-                      options={ownerOptions}
-                      onChange={(value) => setFormState((current) => (current ? { ...current, owner: value } : current))}
-                    />
-
-                    <label className="modern-command-field">
+                    <label className="modern-command-field avel-candidate-edit-field--span-2">
                       {renderFieldLabel('Current Employer', 'currentEmployer')}
                       <input
                         className={getFieldClassName('currentEmployer')}
@@ -1558,15 +1533,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                         }}
                       />
                     </label>
-                  </div>
-                </CandidateEditSectionCard>
 
-                <CandidateEditSectionCard
-                  title="Professional Context & Notes"
-                  description="Compensation, visible skills, and recruiter narrative for submissions."
-                  className="avel-candidate-edit-section--narrative"
-                >
-                  <div className="avel-candidate-edit-grid">
                     <label className="modern-command-field">
                       <span className="modern-command-label">Current Pay</span>
                       <input
@@ -1588,27 +1555,21 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                         onChange={(event) => setFormState((current) => (current ? { ...current, desiredPay: event.target.value } : current))}
                       />
                     </label>
+                  </div>
+                </CandidateEditSectionCard>
 
-                    <label className="modern-command-field avel-candidate-edit-field--span-3">
-                      {renderFieldLabel('Key Skills', 'keySkills')}
-                      <textarea
-                        className={getFieldClassName('keySkills')}
-                        name="keySkills"
-                        value={formState.keySkills}
-                        onChange={(event) => {
-                          clearFieldSource('keySkills');
-                          setFormState((current) => (current ? { ...current, keySkills: event.target.value } : current));
-                        }}
-                        rows={2}
-                      />
-                    </label>
-
+                <CandidateEditSectionCard
+                  title="Notes"
+                  description="Keep recruiter narrative and profile commentary in a wider writing area."
+                  className="avel-candidate-edit-section--notes"
+                >
+                  <div className="avel-candidate-edit-grid">
                     <label className="modern-command-field avel-candidate-edit-field--span-3">
                       {renderFieldLabel('Notes', 'notes')}
                       <MarkdownTextarea
                         name="notes"
                         value={formState.notes}
-                        rows={6}
+                        rows={8}
                         className={getEditorClassName('notes')}
                         ariaLabel="Candidate notes"
                         onChange={(nextValue) => {
@@ -1664,9 +1625,9 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   </div>
                 </details>
               ) : null}
-            </form>
+                </div>
 
-            <aside className="avel-candidate-edit-attachments">
+                <aside className="avel-candidate-edit-sidebar">
               <CandidateSidebarCard
                 title="Edit Actions"
                 description="Save and navigation actions stay in the right rail while you work through the profile."
@@ -1696,79 +1657,133 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               </CandidateSidebarCard>
 
               <CandidateSidebarCard
-                title="Resume & AI Refill"
-                description="Load CV details with AI and apply high-confidence values back into the edit form."
+                title="Status & GDPR"
+                description="Operational state and consent settings for the candidate profile."
               >
-                <div className="avel-candidate-provenance">
-                  <span className="modern-chip modern-chip--success">AI-updated fields: {aiFieldCount}</span>
-                  <span className="avel-field-source-badge avel-field-source-badge--ai-prefill">AI</span>
-                  <span className="avel-field-source-help">High-confidence values applied from selected CV.</span>
-                  {aiUpdatedFieldSummary !== '' ? (
-                    <span className="avel-field-source-help avel-field-source-help--emphasis">
-                      Updated: {aiUpdatedFieldSummary}
-                    </span>
-                  ) : null}
-                </div>
-                <label className="modern-command-field avel-candidate-edit-field--full">
-                  <span className="modern-command-label">AI Source Attachment</span>
-                  <select
-                    className="avel-form-control"
-                    value={String(aiAttachmentID || '')}
-                    onChange={(event) => setAiAttachmentID(Number(event.target.value || 0))}
-                  >
-                    <option value="">Select CV attachment...</option>
-                    {aiSourceAttachments.map((attachment) => (
-                      <option key={`ai-attachment-${attachment.attachmentID}`} value={String(attachment.attachmentID)}>
-                        {toDisplayText(attachment.fileName, `Attachment #${attachment.attachmentID}`)}
-                      </option>
-                    ))}
-                  </select>
+                <label className="modern-command-toggle">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={formState.isActive}
+                    onChange={(event) => setFormState((current) => (current ? { ...current, isActive: event.target.checked } : current))}
+                  />
+                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                  <span>Active Candidate</span>
                 </label>
-                {aiRefillDisabledReason !== '' ? <div className="modern-state">{aiRefillDisabledReason}</div> : null}
-                <div className="modern-table-actions">
-                  <button
-                    type="button"
-                    className="modern-btn modern-btn--emphasis avel-candidate-edit-ai-upload"
-                    onClick={runAIPrefillFromAttachment}
-                    disabled={!aiCanRunPrefill}
-                  >
-                    {aiPrefillPending ? 'AI Running...' : 'Load CV Details With AI'}
-                  </button>
-                  {aiUndoSnapshot ? (
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() => {
-                        if (!aiUndoSnapshot) {
-                          return;
-                        }
-                        setFormState({
-                          ...aiUndoSnapshot,
-                          extraFields: { ...aiUndoSnapshot.extraFields }
-                        });
-                        formStateRef.current = {
-                          ...aiUndoSnapshot,
-                          extraFields: { ...aiUndoSnapshot.extraFields }
-                        };
-                        setFieldSources((current) => {
-                          const next = { ...current };
-                          TRACKED_FIELD_KEYS.forEach((fieldKey) => {
-                            if (next[fieldKey] === 'ai-prefill') {
-                              delete next[fieldKey];
-                            }
-                          });
-                          return next;
-                        });
-                        setAiUpdatedExtraFieldKeys([]);
-                        setAiUndoSnapshot(null);
-                        setAiPrefillStatus('AI refill undone.');
-                        setAiPrefillError('');
-                      }}
-                    >
-                      Undo AI Refill
+
+                <label className="modern-command-toggle">
+                  <input
+                    type="checkbox"
+                    name="isHot"
+                    checked={formState.isHot}
+                    onChange={(event) => setFormState((current) => (current ? { ...current, isHot: event.target.checked } : current))}
+                  />
+                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                  <span>Hot Candidate</span>
+                </label>
+
+                <input type="hidden" name="gdprSigned" value={formState.gdprSigned} />
+                <SelectMenu
+                  label="GDPR Signed"
+                  value={formState.gdprSigned}
+                  options={gdprOptions}
+                  className="modern-command-field"
+                  onChange={(value) => setFormState((current) => (current ? { ...current, gdprSigned: value as '0' | '1' } : current))}
+                />
+
+                <label className="modern-command-field">
+                  <span className="modern-command-label">GDPR Expiration</span>
+                  <input type="hidden" name="gdprExpirationDate" value={formState.gdprExpirationDate} />
+                  <input
+                    className="avel-form-control"
+                    type="date"
+                    value={toISODateInput(formState.gdprExpirationDate)}
+                    onChange={(event) =>
+                      setFormState((current) => (current ? { ...current, gdprExpirationDate: toLegacyShortDate(event.target.value) } : current))
+                    }
+                  />
+                </label>
+              </CandidateSidebarCard>
+
+              <CandidateSidebarCard
+                title="Logistics"
+                description="Availability and relocation details stay near the action rail."
+              >
+                <label className="modern-command-field">
+                  <span className="modern-command-label">Best Time To Call</span>
+                  <input
+                    className="avel-form-control"
+                    type="text"
+                    name="bestTimeToCall"
+                    value={formState.bestTimeToCall}
+                    onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
+                  />
+                </label>
+
+                <label className="modern-command-field">
+                  <span className="modern-command-label">Date Available</span>
+                  <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
+                  <input
+                    className="avel-form-control"
+                    type="date"
+                    value={toISODateInput(formState.dateAvailable)}
+                    onChange={(event) =>
+                      setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
+                    }
+                  />
+                </label>
+
+                <label className="modern-command-toggle">
+                  <input
+                    type="checkbox"
+                    name="canRelocate"
+                    checked={formState.canRelocate}
+                    onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
+                  />
+                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                  <span>Open To Relocation</span>
+                </label>
+              </CandidateSidebarCard>
+
+              <CandidateSidebarCard
+                title="Sourcing & Ownership"
+                description="Assign ownership and keep source taxonomy up to date."
+              >
+                <input type="hidden" name="source" value={formState.source} />
+                <SelectMenu
+                  label="Source"
+                  value={formState.source}
+                  options={sourceOptions.length > 0 ? sourceOptions : [{ value: '(none)', label: '(None)' }]}
+                  className="modern-command-field"
+                  onChange={(value) => {
+                    setSourceNotice('');
+                    setFormState((current) => (current ? { ...current, source: value } : current));
+                  }}
+                />
+                <div className="modern-command-field avel-candidate-source-add">
+                  <span className="modern-command-label">Add New Source</span>
+                  <div className="avel-candidate-source-add__row">
+                    <input
+                      className="avel-form-control"
+                      type="text"
+                      value={newSourceDraft}
+                      placeholder="Type source name"
+                      onChange={(event) => setNewSourceDraft(event.target.value)}
+                    />
+                    <button type="button" className="modern-btn modern-btn--mini modern-btn--secondary" onClick={addSourceOption}>
+                      Add
                     </button>
-                  ) : null}
+                  </div>
+                  {sourceNotice !== '' ? <span className="avel-field-source-help">{sourceNotice}</span> : null}
                 </div>
+
+                <input type="hidden" name="owner" value={formState.owner} />
+                <SelectMenu
+                  label="Owner *"
+                  value={formState.owner}
+                  options={ownerOptions}
+                  onChange={(value) => setFormState((current) => (current ? { ...current, owner: value } : current))}
+                />
               </CandidateSidebarCard>
 
               <CandidateSidebarCard
@@ -1919,7 +1934,9 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   </div>
                 </dl>
               </CandidateSidebarCard>
-            </aside>
+                </aside>
+              </div>
+            </form>
 
           </section>
         </div>
