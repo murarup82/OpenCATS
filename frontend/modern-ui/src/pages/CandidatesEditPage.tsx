@@ -672,12 +672,13 @@ type CandidateSidebarCardProps = {
   title: string;
   description?: string;
   actions?: ReactNode;
+  className?: string;
   children: ReactNode;
 };
 
-function CandidateSidebarCard({ title, description, actions = null, children }: CandidateSidebarCardProps) {
+function CandidateSidebarCard({ title, description, actions = null, className = '', children }: CandidateSidebarCardProps) {
   return (
-    <section className="avel-candidate-edit-sidebar-card">
+    <section className={`avel-candidate-edit-sidebar-card ${className}`.trim()}>
       <div className="avel-candidate-edit-sidebar-card__header">
         <div>
           <h3 className="avel-candidate-edit-sidebar-card__title">{title}</h3>
@@ -1249,13 +1250,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
       <PageContainer
         title={candidateDisplayName}
         subtitle={`Candidate Profile #${data.meta.candidateID} · edit workspace`}
-        actions={(
-          <>
-            <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
-              Open Legacy UI
-            </a>
-          </>
-        )}
       >
         <div className="modern-dashboard avel-dashboard-shell">
           <section className="avel-candidate-edit-header">
@@ -1278,22 +1272,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 <span className="modern-chip modern-chip--info">Owner: {toDisplayText(selectedOwnerLabel)}</span>
                 {parseLimitText !== '' ? <span className="modern-chip modern-chip--source-other">{parseLimitText}</span> : null}
               </div>
-            </div>
-            <div className="modern-table-actions avel-candidate-edit-actions avel-candidate-edit-actions--sticky">
-              <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
-                Save Candidate
-              </button>
-              <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
-                Cancel
-              </button>
-              {data.meta.permissions.canDeleteCandidate ? (
-                <a className="modern-btn modern-btn--danger" href={deleteURL}>
-                  Delete Candidate
-                </a>
-              ) : null}
-              <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>
-                Back to Profile
-              </a>
             </div>
           </section>
           <section className="avel-list-panel avel-candidate-edit-panel avel-candidate-edit-panel--edit avel-candidate-edit-panel--workbench">
@@ -1331,8 +1309,8 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   <div className="modern-state modern-state--error" role="alert">{validationError}</div>
                 ) : null}
                 <CandidateEditSectionCard
-                  title="Profile Status & GDPR"
-                  description="Operational state and GDPR settings used in day-to-day reporting."
+                  title="Status & GDPR"
+                  description="Operational state and consent settings for the candidate profile."
                   className="avel-candidate-edit-section--status"
                 >
                   <div className="avel-candidate-edit-grid">
@@ -1383,8 +1361,8 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </CandidateEditSectionCard>
 
                 <CandidateEditSectionCard
-                  title="Profile & Reachability"
-                  description="Identity, contact channels, and candidate availability details."
+                  title="Identity & Location"
+                  description="Core identity, contact channels, and location details."
                   className="avel-candidate-edit-section--identity"
                 >
                   <div className="avel-candidate-edit-grid">
@@ -1584,8 +1562,8 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                 </CandidateEditSectionCard>
 
                 <CandidateEditSectionCard
-                  title="Compensation & Narrative"
-                  description="Comp package and recruiter context for submissions."
+                  title="Professional Context & Notes"
+                  description="Compensation, visible skills, and recruiter narrative for submissions."
                   className="avel-candidate-edit-section--narrative"
                 >
                   <div className="avel-candidate-edit-grid">
@@ -1690,8 +1668,36 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
             <aside className="avel-candidate-edit-attachments">
               <CandidateSidebarCard
-                title="AI CV Import"
-                description="Load CV details with AI and apply high-confidence values to this form."
+                title="Edit Actions"
+                description="Save and navigation actions stay in the right rail while you work through the profile."
+                className="avel-candidate-edit-sidebar-card--actions"
+              >
+                <div className="avel-candidate-edit-actions-stack">
+                  <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
+                    Save Candidate
+                  </button>
+                  <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
+                    Reset Changes
+                  </button>
+                  <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>
+                    Back to Profile
+                  </a>
+                  <a className="modern-btn modern-btn--secondary" href={data.actions.legacyURL}>
+                    Open Legacy UI
+                  </a>
+                </div>
+                {data.meta.permissions.canDeleteCandidate ? (
+                  <div className="avel-candidate-edit-actions-danger">
+                    <a className="modern-btn modern-btn--danger" href={deleteURL}>
+                      Delete Candidate
+                    </a>
+                  </div>
+                ) : null}
+              </CandidateSidebarCard>
+
+              <CandidateSidebarCard
+                title="Resume & AI Refill"
+                description="Load CV details with AI and apply high-confidence values back into the edit form."
               >
                 <div className="avel-candidate-provenance">
                   <span className="modern-chip modern-chip--success">AI-updated fields: {aiFieldCount}</span>
