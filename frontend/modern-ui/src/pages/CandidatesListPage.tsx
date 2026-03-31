@@ -66,7 +66,7 @@ const CANDIDATE_COLUMNS: CandidateColumnConfig[] = [
   { key: 'candidate', title: 'Candidate', sortKey: 'lastName', filterable: true },
   { key: 'source', title: 'Source', sortKey: 'source', filterable: true },
   { key: 'skills', title: 'Key Skills', sortKey: '', filterable: true },
-  { key: 'pipeline', title: 'Pipeline', sortKey: '', filterable: true },
+  { key: 'pipeline', title: 'Job Allocation', sortKey: '', filterable: true },
   { key: 'gdpr', title: 'GDPR', sortKey: '', filterable: true },
   { key: 'owner', title: 'Owner', sortKey: 'ownerSort', filterable: true },
   { key: 'created', title: 'Added', sortKey: 'dateCreatedSort', filterable: true },

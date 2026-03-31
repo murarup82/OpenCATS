@@ -4211,6 +4211,11 @@
   white-space: nowrap;
 }
 
+.avel-candidates-page .avel-col-header__label {
+  font-weight: 800;
+  text-align: left;
+}
+
 .avel-candidates-page .avel-col-header__sort {
   appearance: none;
   border: 0;
@@ -4406,6 +4411,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  min-height: 20px;
 }
 
 .avel-candidates-page .avel-candidates-results__th-title {
