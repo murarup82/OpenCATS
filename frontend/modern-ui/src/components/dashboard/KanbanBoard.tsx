@@ -122,8 +122,10 @@ export function KanbanBoard({
   };
 
   const handleWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
-    // Keep mouse-wheel scrolling vertical by default; use Shift+wheel or buttons for horizontal lane moves.
-    if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+    // Let normal wheel input participate in page scrolling now that the
+    // dashboard is no longer height-locked. Keep Shift+wheel as a lane
+    // navigation shortcut.
+    if (!event.shiftKey) {
       return;
     }
 
@@ -133,11 +135,7 @@ export function KanbanBoard({
     }
 
     event.preventDefault();
-    window.scrollBy({
-      top: event.deltaY,
-      left: 0,
-      behavior: 'auto'
-    });
+    board.scrollBy({ left: event.deltaY, behavior: 'auto' });
   };
 
   const handleCardDragStart = (event: ReactDragEvent<HTMLElement>, row: DashboardRow) => {

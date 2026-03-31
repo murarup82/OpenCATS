@@ -1,32 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-/* Anchor height for the adaptive kanban/list flex chain.
-   .avel-my-dashboard is unique to DashboardMyPage — do NOT change to
-   .avel-dashboard-page, that class is applied by every page as a theme marker.
-
-   Chain:
-     modern-shell-app-root  → fixed height + flex column
-     modern-app-shell       → flex:1, overrides the global grid/padding
-     avel-dashboard-page    → flex:1, min-height:0 (see below)
-     modern-page / children → fill remaining space, kanban/list scroll inside
-
-   overflow:hidden creates a BFC that seals overflow — unlike overflow:clip it
-   prevents the board's wide column content from contributing to the body's
-   scroll area, which eliminates the page-level horizontal scrollbar in kanban
-   mode and keeps the toolbar controls fully visible. */
+/* My Dashboard needs natural document flow so the kanban can grow with its
+   content. Keep the route scoped to .avel-my-dashboard and preserve the shell
+   chrome, but avoid the old fixed-height viewport lock. */
 .modern-shell-app-root:has(.avel-my-dashboard) {
-  height: calc(100dvh - 72px);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  min-height: calc(100dvh - 72px);
+  overflow: visible;
+  display: block;
 }
 
-/* Override the global .modern-app-shell grid so it fills the flex root. */
+/* Let the dashboard page define its own height naturally instead of filling a
+   locked flex root. */
 .modern-shell-app-root:has(.avel-my-dashboard) > .modern-app-shell {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  min-height: 100%;
+  display: block;
   padding-bottom: 0; /* feedback footer is hidden on the dashboard */
 }
 
@@ -1724,8 +1711,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
 }
 
 .avel-dashboard-page .modern-kanban-board__header {
@@ -1786,15 +1773,15 @@
 
 .avel-dashboard-page .modern-kanban-board__viewport {
   overflow-x: scroll;
-  overflow-y: hidden;
+  overflow-y: visible;
   padding: 8px 8px 14px;
   scrollbar-gutter: stable both-edges;
   scroll-behavior: smooth;
   cursor: grab;
   scrollbar-width: auto;
   scrollbar-color: #7caec9 #e5f1f8;
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
 }
 
 .avel-dashboard-page .modern-kanban-board__viewport:active {
@@ -1829,7 +1816,7 @@
   overflow: visible;
   min-width: 100%;
   align-items: stretch;
-  height: 100%;
+  height: auto;
 }
 
 .avel-dashboard-page .modern-kanban-column {
@@ -2029,8 +2016,8 @@
 .avel-dashboard-page .modern-kanban-column__body {
   flex: 1;
   min-height: 200px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
+  overscroll-behavior: auto;
   transition: background-color 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
