@@ -813,7 +813,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
                   navigateWithFilters({ quickSearch: searchDraft, page: 1 });
                 }}
               >
-                <span className="modern-command-label">Search</span>
+                <span className="modern-command-label">Global Database Search</span>
                 <span className="modern-command-search__shell">
                   <span className="modern-command-search__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="14" height="14" role="presentation" style={{ width: 14, height: 14 }}>
@@ -924,9 +924,14 @@ export function CandidatesListPage({ bootstrap }: Props) {
           <section className="avel-list-panel avel-candidate-results">
             <div className="avel-list-panel__header">
               <div className="avel-list-panel__header-left">
-                <h2 className="avel-list-panel__title">
-                  Candidates {data.meta.totalRows > 0 ? `(${data.meta.totalRows})` : ''}
-                </h2>
+                <div className="avel-candidate-results__title-row">
+                  <h2 className="avel-list-panel__title">
+                    Candidates {data.meta.totalRows > 0 ? `(${data.meta.totalRows})` : ''}
+                  </h2>
+                  <span className="avel-candidate-results__scope-note">
+                    Local table filters refine only the current page selection.
+                  </span>
+                </div>
                 <p className="avel-list-panel__hint">
                   Showing {rangeStart}–{rangeEnd} of {data.meta.totalRows}
                   {activeColumnFilterCount > 0 ? ` (${filteredRows.length} matching column filters)` : ''}

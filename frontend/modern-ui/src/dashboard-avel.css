@@ -4663,6 +4663,27 @@
   gap: 3px;
 }
 
+.avel-candidates-page .avel-candidate-results__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.avel-candidates-page .avel-candidate-results__scope-note {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid rgba(116, 159, 186, 0.42);
+  border-radius: 999px;
+  background: rgba(230, 241, 249, 0.9);
+  color: #45677d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 .avel-candidates-page .avel-candidate-toolbar {
   top: 8px;
   gap: 6px;
@@ -4688,6 +4709,11 @@
 
 .avel-candidates-page .avel-candidate-toolbar__search {
   margin: 0;
+}
+
+.avel-candidates-page .avel-candidate-toolbar__search .modern-command-label {
+  color: #2d5f80;
+  letter-spacing: 0.1em;
 }
 
 .avel-candidates-page .avel-candidate-toolbar__filters {
