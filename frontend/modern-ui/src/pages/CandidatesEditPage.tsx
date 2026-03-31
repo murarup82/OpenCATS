@@ -14,7 +14,6 @@ import { EmptyState } from '../components/states/EmptyState';
 import { DataTable } from '../components/primitives/DataTable';
 import { MarkdownTextarea } from '../components/primitives/MarkdownTextarea';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
-import { LegacyFrameModal } from '../components/primitives/LegacyFrameModal';
 import { SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
@@ -135,6 +134,34 @@ function readAutoAIPrefillAttachmentIDFromURL(): number {
 function toDisplayText(value: unknown, fallback = '--'): string {
   const text = String(value ?? '').trim();
   return text === '' ? fallback : text;
+}
+
+function getAttachmentTypeLabel(fileName: string, isProfileImage: boolean): string {
+  if (isProfileImage) {
+    return 'image';
+  }
+
+  const normalized = String(fileName || '').trim().toLowerCase();
+  const match = normalized.match(/\.([a-z0-9]+)$/);
+  return match?.[1] || 'file';
+}
+
+function toSourceChipClassName(source: string): string {
+  const normalized = String(source || '').trim().toLowerCase();
+  switch (normalized) {
+    case 'linkedin':
+      return 'modern-chip--source-linkedin';
+    case 'direct':
+      return 'modern-chip--source-direct';
+    case 'internal':
+      return 'modern-chip--source-internal';
+    case 'partner':
+      return 'modern-chip--source-partner';
+    case 'network':
+      return 'modern-chip--source-network';
+    default:
+      return 'modern-chip--source-other';
+  }
 }
 
 function parseSourceCSV(csv: string): string[] {
@@ -700,11 +727,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const [serverQueryString] = useState<string>(() => new URLSearchParams(window.location.search).toString());
   const [reloadToken, setReloadToken] = useState(0);
   const [validationError, setValidationError] = useState('');
-  const [attachmentModal, setAttachmentModal] = useState<{
-    url: string;
-    title: string;
-    showRefreshClose: boolean;
-  } | null>(null);
   const [attachmentUploadOpen, setAttachmentUploadOpen] = useState<boolean>(false);
   const [attachmentUploadFile, setAttachmentUploadFile] = useState<File | null>(null);
   const [attachmentUploadIsResume, setAttachmentUploadIsResume] = useState<boolean>(false);
@@ -859,16 +881,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     setReloadToken((current) => current + 1);
   }, []);
   usePageRefreshEvents(refreshPageData);
-
-  const closeAttachmentModal = useCallback(
-    (refreshOnClose: boolean) => {
-      setAttachmentModal(null);
-      if (refreshOnClose) {
-        refreshPageData();
-      }
-    },
-    [refreshPageData]
-  );
 
   const submitAttachmentUpload = useCallback(async () => {
     if (!data || attachmentUploadPending) {
@@ -1249,12 +1261,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const aiUpdatedFieldSummary = [...aiUpdatedFieldKeys.map((fieldKey) => toTrackedFieldLabel(fieldKey)), ...aiUpdatedExtraFieldLabels].join(', ');
   const candidateDisplayName = `${formState.firstName} ${formState.lastName}`.trim() || 'Unnamed Candidate';
   const selectedOwnerLabel = ownerOptions.find((option) => option.value === formState.owner)?.label || '--';
-  const profileSummary = [
-    formState.isActive ? 'Active Profile' : 'Inactive Profile',
-    formState.isHot ? 'Priority: Hot' : 'Priority: Standard',
-    `Source: ${toDisplayText(formState.source, '(None)')}`,
-    `Owner: ${toDisplayText(selectedOwnerLabel)}`
-  ].join(' · ');
+  const pageSubtitle = 'Update recruiter-facing profile, sourcing, status, and attachments.';
   const resetCandidateForm = () => {
     setFormState(toFormState(data));
     setValidationError('');
@@ -1269,15 +1276,23 @@ export function CandidatesEditPage({ bootstrap }: Props) {
     <div className="avel-dashboard-page avel-candidate-add-page avel-candidate-edit-page avel-candidate-edit-page--refined">
       <PageContainer
         title={`Edit ${candidateDisplayName}`}
-        subtitle={profileSummary}
+        subtitle={pageSubtitle}
         actions={
           <>
-            <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>
+            <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
+              Save Candidate
+            </button>
+            <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
+              Reset Changes
+            </button>
+            <a className="modern-btn modern-btn--secondary" href={showURL}>
               Back to Profile
             </a>
-            <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={data.actions.legacyURL}>
-              Open Legacy UI
-            </a>
+            {data.meta.permissions.canDeleteCandidate ? (
+              <a className="modern-btn avel-candidate-edit-page__danger-btn" href={deleteURL}>
+                Delete Candidate
+              </a>
+            ) : null}
           </>
         }
       >
@@ -1310,6 +1325,21 @@ export function CandidatesEditPage({ bootstrap }: Props) {
           {validationError !== '' ? (
             <div className="modern-state modern-state--error" role="alert">{validationError}</div>
           ) : null}
+
+          <div className="avel-candidate-edit-summary">
+            <span className={`modern-chip ${formState.isActive ? 'modern-chip--success' : 'modern-chip--critical'}`}>
+              {formState.isActive ? 'Active Profile' : 'Inactive Profile'}
+            </span>
+            <span className={`modern-chip ${formState.isHot ? 'modern-chip--warning' : 'modern-chip--info'}`}>
+              {formState.isHot ? 'Priority: Hot' : 'Priority: Standard'}
+            </span>
+            <span className={`modern-chip ${toSourceChipClassName(formState.source)}`}>
+              Source: {toDisplayText(formState.source, '(None)')}
+            </span>
+            <span className="modern-chip modern-chip--resume">
+              Owner: {toDisplayText(selectedOwnerLabel)}
+            </span>
+          </div>
 
           <div className="avel-candidate-add-layout avel-candidate-edit-layout">
             <div className="avel-candidate-add-main avel-candidate-edit-main">
@@ -1464,28 +1494,13 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                               )}
                             </td>
                             <td>{toDisplayText(attachment.dateCreated)}</td>
-                            <td>{attachment.isProfileImage ? 'Profile image' : 'Document'}</td>
+                            <td>{getAttachmentTypeLabel(attachment.fileName, attachment.isProfileImage)}</td>
                             <td>
                               <div className="modern-table-actions">
-                                {attachment.previewAvailable && attachment.previewURL !== '' ? (
-                                  <button
-                                    type="button"
-                                    className="modern-btn modern-btn--mini modern-btn--secondary"
-                                    onClick={() =>
-                                      setAttachmentModal({
-                                        url: decodeLegacyURL(attachment.previewURL),
-                                        title: `Preview: ${toDisplayText(attachment.fileName, 'Attachment')}`,
-                                        showRefreshClose: false
-                                      })
-                                    }
-                                  >
-                                    Preview
-                                  </button>
-                                ) : null}
                                 {data.meta.permissions.canDeleteAttachment ? (
                                   <button
                                     type="button"
-                                    className="modern-btn modern-btn--mini modern-btn--danger"
+                                    className="modern-btn modern-btn--mini avel-candidate-edit-page__danger-btn"
                                     onClick={() => {
                                       setAttachmentDeleteError('');
                                       setAttachmentDeleteModal({
@@ -1875,37 +1890,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
               </label>
             </div>
           </CandidateEditSectionCard>
-
-          <div className="avel-candidate-add-footer avel-candidate-edit-footer">
-            <a className="modern-btn modern-btn--secondary" href={showURL}>
-              Back to Profile
-            </a>
-            <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
-              Reset Changes
-            </button>
-            <button type="submit" className="modern-btn modern-btn--emphasis">
-              Save Candidate
-            </button>
-            {data.meta.permissions.canDeleteCandidate ? (
-              <a className="modern-btn modern-btn--danger" href={deleteURL}>
-                Delete Candidate
-              </a>
-            ) : null}
-          </div>
         </form>
-        <div className="avel-candidate-edit-legacy-footer">
-          <a className="avel-candidate-edit-legacy-footer__link" href={data.actions.legacyURL}>
-            Open Legacy UI
-          </a>
-        </div>
-
-        <LegacyFrameModal
-          isOpen={!!attachmentModal}
-          title={attachmentModal?.title || 'Add Attachment'}
-          url={attachmentModal?.url || ''}
-          onClose={closeAttachmentModal}
-          showRefreshClose={attachmentModal?.showRefreshClose ?? true}
-        />
 
         <ConfirmActionModal
           isOpen={!!attachmentDeleteModal}

@@ -9449,6 +9449,12 @@
   gap: 20px;
 }
 
+.avel-candidate-edit-page--refined .avel-candidate-edit-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .avel-candidate-edit-page--refined .avel-candidate-edit-layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -9535,8 +9541,48 @@
   gap: 12px;
 }
 
-.avel-candidate-edit-page--refined .avel-candidate-edit-legacy-footer {
-  margin-top: -4px;
+.avel-candidate-edit-page--refined .modern-chip--success {
+  border-color: #b8dfc8;
+  background: #edf9f1;
+  color: #1f7145;
+}
+
+.avel-candidate-edit-page--refined .modern-chip--warning {
+  border-color: #f0c98d;
+  background: #fff5e4;
+  color: #92500d;
+}
+
+.avel-candidate-edit-page--refined .modern-chip--critical {
+  border-color: #eab6b6;
+  background: #fff0f0;
+  color: #9a2f2f;
+}
+
+.avel-candidate-edit-page--refined .modern-chip--info {
+  border-color: #b5d8e8;
+  background: #eef8ff;
+  color: #1f5f7b;
+}
+
+.avel-candidate-edit-page--refined .modern-chip--resume {
+  border-color: #c5d7e8;
+  background: #f3f8fd;
+  color: #365b75;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-page__danger-btn {
+  border: 1px solid #e7b2b2;
+  background: #fff4f4;
+  color: #a14c4c;
+  box-shadow: none;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-page__danger-btn:hover {
+  border-color: #de9b9b;
+  background: #ffecec;
+  color: #943d3d;
+  box-shadow: 0 8px 16px rgba(164, 76, 76, 0.14);
 }
 
 @media (max-width: 900px) {
