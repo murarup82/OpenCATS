@@ -252,7 +252,15 @@ class GDPRUI extends UserInterface
 
     private function getGdprPolicyMonths()
     {
-        $policyMonths = GDPR_POLICY_MONTHS;
+        $policyMonths = 24;
+        if (defined('GDPR_POLICY_MONTHS'))
+        {
+            $configuredPolicyMonths = (int) constant('GDPR_POLICY_MONTHS');
+            if ($configuredPolicyMonths > 0)
+            {
+                $policyMonths = $configuredPolicyMonths;
+            }
+        }
         $gdprSettings = new GDPRSettings($this->_siteID);
         $settings = $gdprSettings->getAll();
 
