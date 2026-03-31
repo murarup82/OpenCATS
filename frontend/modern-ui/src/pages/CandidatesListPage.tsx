@@ -269,6 +269,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const [headerMenuSearch, setHeaderMenuSearch] = useState('');
   const [columnFilters, setColumnFilters] = useState<Record<CandidateDataColumnKey, string>>(emptyColumnFilters());
   const [visibleColumns, setVisibleColumns] = useState<CandidateColumnVisibility>(DEFAULT_VISIBLE_COLUMNS);
+  const [activeRowActionMenuCandidateID, setActiveRowActionMenuCandidateID] = useState<number | null>(null);
   const skipNextAutoSearchRef = useRef(false);
   const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
   const columnVisibilityStorageKey = useMemo(
@@ -509,12 +510,17 @@ export function CandidatesListPage({ bootstrap }: Props) {
       ) {
         setActiveHeaderMenuColumn(null);
       }
+
+      if (activeRowActionMenuCandidateID !== null && !element?.closest('.avel-candidate-row-menu')) {
+        setActiveRowActionMenuCandidateID(null);
+      }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         closeColumnsMenu();
         setActiveHeaderMenuColumn(null);
+        setActiveRowActionMenuCandidateID(null);
       }
     };
 
@@ -526,7 +532,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
       document.removeEventListener('touchstart', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [activeHeaderMenuColumn]);
+  }, [activeHeaderMenuColumn, activeRowActionMenuCandidateID]);
 
   const sourceOptions = useMemo<SelectMenuOption[]>(() => {
     if (!data) {
@@ -1191,39 +1197,72 @@ export function CandidatesListPage({ bootstrap }: Props) {
                               case 'updated':
                                 return <td key={`${row.candidateID}-updated`}>{toDisplayText(row.modifiedDate)}</td>;
                               case 'actions':
+                                if (!canAddToJobOrder && !canEditCandidate && !canAddToList) {
+                                  return <td key={`${row.candidateID}-actions`}><span className="avel-candidate-row-menu__empty">—</span></td>;
+                                }
+
                                 return (
-                                  <td key={`${row.candidateID}-actions`}>
-                                    <div className="modern-table-actions">
-                                      {canAddToJobOrder ? (
-                                        <button
-                                          type="button"
-                                          className="modern-btn modern-btn--mini modern-btn--emphasis avel-candidate-action avel-candidate-action--primary"
-                                          onClick={() =>
-                                            setAssignJobModal({
-                                              url: decodeLegacyURL(row.addToJobOrderURL),
-                                              title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
-                                            })
-                                          }
-                                        >
-                                          Add To Job
-                                        </button>
-                                      ) : null}
-                                      {canEditCandidate ? (
-                                        <a
-                                          className="modern-btn modern-btn--mini modern-btn--secondary avel-candidate-action avel-candidate-action--edit"
-                                          href={ensureModernUIURL(row.candidateEditURL)}
-                                        >
-                                          Edit
-                                        </a>
-                                      ) : null}
-                                      {canAddToList ? (
-                                        <button
-                                          type="button"
-                                          className="modern-btn modern-btn--mini modern-btn--ghost avel-candidate-action avel-candidate-action--tertiary"
-                                          onClick={() => openAddToListOverlay(row.addToListURL)}
-                                        >
-                                          Add To List
-                                        </button>
+                                  <td key={`${row.candidateID}-actions`} className="avel-candidate-row-menu-cell">
+                                    <div className="avel-candidate-row-menu">
+                                      <button
+                                        type="button"
+                                        className="avel-candidate-row-menu__trigger"
+                                        onClick={() =>
+                                          setActiveRowActionMenuCandidateID((current) =>
+                                            current === row.candidateID ? null : row.candidateID
+                                          )
+                                        }
+                                        aria-label={`Open actions for ${toDisplayText(row.fullName, 'candidate')}`}
+                                        aria-expanded={activeRowActionMenuCandidateID === row.candidateID}
+                                      >
+                                        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                                          <circle cx="8" cy="3" r="1.25" fill="currentColor" />
+                                          <circle cx="8" cy="8" r="1.25" fill="currentColor" />
+                                          <circle cx="8" cy="13" r="1.25" fill="currentColor" />
+                                        </svg>
+                                      </button>
+                                      {activeRowActionMenuCandidateID === row.candidateID ? (
+                                        <div className="avel-candidate-row-menu__panel" role="menu" aria-label="Candidate actions">
+                                          {canAddToJobOrder ? (
+                                            <button
+                                              type="button"
+                                              className="avel-candidate-row-menu__item"
+                                              role="menuitem"
+                                              onClick={() => {
+                                                setActiveRowActionMenuCandidateID(null);
+                                                setAssignJobModal({
+                                                  url: decodeLegacyURL(row.addToJobOrderURL),
+                                                  title: `Add To Job Order: ${toDisplayText(row.fullName, 'Candidate')}`
+                                                });
+                                              }}
+                                            >
+                                              Add To Job
+                                            </button>
+                                          ) : null}
+                                          {canEditCandidate ? (
+                                            <a
+                                              className="avel-candidate-row-menu__item"
+                                              role="menuitem"
+                                              href={ensureModernUIURL(row.candidateEditURL)}
+                                              onClick={() => setActiveRowActionMenuCandidateID(null)}
+                                            >
+                                              Edit
+                                            </a>
+                                          ) : null}
+                                          {canAddToList ? (
+                                            <button
+                                              type="button"
+                                              className="avel-candidate-row-menu__item"
+                                              role="menuitem"
+                                              onClick={() => {
+                                                setActiveRowActionMenuCandidateID(null);
+                                                openAddToListOverlay(row.addToListURL);
+                                              }}
+                                            >
+                                              Add To List
+                                            </button>
+                                          ) : null}
+                                        </div>
                                       ) : null}
                                     </div>
                                   </td>
