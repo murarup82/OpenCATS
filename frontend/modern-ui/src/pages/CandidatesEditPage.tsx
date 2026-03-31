@@ -658,9 +658,9 @@ type CandidateEditSectionCardProps = {
 
 function CandidateEditSectionCard({ title, description, className = '', children }: CandidateEditSectionCardProps) {
   return (
-    <section className={`avel-candidate-edit-section ${className}`.trim()}>
-      <div className="avel-candidate-edit-section__header">
-        <h3 className="avel-candidate-edit-section__title">{title}</h3>
+    <section className={`avel-candidate-add-card avel-candidate-edit-section ${className}`.trim()}>
+      <div className="avel-candidate-add-card__header avel-candidate-edit-card__header">
+        <h2>{title}</h2>
         {description ? <p className="avel-candidate-edit-section__description">{description}</p> : null}
       </div>
       {children}
@@ -678,10 +678,10 @@ type CandidateSidebarCardProps = {
 
 function CandidateSidebarCard({ title, description, actions = null, className = '', children }: CandidateSidebarCardProps) {
   return (
-    <section className={`avel-candidate-edit-sidebar-card ${className}`.trim()}>
-      <div className="avel-candidate-edit-sidebar-card__header">
+    <section className={`avel-candidate-add-card avel-candidate-add-card--sidebar avel-candidate-edit-sidebar-card ${className}`.trim()}>
+      <div className="avel-candidate-add-card__header avel-candidate-edit-sidebar-card__header">
         <div>
-          <h3 className="avel-candidate-edit-sidebar-card__title">{title}</h3>
+          <h2>{title}</h2>
           {description ? <p className="avel-candidate-edit-sidebar-card__description">{description}</p> : null}
         </div>
         {actions ? <div className="modern-table-actions">{actions}</div> : null}
@@ -1248,7 +1248,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   };
 
   return (
-    <div className="avel-dashboard-page avel-candidate-edit-page avel-candidate-edit-page--refined">
+    <div className="avel-dashboard-page avel-candidate-add-page avel-candidate-edit-page avel-candidate-edit-page--refined">
       <PageContainer
         title={`Edit ${candidateDisplayName}`}
         subtitle={profileSummary}
@@ -1271,39 +1271,40 @@ export function CandidatesEditPage({ bootstrap }: Props) {
           </>
         }
       >
-        <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-candidate-edit-workbench">
-            <form
-              id="candidate-edit-form"
-              className="avel-candidate-edit-form"
-              method="post"
-              action={submitURL}
-              onSubmit={(event) => {
-                setValidationError('');
-                if (formState.firstName.trim() === '' || formState.lastName.trim() === '') {
-                  event.preventDefault();
-                  setValidationError('First Name and Last Name are required.');
-                  return;
-                }
-                if (formState.gdprSigned === '1' && formState.gdprExpirationDate.trim() === '') {
-                  event.preventDefault();
-                  setValidationError('GDPR Expiration Date is required when GDPR Signed is Yes.');
-                }
-              }}
-            >
-              <input type="hidden" name="postback" value="postback" />
-              <input type="hidden" name="candidateID" value={String(data.meta.candidateID)} />
-              <input type="hidden" name="sourceCSV" value={sourceCSV} />
-              <input type="hidden" name="gender" value={formState.gender} />
-              <input type="hidden" name="race" value={formState.race} />
-              <input type="hidden" name="veteran" value={formState.veteran} />
-              <input type="hidden" name="disability" value={formState.disability} />
+        <form
+          id="candidate-edit-form"
+          className="avel-candidate-edit-form"
+          method="post"
+          action={submitURL}
+          onSubmit={(event) => {
+            setValidationError('');
+            if (formState.firstName.trim() === '' || formState.lastName.trim() === '') {
+              event.preventDefault();
+              setValidationError('First Name and Last Name are required.');
+              return;
+            }
+            if (formState.gdprSigned === '1' && formState.gdprExpirationDate.trim() === '') {
+              event.preventDefault();
+              setValidationError('GDPR Expiration Date is required when GDPR Signed is Yes.');
+            }
+          }}
+        >
+          <input type="hidden" name="postback" value="postback" />
+          <input type="hidden" name="candidateID" value={String(data.meta.candidateID)} />
+          <input type="hidden" name="sourceCSV" value={sourceCSV} />
+          <input type="hidden" name="gender" value={formState.gender} />
+          <input type="hidden" name="race" value={formState.race} />
+          <input type="hidden" name="veteran" value={formState.veteran} />
+          <input type="hidden" name="disability" value={formState.disability} />
 
-              <div className="avel-candidate-edit-layout">
-                <div className="avel-candidate-edit-main">
+          {validationError !== '' ? (
+            <div className="modern-state modern-state--error" role="alert">{validationError}</div>
+          ) : null}
+
+          <div className="avel-candidate-add-layout avel-candidate-edit-layout">
+            <div className="avel-candidate-add-main avel-candidate-edit-main">
                   <CandidateEditSectionCard
                     title="Resume & AI Refill"
-                    description="Use an existing CV attachment to refresh high-confidence profile fields while you edit."
                     className="avel-candidate-edit-section--ai"
                   >
                     <div className="avel-candidate-provenance">
@@ -1383,9 +1384,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                       <div className="avel-candidate-edit-inline-card__header">
                         <div>
                           <h4 className="avel-candidate-edit-inline-card__title">Attachments</h4>
-                          <p className="avel-candidate-edit-inline-card__description">
-                            Upload, preview, and manage candidate files without leaving the edit workflow.
-                          </p>
                         </div>
                         {data.meta.permissions.canCreateAttachment ? (
                           <button
@@ -1497,13 +1495,8 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     </div>
                   </CandidateEditSectionCard>
 
-                  <div className="avel-candidate-edit-sections">
-                {validationError !== '' ? (
-                  <div className="modern-state modern-state--error" role="alert">{validationError}</div>
-                ) : null}
                 <CandidateEditSectionCard
                   title="Identity & Location"
-                  description="Core identity, contact channels, and location details."
                   className="avel-candidate-edit-section--identity"
                 >
                   <div className="avel-candidate-edit-grid">
@@ -1538,20 +1531,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     </label>
 
                     <label className="modern-command-field">
-                      {renderFieldLabel('Email', 'email1')}
-                      <input
-                        className={getFieldClassName('email1')}
-                        type="email"
-                        name="email1"
-                        value={formState.email1}
-                        onChange={(event) => {
-                          clearFieldSource('email1');
-                          setFormState((current) => (current ? { ...current, email1: event.target.value } : current));
-                        }}
-                      />
-                    </label>
-
-                    <label className="modern-command-field">
                       {renderFieldLabel('Cell Phone', 'phoneCell')}
                       <input
                         className={getFieldClassName('phoneCell')}
@@ -1566,15 +1545,15 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     </label>
 
                     <label className="modern-command-field">
-                      {renderFieldLabel('City', 'city')}
+                      {renderFieldLabel('Email', 'email1')}
                       <input
-                        className={getFieldClassName('city')}
-                        type="text"
-                        name="city"
-                        value={formState.city}
+                        className={getFieldClassName('email1')}
+                        type="email"
+                        name="email1"
+                        value={formState.email1}
                         onChange={(event) => {
-                          clearFieldSource('city');
-                          setFormState((current) => (current ? { ...current, city: event.target.value } : current));
+                          clearFieldSource('email1');
+                          setFormState((current) => (current ? { ...current, email1: event.target.value } : current));
                         }}
                       />
                     </label>
@@ -1589,6 +1568,20 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                         onChange={(event) => {
                           clearFieldSource('country');
                           setFormState((current) => (current ? { ...current, country: event.target.value } : current));
+                        }}
+                      />
+                    </label>
+
+                    <label className="modern-command-field">
+                      {renderFieldLabel('City', 'city')}
+                      <input
+                        className={getFieldClassName('city')}
+                        type="text"
+                        name="city"
+                        value={formState.city}
+                        onChange={(event) => {
+                          clearFieldSource('city');
+                          setFormState((current) => (current ? { ...current, city: event.target.value } : current));
                         }}
                       />
                     </label>
@@ -1611,7 +1604,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
                 <CandidateEditSectionCard
                   title="Key Skills"
-                  description="Keep the visible skills profile concise and current for search and submissions."
                   className="avel-candidate-edit-section--skills"
                 >
                   <label className="modern-command-field avel-candidate-edit-field--span-3">
@@ -1631,10 +1623,9 @@ export function CandidatesEditPage({ bootstrap }: Props) {
 
                 <CandidateEditSectionCard
                   title="Professional Context"
-                  description="Employer and compensation context used in recruiter conversations."
                   className="avel-candidate-edit-section--narrative"
                 >
-                  <div className="avel-candidate-edit-grid">
+                  <div className="avel-candidate-edit-grid avel-candidate-edit-grid--3col">
                     <label className="modern-command-field avel-candidate-edit-field--span-2">
                       {renderFieldLabel('Current Employer', 'currentEmployer')}
                       <input
@@ -1673,37 +1664,47 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   </div>
                 </CandidateEditSectionCard>
 
-                <CandidateEditSectionCard
-                  title="Notes"
-                  description="Keep recruiter narrative and profile commentary in a wider writing area."
-                  className="avel-candidate-edit-section--notes"
-                >
-                  <div className="avel-candidate-edit-grid">
-                    <label className="modern-command-field avel-candidate-edit-field--span-3">
-                      {renderFieldLabel('Notes', 'notes')}
-                      <MarkdownTextarea
-                        name="notes"
-                        value={formState.notes}
-                        rows={8}
-                        className={getEditorClassName('notes')}
-                        ariaLabel="Candidate notes"
-                        onChange={(nextValue) => {
-                          clearFieldSource('notes');
-                          setFormState((current) => (current ? { ...current, notes: nextValue } : current));
-                        }}
+            </div>
+
+            <aside className="avel-candidate-add-sidebar avel-candidate-edit-sidebar">
+                  <CandidateSidebarCard title="Logistics">
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Best Time To Call</span>
+                      <input
+                        className="avel-form-control"
+                        type="text"
+                        name="bestTimeToCall"
+                        value={formState.bestTimeToCall}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
                       />
                     </label>
-                  </div>
-                </CandidateEditSectionCard>
-              </div>
 
-                </div>
+                    <label className="modern-command-field">
+                      <span className="modern-command-label">Date Available</span>
+                      <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
+                      <input
+                        className="avel-form-control"
+                        type="date"
+                        value={toISODateInput(formState.dateAvailable)}
+                        onChange={(event) =>
+                          setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
+                        }
+                      />
+                    </label>
 
-                <aside className="avel-candidate-edit-sidebar">
-                  <CandidateSidebarCard
-                    title="Sourcing & Ownership"
-                    description="Source and owner are the fastest recruiter-facing controls to adjust while editing."
-                  >
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        name="canRelocate"
+                        checked={formState.canRelocate}
+                        onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Open To Relocation</span>
+                    </label>
+                  </CandidateSidebarCard>
+
+                  <CandidateSidebarCard title="Sourcing & Ownership">
                     <input type="hidden" name="source" value={formState.source} />
                     <SelectMenu
                       label="Source"
@@ -1741,10 +1742,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     />
                   </CandidateSidebarCard>
 
-                  <CandidateSidebarCard
-                    title="Status & GDPR"
-                    description="Operational state and GDPR controls stay close, but secondary to sourcing and main profile edits."
-                  >
+                  <CandidateSidebarCard title="Status & GDPR">
                     <label className="modern-command-toggle">
                       <input
                         type="checkbox"
@@ -1790,51 +1788,8 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                     </label>
                   </CandidateSidebarCard>
 
-                  <CandidateSidebarCard
-                    title="Logistics"
-                    description="Availability and relocation stay available in the side rail, like the Add Candidate flow."
-                  >
-                    <label className="modern-command-field">
-                      <span className="modern-command-label">Best Time To Call</span>
-                      <input
-                        className="avel-form-control"
-                        type="text"
-                        name="bestTimeToCall"
-                        value={formState.bestTimeToCall}
-                        onChange={(event) => setFormState((current) => (current ? { ...current, bestTimeToCall: event.target.value } : current))}
-                      />
-                    </label>
-
-                    <label className="modern-command-field">
-                      <span className="modern-command-label">Date Available</span>
-                      <input type="hidden" name="dateAvailable" value={formState.dateAvailable} />
-                      <input
-                        className="avel-form-control"
-                        type="date"
-                        value={toISODateInput(formState.dateAvailable)}
-                        onChange={(event) =>
-                          setFormState((current) => (current ? { ...current, dateAvailable: toLegacyShortDate(event.target.value) } : current))
-                        }
-                      />
-                    </label>
-
-                    <label className="modern-command-toggle">
-                      <input
-                        type="checkbox"
-                        name="canRelocate"
-                        checked={formState.canRelocate}
-                        onChange={(event) => setFormState((current) => (current ? { ...current, canRelocate: event.target.checked } : current))}
-                      />
-                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                      <span>Open To Relocation</span>
-                    </label>
-                  </CandidateSidebarCard>
-
                   {data.extraFields.length > 0 ? (
-                    <CandidateSidebarCard
-                      title="Additional Details"
-                      description="Extra recruiter-specific fields stay available without crowding the main profile cards."
-                    >
+                    <CandidateSidebarCard title="Additional Details">
                       {data.extraFields.map((field) => {
                         const fieldClassName = `modern-command-field${
                           field.inputType === 'textarea' || field.inputType === 'radio'
@@ -1874,14 +1829,32 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                   ) : null}
                 </aside>
               </div>
-            </form>
-
-          </section>
-          <div className="avel-candidate-edit-legacy-footer">
-            <a className="avel-candidate-edit-legacy-footer__link" href={data.actions.legacyURL}>
-              Open Legacy UI
-            </a>
-          </div>
+          <CandidateEditSectionCard
+            title="Notes"
+            className="avel-candidate-edit-section--notes"
+          >
+            <div className="avel-candidate-edit-grid">
+              <label className="modern-command-field avel-candidate-edit-field--span-3">
+                {renderFieldLabel('Notes', 'notes')}
+                <MarkdownTextarea
+                  name="notes"
+                  value={formState.notes}
+                  rows={8}
+                  className={getEditorClassName('notes')}
+                  ariaLabel="Candidate notes"
+                  onChange={(nextValue) => {
+                    clearFieldSource('notes');
+                    setFormState((current) => (current ? { ...current, notes: nextValue } : current));
+                  }}
+                />
+              </label>
+            </div>
+          </CandidateEditSectionCard>
+        </form>
+        <div className="avel-candidate-edit-legacy-footer">
+          <a className="avel-candidate-edit-legacy-footer__link" href={data.actions.legacyURL}>
+            Open Legacy UI
+          </a>
         </div>
 
         <LegacyFrameModal

@@ -9443,6 +9443,115 @@
   }
 }
 
+/* Edit Candidate aligned to Add Candidate grammar */
+.avel-candidate-edit-page--refined .avel-candidate-edit-form {
+  display: grid;
+  gap: 20px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-main {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  grid-column: auto;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  grid-column: auto;
+  position: static;
+  top: auto;
+  align-self: auto;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section,
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card {
+  border-color: var(--avel-border, #c7ddea);
+  background: var(--avel-surface, #ffffff);
+  box-shadow: 0 4px 14px rgba(10, 63, 90, 0.06);
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section {
+  padding: 20px;
+  gap: 16px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-section--identity,
+.avel-candidate-edit-page--refined .avel-candidate-edit-section--narrative,
+.avel-candidate-edit-page--refined .avel-candidate-edit-section--skills,
+.avel-candidate-edit-page--refined .avel-candidate-edit-section--notes,
+.avel-candidate-edit-page--refined .avel-candidate-edit-section--ai {
+  --avel-section-border: var(--avel-border, #c7ddea);
+  --avel-section-surface: #ffffff;
+  --avel-section-field-surface: #ffffff;
+}
+
+.avel-candidate-edit-page--refined .modern-command-field,
+.avel-candidate-edit-page--refined .avel-candidate-edit-section .modern-command-field,
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card .modern-command-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.avel-candidate-edit-page--refined .modern-command-field .modern-command-label {
+  color: #3f6074;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-grid--3col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-card__header,
+.avel-candidate-edit-page--refined .avel-candidate-edit-sidebar-card__header {
+  align-items: flex-start;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-inline-card {
+  margin-top: 4px;
+  border-top: 1px solid var(--avel-border, #c7ddea);
+  padding-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.avel-candidate-edit-page--refined .avel-candidate-edit-legacy-footer {
+  margin-top: -4px;
+}
+
+@media (max-width: 900px) {
+  .avel-candidate-edit-page--refined .avel-candidate-edit-layout,
+  .avel-candidate-edit-page--refined .avel-candidate-edit-grid,
+  .avel-candidate-edit-page--refined .avel-candidate-edit-grid--3col {
+    grid-template-columns: 1fr;
+  }
+
+  .avel-candidate-edit-page--refined .modern-page__actions .modern-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
 /* ─── Pipeline Purge Warning ─────────────────────────────────────────── */
 
 .avel-purge-warning {
