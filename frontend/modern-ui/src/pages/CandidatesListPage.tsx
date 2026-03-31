@@ -729,32 +729,57 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const canEditCandidate = isCapabilityEnabled(permissions.canEditCandidate);
   const canAddToList = isCapabilityEnabled(permissions.canAddToList);
   const canAddToJobOrder = isCapabilityEnabled(permissions.canAddToJobOrder);
-  const activeFilterLabels: string[] = [];
+  const activeFilters: Array<{ label: string; onRemove: () => void }> = [];
   if (filters.quickSearch.trim() !== '') {
-    activeFilterLabels.push(`Search: "${filters.quickSearch.trim()}"`);
+    activeFilters.push({
+      label: `Search: "${filters.quickSearch.trim()}"`,
+      onRemove: () => {
+        skipNextAutoSearchRef.current = true;
+        setSearchDraft('');
+        navigateWithFilters({ quickSearch: '', page: 1 });
+      }
+    });
   }
   if (filters.sourceFilter !== '') {
-    activeFilterLabels.push(`Source: ${filters.sourceFilter}`);
+    activeFilters.push({
+      label: `Source: ${filters.sourceFilter}`,
+      onRemove: () => navigateWithFilters({ sourceFilter: '', page: 1 })
+    });
   }
   if (filters.onlyMyCandidates) {
-    activeFilterLabels.push('Only My Candidates');
+    activeFilters.push({
+      label: 'My Candidates Only',
+      onRemove: () => navigateWithFilters({ onlyMyCandidates: false, page: 1 })
+    });
   }
   if (filters.onlyHotCandidates) {
-    activeFilterLabels.push('Only Hot Candidates');
+    activeFilters.push({
+      label: 'Hot Candidates',
+      onRemove: () => navigateWithFilters({ onlyHotCandidates: false, page: 1 })
+    });
   }
   if (filters.onlyGdprUnsigned) {
-    activeFilterLabels.push('GDPR Not Signed');
+    activeFilters.push({
+      label: 'GDPR Not Signed',
+      onRemove: () => navigateWithFilters({ onlyGdprUnsigned: false, page: 1 })
+    });
   }
   if (filters.onlyInternalCandidates) {
-    activeFilterLabels.push('Internal Candidates');
+    activeFilters.push({
+      label: 'Internal Candidates',
+      onRemove: () => navigateWithFilters({ onlyInternalCandidates: false, page: 1 })
+    });
   }
   if (filters.onlyActiveCandidates) {
-    activeFilterLabels.push('Only Active');
+    activeFilters.push({
+      label: 'Only Active',
+      onRemove: () => navigateWithFilters({ onlyActiveCandidates: false, page: 1 })
+    });
   }
 
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
-  const hasActiveFilters = activeFilterLabels.length > 0;
+  const hasActiveFilters = activeFilters.length > 0;
   const activeColumnFilterCount = (Object.keys(columnFilters) as CandidateDataColumnKey[]).filter(
     (columnKey) => (columnFilters[columnKey] || '').trim() !== ''
   ).length;
@@ -905,12 +930,18 @@ export function CandidatesListPage({ bootstrap }: Props) {
             {hasActiveFilters ? (
               <div className="avel-candidate-toolbar__active-strip">
                 <span className="modern-command-active__count is-active" aria-live="polite" aria-atomic="true">
-                  {activeFilterLabels.length} active filter{activeFilterLabels.length === 1 ? '' : 's'}
+                  {activeFilters.length} active filter{activeFilters.length === 1 ? '' : 's'}
                 </span>
-                {activeFilterLabels.map((label) => (
-                  <span className="modern-active-filter modern-active-filter--server" key={label}>
-                    {label}
-                  </span>
+                {activeFilters.map((filter) => (
+                  <button
+                    key={filter.label}
+                    type="button"
+                    className="modern-active-filter modern-active-filter--server"
+                    onClick={filter.onRemove}
+                    title={`Remove filter: ${filter.label}`}
+                  >
+                    {filter.label} <span aria-hidden="true">x</span>
+                  </button>
                 ))}
               </div>
             ) : null}

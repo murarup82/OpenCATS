@@ -375,6 +375,20 @@ class SearchCandidates
         //FIXME: Library code Session dependencies suck.
         $this->_userID = $_SESSION['CATS']->getUserID();
     }
+
+    private function shouldUseLiteralKeySkillsSearch($wildCardString)
+    {
+        return (preg_match('/[+#@\.]/', (string) $wildCardString) === 1);
+    }
+
+    private function escapeLikeValue($value)
+    {
+        return str_replace(
+            array('\\', '%', '_'),
+            array('\\\\', '\\%', '\\_'),
+            (string) $value
+        );
+    }
     
      /**
      * Returns all candidates.
@@ -491,9 +505,27 @@ class SearchCandidates
      */
     public function byKeySkills($wildCardString, $sortBy, $sortDirection)
     {
-        $WHERE = DatabaseSearch::makeBooleanSQLWhere(
-            $wildCardString, $this->_db, 'candidate.key_skills'
-        );
+        $wildCardString = trim((string) $wildCardString);
+        if ($wildCardString === '')
+        {
+            return array();
+        }
+
+        if ($this->shouldUseLiteralKeySkillsSearch($wildCardString))
+        {
+            $WHERE = sprintf(
+                "candidate.key_skills LIKE %s ESCAPE '\\\\'",
+                $this->_db->makeQueryString(
+                    '%' . $this->escapeLikeValue($wildCardString) . '%'
+                )
+            );
+        }
+        else
+        {
+            $WHERE = DatabaseSearch::makeBooleanSQLWhere(
+                $wildCardString, $this->_db, 'candidate.key_skills'
+            );
+        }
 
         $sql = sprintf(
             "SELECT
