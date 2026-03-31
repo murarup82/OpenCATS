@@ -60,7 +60,6 @@ type CandidateColumnConfig = {
 
 type CandidateColumnVisibility = Record<CandidateDataColumnKey, boolean>;
 
-const SEARCH_APPLY_DEBOUNCE_MS = 420;
 const MULTI_FILTER_PREFIX = '__multi__:';
 
 const CANDIDATE_COLUMNS: CandidateColumnConfig[] = [
@@ -283,7 +282,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const [columnFilters, setColumnFilters] = useState<Record<CandidateDataColumnKey, string>>(emptyColumnFilters());
   const [visibleColumns, setVisibleColumns] = useState<CandidateColumnVisibility>(DEFAULT_VISIBLE_COLUMNS);
   const [activeRowActionMenuCandidateID, setActiveRowActionMenuCandidateID] = useState<number | null>(null);
-  const skipNextAutoSearchRef = useRef(false);
   const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
   const columnVisibilityStorageKey = useMemo(
     () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:candidates:list:columns:v1`,
@@ -443,31 +441,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
     },
     [applyServerQuery, data, serverQueryString]
   );
-
-  useEffect(() => {
-    if (!data) {
-      return;
-    }
-
-    if (skipNextAutoSearchRef.current) {
-      skipNextAutoSearchRef.current = false;
-      return;
-    }
-
-    const nextSearch = searchDraft.trim();
-    const currentSearch = String(data.filters.quickSearch || '').trim();
-    if (nextSearch === currentSearch) {
-      return;
-    }
-
-    const debounceID = window.setTimeout(() => {
-      navigateWithFilters({ quickSearch: nextSearch, page: 1 });
-    }, SEARCH_APPLY_DEBOUNCE_MS);
-
-    return () => {
-      window.clearTimeout(debounceID);
-    };
-  }, [data, navigateWithFilters, searchDraft]);
 
   useEffect(() => {
     try {
@@ -734,7 +707,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
     activeFilters.push({
       label: `Search: "${filters.quickSearch.trim()}"`,
       onRemove: () => {
-        skipNextAutoSearchRef.current = true;
         setSearchDraft('');
         navigateWithFilters({ quickSearch: '', page: 1 });
       }
@@ -838,7 +810,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 className="modern-command-search avel-candidate-toolbar__search"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  skipNextAutoSearchRef.current = true;
                   navigateWithFilters({ quickSearch: searchDraft, page: 1 });
                 }}
               >
@@ -877,7 +848,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
                 type="button"
                 className="modern-btn modern-btn--secondary"
                 onClick={() => {
-                  skipNextAutoSearchRef.current = true;
                   setSearchDraft('');
                   setColumnFilters(emptyColumnFilters());
                   setActiveHeaderMenuColumn(null);
