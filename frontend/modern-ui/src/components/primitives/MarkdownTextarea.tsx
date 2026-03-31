@@ -378,6 +378,13 @@ function isHeadingPopupItemTarget(target: EventTarget | null): boolean {
   return target.closest('.toastui-editor-popup-add-heading li') !== null;
 }
 
+function isToolbarButtonTarget(target: EventTarget | null): boolean {
+  if (!isElementTarget(target)) {
+    return false;
+  }
+  return target.closest('.toastui-editor-toolbar-icons') !== null;
+}
+
 function isEditorSurfaceTarget(target: EventTarget | null): boolean {
   if (!isElementTarget(target)) {
     return false;
@@ -561,6 +568,10 @@ export function MarkdownTextarea({
     hostElement.addEventListener('click', onHeadingPopupActivationCapture, true);
 
     const onHostMouseDownCapture = (rawEvent: Event) => {
+      if (rawEvent instanceof MouseEvent && isToolbarButtonTarget(rawEvent.target) && !isInsideEditorPopup(rawEvent.target)) {
+        rawEvent.preventDefault();
+        return;
+      }
       if (!isEditorSurfaceTarget(rawEvent.target) || isInsideEditorPopup(rawEvent.target)) {
         return;
       }
