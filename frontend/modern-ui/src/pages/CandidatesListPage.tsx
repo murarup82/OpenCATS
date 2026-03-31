@@ -238,6 +238,19 @@ function emptyColumnFilters(): Record<CandidateDataColumnKey, string> {
   };
 }
 
+function emptyColumnOptions(): Record<CandidateDataColumnKey, string[]> {
+  return {
+    candidate: [],
+    source: [],
+    skills: [],
+    pipeline: [],
+    gdpr: [],
+    owner: [],
+    created: [],
+    updated: []
+  };
+}
+
 function normalizeVisibleColumns(visibleColumns: unknown): CandidateColumnVisibility {
   const normalized: CandidateColumnVisibility = { ...DEFAULT_VISIBLE_COLUMNS };
   if (!visibleColumns || typeof visibleColumns !== 'object') {
@@ -625,7 +638,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
   }, [visibleColumnOrder]);
 
   const columnFilterOptions = useMemo(() => {
-    const options = emptyColumnFilters() as unknown as Record<CandidateDataColumnKey, string[]>;
+    const options = emptyColumnOptions();
     if (!data) {
       return options;
     }
@@ -653,7 +666,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
   }, [data]);
 
   const columnFilterOptionTokens = useMemo(() => {
-    return (Object.keys(emptyColumnFilters()) as CandidateDataColumnKey[]).reduce(
+    return (Object.keys(emptyColumnOptions()) as CandidateDataColumnKey[]).reduce(
       (accumulator, columnKey) => {
         accumulator[columnKey] = new Set(columnFilterOptions[columnKey].map((value) => normalizeFilterToken(value)));
         return accumulator;
