@@ -238,6 +238,9 @@ function fetchLatestRequestRow($db, $siteID, $candidateID)
 
 function fetchCandidateRow($db, $siteID, $candidateID)
 {
+    $candidates = new Candidates($siteID);
+    $candidates->normalizeGdprConsentState($candidateID);
+
     $sql = sprintf(
         "SELECT
             candidate_id AS candidateID,

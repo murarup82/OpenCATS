@@ -52,6 +52,139 @@ class Candidates
 
     public $extraFields;
 
+    private function getGdprPolicyMonths()
+    {
+        $policyMonths = GDPR_POLICY_MONTHS;
+        $gdprSettings = new GDPRSettings($this->_siteID);
+        $settings = $gdprSettings->getAll();
+
+        if (isset($settings[GDPRSettings::SETTING_KEY]))
+        {
+            $years = (int) $settings[GDPRSettings::SETTING_KEY];
+            if ($years > 0)
+            {
+                $policyMonths = $years * 12;
+            }
+        }
+
+        return $policyMonths;
+    }
+
+    private function deriveGdprExpirationDateISO($acceptedAtValue)
+    {
+        $acceptedTimestamp = strtotime((string) $acceptedAtValue);
+        if ($acceptedTimestamp === false || $acceptedTimestamp <= 0)
+        {
+            return '';
+        }
+
+        $expirationTimestamp = strtotime('+' . $this->getGdprPolicyMonths() . ' months', $acceptedTimestamp);
+        if ($expirationTimestamp === false || $expirationTimestamp <= 0)
+        {
+            return '';
+        }
+
+        return date('Y-m-d', $expirationTimestamp);
+    }
+
+    public function normalizeGdprConsentState($candidateID)
+    {
+        $candidateID = (int) $candidateID;
+        if ($candidateID <= 0)
+        {
+            return false;
+        }
+
+        $row = $this->_db->getAssoc(sprintf(
+            "SELECT
+                gdpr_signed AS gdprSigned,
+                gdpr_expiration_date AS gdprExpirationDateISO
+             FROM
+                candidate
+             WHERE
+                candidate_id = %s
+                AND site_id = %s
+             LIMIT 1",
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($this->_siteID)
+        ));
+
+        if (empty($row))
+        {
+            return false;
+        }
+
+        $storedExpirationISO = trim((string) $row['gdprExpirationDateISO']);
+        $hasStoredExpiration = ($storedExpirationISO !== '' && $storedExpirationISO !== '0000-00-00');
+        $needsSignedRepair = ($hasStoredExpiration && (int) $row['gdprSigned'] !== 1);
+        $needsExpirationRepair = false;
+        $nextExpirationISO = $storedExpirationISO;
+
+        if (!$hasStoredExpiration)
+        {
+            $acceptedRow = $this->_db->getAssoc(sprintf(
+                "SELECT
+                    accepted_at AS acceptedAt
+                 FROM
+                    candidate_gdpr_requests
+                 WHERE
+                    site_id = %s
+                    AND candidate_id = %s
+                    AND accepted_at IS NOT NULL
+                 ORDER BY
+                    request_id DESC
+                 LIMIT 1",
+                $this->_db->makeQueryInteger($this->_siteID),
+                $this->_db->makeQueryInteger($candidateID)
+            ));
+
+            if (!empty($acceptedRow['acceptedAt']))
+            {
+                $derivedExpirationISO = $this->deriveGdprExpirationDateISO($acceptedRow['acceptedAt']);
+                if ($derivedExpirationISO !== '')
+                {
+                    $needsExpirationRepair = true;
+                    $needsSignedRepair = true;
+                    $nextExpirationISO = $derivedExpirationISO;
+                }
+            }
+        }
+
+        if (!$needsSignedRepair && !$needsExpirationRepair)
+        {
+            return false;
+        }
+
+        $updateAssignments = array();
+        if ($needsSignedRepair)
+        {
+            $updateAssignments[] = 'gdpr_signed = 1';
+        }
+        if ($needsExpirationRepair)
+        {
+            $updateAssignments[] = 'gdpr_expiration_date = ' . $this->_db->makeQueryString($nextExpirationISO);
+        }
+
+        if (empty($updateAssignments))
+        {
+            return false;
+        }
+
+        $this->_db->query(sprintf(
+            "UPDATE candidate
+             SET
+                %s
+             WHERE
+                candidate_id = %s
+                AND site_id = %s",
+            implode(",\n                ", $updateAssignments),
+            $this->_db->makeQueryInteger($candidateID),
+            $this->_db->makeQueryInteger($this->_siteID)
+        ));
+
+        return ($this->_db->getAffectedRows() > 0);
+    }
+
 
     public function __construct($siteID)
     {
@@ -536,6 +669,8 @@ class Candidates
      */
     public function get($candidateID)
     {
+        $this->normalizeGdprConsentState($candidateID);
+
         $sql = sprintf(
             "SELECT
                 candidate.candidate_id AS candidateID,
@@ -675,6 +810,8 @@ class Candidates
      */
     public function getForEditing($candidateID)
     {
+        $this->normalizeGdprConsentState($candidateID);
+
         $sql = sprintf(
             "SELECT
                 candidate.candidate_id AS candidateID,
