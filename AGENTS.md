@@ -71,6 +71,12 @@ From `frontend/modern-ui`:
 - Keep naming and folder patterns consistent with existing code
 - Call out assumptions explicitly when source behavior is uncertain
 
+## Commit Workflow
+- After each completed implementation, create a non-amended git commit automatically
+- Commit only the files changed for the implementation; do not include unrelated user changes
+- If the worktree contains unrelated modifications that make an automatic commit unsafe, stop and report that instead of forcing the commit
+- Do not rewrite history unless explicitly requested
+
 ## Done-When Checklist
 - Route, contract, and payload compatibility preserved
 - Legacy fallback paths still present and visible where expected
