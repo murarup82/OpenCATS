@@ -997,6 +997,7 @@ export type GdprRequestsModernDataResponse = {
     decision: string;
     decisionLabel?: string;
     acceptedAt?: string;
+    gdprExpirationDate?: string;
     acceptedIP?: string;
     acceptedLang?: string;
     noticeVersion?: string;
@@ -4062,11 +4063,14 @@ export type CandidatesShowModernDataResponse = {
     fieldValue: string;
   }>;
   gdpr: {
+    signed: boolean;
+    expirationDate: string;
     latestRequest: {
       hasRequest?: boolean;
       status: string;
       createdAt: string;
       emailSentAt: string;
+      acceptedAt: string;
       expiresAt: string;
       deletedAt: string;
       rawStatus?: string;

@@ -1415,6 +1415,8 @@ class CandidatesUI extends UserInterface
             'extraFields' => $extraFieldsPayload,
             'eeoValues' => $eeoValuesPayload,
             'gdpr' => array(
+                'signed' => ((int) $data['gdprSigned'] === 1),
+                'expirationDate' => (string) $data['gdprExpirationDateDisplay'],
                 'latestRequest' => $gdprLatestRequest,
                 'deletionRequired' => ((bool) $gdprDeletionRequired),
                 'sendEnabled' => ((bool) $gdprSendEnabled),
@@ -1911,20 +1913,12 @@ class CandidatesUI extends UserInterface
             $data['gdprSignedText'] = 'No';
         }
 
-        if (
-            empty($data['gdprExpirationDateISO']) ||
-            $data['gdprExpirationDateISO'] == '0000-00-00'
-        ) {
-            $data['gdprExpirationDateDisplay'] = '';
-        } else {
-            $data['gdprExpirationDateDisplay'] = $data['gdprExpirationDate'];
-        }
-
         $gdprLatestRequest = array(
             'hasRequest' => false,
             'status' => 'None',
             'createdAt' => '--',
             'emailSentAt' => '--',
+            'acceptedAt' => '--',
             'expiresAt' => '--',
             'deletedAt' => '--',
             'rawStatus' => '',
@@ -1950,6 +1944,7 @@ class CandidatesUI extends UserInterface
                 status,
                 created_at AS createdAt,
                 email_sent_at AS emailSentAt,
+                accepted_at AS acceptedAt,
                 expires_at AS expiresAt,
                 deleted_at AS deletedAt
              FROM
@@ -1981,6 +1976,7 @@ class CandidatesUI extends UserInterface
             $gdprLatestRequest['status'] = $statusDisplay;
             $gdprLatestRequest['createdAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['createdAt']);
             $gdprLatestRequest['emailSentAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['emailSentAt']);
+            $gdprLatestRequest['acceptedAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['acceptedAt']);
             $gdprLatestRequest['expiresAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['expiresAt']);
             $gdprLatestRequest['deletedAt'] = $this->formatGdprRequestDate($gdprLatestRequestRow['deletedAt']);
 
@@ -1995,6 +1991,21 @@ class CandidatesUI extends UserInterface
         {
             $gdprLegacyConsent = true;
             $gdprLatestRequest['status'] = 'LEGACY (Signed)';
+        }
+
+        $this->backfillMissingCandidateGdprExpiration(
+            $data,
+            $candidateID,
+            (!empty($gdprLatestRequestRow['acceptedAt']) ? $gdprLatestRequestRow['acceptedAt'] : '')
+        );
+
+        if (
+            empty($data['gdprExpirationDateISO']) ||
+            $data['gdprExpirationDateISO'] == '0000-00-00'
+        ) {
+            $data['gdprExpirationDateDisplay'] = '';
+        } else {
+            $data['gdprExpirationDateDisplay'] = $data['gdprExpirationDate'];
         }
 
         if (isset($data['gdprLegacyProofStatus']) && $data['gdprLegacyProofStatus'] !== '')
@@ -2829,6 +2840,104 @@ class CandidatesUI extends UserInterface
         return DateUtility::getAdjustedDate($format, $timestamp);
     }
 
+    private function getGdprPolicyMonths()
+    {
+        $policyMonths = GDPR_POLICY_MONTHS;
+        $gdprSettings = new GDPRSettings($this->_siteID);
+        $settings = $gdprSettings->getAll();
+
+        if (isset($settings[GDPRSettings::SETTING_KEY]))
+        {
+            $years = (int) $settings[GDPRSettings::SETTING_KEY];
+            if ($years > 0)
+            {
+                $policyMonths = $years * 12;
+            }
+        }
+
+        return $policyMonths;
+    }
+
+    private function deriveGdprExpirationDateParts($acceptedAtValue)
+    {
+        $acceptedTimestamp = strtotime((string) $acceptedAtValue);
+        if ($acceptedTimestamp === false || $acceptedTimestamp <= 0)
+        {
+            return array(
+                'iso' => '',
+                'display' => ''
+            );
+        }
+
+        $expirationTimestamp = strtotime('+' . $this->getGdprPolicyMonths() . ' months', $acceptedTimestamp);
+        if ($expirationTimestamp === false || $expirationTimestamp <= 0)
+        {
+            return array(
+                'iso' => '',
+                'display' => ''
+            );
+        }
+
+        return array(
+            'iso' => date('Y-m-d', $expirationTimestamp),
+            'display' => date('m-d-y', $expirationTimestamp)
+        );
+    }
+
+    private function backfillMissingCandidateGdprExpiration(&$data, $candidateID, $acceptedAtValue = '')
+    {
+        if (!is_array($data))
+        {
+            return;
+        }
+
+        $gdprSigned = isset($data['gdprSigned']) ? (int) $data['gdprSigned'] : 0;
+        $currentISO = isset($data['gdprExpirationDateISO']) ? trim((string) $data['gdprExpirationDateISO']) : '';
+        if ($gdprSigned !== 1 || ($currentISO !== '' && $currentISO !== '0000-00-00'))
+        {
+            return;
+        }
+
+        $acceptedAt = trim((string) $acceptedAtValue);
+        if ($acceptedAt === '' && $candidateID > 0)
+        {
+            $db = DatabaseConnection::getInstance();
+            $acceptedRow = $db->getAssoc(sprintf(
+                "SELECT
+                    accepted_at AS acceptedAt
+                 FROM
+                    candidate_gdpr_requests
+                 WHERE
+                    site_id = %s
+                    AND candidate_id = %s
+                    AND accepted_at IS NOT NULL
+                 ORDER BY
+                    request_id DESC
+                 LIMIT 1",
+                $db->makeQueryInteger($this->_siteID),
+                $db->makeQueryInteger($candidateID)
+            ));
+            if (!empty($acceptedRow['acceptedAt']))
+            {
+                $acceptedAt = (string) $acceptedRow['acceptedAt'];
+            }
+        }
+
+        if ($acceptedAt === '')
+        {
+            return;
+        }
+
+        $derivedDates = $this->deriveGdprExpirationDateParts($acceptedAt);
+        if ($derivedDates['iso'] === '' || $derivedDates['display'] === '')
+        {
+            return;
+        }
+
+        $data['gdprExpirationDateISO'] = $derivedDates['iso'];
+        $data['gdprExpirationDate'] = $derivedDates['display'];
+    }
+
     private function normalizeLegacyGdprText($value)
     {
         $value = strtolower(trim($value));
@@ -3175,6 +3284,8 @@ class CandidatesUI extends UserInterface
         } else {
             $data['dateAvailableMDY'] = $data['dateAvailable'];
         }
+
+        $this->backfillMissingCandidateGdprExpiration($data, $candidateID);
 
         if (!empty($data['gdprExpirationDate'])) {
             $data['gdprExpirationDateMDY'] = $data['gdprExpirationDate'];

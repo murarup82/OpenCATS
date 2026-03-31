@@ -39,6 +39,7 @@ type NormalizedRow = {
   isExpired: boolean;
   createdAt: string;
   expiresAt: string;
+  gdprExpirationDate: string;
   sentAt: string;
   decision: string;
   acceptedAt: string;
@@ -246,6 +247,7 @@ function normalizeRow(row: GdprRequestsModernDataResponse['rows'][number]): Norm
     isExpired: toBoolean(row.isExpired),
     createdAt: toDisplayText(row.createdAt || row.createdAtSort, '--'),
     expiresAt: toDisplayText(row.expiresAt, '--'),
+    gdprExpirationDate: toDisplayText(row.gdprExpirationDate, '--'),
     sentAt: toDisplayText(row.sentAt, '--'),
     decision: toDisplayText(row.decision || row.decisionLabel || row.statusLabel || row.displayStatus || row.status, '--'),
     acceptedAt: toDisplayText(row.acceptedAt, '--'),
@@ -449,7 +451,8 @@ export function GdprRequestsPage({ bootstrap }: Props) {
     { key: 'email', title: 'Email' },
     { key: 'status', title: 'Status' },
     { key: 'created', title: 'Created' },
-    { key: 'expires', title: 'Expires' },
+    { key: 'expires', title: 'Link Expires' },
+    { key: 'gdprExpires', title: 'GDPR Expires' },
     { key: 'sent', title: 'Sent' },
     { key: 'decision', title: 'Decision' },
     { key: 'accepted', title: 'Accepted' },
@@ -694,6 +697,7 @@ export function GdprRequestsPage({ bootstrap }: Props) {
                     </td>
                     <td>{toDisplayText(row.createdAt)}</td>
                     <td>{toDisplayText(row.expiresAt)}</td>
+                    <td>{toDisplayText(row.gdprExpirationDate)}</td>
                     <td>{toDisplayText(row.sentAt)}</td>
                     <td>{toDisplayText(row.decision, '--')}</td>
                     <td>{toDisplayText(row.acceptedAt)}</td>

@@ -1893,6 +1893,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               <div className="avel-candidate-details avel-candidate-details--gdpr">
                 <div className={getDetailFieldClassName(gdpr.latestRequest.createdAt)}><strong>Request Created:</strong> {toDisplayText(gdpr.latestRequest.createdAt)}</div>
                 <div className={getDetailFieldClassName(gdpr.latestRequest.emailSentAt)}><strong>Email Sent:</strong> {toDisplayText(gdpr.latestRequest.emailSentAt)}</div>
+                <div className={getDetailFieldClassName(gdpr.latestRequest.acceptedAt)}><strong>Accepted At:</strong> {toDisplayText(gdpr.latestRequest.acceptedAt)}</div>
+                <div className={getDetailFieldClassName(gdpr.expirationDate)}><strong>GDPR Expires:</strong> {toDisplayText(gdpr.expirationDate)}</div>
                 <div className={getDetailFieldClassName(gdpr.latestRequest.expiresAt)}><strong>Link Expires:</strong> {toDisplayText(gdpr.latestRequest.expiresAt)}</div>
                 <div className={getDetailFieldClassName(gdpr.latestRequest.deletedAt)}><strong>Deleted At:</strong> {toDisplayText(gdpr.latestRequest.deletedAt)}</div>
                 {gdpr.sendDisabledReason !== '' ? (
@@ -2910,4 +2912,3 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     </div>
   );
 }
-

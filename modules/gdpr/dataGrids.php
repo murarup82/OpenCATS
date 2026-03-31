@@ -307,6 +307,7 @@ EOT;
                 c.candidate_id AS candidateExists,
                 c.last_name AS candidateLastName,
                 c.email1 AS candidateEmail,
+                DATE_FORMAT(CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME), '%%m-%%d-%%y') AS gdprExpirationDate,
                 CASE
                     WHEN r.accepted_at IS NOT NULL THEN 3
                     WHEN r.declined_at IS NOT NULL THEN 2
@@ -374,6 +375,7 @@ EOT;
                 c.candidate_id AS candidateExists,
                 c.last_name AS candidateLastName,
                 c.email1 AS candidateEmail,
+                DATE_FORMAT(CAST(NULLIF(c.gdpr_expiration_date, '0000-00-00') AS DATETIME), '%%m-%%d-%%y') AS gdprExpirationDate,
                 0 AS decisionSort,
                 0 AS latestRequestID,
                 1 AS isLatest,

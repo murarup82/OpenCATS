@@ -8,6 +8,7 @@ include_once(LEGACY_ROOT . '/lib/StringUtility.php');
 include_once(LEGACY_ROOT . '/lib/DateUtility.php');
 include_once(LEGACY_ROOT . '/lib/ResultSetUtility.php');
 include_once(LEGACY_ROOT . '/lib/DataGrid.php');
+include_once(LEGACY_ROOT . '/lib/GDPRSettings.php');
 include_once(LEGACY_ROOT . '/modules/gdpr/dataGrids.php');
 
 class GDPRUI extends UserInterface
@@ -249,6 +250,41 @@ class GDPRUI extends UserInterface
         $this->respondModernJSON(200, $payload);
     }
 
+    private function getGdprPolicyMonths()
+    {
+        $policyMonths = GDPR_POLICY_MONTHS;
+        $gdprSettings = new GDPRSettings($this->_siteID);
+        $settings = $gdprSettings->getAll();
+
+        if (isset($settings[GDPRSettings::SETTING_KEY]))
+        {
+            $years = (int) $settings[GDPRSettings::SETTING_KEY];
+            if ($years > 0)
+            {
+                $policyMonths = $years * 12;
+            }
+        }
+
+        return $policyMonths;
+    }
+
+    private function deriveGdprExpirationDateDisplay($acceptedAtValue)
+    {
+        $acceptedTimestamp = strtotime((string) $acceptedAtValue);
+        if ($acceptedTimestamp === false || $acceptedTimestamp <= 0)
+        {
+            return '';
+        }
+
+        $expirationTimestamp = strtotime('+' . $this->getGdprPolicyMonths() . ' months', $acceptedTimestamp);
+        if ($expirationTimestamp === false || $expirationTimestamp <= 0)
+        {
+            return '';
+        }
+
+        return date('m-d-y', $expirationTimestamp);
+    }
+
     private function buildModernRequestRow($row, $baseURL, $canEditGdpr, $canHardDeleteRequest)
     {
         $requestID = (int) (isset($row['requestID']) ? $row['requestID'] : 0);
@@ -286,6 +322,12 @@ class GDPRUI extends UserInterface
         else if (!empty($row['declinedAt']))
         {
             $decisionLabel = 'Declined ' . $row['declinedAt'];
+        }
+
+        $gdprExpirationDate = isset($row['gdprExpirationDate']) ? trim((string) $row['gdprExpirationDate']) : '';
+        if ($gdprExpirationDate === '' && !empty($row['acceptedAt']))
+        {
+            $gdprExpirationDate = $this->deriveGdprExpirationDateDisplay($row['acceptedAt']);
         }
 
         $renewalEligible = (!empty($row['renewalEligible']) && (int) $row['renewalEligible'] === 1);
@@ -329,6 +371,7 @@ class GDPRUI extends UserInterface
             'createdAt' => isset($row['createdAt']) ? (string) $row['createdAt'] : '',
             'sentAt' => isset($row['sentAt']) ? (string) $row['sentAt'] : '',
             'expiresAt' => isset($row['expiresAt']) ? (string) $row['expiresAt'] : '',
+            'gdprExpirationDate' => $gdprExpirationDate,
             'acceptedAt' => isset($row['acceptedAt']) ? (string) $row['acceptedAt'] : '',
             'acceptedIP' => isset($row['acceptedIP']) ? (string) $row['acceptedIP'] : '',
             'acceptedLang' => isset($row['acceptedLang']) ? (string) $row['acceptedLang'] : '',
