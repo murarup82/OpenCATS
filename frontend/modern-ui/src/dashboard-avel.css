@@ -5,7 +5,10 @@
    chrome, but avoid the old fixed-height viewport lock. */
 .modern-shell-app-root:has(.avel-my-dashboard) {
   min-height: calc(100dvh - 72px);
-  overflow: visible;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
   display: block;
 }
 
@@ -13,6 +16,8 @@
    locked flex root. */
 .modern-shell-app-root:has(.avel-my-dashboard) > .modern-app-shell {
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
   display: block;
   padding-bottom: 0; /* feedback footer is hidden on the dashboard */
 }
@@ -48,6 +53,9 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
 }
 
@@ -62,7 +70,8 @@
 
 .avel-dashboard-page .modern-page {
   width: 100%;
-  max-width: none;
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
   padding: clamp(10px, 1vw, 16px);
   gap: 16px;
@@ -78,6 +87,9 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
 }
 
@@ -118,6 +130,9 @@
   flex-direction: column;
   gap: 14px;
   flex: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
 }
 
@@ -1712,6 +1727,9 @@
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: auto;
 }
 
@@ -1723,6 +1741,9 @@
   padding: 9px 12px;
   border-bottom: 1px solid #aec8d9;
   background: #d9eaf5;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .avel-dashboard-page .modern-kanban-board__header-actions {
@@ -1781,6 +1802,9 @@
   scrollbar-width: auto;
   scrollbar-color: #7caec9 #e5f1f8;
   flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: auto;
 }
 
