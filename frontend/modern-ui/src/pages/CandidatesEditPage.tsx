@@ -1216,9 +1216,6 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const aiPreferredAttachments = aiCandidateAttachments.filter((attachment) => isLikelyCVFileName(attachment.fileName));
   const aiSourceAttachments = aiPreferredAttachments.length > 0 ? aiPreferredAttachments : aiCandidateAttachments;
   const aiParsingEnabled = data.resumeImport?.isParsingEnabled ?? false;
-  const parseLimitRaw = data.resumeImport?.parsingStatus?.['parseLimit'];
-  const parseLimitText =
-    typeof parseLimitRaw === 'number' && Number.isFinite(parseLimitRaw) ? `Remaining parses: ${parseLimitRaw}` : '';
   const aiCanRunPrefill =
     aiParsingEnabled && aiSourceAttachments.length > 0 && Number(aiAttachmentID || 0) > 0 && !aiPrefillPending;
   const aiRefillDisabledReason = !aiParsingEnabled
@@ -1234,6 +1231,12 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   const aiUpdatedFieldSummary = [...aiUpdatedFieldKeys.map((fieldKey) => toTrackedFieldLabel(fieldKey)), ...aiUpdatedExtraFieldLabels].join(', ');
   const candidateDisplayName = `${formState.firstName} ${formState.lastName}`.trim() || 'Unnamed Candidate';
   const selectedOwnerLabel = ownerOptions.find((option) => option.value === formState.owner)?.label || '--';
+  const profileSummary = [
+    formState.isActive ? 'Active Profile' : 'Inactive Profile',
+    formState.isHot ? 'Priority: Hot' : 'Priority: Standard',
+    `Source: ${toDisplayText(formState.source, '(None)')}`,
+    `Owner: ${toDisplayText(selectedOwnerLabel)}`
+  ].join(' · ');
   const resetCandidateForm = () => {
     setFormState(toFormState(data));
     setValidationError('');
@@ -1247,51 +1250,28 @@ export function CandidatesEditPage({ bootstrap }: Props) {
   return (
     <div className="avel-dashboard-page avel-candidate-edit-page avel-candidate-edit-page--refined">
       <PageContainer
-        title={candidateDisplayName}
-        subtitle={`Candidate Profile #${data.meta.candidateID} · edit workspace`}
+        title={`Edit ${candidateDisplayName}`}
+        subtitle={profileSummary}
+        actions={
+          <>
+            <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
+              Save Candidate
+            </button>
+            <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
+              Reset Changes
+            </button>
+            <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>
+              Back to Profile
+            </a>
+            {data.meta.permissions.canDeleteCandidate ? (
+              <a className="modern-btn avel-candidate-edit-page__danger-btn" href={deleteURL}>
+                Delete Candidate
+              </a>
+            ) : null}
+          </>
+        }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-candidate-edit-header">
-            <div className="avel-candidate-edit-header__identity">
-              <p className="avel-candidate-edit-header__eyebrow">Candidate Profile</p>
-              <h2 className="avel-candidate-edit-header__title">{candidateDisplayName}</h2>
-              <p className="avel-candidate-edit-header__subtitle">
-                Candidate #{data.meta.candidateID} · Required fields: First Name, Last Name, Owner
-              </p>
-              <div className="avel-candidate-edit-header__chips">
-                <span className={`modern-chip ${formState.isActive ? 'modern-chip--success' : 'modern-chip--critical'}`}>
-                  {formState.isActive ? 'Active Profile' : 'Inactive Profile'}
-                </span>
-                <span className={`modern-chip ${formState.isHot ? 'modern-chip--warning' : 'modern-chip--info'}`}>
-                  {formState.isHot ? 'Priority: Hot' : 'Priority: Standard'}
-                </span>
-                <span className="modern-chip modern-chip--source-other">
-                  Source: {toDisplayText(formState.source, '(None)')}
-                </span>
-                <span className="modern-chip modern-chip--info">Owner: {toDisplayText(selectedOwnerLabel)}</span>
-                {parseLimitText !== '' ? <span className="modern-chip modern-chip--source-other">{parseLimitText}</span> : null}
-              </div>
-              <div className="avel-candidate-edit-header__actions">
-                <button type="submit" form="candidate-edit-form" className="modern-btn modern-btn--emphasis">
-                  Save Candidate
-                </button>
-                <button type="button" className="modern-btn modern-btn--secondary" onClick={resetCandidateForm}>
-                  Reset Changes
-                </button>
-                <a className="modern-btn modern-btn--secondary modern-btn--ghost" href={showURL}>
-                  Back to Profile
-                </a>
-                {data.meta.permissions.canDeleteCandidate ? (
-                  <a className="modern-btn avel-candidate-edit-header__danger-btn" href={deleteURL}>
-                    Delete Candidate
-                  </a>
-                ) : null}
-              </div>
-              <a className="avel-candidate-edit-header__legacy-link" href={data.actions.legacyURL}>
-                Open Legacy UI
-              </a>
-            </div>
-          </section>
           <section className="avel-candidate-edit-workbench">
             <form
               id="candidate-edit-form"
@@ -1897,6 +1877,11 @@ export function CandidatesEditPage({ bootstrap }: Props) {
             </form>
 
           </section>
+          <div className="avel-candidate-edit-legacy-footer">
+            <a className="avel-candidate-edit-legacy-footer__link" href={data.actions.legacyURL}>
+              Open Legacy UI
+            </a>
+          </div>
         </div>
 
         <LegacyFrameModal
