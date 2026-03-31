@@ -1382,7 +1382,7 @@ export function CandidatesEditPage({ bootstrap }: Props) {
                         onClick={runAIPrefillFromAttachment}
                         disabled={!aiCanRunPrefill}
                       >
-                        {aiPrefillPending ? 'AI Running...' : 'Load CV Details With AI'}
+                        {aiPrefillPending ? 'AI Running...' : 'Extract Candidate Details from CV'}
                       </button>
                       {aiUndoSnapshot ? (
                         <button
