@@ -139,6 +139,23 @@ function getGDPRStatusChipClass(status: unknown): string {
   return 'avel-candidate-gdpr-chip--neutral';
 }
 
+function getGDPRStatusFieldClassName(status: unknown): string {
+  const chipClassName = getGDPRStatusChipClass(status);
+  if (chipClassName.endsWith('--success')) {
+    return 'avel-candidate-show-static--gdpr-success';
+  }
+  if (chipClassName.endsWith('--pending')) {
+    return 'avel-candidate-show-static--gdpr-pending';
+  }
+  if (chipClassName.endsWith('--warning')) {
+    return 'avel-candidate-show-static--gdpr-warning';
+  }
+  if (chipClassName.endsWith('--danger')) {
+    return 'avel-candidate-show-static--gdpr-danger';
+  }
+  return 'avel-candidate-show-static--gdpr-neutral';
+}
+
 function normalizeSearchText(value: string): string {
   return String(value || '').trim().toLowerCase();
 }
@@ -258,6 +275,7 @@ type CandidateShowValueFieldProps = {
   label: string;
   value: unknown;
   className?: string;
+  valueClassName?: string;
   children?: ReactNode;
 };
 
@@ -265,13 +283,19 @@ function CandidateShowValueField({
   label,
   value,
   className = '',
+  valueClassName = '',
   children = null
 }: CandidateShowValueFieldProps) {
   const isEmpty = isDisplayValueEmpty(value);
+  const normalizedValueClassName = String(valueClassName || '').trim();
   return (
     <div className={`modern-command-field ${className}`.trim()}>
       <span className="modern-command-label">{label}</span>
-      <div className={`avel-form-control avel-candidate-show-static${isEmpty ? ' avel-form-control--missing' : ''}`}>
+      <div
+        className={`avel-form-control avel-candidate-show-static${isEmpty ? ' avel-form-control--missing' : ''}${
+          normalizedValueClassName !== '' ? ` ${normalizedValueClassName}` : ''
+        }`}
+      >
         {children ?? toDisplayText(value)}
       </div>
     </div>
@@ -353,6 +377,10 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [attachmentDeletePending, setAttachmentDeletePending] = useState<boolean>(false);
   const [attachmentDeleteError, setAttachmentDeleteError] = useState<string>('');
+  const [candidateDeleteModalOpen, setCandidateDeleteModalOpen] = useState<boolean>(false);
+  const [candidateDeletePending, setCandidateDeletePending] = useState<boolean>(false);
+  const [candidateDeleteError, setCandidateDeleteError] = useState<string>('');
+  const [candidateDeleteConfirmation, setCandidateDeleteConfirmation] = useState<string>('');
   const [googleDrivePendingAttachmentID, setGoogleDrivePendingAttachmentID] = useState<number>(0);
   const [googleDriveDeletePendingAttachmentID, setGoogleDriveDeletePendingAttachmentID] = useState<number>(0);
   const [transformCVModalOpen, setTransformCVModalOpen] = useState<boolean>(false);
@@ -1796,19 +1824,46 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const tagCatalog = [...(data.tagManagement?.catalog || [])].sort((left, right) =>
     toDisplayText(left.title, '').localeCompare(toDisplayText(right.title, ''))
   );
-  const googleDriveAccountEmail = String(data.actions.googleDriveAccountEmail || '').trim();
   const googleDriveLinkMode = String(data.actions.googleDriveLinkMode || '').trim().toLowerCase();
   const googleDriveUsesSharedLink = googleDriveLinkMode === 'shared';
+  const deleteURL = ensureModernUIURL(decodeLegacyURL(data.actions.deleteURL));
   const locationLabel = [normalizeDisplayValue(candidate.city), normalizeDisplayValue(candidate.country)]
     .filter((part) => part !== '')
     .join(', ') || '--';
+  const totalJobOrderCount = Number(data.pipelines.activeCount || 0) + Number(data.pipelines.closedCount || 0);
+  const hiddenClosedJobOrders = !showClosed && Number(data.pipelines.closedCount || 0) > 0;
   const identityTags = [
     candidate.isActive ? 'Active Candidate' : 'Inactive Candidate',
     candidate.isHot ? 'Hot Priority' : 'Standard Priority',
-    `Pipelines: ${candidate.pipelineCount}`,
+    `JobOrders: ${totalJobOrderCount}`,
+    `Active: ${Number(data.pipelines.activeCount || 0)}`,
+    `Closed: ${Number(data.pipelines.closedCount || 0)}`,
     `Attachments: ${data.attachments.items.length}`,
     `Proposed: ${candidate.submittedCount}`
   ];
+  const openCandidateDeleteModal = () => {
+    setCandidateDeleteError('');
+    setCandidateDeleteConfirmation('');
+    setCandidateDeletePending(false);
+    setCandidateDeleteModalOpen(true);
+  };
+  const closeCandidateDeleteModal = () => {
+    if (candidateDeletePending) {
+      return;
+    }
+    setCandidateDeleteError('');
+    setCandidateDeleteConfirmation('');
+    setCandidateDeleteModalOpen(false);
+  };
+  const confirmCandidateDelete = () => {
+    if (deleteURL === '') {
+      setCandidateDeleteError('Delete action is unavailable for this candidate.');
+      return;
+    }
+    setCandidateDeleteError('');
+    setCandidateDeletePending(true);
+    window.location.assign(deleteURL);
+  };
 
   return (
     <div className="avel-dashboard-page avel-candidate-show-page avel-candidate-show-page--refined avel-candidate-add-page avel-candidate-edit-page avel-candidate-edit-page--refined">
@@ -1836,16 +1891,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               </button>
             ) : null}
             {permissions.canDeleteCandidate ? (
-              <a
-                className="modern-btn modern-btn--danger"
-                href={ensureModernUIURL(decodeLegacyURL(data.actions.deleteURL))}
+              <button
+                type="button"
+                className="modern-btn avel-candidate-edit-page__danger-btn"
+                onClick={openCandidateDeleteModal}
               >
                 Delete Candidate
-              </a>
+              </button>
             ) : null}
-            <a className="modern-btn modern-btn--secondary" href={decodeLegacyURL(data.actions.legacyURL)}>
-              Open Legacy UI
-            </a>
           </>
         }
       >
@@ -1886,9 +1939,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                         <span className={`modern-chip ${candidate.isHot ? 'modern-chip--warning' : 'modern-chip--resume'}`}>
                           {candidate.isHot ? 'Hot Priority' : 'Standard Priority'}
                         </span>
-                        <span className="modern-chip modern-chip--info">{locationLabel}</span>
-                        <span className="modern-chip modern-chip--info">Owner: {toDisplayText(candidate.owner)}</span>
-                        <span className="modern-chip modern-chip--info">Source: {toDisplayText(candidate.source)}</span>
+                        <span className="modern-chip modern-chip--info">{totalJobOrderCount} JobOrders</span>
+                        <span className="modern-chip modern-chip--info">{data.attachments.items.length} Attachments</span>
                       </div>
                       {candidate.duplicates.length > 0 ? (
                         <div className="avel-candidate-show-identity__duplicates">
@@ -1921,7 +1973,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 </CandidateShowSectionCard>
 
                 <CandidateShowSectionCard
-                  title="Pipelines"
+                  title="JobOrders"
                   description="Track active and closed job-order relationships for this candidate."
                   className="avel-candidate-show-section--pipelines"
                   actions={
@@ -1936,6 +1988,20 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     </label>
                   }
                 >
+                  <div className="avel-candidate-show-joborder-summary">
+                    <span className="modern-chip modern-chip--info">Active: {Number(data.pipelines.activeCount || 0)}</span>
+                    <span className={`modern-chip ${Number(data.pipelines.closedCount || 0) > 0 ? 'modern-chip--warning' : 'modern-chip--resume'}`}>
+                      Closed: {Number(data.pipelines.closedCount || 0)}
+                    </span>
+                    <span className={`modern-chip ${totalJobOrderCount > 0 ? 'modern-chip--success' : 'modern-chip--resume'}`}>
+                      {totalJobOrderCount > 0 ? 'Assigned to job orders' : 'No job orders assigned'}
+                    </span>
+                  </div>
+                  {hiddenClosedJobOrders ? (
+                    <p className="avel-list-panel__hint">
+                      Closed job orders exist for this candidate. Enable <strong>Show Closed</strong> to review them.
+                    </p>
+                  ) : null}
                   <DataTable
                     columns={[
                       { key: 'job', title: 'Job Order' },
@@ -1946,7 +2012,11 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                       { key: 'actions', title: 'Actions' }
                     ]}
                     hasRows={data.pipelines.items.length > 0}
-                    emptyMessage="No pipeline entries for this candidate."
+                    emptyMessage={
+                      hiddenClosedJobOrders
+                        ? 'No active job orders shown. Enable Show Closed to review previous assignments.'
+                        : 'No job orders assigned to this candidate.'
+                    }
                   >
                     {data.pipelines.items.map((pipeline) => (
                       <tr key={pipeline.candidateJobOrderID}>
@@ -2063,15 +2133,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     </>
                   }
                 >
-                  <p className="avel-list-panel__hint">
-                    {googleDriveUsesSharedLink
-                      ? (googleDriveAccountEmail !== ''
-                          ? `Google Docs links are shared across users through the configured shared drive. Connected Google account: ${googleDriveAccountEmail}.`
-                          : 'Google Docs links are shared across users through the configured shared drive once you connect a Google account with access.')
-                      : (googleDriveAccountEmail !== ''
-                          ? `Google Docs links are per-user. Connected Google account: ${googleDriveAccountEmail}.`
-                          : 'Google Docs links are per-user and map only to your connected Google account.')}
-                  </p>
                   {permissions.canCreateAttachment && attachmentUploadOpen ? (
                     <div className="avel-joborder-thread-form avel-candidate-show-inline-block">
                       <label className="modern-command-field avel-candidate-edit-field--full">
@@ -2178,7 +2239,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                             {permissions.canDeleteAttachment ? (
                               <button
                                 type="button"
-                                className="modern-btn modern-btn--mini modern-btn--danger"
+                                className="modern-btn modern-btn--mini avel-candidate-edit-page__danger-btn"
                                 onClick={() => {
                                   setAttachmentDeleteError('');
                                   setAttachmentDeleteModal({
@@ -2201,7 +2262,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
               <aside className="avel-candidate-edit-sidebar avel-candidate-show-sidebar">
                 <CandidateShowSidebarCard
-                  title="Status & GDPR"
+                  title="GDPR"
                   description="Current consent status and renewal action."
                   actions={
                     gdpr.sendEnabled ? (
@@ -2217,17 +2278,14 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     ) : null
                   }
                 >
-                  <div className="avel-candidate-show-sidebar-summary">
-                    <span className={`modern-chip avel-candidate-gdpr-chip ${getGDPRStatusChipClass(gdpr.latestRequest.status)}`}>
-                      GDPR {toDisplayText(gdpr.latestRequest.status)}
-                    </span>
-                  </div>
                   <div className="avel-candidate-show-sidebar-stack">
-                    <CandidateShowValueField label="Current Status" value={gdpr.latestRequest.status} />
+                    <CandidateShowValueField
+                      label="Current Status"
+                      value={gdpr.latestRequest.status}
+                      valueClassName={getGDPRStatusFieldClassName(gdpr.latestRequest.status)}
+                    />
                     <CandidateShowValueField label="GDPR Expires" value={gdpr.expirationDate} />
-                    {gdpr.sendDisabledReason !== '' ? (
-                      <CandidateShowValueField label="Send Disabled" value={gdpr.sendDisabledReason} />
-                    ) : null}
+                    {gdpr.sendDisabledReason !== '' ? <p className="avel-list-panel__hint">{gdpr.sendDisabledReason}</p> : null}
                     {gdprSendError !== '' ? <div className="modern-inline-error">{gdprSendError}</div> : null}
                   </div>
                 </CandidateShowSidebarCard>
@@ -2507,6 +2565,12 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   </div>
                 ) : null}
               </CandidateShowSectionCard>
+            </div>
+
+            <div className="avel-candidate-edit-legacy-footer">
+              <a className="avel-candidate-edit-legacy-footer__link" href={decodeLegacyURL(data.actions.legacyURL)}>
+                Open Legacy UI
+              </a>
             </div>
           </div>
         </div>
@@ -2867,6 +2931,21 @@ export function CandidatesShowPage({ bootstrap }: Props) {
             }
             handleDeleteAttachment(attachmentDeleteModal.attachmentID);
           }}
+        />
+        <ConfirmActionModal
+          isOpen={candidateDeleteModalOpen}
+          title="Delete Candidate"
+          message={`Delete ${toDisplayText(candidate.fullName, 'this candidate')}? This permanently removes the candidate profile.`}
+          confirmLabel="Delete Candidate"
+          pending={candidateDeletePending}
+          error={candidateDeleteError}
+          confirmationKeyword="DELETE"
+          confirmationLabel="Type DELETE to permanently remove this candidate"
+          confirmationHint="This action cannot be undone."
+          confirmationValue={candidateDeleteConfirmation}
+          onConfirmationValueChange={setCandidateDeleteConfirmation}
+          onCancel={closeCandidateDeleteModal}
+          onConfirm={confirmCandidateDelete}
         />
 
         <PipelineRemoveModal

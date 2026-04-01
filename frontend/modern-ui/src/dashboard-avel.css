@@ -9623,6 +9623,12 @@
   gap: 8px;
 }
 
+.avel-candidate-show-page--refined .avel-candidate-show-joborder-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .avel-candidate-show-page--refined .avel-candidate-show-identity {
   display: grid;
   gap: 16px;
@@ -9665,15 +9671,10 @@
 }
 
 .avel-candidate-show-page--refined .avel-candidate-show-identity__meta,
-.avel-candidate-show-page--refined .avel-candidate-show-identity__duplicates,
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar-summary {
+.avel-candidate-show-page--refined .avel-candidate-show-identity__duplicates {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar-summary .modern-chip {
-  width: fit-content;
 }
 
 .avel-candidate-show-page--refined .avel-candidate-show-static {
@@ -9691,6 +9692,36 @@
 
 .avel-candidate-show-page--refined .avel-candidate-show-static.avel-form-control--missing {
   color: #698093;
+}
+
+.avel-candidate-show-page--refined .avel-candidate-show-static--gdpr-success {
+  border-color: #b8dfc8;
+  background: #edf9f1;
+  color: #1f7145;
+}
+
+.avel-candidate-show-page--refined .avel-candidate-show-static--gdpr-pending {
+  border-color: #c8d9ef;
+  background: #f3f8ff;
+  color: #295d87;
+}
+
+.avel-candidate-show-page--refined .avel-candidate-show-static--gdpr-warning {
+  border-color: #f0c98d;
+  background: #fff5e4;
+  color: #92500d;
+}
+
+.avel-candidate-show-page--refined .avel-candidate-show-static--gdpr-danger {
+  border-color: #eab6b6;
+  background: #fff0f0;
+  color: #9a2f2f;
+}
+
+.avel-candidate-show-page--refined .avel-candidate-show-static--gdpr-neutral {
+  border-color: #c8d9e5;
+  background: #f6f9fc;
+  color: #476475;
 }
 
 .avel-candidate-show-page--refined .avel-candidate-notes {
