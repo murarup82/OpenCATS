@@ -43,6 +43,11 @@ export function Modal({
   onClose
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -77,7 +82,7 @@ export function Modal({
 
       if (event.key === 'Escape' && closeOnEscape) {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -112,7 +117,7 @@ export function Modal({
       document.body.style.overflow = previousOverflow;
       previousActiveElement?.focus();
     };
-  }, [closeOnEscape, isOpen, onClose]);
+  }, [closeOnEscape, isOpen]);
 
   if (!isOpen) {
     return null;
@@ -128,7 +133,7 @@ export function Modal({
         }
 
         if (event.target === event.currentTarget) {
-          onClose();
+          onCloseRef.current();
         }
       }}
     >
@@ -136,7 +141,7 @@ export function Modal({
         <div className="ui-modal__panel" role="dialog" aria-modal="true" aria-label={title || 'Dialog'} ref={panelRef} tabIndex={-1}>
           <header className="ui-modal__header">
             {title ? <h2 className="ui-modal__title">{title}</h2> : <span />}
-            <button type="button" className="ui-modal__close" onClick={onClose}>
+            <button type="button" className="ui-modal__close" onClick={() => onCloseRef.current()}>
               {closeLabel}
             </button>
           </header>
