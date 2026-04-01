@@ -1830,19 +1830,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 Edit Candidate
               </a>
             ) : null}
-            {permissions.canAddToJobOrder ? (
-              <button
-                type="button"
-                className="modern-btn modern-btn--emphasis"
-                onClick={() =>
-                  setAssignJobModal({
-                    url: decodeLegacyURL(data.actions.addToJobOrderURL)
-                  })
-                }
-              >
-                Add To Job Order
-              </button>
-            ) : null}
             {permissions.canDeleteCandidate ? (
               <button
                 type="button"
@@ -1930,15 +1917,30 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   description="Track active and closed job-order relationships for this candidate."
                   className="avel-candidate-show-section--pipelines"
                   actions={
-                    <label className="modern-command-toggle">
-                      <input
-                        type="checkbox"
-                        checked={showClosed}
-                        onChange={(event) => navigateWithShowClosed(event.target.checked)}
-                      />
-                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                      <span>Show Closed</span>
-                    </label>
+                    <>
+                      {permissions.canAddToJobOrder ? (
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--emphasis"
+                          onClick={() =>
+                            setAssignJobModal({
+                              url: decodeLegacyURL(data.actions.addToJobOrderURL)
+                            })
+                          }
+                        >
+                          Add To Job Order
+                        </button>
+                      ) : null}
+                      <label className="modern-command-toggle">
+                        <input
+                          type="checkbox"
+                          checked={showClosed}
+                          onChange={(event) => navigateWithShowClosed(event.target.checked)}
+                        />
+                        <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                        <span>Show Closed</span>
+                      </label>
+                    </>
                   }
                 >
                   <div className="avel-candidate-show-joborder-summary">
