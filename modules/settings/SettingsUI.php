@@ -3705,6 +3705,12 @@ class SettingsUI extends UserInterface
         $notifyEmail = strtolower($this->getTrimmedInput('notifyEmail', $_POST));
         $fromEmail = strtolower($this->getTrimmedInput('fromEmail', $_POST));
         $requestSubject = $this->getTrimmedInput('requestSubject', $_POST);
+        $sharedDriveId = $this->getTrimmedInput('sharedDriveId', $_POST);
+        $sharedDocsFolderName = $this->getTrimmedInput('sharedDocsFolderName', $_POST);
+        if ($sharedDocsFolderName === '')
+        {
+            $sharedDocsFolderName = 'Formatted CV';
+        }
 
         $settingsPayload = array(
             'enabled' => $enabled,
@@ -3716,7 +3722,9 @@ class SettingsUI extends UserInterface
             'autoProvisionEnabled' => $autoProvisionEnabled,
             'notifyEmail' => $notifyEmail,
             'fromEmail' => $fromEmail,
-            'requestSubject' => $requestSubject
+            'requestSubject' => $requestSubject,
+            'sharedDriveId' => $sharedDriveId,
+            'sharedDocsFolderName' => $sharedDocsFolderName
         );
 
         if (isset($_POST['testConfig']))
@@ -3759,6 +3767,8 @@ class SettingsUI extends UserInterface
         $googleOIDCSettings->set('notifyEmail', $notifyEmail);
         $googleOIDCSettings->set('fromEmail', $fromEmail);
         $googleOIDCSettings->set('requestSubject', $requestSubject);
+        $googleOIDCSettings->set('sharedDriveId', $sharedDriveId);
+        $googleOIDCSettings->set('sharedDocsFolderName', $sharedDocsFolderName);
 
         if ($isModernJSON)
         {

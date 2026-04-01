@@ -1733,6 +1733,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     toDisplayText(left.title, '').localeCompare(toDisplayText(right.title, ''))
   );
   const googleDriveAccountEmail = String(data.actions.googleDriveAccountEmail || '').trim();
+  const googleDriveLinkMode = String(data.actions.googleDriveLinkMode || '').trim().toLowerCase();
+  const googleDriveUsesSharedLink = googleDriveLinkMode === 'shared';
 
   return (
     <div className="avel-dashboard-page avel-candidate-show-page">
@@ -2253,9 +2255,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 </div>
               </div>
               <p className="avel-list-panel__hint">
-                {googleDriveAccountEmail !== ''
-                  ? `Google Docs links are per-user. Connected Google account: ${googleDriveAccountEmail}.`
-                  : 'Google Docs links are per-user and map only to your connected Google account.'}
+                {googleDriveUsesSharedLink
+                  ? (googleDriveAccountEmail !== ''
+                      ? `Google Docs links are shared across users through the configured shared drive. Connected Google account: ${googleDriveAccountEmail}.`
+                      : 'Google Docs links are shared across users through the configured shared drive once you connect a Google account with access.')
+                  : (googleDriveAccountEmail !== ''
+                      ? `Google Docs links are per-user. Connected Google account: ${googleDriveAccountEmail}.`
+                      : 'Google Docs links are per-user and map only to your connected Google account.')}
               </p>
               {permissions.canCreateAttachment && attachmentUploadOpen ? (
                 <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
@@ -2314,7 +2320,9 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                             </a>
                             {canOpenInGoogleDocs ? (
                               <span className="modern-chip modern-chip--info" style={{ marginLeft: 8 }}>
-                                {hasLinkedGoogleDoc ? 'Linked in Google Docs' : 'Not linked in Google Docs'}
+                                {hasLinkedGoogleDoc
+                                  ? (googleDriveUsesSharedLink ? 'Linked in shared Google Docs' : 'Linked in Google Docs')
+                                  : (googleDriveUsesSharedLink ? 'Not linked in shared Google Docs' : 'Not linked in Google Docs')}
                               </span>
                             ) : null}
                           </>
@@ -2355,7 +2363,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                           >
                             {googleDriveDeletePendingAttachmentID === attachment.attachmentID
                               ? 'Deleting...'
-                              : 'Delete from Google'}
+                              : (googleDriveUsesSharedLink ? 'Delete shared Google Doc' : 'Delete from Google')}
                           </button>
                         ) : null}
                         {permissions.canDeleteAttachment ? (

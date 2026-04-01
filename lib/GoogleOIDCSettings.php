@@ -33,7 +33,9 @@ class GoogleOIDCSettings
             'autoProvisionEnabled' => (!defined('GOOGLE_AUTO_PROVISION_ENABLED') || GOOGLE_AUTO_PROVISION_ENABLED) ? '1' : '0',
             'notifyEmail' => (defined('GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL') ? (string) GOOGLE_ACCESS_REQUEST_NOTIFY_EMAIL : ''),
             'fromEmail' => (defined('GOOGLE_ACCESS_REQUEST_FROM_EMAIL') ? (string) GOOGLE_ACCESS_REQUEST_FROM_EMAIL : ''),
-            'requestSubject' => (defined('GOOGLE_ACCESS_REQUEST_SUBJECT') ? (string) GOOGLE_ACCESS_REQUEST_SUBJECT : '')
+            'requestSubject' => (defined('GOOGLE_ACCESS_REQUEST_SUBJECT') ? (string) GOOGLE_ACCESS_REQUEST_SUBJECT : ''),
+            'sharedDriveId' => (defined('GOOGLE_DRIVE_SHARED_DRIVE_ID') ? (string) GOOGLE_DRIVE_SHARED_DRIVE_ID : ''),
+            'sharedDocsFolderName' => (defined('GOOGLE_DRIVE_SHARED_FOLDER_NAME') ? (string) GOOGLE_DRIVE_SHARED_FOLDER_NAME : 'Formatted CV')
         );
 
         $sql = sprintf(

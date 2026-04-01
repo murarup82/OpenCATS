@@ -47,22 +47,19 @@ class GoogleDriveClient
             return false;
         }
 
-        $targetFolderID = $this->ensureNestedFolder($accessToken, 'root', 'ATS');
-        if ($targetFolderID === '')
+        $targetFolderContext = $this->resolveTargetFolderContext($accessToken);
+        if (empty($targetFolderContext) || empty($targetFolderContext['folderID']))
         {
             return false;
         }
-
-        $targetFolderID = $this->ensureNestedFolder($accessToken, $targetFolderID, 'Formated CV');
-        if ($targetFolderID === '')
-        {
-            return false;
-        }
+        $targetFolderID = (string) $targetFolderContext['folderID'];
+        $sharedDriveID = (isset($targetFolderContext['sharedDriveID']) ? (string) $targetFolderContext['sharedDriveID'] : '');
 
         $existingDoc = $this->findExistingConvertedDocByName(
             $accessToken,
             $targetFolderID,
-            $attachmentFilename
+            $attachmentFilename,
+            $sharedDriveID
         );
         if (!empty($existingDoc))
         {
@@ -70,7 +67,9 @@ class GoogleDriveClient
                 'fileID' => (isset($existingDoc['id']) ? (string) $existingDoc['id'] : ''),
                 'fileName' => (isset($existingDoc['name']) ? (string) $existingDoc['name'] : $attachmentFilename),
                 'editURL' => (isset($existingDoc['webViewLink']) ? (string) $existingDoc['webViewLink'] : ''),
-                'reusedExisting' => true
+                'reusedExisting' => true,
+                'sharedDriveID' => $sharedDriveID,
+                'folderPath' => (isset($targetFolderContext['folderPath']) ? (string) $targetFolderContext['folderPath'] : '')
             );
         }
 
@@ -78,7 +77,8 @@ class GoogleDriveClient
             $accessToken,
             $attachmentPath,
             $attachmentFilename,
-            $targetFolderID
+            $targetFolderID,
+            $sharedDriveID
         );
         if (empty($uploadPayload))
         {
@@ -89,7 +89,9 @@ class GoogleDriveClient
             'fileID' => (isset($uploadPayload['id']) ? (string) $uploadPayload['id'] : ''),
             'fileName' => (isset($uploadPayload['name']) ? (string) $uploadPayload['name'] : $attachmentFilename),
             'editURL' => (isset($uploadPayload['webViewLink']) ? (string) $uploadPayload['webViewLink'] : ''),
-            'reusedExisting' => false
+            'reusedExisting' => false,
+            'sharedDriveID' => $sharedDriveID,
+            'folderPath' => (isset($targetFolderContext['folderPath']) ? (string) $targetFolderContext['folderPath'] : '')
         );
     }
 
@@ -141,7 +143,7 @@ class GoogleDriveClient
         }
 
         $response = $this->httpRequest(
-            'https://www.googleapis.com/drive/v3/files/' . rawurlencode($fileID),
+            'https://www.googleapis.com/drive/v3/files/' . rawurlencode($fileID) . '?supportsAllDrives=true',
             'DELETE',
             array(),
             array(
@@ -282,18 +284,68 @@ class GoogleDriveClient
         return $payload;
     }
 
-    private function ensureNestedFolder($accessToken, $parentID, $folderName)
+    private function resolveTargetFolderContext($accessToken)
     {
-        $existingFolderID = $this->findFolder($accessToken, $parentID, $folderName);
+        $sharedDriveID = trim((string) (isset($this->_settings['sharedDriveId']) ? $this->_settings['sharedDriveId'] : ''));
+        if ($sharedDriveID !== '')
+        {
+            $baseFolderName = trim((string) (isset($this->_settings['sharedDocsFolderName']) ? $this->_settings['sharedDocsFolderName'] : ''));
+            if ($baseFolderName === '')
+            {
+                $baseFolderName = 'Formatted CV';
+            }
+
+            $baseFolderID = $this->ensureNestedFolder($accessToken, $sharedDriveID, $baseFolderName, $sharedDriveID);
+            if ($baseFolderID === '')
+            {
+                return array();
+            }
+
+            $monthFolderName = date('Y-m');
+            $monthFolderID = $this->ensureNestedFolder($accessToken, $baseFolderID, $monthFolderName, $sharedDriveID);
+            if ($monthFolderID === '')
+            {
+                return array();
+            }
+
+            return array(
+                'folderID' => $monthFolderID,
+                'sharedDriveID' => $sharedDriveID,
+                'folderPath' => $baseFolderName . '/' . $monthFolderName
+            );
+        }
+
+        $targetFolderID = $this->ensureNestedFolder($accessToken, 'root', 'ATS');
+        if ($targetFolderID === '')
+        {
+            return array();
+        }
+
+        $targetFolderID = $this->ensureNestedFolder($accessToken, $targetFolderID, 'Formated CV');
+        if ($targetFolderID === '')
+        {
+            return array();
+        }
+
+        return array(
+            'folderID' => $targetFolderID,
+            'sharedDriveID' => '',
+            'folderPath' => 'ATS/Formated CV'
+        );
+    }
+
+    private function ensureNestedFolder($accessToken, $parentID, $folderName, $sharedDriveID = '')
+    {
+        $existingFolderID = $this->findFolder($accessToken, $parentID, $folderName, $sharedDriveID);
         if ($existingFolderID !== '')
         {
             return $existingFolderID;
         }
 
-        return $this->createFolder($accessToken, $parentID, $folderName);
+        return $this->createFolder($accessToken, $parentID, $folderName, $sharedDriveID);
     }
 
-    private function findFolder($accessToken, $parentID, $folderName)
+    private function findFolder($accessToken, $parentID, $folderName, $sharedDriveID = '')
     {
         $parentID = trim((string) $parentID);
         if ($parentID === '')
@@ -312,6 +364,13 @@ class GoogleDriveClient
             . '&fields=' . rawurlencode('files(id,name)')
             . '&spaces=drive'
             . '&pageSize=10';
+        if (trim((string) $sharedDriveID) !== '')
+        {
+            $url .= '&supportsAllDrives=true'
+                . '&includeItemsFromAllDrives=true'
+                . '&corpora=drive'
+                . '&driveId=' . rawurlencode(trim((string) $sharedDriveID));
+        }
 
         $response = $this->httpRequest(
             $url,
@@ -362,7 +421,7 @@ class GoogleDriveClient
         return '';
     }
 
-    private function createFolder($accessToken, $parentID, $folderName)
+    private function createFolder($accessToken, $parentID, $folderName, $sharedDriveID = '')
     {
         $payload = array(
             'name' => (string) $folderName,
@@ -370,8 +429,14 @@ class GoogleDriveClient
             'parents' => array((string) $parentID)
         );
 
+        $url = 'https://www.googleapis.com/drive/v3/files?fields=' . rawurlencode('id,name');
+        if (trim((string) $sharedDriveID) !== '')
+        {
+            $url .= '&supportsAllDrives=true';
+        }
+
         $response = $this->httpRequest(
-            'https://www.googleapis.com/drive/v3/files?fields=' . rawurlencode('id,name'),
+            $url,
             'POST',
             json_encode($payload),
             array(
@@ -413,7 +478,7 @@ class GoogleDriveClient
         return (string) $data['id'];
     }
 
-    private function uploadAndConvertDocx($accessToken, $filePath, $filename, $parentFolderID)
+    private function uploadAndConvertDocx($accessToken, $filePath, $filename, $parentFolderID, $sharedDriveID = '')
     {
         $fileContents = @file_get_contents($filePath);
         if ($fileContents === false)
@@ -444,9 +509,15 @@ class GoogleDriveClient
             . $fileContents . "\r\n"
             . '--' . $boundary . "--\r\n";
 
+        $url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields='
+            . rawurlencode('id,name,webViewLink,mimeType');
+        if (trim((string) $sharedDriveID) !== '')
+        {
+            $url .= '&supportsAllDrives=true';
+        }
+
         $response = $this->httpRequest(
-            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields='
-            . rawurlencode('id,name,webViewLink,mimeType'),
+            $url,
             'POST',
             $body,
             array(
@@ -488,7 +559,7 @@ class GoogleDriveClient
         return $payload;
     }
 
-    private function findExistingConvertedDocByName($accessToken, $parentFolderID, $filename)
+    private function findExistingConvertedDocByName($accessToken, $parentFolderID, $filename, $sharedDriveID = '')
     {
         $parentFolderID = trim((string) $parentFolderID);
         $filename = trim((string) $filename);
@@ -511,6 +582,13 @@ class GoogleDriveClient
             . '&spaces=drive'
             . '&orderBy=' . rawurlencode('modifiedTime desc')
             . '&pageSize=1';
+        if (trim((string) $sharedDriveID) !== '')
+        {
+            $url .= '&supportsAllDrives=true'
+                . '&includeItemsFromAllDrives=true'
+                . '&corpora=drive'
+                . '&driveId=' . rawurlencode(trim((string) $sharedDriveID));
+        }
 
         $response = $this->httpRequest(
             $url,
@@ -575,7 +653,8 @@ class GoogleDriveClient
 
         $url = 'https://www.googleapis.com/drive/v3/files/'
             . rawurlencode($fileID)
-            . '?fields=' . rawurlencode('id,name,webViewLink');
+            . '?fields=' . rawurlencode('id,name,webViewLink')
+            . '&supportsAllDrives=true';
 
         $response = $this->httpRequest(
             $url,
@@ -588,6 +667,20 @@ class GoogleDriveClient
         );
         if (!$response['ok'])
         {
+            $providerDetails = $this->parseProviderErrorDetails((string) $response['body']);
+            $message = $this->buildProviderErrorMessage(
+                'Unable to access Google Drive file.',
+                $response['statusCode'],
+                $providerDetails
+            );
+            if ((int) $response['statusCode'] === 401)
+            {
+                $this->setError('googleDriveAuthRequired', $message);
+            }
+            else if ((int) $response['statusCode'] === 403)
+            {
+                $this->setError('googleDriveAccessDenied', $message);
+            }
             return array();
         }
 

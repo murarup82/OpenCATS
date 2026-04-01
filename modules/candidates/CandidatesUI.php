@@ -55,6 +55,7 @@ include_once(LEGACY_ROOT . '/lib/CandidateMessages.php');
 include_once(LEGACY_ROOT . '/lib/GoogleOIDCSettings.php');
 include_once(LEGACY_ROOT . '/lib/GoogleDriveUserTokens.php');
 include_once(LEGACY_ROOT . '/lib/GoogleDriveAttachmentLinks.php');
+include_once(LEGACY_ROOT . '/lib/GoogleDriveSharedAttachmentLinks.php');
 include_once(LEGACY_ROOT . '/lib/GoogleDriveClient.php');
 
 class CandidatesUI extends UserInterface
@@ -970,15 +971,28 @@ class CandidatesUI extends UserInterface
                 $attachmentIDsForDriveMap[] = $attachmentIDForMap;
             }
         }
+        $googleDriveSettings = $this->getGoogleDriveOAuthSettings();
+        $googleDriveSharedMode = $this->isGoogleDriveSharedModeEnabled($googleDriveSettings);
         $googleDriveLinkedAttachmentIDMap = array();
         if (!empty($attachmentIDsForDriveMap))
         {
-            $googleDriveLinks = new GoogleDriveAttachmentLinks();
-            $googleDriveLinkedAttachmentIDMap = $googleDriveLinks->getAttachmentIDMap(
-                $this->_siteID,
-                $this->_userID,
-                $attachmentIDsForDriveMap
-            );
+            if ($googleDriveSharedMode)
+            {
+                $googleDriveLinks = new GoogleDriveSharedAttachmentLinks();
+                $googleDriveLinkedAttachmentIDMap = $googleDriveLinks->getAttachmentIDMap(
+                    $this->_siteID,
+                    $attachmentIDsForDriveMap
+                );
+            }
+            else
+            {
+                $googleDriveLinks = new GoogleDriveAttachmentLinks();
+                $googleDriveLinkedAttachmentIDMap = $googleDriveLinks->getAttachmentIDMap(
+                    $this->_siteID,
+                    $this->_userID,
+                    $attachmentIDsForDriveMap
+                );
+            }
         }
         $googleDriveAccountEmail = '';
         $googleDriveTokenStore = new GoogleDriveUserTokens();
@@ -1360,6 +1374,7 @@ class CandidatesUI extends UserInterface
                 'googleDriveDeleteAttachmentToken' => $this->getCSRFToken('candidates.googleDriveDeleteAttachmentFile'),
                 'googleDriveConnectURL' => $this->buildGoogleDriveConnectURL(''),
                 'googleDriveAccountEmail' => $googleDriveAccountEmail,
+                'googleDriveLinkMode' => ($googleDriveSharedMode ? 'shared' : 'per-user'),
                 'addTagsURL' => sprintf('%s?m=candidates&a=addCandidateTags&candidateID=%d&ui=legacy', $baseURL, $candidateID),
                 'addTagsToken' => $this->getCSRFToken('candidates.addCandidateTags'),
                 'addToListURL' => sprintf('%s?m=lists&a=quickActionAddToListModal&dataItemType=%d&dataItemID=%d&ui=legacy', $baseURL, DATA_ITEM_CANDIDATE, $candidateID),
@@ -5898,11 +5913,36 @@ class CandidatesUI extends UserInterface
             return;
         }
 
+        $sharedDriveMode = $this->isGoogleDriveSharedModeEnabled($googleSettings);
+        if ($sharedDriveMode && $this->googleDriveTokenNeedsReconnectForSharedDrive($tokenData))
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                401,
+                false,
+                'googleDriveAuthRequired',
+                'Reconnect Google Drive to grant shared-drive access for transformed CV files.',
+                array(
+                    'authURL' => $this->buildGoogleDriveConnectURL($origin)
+                )
+            );
+            return;
+        }
+
         $driveClient = new GoogleDriveClient($googleSettings, $tokenStore, $this->_siteID, $this->_userID);
-        $googleDriveLinks = new GoogleDriveAttachmentLinks();
+        $googleDriveLinks = ($sharedDriveMode
+            ? new GoogleDriveSharedAttachmentLinks()
+            : new GoogleDriveAttachmentLinks());
 
         $uploadResult = array();
-        $existingLink = $googleDriveLinks->get($this->_siteID, $this->_userID, $attachmentID);
+        if ($sharedDriveMode)
+        {
+            $existingLink = $googleDriveLinks->get($this->_siteID, $attachmentID);
+        }
+        else
+        {
+            $existingLink = $googleDriveLinks->get($this->_siteID, $this->_userID, $attachmentID);
+        }
         if (!empty($existingLink) && !empty($existingLink['fileID']))
         {
             $existingGoogleFile = $driveClient->getFileByID((string) $existingLink['fileID']);
@@ -5919,7 +5959,40 @@ class CandidatesUI extends UserInterface
             {
                 if ($driveClient->getLastErrorCode() === '')
                 {
-                    $googleDriveLinks->delete($this->_siteID, $this->_userID, $attachmentID);
+                    if ($sharedDriveMode)
+                    {
+                        $googleDriveLinks->delete($this->_siteID, $attachmentID);
+                    }
+                    else
+                    {
+                        $googleDriveLinks->delete($this->_siteID, $this->_userID, $attachmentID);
+                    }
+                }
+                else
+                {
+                    $errorCode = $driveClient->getLastErrorCode();
+                    $errorMessage = $driveClient->getLastErrorMessage();
+                    if ($errorMessage === '')
+                    {
+                        $errorMessage = 'Unable to access the linked Google Docs file.';
+                    }
+
+                    $statusCode = ($errorCode === 'googleDriveAuthRequired' ? 401 : 502);
+                    $extra = array();
+                    if ($errorCode === 'googleDriveAuthRequired')
+                    {
+                        $extra['authURL'] = $this->buildGoogleDriveConnectURL($origin);
+                    }
+
+                    $this->outputGoogleDriveMutationJSON(
+                        $isModernJSON,
+                        $statusCode,
+                        false,
+                        $errorCode,
+                        $errorMessage,
+                        $extra
+                    );
+                    return;
                 }
             }
         }
@@ -5957,13 +6030,28 @@ class CandidatesUI extends UserInterface
 
         if (!empty($uploadResult['fileID']))
         {
-            $googleDriveLinks->save(
-                $this->_siteID,
-                $this->_userID,
-                $attachmentID,
-                (string) $uploadResult['fileID'],
-                (isset($uploadResult['fileName']) ? (string) $uploadResult['fileName'] : '')
-            );
+            if ($sharedDriveMode)
+            {
+                $googleDriveLinks->save(
+                    $this->_siteID,
+                    $attachmentID,
+                    (string) $uploadResult['fileID'],
+                    (isset($uploadResult['fileName']) ? (string) $uploadResult['fileName'] : ''),
+                    (isset($uploadResult['sharedDriveID']) ? (string) $uploadResult['sharedDriveID'] : ''),
+                    (isset($uploadResult['folderPath']) ? (string) $uploadResult['folderPath'] : ''),
+                    $this->_userID
+                );
+            }
+            else
+            {
+                $googleDriveLinks->save(
+                    $this->_siteID,
+                    $this->_userID,
+                    $attachmentID,
+                    (string) $uploadResult['fileID'],
+                    (isset($uploadResult['fileName']) ? (string) $uploadResult['fileName'] : '')
+                );
+            }
         }
 
         $this->outputGoogleDriveMutationJSON(
@@ -5972,8 +6060,12 @@ class CandidatesUI extends UserInterface
             true,
             'googleDriveUploadSuccess',
             (!empty($uploadResult['reusedExisting'])
-                ? 'Existing Google Docs file opened (no duplicate created).'
-                : 'Attachment copied to Google Drive and opened in Google Docs.'),
+                ? ($sharedDriveMode
+                    ? 'Existing shared Google Docs file opened (no duplicate created).'
+                    : 'Existing Google Docs file opened (no duplicate created).')
+                : ($sharedDriveMode
+                    ? 'Attachment copied to the shared Google Drive and opened in Google Docs.'
+                    : 'Attachment copied to Google Drive and opened in Google Docs.')),
             array(
                 'editURL' => (isset($uploadResult['editURL']) ? (string) $uploadResult['editURL'] : ''),
                 'fileID' => (isset($uploadResult['fileID']) ? (string) $uploadResult['fileID'] : ''),
@@ -6070,8 +6162,33 @@ class CandidatesUI extends UserInterface
             return;
         }
 
-        $googleDriveLinks = new GoogleDriveAttachmentLinks();
-        $existingLink = $googleDriveLinks->get($this->_siteID, $this->_userID, $attachmentID);
+        $sharedDriveMode = $this->isGoogleDriveSharedModeEnabled($googleSettings);
+        if ($sharedDriveMode && $this->googleDriveTokenNeedsReconnectForSharedDrive($tokenData))
+        {
+            $this->outputGoogleDriveMutationJSON(
+                $isModernJSON,
+                401,
+                false,
+                'googleDriveAuthRequired',
+                'Reconnect Google Drive to grant shared-drive access for transformed CV files.',
+                array(
+                    'authURL' => $this->buildGoogleDriveConnectURL($origin)
+                )
+            );
+            return;
+        }
+
+        $googleDriveLinks = ($sharedDriveMode
+            ? new GoogleDriveSharedAttachmentLinks()
+            : new GoogleDriveAttachmentLinks());
+        if ($sharedDriveMode)
+        {
+            $existingLink = $googleDriveLinks->get($this->_siteID, $attachmentID);
+        }
+        else
+        {
+            $existingLink = $googleDriveLinks->get($this->_siteID, $this->_userID, $attachmentID);
+        }
         if (empty($existingLink) || empty($existingLink['fileID']))
         {
             $this->outputGoogleDriveMutationJSON(
@@ -6113,7 +6230,14 @@ class CandidatesUI extends UserInterface
             return;
         }
 
-        $googleDriveLinks->delete($this->_siteID, $this->_userID, $attachmentID);
+        if ($sharedDriveMode)
+        {
+            $googleDriveLinks->delete($this->_siteID, $attachmentID);
+        }
+        else
+        {
+            $googleDriveLinks->delete($this->_siteID, $this->_userID, $attachmentID);
+        }
 
         $this->outputGoogleDriveMutationJSON(
             $isModernJSON,
@@ -6191,7 +6315,9 @@ class CandidatesUI extends UserInterface
             'clientId' => (defined('GOOGLE_OIDC_CLIENT_ID') ? trim((string) GOOGLE_OIDC_CLIENT_ID) : ''),
             'clientSecret' => (defined('GOOGLE_OIDC_CLIENT_SECRET') ? trim((string) GOOGLE_OIDC_CLIENT_SECRET) : ''),
             'redirectUri' => (defined('GOOGLE_OIDC_REDIRECT_URI') ? trim((string) GOOGLE_OIDC_REDIRECT_URI) : ''),
-            'hostedDomain' => (defined('GOOGLE_OIDC_HOSTED_DOMAIN') ? trim((string) GOOGLE_OIDC_HOSTED_DOMAIN) : '')
+            'hostedDomain' => (defined('GOOGLE_OIDC_HOSTED_DOMAIN') ? trim((string) GOOGLE_OIDC_HOSTED_DOMAIN) : ''),
+            'sharedDriveId' => (defined('GOOGLE_DRIVE_SHARED_DRIVE_ID') ? trim((string) GOOGLE_DRIVE_SHARED_DRIVE_ID) : ''),
+            'sharedDocsFolderName' => (defined('GOOGLE_DRIVE_SHARED_FOLDER_NAME') ? trim((string) GOOGLE_DRIVE_SHARED_FOLDER_NAME) : 'Formatted CV')
         );
 
         $googleOIDCSettings = new GoogleOIDCSettings($this->_siteID);
@@ -6223,6 +6349,31 @@ class CandidatesUI extends UserInterface
         }
 
         return true;
+    }
+
+    private function isGoogleDriveSharedModeEnabled($googleSettings)
+    {
+        return (
+            is_array($googleSettings) &&
+            isset($googleSettings['sharedDriveId']) &&
+            trim((string) $googleSettings['sharedDriveId']) !== ''
+        );
+    }
+
+    private function googleDriveTokenNeedsReconnectForSharedDrive($tokenData)
+    {
+        if (!is_array($tokenData))
+        {
+            return true;
+        }
+
+        $scope = strtolower(trim((string) (isset($tokenData['tokenScope']) ? $tokenData['tokenScope'] : '')));
+        if ($scope === '')
+        {
+            return true;
+        }
+
+        return (strpos($scope, 'https://www.googleapis.com/auth/drive') === false);
     }
 
     private function buildGoogleDriveConnectURL($origin)

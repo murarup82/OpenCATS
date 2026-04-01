@@ -84,6 +84,18 @@
 
                             <br /><br />
 
+                            <label for="sharedDriveId">Shared Drive ID for transformed CVs:</label><br />
+                            <input type="text" name="sharedDriveId" id="sharedDriveId" value="<?php $this->_($this->googleOIDCSettings['sharedDriveId']); ?>" style="width: 480px;" />
+                            <div class="noteUnsized">When set, transformed CV Google Docs become shared per attachment instead of per user.</div>
+
+                            <br /><br />
+
+                            <label for="sharedDocsFolderName">Shared Drive folder name:</label><br />
+                            <input type="text" name="sharedDocsFolderName" id="sharedDocsFolderName" value="<?php $this->_($this->googleOIDCSettings['sharedDocsFolderName']); ?>" style="width: 320px;" />
+                            <div class="noteUnsized">OpenCATS auto-creates this folder and then a monthly subfolder like `2026-04` inside the shared drive.</div>
+
+                            <br /><br />
+
                             <input type="submit" class="button" value="Save Settings" />
                             <input type="submit" class="button" name="testConfig" value="Test Google Config" />
                             <input type="button" class="button" value="Back" onclick="document.location.href='<?php echo(CATSUtility::getIndexName()); ?>?m=settings&amp;a=administration';" />

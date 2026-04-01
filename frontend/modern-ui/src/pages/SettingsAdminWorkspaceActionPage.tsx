@@ -753,6 +753,8 @@ type SettingsGoogleOIDCSettingsNativeData = {
     notifyEmail: string;
     fromEmail: string;
     requestSubject: string;
+    sharedDriveId: string;
+    sharedDocsFolderName: string;
   };
   flash?: {
     success: boolean;
@@ -1610,7 +1612,9 @@ async function fetchNativeGoogleOIDCSettingsData(bootstrap: UIModeBootstrap, leg
       autoProvisionEnabled: readCheckboxValue(form, 'input[name="autoProvisionEnabled"]'),
       notifyEmail: readInputValue(form, '#notifyEmail'),
       fromEmail: readInputValue(form, '#fromEmail'),
-      requestSubject: readInputValue(form, '#requestSubject')
+      requestSubject: readInputValue(form, '#requestSubject'),
+      sharedDriveId: readInputValue(form, '#sharedDriveId'),
+      sharedDocsFolderName: readInputValue(form, '#sharedDocsFolderName')
     },
     flash: message === '' ? undefined : {
       success: document.querySelector('.noteGood') !== null,
@@ -2574,6 +2578,8 @@ function SettingsGoogleOIDCSettingsNativeShell({
   const [notifyEmail, setNotifyEmail] = useState(data.form.notifyEmail);
   const [fromEmail, setFromEmail] = useState(data.form.fromEmail);
   const [requestSubject, setRequestSubject] = useState(data.form.requestSubject);
+  const [sharedDriveId, setSharedDriveId] = useState(data.form.sharedDriveId);
+  const [sharedDocsFolderName, setSharedDocsFolderName] = useState(data.form.sharedDocsFolderName);
   const [isSaving, setIsSaving] = useState(false);
   const [flash, setFlash] = useState<SettingsGoogleOIDCSettingsNativeData['flash'] | null>(data.flash || null);
   const [testFeedback, setTestFeedback] = useState<SettingsGoogleOIDCSettingsNativeData['testFeedback'] | null>(data.testFeedback || null);
@@ -2589,6 +2595,8 @@ function SettingsGoogleOIDCSettingsNativeShell({
     setNotifyEmail(data.form.notifyEmail);
     setFromEmail(data.form.fromEmail);
     setRequestSubject(data.form.requestSubject);
+    setSharedDriveId(data.form.sharedDriveId);
+    setSharedDocsFolderName(data.form.sharedDocsFolderName);
     setFlash(data.flash || null);
     setTestFeedback(data.testFeedback || null);
   }, [data]);
@@ -2615,6 +2623,8 @@ function SettingsGoogleOIDCSettingsNativeShell({
       payload.set('notifyEmail', notifyEmail);
       payload.set('fromEmail', fromEmail);
       payload.set('requestSubject', requestSubject);
+      payload.set('sharedDriveId', sharedDriveId);
+      payload.set('sharedDocsFolderName', sharedDocsFolderName);
       if (testConfig) {
         payload.set('testConfig', '1');
       }
@@ -2651,7 +2661,7 @@ function SettingsGoogleOIDCSettingsNativeShell({
     } finally {
       setIsSaving(false);
     }
-  }, [autoProvisionEnabled, clientId, clientSecret, enabled, fromEmail, hostedDomain, isSaving, notifyEmail, onReload, redirectUri, requestSubject, siteId, submitURL]);
+  }, [autoProvisionEnabled, clientId, clientSecret, enabled, fromEmail, hostedDomain, isSaving, notifyEmail, onReload, redirectUri, requestSubject, sharedDocsFolderName, sharedDriveId, siteId, submitURL]);
 
   return (
     <div className="avel-dashboard-page avel-settings-admin-page avel-settings-workflow-page">
@@ -2763,6 +2773,16 @@ function SettingsGoogleOIDCSettingsNativeShell({
                 <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="requestSubject">
                   <span>Access request e-mail subject</span>
                   <input className="avel-form-control" type="text" id="requestSubject" name="requestSubject" value={requestSubject} onChange={(event) => setRequestSubject(event.target.value)} />
+                </label>
+
+                <label className="avel-settings-user-field avel-settings-user-field--full" htmlFor="sharedDriveId">
+                  <span>Shared Drive ID for transformed CVs</span>
+                  <input className="avel-form-control" type="text" id="sharedDriveId" name="sharedDriveId" value={sharedDriveId} onChange={(event) => setSharedDriveId(event.target.value)} />
+                </label>
+
+                <label className="avel-settings-user-field" htmlFor="sharedDocsFolderName">
+                  <span>Shared Drive folder name</span>
+                  <input className="avel-form-control" type="text" id="sharedDocsFolderName" name="sharedDocsFolderName" value={sharedDocsFolderName} onChange={(event) => setSharedDocsFolderName(event.target.value)} />
                 </label>
               </div>
 

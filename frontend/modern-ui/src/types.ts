@@ -2106,6 +2106,8 @@ export type SettingsGoogleOIDCSettingsModernDataResponse = {
     notifyEmail: string;
     fromEmail: string;
     requestSubject: string;
+    sharedDriveId: string;
+    sharedDocsFolderName: string;
   };
   actions: {
     submitURL: string;
@@ -3993,6 +3995,7 @@ export type CandidatesShowModernDataResponse = {
     googleDriveDeleteAttachmentToken?: string;
     googleDriveConnectURL?: string;
     googleDriveAccountEmail?: string;
+    googleDriveLinkMode?: string;
     addTagsURL: string;
     addTagsToken?: string;
     addToListURL: string;

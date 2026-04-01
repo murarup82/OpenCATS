@@ -904,7 +904,7 @@ class LoginUI extends UserInterface
             'client_id' => $googleSettings['clientId'],
             'redirect_uri' => $this->getGoogleRedirectURI($googleSettings),
             'response_type' => 'code',
-            'scope' => 'openid email profile https://www.googleapis.com/auth/drive.file',
+            'scope' => 'openid email profile https://www.googleapis.com/auth/drive',
             'access_type' => 'offline',
             'include_granted_scopes' => 'true',
             'prompt' => 'consent',
