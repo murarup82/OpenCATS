@@ -9617,6 +9617,10 @@
   gap: 8px;
 }
 
+.avel-candidate-show-page--refined .avel-candidate-show-summary .modern-chip {
+  border-radius: 999px;
+}
+
 .avel-candidate-show-page--refined .avel-candidate-show-layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -9635,6 +9639,13 @@
   gap: 16px;
 }
 
+.avel-candidate-show-page--refined .avel-candidate-show-collaboration {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
 .avel-candidate-show-page--refined .avel-candidate-show-section,
 .avel-candidate-show-page--refined .avel-candidate-show-sidebar-card {
   border-color: var(--avel-border, #c7ddea);
@@ -9646,6 +9657,11 @@
   padding: 20px;
   display: grid;
   gap: 16px;
+}
+
+.avel-candidate-show-page--refined .avel-candidate-show-section--compact {
+  padding: 16px;
+  gap: 12px;
 }
 
 .avel-candidate-show-page--refined .avel-candidate-show-sidebar-card__body {
@@ -9667,6 +9683,10 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.avel-candidate-show-page--refined .avel-candidate-show-sidebar-grid--single {
+  grid-template-columns: 1fr;
 }
 
 .avel-candidate-show-page--refined .avel-candidate-show-identity {
@@ -9718,6 +9738,10 @@
   gap: 8px;
 }
 
+.avel-candidate-show-page--refined .avel-candidate-show-sidebar-summary .modern-chip {
+  width: fit-content;
+}
+
 .avel-candidate-show-page--refined .modern-command-field,
 .avel-candidate-show-page--refined .avel-candidate-show-section .modern-command-field,
 .avel-candidate-show-page--refined .avel-candidate-show-sidebar-card .modern-command-field {
@@ -9763,7 +9787,7 @@
   border: 1px solid var(--avel-border, #c7ddea);
   border-radius: 14px;
   background: #f8fbfe;
-  padding: 14px;
+  padding: 12px;
 }
 
 .avel-candidate-show-page--refined .avel-candidate-comments,
@@ -9818,6 +9842,7 @@
 
 @media (max-width: 900px) {
   .avel-candidate-show-page--refined .avel-candidate-show-layout,
+  .avel-candidate-show-page--refined .avel-candidate-show-collaboration,
   .avel-candidate-show-page--refined .avel-candidate-show-grid,
   .avel-candidate-show-page--refined .avel-candidate-show-grid--3col,
   .avel-candidate-show-page--refined .avel-candidate-show-sidebar-grid {

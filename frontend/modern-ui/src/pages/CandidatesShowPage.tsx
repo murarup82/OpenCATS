@@ -1803,31 +1803,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     candidate.isActive ? 'Active Candidate' : 'Inactive Candidate',
     candidate.isHot ? 'Hot Priority' : 'Standard Priority',
     `Pipelines: ${candidate.pipelineCount}`,
-    `Proposed: ${candidate.submittedCount}`,
-    `Source: ${toDisplayText(candidate.source)}`,
-    `Owner: ${toDisplayText(candidate.owner)}`
-  ];
-  const overviewCards = [
-    {
-      label: 'Pipeline Entries',
-      value: candidate.pipelineCount,
-      hint: `${data.pipelines.activeCount} active`
-    },
-    {
-      label: 'Proposed',
-      value: candidate.submittedCount,
-      hint: 'To customer'
-    },
-    {
-      label: 'Comments',
-      value: data.comments.count,
-      hint: 'Profile notes'
-    },
-    {
-      label: 'Attachments',
-      value: data.attachments.items.length,
-      hint: 'Documents'
-    }
+    `Attachments: ${data.attachments.items.length}`,
+    `Proposed: ${candidate.submittedCount}`
   ];
 
   return (
@@ -1878,16 +1855,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                 </span>
               ))}
             </div>
-
-            <section className="avel-kpi-grid">
-              {overviewCards.map((item) => (
-                <div key={item.label} className="avel-kpi">
-                  <span className="avel-kpi__label">{item.label}</span>
-                  <span className="avel-kpi__value">{item.value}</span>
-                  <span className="avel-kpi__hint">{item.hint}</span>
-                </div>
-              ))}
-            </section>
 
             <div className="avel-candidate-show-layout">
               <div className="avel-candidate-show-main">
@@ -1948,246 +1915,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <CandidateShowValueField label="Country" value={candidate.country} />
                     <CandidateShowValueField label="Address" value={candidate.address} className="avel-candidate-details__full" />
                   </div>
-                </CandidateShowSectionCard>
-
-                <CandidateShowSectionCard
-                  title="Professional Context"
-                  description="Availability, compensation, work preferences, skills, and custom recruiter fields."
-                  className="avel-candidate-show-section--context"
-                >
-                  <div className="avel-candidate-details avel-candidate-show-grid avel-candidate-show-grid--3col">
-                    <CandidateShowValueField label="Current Employer" value={candidate.currentEmployer} />
-                    <CandidateShowValueField label="Date Available" value={candidate.dateAvailable} />
-                    <CandidateShowValueField label="Best Time To Call" value={candidate.bestTimeToCall} />
-                    <CandidateShowValueField label="Can Relocate" value={candidate.canRelocate} />
-                    <CandidateShowValueField label="Current Pay" value={candidate.currentPay} />
-                    <CandidateShowValueField label="Desired Pay" value={candidate.desiredPay} />
-                    <CandidateShowValueField
-                      label="Key Skills"
-                      value={candidate.keySkills}
-                      className="avel-candidate-details__full avel-candidate-details__full--skills"
-                    />
-                    {data.extraFields.map((field) => (
-                      <CandidateShowValueField
-                        key={field.fieldName}
-                        label={toDisplayText(field.fieldName)}
-                        value={field.display}
-                        className={
-                          String(field.fieldName || '').toLowerCase().includes('key skill')
-                            ? 'avel-candidate-details__full avel-candidate-details__full--skills'
-                            : ''
-                        }
-                      />
-                    ))}
-                  </div>
-                </CandidateShowSectionCard>
-
-                <CandidateShowSectionCard
-                  title="Notes & Comments"
-                  description="Profile notes and internal recruiter commentary."
-                  className="avel-candidate-show-section--notes"
-                  actions={
-                    <>
-                      <span className="modern-chip modern-chip--info">{data.comments.count} entries</span>
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() => setCommentsOpen((current) => !current)}
-                      >
-                        {commentsOpen ? 'Hide' : 'Show'}
-                      </button>
-                    </>
-                  }
-                >
-                  <div className="avel-candidate-notes">
-                    <FormattedTextBlock text={toDisplayText(candidate.notesText, '')} emptyMessage="No notes provided." />
-                  </div>
-                  {data.comments.flashMessage ? (
-                    <div className={`modern-state ${data.comments.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
-                      {data.comments.flashMessage}
-                    </div>
-                  ) : null}
-                  {commentsOpen ? (
-                    <>
-                      {data.comments.canAddComment ? (
-                        <form className="avel-joborder-thread-form" onSubmit={submitCandidateComment}>
-                          <label className="modern-command-field">
-                            <span className="modern-command-label">Comment Type</span>
-                            <select
-                              className="avel-form-control"
-                              name="commentCategory"
-                              value={commentCategory}
-                              onChange={(event) => setCommentCategory(event.target.value)}
-                            >
-                              {data.comments.categories.map((category) => (
-                                <option key={category} value={category}>
-                                  {category}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                          <label className="modern-command-field avel-candidate-edit-field--full">
-                            <span className="modern-command-label">Comment</span>
-                            <textarea
-                              className="avel-form-control"
-                              name="commentText"
-                              rows={4}
-                              maxLength={data.comments.maxLength}
-                              required
-                              placeholder="Share an internal update for this candidate."
-                              value={commentText}
-                              onChange={(event) => setCommentText(event.target.value)}
-                            />
-                          </label>
-                          {commentSubmitError ? <div className="modern-state modern-state--error">{commentSubmitError}</div> : null}
-                          <div className="modern-table-actions">
-                            <button
-                              type="submit"
-                              className="modern-btn modern-btn--mini modern-btn--emphasis"
-                              disabled={commentSubmitPending}
-                            >
-                              {commentSubmitPending ? 'Saving...' : 'Save Comment'}
-                            </button>
-                          </div>
-                        </form>
-                      ) : null}
-                      {data.comments.items.length > 0 ? (
-                        <div className="avel-candidate-comments">
-                          {data.comments.items.map((comment) => (
-                            <article key={comment.activityID} className="avel-candidate-comment">
-                              <div className="avel-candidate-comment__meta">
-                                <span>{toDisplayText(comment.category)}</span>
-                                <span>{toDisplayText(comment.enteredBy)}</span>
-                                <span>{toDisplayText(comment.dateCreated)}</span>
-                              </div>
-                              <p>{toDisplayText(comment.commentText, '')}</p>
-                            </article>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="modern-state modern-state--empty">No comments yet.</div>
-                      )}
-                    </>
-                  ) : null}
-                </CandidateShowSectionCard>
-
-                <CandidateShowSectionCard
-                  title="Team Inbox"
-                  description="Internal collaboration thread for recruiter communication."
-                  className="avel-candidate-show-section--messages"
-                  actions={
-                    data.messages.enabled ? (
-                      <>
-                        <button
-                          type="button"
-                          className="modern-btn modern-btn--mini modern-btn--secondary"
-                          onClick={() =>
-                            setPipelineModal({
-                              url: ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL)),
-                              title: 'Team Inbox',
-                              showRefreshClose: false
-                            })
-                          }
-                        >
-                          Open Inbox
-                        </button>
-                        <button
-                          type="button"
-                          className="modern-btn modern-btn--mini modern-btn--secondary"
-                          onClick={() => setMessagesOpen((current) => !current)}
-                        >
-                          {messagesOpen ? 'Hide' : 'Show'}
-                        </button>
-                      </>
-                    ) : null
-                  }
-                >
-                  {data.messages.flashMessage ? (
-                    <div className={`modern-state ${data.messages.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
-                      {data.messages.flashMessage}
-                    </div>
-                  ) : null}
-                  {!data.messages.enabled ? (
-                    <div className="modern-state modern-state--empty">
-                      Messaging tables are missing. Run schema migrations to enable Team Inbox.
-                    </div>
-                  ) : messagesOpen ? (
-                    <div className="avel-joborder-thread-block">
-                      {permissions.candidateMessagingEnabled ? (
-                        <form className="avel-joborder-thread-form" onSubmit={submitCandidateMessage}>
-                          <label className="modern-command-field avel-candidate-edit-field--full">
-                            <span className="modern-command-label">Message</span>
-                            <textarea
-                              className="avel-form-control"
-                              name="messageBody"
-                              rows={4}
-                              maxLength={data.messages.maxLength}
-                              required
-                              placeholder="Type a message and mention teammates with @First Last."
-                              value={messageBody}
-                              onChange={(event) => setMessageBody(event.target.value)}
-                            />
-                          </label>
-                          {data.messages.mentionHintNames.length > 0 ? (
-                            <p className="avel-list-panel__hint">Mention help: {data.messages.mentionHintNames.map((name) => `@${name}`).join(', ')}</p>
-                          ) : null}
-                          {messageSubmitError ? <div className="modern-state modern-state--error">{messageSubmitError}</div> : null}
-                          <div className="modern-table-actions">
-                            <button
-                              type="submit"
-                              className="modern-btn modern-btn--mini modern-btn--emphasis"
-                              disabled={messageSubmitPending}
-                            >
-                              {messageSubmitPending ? 'Sending...' : 'Send Message'}
-                            </button>
-                          </div>
-                        </form>
-                      ) : null}
-
-                      {permissions.canDeleteMessageThread && data.messages.threadID > 0 && data.messages.threadVisibleToCurrentUser ? (
-                        <div className="modern-table-actions">
-                          <button
-                            type="button"
-                            className="modern-btn modern-btn--mini modern-btn--danger"
-                            onClick={() => {
-                              setMessageDeleteError('');
-                              setMessageDeleteConfirmOpen(true);
-                            }}
-                            disabled={messageDeletePending}
-                          >
-                            {messageDeletePending ? 'Deleting...' : 'Delete Thread'}
-                          </button>
-                        </div>
-                      ) : null}
-                      {messageDeleteError ? <div className="modern-state modern-state--error">{messageDeleteError}</div> : null}
-
-                      {data.messages.threadID > 0 && !data.messages.threadVisibleToCurrentUser ? (
-                        <div className="modern-state modern-state--empty">
-                          You are not part of this thread yet. Send a message and mention teammates to start collaborating.
-                        </div>
-                      ) : null}
-
-                      <DataTable
-                        columns={[
-                          { key: 'date', title: 'Date' },
-                          { key: 'from', title: 'From' },
-                          { key: 'mentions', title: 'Mentions' },
-                          { key: 'message', title: 'Message' }
-                        ]}
-                        hasRows={data.messages.items.length > 0}
-                        emptyMessage="No messages yet."
-                      >
-                        {data.messages.items.map((message) => (
-                          <tr key={message.messageID}>
-                            <td>{toDisplayText(message.dateCreated)}</td>
-                            <td>{toDisplayText(message.senderName)}</td>
-                            <td>{toDisplayText(message.mentionedUsers)}</td>
-                            <td>{toDisplayText(message.bodyText, '')}</td>
-                          </tr>
-                        ))}
-                      </DataTable>
-                    </div>
-                  ) : null}
                 </CandidateShowSectionCard>
 
                 <CandidateShowSectionCard
@@ -2269,6 +1996,38 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                       </tr>
                     ))}
                   </DataTable>
+                </CandidateShowSectionCard>
+
+                <CandidateShowSectionCard
+                  title="Professional Context"
+                  description="Availability, compensation, work preferences, skills, and custom recruiter fields."
+                  className="avel-candidate-show-section--context"
+                >
+                  <div className="avel-candidate-details avel-candidate-show-grid avel-candidate-show-grid--3col">
+                    <CandidateShowValueField label="Current Employer" value={candidate.currentEmployer} />
+                    <CandidateShowValueField label="Date Available" value={candidate.dateAvailable} />
+                    <CandidateShowValueField label="Best Time To Call" value={candidate.bestTimeToCall} />
+                    <CandidateShowValueField label="Can Relocate" value={candidate.canRelocate} />
+                    <CandidateShowValueField label="Current Pay" value={candidate.currentPay} />
+                    <CandidateShowValueField label="Desired Pay" value={candidate.desiredPay} />
+                    <CandidateShowValueField
+                      label="Key Skills"
+                      value={candidate.keySkills}
+                      className="avel-candidate-details__full avel-candidate-details__full--skills"
+                    />
+                    {data.extraFields.map((field) => (
+                      <CandidateShowValueField
+                        key={field.fieldName}
+                        label={toDisplayText(field.fieldName)}
+                        value={field.display}
+                        className={
+                          String(field.fieldName || '').toLowerCase().includes('key skill')
+                            ? 'avel-candidate-details__full avel-candidate-details__full--skills'
+                            : ''
+                        }
+                      />
+                    ))}
+                  </div>
                 </CandidateShowSectionCard>
 
                 <CandidateShowSectionCard
@@ -2440,7 +2199,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               <aside className="avel-candidate-show-sidebar">
                 <CandidateShowSidebarCard
                   title="Status & GDPR"
-                  description="Consent state, recruiter status flags, and request history."
+                  description="Current consent status and renewal action."
                   actions={
                     gdpr.sendEnabled ? (
                       <button
@@ -2456,51 +2215,28 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   }
                 >
                   <div className="avel-candidate-show-sidebar-summary">
-                    <span className={`modern-chip ${candidate.isActive ? 'modern-chip--success' : 'modern-chip--critical'}`}>
-                      {candidate.isActive ? 'Active Candidate' : 'Inactive Candidate'}
-                    </span>
-                    <span className={`modern-chip ${candidate.isHot ? 'modern-chip--warning' : 'modern-chip--resume'}`}>
-                      {candidate.isHot ? 'Hot Candidate' : 'Standard Priority'}
-                    </span>
                     <span className={`modern-chip avel-candidate-gdpr-chip ${getGDPRStatusChipClass(gdpr.latestRequest.status)}`}>
                       GDPR {toDisplayText(gdpr.latestRequest.status)}
                     </span>
                   </div>
-                  <div className="avel-candidate-details avel-candidate-show-sidebar-grid">
-                    <CandidateShowValueField label="Request Created" value={gdpr.latestRequest.createdAt} />
-                    <CandidateShowValueField label="Email Sent" value={gdpr.latestRequest.emailSentAt} />
-                    <CandidateShowValueField label="Accepted At" value={gdpr.latestRequest.acceptedAt} />
+                  <div className="avel-candidate-details avel-candidate-show-sidebar-grid avel-candidate-show-sidebar-grid--single">
+                    <CandidateShowValueField label="Current Status" value={gdpr.latestRequest.status} />
                     <CandidateShowValueField label="GDPR Expires" value={gdpr.expirationDate} />
-                    <CandidateShowValueField label="Link Expires" value={gdpr.latestRequest.expiresAt} />
-                    <CandidateShowValueField label="Deleted At" value={gdpr.latestRequest.deletedAt} />
                     {gdpr.sendDisabledReason !== '' ? (
                       <CandidateShowValueField label="Send Disabled" value={gdpr.sendDisabledReason} className="avel-candidate-details__full" />
                     ) : null}
                     {gdprSendError !== '' ? <div className="avel-candidate-details__full modern-inline-error">{gdprSendError}</div> : null}
-                    {gdpr.legacyProof.link !== '' ? (
-                      <CandidateShowValueField label="Legacy Proof" value={gdpr.legacyProof.fileName} className="avel-candidate-details__full">
-                        <a className="modern-link" href={decodeLegacyURL(gdpr.legacyProof.link)} target="_blank" rel="noreferrer">
-                          {toDisplayText(gdpr.legacyProof.fileName, 'View file')}
-                        </a>
-                      </CandidateShowValueField>
-                    ) : null}
-                    {gdpr.flashMessage !== '' ? (
-                      <CandidateShowValueField label="Info" value={gdpr.flashMessage} className="avel-candidate-details__full" />
-                    ) : null}
                   </div>
                 </CandidateShowSidebarCard>
 
                 <CandidateShowSidebarCard
                   title="Sourcing & Ownership"
-                  description="Recruiter ownership, origin, and profile audit details."
+                  description="Recruiter ownership and sourcing context."
                 >
-                  <div className="avel-candidate-details avel-candidate-show-sidebar-grid">
+                  <div className="avel-candidate-details avel-candidate-show-sidebar-grid avel-candidate-show-sidebar-grid--single">
+                    <CandidateShowValueField label="Location" value={locationLabel} />
                     <CandidateShowValueField label="Owner" value={candidate.owner} />
                     <CandidateShowValueField label="Source" value={candidate.source} />
-                    <CandidateShowValueField label="Entered By" value={candidate.enteredBy} />
-                    <CandidateShowValueField label="Created" value={candidate.dateCreated} />
-                    <CandidateShowValueField label="Modified" value={candidate.dateModified} />
-                    <CandidateShowValueField label="Location" value={locationLabel} />
                   </div>
                 </CandidateShowSidebarCard>
 
@@ -2558,6 +2294,216 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   </CandidateShowSidebarCard>
                 ) : null}
               </aside>
+            </div>
+
+            <div className="avel-candidate-show-collaboration">
+              <CandidateShowSectionCard
+                title="Notes & Comments"
+                description="Profile notes and internal recruiter commentary."
+                className="avel-candidate-show-section--compact"
+                actions={
+                  <>
+                    <span className="modern-chip modern-chip--info">{data.comments.count} entries</span>
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn--mini modern-btn--secondary"
+                      onClick={() => setCommentsOpen((current) => !current)}
+                    >
+                      {commentsOpen ? 'Hide' : 'Show'}
+                    </button>
+                  </>
+                }
+              >
+                <div className="avel-candidate-notes">
+                  <FormattedTextBlock text={toDisplayText(candidate.notesText, '')} emptyMessage="No notes provided." />
+                </div>
+                {data.comments.flashMessage ? (
+                  <div className={`modern-state ${data.comments.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
+                    {data.comments.flashMessage}
+                  </div>
+                ) : null}
+                {commentsOpen ? (
+                  <>
+                    {data.comments.canAddComment ? (
+                      <form className="avel-joborder-thread-form" onSubmit={submitCandidateComment}>
+                        <label className="modern-command-field">
+                          <span className="modern-command-label">Comment Type</span>
+                          <select
+                            className="avel-form-control"
+                            name="commentCategory"
+                            value={commentCategory}
+                            onChange={(event) => setCommentCategory(event.target.value)}
+                          >
+                            {data.comments.categories.map((category) => (
+                              <option key={category} value={category}>
+                                {category}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="modern-command-field avel-candidate-edit-field--full">
+                          <span className="modern-command-label">Comment</span>
+                          <textarea
+                            className="avel-form-control"
+                            name="commentText"
+                            rows={4}
+                            maxLength={data.comments.maxLength}
+                            required
+                            placeholder="Share an internal update for this candidate."
+                            value={commentText}
+                            onChange={(event) => setCommentText(event.target.value)}
+                          />
+                        </label>
+                        {commentSubmitError ? <div className="modern-state modern-state--error">{commentSubmitError}</div> : null}
+                        <div className="modern-table-actions">
+                          <button
+                            type="submit"
+                            className="modern-btn modern-btn--mini modern-btn--emphasis"
+                            disabled={commentSubmitPending}
+                          >
+                            {commentSubmitPending ? 'Saving...' : 'Save Comment'}
+                          </button>
+                        </div>
+                      </form>
+                    ) : null}
+                    {data.comments.items.length > 0 ? (
+                      <div className="avel-candidate-comments">
+                        {data.comments.items.map((comment) => (
+                          <article key={comment.activityID} className="avel-candidate-comment">
+                            <div className="avel-candidate-comment__meta">
+                              <span>{toDisplayText(comment.category)}</span>
+                              <span>{toDisplayText(comment.enteredBy)}</span>
+                              <span>{toDisplayText(comment.dateCreated)}</span>
+                            </div>
+                            <p>{toDisplayText(comment.commentText, '')}</p>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="modern-state modern-state--empty">No comments yet.</div>
+                    )}
+                  </>
+                ) : null}
+              </CandidateShowSectionCard>
+
+              <CandidateShowSectionCard
+                title="Team Inbox"
+                description="Internal collaboration thread for recruiter communication."
+                className="avel-candidate-show-section--compact"
+                actions={
+                  data.messages.enabled ? (
+                    <>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--secondary"
+                        onClick={() =>
+                          setPipelineModal({
+                            url: ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL)),
+                            title: 'Team Inbox',
+                            showRefreshClose: false
+                          })
+                        }
+                      >
+                        Open Inbox
+                      </button>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--secondary"
+                        onClick={() => setMessagesOpen((current) => !current)}
+                      >
+                        {messagesOpen ? 'Hide' : 'Show'}
+                      </button>
+                    </>
+                  ) : null
+                }
+              >
+                {data.messages.flashMessage ? (
+                  <div className={`modern-state ${data.messages.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
+                    {data.messages.flashMessage}
+                  </div>
+                ) : null}
+                {!data.messages.enabled ? (
+                  <div className="modern-state modern-state--empty">
+                    Messaging tables are missing. Run schema migrations to enable Team Inbox.
+                  </div>
+                ) : messagesOpen ? (
+                  <div className="avel-joborder-thread-block">
+                    {permissions.candidateMessagingEnabled ? (
+                      <form className="avel-joborder-thread-form" onSubmit={submitCandidateMessage}>
+                        <label className="modern-command-field avel-candidate-edit-field--full">
+                          <span className="modern-command-label">Message</span>
+                          <textarea
+                            className="avel-form-control"
+                            name="messageBody"
+                            rows={4}
+                            maxLength={data.messages.maxLength}
+                            required
+                            placeholder="Type a message and mention teammates with @First Last."
+                            value={messageBody}
+                            onChange={(event) => setMessageBody(event.target.value)}
+                          />
+                        </label>
+                        {data.messages.mentionHintNames.length > 0 ? (
+                          <p className="avel-list-panel__hint">Mention help: {data.messages.mentionHintNames.map((name) => `@${name}`).join(', ')}</p>
+                        ) : null}
+                        {messageSubmitError ? <div className="modern-state modern-state--error">{messageSubmitError}</div> : null}
+                        <div className="modern-table-actions">
+                          <button
+                            type="submit"
+                            className="modern-btn modern-btn--mini modern-btn--emphasis"
+                            disabled={messageSubmitPending}
+                          >
+                            {messageSubmitPending ? 'Sending...' : 'Send Message'}
+                          </button>
+                        </div>
+                      </form>
+                    ) : null}
+
+                    {permissions.canDeleteMessageThread && data.messages.threadID > 0 && data.messages.threadVisibleToCurrentUser ? (
+                      <div className="modern-table-actions">
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--danger"
+                          onClick={() => {
+                            setMessageDeleteError('');
+                            setMessageDeleteConfirmOpen(true);
+                          }}
+                          disabled={messageDeletePending}
+                        >
+                          {messageDeletePending ? 'Deleting...' : 'Delete Thread'}
+                        </button>
+                      </div>
+                    ) : null}
+                    {messageDeleteError ? <div className="modern-state modern-state--error">{messageDeleteError}</div> : null}
+
+                    {data.messages.threadID > 0 && !data.messages.threadVisibleToCurrentUser ? (
+                      <div className="modern-state modern-state--empty">
+                        You are not part of this thread yet. Send a message and mention teammates to start collaborating.
+                      </div>
+                    ) : null}
+
+                    <DataTable
+                      columns={[
+                        { key: 'date', title: 'Date' },
+                        { key: 'from', title: 'From' },
+                        { key: 'mentions', title: 'Mentions' },
+                        { key: 'message', title: 'Message' }
+                      ]}
+                      hasRows={data.messages.items.length > 0}
+                      emptyMessage="No messages yet."
+                    >
+                      {data.messages.items.map((message) => (
+                        <tr key={message.messageID}>
+                          <td>{toDisplayText(message.dateCreated)}</td>
+                          <td>{toDisplayText(message.senderName)}</td>
+                          <td>{toDisplayText(message.mentionedUsers)}</td>
+                          <td>{toDisplayText(message.bodyText, '')}</td>
+                        </tr>
+                      ))}
+                    </DataTable>
+                  </div>
+                ) : null}
+              </CandidateShowSectionCard>
             </div>
           </div>
         </div>
