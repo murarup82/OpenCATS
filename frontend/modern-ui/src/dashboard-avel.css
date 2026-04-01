@@ -9781,6 +9781,55 @@
   color: #365b75;
 }
 
+.avel-joborder-show-page--refined .avel-joborder-show-summary,
+.avel-joborder-show-page--refined .avel-joborder-show-sidebar-stack,
+.avel-joborder-show-page--refined .avel-joborder-show-richtext,
+.avel-joborder-show-page--refined .avel-joborder-show-hiring-plan-list,
+.avel-joborder-show-page--refined .avel-joborder-show-hiring-plan-item {
+  display: grid;
+  gap: 10px;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-pipeline-summary,
+.avel-joborder-show-page--refined .avel-joborder-show-flag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-richtext-block {
+  gap: 10px;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-caption {
+  margin: 0;
+  color: #3f6074;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-inline-card {
+  margin-top: 4px;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-hiring-plan-item {
+  border: 1px solid var(--avel-border, #c7ddea);
+  border-radius: 14px;
+  background: #f8fbfe;
+  padding: 10px 12px;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-hiring-plan-item strong {
+  color: #0f4d6c;
+  font-size: 0.9rem;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-hiring-plan-item span {
+  color: #4b6980;
+  font-size: 0.88rem;
+}
+
 @media (max-width: 900px) {
   .avel-candidate-show-page--refined .avel-candidate-show-collaboration,
   .avel-candidate-show-page--refined .avel-candidate-edit-grid,
