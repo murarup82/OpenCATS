@@ -212,7 +212,7 @@ function CandidateShowSectionCard({
   children
 }: CandidateShowSectionCardProps) {
   return (
-    <section className={`avel-candidate-add-card avel-candidate-show-section ${className}`.trim()}>
+    <section className={`avel-candidate-add-card avel-candidate-edit-section avel-candidate-show-section ${className}`.trim()}>
       <div className="avel-candidate-add-card__header avel-candidate-edit-card__header">
         <div>
           <h2>{title}</h2>
@@ -241,7 +241,7 @@ function CandidateShowSidebarCard({
   children
 }: CandidateShowSidebarCardProps) {
   return (
-    <section className={`avel-candidate-add-card avel-candidate-add-card--sidebar avel-candidate-show-sidebar-card ${className}`.trim()}>
+    <section className={`avel-candidate-add-card avel-candidate-add-card--sidebar avel-candidate-edit-sidebar-card avel-candidate-show-sidebar-card ${className}`.trim()}>
       <div className="avel-candidate-add-card__header avel-candidate-edit-sidebar-card__header">
         <div>
           <h2>{title}</h2>
@@ -249,7 +249,7 @@ function CandidateShowSidebarCard({
         </div>
         {actions ? <div className="modern-table-actions">{actions}</div> : null}
       </div>
-      <div className="avel-candidate-show-sidebar-card__body">{children}</div>
+                  <div className="avel-candidate-edit-sidebar-card__body avel-candidate-show-sidebar-card__body">{children}</div>
     </section>
   );
 }
@@ -267,10 +267,13 @@ function CandidateShowValueField({
   className = '',
   children = null
 }: CandidateShowValueFieldProps) {
+  const isEmpty = isDisplayValueEmpty(value);
   return (
-    <div className={getDetailFieldClassName(value, className)}>
-      <strong>{label}</strong>
-      {children ?? toDisplayText(value)}
+    <div className={`modern-command-field ${className}`.trim()}>
+      <span className="modern-command-label">{label}</span>
+      <div className={`avel-form-control avel-candidate-show-static${isEmpty ? ' avel-form-control--missing' : ''}`}>
+        {children ?? toDisplayText(value)}
+      </div>
     </div>
   );
 }
@@ -1808,7 +1811,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   ];
 
   return (
-    <div className="avel-dashboard-page avel-candidate-show-page avel-candidate-show-page--refined">
+    <div className="avel-dashboard-page avel-candidate-show-page avel-candidate-show-page--refined avel-candidate-add-page avel-candidate-edit-page avel-candidate-edit-page--refined">
       <PageContainer
         title={toDisplayText(candidate.fullName, 'Candidate')}
         subtitle="Review recruiter-facing profile, sourcing, consent, pipeline, and attachments."
@@ -1847,8 +1850,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <div className="avel-candidate-show-workbench">
-            <div className="avel-candidate-show-summary">
+          <div className="avel-candidate-edit-form avel-candidate-show-workbench">
+            <div className="avel-candidate-edit-summary avel-candidate-show-summary">
               {identityTags.map((chip) => (
                 <span key={chip} className="modern-chip modern-chip--info">
                   {chip}
@@ -1856,8 +1859,8 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               ))}
             </div>
 
-            <div className="avel-candidate-show-layout">
-              <div className="avel-candidate-show-main">
+            <div className="avel-candidate-edit-layout avel-candidate-show-layout">
+              <div className="avel-candidate-edit-main avel-candidate-show-main">
                 <CandidateShowSectionCard
                   title="Identity & Contact"
                   description="Core profile identity, contact details, and recruiter-facing context."
@@ -1898,7 +1901,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                       ) : null}
                     </div>
                   </div>
-                  <div className="avel-candidate-details avel-candidate-show-grid avel-candidate-show-grid--3col">
+                  <div className="avel-candidate-edit-grid avel-candidate-edit-grid--3col">
                     <CandidateShowValueField label="First Name" value={candidate.firstName} />
                     <CandidateShowValueField label="Last Name" value={candidate.lastName} />
                     <CandidateShowValueField label="Email" value={candidate.email1}>
@@ -1913,7 +1916,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <CandidateShowValueField label="Cell Phone" value={candidate.phoneCell} />
                     <CandidateShowValueField label="City" value={candidate.city} />
                     <CandidateShowValueField label="Country" value={candidate.country} />
-                    <CandidateShowValueField label="Address" value={candidate.address} className="avel-candidate-details__full" />
+                    <CandidateShowValueField label="Address" value={candidate.address} className="avel-candidate-edit-field--full" />
                   </div>
                 </CandidateShowSectionCard>
 
@@ -2003,7 +2006,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   description="Availability, compensation, work preferences, skills, and custom recruiter fields."
                   className="avel-candidate-show-section--context"
                 >
-                  <div className="avel-candidate-details avel-candidate-show-grid avel-candidate-show-grid--3col">
+                  <div className="avel-candidate-edit-grid avel-candidate-edit-grid--3col">
                     <CandidateShowValueField label="Current Employer" value={candidate.currentEmployer} />
                     <CandidateShowValueField label="Date Available" value={candidate.dateAvailable} />
                     <CandidateShowValueField label="Best Time To Call" value={candidate.bestTimeToCall} />
@@ -2013,7 +2016,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     <CandidateShowValueField
                       label="Key Skills"
                       value={candidate.keySkills}
-                      className="avel-candidate-details__full avel-candidate-details__full--skills"
+                      className="avel-candidate-edit-field--full"
                     />
                     {data.extraFields.map((field) => (
                       <CandidateShowValueField
@@ -2022,7 +2025,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                         value={field.display}
                         className={
                           String(field.fieldName || '').toLowerCase().includes('key skill')
-                            ? 'avel-candidate-details__full avel-candidate-details__full--skills'
+                            ? 'avel-candidate-edit-field--full'
                             : ''
                         }
                       />
@@ -2196,7 +2199,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
 
               </div>
 
-              <aside className="avel-candidate-show-sidebar">
+              <aside className="avel-candidate-edit-sidebar avel-candidate-show-sidebar">
                 <CandidateShowSidebarCard
                   title="Status & GDPR"
                   description="Current consent status and renewal action."
@@ -2219,13 +2222,13 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                       GDPR {toDisplayText(gdpr.latestRequest.status)}
                     </span>
                   </div>
-                  <div className="avel-candidate-details avel-candidate-show-sidebar-grid avel-candidate-show-sidebar-grid--single">
+                  <div className="avel-candidate-show-sidebar-stack">
                     <CandidateShowValueField label="Current Status" value={gdpr.latestRequest.status} />
                     <CandidateShowValueField label="GDPR Expires" value={gdpr.expirationDate} />
                     {gdpr.sendDisabledReason !== '' ? (
-                      <CandidateShowValueField label="Send Disabled" value={gdpr.sendDisabledReason} className="avel-candidate-details__full" />
+                      <CandidateShowValueField label="Send Disabled" value={gdpr.sendDisabledReason} />
                     ) : null}
-                    {gdprSendError !== '' ? <div className="avel-candidate-details__full modern-inline-error">{gdprSendError}</div> : null}
+                    {gdprSendError !== '' ? <div className="modern-inline-error">{gdprSendError}</div> : null}
                   </div>
                 </CandidateShowSidebarCard>
 
@@ -2233,7 +2236,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                   title="Sourcing & Ownership"
                   description="Recruiter ownership and sourcing context."
                 >
-                  <div className="avel-candidate-details avel-candidate-show-sidebar-grid avel-candidate-show-sidebar-grid--single">
+                  <div className="avel-candidate-show-sidebar-stack">
                     <CandidateShowValueField label="Location" value={locationLabel} />
                     <CandidateShowValueField label="Owner" value={candidate.owner} />
                     <CandidateShowValueField label="Source" value={candidate.source} />
@@ -2286,7 +2289,7 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                     title="EEO Information"
                     description="Compliance-related candidate attributes when provided."
                   >
-                    <div className="avel-candidate-details avel-candidate-show-sidebar-grid">
+                    <div className="avel-candidate-show-sidebar-stack">
                       {data.eeoValues.map((item) => (
                         <CandidateShowValueField key={item.fieldName} label={toDisplayText(item.fieldName)} value={item.fieldValue} />
                       ))}

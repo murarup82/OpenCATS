@@ -9603,40 +9603,7 @@
 }
 
 .avel-candidate-show-page--refined .modern-page__subtitle {
-  max-width: 760px;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-workbench {
-  display: grid;
-  gap: 20px;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-summary .modern-chip {
-  border-radius: 999px;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-layout {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  align-items: start;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-main,
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar {
-  display: grid;
-  gap: 20px;
-  min-width: 0;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar {
-  gap: 16px;
+  max-width: 72ch;
 }
 
 .avel-candidate-show-page--refined .avel-candidate-show-collaboration {
@@ -9646,47 +9613,14 @@
   align-items: start;
 }
 
-.avel-candidate-show-page--refined .avel-candidate-show-section,
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar-card {
-  border-color: var(--avel-border, #c7ddea);
-  background: var(--avel-surface, #ffffff);
-  box-shadow: 0 4px 14px rgba(10, 63, 90, 0.06);
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-section {
-  padding: 20px;
-  display: grid;
-  gap: 16px;
-}
-
 .avel-candidate-show-page--refined .avel-candidate-show-section--compact {
   padding: 16px;
   gap: 12px;
 }
 
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar-card__body {
+.avel-candidate-show-page--refined .avel-candidate-show-sidebar-stack {
   display: grid;
-  gap: 14px;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-grid--3col {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar-grid--single {
-  grid-template-columns: 1fr;
+  gap: 8px;
 }
 
 .avel-candidate-show-page--refined .avel-candidate-show-identity {
@@ -9742,45 +9676,21 @@
   width: fit-content;
 }
 
-.avel-candidate-show-page--refined .modern-command-field,
-.avel-candidate-show-page--refined .avel-candidate-show-section .modern-command-field,
-.avel-candidate-show-page--refined .avel-candidate-show-sidebar-card .modern-command-field {
+.avel-candidate-show-page--refined .avel-candidate-show-static {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-
-.avel-candidate-show-page--refined .modern-command-field .modern-command-label {
-  color: #3f6074;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-details {
-  gap: 14px;
-  color: #21465b;
-}
-
-.avel-candidate-show-page--refined .avel-candidate-details > div {
-  border: 1px solid var(--avel-border, #c7ddea);
-  border-radius: 12px;
-  background: #ffffff;
-  padding: 12px 14px;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 10px;
   color: #23485e;
+  background: #ffffff;
 }
 
-.avel-candidate-show-page--refined .avel-candidate-details > div strong {
-  color: #426379;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+.avel-candidate-show-page--refined .avel-candidate-show-static a {
+  color: inherit;
 }
 
-.avel-candidate-show-page--refined .avel-candidate-details__full {
-  grid-column: 1 / -1;
-  background: #f8fbfe;
+.avel-candidate-show-page--refined .avel-candidate-show-static.avel-form-control--missing {
+  color: #698093;
 }
 
 .avel-candidate-show-page--refined .avel-candidate-notes {
@@ -9841,11 +9751,9 @@
 }
 
 @media (max-width: 900px) {
-  .avel-candidate-show-page--refined .avel-candidate-show-layout,
   .avel-candidate-show-page--refined .avel-candidate-show-collaboration,
-  .avel-candidate-show-page--refined .avel-candidate-show-grid,
-  .avel-candidate-show-page--refined .avel-candidate-show-grid--3col,
-  .avel-candidate-show-page--refined .avel-candidate-show-sidebar-grid {
+  .avel-candidate-show-page--refined .avel-candidate-edit-grid,
+  .avel-candidate-show-page--refined .avel-candidate-edit-grid--3col {
     grid-template-columns: 1fr;
   }
 
