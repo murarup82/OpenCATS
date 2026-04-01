@@ -1799,62 +1799,59 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     setCandidateDeletePending(true);
     window.location.assign(deleteURL);
   };
-  const submitPurgeFromPipeline = useCallback(
-    async () => {
-      if (!data || !purgeModal || purgePending) {
+  const submitPurgeFromPipeline = async () => {
+    if (!data || !purgeModal || purgePending) {
+      return;
+    }
+
+    const token = data.actions.removeFromPipelineToken || '';
+    if (token === '') {
+      setPurgeError('Security token is not available.');
+      return;
+    }
+
+    setPurgeError('');
+    setPurgePending(true);
+    try {
+      const parsedURL = new URL(
+        decodeLegacyURL(purgeModal.removeURL),
+        window.location.href
+      );
+      parsedURL.searchParams.set('a', 'purgeFromPipeline');
+      parsedURL.searchParams.set('m', 'joborders');
+      parsedURL.searchParams.set('format', 'modern-json');
+      parsedURL.searchParams.delete('display');
+
+      const candidateID = parsedURL.searchParams.get('candidateID') || String(purgeModal.candidateID);
+      const jobOrderID = parsedURL.searchParams.get('jobOrderID') || '';
+
+      const body = new URLSearchParams();
+      body.set('candidateID', candidateID);
+      body.set('jobOrderID', jobOrderID);
+      body.set('securityToken', token);
+
+      const response = await fetch(parsedURL.toString(), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+
+      const result = await response.json();
+      if (!result.success) {
+        setPurgeError(result.message || 'Purge failed.');
         return;
       }
 
-      const token = data.actions.removeFromPipelineToken || '';
-      if (token === '') {
-        setPurgeError('Security token is not available.');
-        return;
-      }
-
-      setPurgeError('');
-      setPurgePending(true);
-      try {
-        const parsedURL = new URL(
-          decodeLegacyURL(purgeModal.removeURL),
-          window.location.href
-        );
-        parsedURL.searchParams.set('a', 'purgeFromPipeline');
-        parsedURL.searchParams.set('m', 'joborders');
-        parsedURL.searchParams.set('format', 'modern-json');
-        parsedURL.searchParams.delete('display');
-
-        const candidateID = parsedURL.searchParams.get('candidateID') || String(purgeModal.candidateID);
-        const jobOrderID = parsedURL.searchParams.get('jobOrderID') || '';
-
-        const body = new URLSearchParams();
-        body.set('candidateID', candidateID);
-        body.set('jobOrderID', jobOrderID);
-        body.set('securityToken', token);
-
-        const response = await fetch(parsedURL.toString(), {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body.toString()
-        });
-
-        const result = await response.json();
-        if (!result.success) {
-          setPurgeError(result.message || 'Purge failed.');
-          return;
-        }
-
-        setPurgeModal(null);
-        refreshPageData();
-        showToast('Candidate permanently purged from job order.');
-      } catch (err: unknown) {
-        setPurgeError(err instanceof Error ? err.message : 'Purge failed.');
-      } finally {
-        setPurgePending(false);
-      }
-    },
-    [data, purgeModal, purgePending, refreshPageData, showToast]
-  );
+      setPurgeModal(null);
+      refreshPageData();
+      showToast('Candidate permanently purged from job order.');
+    } catch (err: unknown) {
+      setPurgeError(err instanceof Error ? err.message : 'Purge failed.');
+    } finally {
+      setPurgePending(false);
+    }
+  };
 
   return (
     <div className="avel-dashboard-page avel-candidate-show-page avel-candidate-show-page--refined avel-candidate-add-page avel-candidate-edit-page avel-candidate-edit-page--refined">
