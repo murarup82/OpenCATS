@@ -1,7 +1,7 @@
 # Operations Ownership Review Reminder
 
-Generated: 2026-03-30T16:08:01.043Z
-Next Review Due: 2026-04-29
+Generated: 2026-04-01T13:52:23.514Z
+Next Review Due: 2026-05-01
 Review Cadence: Monthly during steady-state, weekly during cutover windows.
 
 ## Matrix Snapshot

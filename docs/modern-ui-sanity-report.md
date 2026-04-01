@@ -1,8 +1,8 @@
 # Modern UI Sanity Report
 
-Started: 2026-03-30T16:07:32.122Z
-Finished: 2026-03-30T16:07:45.529Z
-Overall Required Status: **Pass**
+Started: 2026-04-01T13:51:30.661Z
+Finished: 2026-04-01T13:51:53.257Z
+Overall Required Status: **Fail**
 
 ## Summary
 
@@ -12,7 +12,7 @@ Overall Required Status: **Pass**
 | Coverage Matrix | Pass | Yes | 0 |
 | Route Parity Checklist | Pass | Yes | 0 |
 | Bridge Wildcard Retirement | Pass | Yes | 0 |
-| No-Bridge Action Guard | Pass | Yes | 0 |
+| No-Bridge Action Guard | Fail | Yes | 1 |
 | Unexpected Legacy Redirect Guard | Pass | Yes | 0 |
 | Legacy Fallback Link Guard | Pass | Yes | 0 |
 | Shell No-JS Fallback Guard | Pass | Yes | 0 |
@@ -40,14 +40,20 @@ Command: `npm run build`
 [2Ktransforming...✓ 153 modules transformed.
 rendering chunks...
 ../../public/modern-ui/build/.vite/manifest.json         0.20 kB
-../../public/modern-ui/build/opencats-modern-ui.css    383.41 kB
-../../public/modern-ui/build/app.bundle.js           2,070.36 kB
+../../public/modern-ui/build/opencats-modern-ui.css    397.97 kB
+../../public/modern-ui/build/app.bundle.js           2,081.11 kB
 
-[32m✓ built in 1.80s[39m
+[32m✓ built in 3.62s[39m
 ```
 
 **stderr**
-`(no output)`
+```text
+[33m[33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+  - vite:css (87%)
+  - vite:css-post (9%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+[39m
+```
 
 ### Coverage Matrix (Pass)
 
@@ -94,7 +100,7 @@ Command: `npm run verify:bridge-wildcards`
 **stderr**
 `(no output)`
 
-### No-Bridge Action Guard (Pass)
+### No-Bridge Action Guard (Fail)
 
 Command: `npm run verify:no-bridge-actions`
 
@@ -107,7 +113,9 @@ Command: `npm run verify:no-bridge-actions`
 ```
 
 **stderr**
-`(no output)`
+```text
+[modern-ui] Bridge actions detected (bridge=1, bridgeExplicit=0, bridgeFallback=1, rows=1).
+```
 
 ### Unexpected Legacy Redirect Guard (Pass)
 

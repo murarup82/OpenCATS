@@ -1,14 +1,14 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-03-30T16:07:31.297Z
-Finished: 2026-03-30T16:08:01.075Z
+Started: 2026-04-01T13:51:29.228Z
+Finished: 2026-04-01T13:52:23.556Z
 Overall Status: **Fail**
 
 ## Summary
 
 | Check | Status | Detail |
 | --- | --- | --- |
-| Command: Sanity Report | Pass | 0 |
+| Command: Sanity Report | Fail | 1 |
 | Command: Scorecard Prefill | Pass | 0 |
 | Command: Fixture Lint | Pass | 0 |
 | Command: Fixture Coverage Report | Pass | 0 |
@@ -59,7 +59,7 @@ Overall Status: **Fail**
 
 ## Command Details
 
-### Sanity Report (Pass)
+### Sanity Report (Fail)
 
 Command: `npm.cmd run sanity:modern`
 
