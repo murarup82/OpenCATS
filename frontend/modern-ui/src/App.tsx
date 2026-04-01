@@ -48,11 +48,16 @@ export function App({ bootstrap }: AppProps) {
     return <LegacyCompatPage bootstrap={bootstrap} />;
   })();
 
+  const hideGlobalFeedbackFooter =
+    routeResolution.matchedRouteKey === 'dashboard.my' ||
+    routeResolution.matchedRouteKey === 'dashboard.(default)' ||
+    routeResolution.matchedRouteKey === 'dashboard.setpipelinestatus';
+
   return (
     <>
       <div className="modern-app-shell">
         {content}
-        <GlobalFeedbackFooter bootstrap={bootstrap} />
+        {!hideGlobalFeedbackFooter ? <GlobalFeedbackFooter bootstrap={bootstrap} /> : null}
       </div>
       <ModernOverlayHost bootstrap={bootstrap} />
     </>
