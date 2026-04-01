@@ -5850,6 +5850,27 @@
   background: #1765d9;
 }
 
+.avel-joborders-page--candidate-grammar .modern-chip {
+  padding: 3px 7px;
+  font-size: 0.57rem;
+}
+
+.avel-joborders-page--candidate-grammar .modern-chip--monitor {
+  min-width: 0;
+}
+
+.avel-joborders-page--candidate-grammar .avel-joborders-metric-cell {
+  text-align: center;
+}
+
+.avel-joborders-page--candidate-grammar .avel-joborders-table__joborder {
+  min-width: 300px;
+}
+
+.avel-joborders-page--candidate-grammar .avel-candidate-toolbar__primary {
+  grid-template-columns: minmax(250px, 1fr) minmax(150px, 210px) minmax(190px, 260px) minmax(120px, auto) auto;
+}
+
 .avel-joborder-show-page .avel-joborder-hero {
   display: grid;
   gap: 10px;
