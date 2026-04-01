@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import {
   addCandidateProfileComment,
   createTalentFitFlowTransformJob,
@@ -75,24 +75,6 @@ function toDisplayText(value: unknown, fallback = '--'): string {
 
 function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
-}
-
-function formatQuestionnaireDate(value: unknown): string {
-  const raw = String(value || '').trim();
-  if (raw === '') {
-    return '--';
-  }
-
-  const parsed = new Date(raw);
-  if (Number.isNaN(parsed.getTime())) {
-    return raw;
-  }
-
-  return parsed.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
 }
 
 function createStatusClassName(statusSlug: string): string {
@@ -212,6 +194,85 @@ function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => {
     window.setTimeout(resolve, delayMs);
   });
+}
+
+type CandidateShowSectionCardProps = {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  className?: string;
+  children: ReactNode;
+};
+
+function CandidateShowSectionCard({
+  title,
+  description,
+  actions = null,
+  className = '',
+  children
+}: CandidateShowSectionCardProps) {
+  return (
+    <section className={`avel-candidate-add-card avel-candidate-show-section ${className}`.trim()}>
+      <div className="avel-candidate-add-card__header avel-candidate-edit-card__header">
+        <div>
+          <h2>{title}</h2>
+          {description ? <p className="avel-candidate-edit-section__description">{description}</p> : null}
+        </div>
+        {actions ? <div className="modern-table-actions">{actions}</div> : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+type CandidateShowSidebarCardProps = {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  className?: string;
+  children: ReactNode;
+};
+
+function CandidateShowSidebarCard({
+  title,
+  description,
+  actions = null,
+  className = '',
+  children
+}: CandidateShowSidebarCardProps) {
+  return (
+    <section className={`avel-candidate-add-card avel-candidate-add-card--sidebar avel-candidate-show-sidebar-card ${className}`.trim()}>
+      <div className="avel-candidate-add-card__header avel-candidate-edit-sidebar-card__header">
+        <div>
+          <h2>{title}</h2>
+          {description ? <p className="avel-candidate-edit-sidebar-card__description">{description}</p> : null}
+        </div>
+        {actions ? <div className="modern-table-actions">{actions}</div> : null}
+      </div>
+      <div className="avel-candidate-show-sidebar-card__body">{children}</div>
+    </section>
+  );
+}
+
+type CandidateShowValueFieldProps = {
+  label: string;
+  value: unknown;
+  className?: string;
+  children?: ReactNode;
+};
+
+function CandidateShowValueField({
+  label,
+  value,
+  className = '',
+  children = null
+}: CandidateShowValueFieldProps) {
+  return (
+    <div className={getDetailFieldClassName(value, className)}>
+      <strong>{label}</strong>
+      {children ?? toDisplayText(value)}
+    </div>
+  );
 }
 
 export function CandidatesShowPage({ bootstrap }: Props) {
@@ -1735,12 +1796,45 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const googleDriveAccountEmail = String(data.actions.googleDriveAccountEmail || '').trim();
   const googleDriveLinkMode = String(data.actions.googleDriveLinkMode || '').trim().toLowerCase();
   const googleDriveUsesSharedLink = googleDriveLinkMode === 'shared';
+  const locationLabel = [normalizeDisplayValue(candidate.city), normalizeDisplayValue(candidate.country)]
+    .filter((part) => part !== '')
+    .join(', ') || '--';
+  const identityTags = [
+    candidate.isActive ? 'Active Candidate' : 'Inactive Candidate',
+    candidate.isHot ? 'Hot Priority' : 'Standard Priority',
+    `Pipelines: ${candidate.pipelineCount}`,
+    `Proposed: ${candidate.submittedCount}`,
+    `Source: ${toDisplayText(candidate.source)}`,
+    `Owner: ${toDisplayText(candidate.owner)}`
+  ];
+  const overviewCards = [
+    {
+      label: 'Pipeline Entries',
+      value: candidate.pipelineCount,
+      hint: `${data.pipelines.activeCount} active`
+    },
+    {
+      label: 'Proposed',
+      value: candidate.submittedCount,
+      hint: 'To customer'
+    },
+    {
+      label: 'Comments',
+      value: data.comments.count,
+      hint: 'Profile notes'
+    },
+    {
+      label: 'Attachments',
+      value: data.attachments.items.length,
+      hint: 'Documents'
+    }
+  ];
 
   return (
-    <div className="avel-dashboard-page avel-candidate-show-page">
+    <div className="avel-dashboard-page avel-candidate-show-page avel-candidate-show-page--refined">
       <PageContainer
         title={toDisplayText(candidate.fullName, 'Candidate')}
-        subtitle={`Candidate profile #${candidate.candidateID}`}
+        subtitle="Review recruiter-facing profile, sourcing, consent, pipeline, and attachments."
         actions={
           <>
             {permissions.canEditCandidate ? (
@@ -1776,749 +1870,695 @@ export function CandidatesShowPage({ bootstrap }: Props) {
         }
       >
         <div className="modern-dashboard avel-dashboard-shell">
-          <section className="avel-candidate-hero">
-            <div className="avel-candidate-hero__identity">
-              <div className="avel-candidate-hero__name">
-                {toDisplayText(candidate.fullName)}
-                {!candidate.isActive ? <span className="modern-chip modern-chip--critical">Inactive</span> : null}
-                {candidate.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-              </div>
-              <div className="avel-candidate-hero__meta">
-                {String(candidate.email1 || '').trim() !== '' ? (
-                  <a className="modern-link avel-candidate-hero__meta-item avel-candidate-hero__meta-item--email" href={`mailto:${candidate.email1}`}>
-                    {toDisplayText(candidate.email1)}
-                  </a>
-                ) : (
-                  <span className="avel-candidate-hero__meta-item">{toDisplayText(candidate.email1)}</span>
-                )}
-                <span className="avel-candidate-hero__meta-item">{toDisplayText(candidate.phoneCell)}</span>
-                <span className="avel-candidate-hero__meta-item">{`${toDisplayText(candidate.city)}, ${toDisplayText(candidate.country)}`}</span>
-                <span className="avel-candidate-hero__meta-item avel-candidate-hero__meta-item--owner">Owner: {toDisplayText(candidate.owner)}</span>
-                <span className="avel-candidate-hero__meta-item avel-candidate-hero__meta-item--source">Source: {toDisplayText(candidate.source)}</span>
-              </div>
-              {candidate.duplicates.length > 0 ? (
-                <div className="avel-candidate-hero__duplicates">
-                  {candidate.duplicates.map((duplicate) => (
-                    <a key={duplicate.candidateID} className="modern-chip modern-chip--info" href={ensureModernUIURL(duplicate.showURL)}>
-                      Duplicate #{duplicate.candidateID}
-                    </a>
-                  ))}
-                </div>
-              ) : null}
+          <div className="avel-candidate-show-workbench">
+            <div className="avel-candidate-show-summary">
+              {identityTags.map((chip) => (
+                <span key={chip} className="modern-chip modern-chip--info">
+                  {chip}
+                </span>
+              ))}
             </div>
-            {candidate.profileImageURL !== '' ? (
-              <div className="avel-candidate-hero__avatar">
-                <img src={decodeLegacyURL(candidate.profileImageURL)} alt={candidate.fullName} />
-              </div>
-            ) : null}
-          </section>
 
-          <section className="avel-kpi-grid">
-            <div className="avel-kpi">
-              <span className="avel-kpi__label">Pipeline Entries</span>
-              <span className="avel-kpi__value">{candidate.pipelineCount}</span>
-              <span className="avel-kpi__hint">Active: {data.pipelines.activeCount}</span>
-            </div>
-            <div className="avel-kpi">
-              <span className="avel-kpi__label">Proposed</span>
-              <span className="avel-kpi__value">{candidate.submittedCount}</span>
-              <span className="avel-kpi__hint">To customer</span>
-            </div>
-            <div className="avel-kpi">
-              <span className="avel-kpi__label">Comments</span>
-              <span className="avel-kpi__value">{data.comments.count}</span>
-              <span className="avel-kpi__hint">Profile notes</span>
-            </div>
-            <div className="avel-kpi">
-              <span className="avel-kpi__label">Attachments</span>
-              <span className="avel-kpi__value">{data.attachments.items.length}</span>
-              <span className="avel-kpi__hint">Documents</span>
-            </div>
-          </section>
-
-          <div className="avel-candidate-grid avel-candidate-grid--summary">
-            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--profile">
-              <div className="avel-list-panel__header">
-                <h2 className="avel-list-panel__title">Details</h2>
-                <p className="avel-list-panel__hint">Core profile data and custom fields.</p>
-              </div>
-              <div className="avel-candidate-details avel-candidate-details--profile">
-                <div className={getDetailFieldClassName(candidate.currentEmployer)}><strong>Current Employer:</strong> {toDisplayText(candidate.currentEmployer)}</div>
-                <div className={getDetailFieldClassName(candidate.dateAvailable)}><strong>Date Available:</strong> {toDisplayText(candidate.dateAvailable)}</div>
-                <div className={getDetailFieldClassName(candidate.bestTimeToCall)}><strong>Best Time To Call:</strong> {toDisplayText(candidate.bestTimeToCall)}</div>
-                <div className={getDetailFieldClassName(candidate.canRelocate)}><strong>Can Relocate:</strong> {toDisplayText(candidate.canRelocate)}</div>
-                <div className={getDetailFieldClassName(candidate.currentPay)}><strong>Current Pay:</strong> {toDisplayText(candidate.currentPay)}</div>
-                <div className={getDetailFieldClassName(candidate.desiredPay)}><strong>Desired Pay:</strong> {toDisplayText(candidate.desiredPay)}</div>
-                <div className={getDetailFieldClassName(candidate.dateCreated)}><strong>Created:</strong> {toDisplayText(candidate.dateCreated)} ({toDisplayText(candidate.enteredBy)})</div>
-                <div className={getDetailFieldClassName(candidate.dateModified)}><strong>Modified:</strong> {toDisplayText(candidate.dateModified)}</div>
-                <div className={getDetailFieldClassName(candidate.address)}><strong>Address:</strong> {toDisplayText(candidate.address)}</div>
-                <div className={getDetailFieldClassName(candidate.keySkills, 'avel-candidate-details__full avel-candidate-details__full--skills')}>
-                  <strong>Key Skills:</strong> {toDisplayText(candidate.keySkills)}
+            <section className="avel-kpi-grid">
+              {overviewCards.map((item) => (
+                <div key={item.label} className="avel-kpi">
+                  <span className="avel-kpi__label">{item.label}</span>
+                  <span className="avel-kpi__value">{item.value}</span>
+                  <span className="avel-kpi__hint">{item.hint}</span>
                 </div>
-                {data.extraFields.map((field) => (
-                  <div
-                    key={field.fieldName}
-                    className={getDetailFieldClassName(
-                      field.display,
-                      String(field.fieldName || '').toLowerCase().includes('key skill')
-                        ? 'avel-candidate-details__full avel-candidate-details__full--skills'
-                        : ''
-                    )}
-                  >
-                    <strong>{toDisplayText(field.fieldName)}:</strong> {toDisplayText(field.display)}
-                  </div>
-                ))}
-              </div>
+              ))}
             </section>
 
-            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--gdpr">
-              <div className="avel-list-panel__header">
-                <h2 className="avel-list-panel__title">GDPR</h2>
-                <div className="avel-list-panel__hint avel-candidate-gdpr-hint">
-                  <span>Latest status:</span>
-                  <span className={`modern-chip avel-candidate-gdpr-chip ${getGDPRStatusChipClass(gdpr.latestRequest.status)}`}>
-                    {toDisplayText(gdpr.latestRequest.status)}
-                  </span>
-                  {gdpr.sendEnabled ? (
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--sm modern-btn--primary"
-                      onClick={handleGdprSend}
-                      disabled={gdprSendPending || gdpr.sendDisabled}
-                      title={gdpr.sendDisabled && gdpr.sendDisabledReason !== '' ? gdpr.sendDisabledReason : 'Send GDPR consent request to this candidate'}
-                    >
-                      {gdprSendPending ? 'Sending...' : 'Send GDPR Request'}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-              <div className="avel-candidate-details avel-candidate-details--gdpr">
-                <div className={getDetailFieldClassName(gdpr.latestRequest.createdAt)}><strong>Request Created:</strong> {toDisplayText(gdpr.latestRequest.createdAt)}</div>
-                <div className={getDetailFieldClassName(gdpr.latestRequest.emailSentAt)}><strong>Email Sent:</strong> {toDisplayText(gdpr.latestRequest.emailSentAt)}</div>
-                <div className={getDetailFieldClassName(gdpr.latestRequest.acceptedAt)}><strong>Accepted At:</strong> {toDisplayText(gdpr.latestRequest.acceptedAt)}</div>
-                <div className={getDetailFieldClassName(gdpr.expirationDate)}><strong>GDPR Expires:</strong> {toDisplayText(gdpr.expirationDate)}</div>
-                <div className={getDetailFieldClassName(gdpr.latestRequest.expiresAt)}><strong>Link Expires:</strong> {toDisplayText(gdpr.latestRequest.expiresAt)}</div>
-                <div className={getDetailFieldClassName(gdpr.latestRequest.deletedAt)}><strong>Deleted At:</strong> {toDisplayText(gdpr.latestRequest.deletedAt)}</div>
-                {gdpr.sendDisabledReason !== '' ? (
-                  <div className={getDetailFieldClassName(gdpr.sendDisabledReason, 'avel-candidate-details__full')}>
-                    <strong>Send Disabled:</strong> {gdpr.sendDisabledReason}
-                  </div>
-                ) : null}
-                {gdprSendError !== '' ? (
-                  <div className="avel-candidate-details__full modern-inline-error">
-                    {gdprSendError}
-                  </div>
-                ) : null}
-                {gdpr.legacyProof.link !== '' ? (
-                  <div className={getDetailFieldClassName(gdpr.legacyProof.fileName, 'avel-candidate-details__full')}>
-                    <strong>Legacy Proof:</strong>{' '}
-                    <a className="modern-link" href={decodeLegacyURL(gdpr.legacyProof.link)} target="_blank" rel="noreferrer">
-                      {toDisplayText(gdpr.legacyProof.fileName, 'View file')}
-                    </a>
-                  </div>
-                ) : null}
-                {gdpr.flashMessage !== '' ? (
-                  <div className={getDetailFieldClassName(gdpr.flashMessage, 'avel-candidate-details__full')}>
-                    <strong>Info:</strong> {gdpr.flashMessage}
-                  </div>
-                ) : null}
-              </div>
-            </section>
-          </div>
-
-          {data.eeoValues.length > 0 ? (
-            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--eeo">
-              <div className="avel-list-panel__header">
-                <h2 className="avel-list-panel__title">EEO Information</h2>
-                <p className="avel-list-panel__hint">Compliance-related candidate attributes.</p>
-              </div>
-              <div className="avel-candidate-details avel-candidate-details--eeo">
-                {data.eeoValues.map((item) => (
-                  <div key={item.fieldName}>
-                    <strong>{toDisplayText(item.fieldName)}:</strong> {toDisplayText(item.fieldValue)}
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--notes">
-            <div className="avel-list-panel__header">
-              <h2 className="avel-list-panel__title">Notes & Comments</h2>
-              <div className="modern-table-actions">
-                <span className="modern-chip modern-chip--info">{data.comments.count} entries</span>
-                <button
-                  type="button"
-                  className="modern-btn modern-btn--mini modern-btn--secondary"
-                  onClick={() => setCommentsOpen((current) => !current)}
+            <div className="avel-candidate-show-layout">
+              <div className="avel-candidate-show-main">
+                <CandidateShowSectionCard
+                  title="Identity & Contact"
+                  description="Core profile identity, contact details, and recruiter-facing context."
+                  className="avel-candidate-show-section--identity"
                 >
-                  {commentsOpen ? 'Hide' : 'Show'}
-                </button>
-              </div>
-            </div>
-            <div className="avel-candidate-notes">
-              <FormattedTextBlock text={toDisplayText(candidate.notesText, '')} emptyMessage="No notes provided." />
-            </div>
-            {data.comments.flashMessage ? (
-              <div className={`modern-state ${data.comments.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
-                {data.comments.flashMessage}
-              </div>
-            ) : null}
-            {commentsOpen ? (
-              <>
-                {data.comments.canAddComment ? (
-                  <form className="avel-joborder-thread-form" onSubmit={submitCandidateComment}>
-                    <label className="modern-command-field">
-                      <span className="modern-command-label">Comment Type</span>
-                      <select
-                        className="avel-form-control"
-                        name="commentCategory"
-                        value={commentCategory}
-                        onChange={(event) => setCommentCategory(event.target.value)}
-                      >
-                        {data.comments.categories.map((category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="modern-command-field avel-candidate-edit-field--full">
-                      <span className="modern-command-label">Comment</span>
-                      <textarea
-                        className="avel-form-control"
-                        name="commentText"
-                        rows={4}
-                        maxLength={data.comments.maxLength}
-                        required
-                        placeholder="Share an internal update for this candidate."
-                        value={commentText}
-                        onChange={(event) => setCommentText(event.target.value)}
-                      />
-                    </label>
-                    {commentSubmitError ? <div className="modern-state modern-state--error">{commentSubmitError}</div> : null}
-                    <div className="modern-table-actions">
-                      <button
-                        type="submit"
-                        className="modern-btn modern-btn--mini modern-btn--emphasis"
-                        disabled={commentSubmitPending}
-                      >
-                        {commentSubmitPending ? 'Saving...' : 'Save Comment'}
-                      </button>
-                    </div>
-                  </form>
-                ) : null}
-                {data.comments.items.length > 0 ? (
-                  <div className="avel-candidate-comments">
-                    {data.comments.items.map((comment) => (
-                      <article key={comment.activityID} className="avel-candidate-comment">
-                        <div className="avel-candidate-comment__meta">
-                          <span>{toDisplayText(comment.category)}</span>
-                          <span>{toDisplayText(comment.enteredBy)}</span>
-                          <span>{toDisplayText(comment.dateCreated)}</span>
+                  <div className="avel-candidate-show-identity">
+                    <div className="avel-candidate-show-identity__content">
+                      <div className="avel-candidate-show-identity__header">
+                        <div>
+                          <h3 className="avel-candidate-show-identity__name">{toDisplayText(candidate.fullName)}</h3>
+                          <p className="avel-candidate-show-identity__subline">Candidate profile #{candidate.candidateID}</p>
                         </div>
-                        <p>{toDisplayText(comment.commentText, '')}</p>
-                      </article>
+                        {candidate.profileImageURL !== '' ? (
+                          <div className="avel-candidate-show-identity__avatar">
+                            <img src={decodeLegacyURL(candidate.profileImageURL)} alt={candidate.fullName} />
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="avel-candidate-show-identity__meta">
+                        <span className={`modern-chip ${candidate.isActive ? 'modern-chip--success' : 'modern-chip--critical'}`}>
+                          {candidate.isActive ? 'Active Profile' : 'Inactive Profile'}
+                        </span>
+                        <span className={`modern-chip ${candidate.isHot ? 'modern-chip--warning' : 'modern-chip--resume'}`}>
+                          {candidate.isHot ? 'Hot Priority' : 'Standard Priority'}
+                        </span>
+                        <span className="modern-chip modern-chip--info">{locationLabel}</span>
+                        <span className="modern-chip modern-chip--info">Owner: {toDisplayText(candidate.owner)}</span>
+                        <span className="modern-chip modern-chip--info">Source: {toDisplayText(candidate.source)}</span>
+                      </div>
+                      {candidate.duplicates.length > 0 ? (
+                        <div className="avel-candidate-show-identity__duplicates">
+                          {candidate.duplicates.map((duplicate) => (
+                            <a key={duplicate.candidateID} className="modern-chip modern-chip--warning" href={ensureModernUIURL(duplicate.showURL)}>
+                              Duplicate #{duplicate.candidateID}
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="avel-candidate-details avel-candidate-show-grid avel-candidate-show-grid--3col">
+                    <CandidateShowValueField label="First Name" value={candidate.firstName} />
+                    <CandidateShowValueField label="Last Name" value={candidate.lastName} />
+                    <CandidateShowValueField label="Email" value={candidate.email1}>
+                      {normalizeDisplayValue(candidate.email1) !== '' ? (
+                        <a className="modern-link" href={`mailto:${candidate.email1}`}>
+                          {toDisplayText(candidate.email1)}
+                        </a>
+                      ) : (
+                        toDisplayText(candidate.email1)
+                      )}
+                    </CandidateShowValueField>
+                    <CandidateShowValueField label="Cell Phone" value={candidate.phoneCell} />
+                    <CandidateShowValueField label="City" value={candidate.city} />
+                    <CandidateShowValueField label="Country" value={candidate.country} />
+                    <CandidateShowValueField label="Address" value={candidate.address} className="avel-candidate-details__full" />
+                  </div>
+                </CandidateShowSectionCard>
+
+                <CandidateShowSectionCard
+                  title="Professional Context"
+                  description="Availability, compensation, work preferences, skills, and custom recruiter fields."
+                  className="avel-candidate-show-section--context"
+                >
+                  <div className="avel-candidate-details avel-candidate-show-grid avel-candidate-show-grid--3col">
+                    <CandidateShowValueField label="Current Employer" value={candidate.currentEmployer} />
+                    <CandidateShowValueField label="Date Available" value={candidate.dateAvailable} />
+                    <CandidateShowValueField label="Best Time To Call" value={candidate.bestTimeToCall} />
+                    <CandidateShowValueField label="Can Relocate" value={candidate.canRelocate} />
+                    <CandidateShowValueField label="Current Pay" value={candidate.currentPay} />
+                    <CandidateShowValueField label="Desired Pay" value={candidate.desiredPay} />
+                    <CandidateShowValueField
+                      label="Key Skills"
+                      value={candidate.keySkills}
+                      className="avel-candidate-details__full avel-candidate-details__full--skills"
+                    />
+                    {data.extraFields.map((field) => (
+                      <CandidateShowValueField
+                        key={field.fieldName}
+                        label={toDisplayText(field.fieldName)}
+                        value={field.display}
+                        className={
+                          String(field.fieldName || '').toLowerCase().includes('key skill')
+                            ? 'avel-candidate-details__full avel-candidate-details__full--skills'
+                            : ''
+                        }
+                      />
                     ))}
                   </div>
-                ) : (
-                  <div className="modern-state modern-state--empty">No comments yet.</div>
-                )}
-              </>
-            ) : null}
-          </section>
+                </CandidateShowSectionCard>
 
-          <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--messages">
-            <div className="avel-list-panel__header">
-              <h2 className="avel-list-panel__title">Team Inbox</h2>
-                <div className="modern-table-actions">
-                  {data.messages.enabled ? (
+                <CandidateShowSectionCard
+                  title="Notes & Comments"
+                  description="Profile notes and internal recruiter commentary."
+                  className="avel-candidate-show-section--notes"
+                  actions={
                     <>
+                      <span className="modern-chip modern-chip--info">{data.comments.count} entries</span>
                       <button
                         type="button"
                         className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() =>
-                          setPipelineModal({
-                            url: ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL)),
-                            title: 'Team Inbox',
-                            showRefreshClose: false
-                          })
-                        }
+                        onClick={() => setCommentsOpen((current) => !current)}
                       >
-                        Open Inbox
+                        {commentsOpen ? 'Hide' : 'Show'}
                       </button>
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() => setMessagesOpen((current) => !current)}
-                    >
-                      {messagesOpen ? 'Hide' : 'Show'}
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            </div>
-            {data.messages.flashMessage ? (
-              <div className={`modern-state ${data.messages.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
-                {data.messages.flashMessage}
-              </div>
-            ) : null}
-            {!data.messages.enabled ? (
-              <div className="modern-state modern-state--empty">
-                Messaging tables are missing. Run schema migrations to enable Team Inbox.
-              </div>
-            ) : messagesOpen ? (
-              <div className="avel-joborder-thread-block">
-                {permissions.candidateMessagingEnabled ? (
-                  <form className="avel-joborder-thread-form" onSubmit={submitCandidateMessage}>
-                    <label className="modern-command-field avel-candidate-edit-field--full">
-                      <span className="modern-command-label">Message</span>
-                      <textarea
-                        className="avel-form-control"
-                        name="messageBody"
-                        rows={4}
-                        maxLength={data.messages.maxLength}
-                        required
-                        placeholder="Type a message and mention teammates with @First Last."
-                        value={messageBody}
-                        onChange={(event) => setMessageBody(event.target.value)}
-                      />
-                    </label>
-                    {data.messages.mentionHintNames.length > 0 ? (
-                      <p className="avel-list-panel__hint">Mention help: {data.messages.mentionHintNames.map((name) => `@${name}`).join(', ')}</p>
-                    ) : null}
-                    {messageSubmitError ? <div className="modern-state modern-state--error">{messageSubmitError}</div> : null}
-                    <div className="modern-table-actions">
-                      <button
-                        type="submit"
-                        className="modern-btn modern-btn--mini modern-btn--emphasis"
-                        disabled={messageSubmitPending}
-                      >
-                        {messageSubmitPending ? 'Sending...' : 'Send Message'}
-                      </button>
-                    </div>
-                  </form>
-                ) : null}
-
-                {permissions.canDeleteMessageThread && data.messages.threadID > 0 && data.messages.threadVisibleToCurrentUser ? (
-                  <div className="modern-table-actions">
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--danger"
-                      onClick={() => {
-                        setMessageDeleteError('');
-                        setMessageDeleteConfirmOpen(true);
-                      }}
-                      disabled={messageDeletePending}
-                    >
-                      {messageDeletePending ? 'Deleting...' : 'Delete Thread'}
-                    </button>
-                  </div>
-                ) : null}
-                {messageDeleteError ? <div className="modern-state modern-state--error">{messageDeleteError}</div> : null}
-
-                {data.messages.threadID > 0 && !data.messages.threadVisibleToCurrentUser ? (
-                  <div className="modern-state modern-state--empty">
-                    You are not part of this thread yet. Send a message and mention teammates to start collaborating.
-                  </div>
-                ) : null}
-
-                <DataTable
-                  columns={[
-                    { key: 'date', title: 'Date' },
-                    { key: 'from', title: 'From' },
-                    { key: 'mentions', title: 'Mentions' },
-                    { key: 'message', title: 'Message' }
-                  ]}
-                  hasRows={data.messages.items.length > 0}
-                  emptyMessage="No messages yet."
+                    </>
+                  }
                 >
-                  {data.messages.items.map((message) => (
-                    <tr key={message.messageID}>
-                      <td>{toDisplayText(message.dateCreated)}</td>
-                      <td>{toDisplayText(message.senderName)}</td>
-                      <td>{toDisplayText(message.mentionedUsers)}</td>
-                      <td>{toDisplayText(message.bodyText, '')}</td>
-                    </tr>
-                  ))}
-                </DataTable>
-              </div>
-            ) : null}
-          </section>
-
-          <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--pipelines">
-            <div className="avel-list-panel__header">
-              <h2 className="avel-list-panel__title">Pipelines</h2>
-              <div className="avel-candidates-pagination">
-                <label className="modern-command-toggle">
-                  <input
-                    type="checkbox"
-                    checked={showClosed}
-                    onChange={(event) => navigateWithShowClosed(event.target.checked)}
-                  />
-                  <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                  <span>Show Closed</span>
-                </label>
-              </div>
-            </div>
-            <DataTable
-              columns={[
-                { key: 'job', title: 'Job Order' },
-                { key: 'company', title: 'Company' },
-                { key: 'status', title: 'Status' },
-                { key: 'owner', title: 'Owner' },
-                { key: 'date', title: 'Added' },
-                { key: 'actions', title: 'Actions' }
-              ]}
-              hasRows={data.pipelines.items.length > 0}
-              emptyMessage="No pipeline entries for this candidate."
-            >
-              {data.pipelines.items.map((pipeline) => (
-                <tr key={pipeline.candidateJobOrderID}>
-                  <td>
-                    <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(pipeline.jobOrderURL))}>
-                      {toDisplayText(pipeline.jobOrderTitle)}
-                    </a>
-                    {pipeline.clientJobID !== '' ? <div>{pipeline.clientJobID}</div> : null}
-                  </td>
-                  <td>
-                    <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(pipeline.companyURL))}>
-                      {toDisplayText(pipeline.companyName)}
-                    </a>
-                  </td>
-                  <td>
-                    <span className={createStatusClassName(pipeline.statusSlug)}>{toDisplayText(pipeline.statusLabel)}</span>
-                    {!pipeline.isActive ? <span className="modern-chip modern-chip--critical">Closed</span> : null}
-                  </td>
-                  <td>{toDisplayText(pipeline.ownerName)}</td>
-                  <td>{toDisplayText(pipeline.dateCreated)}</td>
-                  <td>
-                    <div className="modern-table-actions">
-                      {permissions.canChangePipelineStatus ? (
-                        <button
-                          type="button"
-                          className="modern-btn modern-btn--mini modern-btn--secondary"
-                          onClick={() => openQuickStatus(pipeline)}
-                        >
-                          Change Status
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() => openPipelineDetailsInline(pipeline)}
-                      >
-                        Details
-                      </button>
-                      {permissions.canRemoveFromPipeline ? (
-                        <button
-                          type="button"
-                          className="modern-btn modern-btn--mini modern-btn--secondary"
-                          onClick={() => handleRemoveFromPipeline(pipeline)}
-                        >
-                          Remove
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </DataTable>
-          </section>
-
-          <div className="avel-candidate-grid avel-candidate-grid--assets">
-            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--attachments">
-              <div className="avel-list-panel__header">
-                <h2 className="avel-list-panel__title">Attachments</h2>
-                <div className="modern-table-actions">
-                  {data.attachments.transformCandidates.length > 0 ? (
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--emphasis"
-                      onClick={() => setTransformCVModalOpen(true)}
-                    >
-                      Transform CV
-                    </button>
-                  ) : null}
-                  {permissions.canCreateAttachment ? (
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() => {
-                        setAttachmentUploadOpen((current) => !current);
-                        setAttachmentUploadError('');
-                      }}
-                    >
-                      {attachmentUploadOpen ? 'Cancel Upload' : 'Add Attachment'}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-              <p className="avel-list-panel__hint">
-                {googleDriveUsesSharedLink
-                  ? (googleDriveAccountEmail !== ''
-                      ? `Google Docs links are shared across users through the configured shared drive. Connected Google account: ${googleDriveAccountEmail}.`
-                      : 'Google Docs links are shared across users through the configured shared drive once you connect a Google account with access.')
-                  : (googleDriveAccountEmail !== ''
-                      ? `Google Docs links are per-user. Connected Google account: ${googleDriveAccountEmail}.`
-                      : 'Google Docs links are per-user and map only to your connected Google account.')}
-              </p>
-              {permissions.canCreateAttachment && attachmentUploadOpen ? (
-                <div className="avel-joborder-thread-form" style={{ marginBottom: '8px' }}>
-                  <label className="modern-command-field avel-candidate-edit-field--full">
-                    <span className="modern-command-label">Attachment File</span>
-                    <input
-                      className="avel-form-control"
-                      type="file"
-                      onChange={(event) => setAttachmentUploadFile(event.target.files?.[0] || null)}
-                    />
-                  </label>
-                  <label className="modern-command-toggle">
-                    <input
-                      type="checkbox"
-                      checked={attachmentUploadIsResume}
-                      onChange={(event) => setAttachmentUploadIsResume(event.target.checked)}
-                    />
-                    <span className="modern-command-toggle__switch" aria-hidden="true"></span>
-                    <span>Treat as resume (enable parsing/indexing)</span>
-                  </label>
-                  {attachmentUploadError ? <div className="modern-state modern-state--error">{attachmentUploadError}</div> : null}
-                  <div className="modern-table-actions">
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--emphasis"
-                      onClick={submitAttachmentUpload}
-                      disabled={attachmentUploadPending}
-                    >
-                      {attachmentUploadPending ? 'Uploading...' : 'Upload'}
-                    </button>
+                  <div className="avel-candidate-notes">
+                    <FormattedTextBlock text={toDisplayText(candidate.notesText, '')} emptyMessage="No notes provided." />
                   </div>
-                </div>
-              ) : null}
-              <DataTable
-                columns={[
-                  { key: 'name', title: 'File' },
-                  { key: 'date', title: 'Date' },
-                  { key: 'actions', title: 'Actions' }
-                ]}
-                hasRows={data.attachments.items.length > 0}
-                emptyMessage="No attachments."
-              >
-                {data.attachments.items.map((attachment) => (
-                  <tr key={attachment.attachmentID}>
-                    <td>
-                      {(() => {
-                        const canOpenInGoogleDocs =
-                          isDocxAttachment(attachment.fileName) &&
-                          !!data.actions.googleDriveUploadAttachmentURL &&
-                          !!data.actions.googleDriveUploadAttachmentToken;
-                        const hasLinkedGoogleDoc = !!attachment.googleDriveLinked;
-                        return (
-                          <>
-                            <a className="modern-link" href={decodeLegacyURL(attachment.retrievalURL)} target="_blank" rel="noreferrer">
-                              {toDisplayText(attachment.fileName)}
-                            </a>
-                            {canOpenInGoogleDocs ? (
-                              <span className="modern-chip modern-chip--info" style={{ marginLeft: 8 }}>
-                                {hasLinkedGoogleDoc
-                                  ? (googleDriveUsesSharedLink ? 'Linked in shared Google Docs' : 'Linked in Google Docs')
-                                  : (googleDriveUsesSharedLink ? 'Not linked in shared Google Docs' : 'Not linked in Google Docs')}
-                              </span>
-                            ) : null}
-                          </>
-                        );
-                      })()}
-                    </td>
-                    <td>{toDisplayText(attachment.dateCreated)}</td>
-                    <td>
-                      <div className="modern-table-actions">
-                        {isDocxAttachment(attachment.fileName) &&
-                        data.actions.googleDriveUploadAttachmentURL &&
-                        data.actions.googleDriveUploadAttachmentToken ? (
-                          <button
-                            type="button"
-                            className="modern-btn modern-btn--mini modern-btn--emphasis"
-                            onClick={() => void handleSendAttachmentToGoogleDocs(attachment)}
-                            disabled={
-                              attachmentDeletePending ||
-                              (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID) ||
-                              (googleDriveDeletePendingAttachmentID > 0 && googleDriveDeletePendingAttachmentID !== attachment.attachmentID)
-                            }
-                          >
-                            {googleDrivePendingAttachmentID === attachment.attachmentID ? 'Opening...' : 'Open in Google Docs'}
-                          </button>
-                        ) : null}
-                        {attachment.googleDriveLinked &&
-                        data.actions.googleDriveDeleteAttachmentURL &&
-                        data.actions.googleDriveDeleteAttachmentToken ? (
-                          <button
-                            type="button"
-                            className="modern-btn modern-btn--mini modern-btn--google-delete"
-                            onClick={() => void handleDeleteGoogleDocsFile(attachment)}
-                            disabled={
-                              attachmentDeletePending ||
-                              (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID) ||
-                              (googleDriveDeletePendingAttachmentID > 0 && googleDriveDeletePendingAttachmentID !== attachment.attachmentID)
-                            }
-                          >
-                            {googleDriveDeletePendingAttachmentID === attachment.attachmentID
-                              ? 'Deleting...'
-                              : (googleDriveUsesSharedLink ? 'Delete shared Google Doc' : 'Delete from Google')}
-                          </button>
-                        ) : null}
-                        {permissions.canDeleteAttachment ? (
+                  {data.comments.flashMessage ? (
+                    <div className={`modern-state ${data.comments.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
+                      {data.comments.flashMessage}
+                    </div>
+                  ) : null}
+                  {commentsOpen ? (
+                    <>
+                      {data.comments.canAddComment ? (
+                        <form className="avel-joborder-thread-form" onSubmit={submitCandidateComment}>
+                          <label className="modern-command-field">
+                            <span className="modern-command-label">Comment Type</span>
+                            <select
+                              className="avel-form-control"
+                              name="commentCategory"
+                              value={commentCategory}
+                              onChange={(event) => setCommentCategory(event.target.value)}
+                            >
+                              {data.comments.categories.map((category) => (
+                                <option key={category} value={category}>
+                                  {category}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="modern-command-field avel-candidate-edit-field--full">
+                            <span className="modern-command-label">Comment</span>
+                            <textarea
+                              className="avel-form-control"
+                              name="commentText"
+                              rows={4}
+                              maxLength={data.comments.maxLength}
+                              required
+                              placeholder="Share an internal update for this candidate."
+                              value={commentText}
+                              onChange={(event) => setCommentText(event.target.value)}
+                            />
+                          </label>
+                          {commentSubmitError ? <div className="modern-state modern-state--error">{commentSubmitError}</div> : null}
+                          <div className="modern-table-actions">
+                            <button
+                              type="submit"
+                              className="modern-btn modern-btn--mini modern-btn--emphasis"
+                              disabled={commentSubmitPending}
+                            >
+                              {commentSubmitPending ? 'Saving...' : 'Save Comment'}
+                            </button>
+                          </div>
+                        </form>
+                      ) : null}
+                      {data.comments.items.length > 0 ? (
+                        <div className="avel-candidate-comments">
+                          {data.comments.items.map((comment) => (
+                            <article key={comment.activityID} className="avel-candidate-comment">
+                              <div className="avel-candidate-comment__meta">
+                                <span>{toDisplayText(comment.category)}</span>
+                                <span>{toDisplayText(comment.enteredBy)}</span>
+                                <span>{toDisplayText(comment.dateCreated)}</span>
+                              </div>
+                              <p>{toDisplayText(comment.commentText, '')}</p>
+                            </article>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="modern-state modern-state--empty">No comments yet.</div>
+                      )}
+                    </>
+                  ) : null}
+                </CandidateShowSectionCard>
+
+                <CandidateShowSectionCard
+                  title="Team Inbox"
+                  description="Internal collaboration thread for recruiter communication."
+                  className="avel-candidate-show-section--messages"
+                  actions={
+                    data.messages.enabled ? (
+                      <>
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--secondary"
+                          onClick={() =>
+                            setPipelineModal({
+                              url: ensureModernUIURL(decodeLegacyURL(data.messages.openInboxURL)),
+                              title: 'Team Inbox',
+                              showRefreshClose: false
+                            })
+                          }
+                        >
+                          Open Inbox
+                        </button>
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--secondary"
+                          onClick={() => setMessagesOpen((current) => !current)}
+                        >
+                          {messagesOpen ? 'Hide' : 'Show'}
+                        </button>
+                      </>
+                    ) : null
+                  }
+                >
+                  {data.messages.flashMessage ? (
+                    <div className={`modern-state ${data.messages.flashIsError ? 'modern-state--error' : 'modern-state--empty'}`}>
+                      {data.messages.flashMessage}
+                    </div>
+                  ) : null}
+                  {!data.messages.enabled ? (
+                    <div className="modern-state modern-state--empty">
+                      Messaging tables are missing. Run schema migrations to enable Team Inbox.
+                    </div>
+                  ) : messagesOpen ? (
+                    <div className="avel-joborder-thread-block">
+                      {permissions.candidateMessagingEnabled ? (
+                        <form className="avel-joborder-thread-form" onSubmit={submitCandidateMessage}>
+                          <label className="modern-command-field avel-candidate-edit-field--full">
+                            <span className="modern-command-label">Message</span>
+                            <textarea
+                              className="avel-form-control"
+                              name="messageBody"
+                              rows={4}
+                              maxLength={data.messages.maxLength}
+                              required
+                              placeholder="Type a message and mention teammates with @First Last."
+                              value={messageBody}
+                              onChange={(event) => setMessageBody(event.target.value)}
+                            />
+                          </label>
+                          {data.messages.mentionHintNames.length > 0 ? (
+                            <p className="avel-list-panel__hint">Mention help: {data.messages.mentionHintNames.map((name) => `@${name}`).join(', ')}</p>
+                          ) : null}
+                          {messageSubmitError ? <div className="modern-state modern-state--error">{messageSubmitError}</div> : null}
+                          <div className="modern-table-actions">
+                            <button
+                              type="submit"
+                              className="modern-btn modern-btn--mini modern-btn--emphasis"
+                              disabled={messageSubmitPending}
+                            >
+                              {messageSubmitPending ? 'Sending...' : 'Send Message'}
+                            </button>
+                          </div>
+                        </form>
+                      ) : null}
+
+                      {permissions.canDeleteMessageThread && data.messages.threadID > 0 && data.messages.threadVisibleToCurrentUser ? (
+                        <div className="modern-table-actions">
                           <button
                             type="button"
                             className="modern-btn modern-btn--mini modern-btn--danger"
                             onClick={() => {
-                              setAttachmentDeleteError('');
-                              setAttachmentDeleteModal({
-                                attachmentID: attachment.attachmentID,
-                                fileName: toDisplayText(attachment.fileName, 'Attachment')
-                              });
+                              setMessageDeleteError('');
+                              setMessageDeleteConfirmOpen(true);
                             }}
+                            disabled={messageDeletePending}
                           >
-                            Delete
+                            {messageDeletePending ? 'Deleting...' : 'Delete Thread'}
                           </button>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </DataTable>
-            </section>
+                        </div>
+                      ) : null}
+                      {messageDeleteError ? <div className="modern-state modern-state--error">{messageDeleteError}</div> : null}
 
-            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--tags">
-              <div className="avel-list-panel__header">
-                <h2 className="avel-list-panel__title">Tags & Lists</h2>
-                <div className="modern-table-actions">
-                  {permissions.canManageTags ? (
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={openTagEditor}
-                    >
-                      Manage Tags
-                    </button>
-                  ) : null}
-                  {permissions.canManageLists ? (
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() => openAddToListOverlay(data.actions.addToListURL)}
-                    >
-                      Manage Lists
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-              <div className="avel-candidate-tag-cloud">
-                {data.tags.length > 0 ? data.tags.map((tag) => <span key={tag} className="modern-chip">{tag}</span>) : <span>No tags.</span>}
-              </div>
-              <ul className="avel-candidate-lists">
-                {data.lists.map((list) => (
-                  <li key={list.listID}>
-                    <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(list.url))}>
-                      {toDisplayText(list.name)}
-                    </a>
-                  </li>
-                ))}
-                {data.lists.length === 0 ? <li>No lists linked.</li> : null}
-              </ul>
-            </section>
-          </div>
+                      {data.messages.threadID > 0 && !data.messages.threadVisibleToCurrentUser ? (
+                        <div className="modern-state modern-state--empty">
+                          You are not part of this thread yet. Send a message and mention teammates to start collaborating.
+                        </div>
+                      ) : null}
 
-          <div className="avel-candidate-grid avel-candidate-grid--secondary">
-            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--events">
-              <div className="avel-list-panel__header">
-                <h2 className="avel-list-panel__title">Upcoming Events</h2>
-                <p className="avel-list-panel__hint">Calendar items linked to this profile.</p>
-              </div>
-              {data.calendar.length > 0 ? (
-                <ul className="avel-candidate-lists">
-                  {data.calendar.slice(0, 10).map((eventItem) => (
-                    <li key={eventItem.eventID}>
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() =>
-                          setPipelineModal({
-                            url: ensureModernUIURL(decodeLegacyURL(eventItem.eventURL)),
-                            title: `Calendar Event: ${toDisplayText(eventItem.title)}`,
-                            showRefreshClose: false
-                          })
-                        }
+                      <DataTable
+                        columns={[
+                          { key: 'date', title: 'Date' },
+                          { key: 'from', title: 'From' },
+                          { key: 'mentions', title: 'Mentions' },
+                          { key: 'message', title: 'Message' }
+                        ]}
+                        hasRows={data.messages.items.length > 0}
+                        emptyMessage="No messages yet."
                       >
-                        {toDisplayText(eventItem.dateShow)}: {toDisplayText(eventItem.title)}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="modern-state modern-state--empty">No upcoming events.</div>
-              )}
-            </section>
+                        {data.messages.items.map((message) => (
+                          <tr key={message.messageID}>
+                            <td>{toDisplayText(message.dateCreated)}</td>
+                            <td>{toDisplayText(message.senderName)}</td>
+                            <td>{toDisplayText(message.mentionedUsers)}</td>
+                            <td>{toDisplayText(message.bodyText, '')}</td>
+                          </tr>
+                        ))}
+                      </DataTable>
+                    </div>
+                  ) : null}
+                </CandidateShowSectionCard>
 
-            <section className="avel-list-panel avel-candidate-panel avel-candidate-panel--questionnaires">
-              <div className="avel-list-panel__header">
-                <h2 className="avel-list-panel__title">Questionnaires</h2>
-                <p className="avel-list-panel__hint">Submitted candidate questionnaires.</p>
-              </div>
-              {data.questionnaires.length > 0 ? (
-                <DataTable
-                  columns={[
-                    { key: 'title', title: 'Title' },
-                    { key: 'completed', title: 'Completed' },
-                    { key: 'description', title: 'Description' },
-                    { key: 'actions', title: 'Actions' }
-                  ]}
-                  hasRows={data.questionnaires.length > 0}
+                <CandidateShowSectionCard
+                  title="Pipelines"
+                  description="Track active and closed job-order relationships for this candidate."
+                  className="avel-candidate-show-section--pipelines"
+                  actions={
+                    <label className="modern-command-toggle">
+                      <input
+                        type="checkbox"
+                        checked={showClosed}
+                        onChange={(event) => navigateWithShowClosed(event.target.checked)}
+                      />
+                      <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                      <span>Show Closed</span>
+                    </label>
+                  }
                 >
-                  {data.questionnaires.slice(0, 10).map((questionnaire, index) => {
-                    const row = questionnaire as Record<string, unknown>;
-                    const rawTitle = row['questionnaireTitle'];
-                    const title = toDisplayText(rawTitle);
-                    const titleEncoded = encodeURIComponent(String(rawTitle || ''));
-                    const viewURL =
-                      `${bootstrap.indexName}?m=candidates&a=show_questionnaire&candidateID=${candidate.candidateID}` +
-                      `&questionnaireTitle=${titleEncoded}&print=no&ui=legacy`;
-                    const printURL =
-                      `${bootstrap.indexName}?m=candidates&a=show_questionnaire&candidateID=${candidate.candidateID}` +
-                      `&questionnaireTitle=${titleEncoded}&print=yes&ui=legacy`;
-
-                    return (
-                      <tr key={`${title}-${index}`}>
-                        <td>{title}</td>
-                        <td>{formatQuestionnaireDate(row['questionnaireDate'])}</td>
-                        <td>{toDisplayText(row['questionnaireDescription'])}</td>
+                  <DataTable
+                    columns={[
+                      { key: 'job', title: 'Job Order' },
+                      { key: 'company', title: 'Company' },
+                      { key: 'status', title: 'Status' },
+                      { key: 'owner', title: 'Owner' },
+                      { key: 'date', title: 'Added' },
+                      { key: 'actions', title: 'Actions' }
+                    ]}
+                    hasRows={data.pipelines.items.length > 0}
+                    emptyMessage="No pipeline entries for this candidate."
+                  >
+                    {data.pipelines.items.map((pipeline) => (
+                      <tr key={pipeline.candidateJobOrderID}>
+                        <td>
+                          <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(pipeline.jobOrderURL))}>
+                            {toDisplayText(pipeline.jobOrderTitle)}
+                          </a>
+                          {pipeline.clientJobID !== '' ? <div>{pipeline.clientJobID}</div> : null}
+                        </td>
+                        <td>
+                          <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(pipeline.companyURL))}>
+                            {toDisplayText(pipeline.companyName)}
+                          </a>
+                        </td>
+                        <td>
+                          <span className={createStatusClassName(pipeline.statusSlug)}>{toDisplayText(pipeline.statusLabel)}</span>
+                          {!pipeline.isActive ? <span className="modern-chip modern-chip--critical">Closed</span> : null}
+                        </td>
+                        <td>{toDisplayText(pipeline.ownerName)}</td>
+                        <td>{toDisplayText(pipeline.dateCreated)}</td>
                         <td>
                           <div className="modern-table-actions">
+                            {permissions.canChangePipelineStatus ? (
+                              <button
+                                type="button"
+                                className="modern-btn modern-btn--mini modern-btn--secondary"
+                                onClick={() => openQuickStatus(pipeline)}
+                              >
+                                Change Status
+                              </button>
+                            ) : null}
                             <button
                               type="button"
                               className="modern-btn modern-btn--mini modern-btn--secondary"
-                              onClick={() =>
-                                setPipelineModal({
-                                  url: decodeLegacyURL(viewURL),
-                                  title: `Questionnaire: ${title}`,
-                                  showRefreshClose: false
-                                })
-                              }
+                              onClick={() => openPipelineDetailsInline(pipeline)}
                             >
-                              View
+                              Details
                             </button>
-                            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={printURL} target="_blank" rel="noreferrer">
-                              Print
-                            </a>
+                            {permissions.canRemoveFromPipeline ? (
+                              <button
+                                type="button"
+                                className="modern-btn modern-btn--mini modern-btn--secondary"
+                                onClick={() => handleRemoveFromPipeline(pipeline)}
+                              >
+                                Remove
+                              </button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
-                    );
-                  })}
-                </DataTable>
-              ) : (
-                <div className="modern-state modern-state--empty">No questionnaires available.</div>
-              )}
-            </section>
+                    ))}
+                  </DataTable>
+                </CandidateShowSectionCard>
+
+                <CandidateShowSectionCard
+                  title="Attachments"
+                  description="Recruiter-facing documents, transformed CV workflow, and Google Docs handoff."
+                  className="avel-candidate-show-section--attachments"
+                  actions={
+                    <>
+                      {data.attachments.transformCandidates.length > 0 ? (
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--emphasis"
+                          onClick={() => setTransformCVModalOpen(true)}
+                        >
+                          Transform CV
+                        </button>
+                      ) : null}
+                      {permissions.canCreateAttachment ? (
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--secondary"
+                          onClick={() => {
+                            setAttachmentUploadOpen((current) => !current);
+                            setAttachmentUploadError('');
+                          }}
+                        >
+                          {attachmentUploadOpen ? 'Cancel Upload' : 'Add Attachment'}
+                        </button>
+                      ) : null}
+                    </>
+                  }
+                >
+                  <p className="avel-list-panel__hint">
+                    {googleDriveUsesSharedLink
+                      ? (googleDriveAccountEmail !== ''
+                          ? `Google Docs links are shared across users through the configured shared drive. Connected Google account: ${googleDriveAccountEmail}.`
+                          : 'Google Docs links are shared across users through the configured shared drive once you connect a Google account with access.')
+                      : (googleDriveAccountEmail !== ''
+                          ? `Google Docs links are per-user. Connected Google account: ${googleDriveAccountEmail}.`
+                          : 'Google Docs links are per-user and map only to your connected Google account.')}
+                  </p>
+                  {permissions.canCreateAttachment && attachmentUploadOpen ? (
+                    <div className="avel-joborder-thread-form avel-candidate-show-inline-block">
+                      <label className="modern-command-field avel-candidate-edit-field--full">
+                        <span className="modern-command-label">Attachment File</span>
+                        <input
+                          className="avel-form-control"
+                          type="file"
+                          onChange={(event) => setAttachmentUploadFile(event.target.files?.[0] || null)}
+                        />
+                      </label>
+                      <label className="modern-command-toggle">
+                        <input
+                          type="checkbox"
+                          checked={attachmentUploadIsResume}
+                          onChange={(event) => setAttachmentUploadIsResume(event.target.checked)}
+                        />
+                        <span className="modern-command-toggle__switch" aria-hidden="true"></span>
+                        <span>Treat as resume (enable parsing/indexing)</span>
+                      </label>
+                      {attachmentUploadError ? <div className="modern-state modern-state--error">{attachmentUploadError}</div> : null}
+                      <div className="modern-table-actions">
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--emphasis"
+                          onClick={submitAttachmentUpload}
+                          disabled={attachmentUploadPending}
+                        >
+                          {attachmentUploadPending ? 'Uploading...' : 'Upload'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  <DataTable
+                    columns={[
+                      { key: 'name', title: 'File' },
+                      { key: 'date', title: 'Date' },
+                      { key: 'actions', title: 'Actions' }
+                    ]}
+                    hasRows={data.attachments.items.length > 0}
+                    emptyMessage="No attachments."
+                  >
+                    {data.attachments.items.map((attachment) => (
+                      <tr key={attachment.attachmentID}>
+                        <td>
+                          {(() => {
+                            const canOpenInGoogleDocs =
+                              isDocxAttachment(attachment.fileName) &&
+                              !!data.actions.googleDriveUploadAttachmentURL &&
+                              !!data.actions.googleDriveUploadAttachmentToken;
+                            const hasLinkedGoogleDoc = !!attachment.googleDriveLinked;
+                            return (
+                              <>
+                                <a className="modern-link" href={decodeLegacyURL(attachment.retrievalURL)} target="_blank" rel="noreferrer">
+                                  {toDisplayText(attachment.fileName)}
+                                </a>
+                                {canOpenInGoogleDocs ? (
+                                  <span className="modern-chip modern-chip--info avel-candidate-show-attachment-chip">
+                                    {hasLinkedGoogleDoc
+                                      ? (googleDriveUsesSharedLink ? 'Linked in shared Google Docs' : 'Linked in Google Docs')
+                                      : (googleDriveUsesSharedLink ? 'Not linked in shared Google Docs' : 'Not linked in Google Docs')}
+                                  </span>
+                                ) : null}
+                              </>
+                            );
+                          })()}
+                        </td>
+                        <td>{toDisplayText(attachment.dateCreated)}</td>
+                        <td>
+                          <div className="modern-table-actions">
+                            {isDocxAttachment(attachment.fileName) &&
+                            data.actions.googleDriveUploadAttachmentURL &&
+                            data.actions.googleDriveUploadAttachmentToken ? (
+                              <button
+                                type="button"
+                                className="modern-btn modern-btn--mini modern-btn--emphasis"
+                                onClick={() => void handleSendAttachmentToGoogleDocs(attachment)}
+                                disabled={
+                                  attachmentDeletePending ||
+                                  (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID) ||
+                                  (googleDriveDeletePendingAttachmentID > 0 && googleDriveDeletePendingAttachmentID !== attachment.attachmentID)
+                                }
+                              >
+                                {googleDrivePendingAttachmentID === attachment.attachmentID ? 'Opening...' : 'Open in Google Docs'}
+                              </button>
+                            ) : null}
+                            {attachment.googleDriveLinked &&
+                            data.actions.googleDriveDeleteAttachmentURL &&
+                            data.actions.googleDriveDeleteAttachmentToken ? (
+                              <button
+                                type="button"
+                                className="modern-btn modern-btn--mini modern-btn--google-delete"
+                                onClick={() => void handleDeleteGoogleDocsFile(attachment)}
+                                disabled={
+                                  attachmentDeletePending ||
+                                  (googleDrivePendingAttachmentID > 0 && googleDrivePendingAttachmentID !== attachment.attachmentID) ||
+                                  (googleDriveDeletePendingAttachmentID > 0 && googleDriveDeletePendingAttachmentID !== attachment.attachmentID)
+                                }
+                              >
+                                {googleDriveDeletePendingAttachmentID === attachment.attachmentID
+                                  ? 'Deleting...'
+                                  : (googleDriveUsesSharedLink ? 'Delete shared Google Doc' : 'Delete from Google')}
+                              </button>
+                            ) : null}
+                            {permissions.canDeleteAttachment ? (
+                              <button
+                                type="button"
+                                className="modern-btn modern-btn--mini modern-btn--danger"
+                                onClick={() => {
+                                  setAttachmentDeleteError('');
+                                  setAttachmentDeleteModal({
+                                    attachmentID: attachment.attachmentID,
+                                    fileName: toDisplayText(attachment.fileName, 'Attachment')
+                                  });
+                                }}
+                              >
+                                Delete
+                              </button>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </DataTable>
+                </CandidateShowSectionCard>
+
+              </div>
+
+              <aside className="avel-candidate-show-sidebar">
+                <CandidateShowSidebarCard
+                  title="Status & GDPR"
+                  description="Consent state, recruiter status flags, and request history."
+                  actions={
+                    gdpr.sendEnabled ? (
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn--mini modern-btn--emphasis"
+                        onClick={handleGdprSend}
+                        disabled={gdprSendPending || gdpr.sendDisabled}
+                        title={gdpr.sendDisabled && gdpr.sendDisabledReason !== '' ? gdpr.sendDisabledReason : 'Send GDPR consent request to this candidate'}
+                      >
+                        {gdprSendPending ? 'Sending...' : 'Send GDPR Request'}
+                      </button>
+                    ) : null
+                  }
+                >
+                  <div className="avel-candidate-show-sidebar-summary">
+                    <span className={`modern-chip ${candidate.isActive ? 'modern-chip--success' : 'modern-chip--critical'}`}>
+                      {candidate.isActive ? 'Active Candidate' : 'Inactive Candidate'}
+                    </span>
+                    <span className={`modern-chip ${candidate.isHot ? 'modern-chip--warning' : 'modern-chip--resume'}`}>
+                      {candidate.isHot ? 'Hot Candidate' : 'Standard Priority'}
+                    </span>
+                    <span className={`modern-chip avel-candidate-gdpr-chip ${getGDPRStatusChipClass(gdpr.latestRequest.status)}`}>
+                      GDPR {toDisplayText(gdpr.latestRequest.status)}
+                    </span>
+                  </div>
+                  <div className="avel-candidate-details avel-candidate-show-sidebar-grid">
+                    <CandidateShowValueField label="Request Created" value={gdpr.latestRequest.createdAt} />
+                    <CandidateShowValueField label="Email Sent" value={gdpr.latestRequest.emailSentAt} />
+                    <CandidateShowValueField label="Accepted At" value={gdpr.latestRequest.acceptedAt} />
+                    <CandidateShowValueField label="GDPR Expires" value={gdpr.expirationDate} />
+                    <CandidateShowValueField label="Link Expires" value={gdpr.latestRequest.expiresAt} />
+                    <CandidateShowValueField label="Deleted At" value={gdpr.latestRequest.deletedAt} />
+                    {gdpr.sendDisabledReason !== '' ? (
+                      <CandidateShowValueField label="Send Disabled" value={gdpr.sendDisabledReason} className="avel-candidate-details__full" />
+                    ) : null}
+                    {gdprSendError !== '' ? <div className="avel-candidate-details__full modern-inline-error">{gdprSendError}</div> : null}
+                    {gdpr.legacyProof.link !== '' ? (
+                      <CandidateShowValueField label="Legacy Proof" value={gdpr.legacyProof.fileName} className="avel-candidate-details__full">
+                        <a className="modern-link" href={decodeLegacyURL(gdpr.legacyProof.link)} target="_blank" rel="noreferrer">
+                          {toDisplayText(gdpr.legacyProof.fileName, 'View file')}
+                        </a>
+                      </CandidateShowValueField>
+                    ) : null}
+                    {gdpr.flashMessage !== '' ? (
+                      <CandidateShowValueField label="Info" value={gdpr.flashMessage} className="avel-candidate-details__full" />
+                    ) : null}
+                  </div>
+                </CandidateShowSidebarCard>
+
+                <CandidateShowSidebarCard
+                  title="Sourcing & Ownership"
+                  description="Recruiter ownership, origin, and profile audit details."
+                >
+                  <div className="avel-candidate-details avel-candidate-show-sidebar-grid">
+                    <CandidateShowValueField label="Owner" value={candidate.owner} />
+                    <CandidateShowValueField label="Source" value={candidate.source} />
+                    <CandidateShowValueField label="Entered By" value={candidate.enteredBy} />
+                    <CandidateShowValueField label="Created" value={candidate.dateCreated} />
+                    <CandidateShowValueField label="Modified" value={candidate.dateModified} />
+                    <CandidateShowValueField label="Location" value={locationLabel} />
+                  </div>
+                </CandidateShowSidebarCard>
+
+                <CandidateShowSidebarCard
+                  title="Tags & Lists"
+                  description="Classification and list membership used in recruiting workflows."
+                  actions={
+                    <>
+                      {permissions.canManageTags ? (
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--secondary"
+                          onClick={openTagEditor}
+                        >
+                          Manage Tags
+                        </button>
+                      ) : null}
+                      {permissions.canManageLists ? (
+                        <button
+                          type="button"
+                          className="modern-btn modern-btn--mini modern-btn--secondary"
+                          onClick={() => openAddToListOverlay(data.actions.addToListURL)}
+                        >
+                          Manage Lists
+                        </button>
+                      ) : null}
+                    </>
+                  }
+                >
+                  <div className="avel-candidate-tag-cloud">
+                    {data.tags.length > 0 ? data.tags.map((tag) => <span key={tag} className="modern-chip">{tag}</span>) : <span>No tags.</span>}
+                  </div>
+                  <ul className="avel-candidate-lists">
+                    {data.lists.map((list) => (
+                      <li key={list.listID}>
+                        <a className="modern-link" href={ensureModernUIURL(decodeLegacyURL(list.url))}>
+                          {toDisplayText(list.name)}
+                        </a>
+                      </li>
+                    ))}
+                    {data.lists.length === 0 ? <li>No lists linked.</li> : null}
+                  </ul>
+                </CandidateShowSidebarCard>
+
+                {data.eeoValues.length > 0 ? (
+                  <CandidateShowSidebarCard
+                    title="EEO Information"
+                    description="Compliance-related candidate attributes when provided."
+                  >
+                    <div className="avel-candidate-details avel-candidate-show-sidebar-grid">
+                      {data.eeoValues.map((item) => (
+                        <CandidateShowValueField key={item.fieldName} label={toDisplayText(item.fieldName)} value={item.fieldValue} />
+                      ))}
+                    </div>
+                  </CandidateShowSidebarCard>
+                ) : null}
+              </aside>
+            </div>
           </div>
         </div>
 
