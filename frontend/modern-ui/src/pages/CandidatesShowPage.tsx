@@ -10,7 +10,6 @@ import {
   fetchTalentFitFlowTransformStatus,
   fetchCandidatesShowModernData,
   postCandidateMessage,
-  removePipelineEntryViaLegacyURL,
   searchJobOrdersForTransform,
   setDashboardPipelineStatus,
   storeTalentFitFlowTransformedAttachment,
@@ -35,7 +34,6 @@ import { CandidateAssignJobOrderModal } from '../components/primitives/Candidate
 import { PipelineDetailsInlineModal } from '../components/primitives/PipelineDetailsInlineModal';
 import { PipelineQuickStatusModal } from '../components/primitives/PipelineQuickStatusModal';
 import { PipelineRejectionModal } from '../components/primitives/PipelineRejectionModal';
-import { PipelineRemoveModal } from '../components/primitives/PipelineRemoveModal';
 import { ConfirmActionModal } from '../components/primitives/ConfirmActionModal';
 import { MutationToast } from '../components/primitives/MutationToast';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -343,13 +341,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   } | null>(null);
   const [rejectionPending, setRejectionPending] = useState<boolean>(false);
   const [rejectionError, setRejectionError] = useState<string>('');
-  const [removePipelineModal, setRemovePipelineModal] = useState<{
-    title: string;
-    description: string;
-    actionURL: string;
-  } | null>(null);
-  const [removePipelinePending, setRemovePipelinePending] = useState<boolean>(false);
-  const [removePipelineError, setRemovePipelineError] = useState<string>('');
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [commentCategory, setCommentCategory] = useState<string>('General');
@@ -381,6 +372,10 @@ export function CandidatesShowPage({ bootstrap }: Props) {
   const [candidateDeletePending, setCandidateDeletePending] = useState<boolean>(false);
   const [candidateDeleteError, setCandidateDeleteError] = useState<string>('');
   const [candidateDeleteConfirmation, setCandidateDeleteConfirmation] = useState<string>('');
+  const [candidatePurgeModalOpen, setCandidatePurgeModalOpen] = useState<boolean>(false);
+  const [candidatePurgePending, setCandidatePurgePending] = useState<boolean>(false);
+  const [candidatePurgeError, setCandidatePurgeError] = useState<string>('');
+  const [candidatePurgeConfirmation, setCandidatePurgeConfirmation] = useState<string>('');
   const [googleDrivePendingAttachmentID, setGoogleDrivePendingAttachmentID] = useState<number>(0);
   const [googleDriveDeletePendingAttachmentID, setGoogleDriveDeletePendingAttachmentID] = useState<number>(0);
   const [transformCVModalOpen, setTransformCVModalOpen] = useState<boolean>(false);
@@ -520,71 +515,6 @@ export function CandidatesShowPage({ bootstrap }: Props) {
       window.removeEventListener('opencats:add-to-list:completed', handleAddToListCompleted as EventListener);
     };
   }, [data?.meta.candidateID, refreshPageData]);
-
-  const handleRemoveFromPipeline = useCallback(
-    async (pipeline: CandidatesShowModernDataResponse['pipelines']['items'][number]) => {
-      if (!data) {
-        return;
-      }
-
-      const token = data.actions.removeFromPipelineToken || '';
-      if (token === '') {
-        setPipelineModal({
-          url: decodeLegacyURL(pipeline.actions.removeFromPipelineURL),
-          title: `Remove From Pipeline: ${toDisplayText(pipeline.jobOrderTitle)}`,
-          showRefreshClose: true
-        });
-        return;
-      }
-
-      const candidateName = toDisplayText(data.candidate.fullName);
-      const jobOrderTitle = toDisplayText(pipeline.jobOrderTitle);
-      setRemovePipelineError('');
-      setRemovePipelineModal({
-        title: `Remove From Pipeline: ${jobOrderTitle}`,
-        description: `Remove ${candidateName} from ${jobOrderTitle}?`,
-        actionURL: decodeLegacyURL(pipeline.actions.removeFromPipelineURL)
-      });
-    },
-    [data, refreshPageData]
-  );
-
-  const submitRemoveFromPipeline = useCallback(
-    async (note: string) => {
-      if (!data || !removePipelineModal || removePipelinePending) {
-        return;
-      }
-
-      const token = data.actions.removeFromPipelineToken || '';
-      if (token === '') {
-        setRemovePipelineError('Removal security token is not available.');
-        return;
-      }
-
-      setRemovePipelineError('');
-      setRemovePipelinePending(true);
-      try {
-        const result = await removePipelineEntryViaLegacyURL(
-          removePipelineModal.actionURL,
-          token,
-          note
-        );
-        if (!result.success) {
-          setRemovePipelineError(result.message || 'Unable to remove candidate from pipeline.');
-          return;
-        }
-
-        setRemovePipelineModal(null);
-        refreshPageData();
-        showToast('Candidate removed from pipeline.');
-      } catch (err: unknown) {
-        setRemovePipelineError(err instanceof Error ? err.message : 'Unable to remove candidate from pipeline.');
-      } finally {
-        setRemovePipelinePending(false);
-      }
-    },
-    [data, removePipelineModal, removePipelinePending, refreshPageData, showToast]
-  );
 
   const closePipelineModal = useCallback(
     (refreshOnClose: boolean) => {
@@ -1864,6 +1794,29 @@ export function CandidatesShowPage({ bootstrap }: Props) {
     setCandidateDeletePending(true);
     window.location.assign(deleteURL);
   };
+  const openCandidatePurgeModal = () => {
+    setCandidatePurgeError('');
+    setCandidatePurgeConfirmation('');
+    setCandidatePurgePending(false);
+    setCandidatePurgeModalOpen(true);
+  };
+  const closeCandidatePurgeModal = () => {
+    if (candidatePurgePending) {
+      return;
+    }
+    setCandidatePurgeError('');
+    setCandidatePurgeConfirmation('');
+    setCandidatePurgeModalOpen(false);
+  };
+  const confirmCandidatePurge = () => {
+    if (deleteURL === '') {
+      setCandidatePurgeError('Purge action is unavailable for this candidate.');
+      return;
+    }
+    setCandidatePurgeError('');
+    setCandidatePurgePending(true);
+    window.location.assign(deleteURL);
+  };
 
   return (
     <div className="avel-dashboard-page avel-candidate-show-page avel-candidate-show-page--refined avel-candidate-add-page avel-candidate-edit-page avel-candidate-edit-page--refined">
@@ -2055,11 +2008,11 @@ export function CandidatesShowPage({ bootstrap }: Props) {
                             >
                               Details
                             </button>
-                            {permissions.canRemoveFromPipeline ? (
+                            {permissions.canDeleteCandidate ? (
                               <button
                                 type="button"
-                                className="modern-btn modern-btn--mini modern-btn--secondary"
-                                onClick={() => handleRemoveFromPipeline(pipeline)}
+                                className="modern-btn modern-btn--mini avel-candidate-edit-page__danger-btn"
+                                onClick={openCandidatePurgeModal}
                               >
                                 Remove
                               </button>
@@ -2947,21 +2900,20 @@ export function CandidatesShowPage({ bootstrap }: Props) {
           onCancel={closeCandidateDeleteModal}
           onConfirm={confirmCandidateDelete}
         />
-
-        <PipelineRemoveModal
-          isOpen={!!removePipelineModal}
-          title={removePipelineModal?.title || 'Remove From Pipeline'}
-          description={removePipelineModal?.description || 'Confirm pipeline removal.'}
-          pending={removePipelinePending}
-          error={removePipelineError}
-          onCancel={() => {
-            if (removePipelinePending) {
-              return;
-            }
-            setRemovePipelineError('');
-            setRemovePipelineModal(null);
-          }}
-          onSubmit={submitRemoveFromPipeline}
+        <ConfirmActionModal
+          isOpen={candidatePurgeModalOpen}
+          title="Purge Candidate"
+          message={`Purge ${toDisplayText(candidate.fullName, 'this candidate')} from OpenCATS? This permanently removes the profile, job-order assignments, attachments, comments, and related candidate records.`}
+          confirmLabel="Purge Candidate"
+          pending={candidatePurgePending}
+          error={candidatePurgeError}
+          confirmationKeyword="PURGE"
+          confirmationLabel="Type PURGE to permanently remove this candidate"
+          confirmationHint="Use this only when the candidate must be removed completely, not just rejected from a job order."
+          confirmationValue={candidatePurgeConfirmation}
+          onConfirmationValueChange={setCandidatePurgeConfirmation}
+          onCancel={closeCandidatePurgeModal}
+          onConfirm={confirmCandidatePurge}
         />
 
         <LegacyFrameModal
