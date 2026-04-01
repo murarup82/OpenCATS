@@ -6373,7 +6373,21 @@ class CandidatesUI extends UserInterface
             return true;
         }
 
-        return (strpos($scope, 'https://www.googleapis.com/auth/drive') === false);
+        $scopeParts = preg_split('/\s+/', $scope);
+        if (!is_array($scopeParts))
+        {
+            return true;
+        }
+
+        foreach ($scopeParts as $scopePart)
+        {
+            if (trim((string) $scopePart) === 'https://www.googleapis.com/auth/drive')
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function buildGoogleDriveConnectURL($origin)
