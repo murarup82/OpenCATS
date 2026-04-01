@@ -1348,6 +1348,7 @@ class CandidatesUI extends UserInterface
                     ),
                     'canChangePipelineStatus' => ($this->getUserAccessLevel('pipelines.addActivityChangeStatus') >= ACCESS_LEVEL_EDIT),
                     'canRemoveFromPipeline' => ($this->getUserAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_DELETE),
+                    'canPurgeFromPipeline' => ($this->getUserAccessLevel('pipelines.removeFromPipeline') >= ACCESS_LEVEL_SA),
                     'canCreateAttachment' => ($this->getUserAccessLevel('candidates.createAttachment') >= ACCESS_LEVEL_EDIT),
                     'canDeleteAttachment' => ($this->getUserAccessLevel('candidates.deleteAttachment') >= ACCESS_LEVEL_DELETE),
                     'canManageTags' => ($this->getUserAccessLevel('candidates.addCandidateTags') >= ACCESS_LEVEL_EDIT),

@@ -3969,6 +3969,7 @@ export type CandidatesShowModernDataResponse = {
       canAddToJobOrder: boolean;
       canChangePipelineStatus: boolean;
       canRemoveFromPipeline: boolean;
+      canPurgeFromPipeline: boolean;
       canCreateAttachment: boolean;
       canDeleteAttachment: boolean;
       canManageTags: boolean;
