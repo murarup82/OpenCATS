@@ -1891,22 +1891,10 @@ export function CandidatesShowPage({ bootstrap }: Props) {
               <div className="avel-candidate-edit-main avel-candidate-show-main">
                 <CandidateShowSectionCard
                   title="Identity & Contact"
-                  description="Core profile identity, contact details, and recruiter-facing context."
                   className="avel-candidate-show-section--identity"
                 >
                   <div className="avel-candidate-show-identity">
                     <div className="avel-candidate-show-identity__content">
-                      <div className="avel-candidate-show-identity__header">
-                        <div>
-                          <h3 className="avel-candidate-show-identity__name">{toDisplayText(candidate.fullName)}</h3>
-                          <p className="avel-candidate-show-identity__subline">Candidate profile #{candidate.candidateID}</p>
-                        </div>
-                        {candidate.profileImageURL !== '' ? (
-                          <div className="avel-candidate-show-identity__avatar">
-                            <img src={decodeLegacyURL(candidate.profileImageURL)} alt={candidate.fullName} />
-                          </div>
-                        ) : null}
-                      </div>
                       <div className="avel-candidate-show-identity__meta">
                         <span className={`modern-chip ${candidate.isActive ? 'modern-chip--success' : 'modern-chip--critical'}`}>
                           {candidate.isActive ? 'Active Profile' : 'Inactive Profile'}
