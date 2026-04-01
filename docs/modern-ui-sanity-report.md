@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-04-01T13:51:30.661Z
-Finished: 2026-04-01T13:51:53.257Z
+Started: 2026-04-01T15:19:17.615Z
+Finished: 2026-04-01T15:19:30.271Z
 Overall Required Status: **Fail**
 
 ## Summary
@@ -40,20 +40,14 @@ Command: `npm run build`
 [2Ktransforming...✓ 153 modules transformed.
 rendering chunks...
 ../../public/modern-ui/build/.vite/manifest.json         0.20 kB
-../../public/modern-ui/build/opencats-modern-ui.css    397.97 kB
-../../public/modern-ui/build/app.bundle.js           2,081.11 kB
+../../public/modern-ui/build/opencats-modern-ui.css    398.48 kB
+../../public/modern-ui/build/app.bundle.js           2,090.23 kB
 
-[32m✓ built in 3.62s[39m
+[32m✓ built in 1.87s[39m
 ```
 
 **stderr**
-```text
-[33m[33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
-  - vite:css (87%)
-  - vite:css-post (9%)
-See https://rolldown.rs/options/checks#plugintimings for more details.
-[39m
-```
+`(no output)`
 
 ### Coverage Matrix (Pass)
 

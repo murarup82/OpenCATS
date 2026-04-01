@@ -1,6 +1,6 @@
 # Modern UI Unexpected Legacy Redirect Guard
 
-Generated: 2026-04-01T13:52:10.748Z
+Generated: 2026-04-01T15:19:38.903Z
 
 This guard tracks runtime `window.location.assign/replace` redirects that target legacy URLs.
 
