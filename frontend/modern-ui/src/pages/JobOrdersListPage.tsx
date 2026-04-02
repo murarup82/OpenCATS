@@ -37,8 +37,10 @@ type JobOrderDataColumnKey =
   | 'openings'
   | 'remainingOpenings'
   | 'internalValidation'
+  | 'customerInterview'
   | 'proposed'
   | 'hired'
+  | 'rejected'
   | 'owner'
   | 'recruiter'
   | 'monitor';
@@ -62,8 +64,10 @@ const JOB_ORDER_COLUMNS: JobOrderColumnConfig[] = [
   { key: 'openings', title: 'Total Openings', sortKey: '', filterable: true },
   { key: 'remainingOpenings', title: 'Remaining Openings', sortKey: '', filterable: true },
   { key: 'internalValidation', title: 'Internal Validation', sortKey: '', filterable: true },
+  { key: 'customerInterview', title: 'Customer Interview', sortKey: '', filterable: true },
   { key: 'proposed', title: 'Proposed', sortKey: '', filterable: true },
   { key: 'hired', title: 'Hired', sortKey: '', filterable: true },
+  { key: 'rejected', title: 'Rejected', sortKey: '', filterable: true },
   { key: 'owner', title: 'Owner', sortKey: 'ownerSort', filterable: true },
   { key: 'recruiter', title: 'Recruiter', sortKey: 'recruiterSort', filterable: true },
   { key: 'monitor', title: 'Monitor', sortKey: '', filterable: true }
@@ -77,8 +81,10 @@ const DEFAULT_VISIBLE_COLUMNS: JobOrderColumnVisibility = {
   openings: true,
   remainingOpenings: true,
   internalValidation: true,
+  customerInterview: true,
   proposed: true,
   hired: true,
+  rejected: true,
   owner: false,
   recruiter: false,
   monitor: false
@@ -159,8 +165,10 @@ function getJobOrderColumnValue(row: JobOrderRow, key: JobOrderDataColumnKey): s
     case 'openings': return String(Number(row.openings || 0));
     case 'remainingOpenings': return String(Number(row.remainingOpenings || 0));
     case 'internalValidation': return String(Number(row.internalValidation || 0));
+    case 'customerInterview': return String(Number(row.clientInterview || 0));
     case 'proposed': return String(Number(row.proposed || 0));
     case 'hired': return String(Number(row.hired || 0));
+    case 'rejected': return String(Number(row.rejected || 0));
     case 'owner': return String(row.ownerName || '');
     case 'recruiter': return String(row.recruiterName || '');
     case 'monitor': return row.isMonitored ? 'Monitored' : 'Not Monitored';
@@ -263,8 +271,10 @@ function emptyColumnFilters(): Record<JobOrderDataColumnKey, string> {
     openings: '',
     remainingOpenings: '',
     internalValidation: '',
+    customerInterview: '',
     proposed: '',
     hired: '',
+    rejected: '',
     owner: '',
     recruiter: '',
     monitor: ''
@@ -280,8 +290,10 @@ function emptyColumnOptions(): Record<JobOrderDataColumnKey, string[]> {
     openings: [],
     remainingOpenings: [],
     internalValidation: [],
+    customerInterview: [],
     proposed: [],
     hired: [],
+    rejected: [],
     owner: [],
     recruiter: [],
     monitor: []
@@ -834,7 +846,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--gdpr avel-candidate-stats-bar__item--openings"
               title="Open positions remaining across currently visible job orders in Active status only."
             >
-              <span className="avel-candidate-stats-bar__label">Openings</span>
+              <span className="avel-candidate-stats-bar__label">Remaining Openings</span>
               <strong className="avel-candidate-stats-bar__value">{totalOpenings}</strong>
             </div>
             <div
@@ -1091,8 +1103,10 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                           columnKey === 'openings' ||
                           columnKey === 'remainingOpenings' ||
                           columnKey === 'internalValidation' ||
+                          columnKey === 'customerInterview' ||
                           columnKey === 'proposed' ||
-                          columnKey === 'hired';
+                          columnKey === 'hired' ||
+                          columnKey === 'rejected';
                         const isFilterable = col.filterable === true;
                         const isFilterOpen = activeHeaderMenuColumn === columnKey;
                         const activeSelection = parseFilterSelection(columnFilters[columnKey] || '');
@@ -1184,7 +1198,19 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                             <span className={`modern-chip ${numericValue > 0 ? 'modern-chip--openings' : 'modern-chip--openings-zero'}`}>
                                               {optionValue}
                                             </span>
-                                          ) : columnKey === 'internalValidation' || columnKey === 'proposed' || columnKey === 'hired' ? (
+                                          ) : columnKey === 'customerInterview' ? (
+                                            <span className={`modern-chip ${numericValue > 0 ? 'modern-chip--metric-customer-interview' : 'modern-chip--openings-zero'}`}>
+                                              {optionValue}
+                                            </span>
+                                          ) : columnKey === 'hired' ? (
+                                            <span className={`modern-chip ${numericValue > 0 ? 'modern-chip--metric-hired' : 'modern-chip--openings-zero'}`}>
+                                              {optionValue}
+                                            </span>
+                                          ) : columnKey === 'rejected' ? (
+                                            <span className={`modern-chip ${numericValue > 0 ? 'modern-chip--metric-rejected' : 'modern-chip--openings-zero'}`}>
+                                              {optionValue}
+                                            </span>
+                                          ) : columnKey === 'internalValidation' || columnKey === 'proposed' ? (
                                             <span className={`modern-chip ${numericValue > 0 ? 'modern-chip--success' : 'modern-chip--openings-zero'}`}>
                                               {optionValue}
                                             </span>
@@ -1305,6 +1331,14 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                   </span>
                                 </td>
                               );
+                            case 'customerInterview':
+                              return (
+                                <td key={`${row.jobOrderID}-customerInterview`} className="avel-joborders-metric-cell">
+                                  <span className={`modern-chip ${row.clientInterview > 0 ? 'modern-chip--metric-customer-interview' : 'modern-chip--openings-zero'}`}>
+                                    {row.clientInterview}
+                                  </span>
+                                </td>
+                              );
                             case 'proposed':
                               return (
                                 <td key={`${row.jobOrderID}-proposed`} className="avel-joborders-metric-cell">
@@ -1316,8 +1350,16 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                             case 'hired':
                               return (
                                 <td key={`${row.jobOrderID}-hired`} className="avel-joborders-metric-cell">
-                                  <span className={`modern-chip ${row.hired > 0 ? 'modern-chip--success' : 'modern-chip--openings-zero'}`}>
+                                  <span className={`modern-chip ${row.hired > 0 ? 'modern-chip--metric-hired' : 'modern-chip--openings-zero'}`}>
                                     {row.hired}
+                                  </span>
+                                </td>
+                              );
+                            case 'rejected':
+                              return (
+                                <td key={`${row.jobOrderID}-rejected`} className="avel-joborders-metric-cell">
+                                  <span className={`modern-chip ${row.rejected > 0 ? 'modern-chip--metric-rejected' : 'modern-chip--openings-zero'}`}>
+                                    {row.rejected}
                                   </span>
                                 </td>
                               );

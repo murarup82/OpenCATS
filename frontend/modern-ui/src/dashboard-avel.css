@@ -4032,6 +4032,24 @@
   color: #4f6878;
 }
 
+.avel-joborders-page .modern-chip--metric-customer-interview {
+  border-color: #efc18d;
+  background: #fff1df;
+  color: #8b4a13;
+}
+
+.avel-joborders-page .modern-chip--metric-rejected {
+  border-color: #e8bbbb;
+  background: #fff1f1;
+  color: #a63d3d;
+}
+
+.avel-joborders-page .modern-chip--metric-hired {
+  border-color: #1d7a48;
+  background: #1f8b52;
+  color: #ffffff;
+}
+
 .avel-joborders-page .modern-chip--monitor {
   min-width: 112px;
   justify-content: center;
