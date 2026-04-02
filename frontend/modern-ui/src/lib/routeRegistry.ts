@@ -150,6 +150,9 @@ const explicitNativeActionRoutes: Record<string, ModernRouteComponent> = {
   'joborders.pipelinematrixdeleteview': JobOrdersPipelineMatrixPage,
   'joborders.pipelinematrixsaveview': JobOrdersPipelineMatrixPage,
   'joborders.postmessage': JobOrdersShowPage,
+  'joborders.purgefrompipeline': JobOrdersShowPage,
+  'joborders.quickupdate': JobOrdersListPage,
+  'joborders.rejectionreasonbreakdown': JobOrdersListPage,
   'joborders.removefrompipeline': JobOrdersShowPage,
   'joborders.setcandidatejoborder': OperationsWorkspaceActionPage,
   'lists.deletestaticlist': ListsDetailPage,
@@ -378,6 +381,9 @@ const guardedRouteParams: Record<string, string[]> = {
   'joborders.deletemessagethread': ['jobOrderID'],
   'joborders.edithiringplan': ['jobOrderID'],
   'joborders.postmessage': ['jobOrderID'],
+  'joborders.purgefrompipeline': ['candidateID', 'jobOrderID'],
+  'joborders.quickupdate': ['jobOrderID'],
+  'joborders.rejectionreasonbreakdown': ['jobOrderID'],
   'joborders.removefrompipeline': ['jobOrderID'],
   'joborders.setcandidatejoborder': ['jobOrderID'],
   'joborders.addcandidatemodal': ['jobOrderID'],
@@ -476,4 +482,3 @@ export function resolveModernRouteComponent(
 ): ModernRouteComponent | null {
   return resolveModernRoute(moduleName, actionName, requestURI).component;
 }
-

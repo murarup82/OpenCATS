@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchJobOrderRejectionReasonBreakdownModernData,
   fetchJobOrdersListModernData,
-  setJobOrderMonitored
+  setJobOrderMonitored,
+  updateJobOrderQuickAction
 } from '../lib/api';
 import type {
   JobOrderRejectionReasonBreakdownModernDataResponse,
@@ -12,6 +13,7 @@ import type {
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
+import { JobOrderAssignCandidateModal } from '../components/primitives/JobOrderAssignCandidateModal';
 import { InlineModal, SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
@@ -51,7 +53,8 @@ type JobOrderDataColumnKey =
   | 'rejected'
   | 'owner'
   | 'recruiter'
-  | 'monitor';
+  | 'monitor'
+  | 'actions';
 
 type JobOrderColumnConfig = {
   key: JobOrderDataColumnKey;
@@ -78,7 +81,8 @@ const JOB_ORDER_COLUMNS: JobOrderColumnConfig[] = [
   { key: 'rejected', title: 'Rejected', sortKey: '', filterable: true },
   { key: 'owner', title: 'Owner', sortKey: 'ownerSort', filterable: true },
   { key: 'recruiter', title: 'Recruiter', sortKey: 'recruiterSort', filterable: true },
-  { key: 'monitor', title: 'Monitor', sortKey: '', filterable: true }
+  { key: 'monitor', title: 'Monitor', sortKey: '', filterable: true },
+  { key: 'actions', title: 'Actions', sortKey: '', filterable: false }
 ];
 
 const DEFAULT_VISIBLE_COLUMNS: JobOrderColumnVisibility = {
@@ -95,7 +99,8 @@ const DEFAULT_VISIBLE_COLUMNS: JobOrderColumnVisibility = {
   rejected: true,
   owner: false,
   recruiter: false,
-  monitor: false
+  monitor: false,
+  actions: true
 };
 
 function toDisplayText(value: unknown, fallback = '--'): string {
@@ -186,6 +191,7 @@ function getJobOrderColumnValue(row: JobOrderRow, key: JobOrderDataColumnKey): s
     case 'owner': return String(row.ownerName || '');
     case 'recruiter': return String(row.recruiterName || '');
     case 'monitor': return row.isMonitored ? 'Monitored' : 'Not Monitored';
+    case 'actions': return '';
     default: return '';
   }
 }
@@ -320,7 +326,8 @@ function emptyColumnFilters(): Record<JobOrderDataColumnKey, string> {
     rejected: '',
     owner: '',
     recruiter: '',
-    monitor: ''
+    monitor: '',
+    actions: ''
   };
 }
 
@@ -339,7 +346,8 @@ function emptyColumnOptions(): Record<JobOrderDataColumnKey, string[]> {
     rejected: [],
     owner: [],
     recruiter: [],
-    monitor: []
+    monitor: [],
+    actions: []
   };
 }
 
@@ -377,6 +385,37 @@ function isJobOrderSearchMatch(row: JobOrderRow, query: string): boolean {
   return searchableValues.some((value) => value.includes(normalizedQuery));
 }
 
+type JobOrderStatusModalState = {
+  jobOrderID: number;
+  title: string;
+  status: string;
+  pending: boolean;
+  error: string;
+};
+
+type JobOrderPriorityModalState = {
+  jobOrderID: number;
+  title: string;
+  priority: 'standard' | 'hot';
+  pending: boolean;
+  error: string;
+};
+
+type JobOrderAssignmentModalState = {
+  jobOrderID: number;
+  title: string;
+  ownerUserID: number;
+  recruiterUserID: number;
+  pending: boolean;
+  error: string;
+};
+
+type JobOrderAssignCandidateModalState = {
+  sourceURL: string;
+  title: string;
+  initialSearchTerm: string;
+};
+
 export function JobOrdersListPage({ bootstrap }: Props) {
   const [data, setData] = useState<JobOrdersListModernDataResponse | null>(null);
   const [error, setError] = useState<string>('');
@@ -387,10 +426,16 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [appliedSearch, setAppliedSearch] = useState('');
   const [visibleColumns, setVisibleColumns] = useState<JobOrderColumnVisibility>(DEFAULT_VISIBLE_COLUMNS);
   const [activeHeaderMenuColumn, setActiveHeaderMenuColumn] = useState<JobOrderDataColumnKey | null>(null);
+  const [activeRowActionMenuJobOrderID, setActiveRowActionMenuJobOrderID] = useState<number | null>(null);
   const [headerMenuSearch, setHeaderMenuSearch] = useState('');
   const [columnFilters, setColumnFilters] = useState<Record<JobOrderDataColumnKey, string>>(emptyColumnFilters());
   const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
   const [monitorToggleError, setMonitorToggleError] = useState('');
+  const [quickActionError, setQuickActionError] = useState('');
+  const [statusModal, setStatusModal] = useState<JobOrderStatusModalState | null>(null);
+  const [priorityModal, setPriorityModal] = useState<JobOrderPriorityModalState | null>(null);
+  const [assignmentModal, setAssignmentModal] = useState<JobOrderAssignmentModalState | null>(null);
+  const [assignCandidateModal, setAssignCandidateModal] = useState<JobOrderAssignCandidateModalState | null>(null);
   const [rejectionBreakdownModal, setRejectionBreakdownModal] = useState<{
     jobOrderID: number;
     jobOrderTitle: string;
@@ -400,7 +445,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   } | null>(null);
   const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
   const columnStorageKey = useMemo(
-    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:list:columns:v5`,
+    () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:list:columns:v6`,
     [bootstrap.siteID, bootstrap.userID]
   );
 
@@ -497,12 +542,17 @@ export function JobOrdersListPage({ bootstrap }: Props) {
       ) {
         setActiveHeaderMenuColumn(null);
       }
+
+      if (activeRowActionMenuJobOrderID !== null && !element?.closest('.avel-candidate-row-menu')) {
+        setActiveRowActionMenuJobOrderID(null);
+      }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         closeColumnsMenu();
         setActiveHeaderMenuColumn(null);
+        setActiveRowActionMenuJobOrderID(null);
       }
     };
 
@@ -514,7 +564,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
       document.removeEventListener('touchstart', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [activeHeaderMenuColumn]);
+  }, [activeHeaderMenuColumn, activeRowActionMenuJobOrderID]);
 
   const toggleMonitoredState = useCallback(
     async (row: JobOrderRow) => {
@@ -604,6 +654,177 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     setRejectionBreakdownModal(null);
   }, []);
 
+  const openStatusModalForRow = useCallback((row: JobOrderRow) => {
+    setActiveRowActionMenuJobOrderID(null);
+    setQuickActionError('');
+    setStatusModal({
+      jobOrderID: Number(row.jobOrderID || 0),
+      title: toDisplayText(row.title, `Job Order #${Number(row.jobOrderID || 0)}`),
+      status: String(row.status || ''),
+      pending: false,
+      error: ''
+    });
+  }, []);
+
+  const openPriorityModalForRow = useCallback((row: JobOrderRow) => {
+    setActiveRowActionMenuJobOrderID(null);
+    setQuickActionError('');
+    setPriorityModal({
+      jobOrderID: Number(row.jobOrderID || 0),
+      title: toDisplayText(row.title, `Job Order #${Number(row.jobOrderID || 0)}`),
+      priority: row.isHot ? 'hot' : 'standard',
+      pending: false,
+      error: ''
+    });
+  }, []);
+
+  const openAssignmentModalForRow = useCallback((row: JobOrderRow) => {
+    setActiveRowActionMenuJobOrderID(null);
+    setQuickActionError('');
+    setAssignmentModal({
+      jobOrderID: Number(row.jobOrderID || 0),
+      title: toDisplayText(row.title, `Job Order #${Number(row.jobOrderID || 0)}`),
+      ownerUserID: Math.max(0, Number(row.ownerUserID || 0)),
+      recruiterUserID: Math.max(0, Number(row.recruiterUserID || 0)),
+      pending: false,
+      error: ''
+    });
+  }, []);
+
+  const openAddCandidateModalForRow = useCallback((row: JobOrderRow) => {
+    setActiveRowActionMenuJobOrderID(null);
+    setQuickActionError('');
+    setAssignCandidateModal({
+      sourceURL: decodeLegacyURL(row.addCandidateURL || ''),
+      title: `Assign candidate to ${toDisplayText(row.title, `Job Order #${Number(row.jobOrderID || 0)}`)}`,
+      initialSearchTerm: ''
+    });
+  }, []);
+
+  const submitStatusQuickUpdate = useCallback(async () => {
+    if (!data || !statusModal) {
+      return;
+    }
+
+    const payload = {
+      jobOrderID: statusModal.jobOrderID,
+      status: statusModal.status
+    };
+
+    setStatusModal((current) => (
+      current && current.jobOrderID === payload.jobOrderID
+        ? { ...current, pending: true, error: '' }
+        : current
+    ));
+    setQuickActionError('');
+
+    try {
+      const result = await updateJobOrderQuickAction(data.actions.quickUpdateURL, payload);
+      if (!result.success) {
+        setStatusModal((current) => (
+          current && current.jobOrderID === payload.jobOrderID
+            ? { ...current, pending: false, error: result.message || 'Unable to update status.' }
+            : current
+        ));
+        return;
+      }
+
+      setStatusModal(null);
+      refreshPageData();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unable to update status.';
+      setStatusModal((current) => (
+        current && current.jobOrderID === payload.jobOrderID
+          ? { ...current, pending: false, error: message }
+          : current
+      ));
+      setQuickActionError(message);
+    }
+  }, [data, refreshPageData, statusModal]);
+
+  const submitPriorityQuickUpdate = useCallback(async () => {
+    if (!data || !priorityModal) {
+      return;
+    }
+
+    const payload = {
+      jobOrderID: priorityModal.jobOrderID,
+      priority: priorityModal.priority
+    };
+
+    setPriorityModal((current) => (
+      current && current.jobOrderID === payload.jobOrderID
+        ? { ...current, pending: true, error: '' }
+        : current
+    ));
+    setQuickActionError('');
+
+    try {
+      const result = await updateJobOrderQuickAction(data.actions.quickUpdateURL, payload);
+      if (!result.success) {
+        setPriorityModal((current) => (
+          current && current.jobOrderID === payload.jobOrderID
+            ? { ...current, pending: false, error: result.message || 'Unable to update priority.' }
+            : current
+        ));
+        return;
+      }
+
+      setPriorityModal(null);
+      refreshPageData();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unable to update priority.';
+      setPriorityModal((current) => (
+        current && current.jobOrderID === payload.jobOrderID
+          ? { ...current, pending: false, error: message }
+          : current
+      ));
+      setQuickActionError(message);
+    }
+  }, [data, priorityModal, refreshPageData]);
+
+  const submitAssignmentQuickUpdate = useCallback(async () => {
+    if (!data || !assignmentModal) {
+      return;
+    }
+
+    const payload = {
+      jobOrderID: assignmentModal.jobOrderID,
+      ownerUserID: assignmentModal.ownerUserID,
+      recruiterUserID: assignmentModal.recruiterUserID
+    };
+
+    setAssignmentModal((current) => (
+      current && current.jobOrderID === payload.jobOrderID
+        ? { ...current, pending: true, error: '' }
+        : current
+    ));
+    setQuickActionError('');
+
+    try {
+      const result = await updateJobOrderQuickAction(data.actions.quickUpdateURL, payload);
+      if (!result.success) {
+        setAssignmentModal((current) => (
+          current && current.jobOrderID === payload.jobOrderID
+            ? { ...current, pending: false, error: result.message || 'Unable to update assignment.' }
+            : current
+        ));
+        return;
+      }
+
+      setAssignmentModal(null);
+      refreshPageData();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unable to update assignment.';
+      setAssignmentModal((current) => (
+        current && current.jobOrderID === payload.jobOrderID
+          ? { ...current, pending: false, error: message }
+          : current
+      ));
+      setQuickActionError(message);
+    }
+  }, [assignmentModal, data, refreshPageData]);
+
   const navigateWithFilters = useCallback(
     (next: NavigationFilters) => {
       if (!data) {
@@ -689,6 +910,66 @@ export function JobOrdersListPage({ bootstrap }: Props) {
       value: String(company.companyID || 0),
       label: toDisplayText(company.name, 'Unknown')
     }));
+  }, [data]);
+
+  const quickStatusOptions = useMemo<SelectMenuOption[]>(() => {
+    if (!data) {
+      return [];
+    }
+
+    return (data.options.quickActions?.statuses || []).map((option) => ({
+      value: String(option.value || ''),
+      label: toDisplayText(option.label, 'Status'),
+      tone: buildStatusTone(option.tone)
+    }));
+  }, [data]);
+
+  const quickPriorityOptions = useMemo<Array<{ value: 'standard' | 'hot'; label: string }>>(() => {
+    if (!data) {
+      return [
+        { value: 'standard', label: 'Standard' },
+        { value: 'hot', label: 'Hot' }
+      ];
+    }
+
+    const normalized = (data.options.quickActions?.priorities || [])
+      .map((option) => ({
+        value: String(option.value || '').trim().toLowerCase() === 'hot' ? 'hot' : 'standard',
+        label: toDisplayText(option.label, 'Priority')
+      }));
+
+    return normalized.length > 0
+      ? normalized
+      : [
+          { value: 'standard', label: 'Standard' },
+          { value: 'hot', label: 'Hot' }
+        ];
+  }, [data]);
+
+  const quickOwnerOptions = useMemo<Array<{ value: string; label: string }>>(() => {
+    if (!data) {
+      return [{ value: '0', label: '(Unassigned)' }];
+    }
+
+    const options = (data.options.quickActions?.owners || []).map((option) => ({
+      value: String(option.value || '0'),
+      label: toDisplayText(option.label, '(Unassigned)')
+    }));
+
+    return options.length > 0 ? options : [{ value: '0', label: '(Unassigned)' }];
+  }, [data]);
+
+  const quickRecruiterOptions = useMemo<Array<{ value: string; label: string }>>(() => {
+    if (!data) {
+      return [{ value: '0', label: '(Unassigned)' }];
+    }
+
+    const options = (data.options.quickActions?.recruiters || []).map((option) => ({
+      value: String(option.value || '0'),
+      label: toDisplayText(option.label, '(Unassigned)')
+    }));
+
+    return options.length > 0 ? options : [{ value: '0', label: '(Unassigned)' }];
   }, [data]);
 
   const rowsPerPageOptions: SelectMenuOption[] = [
@@ -838,8 +1119,10 @@ export function JobOrdersListPage({ bootstrap }: Props) {
 
   const permissions = data.meta.permissions;
   const canAddJobOrder = isCapabilityEnabled(permissions.canAddJobOrder);
+  const canEditJobOrder = isCapabilityEnabled(permissions.canEditJobOrder);
   const canManageRecruiterAllocation = isCapabilityEnabled(permissions.canManageRecruiterAllocation);
   const canToggleMonitored = isCapabilityEnabled(permissions.canToggleMonitored);
+  const canAddCandidateToPipeline = isCapabilityEnabled(permissions.canAddCandidateToPipeline);
   const canGoPrev = data.meta.page > 1;
   const canGoNext = data.meta.page < data.meta.totalPages;
 
@@ -1114,6 +1397,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
 
           {data.state.errorMessage ? <div className="modern-state">{data.state.errorMessage}</div> : null}
           {monitorToggleError !== '' ? <div className="modern-state">{monitorToggleError}</div> : null}
+          {quickActionError !== '' ? <div className="modern-state modern-state--error">{quickActionError}</div> : null}
 
           <section className="avel-list-panel avel-candidate-results">
             <div className="avel-list-panel__header">
@@ -1529,6 +1813,129 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                   )}
                                 </td>
                               );
+                            case 'actions': {
+                              const hasOpenDetailsAction = String(row.showURL || '').trim() !== '';
+                              const hasEditAction = canEditJobOrder && String(row.editURL || '').trim() !== '';
+                              const hasHiringPlanAction = canEditJobOrder && String(row.hiringPlanURL || '').trim() !== '';
+                              const hasAddCandidateAction = canAddCandidateToPipeline && String(row.addCandidateURL || '').trim() !== '';
+                              const hasStatusAction = canEditJobOrder;
+                              const hasPriorityAction = canEditJobOrder;
+                              const hasAssignmentAction = canManageRecruiterAllocation;
+                              const hasAnyAction =
+                                hasOpenDetailsAction ||
+                                hasEditAction ||
+                                hasHiringPlanAction ||
+                                hasAddCandidateAction ||
+                                hasStatusAction ||
+                                hasPriorityAction ||
+                                hasAssignmentAction;
+
+                              if (!hasAnyAction) {
+                                return (
+                                  <td key={`${row.jobOrderID}-actions`}>
+                                    <span className="avel-candidate-row-menu__empty">—</span>
+                                  </td>
+                                );
+                              }
+
+                              return (
+                                <td key={`${row.jobOrderID}-actions`} className="avel-candidate-row-menu-cell">
+                                  <div className="avel-candidate-row-menu">
+                                    <button
+                                      type="button"
+                                      className="avel-candidate-row-menu__trigger"
+                                      onClick={() =>
+                                        setActiveRowActionMenuJobOrderID((current) =>
+                                          current === row.jobOrderID ? null : row.jobOrderID
+                                        )
+                                      }
+                                      aria-label={`Open actions for ${toDisplayText(row.title, 'job order')}`}
+                                      aria-expanded={activeRowActionMenuJobOrderID === row.jobOrderID}
+                                    >
+                                      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                                        <circle cx="8" cy="3" r="1.25" fill="currentColor" />
+                                        <circle cx="8" cy="8" r="1.25" fill="currentColor" />
+                                        <circle cx="8" cy="13" r="1.25" fill="currentColor" />
+                                      </svg>
+                                    </button>
+                                    {activeRowActionMenuJobOrderID === row.jobOrderID ? (
+                                      <div className="avel-candidate-row-menu__panel" role="menu" aria-label="Job order actions">
+                                        {hasStatusAction ? (
+                                          <button
+                                            type="button"
+                                            className="avel-candidate-row-menu__item"
+                                            role="menuitem"
+                                            onClick={() => openStatusModalForRow(row)}
+                                          >
+                                            Change Status
+                                          </button>
+                                        ) : null}
+                                        {hasPriorityAction ? (
+                                          <button
+                                            type="button"
+                                            className="avel-candidate-row-menu__item"
+                                            role="menuitem"
+                                            onClick={() => openPriorityModalForRow(row)}
+                                          >
+                                            Change Priority
+                                          </button>
+                                        ) : null}
+                                        {hasAddCandidateAction ? (
+                                          <button
+                                            type="button"
+                                            className="avel-candidate-row-menu__item"
+                                            role="menuitem"
+                                            onClick={() => openAddCandidateModalForRow(row)}
+                                          >
+                                            Add Candidate
+                                          </button>
+                                        ) : null}
+                                        {hasOpenDetailsAction ? (
+                                          <a
+                                            className="avel-candidate-row-menu__item"
+                                            role="menuitem"
+                                            href={ensureModernUIURL(row.showURL)}
+                                            onClick={() => setActiveRowActionMenuJobOrderID(null)}
+                                          >
+                                            Open Job Order
+                                          </a>
+                                        ) : null}
+                                        {hasEditAction ? (
+                                          <a
+                                            className="avel-candidate-row-menu__item"
+                                            role="menuitem"
+                                            href={ensureModernUIURL(row.editURL)}
+                                            onClick={() => setActiveRowActionMenuJobOrderID(null)}
+                                          >
+                                            Edit Job Order
+                                          </a>
+                                        ) : null}
+                                        {hasHiringPlanAction ? (
+                                          <a
+                                            className="avel-candidate-row-menu__item"
+                                            role="menuitem"
+                                            href={ensureModernUIURL(row.hiringPlanURL)}
+                                            onClick={() => setActiveRowActionMenuJobOrderID(null)}
+                                          >
+                                            Open Hiring Plan
+                                          </a>
+                                        ) : null}
+                                        {hasAssignmentAction ? (
+                                          <button
+                                            type="button"
+                                            className="avel-candidate-row-menu__item"
+                                            role="menuitem"
+                                            onClick={() => openAssignmentModalForRow(row)}
+                                          >
+                                            Assign Recruiter/Owner
+                                          </button>
+                                        ) : null}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </td>
+                              );
+                            }
                             default:
                               return null;
                           }
@@ -1540,6 +1947,230 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               </div>
             )}
           </section>
+
+          {statusModal ? (
+            <InlineModal
+              isOpen={Boolean(statusModal)}
+              ariaLabel="Change job order status"
+              dialogClassName="modern-inline-modal__dialog--status modern-inline-modal__dialog--compact"
+              onClose={() => {
+                if (!statusModal.pending) {
+                  setStatusModal(null);
+                }
+              }}
+            >
+              <div className="modern-inline-modal__header">
+                <h3>Change Status</h3>
+                <p>{statusModal.title}</p>
+              </div>
+              <div className="modern-inline-modal__body modern-inline-modal__body--form">
+                <label className="modern-command-field">
+                  <span className="modern-command-label">Status</span>
+                  <select
+                    className="avel-form-control"
+                    value={statusModal.status}
+                    onChange={(event) =>
+                      setStatusModal((current) => (
+                        current
+                          ? { ...current, status: String(event.target.value || ''), error: '' }
+                          : current
+                      ))
+                    }
+                    disabled={statusModal.pending}
+                  >
+                    {quickStatusOptions.map((option) => (
+                      <option key={`joborder-status-${option.value}`} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {statusModal.error !== '' ? (
+                  <div className="modern-state modern-state--error">{statusModal.error}</div>
+                ) : null}
+              </div>
+              <div className="modern-inline-modal__actions">
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--secondary"
+                  onClick={() => setStatusModal(null)}
+                  disabled={statusModal.pending}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--emphasis"
+                  onClick={() => void submitStatusQuickUpdate()}
+                  disabled={statusModal.pending || String(statusModal.status || '').trim() === ''}
+                >
+                  {statusModal.pending ? 'Saving...' : 'Save Status'}
+                </button>
+              </div>
+            </InlineModal>
+          ) : null}
+
+          {priorityModal ? (
+            <InlineModal
+              isOpen={Boolean(priorityModal)}
+              ariaLabel="Change job order priority"
+              dialogClassName="modern-inline-modal__dialog--status modern-inline-modal__dialog--compact"
+              onClose={() => {
+                if (!priorityModal.pending) {
+                  setPriorityModal(null);
+                }
+              }}
+            >
+              <div className="modern-inline-modal__header">
+                <h3>Change Priority</h3>
+                <p>{priorityModal.title}</p>
+              </div>
+              <div className="modern-inline-modal__body modern-inline-modal__body--form">
+                <label className="modern-command-field">
+                  <span className="modern-command-label">Priority</span>
+                  <select
+                    className="avel-form-control"
+                    value={priorityModal.priority}
+                    onChange={(event) =>
+                      setPriorityModal((current) => (
+                        current
+                          ? {
+                              ...current,
+                              priority: String(event.target.value || '').trim().toLowerCase() === 'hot' ? 'hot' : 'standard',
+                              error: ''
+                            }
+                          : current
+                      ))
+                    }
+                    disabled={priorityModal.pending}
+                  >
+                    {quickPriorityOptions.map((option) => (
+                      <option key={`joborder-priority-${option.value}`} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {priorityModal.error !== '' ? (
+                  <div className="modern-state modern-state--error">{priorityModal.error}</div>
+                ) : null}
+              </div>
+              <div className="modern-inline-modal__actions">
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--secondary"
+                  onClick={() => setPriorityModal(null)}
+                  disabled={priorityModal.pending}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--emphasis"
+                  onClick={() => void submitPriorityQuickUpdate()}
+                  disabled={priorityModal.pending}
+                >
+                  {priorityModal.pending ? 'Saving...' : 'Save Priority'}
+                </button>
+              </div>
+            </InlineModal>
+          ) : null}
+
+          {assignmentModal ? (
+            <InlineModal
+              isOpen={Boolean(assignmentModal)}
+              ariaLabel="Assign recruiter or owner"
+              dialogClassName="modern-inline-modal__dialog--status modern-inline-modal__dialog--compact"
+              onClose={() => {
+                if (!assignmentModal.pending) {
+                  setAssignmentModal(null);
+                }
+              }}
+            >
+              <div className="modern-inline-modal__header">
+                <h3>Assign Recruiter/Owner</h3>
+                <p>{assignmentModal.title}</p>
+              </div>
+              <div className="modern-inline-modal__body modern-inline-modal__body--form">
+                <label className="modern-command-field">
+                  <span className="modern-command-label">Owner</span>
+                  <select
+                    className="avel-form-control"
+                    value={String(assignmentModal.ownerUserID)}
+                    onChange={(event) =>
+                      setAssignmentModal((current) => (
+                        current
+                          ? { ...current, ownerUserID: Math.max(0, Number(event.target.value || 0)), error: '' }
+                          : current
+                      ))
+                    }
+                    disabled={assignmentModal.pending}
+                  >
+                    {quickOwnerOptions.map((option) => (
+                      <option key={`joborder-owner-${option.value}`} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="modern-command-field">
+                  <span className="modern-command-label">Recruiter</span>
+                  <select
+                    className="avel-form-control"
+                    value={String(assignmentModal.recruiterUserID)}
+                    onChange={(event) =>
+                      setAssignmentModal((current) => (
+                        current
+                          ? { ...current, recruiterUserID: Math.max(0, Number(event.target.value || 0)), error: '' }
+                          : current
+                      ))
+                    }
+                    disabled={assignmentModal.pending}
+                  >
+                    {quickRecruiterOptions.map((option) => (
+                      <option key={`joborder-recruiter-${option.value}`} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {assignmentModal.error !== '' ? (
+                  <div className="modern-state modern-state--error">{assignmentModal.error}</div>
+                ) : null}
+              </div>
+              <div className="modern-inline-modal__actions">
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--secondary"
+                  onClick={() => setAssignmentModal(null)}
+                  disabled={assignmentModal.pending}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="modern-btn modern-btn--emphasis"
+                  onClick={() => void submitAssignmentQuickUpdate()}
+                  disabled={assignmentModal.pending}
+                >
+                  {assignmentModal.pending ? 'Saving...' : 'Save Assignment'}
+                </button>
+              </div>
+            </InlineModal>
+          ) : null}
+
+          <JobOrderAssignCandidateModal
+            isOpen={Boolean(assignCandidateModal)}
+            bootstrap={bootstrap}
+            sourceURL={assignCandidateModal?.sourceURL || ''}
+            subtitle={assignCandidateModal?.title || ''}
+            initialSearchTerm={assignCandidateModal?.initialSearchTerm || ''}
+            onClose={() => setAssignCandidateModal(null)}
+            onAssigned={() => {
+              setQuickActionError('');
+              refreshPageData();
+            }}
+          />
 
           {rejectionBreakdownModal ? (
             <InlineModal

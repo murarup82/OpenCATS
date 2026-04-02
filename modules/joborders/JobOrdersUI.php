@@ -442,6 +442,14 @@ class JobOrdersUI extends UserInterface
                 $this->onSetMonitoredJobOrder();
                 break;
 
+            case 'quickUpdate':
+                if ($this->getUserAccessLevel('joborders.edit') < ACCESS_LEVEL_EDIT)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->onQuickUpdateJobOrder();
+                break;
+
             case 'rejectionReasonBreakdown':
                 if ($this->getUserAccessLevel('joborders.list') < ACCESS_LEVEL_READ)
                 {
@@ -1092,6 +1100,47 @@ class JobOrdersUI extends UserInterface
             );
         }
 
+        $quickStatusOptions = array();
+        foreach ($this->getJobOrderStatusChoices() as $statusChoice)
+        {
+            $statusLabel = trim((string) $statusChoice);
+            if ($statusLabel === '')
+            {
+                continue;
+            }
+
+            $quickStatusTone = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $statusLabel), '-'));
+            if ($quickStatusTone === '')
+            {
+                $quickStatusTone = 'status';
+            }
+
+            $quickStatusOptions[] = array(
+                'value' => $statusLabel,
+                'label' => $statusLabel,
+                'tone' => $quickStatusTone
+            );
+        }
+
+        $allowedOwnerIDs = array();
+        $ownerLabels = array();
+        $ownerOptionsPayload = $this->buildJobOrderOwnerOptionsPayload($allowedOwnerIDs, $ownerLabels);
+
+        $allowedRecruiterIDs = array();
+        $recruiterLabels = array();
+        $recruiterOptionsPayload = $this->buildJobOrderRecruiterOptionsPayload($allowedRecruiterIDs, $recruiterLabels);
+
+        $priorityOptionsPayload = array(
+            array(
+                'value' => 'standard',
+                'label' => 'Standard'
+            ),
+            array(
+                'value' => 'hot',
+                'label' => 'Hot'
+            )
+        );
+
         $summaryTotals = array(
             'clientInterviewAll' => 0,
             'clientInterviewHistoricalAll' => 0,
@@ -1189,15 +1238,17 @@ class JobOrdersUI extends UserInterface
         }
 
         $pipelineStatusCounts = array();
-        $openingsAvailableByJobOrderID = array();
+        $jobOrderMetaByID = array();
         if (!empty($pageJobOrderIDs))
         {
             $db = DatabaseConnection::getInstance();
             $idList = implode(',', $pageJobOrderIDs);
-            $openingsAvailableSQL = sprintf(
+            $jobOrderMetaSQL = sprintf(
                 'SELECT
                     joborder_id AS jobOrderID,
-                    openings_available AS openingsAvailable
+                    openings_available AS openingsAvailable,
+                    owner AS ownerUserID,
+                    recruiter AS recruiterUserID
                 FROM
                     joborder
                 WHERE
@@ -1207,10 +1258,19 @@ class JobOrdersUI extends UserInterface
                 $db->makeQueryInteger($this->_siteID),
                 $idList
             );
-            $openingsAvailableRS = $db->getAllAssoc($openingsAvailableSQL);
-            foreach ($openingsAvailableRS as $openingsRow)
+            $jobOrderMetaRS = $db->getAllAssoc($jobOrderMetaSQL);
+            foreach ($jobOrderMetaRS as $jobOrderMetaRow)
             {
-                $openingsAvailableByJobOrderID[(int) $openingsRow['jobOrderID']] = (int) $openingsRow['openingsAvailable'];
+                $mappedJobOrderID = (int) (isset($jobOrderMetaRow['jobOrderID']) ? $jobOrderMetaRow['jobOrderID'] : 0);
+                if ($mappedJobOrderID <= 0)
+                {
+                    continue;
+                }
+                $jobOrderMetaByID[$mappedJobOrderID] = array(
+                    'openingsAvailable' => (int) (isset($jobOrderMetaRow['openingsAvailable']) ? $jobOrderMetaRow['openingsAvailable'] : 0),
+                    'ownerUserID' => (int) (isset($jobOrderMetaRow['ownerUserID']) ? $jobOrderMetaRow['ownerUserID'] : 0),
+                    'recruiterUserID' => (int) (isset($jobOrderMetaRow['recruiterUserID']) ? $jobOrderMetaRow['recruiterUserID'] : 0)
+                );
             }
 
             $statusCountSQL = sprintf(
@@ -1332,9 +1392,24 @@ class JobOrdersUI extends UserInterface
             $openings = (isset($row['openings'])
                 ? (int) $row['openings']
                 : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : 0));
-            $openingsAvailable = isset($openingsAvailableByJobOrderID[$jobOrderID])
-                ? (int) $openingsAvailableByJobOrderID[$jobOrderID]
+            $jobOrderMeta = (isset($jobOrderMetaByID[$jobOrderID]) ? $jobOrderMetaByID[$jobOrderID] : null);
+            $openingsAvailable = (is_array($jobOrderMeta) && isset($jobOrderMeta['openingsAvailable']))
+                ? (int) $jobOrderMeta['openingsAvailable']
                 : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : $openings);
+            $ownerUserID = (is_array($jobOrderMeta) && isset($jobOrderMeta['ownerUserID']))
+                ? (int) $jobOrderMeta['ownerUserID']
+                : (isset($row['owner']) ? (int) $row['owner'] : 0);
+            if ($ownerUserID < 0)
+            {
+                $ownerUserID = 0;
+            }
+            $recruiterUserID = (is_array($jobOrderMeta) && isset($jobOrderMeta['recruiterUserID']))
+                ? (int) $jobOrderMeta['recruiterUserID']
+                : (isset($row['recruiter']) ? (int) $row['recruiter'] : 0);
+            if ($recruiterUserID < 0)
+            {
+                $recruiterUserID = 0;
+            }
             $counts = isset($pipelineStatusCounts[$jobOrderID])
                 ? $pipelineStatusCounts[$jobOrderID]
                 : array(
@@ -1375,10 +1450,15 @@ class JobOrdersUI extends UserInterface
                 'hiredAll' => $counts['hiredAll'],
                 'rejected' => $counts['rejectedAll'],
                 'rejectedAll' => $counts['rejectedAll'],
+                'ownerUserID' => $ownerUserID,
                 'ownerName' => $ownerName,
+                'recruiterUserID' => $recruiterUserID,
                 'recruiterName' => $recruiterName,
                 'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
                 'showLegacyURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'editURL' => sprintf('%s?m=joborders&a=edit&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
+                'addCandidateURL' => sprintf('%s?m=joborders&a=considerCandidateSearch&jobOrderID=%d&ui=legacy', $baseURL, $jobOrderID),
+                'hiringPlanURL' => sprintf('%s?m=joborders&a=editHiringPlan&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),
                 'setMonitoredBaseURL' => sprintf(
                     '%s?m=joborders&a=setMonitoredJobOrder&jobOrderID=%d&ui=legacy',
                     $baseURL,
@@ -1409,7 +1489,8 @@ class JobOrdersUI extends UserInterface
                     'canEditJobOrder' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
                     'canDeleteJobOrder' => ($this->getUserAccessLevel('joborders.delete') >= ACCESS_LEVEL_DELETE),
                     'canManageRecruiterAllocation' => ((bool) $this->canManageRecruiterAllocation()),
-                    'canToggleMonitored' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT)
+                    'canToggleMonitored' => ($this->getUserAccessLevel('joborders.edit') >= ACCESS_LEVEL_EDIT),
+                    'canAddCandidateToPipeline' => ($this->getUserAccessLevel('joborders.considerCandidateSearch') >= ACCESS_LEVEL_EDIT)
                 )
             ),
             'filters' => array(
@@ -1421,13 +1502,20 @@ class JobOrdersUI extends UserInterface
             ),
             'options' => array(
                 'statuses' => $statusOptions,
-                'companies' => $companyOptions
+                'companies' => $companyOptions,
+                'quickActions' => array(
+                    'statuses' => $quickStatusOptions,
+                    'priorities' => $priorityOptionsPayload,
+                    'owners' => $ownerOptionsPayload,
+                    'recruiters' => $recruiterOptionsPayload
+                )
             ),
             'actions' => array(
                 'addJobOrderURL' => sprintf('%s?m=joborders&a=add&ui=modern', $baseURL),
                 'addJobOrderPopupURL' => sprintf('%s?m=joborders&a=addJobOrderPopup&ui=modern', $baseURL),
                 'recruiterAllocationURL' => sprintf('%s?m=joborders&a=recruiterAllocation&ui=modern', $baseURL),
                 'pipelineMatrixURL' => sprintf('%s?m=joborders&a=pipelineMatrix&ui=modern', $baseURL),
+                'quickUpdateURL' => sprintf('%s?m=joborders&a=quickUpdate&ui=modern', $baseURL),
                 'legacyURL' => sprintf('%s?m=joborders&a=listByView&ui=legacy', $baseURL)
             ),
             'state' => array(
@@ -4249,6 +4337,511 @@ class JobOrdersUI extends UserInterface
         }
 
         CATSUtility::transferRelativeURI($redirectURI);
+    }
+
+    private function getJobOrderStatusChoices()
+    {
+        $statusValues = array();
+        $statusGroups = JobOrderStatuses::getAll();
+        foreach ($statusGroups as $statusGroup)
+        {
+            if (!is_array($statusGroup))
+            {
+                continue;
+            }
+            foreach ($statusGroup as $statusLabel)
+            {
+                $statusLabel = trim((string) $statusLabel);
+                if ($statusLabel === '')
+                {
+                    continue;
+                }
+                if (!in_array($statusLabel, $statusValues, true))
+                {
+                    $statusValues[] = $statusLabel;
+                }
+            }
+        }
+
+        if (!empty($statusValues))
+        {
+            return $statusValues;
+        }
+
+        foreach (JobOrderStatuses::getFilters() as $filterValue)
+        {
+            $parts = preg_split('/\s*\/\s*/', (string) $filterValue);
+            if (!is_array($parts))
+            {
+                continue;
+            }
+            foreach ($parts as $part)
+            {
+                $statusLabel = trim((string) $part);
+                if ($statusLabel === '')
+                {
+                    continue;
+                }
+                if (!in_array($statusLabel, $statusValues, true))
+                {
+                    $statusValues[] = $statusLabel;
+                }
+            }
+        }
+
+        if (!empty($statusValues))
+        {
+            return $statusValues;
+        }
+
+        return array('Active', 'On Hold', 'Full', 'Upcoming', 'Lead', 'Closed', 'Canceled');
+    }
+
+    private function buildJobOrderOwnerOptionsPayload(&$allowedOwnerIDs, &$ownerLabels)
+    {
+        $allowedOwnerIDs = array(0 => true);
+        $ownerLabels = array(0 => '(Unassigned)');
+        $ownerOptionsPayload = array(
+            array(
+                'value' => '0',
+                'label' => '(Unassigned)'
+            )
+        );
+
+        $users = new Users($this->_siteID);
+        foreach ($users->getSelectList() as $ownerData)
+        {
+            $ownerID = (int) (isset($ownerData['userID']) ? $ownerData['userID'] : 0);
+            if ($ownerID <= 0)
+            {
+                continue;
+            }
+            $label = trim(
+                (isset($ownerData['firstName']) ? (string) $ownerData['firstName'] : '') . ' ' .
+                (isset($ownerData['lastName']) ? (string) $ownerData['lastName'] : '')
+            );
+            if ($label === '')
+            {
+                $label = 'User #' . $ownerID;
+            }
+            $allowedOwnerIDs[$ownerID] = true;
+            $ownerLabels[$ownerID] = $label;
+            $ownerOptionsPayload[] = array(
+                'value' => (string) $ownerID,
+                'label' => $label
+            );
+        }
+
+        return $ownerOptionsPayload;
+    }
+
+    private function buildJobOrderRecruiterOptionsPayload(&$allowedRecruiterIDs, &$recruiterLabels)
+    {
+        $allowedRecruiterIDs = array(0 => true);
+        $recruiterLabels = array(0 => '(Unassigned)');
+        $recruiterOptionsPayload = array(
+            array(
+                'value' => '0',
+                'label' => '(Unassigned)'
+            )
+        );
+
+        foreach ($this->getRecruiterAllocationUsers() as $recruiterData)
+        {
+            $recruiterID = (int) (isset($recruiterData['userID']) ? $recruiterData['userID'] : 0);
+            if ($recruiterID <= 0)
+            {
+                continue;
+            }
+            $label = trim((string) (isset($recruiterData['fullName']) ? $recruiterData['fullName'] : ''));
+            if ($label === '')
+            {
+                $label = 'User #' . $recruiterID;
+            }
+
+            $allowedRecruiterIDs[$recruiterID] = true;
+            $recruiterLabels[$recruiterID] = $label;
+            $recruiterOptionsPayload[] = array(
+                'value' => (string) $recruiterID,
+                'label' => $label
+            );
+        }
+
+        return $recruiterOptionsPayload;
+    }
+
+    private function onQuickUpdateJobOrder()
+    {
+        $isModernJSON = (strtolower($this->getTrimmedInput('format', $_REQUEST)) === 'modern-json');
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_REQUEST));
+
+        if (!$isModernJSON)
+        {
+            CATSUtility::transferRelativeURI('m=joborders&a=listByView&ui=modern');
+            return;
+        }
+
+        if ($modernPage !== '' && $modernPage !== 'joborders-list')
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 400 Bad Request');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'invalidPage',
+                'message' => 'Unexpected modern page request.'
+            ));
+            return;
+        }
+
+        if (!$this->isRequiredIDValid('jobOrderID', $_REQUEST))
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 400 Bad Request');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'invalidJobOrder',
+                'message' => 'Invalid job order ID.'
+            ));
+            return;
+        }
+
+        $jobOrderID = (int) $_REQUEST['jobOrderID'];
+        $jobOrders = new JobOrders($this->_siteID);
+        $jobOrderData = $jobOrders->get($jobOrderID);
+        if (empty($jobOrderData))
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 404 Not Found');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'jobOrderNotFound',
+                'message' => 'Job order not found.'
+            ));
+            return;
+        }
+
+        if (
+            $_SESSION['CATS']->isLoggedIn() &&
+            $_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT) < ACCESS_LEVEL_MULTI_SA &&
+            isset($jobOrderData['isAdminHidden']) &&
+            (int) $jobOrderData['isAdminHidden'] === 1
+        )
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 403 Forbidden');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'permissionDenied',
+                'message' => 'You do not have permission to update this job order.'
+            ));
+            return;
+        }
+
+        $hasStatusUpdate = array_key_exists('status', $_POST);
+        $hasPriorityUpdate = array_key_exists('priority', $_POST);
+        $hasOwnerUpdate = array_key_exists('ownerUserID', $_POST);
+        $hasRecruiterUpdate = array_key_exists('recruiterUserID', $_POST);
+
+        if (!$hasStatusUpdate && !$hasPriorityUpdate && !$hasOwnerUpdate && !$hasRecruiterUpdate)
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 400 Bad Request');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'noFields',
+                'message' => 'No quick update fields provided.'
+            ));
+            return;
+        }
+
+        $statusChoices = $this->getJobOrderStatusChoices();
+        $nextStatus = (string) (isset($jobOrderData['status']) ? $jobOrderData['status'] : '');
+        if ($hasStatusUpdate)
+        {
+            $nextStatus = trim((string) $this->getTrimmedInput('status', $_POST));
+            if ($nextStatus === '' || !in_array($nextStatus, $statusChoices, true))
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidStatus',
+                    'message' => 'Invalid status value.'
+                ));
+                return;
+            }
+        }
+
+        $nextIsHot = (isset($jobOrderData['isHot']) ? ((int) $jobOrderData['isHot'] === 1) : false);
+        if ($hasPriorityUpdate)
+        {
+            $priorityValue = strtolower(trim((string) $this->getTrimmedInput('priority', $_POST)));
+            if ($priorityValue === 'hot')
+            {
+                $nextIsHot = true;
+            }
+            else if ($priorityValue === 'standard')
+            {
+                $nextIsHot = false;
+            }
+            else
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidPriority',
+                    'message' => 'Invalid priority value.'
+                ));
+                return;
+            }
+        }
+
+        $canManageRecruiterAllocation = $this->canManageRecruiterAllocation();
+        if (($hasOwnerUpdate || $hasRecruiterUpdate) && !$canManageRecruiterAllocation)
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 403 Forbidden');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'permissionDenied',
+                'message' => 'You do not have permission to update recruiter/owner assignment.'
+            ));
+            return;
+        }
+
+        $allowedOwnerIDs = array();
+        $ownerLabels = array();
+        $this->buildJobOrderOwnerOptionsPayload($allowedOwnerIDs, $ownerLabels);
+        $allowedRecruiterIDs = array();
+        $recruiterLabels = array();
+        $this->buildJobOrderRecruiterOptionsPayload($allowedRecruiterIDs, $recruiterLabels);
+
+        $nextOwnerUserID = (int) (isset($jobOrderData['owner']) ? $jobOrderData['owner'] : 0);
+        if ($hasOwnerUpdate)
+        {
+            $nextOwnerUserID = (int) $this->getTrimmedInput('ownerUserID', $_POST);
+            if ($nextOwnerUserID < 0)
+            {
+                $nextOwnerUserID = 0;
+            }
+            if (!isset($allowedOwnerIDs[$nextOwnerUserID]))
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidOwner',
+                    'message' => 'Invalid owner selection.'
+                ));
+                return;
+            }
+        }
+
+        $nextRecruiterUserID = (int) (isset($jobOrderData['recruiter']) ? $jobOrderData['recruiter'] : 0);
+        if ($hasRecruiterUpdate)
+        {
+            $nextRecruiterUserID = (int) $this->getTrimmedInput('recruiterUserID', $_POST);
+            if ($nextRecruiterUserID < 0)
+            {
+                $nextRecruiterUserID = 0;
+            }
+            if (!isset($allowedRecruiterIDs[$nextRecruiterUserID]))
+            {
+                if (!headers_sent())
+                {
+                    header('HTTP/1.1 400 Bad Request');
+                    header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                }
+                echo json_encode(array(
+                    'success' => false,
+                    'code' => 'invalidRecruiter',
+                    'message' => 'Invalid recruiter selection.'
+                ));
+                return;
+            }
+        }
+
+        $currentStatus = (string) (isset($jobOrderData['status']) ? $jobOrderData['status'] : '');
+        $currentIsHot = (isset($jobOrderData['isHot']) ? ((int) $jobOrderData['isHot'] === 1) : false);
+        $currentOwnerUserID = (int) (isset($jobOrderData['owner']) ? $jobOrderData['owner'] : 0);
+        $currentRecruiterUserID = (int) (isset($jobOrderData['recruiter']) ? $jobOrderData['recruiter'] : 0);
+
+        $statusChanged = ($hasStatusUpdate && $nextStatus !== $currentStatus);
+        $priorityChanged = ($hasPriorityUpdate && $nextIsHot !== $currentIsHot);
+        $ownerChanged = ($hasOwnerUpdate && $nextOwnerUserID !== $currentOwnerUserID);
+        $recruiterChanged = ($hasRecruiterUpdate && $nextRecruiterUserID !== $currentRecruiterUserID);
+
+        if (!$statusChanged && !$priorityChanged && !$ownerChanged && !$recruiterChanged)
+        {
+            if (!headers_sent())
+            {
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => true,
+                'code' => 'noChanges',
+                'message' => 'No changes detected.',
+                'jobOrderID' => $jobOrderID
+            ));
+            return;
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $setClauses = array();
+        if ($statusChanged)
+        {
+            $setClauses[] = 'status = ' . $db->makeQueryString($nextStatus);
+        }
+        if ($priorityChanged)
+        {
+            $setClauses[] = 'is_hot = ' . $db->makeQueryInteger($nextIsHot ? 1 : 0);
+        }
+        if ($ownerChanged)
+        {
+            $setClauses[] = 'owner = ' . $db->makeQueryInteger($nextOwnerUserID);
+        }
+        if ($recruiterChanged)
+        {
+            if ($nextRecruiterUserID > 0)
+            {
+                $setClauses[] = 'recruiter = ' . $db->makeQueryInteger($nextRecruiterUserID);
+            }
+            else
+            {
+                $setClauses[] = 'recruiter = NULL';
+            }
+        }
+        $setClauses[] = 'date_modified = NOW()';
+
+        $updateSQL = sprintf(
+            "UPDATE
+                joborder
+            SET
+                %s
+            WHERE
+                joborder_id = %s
+            AND
+                site_id = %s",
+            implode(",\n                ", $setClauses),
+            $db->makeQueryInteger($jobOrderID),
+            $db->makeQueryInteger($this->_siteID)
+        );
+        if (!$db->query($updateSQL))
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 500 Internal Server Error');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'updateFailed',
+                'message' => 'Failed to update job order.'
+            ));
+            return;
+        }
+
+        $history = new History($this->_siteID);
+        if ($statusChanged)
+        {
+            $history->storeHistoryData(
+                DATA_ITEM_JOBORDER,
+                $jobOrderID,
+                'Status',
+                $currentStatus,
+                $nextStatus,
+                '(USER) updated job order status from list quick actions.'
+            );
+        }
+        if ($priorityChanged)
+        {
+            $history->storeHistoryData(
+                DATA_ITEM_JOBORDER,
+                $jobOrderID,
+                'Priority',
+                ($currentIsHot ? 'Hot' : 'Standard'),
+                ($nextIsHot ? 'Hot' : 'Standard'),
+                '(USER) updated job order priority from list quick actions.'
+            );
+        }
+        if ($ownerChanged)
+        {
+            $history->storeHistoryData(
+                DATA_ITEM_JOBORDER,
+                $jobOrderID,
+                'Owner',
+                (isset($ownerLabels[$currentOwnerUserID]) ? $ownerLabels[$currentOwnerUserID] : '(Unassigned)'),
+                (isset($ownerLabels[$nextOwnerUserID]) ? $ownerLabels[$nextOwnerUserID] : '(Unassigned)'),
+                '(USER) updated owner assignment from list quick actions.'
+            );
+        }
+        if ($recruiterChanged)
+        {
+            $history->storeHistoryData(
+                DATA_ITEM_JOBORDER,
+                $jobOrderID,
+                'Recruiter',
+                (isset($recruiterLabels[$currentRecruiterUserID]) ? $recruiterLabels[$currentRecruiterUserID] : '(Unassigned)'),
+                (isset($recruiterLabels[$nextRecruiterUserID]) ? $recruiterLabels[$nextRecruiterUserID] : '(Unassigned)'),
+                '(USER) updated recruiter assignment from list quick actions.'
+            );
+        }
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode(array(
+            'success' => true,
+            'code' => 'jobOrderQuickUpdateSaved',
+            'message' => 'Job order updated.',
+            'jobOrderID' => $jobOrderID,
+            'status' => $nextStatus,
+            'isHot' => ((bool) $nextIsHot),
+            'ownerUserID' => (int) $nextOwnerUserID,
+            'recruiterUserID' => (int) $nextRecruiterUserID
+        ));
     }
 
     private function sanitizeListTransferURI($rawURI)

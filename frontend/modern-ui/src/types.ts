@@ -3308,6 +3308,7 @@ export type JobOrdersListModernDataResponse = {
       canDeleteJobOrder: boolean;
       canManageRecruiterAllocation: boolean;
       canToggleMonitored: boolean;
+      canAddCandidateToPipeline: boolean;
     };
   };
   filters: {
@@ -3327,6 +3328,25 @@ export type JobOrdersListModernDataResponse = {
       companyID: number;
       name: string;
     }>;
+    quickActions: {
+      statuses: Array<{
+        value: string;
+        label: string;
+        tone: string;
+      }>;
+      priorities: Array<{
+        value: string;
+        label: string;
+      }>;
+      owners: Array<{
+        value: string;
+        label: string;
+      }>;
+      recruiters: Array<{
+        value: string;
+        label: string;
+      }>;
+    };
   };
   summary: {
     clientInterviewAll: number;
@@ -3339,6 +3359,7 @@ export type JobOrdersListModernDataResponse = {
     addJobOrderPopupURL: string;
     recruiterAllocationURL: string;
     pipelineMatrixURL: string;
+    quickUpdateURL: string;
     legacyURL: string;
   };
   state: {
@@ -3369,10 +3390,15 @@ export type JobOrdersListModernDataResponse = {
     hiredAll: number;
     rejected: number;
     rejectedAll: number;
+    ownerUserID: number;
     ownerName: string;
+    recruiterUserID: number;
     recruiterName: string;
     showURL: string;
     showLegacyURL: string;
+    editURL: string;
+    addCandidateURL: string;
+    hiringPlanURL: string;
     setMonitoredBaseURL: string;
     companyURL: string;
   }>;

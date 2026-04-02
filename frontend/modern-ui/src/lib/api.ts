@@ -3047,6 +3047,53 @@ export async function setJobOrderMonitored(
   return result;
 }
 
+export async function updateJobOrderQuickAction(
+  submitURL: string,
+  payload: {
+    jobOrderID: number;
+    status?: string;
+    priority?: 'standard' | 'hot';
+    ownerUserID?: number;
+    recruiterUserID?: number;
+  }
+): Promise<ModernMutationResponse> {
+  const body = new URLSearchParams();
+  body.set('format', 'modern-json');
+  body.set('modernPage', MODERN_JOBORDERS_PAGE);
+  body.set('jobOrderID', String(Number(payload.jobOrderID || 0)));
+
+  if (typeof payload.status === 'string') {
+    body.set('status', payload.status);
+  }
+  if (typeof payload.priority === 'string') {
+    body.set('priority', payload.priority);
+  }
+  if (typeof payload.ownerUserID === 'number') {
+    body.set('ownerUserID', String(Math.max(0, Math.trunc(payload.ownerUserID))));
+  }
+  if (typeof payload.recruiterUserID === 'number') {
+    body.set('recruiterUserID', String(Math.max(0, Math.trunc(payload.recruiterUserID))));
+  }
+
+  const requestURL = buildModernMutationURL(submitURL, {
+    m: 'joborders',
+    a: 'quickUpdate',
+    jobOrderID: Number(payload.jobOrderID || 0),
+    modernPage: MODERN_JOBORDERS_PAGE
+  });
+
+  const response = await fetch(requestURL, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  });
+
+  return parseModernMutationResponse(response, 'Job order quick update');
+}
+
 export async function uploadCandidateAttachment(
   submitURL: string,
   payload: {
