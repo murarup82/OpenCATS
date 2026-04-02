@@ -4053,13 +4053,12 @@
 .avel-joborders-page .avel-joborders-metric-drilldown {
   appearance: none;
   cursor: pointer;
-  min-width: 34px;
+  min-width: 0;
   text-align: center;
-  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+  transition: filter 120ms ease;
 }
 
 .avel-joborders-page .avel-joborders-metric-drilldown:hover {
-  transform: translateY(-1px);
   filter: brightness(0.98);
 }
 
