@@ -3491,9 +3491,13 @@ class JobOrdersUI extends UserInterface
             AND
                 joborder_id = %s
             AND
-                is_active = 0",
+                is_active = 0
+            AND
+                status IN (%s, %s)",
             $db->makeQueryInteger($this->_siteID),
-            $db->makeQueryInteger($jobOrderID)
+            $db->makeQueryInteger($jobOrderID),
+            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
+            $db->makeQueryInteger(PIPELINE_STATUS_REJECTED)
         );
         $closedPipelineCountAll = (int) $db->getColumn($closedPipelineCountAllSQL, 0, 0);
         foreach ($pipelineRS as $pipelineData)
