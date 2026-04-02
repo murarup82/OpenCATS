@@ -5032,27 +5032,27 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid #0e6f93;
+  border: 1px solid transparent;
   border-radius: 10px;
-  background: linear-gradient(180deg, #1494c3 0%, #0d7296 100%);
-  color: #ffffff;
+  background: transparent;
+  color: #111111;
   font-size: 1.2rem;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 6px 14px rgba(0, 92, 122, 0.2);
+  box-shadow: none;
 }
 
 .avel-candidates-page .avel-candidate-row-menu__trigger:hover,
 .avel-candidates-page .avel-candidate-row-menu__trigger[aria-expanded='true'] {
-  background: linear-gradient(180deg, #17a2d4 0%, #0f7ea6 100%);
-  border-color: #0a6788;
-  color: #ffffff;
+  background: #eef2f6;
+  border-color: #c2ccd6;
+  color: #111111;
 }
 
 .avel-candidates-page .avel-candidate-row-menu__trigger:focus-visible {
   outline: none;
-  border-color: #0a6788;
-  box-shadow: 0 0 0 3px rgba(0, 151, 189, 0.22), 0 6px 14px rgba(0, 92, 122, 0.2);
+  border-color: #9eaab6;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.16);
 }
 
 .avel-candidates-page .avel-candidate-row-menu__trigger svg {
