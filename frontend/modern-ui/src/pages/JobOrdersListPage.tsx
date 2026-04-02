@@ -793,7 +793,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   );
   const totalHired = activeStatusRows.reduce((total, row) => total + Number(row.hired || 0), 0);
   const totalHiredAll = filteredRows.reduce((total, row) => total + Number(row.hiredAll || 0), 0);
-  const totalRejected = filteredRows.reduce((total, row) => total + Number(row.rejected || 0), 0);
+  const totalRejected = activeStatusRows.reduce((total, row) => total + Number(row.rejected || 0), 0);
   const totalRejectedAll = filteredRows.reduce((total, row) => total + Number(row.rejectedAll || 0), 0);
 
   return (
@@ -834,14 +834,14 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               <strong className="avel-candidate-stats-bar__chip-value">{activeJobsCount}</strong>
             </div>
             <div
-              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--gdpr"
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--gdpr avel-candidate-stats-bar__item--openings"
               title="Open positions remaining across currently visible job orders in Active status only."
             >
               <span className="avel-candidate-stats-bar__label">Openings</span>
               <strong className="avel-candidate-stats-bar__value">{totalOpenings}</strong>
             </div>
             <div
-              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline avel-candidate-stats-bar__item--client-interview"
               title="Candidates currently in Client Interview for visible jobs; parentheses include closed pipeline entries."
             >
               <span className="avel-candidate-stats-bar__label">Client Interview (Current)</span>
@@ -850,7 +850,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               </strong>
             </div>
             <div
-              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline avel-candidate-stats-bar__item--client-interview"
               title="Candidates that reached Customer Interview at any point for visible jobs; parentheses include closed pipeline entries."
             >
               <span className="avel-candidate-stats-bar__label">Customer Interview (History)</span>
@@ -859,15 +859,15 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               </strong>
             </div>
             <div
-              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline avel-candidate-stats-bar__item--hired"
               title="Candidates currently in Hired status for job orders with Active status; parentheses include all filtered jobs (including non-active) and closed pipeline entries."
             >
               <span className="avel-candidate-stats-bar__label">Hired</span>
               <strong className="avel-candidate-stats-bar__value">{formatCountWithClosed(totalHired, totalHiredAll)}</strong>
             </div>
             <div
-              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
-              title="Candidates currently in Rejected status for visible jobs; parentheses include closed pipeline entries."
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline avel-candidate-stats-bar__item--rejected"
+              title="Candidates currently in Rejected status for job orders with Active status; parentheses include all filtered jobs (including non-active) and closed pipeline entries."
             >
               <span className="avel-candidate-stats-bar__label">Rejected</span>
               <strong className="avel-candidate-stats-bar__value">{formatCountWithClosed(totalRejected, totalRejectedAll)}</strong>

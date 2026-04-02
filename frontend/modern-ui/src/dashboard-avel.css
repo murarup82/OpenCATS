@@ -5871,6 +5871,32 @@
   grid-template-columns: minmax(250px, 1fr) minmax(150px, 210px) minmax(190px, 260px) minmax(120px, auto) auto;
 }
 
+.avel-joborders-page--candidate-grammar .avel-candidate-stats-bar__item--openings .avel-candidate-stats-bar__label,
+.avel-joborders-page--candidate-grammar .avel-candidate-stats-bar__item--hired .avel-candidate-stats-bar__label {
+  color: #1f7145;
+}
+
+.avel-joborders-page--candidate-grammar .avel-candidate-stats-bar__item--openings .avel-candidate-stats-bar__value,
+.avel-joborders-page--candidate-grammar .avel-candidate-stats-bar__item--hired .avel-candidate-stats-bar__value {
+  color: #1f7e49;
+}
+
+.avel-joborders-page--candidate-grammar .avel-candidate-stats-bar__item--client-interview .avel-candidate-stats-bar__label {
+  color: #8b4a13;
+}
+
+.avel-joborders-page--candidate-grammar .avel-candidate-stats-bar__item--client-interview .avel-candidate-stats-bar__value {
+  color: #a85a16;
+}
+
+.avel-joborders-page--candidate-grammar .avel-candidate-stats-bar__item--rejected .avel-candidate-stats-bar__label {
+  color: #9a2f2f;
+}
+
+.avel-joborders-page--candidate-grammar .avel-candidate-stats-bar__item--rejected .avel-candidate-stats-bar__value {
+  color: #b23636;
+}
+
 .avel-joborder-show-page .avel-joborder-hero {
   display: grid;
   gap: 10px;
