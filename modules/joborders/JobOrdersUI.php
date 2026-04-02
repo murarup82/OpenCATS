@@ -442,6 +442,14 @@ class JobOrdersUI extends UserInterface
                 $this->onSetMonitoredJobOrder();
                 break;
 
+            case 'rejectionReasonBreakdown':
+                if ($this->getUserAccessLevel('joborders.list') < ACCESS_LEVEL_READ)
+                {
+                    CommonErrors::fatal(COMMONERROR_PERMISSION, $this, 'Invalid user level for action.');
+                }
+                $this->rejectionReasonBreakdown();
+                break;
+
             /* Main job orders page. */
             case 'listByView':
             default:
@@ -567,6 +575,236 @@ class JobOrdersUI extends UserInterface
         $this->_template->assign('totalJobOrders', $totalJobOrders);
 
         $this->_template->display('./modules/joborders/JobOrders.tpl');
+    }
+
+    private function rejectionReasonBreakdown()
+    {
+        $responseFormat = strtolower($this->getTrimmedInput('format', $_GET));
+        $modernPage = strtolower($this->getTrimmedInput('modernPage', $_GET));
+        $isModernJSON = ($responseFormat === 'modern-json');
+
+        if (!$isModernJSON)
+        {
+            CATSUtility::transferRelativeURI('m=joborders&a=listByView&ui=modern');
+            return;
+        }
+
+        if ($modernPage !== '' && $modernPage !== 'joborders-list')
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 400 Bad Request');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'invalidPage',
+                'message' => 'Unexpected modern page request.',
+                'requestedPage' => $modernPage
+            ));
+            return;
+        }
+
+        if (!$this->isRequiredIDValid('jobOrderID', $_GET))
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 400 Bad Request');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'invalidJobOrderID',
+                'message' => 'Invalid job order ID.'
+            ));
+            return;
+        }
+
+        $jobOrderID = (int) $_GET['jobOrderID'];
+        $jobOrders = new JobOrders($this->_siteID);
+        $jobOrderData = $jobOrders->get($jobOrderID);
+        if (empty($jobOrderData))
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 404 Not Found');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'jobOrderNotFound',
+                'message' => 'Job order not found.'
+            ));
+            return;
+        }
+
+        if (
+            $_SESSION['CATS']->isLoggedIn() &&
+            $_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT) < ACCESS_LEVEL_MULTI_SA &&
+            isset($jobOrderData['isAdminHidden']) &&
+            (int) $jobOrderData['isAdminHidden'] === 1
+        )
+        {
+            if (!headers_sent())
+            {
+                header('HTTP/1.1 403 Forbidden');
+                header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            }
+            echo json_encode(array(
+                'success' => false,
+                'code' => 'permissionDenied',
+                'message' => 'You do not have permission to view this job order.'
+            ));
+            return;
+        }
+
+        $db = DatabaseConnection::getInstance();
+        $latestRejectedHistorySQL = sprintf(
+            "SELECT
+                cjo.candidate_id AS candidateID,
+                MAX(h.candidate_joborder_status_history_id) AS historyID
+            FROM
+                candidate_joborder cjo
+            LEFT JOIN
+                candidate_joborder_status_history h
+                ON h.candidate_id = cjo.candidate_id
+                AND h.joborder_id = cjo.joborder_id
+                AND h.site_id = cjo.site_id
+                AND h.status_to = %s
+            WHERE
+                cjo.site_id = %s
+            AND
+                cjo.joborder_id = %s
+            AND
+                cjo.status = %s
+            GROUP BY
+                cjo.candidate_id,
+                cjo.joborder_id",
+            $db->makeQueryInteger(PIPELINE_STATUS_REJECTED),
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($jobOrderID),
+            $db->makeQueryInteger(PIPELINE_STATUS_REJECTED)
+        );
+        $latestRejectedHistoryRS = $db->getAllAssoc($latestRejectedHistorySQL);
+
+        $totalRejectedCandidates = count($latestRejectedHistoryRS);
+        $historyIDs = array();
+        foreach ($latestRejectedHistoryRS as $historyRow)
+        {
+            $historyID = (int) (isset($historyRow['historyID']) ? $historyRow['historyID'] : 0);
+            if ($historyID > 0)
+            {
+                $historyIDs[] = $historyID;
+            }
+        }
+        $historyIDs = array_values(array_unique($historyIDs));
+
+        $reasonCounts = array();
+        $historiesWithReasons = array();
+        if (!empty($historyIDs))
+        {
+            $historyIDSQLParts = array();
+            foreach ($historyIDs as $historyID)
+            {
+                $historyIDSQLParts[] = $db->makeQueryInteger((int) $historyID);
+            }
+            $reasonRowsSQL = sprintf(
+                "SELECT
+                    shrr.status_history_id AS historyID,
+                    rr.rejection_reason_id AS reasonID,
+                    rr.label AS label
+                FROM
+                    status_history_rejection_reason shrr
+                INNER JOIN
+                    rejection_reason rr
+                    ON rr.rejection_reason_id = shrr.rejection_reason_id
+                WHERE
+                    shrr.status_history_id IN (%s)
+                ORDER BY
+                    rr.label ASC",
+                implode(',', $historyIDSQLParts)
+            );
+            $reasonRows = $db->getAllAssoc($reasonRowsSQL);
+            foreach ($reasonRows as $reasonRow)
+            {
+                $historyID = (int) (isset($reasonRow['historyID']) ? $reasonRow['historyID'] : 0);
+                $reasonID = (int) (isset($reasonRow['reasonID']) ? $reasonRow['reasonID'] : 0);
+                $label = trim((string) (isset($reasonRow['label']) ? $reasonRow['label'] : ''));
+                if ($reasonID <= 0 || $label === '')
+                {
+                    continue;
+                }
+
+                $historiesWithReasons[$historyID] = true;
+                if (!isset($reasonCounts[$reasonID]))
+                {
+                    $reasonCounts[$reasonID] = array(
+                        'reasonID' => $reasonID,
+                        'label' => $label,
+                        'count' => 0
+                    );
+                }
+                $reasonCounts[$reasonID]['count']++;
+            }
+        }
+
+        $reasonPayload = array_values($reasonCounts);
+        usort(
+            $reasonPayload,
+            function ($left, $right)
+            {
+                $leftCount = (int) (isset($left['count']) ? $left['count'] : 0);
+                $rightCount = (int) (isset($right['count']) ? $right['count'] : 0);
+                if ($leftCount === $rightCount)
+                {
+                    return strcasecmp(
+                        (string) (isset($left['label']) ? $left['label'] : ''),
+                        (string) (isset($right['label']) ? $right['label'] : '')
+                    );
+                }
+                return ($rightCount - $leftCount);
+            }
+        );
+
+        $candidatesWithReasons = count($historiesWithReasons);
+        $candidatesWithoutReasons = max(0, $totalRejectedCandidates - $candidatesWithReasons);
+        $totalReasonMentions = 0;
+        foreach ($reasonPayload as $reasonRow)
+        {
+            $totalReasonMentions += (int) (isset($reasonRow['count']) ? $reasonRow['count'] : 0);
+        }
+
+        $payload = array(
+            'meta' => array(
+                'contractVersion' => 1,
+                'contractKey' => 'joborders.rejectionReasonBreakdown.v1',
+                'modernPage' => 'joborders-list',
+                'jobOrderID' => $jobOrderID
+            ),
+            'jobOrder' => array(
+                'jobOrderID' => $jobOrderID,
+                'title' => (isset($jobOrderData['title']) ? (string) $jobOrderData['title'] : ''),
+                'companyName' => (isset($jobOrderData['companyName']) ? (string) $jobOrderData['companyName'] : '')
+            ),
+            'summary' => array(
+                'totalRejectedCandidates' => (int) $totalRejectedCandidates,
+                'totalReasonMentions' => (int) $totalReasonMentions,
+                'candidatesWithReasons' => (int) $candidatesWithReasons,
+                'candidatesWithoutReasons' => (int) $candidatesWithoutReasons
+            ),
+            'reasons' => $reasonPayload
+        );
+
+        if (!headers_sent())
+        {
+            header('Content-Type: application/json; charset=' . AJAX_ENCODING);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        }
+        echo json_encode($payload);
     }
 
     private function applyModernListRequestToDataGridProperties(

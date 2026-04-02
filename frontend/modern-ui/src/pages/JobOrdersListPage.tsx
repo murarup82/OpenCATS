@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { fetchJobOrdersListModernData, setJobOrderMonitored } from '../lib/api';
-import type { JobOrdersListModernDataResponse, UIModeBootstrap } from '../types';
+import {
+  fetchJobOrderRejectionReasonBreakdownModernData,
+  fetchJobOrdersListModernData,
+  setJobOrderMonitored
+} from '../lib/api';
+import type {
+  JobOrderRejectionReasonBreakdownModernDataResponse,
+  JobOrdersListModernDataResponse,
+  UIModeBootstrap
+} from '../types';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
-import { SelectMenu } from '../ui-core';
+import { InlineModal, SelectMenu } from '../ui-core';
 import type { SelectMenuOption } from '../ui-core';
 import { ensureModernUIURL } from '../lib/navigation';
 import { usePageRefreshEvents } from '../lib/usePageRefreshEvents';
@@ -174,6 +182,35 @@ function getJobOrderColumnValue(row: JobOrderRow, key: JobOrderDataColumnKey): s
     case 'monitor': return row.isMonitored ? 'Monitored' : 'Not Monitored';
     default: return '';
   }
+}
+
+const REJECTION_PIE_PALETTE = ['#d55454', '#e77b4f', '#d38f2f', '#9d658a', '#4f7da8', '#4b9589', '#627f58'];
+
+function buildPieBackground(slices: Array<{ count: number; color: string }>): string {
+  const total = slices.reduce((sum, slice) => sum + Math.max(0, Number(slice.count || 0)), 0);
+  if (total <= 0) {
+    return 'radial-gradient(circle at center, #ffffff 0, #ffffff 61%, #f2f6f9 62%, #f2f6f9 100%)';
+  }
+
+  let offset = 0;
+  const segments: string[] = [];
+  slices.forEach((slice) => {
+    const value = Math.max(0, Number(slice.count || 0));
+    if (value <= 0) {
+      return;
+    }
+    const start = offset;
+    const span = (value / total) * 100;
+    const end = Math.min(100, start + span);
+    segments.push(`${slice.color} ${start}% ${end}%`);
+    offset = end;
+  });
+
+  if (segments.length === 0) {
+    return 'radial-gradient(circle at center, #ffffff 0, #ffffff 61%, #f2f6f9 62%, #f2f6f9 100%)';
+  }
+
+  return `conic-gradient(${segments.join(', ')})`;
 }
 
 const stripDiacritics = (input: string) => input.normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -348,6 +385,13 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [columnFilters, setColumnFilters] = useState<Record<JobOrderDataColumnKey, string>>(emptyColumnFilters());
   const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
   const [monitorToggleError, setMonitorToggleError] = useState('');
+  const [rejectionBreakdownModal, setRejectionBreakdownModal] = useState<{
+    jobOrderID: number;
+    jobOrderTitle: string;
+    loading: boolean;
+    error: string;
+    data: JobOrderRejectionReasonBreakdownModernDataResponse | null;
+  } | null>(null);
   const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
   const columnStorageKey = useMemo(
     () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:joborders:list:columns:v5`,
@@ -504,6 +548,55 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     },
     [refreshPageData]
   );
+
+  const openRejectionBreakdown = useCallback(
+    async (row: JobOrderRow) => {
+      const jobOrderID = Number(row.jobOrderID || 0);
+      const rejectedCount = Number(row.rejected || 0);
+      if (jobOrderID <= 0 || rejectedCount <= 0) {
+        return;
+      }
+
+      setRejectionBreakdownModal({
+        jobOrderID,
+        jobOrderTitle: toDisplayText(row.title, `Job Order #${jobOrderID}`),
+        loading: true,
+        error: '',
+        data: null
+      });
+
+      try {
+        const breakdown = await fetchJobOrderRejectionReasonBreakdownModernData(bootstrap, jobOrderID);
+        setRejectionBreakdownModal((current) => {
+          if (!current || current.jobOrderID !== jobOrderID) {
+            return current;
+          }
+          return {
+            ...current,
+            loading: false,
+            data: breakdown
+          };
+        });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unable to load rejection reason breakdown.';
+        setRejectionBreakdownModal((current) => {
+          if (!current || current.jobOrderID !== jobOrderID) {
+            return current;
+          }
+          return {
+            ...current,
+            loading: false,
+            error: message
+          };
+        });
+      }
+    },
+    [bootstrap]
+  );
+
+  const closeRejectionBreakdownModal = useCallback(() => {
+    setRejectionBreakdownModal(null);
+  }, []);
 
   const navigateWithFilters = useCallback(
     (next: NavigationFilters) => {
@@ -804,6 +897,36 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const totalHiredAll = Number(data.summary.hiredAll || 0);
   const totalRejected = activeStatusRows.reduce((total, row) => total + Number(row.rejected || 0), 0);
   const totalRejectedAll = Number(data.summary.rejectedAll || 0);
+  const rejectionBreakdownRows = rejectionBreakdownModal?.data
+    ? rejectionBreakdownModal.data.reasons
+        .filter((reason) => Number(reason.count || 0) > 0)
+        .map((reason, index) => ({
+          key: `reason-${Number(reason.reasonID || 0)}-${index}`,
+          label: toDisplayText(reason.label, 'Unknown'),
+          count: Number(reason.count || 0),
+          color: REJECTION_PIE_PALETTE[index % REJECTION_PIE_PALETTE.length]
+        }))
+    : [];
+  const rejectionUnspecifiedCount = Math.max(
+    0,
+    Number(rejectionBreakdownModal?.data?.summary.candidatesWithoutReasons || 0)
+  );
+  const rejectionLegendRows = rejectionUnspecifiedCount > 0
+    ? [
+        ...rejectionBreakdownRows,
+        {
+          key: 'reason-unspecified',
+          label: 'Unspecified',
+          count: rejectionUnspecifiedCount,
+          color: '#9eb0be'
+        }
+      ]
+    : rejectionBreakdownRows;
+  const rejectionLegendTotal = rejectionLegendRows.reduce((total, row) => total + Number(row.count || 0), 0);
+  const rejectionPieBackground = buildPieBackground(rejectionLegendRows);
+  const rejectionSummary = rejectionBreakdownModal?.data?.summary || null;
+  const rejectionSummaryTotalCandidates = Number(rejectionSummary?.totalRejectedCandidates || 0);
+  const rejectionSummaryTotalMentions = Number(rejectionSummary?.totalReasonMentions || 0);
 
   return (
     <div className="avel-dashboard-page avel-candidates-page avel-joborders-page avel-joborders-page--candidate-grammar">
@@ -1358,9 +1481,18 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                             case 'rejected':
                               return (
                                 <td key={`${row.jobOrderID}-rejected`} className="avel-joborders-metric-cell">
-                                  <span className={`modern-chip ${row.rejected > 0 ? 'modern-chip--metric-rejected' : 'modern-chip--openings-zero'}`}>
-                                    {row.rejected}
-                                  </span>
+                                  {row.rejected > 0 ? (
+                                    <button
+                                      type="button"
+                                      className="modern-chip modern-chip--metric-rejected avel-joborders-metric-drilldown"
+                                      onClick={() => void openRejectionBreakdown(row)}
+                                      title="View rejected reasons breakdown"
+                                    >
+                                      {row.rejected}
+                                    </button>
+                                  ) : (
+                                    <span className="modern-chip modern-chip--openings-zero">{row.rejected}</span>
+                                  )}
                                 </td>
                               );
                             case 'owner':
@@ -1401,6 +1533,86 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               </div>
             )}
           </section>
+
+          {rejectionBreakdownModal ? (
+            <InlineModal
+              isOpen={Boolean(rejectionBreakdownModal)}
+              ariaLabel="Rejected reason breakdown"
+              dialogClassName="modern-inline-modal__dialog--status modern-inline-modal__dialog--compact avel-joborders-rejection-breakdown-modal"
+              onClose={closeRejectionBreakdownModal}
+            >
+              <div className="modern-inline-modal__header">
+                <h3>Rejected Reasons</h3>
+                <p>
+                  {toDisplayText(rejectionBreakdownModal.jobOrderTitle)}
+                  {rejectionBreakdownModal.data?.jobOrder.companyName
+                    ? ` • ${toDisplayText(rejectionBreakdownModal.data.jobOrder.companyName)}`
+                    : ''}
+                </p>
+              </div>
+              <div className="modern-inline-modal__body modern-inline-modal__body--form">
+                {rejectionBreakdownModal.loading ? (
+                  <div className="modern-state">Loading rejection reasons…</div>
+                ) : rejectionBreakdownModal.error ? (
+                  <div className="modern-state modern-state--error">{rejectionBreakdownModal.error}</div>
+                ) : rejectionBreakdownModal.data ? (
+                  <div className="avel-joborders-rejection-breakdown">
+                    <div className="avel-joborders-rejection-breakdown__hero">
+                      <div
+                        className="avel-joborders-rejection-breakdown__pie"
+                        style={{ background: rejectionPieBackground }}
+                        aria-hidden="true"
+                      />
+                      <div className="avel-joborders-rejection-breakdown__totals">
+                        <div className="avel-joborders-rejection-breakdown__total">
+                          <span>Total Rejected</span>
+                          <strong>{rejectionSummaryTotalCandidates}</strong>
+                        </div>
+                        <div className="avel-joborders-rejection-breakdown__total">
+                          <span>Reason Mentions</span>
+                          <strong>{rejectionSummaryTotalMentions}</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {rejectionLegendRows.length > 0 ? (
+                      <ul className="avel-joborders-rejection-breakdown__legend">
+                        {rejectionLegendRows.map((reasonRow) => {
+                          const count = Math.max(0, Number(reasonRow.count || 0));
+                          const percent = rejectionLegendTotal > 0
+                            ? Math.round((count / rejectionLegendTotal) * 100)
+                            : 0;
+                          return (
+                            <li key={reasonRow.key}>
+                              <span className="avel-joborders-rejection-breakdown__legend-swatch" style={{ background: reasonRow.color }} />
+                              <span className="avel-joborders-rejection-breakdown__legend-label">{toDisplayText(reasonRow.label)}</span>
+                              <span className="avel-joborders-rejection-breakdown__legend-value">{count}</span>
+                              <span className="avel-joborders-rejection-breakdown__legend-percent">{percent}%</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <div className="modern-state">No rejection reasons recorded for this job order.</div>
+                    )}
+
+                    {rejectionUnspecifiedCount > 0 ? (
+                      <p className="avel-joborders-rejection-breakdown__footnote">
+                        Unspecified means rejected candidates without an assigned rejection reason.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="modern-state">No rejection data available.</div>
+                )}
+              </div>
+              <div className="modern-inline-modal__actions">
+                <button type="button" className="modern-btn modern-btn--secondary" onClick={closeRejectionBreakdownModal}>
+                  Close
+                </button>
+              </div>
+            </InlineModal>
+          ) : null}
         </div>
       </PageContainer>
     </div>

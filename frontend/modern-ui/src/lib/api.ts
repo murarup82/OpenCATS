@@ -112,6 +112,7 @@ import type {
   JobOrdersRecruiterAllocationMutationResponse,
   JobOrdersShowModernDataResponse,
   JobOrdersListModernDataResponse,
+  JobOrderRejectionReasonBreakdownModernDataResponse,
   KpisDetailsModernDataResponse,
   KpisListModernDataResponse,
   ListsDetailModernDataResponse,
@@ -4057,6 +4058,27 @@ export async function fetchJobOrdersListModernData(
   const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
   const data = await getJSON<JobOrdersListModernDataResponse>(url);
   assertModernContract(data.meta, 'joborders.listByView.v1', 'job orders data');
+
+  return data;
+}
+
+export async function fetchJobOrderRejectionReasonBreakdownModernData(
+  bootstrap: UIModeBootstrap,
+  jobOrderID: number
+): Promise<JobOrderRejectionReasonBreakdownModernDataResponse> {
+  const query = new URLSearchParams();
+  query.set('jobOrderID', String(Number(jobOrderID || 0)));
+
+  const apiQuery = buildModernJSONRequestQuery({
+    module: 'joborders',
+    action: 'rejectionReasonBreakdown',
+    modernPage: MODERN_JOBORDERS_PAGE,
+    query
+  });
+
+  const url = `${bootstrap.indexName}?${apiQuery.toString()}`;
+  const data = await getJSON<JobOrderRejectionReasonBreakdownModernDataResponse>(url);
+  assertModernContract(data.meta, 'joborders.rejectionReasonBreakdown.v1', 'job order rejection reason breakdown');
 
   return data;
 }

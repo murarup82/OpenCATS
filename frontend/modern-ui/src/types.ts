@@ -3378,6 +3378,31 @@ export type JobOrdersListModernDataResponse = {
   }>;
 };
 
+export type JobOrderRejectionReasonBreakdownModernDataResponse = {
+  meta: {
+    contractVersion: number;
+    contractKey: string;
+    modernPage: string;
+    jobOrderID: number;
+  };
+  jobOrder: {
+    jobOrderID: number;
+    title: string;
+    companyName: string;
+  };
+  summary: {
+    totalRejectedCandidates: number;
+    totalReasonMentions: number;
+    candidatesWithReasons: number;
+    candidatesWithoutReasons: number;
+  };
+  reasons: Array<{
+    reasonID: number;
+    label: string;
+    count: number;
+  }>;
+};
+
 export type JobOrdersRecruiterAllocationModernDataResponse = {
   meta: {
     contractVersion: number;
