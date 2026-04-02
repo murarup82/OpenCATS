@@ -9818,6 +9818,96 @@
   gap: 8px;
 }
 
+.avel-joborder-show-page--refined .avel-joborder-show-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  border-radius: 999px;
+  border: 1px solid #b7d6e8;
+  background: #eef8ff;
+  color: #1f5f7b;
+  padding: 6px 12px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--priority-hot {
+  border-color: #f0c98d;
+  background: #fff5e4;
+  color: #92500d;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--priority-standard {
+  border-color: #bed6e5;
+  background: #eff7fc;
+  color: #2b607f;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--visibility-public {
+  border-color: #b7dcca;
+  background: #edf9f2;
+  color: #1f7145;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--visibility-internal {
+  border-color: #c4d4e2;
+  background: #f3f8fd;
+  color: #365b75;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--status-active {
+  border-color: #a9d9bf;
+  background: #e7f8ef;
+  color: #1f7145;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--status-on-hold {
+  border-color: #f0c98d;
+  background: #fff6e8;
+  color: #8a5618;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--status-lead {
+  border-color: #cdd6e6;
+  background: #f5f7fc;
+  color: #4e5f79;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--status-full,
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--status-closed,
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--status-cancelled {
+  border-color: #e7b8b8;
+  background: #fff1f1;
+  color: #993737;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--status-default {
+  border-color: #b7d6e8;
+  background: #eef8ff;
+  color: #1f5f7b;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--company {
+  border-color: #a9d8e3;
+  background: #e8f7fb;
+  color: #1e6076;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--candidates {
+  border-color: #b7dcca;
+  background: #edf9f2;
+  color: #1f7145;
+}
+
 .avel-joborder-show-page--refined .avel-joborder-show-richtext-block {
   gap: 10px;
 }

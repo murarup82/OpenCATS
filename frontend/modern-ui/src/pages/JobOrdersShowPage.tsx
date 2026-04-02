@@ -80,6 +80,35 @@ function getDetailFieldClassName(value: unknown): string {
   return `avel-entity-detail-field ${isDisplayValueEmpty(value) ? 'is-empty' : 'is-filled'}`;
 }
 
+type JobOrderSummaryChip = {
+  key: string;
+  label: string;
+  tone: string;
+};
+
+function getJobOrderStatusChipTone(statusLabel: unknown): string {
+  const normalized = String(statusLabel || '').toLowerCase();
+  if (normalized.includes('cancel')) {
+    return 'status-cancelled';
+  }
+  if (normalized.includes('closed')) {
+    return 'status-closed';
+  }
+  if (normalized.includes('lead') || normalized.includes('upcoming') || normalized.includes('pre-open')) {
+    return 'status-lead';
+  }
+  if (normalized.includes('on hold') || normalized.includes('on-hold')) {
+    return 'status-on-hold';
+  }
+  if (normalized.includes('full')) {
+    return 'status-full';
+  }
+  if (normalized.includes('active')) {
+    return 'status-active';
+  }
+  return 'status-default';
+}
+
 type JobOrderShowSectionCardProps = {
   title: string;
   description?: string;
@@ -1058,12 +1087,32 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const totalCandidateCount = Number(data.pipeline.activeCount || 0) + Number(data.pipeline.closedCount || 0);
   const hiddenClosedCandidates = !showClosed && Number(data.pipeline.closedCount || 0) > 0;
   const deleteURL = ensureModernUIURL(decodeLegacyURL(data.actions.deleteURL));
-  const summaryChips = [
-    jobOrder.isHot ? 'Priority: Hot' : 'Priority: Standard',
-    jobOrder.public ? 'Public Job Order' : 'Internal Job Order',
-    `Status: ${toDisplayText(jobOrder.status)}`,
-    `Company: ${toDisplayText(jobOrder.companyName)}`,
-    `Candidates: ${totalCandidateCount}`
+  const summaryChips: JobOrderSummaryChip[] = [
+    {
+      key: 'priority',
+      label: jobOrder.isHot ? 'Priority: Hot' : 'Priority: Standard',
+      tone: jobOrder.isHot ? 'priority-hot' : 'priority-standard'
+    },
+    {
+      key: 'visibility',
+      label: jobOrder.public ? 'Public Job Order' : 'Internal Job Order',
+      tone: jobOrder.public ? 'visibility-public' : 'visibility-internal'
+    },
+    {
+      key: 'status',
+      label: `Status: ${toDisplayText(jobOrder.status)}`,
+      tone: getJobOrderStatusChipTone(jobOrder.status)
+    },
+    {
+      key: 'company',
+      label: `Company: ${toDisplayText(jobOrder.companyName)}`,
+      tone: 'company'
+    },
+    {
+      key: 'candidates',
+      label: `Candidates: ${totalCandidateCount}`,
+      tone: 'candidates'
+    }
   ];
   const openJobOrderDeleteModal = () => {
     setJobOrderDeleteError('');
@@ -1117,8 +1166,11 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
           <div className="avel-candidate-edit-form avel-joborder-show-workbench">
             <div className="avel-candidate-edit-summary avel-joborder-show-summary">
               {summaryChips.map((chip) => (
-                <span key={chip} className="modern-chip modern-chip--info">
-                  {chip}
+                <span
+                  key={chip.key}
+                  className={`modern-chip avel-joborder-show-summary__chip avel-joborder-show-summary__chip--${chip.tone}`}
+                >
+                  {chip.label}
                 </span>
               ))}
             </div>
