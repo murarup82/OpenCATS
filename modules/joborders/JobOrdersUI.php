@@ -908,26 +908,19 @@ class JobOrdersUI extends UserInterface
 
     private function getModernDefaultStatusFilter()
     {
-        $groups = JobOrderStatuses::getAll();
-        $statusList = array();
-
-        if (isset($groups['Open']) && is_array($groups['Open']))
+        $defaultStatus = trim((string) JobOrderStatuses::getDefaultStatus());
+        if ($defaultStatus !== '')
         {
-            $statusList = array_merge($statusList, $groups['Open']);
-        }
-        if (isset($groups['Pre-Open']) && is_array($groups['Pre-Open']))
-        {
-            $statusList = array_merge($statusList, $groups['Pre-Open']);
+            return $defaultStatus;
         }
 
-        $statusList = array_values(array_unique(array_filter($statusList, 'strlen')));
-
-        if (empty($statusList))
+        $jobOrderFilters = JobOrderStatuses::getFilters();
+        if (!empty($jobOrderFilters) && isset($jobOrderFilters[0]))
         {
-            return 'Active / On Hold / Full / Upcoming / Lead';
+            return trim((string) $jobOrderFilters[0]);
         }
 
-        return implode(' / ', $statusList);
+        return 'Active';
     }
 
     private function getRequestBooleanFlag($key, $defaultValue = false)
@@ -1049,17 +1042,24 @@ class JobOrdersUI extends UserInterface
                 'tone' => 'all-statuses'
             )
         );
+        $statusOptionValues = array();
         if (is_string($defaultStatusFilter) && trim($defaultStatusFilter) !== '')
         {
+            $defaultStatusSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string) $defaultStatusFilter), '-'));
+            if ($defaultStatusSlug === '')
+            {
+                $defaultStatusSlug = 'status';
+            }
             $statusOptions[] = array(
                 'value' => $defaultStatusFilter,
-                'label' => 'Open + Lead',
-                'tone' => 'open-lead'
+                'label' => (string) $defaultStatusFilter,
+                'tone' => $defaultStatusSlug
             );
+            $statusOptionValues[] = (string) $defaultStatusFilter;
         }
         foreach ($jobOrderFilters as $statusLabel)
         {
-            if ((string) $statusLabel === (string) $defaultStatusFilter)
+            if (in_array((string) $statusLabel, $statusOptionValues, true))
             {
                 continue;
             }
@@ -1075,6 +1075,7 @@ class JobOrdersUI extends UserInterface
                 'label' => (string) $statusLabel,
                 'tone' => $statusSlug
             );
+            $statusOptionValues[] = (string) $statusLabel;
         }
 
         $companyOptions = array(
