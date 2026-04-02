@@ -1541,7 +1541,23 @@ class JobOrdersUI extends UserInterface
             }
 
             $pipelines = new Pipelines($this->_siteID);
-            $pipelineRS = $pipelines->getJobOrderPipeline($jobOrderID, '', $showClosed);
+            $pipelineAllRS = $pipelines->getJobOrderPipeline($jobOrderID, '', true);
+            $pipelineRS = array();
+            if ($showClosed)
+            {
+                $pipelineRS = $pipelineAllRS;
+            }
+            else
+            {
+                foreach ($pipelineAllRS as $pipelineRow)
+                {
+                    $isActivePipeline = (isset($pipelineRow['isActive']) ? ((int) $pipelineRow['isActive'] === 1) : true);
+                    if ($isActivePipeline)
+                    {
+                        $pipelineRS[] = $pipelineRow;
+                    }
+                }
+            }
 
             $this->renderModernJobOrderShowJSON(
                 $jobOrderID,
@@ -1572,6 +1588,7 @@ class JobOrdersUI extends UserInterface
                 $this->getCSRFToken('joborders.postMessage'),
                 $this->getCSRFToken('joborders.deleteMessageThread'),
                 $pipelineRS,
+                $pipelineAllRS,
                 $pipelines->getStatusesForPicking(),
                 'joborders-show'
             );
@@ -3517,6 +3534,7 @@ class JobOrdersUI extends UserInterface
         $postJobOrderMessageToken,
         $deleteJobOrderMessageThreadToken,
         $pipelineRS,
+        $pipelineAllRS,
         $pipelineStatusRS,
         $modernPage
     )
@@ -3570,26 +3588,21 @@ class JobOrdersUI extends UserInterface
         $pipelinePayload = array();
         $activePipelineCount = 0;
         $closedPipelineCountAll = 0;
-        $db = DatabaseConnection::getInstance();
-        $closedPipelineCountAllSQL = sprintf(
-            "SELECT
-                COUNT(*)
-            FROM
-                candidate_joborder
-            WHERE
-                site_id = %s
-            AND
-                joborder_id = %s
-            AND
-                is_active = 0
-            AND
-                status IN (%s, %s)",
-            $db->makeQueryInteger($this->_siteID),
-            $db->makeQueryInteger($jobOrderID),
-            $db->makeQueryInteger(PIPELINE_STATUS_HIRED),
-            $db->makeQueryInteger(PIPELINE_STATUS_REJECTED)
-        );
-        $closedPipelineCountAll = (int) $db->getColumn($closedPipelineCountAllSQL, 0, 0);
+        foreach ($pipelineAllRS as $pipelineData)
+        {
+            $isActivePipeline = (isset($pipelineData['isActive']) ? ((int) $pipelineData['isActive'] === 1) : true);
+            $statusID = (isset($pipelineData['statusID']) ? (int) $pipelineData['statusID'] : 0);
+            if (
+                !$isActivePipeline &&
+                (
+                    $statusID === (int) PIPELINE_STATUS_HIRED ||
+                    $statusID === (int) PIPELINE_STATUS_REJECTED
+                )
+            )
+            {
+                $closedPipelineCountAll++;
+            }
+        }
         foreach ($pipelineRS as $pipelineData)
         {
             $candidateID = (isset($pipelineData['candidateID']) ? (int) $pipelineData['candidateID'] : 0);
