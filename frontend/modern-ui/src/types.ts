@@ -3356,6 +3356,7 @@ export type JobOrdersListModernDataResponse = {
     openings: number;
     remainingOpenings: number;
     internalValidation: number;
+    clientInterview: number;
     proposed: number;
     hired: number;
     ownerName: string;

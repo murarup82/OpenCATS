@@ -754,26 +754,19 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     (columnKey) => (columnFilters[columnKey] || '').trim() !== ''
   ).length;
 
-  const statusDistribution = (() => {
-    const counts = new Map<string, number>();
-    for (const row of data.rows) {
-      const status = String(row.status || '').trim();
-      const key = status === '' ? 'Unknown' : status;
-      counts.set(key, (counts.get(key) || 0) + 1);
-    }
-    const entries = [...counts.entries()].sort((left, right) => right[1] - left[1]);
-    return entries.slice(0, 6).map(([label, count]) => ({ label, count }));
-  })();
-
-  const monitoredCount = data.rows.filter((row) => row.isMonitored).length;
-  const totalRemainingOpenings = data.rows.reduce((total, row) => total + Number(row.remainingOpenings || 0), 0);
-
   const rangeStart = data.meta.totalRows > 0 ? (data.meta.page - 1) * data.meta.entriesPerPage + 1 : 0;
   const rangeEnd = data.meta.totalRows > 0
     ? Math.min(rangeStart + data.rows.length - 1, data.meta.totalRows)
     : 0;
 
   const hasVisibleRows = filteredRows.length > 0;
+  const activeJobsCount = filteredRows.reduce(
+    (total, row) => total + (buildJobOrderStatusTone(row.status, row.statusSlug) === 'active' ? 1 : 0),
+    0
+  );
+  const totalOpenings = filteredRows.reduce((total, row) => total + Number(row.remainingOpenings || 0), 0);
+  const totalClientInterview = filteredRows.reduce((total, row) => total + Number(row.clientInterview || 0), 0);
+  const totalHired = filteredRows.reduce((total, row) => total + Number(row.hired || 0), 0);
 
   return (
     <div className="avel-dashboard-page avel-candidates-page avel-joborders-page avel-joborders-page--candidate-grammar">
@@ -797,25 +790,41 @@ export function JobOrdersListPage({ bootstrap }: Props) {
       >
         <div className="modern-dashboard avel-dashboard-shell">
           <section className="avel-candidate-stats-bar" aria-label="Job order overview">
-            <div className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--total">
-              <span className="avel-candidate-stats-bar__label">Visible Job Orders</span>
+            <div
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--total"
+              title="Total number of job orders returned by the current server filters."
+            >
+              <span className="avel-candidate-stats-bar__label">Total Job Orders</span>
               <strong className="avel-candidate-stats-bar__value">{data.meta.totalRows}</strong>
             </div>
             <span className="avel-candidate-stats-bar__sep" aria-hidden="true" />
-            {statusDistribution.map(({ label, count }) => (
-              <div key={label} className="avel-candidate-stats-bar__item avel-candidate-stats-bar__chip">
-                <span className="avel-candidate-stats-bar__chip-label">{label}</span>
-                <strong className="avel-candidate-stats-bar__chip-value">{count}</strong>
-              </div>
-            ))}
-            <span className="avel-candidate-stats-bar__sep" aria-hidden="true" />
-            <div className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline">
-              <span className="avel-candidate-stats-bar__label">Monitored</span>
-              <strong className="avel-candidate-stats-bar__value">{monitoredCount}</strong>
+            <div
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__chip"
+              title="Jobs with Active status in the currently visible/filtered list."
+            >
+              <span className="avel-candidate-stats-bar__chip-label">Active</span>
+              <strong className="avel-candidate-stats-bar__chip-value">{activeJobsCount}</strong>
             </div>
-            <div className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--gdpr">
-              <span className="avel-candidate-stats-bar__label">Remaining Openings</span>
-              <strong className="avel-candidate-stats-bar__value">{totalRemainingOpenings}</strong>
+            <div
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--gdpr"
+              title="Open positions remaining across the currently visible/filtered job orders."
+            >
+              <span className="avel-candidate-stats-bar__label">Openings</span>
+              <strong className="avel-candidate-stats-bar__value">{totalOpenings}</strong>
+            </div>
+            <div
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
+              title="Candidates currently in Client Interview pipeline status for the currently visible/filtered job orders."
+            >
+              <span className="avel-candidate-stats-bar__label">Client Interview</span>
+              <strong className="avel-candidate-stats-bar__value">{totalClientInterview}</strong>
+            </div>
+            <div
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
+              title="Candidates currently in Hired pipeline status for the currently visible/filtered job orders."
+            >
+              <span className="avel-candidate-stats-bar__label">Hired</span>
+              <strong className="avel-candidate-stats-bar__value">{totalHired}</strong>
             </div>
           </section>
 

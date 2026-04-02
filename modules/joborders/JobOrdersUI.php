@@ -874,6 +874,7 @@ class JobOrdersUI extends UserInterface
                 'SELECT
                     cjo.joborder_id AS jobOrderID,
                     SUM(IF(cjo.status IN (%s, %s), 1, 0)) AS internalValidation,
+                    SUM(IF(cjo.status = %s, 1, 0)) AS clientInterview,
                     SUM(IF(cjo.status IN (%s, %s, %s, %s, %s, %s), 1, 0)) AS proposed,
                     SUM(IF(cjo.status = %s, 1, 0)) AS hired
                 FROM
@@ -886,6 +887,7 @@ class JobOrdersUI extends UserInterface
                     cjo.joborder_id',
                 PIPELINE_STATUS_ALLOCATED,
                 PIPELINE_STATUS_DELIVERY_VALIDATED,
+                PIPELINE_STATUS_CUSTOMER_INTERVIEW,
                 PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
                 PIPELINE_STATUS_CUSTOMER_INTERVIEW,
                 PIPELINE_STATUS_CUSTOMER_APPROVED,
@@ -901,6 +903,7 @@ class JobOrdersUI extends UserInterface
             {
                 $pipelineStatusCounts[(int) $countRow['jobOrderID']] = array(
                     'internalValidation' => (int) $countRow['internalValidation'],
+                    'clientInterview' => (int) $countRow['clientInterview'],
                     'proposed' => (int) $countRow['proposed'],
                     'hired' => (int) $countRow['hired']
                 );
@@ -945,7 +948,7 @@ class JobOrdersUI extends UserInterface
                 : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : 0));
             $counts = isset($pipelineStatusCounts[$jobOrderID])
                 ? $pipelineStatusCounts[$jobOrderID]
-                : array('internalValidation' => 0, 'proposed' => 0, 'hired' => 0);
+                : array('internalValidation' => 0, 'clientInterview' => 0, 'proposed' => 0, 'hired' => 0);
 
             $responseRows[] = array(
                 'jobOrderID' => $jobOrderID,
@@ -963,6 +966,7 @@ class JobOrdersUI extends UserInterface
                 'openings' => $openings,
                 'remainingOpenings' => max(0, $openings - $counts['hired']),
                 'internalValidation' => $counts['internalValidation'],
+                'clientInterview' => $counts['clientInterview'],
                 'proposed' => $counts['proposed'],
                 'hired' => $counts['hired'],
                 'ownerName' => $ownerName,
