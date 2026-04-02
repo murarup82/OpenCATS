@@ -1087,6 +1087,12 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                       {visibleTableColumns.map((col) => {
                         const isSorted = col.sortKey !== '' && data.meta.sortBy === col.sortKey;
                         const columnKey = col.key;
+                        const isMetricColumn =
+                          columnKey === 'openings' ||
+                          columnKey === 'remainingOpenings' ||
+                          columnKey === 'internalValidation' ||
+                          columnKey === 'proposed' ||
+                          columnKey === 'hired';
                         const isFilterable = col.filterable === true;
                         const isFilterOpen = activeHeaderMenuColumn === columnKey;
                         const activeSelection = parseFilterSelection(columnFilters[columnKey] || '');
@@ -1102,8 +1108,15 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                         );
                         const renderedOptions = dedupeFilterValues([...selectedUnknownValues, ...visibleOptions]);
 
+                        const headerClasses = [
+                          isFilterOpen ? 'avel-col-filter--active' : '',
+                          isMetricColumn ? 'avel-joborders-metric-column' : ''
+                        ]
+                          .filter(Boolean)
+                          .join(' ');
+
                         return (
-                          <th key={col.key} className={isFilterOpen ? 'avel-col-filter--active' : ''}>
+                          <th key={col.key} className={headerClasses}>
                             <div className="avel-pipeline-matrix__th-shell">
                               <button
                                 type="button"
@@ -1304,7 +1317,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                               return (
                                 <td key={`${row.jobOrderID}-hired`} className="avel-joborders-metric-cell">
                                   <span className={`modern-chip ${row.hired > 0 ? 'modern-chip--success' : 'modern-chip--openings-zero'}`}>
-                                    {formatCountWithClosed(row.hired, row.hiredAll)}
+                                    {row.hired}
                                   </span>
                                 </td>
                               );

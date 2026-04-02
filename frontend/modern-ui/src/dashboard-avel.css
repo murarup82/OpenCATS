@@ -5863,6 +5863,18 @@
   text-align: center;
 }
 
+.avel-joborders-page--candidate-grammar th.avel-joborders-metric-column .avel-candidates-results__th-title {
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+}
+
+.avel-joborders-page--candidate-grammar .avel-joborders-metric-cell .modern-chip {
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 4px 10px;
+}
+
 .avel-joborders-page--candidate-grammar .avel-joborders-table__joborder {
   min-width: 300px;
 }

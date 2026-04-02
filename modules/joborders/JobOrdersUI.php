@@ -1073,6 +1073,9 @@ class JobOrdersUI extends UserInterface
             $openings = (isset($row['openings'])
                 ? (int) $row['openings']
                 : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : 0));
+            $openingsAvailable = (isset($row['openingsAvailable'])
+                ? (int) $row['openingsAvailable']
+                : $openings);
             $counts = isset($pipelineStatusCounts[$jobOrderID])
                 ? $pipelineStatusCounts[$jobOrderID]
                 : array(
@@ -1102,7 +1105,7 @@ class JobOrdersUI extends UserInterface
                 'daysOld' => (isset($row['daysOld']) ? (int) $row['daysOld'] : 0),
                 'dateCreated' => (isset($row['dateCreated']) ? $row['dateCreated'] : '--'),
                 'openings' => $openings,
-                'remainingOpenings' => max(0, $openings - $counts['hired']),
+                'remainingOpenings' => max(0, $openingsAvailable),
                 'internalValidation' => $counts['internalValidation'],
                 'clientInterview' => $counts['clientInterview'],
                 'clientInterviewAll' => $counts['clientInterviewAll'],
