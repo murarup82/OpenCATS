@@ -144,6 +144,12 @@ function buildJobOrderStatusTone(status: string, statusSlug: string): string {
   return 'default';
 }
 
+function isActiveJobOrderStatus(status: string, statusSlug: string): boolean {
+  const normalizedStatus = String(status || '').trim().toLowerCase();
+  const normalizedSlug = String(statusSlug || '').trim().toLowerCase();
+  return normalizedStatus === 'active' || normalizedSlug === 'active';
+}
+
 function getJobOrderColumnValue(row: JobOrderRow, key: JobOrderDataColumnKey): string {
   switch (key) {
     case 'jobOrder': return `${toDisplayText(row.title)} #${Number(row.jobOrderID || 0)}`;
@@ -772,13 +778,8 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     : 0;
 
   const hasVisibleRows = filteredRows.length > 0;
-  const activeJobsCount = filteredRows.reduce(
-    (total, row) => total + (buildJobOrderStatusTone(row.status, row.statusSlug) === 'active' ? 1 : 0),
-    0
-  );
-  const activeStatusRows = filteredRows.filter(
-    (row) => buildJobOrderStatusTone(row.status, row.statusSlug) === 'active'
-  );
+  const activeJobsCount = filteredRows.reduce((total, row) => total + (isActiveJobOrderStatus(row.status, row.statusSlug) ? 1 : 0), 0);
+  const activeStatusRows = filteredRows.filter((row) => isActiveJobOrderStatus(row.status, row.statusSlug));
   const totalOpenings = activeStatusRows.reduce((total, row) => total + Number(row.remainingOpenings || 0), 0);
   const totalClientInterview = filteredRows.reduce((total, row) => total + Number(row.clientInterview || 0), 0);
   const totalClientInterviewAll = filteredRows.reduce((total, row) => total + Number(row.clientInterviewAll || 0), 0);
@@ -790,7 +791,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     (total, row) => total + Number(row.clientInterviewHistoricalAll || 0),
     0
   );
-  const totalHired = filteredRows.reduce((total, row) => total + Number(row.hired || 0), 0);
+  const totalHired = activeStatusRows.reduce((total, row) => total + Number(row.hired || 0), 0);
   const totalHiredAll = filteredRows.reduce((total, row) => total + Number(row.hiredAll || 0), 0);
   const totalRejected = filteredRows.reduce((total, row) => total + Number(row.rejected || 0), 0);
   const totalRejectedAll = filteredRows.reduce((total, row) => total + Number(row.rejectedAll || 0), 0);
@@ -859,7 +860,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
             </div>
             <div
               className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
-              title="Candidates currently in Hired status for visible jobs; parentheses include closed pipeline entries."
+              title="Candidates currently in Hired status for job orders with Active status; parentheses include all filtered jobs (including non-active) and closed pipeline entries."
             >
               <span className="avel-candidate-stats-bar__label">Hired</span>
               <strong className="avel-candidate-stats-bar__value">{formatCountWithClosed(totalHired, totalHiredAll)}</strong>
