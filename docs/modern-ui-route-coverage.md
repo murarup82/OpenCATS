@@ -1,16 +1,16 @@
 # Modern UI Route Coverage Matrix
 
-Generated: 2026-04-02T09:34:03.967Z
+Generated: 2026-04-02T12:12:49.333Z
 
 This report classifies routeRegistry mappings into true native UI routes, intentional legacy-forward endpoints/wrappers, and bridge fallbacks.
 
 ## Summary
 
-- Total route mappings: **251**
-- True native UI mappings: **140**
+- Total route mappings: **254**
+- True native UI mappings: **143**
 - Intentional legacy-forward mappings: **110**
 - Bridge mappings: **1**
-- True native UI coverage (mapping-level): **55.8%**
+- True native UI coverage (mapping-level): **56.3%**
 
 ## Module Summary
 
@@ -27,7 +27,7 @@ This report classifies routeRegistry mappings into true native UI routes, intent
 - `graphs`: native-ui=1, legacy-forward=5, bridge=0
 - `home`: native-ui=23, legacy-forward=0, bridge=0
 - `import`: native-ui=3, legacy-forward=12, bridge=0
-- `joborders`: native-ui=28, legacy-forward=2, bridge=0
+- `joborders`: native-ui=31, legacy-forward=2, bridge=0
 - `kpis`: native-ui=2, legacy-forward=0, bridge=0
 - `lists`: native-ui=9, legacy-forward=0, bridge=0
 - `login`: native-ui=5, legacy-forward=4, bridge=0
@@ -305,7 +305,10 @@ This report classifies routeRegistry mappings into true native UI routes, intent
 | `joborders.pipelinestatusdetails` | `PipelineStatusActionPage` | native-ui | pipelineID |
 | `joborders.pipelinestatuseditdate` | `PipelineStatusActionPage` | native-ui | pipelineID |
 | `joborders.postmessage` | `JobOrdersShowPage` | native-ui | jobOrderID |
+| `joborders.purgefrompipeline` | `JobOrdersShowPage` | native-ui | candidateID, jobOrderID |
+| `joborders.quickupdate` | `JobOrdersListPage` | native-ui | jobOrderID |
 | `joborders.recruiterallocation` | `JobOrdersRecruiterAllocationPage` | native-ui | - |
+| `joborders.rejectionreasonbreakdown` | `JobOrdersListPage` | native-ui | jobOrderID |
 | `joborders.removefrompipeline` | `JobOrdersShowPage` | native-ui | jobOrderID |
 | `joborders.search` | `JobOrdersListPage` | native-ui | - |
 | `joborders.setcandidatejoborder` | `OperationsWorkspaceActionPage` | legacy-forward | jobOrderID |

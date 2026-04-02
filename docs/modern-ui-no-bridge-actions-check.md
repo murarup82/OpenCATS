@@ -1,17 +1,14 @@
 # Modern UI Bridge Action Guard
 
-Generated: 2026-04-02T09:34:27.199Z
+Generated: 2026-04-02T12:13:11.648Z
 
 ## Totals
 
-- Bridge (total): 2
+- Bridge (total): 0
 - Bridge explicit: 0
-- Bridge fallback: 2
-- Bridge-classified rows: 2
+- Bridge fallback: 0
+- Bridge-classified rows: 0
 
-## Bridge Rows (Preview)
+## Result
 
-| Module | Action | Classification | Route Key |
-| --- | --- | --- | --- |
-| joborders | purgeFromPipeline | bridge-global-fallback | *.* |
-| joborders | rejectionReasonBreakdown | bridge-global-fallback | *.* |
+No bridge-classified actions detected in the legacy-modern gap report.

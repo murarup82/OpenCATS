@@ -1,7 +1,7 @@
 # Modern UI Sanity Report
 
-Started: 2026-04-02T09:33:59.848Z
-Finished: 2026-04-02T09:34:13.332Z
+Started: 2026-04-02T12:12:44.703Z
+Finished: 2026-04-02T12:12:58.823Z
 Overall Required Status: **Fail**
 
 ## Summary
@@ -40,10 +40,10 @@ Command: `npm run build`
 [2Ktransforming...✓ 153 modules transformed.
 rendering chunks...
 ../../public/modern-ui/build/.vite/manifest.json         0.20 kB
-../../public/modern-ui/build/opencats-modern-ui.css    405.37 kB
-../../public/modern-ui/build/app.bundle.js           2,098.79 kB
+../../public/modern-ui/build/opencats-modern-ui.css    405.42 kB
+../../public/modern-ui/build/app.bundle.js           2,110.50 kB
 
-[32m✓ built in 1.89s[39m
+[32m✓ built in 2.05s[39m
 ```
 
 **stderr**
@@ -108,7 +108,7 @@ Command: `npm run verify:no-bridge-actions`
 
 **stderr**
 ```text
-[modern-ui] Bridge actions detected (bridge=1, bridgeExplicit=0, bridgeFallback=1, rows=1).
+[modern-ui] Bridge actions detected (bridge=3, bridgeExplicit=0, bridgeFallback=3, rows=3).
 ```
 
 ### Unexpected Legacy Redirect Guard (Pass)

@@ -1,15 +1,15 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-04-02T09:34:20.424Z
+Generated: 2026-04-02T12:13:05.179Z
 
 ## Summary
 
-- Legacy handleRequest actions discovered: 230
-- Native explicit modern coverage: 228
+- Legacy handleRequest actions discovered: 231
+- Native explicit modern coverage: 231
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 2
+- Bridge coverage (explicit + fallback): 0
 - Bridge explicit route mapping: 0
-- Bridge wildcard fallback mapping: 2
+- Bridge wildcard fallback mapping: 0
 - Legacy unresolved: 0
 
 ## Module Coverage
@@ -28,7 +28,7 @@ Generated: 2026-04-02T09:34:20.424Z
 | graphs | 5 | 5 | 0 | 0 | 0 |
 | home | 22 | 22 | 0 | 0 | 0 |
 | import | 15 | 15 | 0 | 0 | 0 |
-| joborders | 29 | 27 | 0 | 2 | 0 |
+| joborders | 30 | 30 | 0 | 0 | 0 |
 | kpis | 1 | 1 | 0 | 0 | 0 |
 | lists | 8 | 8 | 0 | 0 | 0 |
 | login | 8 | 8 | 0 | 0 | 0 |
@@ -44,13 +44,7 @@ Generated: 2026-04-02T09:34:20.424Z
 
 These are legacy actions for modernized modules that are not mapped as explicit native routes.
 
-### joborders
-
-| Action | Classification | Resolved Route | Component |
-| --- | --- | --- | --- |
-| purgeFromPipeline | bridge-global-fallback | *.* | ModuleBridgePage |
-| rejectionReasonBreakdown | bridge-global-fallback | *.* | ModuleBridgePage |
-
+- None.
 ## Full Action Matrix
 
 | Module | Action | Classification | Resolved Route | Component |
@@ -180,9 +174,10 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | pipelineStatusDetails | native-explicit-guarded | joborders.pipelinestatusdetails | PipelineStatusActionPage |
 | joborders | pipelineStatusEditDate | native-explicit-guarded | joborders.pipelinestatuseditdate | PipelineStatusActionPage |
 | joborders | postMessage | native-explicit-guarded | joborders.postmessage | JobOrdersShowPage |
-| joborders | purgeFromPipeline | bridge-global-fallback | *.* | ModuleBridgePage |
+| joborders | purgeFromPipeline | native-explicit-guarded | joborders.purgefrompipeline | JobOrdersShowPage |
+| joborders | quickUpdate | native-explicit-guarded | joborders.quickupdate | JobOrdersListPage |
 | joborders | recruiterAllocation | native-explicit | joborders.recruiterallocation | JobOrdersRecruiterAllocationPage |
-| joborders | rejectionReasonBreakdown | bridge-global-fallback | *.* | ModuleBridgePage |
+| joborders | rejectionReasonBreakdown | native-explicit-guarded | joborders.rejectionreasonbreakdown | JobOrdersListPage |
 | joborders | removeFromPipeline | native-explicit-guarded | joborders.removefrompipeline | JobOrdersShowPage |
 | joborders | search | native-explicit | joborders.search | JobOrdersListPage |
 | joborders | setMonitoredJobOrder | native-explicit-guarded | joborders.setmonitoredjoborder | JobOrderMonitorActionPage |

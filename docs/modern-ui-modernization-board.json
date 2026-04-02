@@ -1,25 +1,21 @@
 {
-  "generatedAt": "2026-04-02T09:34:21.133Z",
+  "generatedAt": "2026-04-02T12:13:05.858Z",
   "sourceReport": "docs/modern-ui-legacy-route-gap-report.json",
   "totals": {
-    "actions": 230,
-    "modernNative": 228,
-    "legacyDependent": 2,
-    "bridge": 2,
+    "actions": 231,
+    "modernNative": 231,
+    "legacyDependent": 0,
+    "bridge": 0,
     "unresolved": 0
   },
   "bucketSummaries": [
-    {
-      "bucket": "bridge",
-      "count": 2
-    },
     {
       "bucket": "native-action",
       "count": 127
     },
     {
       "bucket": "native-surface",
-      "count": 101
+      "count": 104
     }
   ],
   "moduleSummaries": [
@@ -97,9 +93,9 @@
     },
     {
       "module": "joborders",
-      "totalActions": 29,
-      "modernNative": 27,
-      "legacyDependent": 2
+      "totalActions": 30,
+      "modernNative": 30,
+      "legacyDependent": 0
     },
     {
       "module": "kpis",
@@ -162,53 +158,8 @@
       "legacyDependent": 0
     }
   ],
-  "next50Targets": [
-    {
-      "order": 1,
-      "module": "joborders",
-      "action": "purgeFromPipeline",
-      "routeKey": "joborders.purgefrompipeline",
-      "component": "ModuleBridgePage",
-      "bucket": "bridge",
-      "guidance": "Add explicit native route mapping and remove wildcard bridge resolution."
-    },
-    {
-      "order": 2,
-      "module": "joborders",
-      "action": "rejectionReasonBreakdown",
-      "routeKey": "joborders.rejectionreasonbreakdown",
-      "component": "ModuleBridgePage",
-      "bucket": "bridge",
-      "guidance": "Add explicit native route mapping and remove wildcard bridge resolution."
-    }
-  ],
+  "next50Targets": [],
   "rows": [
-    {
-      "module": "joborders",
-      "action": "purgeFromPipeline",
-      "classification": "bridge-global-fallback",
-      "routeKey": "joborders.purgefrompipeline",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
-      "guarded": false,
-      "modernizationStatus": "bridge",
-      "modernizationBucket": "bridge",
-      "modernizationRank": 0,
-      "legacyDependent": true
-    },
-    {
-      "module": "joborders",
-      "action": "rejectionReasonBreakdown",
-      "classification": "bridge-global-fallback",
-      "routeKey": "joborders.rejectionreasonbreakdown",
-      "resolution": "bridge",
-      "component": "ModuleBridgePage",
-      "guarded": false,
-      "modernizationStatus": "bridge",
-      "modernizationBucket": "bridge",
-      "modernizationRank": 0,
-      "legacyDependent": true
-    },
     {
       "module": "attachments",
       "action": "getAttachment",
@@ -2889,12 +2840,51 @@
     },
     {
       "module": "joborders",
+      "action": "purgeFromPipeline",
+      "classification": "native-explicit-guarded",
+      "routeKey": "joborders.purgefrompipeline",
+      "resolution": "native",
+      "component": "JobOrdersShowPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "joborders",
+      "action": "quickUpdate",
+      "classification": "native-explicit-guarded",
+      "routeKey": "joborders.quickupdate",
+      "resolution": "native",
+      "component": "JobOrdersListPage",
+      "guarded": true,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "joborders",
       "action": "recruiterAllocation",
       "classification": "native-explicit",
       "routeKey": "joborders.recruiterallocation",
       "resolution": "native",
       "component": "JobOrdersRecruiterAllocationPage",
       "guarded": false,
+      "modernizationStatus": "modern-native",
+      "modernizationBucket": "native-surface",
+      "modernizationRank": 10,
+      "legacyDependent": false
+    },
+    {
+      "module": "joborders",
+      "action": "rejectionReasonBreakdown",
+      "classification": "native-explicit-guarded",
+      "routeKey": "joborders.rejectionreasonbreakdown",
+      "resolution": "native",
+      "component": "JobOrdersListPage",
+      "guarded": true,
       "modernizationStatus": "modern-native",
       "modernizationBucket": "native-surface",
       "modernizationRank": 10,
