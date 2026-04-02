@@ -886,8 +886,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const activeJobsCount = filteredRows.reduce((total, row) => total + (isActiveJobOrderStatus(row.status, row.statusSlug) ? 1 : 0), 0);
   const activeStatusRows = filteredRows.filter((row) => isActiveJobOrderStatus(row.status, row.statusSlug));
   const totalOpenings = activeStatusRows.reduce((total, row) => total + Number(row.remainingOpenings || 0), 0);
-  const totalClientInterview = filteredRows.reduce((total, row) => total + Number(row.clientInterview || 0), 0);
-  const totalClientInterviewAll = Number(data.summary.clientInterviewAll || 0);
   const totalClientInterviewHistorical = filteredRows.reduce(
     (total, row) => total + Number(row.clientInterviewHistorical || 0),
     0
@@ -974,18 +972,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
             </div>
             <div
               className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline avel-candidate-stats-bar__item--client-interview"
-              title="Candidates currently in Client Interview for visible jobs; parentheses include all filtered jobs across statuses and closed pipeline entries."
+              title="Candidates that reached Customer Interview at any point: first value is for active jobs, parentheses include all filtered jobs (including inactive/closed)."
             >
-              <span className="avel-candidate-stats-bar__label">Client Interview (Current)</span>
-              <strong className="avel-candidate-stats-bar__value">
-                {formatCountWithClosed(totalClientInterview, totalClientInterviewAll)}
-              </strong>
-            </div>
-            <div
-              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline avel-candidate-stats-bar__item--client-interview"
-              title="Candidates that reached Customer Interview at any point for visible jobs; parentheses include all filtered jobs across statuses and closed pipeline entries."
-            >
-              <span className="avel-candidate-stats-bar__label">Customer Interview (History)</span>
+              <span className="avel-candidate-stats-bar__label">Customer Interview (Active/Hist)</span>
               <strong className="avel-candidate-stats-bar__value">
                 {formatCountWithClosed(totalClientInterviewHistorical, totalClientInterviewHistoricalAll)}
               </strong>
