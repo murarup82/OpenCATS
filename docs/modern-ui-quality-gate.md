@@ -1,7 +1,7 @@
 # Modern UI Quality Gate Report
 
-Started: 2026-04-02T06:37:28.676Z
-Finished: 2026-04-02T06:38:05.994Z
+Started: 2026-04-02T09:33:59.218Z
+Finished: 2026-04-02T09:34:31.430Z
 Overall Status: **Fail**
 
 ## Summary
@@ -359,7 +359,7 @@ Command: `npm.cmd run verify:zero-legacy-dependent`
 
 **stderr**
 ```text
-[modern-ui] Legacy-dependent routes detected (totals.legacyDependent=1, rows=1).
+[modern-ui] Legacy-dependent routes detected (totals.legacyDependent=2, rows=2).
 ```
 
 ### In-Scope Route Fallback Guard (Fail)
@@ -374,8 +374,9 @@ Command: `npm.cmd run verify:in-scope-routes`
 
 **stderr**
 ```text
-[modern-ui] In-scope fallback routes found: 1
+[modern-ui] In-scope fallback routes found: 2
 - joborders.purgeFromPipeline -> bridge-global-fallback (*.*)
+- joborders.rejectionReasonBreakdown -> bridge-global-fallback (*.*)
 ```
 
 ### Bridge Wildcard Retirement Guard (Pass)
@@ -407,7 +408,7 @@ Command: `npm.cmd run verify:no-bridge-actions`
 
 **stderr**
 ```text
-[modern-ui] Bridge actions detected (bridge=1, bridgeExplicit=0, bridgeFallback=1, rows=1).
+[modern-ui] Bridge actions detected (bridge=2, bridgeExplicit=0, bridgeFallback=2, rows=2).
 ```
 
 ### Legacy Fallback Link Guard (Pass)

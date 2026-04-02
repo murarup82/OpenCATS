@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-02T06:37:54.616Z",
+  "generatedAt": "2026-04-02T09:34:20.424Z",
   "totals": {
-    "actions": 229,
+    "actions": 230,
     "nativeExplicit": 228,
     "nativeDefaultFallback": 0,
-    "bridge": 1,
+    "bridge": 2,
     "bridgeExplicit": 0,
-    "bridgeFallback": 1,
+    "bridgeFallback": 2,
     "unresolved": 0
   },
   "moduleSummaries": [
@@ -108,10 +108,10 @@
     },
     {
       "module": "joborders",
-      "totalActions": 28,
+      "totalActions": 29,
       "nativeExplicit": 27,
       "nativeFallback": 0,
-      "bridge": 1,
+      "bridge": 2,
       "unresolved": 0
     },
     {
@@ -1337,6 +1337,15 @@
       "routeKey": "joborders.recruiterallocation",
       "resolution": "native",
       "component": "JobOrdersRecruiterAllocationPage",
+      "guarded": false
+    },
+    {
+      "module": "joborders",
+      "action": "rejectionReasonBreakdown",
+      "classification": "bridge-global-fallback",
+      "routeKey": "*.*",
+      "resolution": "bridge",
+      "component": "ModuleBridgePage",
       "guarded": false
     },
     {

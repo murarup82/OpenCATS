@@ -1,15 +1,15 @@
 # Modern UI Legacy Comparison Report
 
-Generated: 2026-04-02T06:37:54.616Z
+Generated: 2026-04-02T09:34:20.424Z
 
 ## Summary
 
-- Legacy handleRequest actions discovered: 229
+- Legacy handleRequest actions discovered: 230
 - Native explicit modern coverage: 228
 - Native default fallback coverage: 0
-- Bridge coverage (explicit + fallback): 1
+- Bridge coverage (explicit + fallback): 2
 - Bridge explicit route mapping: 0
-- Bridge wildcard fallback mapping: 1
+- Bridge wildcard fallback mapping: 2
 - Legacy unresolved: 0
 
 ## Module Coverage
@@ -28,7 +28,7 @@ Generated: 2026-04-02T06:37:54.616Z
 | graphs | 5 | 5 | 0 | 0 | 0 |
 | home | 22 | 22 | 0 | 0 | 0 |
 | import | 15 | 15 | 0 | 0 | 0 |
-| joborders | 28 | 27 | 0 | 1 | 0 |
+| joborders | 29 | 27 | 0 | 2 | 0 |
 | kpis | 1 | 1 | 0 | 0 | 0 |
 | lists | 8 | 8 | 0 | 0 | 0 |
 | login | 8 | 8 | 0 | 0 | 0 |
@@ -49,6 +49,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | Action | Classification | Resolved Route | Component |
 | --- | --- | --- | --- |
 | purgeFromPipeline | bridge-global-fallback | *.* | ModuleBridgePage |
+| rejectionReasonBreakdown | bridge-global-fallback | *.* | ModuleBridgePage |
 
 ## Full Action Matrix
 
@@ -181,6 +182,7 @@ These are legacy actions for modernized modules that are not mapped as explicit 
 | joborders | postMessage | native-explicit-guarded | joborders.postmessage | JobOrdersShowPage |
 | joborders | purgeFromPipeline | bridge-global-fallback | *.* | ModuleBridgePage |
 | joborders | recruiterAllocation | native-explicit | joborders.recruiterallocation | JobOrdersRecruiterAllocationPage |
+| joborders | rejectionReasonBreakdown | bridge-global-fallback | *.* | ModuleBridgePage |
 | joborders | removeFromPipeline | native-explicit-guarded | joborders.removefrompipeline | JobOrdersShowPage |
 | joborders | search | native-explicit | joborders.search | JobOrdersListPage |
 | joborders | setMonitoredJobOrder | native-explicit-guarded | joborders.setmonitoredjoborder | JobOrderMonitorActionPage |
