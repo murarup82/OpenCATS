@@ -4026,6 +4026,12 @@
   color: #185e37;
 }
 
+.avel-joborders-page .modern-chip--openings-not-counted {
+  border-color: #4d5a67;
+  background: #586571;
+  color: #ffffff;
+}
+
 .avel-joborders-page .modern-chip--openings-zero {
   border-color: #d0dae3;
   background: #f2f6f9;

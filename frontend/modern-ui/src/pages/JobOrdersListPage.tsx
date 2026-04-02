@@ -164,6 +164,12 @@ function isActiveJobOrderStatus(status: string, statusSlug: string): boolean {
   return normalizedStatus === 'active' || normalizedSlug === 'active';
 }
 
+function isCountedPositionStatus(status: string, statusSlug: string): boolean {
+  const normalizedStatus = String(status || '').trim().toLowerCase();
+  const normalizedSlug = String(statusSlug || '').trim().toLowerCase();
+  return normalizedStatus === 'active' || normalizedSlug === 'active' || normalizedStatus === 'lead' || normalizedSlug === 'lead';
+}
+
 function getJobOrderColumnValue(row: JobOrderRow, key: JobOrderDataColumnKey): string {
   switch (key) {
     case 'jobOrder': return `${toDisplayText(row.title)} #${Number(row.jobOrderID || 0)}`;
@@ -1422,7 +1428,13 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                             case 'openings':
                               return (
                                 <td key={`${row.jobOrderID}-openings`} className="avel-joborders-metric-cell">
-                                  <span className={`modern-chip ${row.openings > 0 ? 'modern-chip--openings' : 'modern-chip--openings-zero'}`}>
+                                  <span
+                                    className={`modern-chip ${
+                                      row.openings > 0
+                                        ? (isCountedPositionStatus(row.status, row.statusSlug) ? 'modern-chip--openings' : 'modern-chip--openings-not-counted')
+                                        : 'modern-chip--openings-zero'
+                                    }`}
+                                  >
                                     {row.openings}
                                   </span>
                                 </td>
@@ -1430,7 +1442,13 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                             case 'remainingOpenings':
                               return (
                                 <td key={`${row.jobOrderID}-remainingOpenings`} className="avel-joborders-metric-cell">
-                                  <span className={`modern-chip ${row.remainingOpenings > 0 ? 'modern-chip--openings modern-chip--info' : 'modern-chip--openings-zero'}`}>
+                                  <span
+                                    className={`modern-chip ${
+                                      row.remainingOpenings > 0
+                                        ? (isCountedPositionStatus(row.status, row.statusSlug) ? 'modern-chip--openings modern-chip--info' : 'modern-chip--openings-not-counted')
+                                        : 'modern-chip--openings-zero'
+                                    }`}
+                                  >
                                     {row.remainingOpenings}
                                   </span>
                                 </td>
