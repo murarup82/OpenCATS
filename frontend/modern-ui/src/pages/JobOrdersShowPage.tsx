@@ -1454,18 +1454,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   </div>
                 </JobOrderShowSectionCard>
 
-                {hasExtraFields ? (
-                  <JobOrderShowSectionCard
-                    title="Extra Fields"
-                    description="Custom metadata captured for this job order."
-                  >
-                    <div className="avel-candidate-edit-grid avel-candidate-edit-grid--3col">
-                      {data.extraFields.map((field) => (
-                        <JobOrderShowValueField key={field.fieldName} label={toDisplayText(field.fieldName)} value={field.display} />
-                      ))}
-                    </div>
-                  </JobOrderShowSectionCard>
-                ) : null}
               </div>
 
               <aside className="avel-candidate-edit-sidebar avel-joborder-show-sidebar">
@@ -1495,6 +1483,30 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                     {adminHideToggleError ? <div className="modern-inline-error">{adminHideToggleError}</div> : null}
                   </div>
                 </JobOrderShowSidebarCard>
+
+                {hasExtraFields ? (
+                  <JobOrderShowSidebarCard
+                    title="Extra Fields"
+                    description="Custom metadata captured for this job order."
+                  >
+                    <div className="avel-joborder-show-extra-badges">
+                      {data.extraFields.map((field) => {
+                        const value = toDisplayText(field.display);
+                        const isEmpty = isDisplayValueEmpty(field.display);
+                        return (
+                          <span
+                            key={field.fieldName}
+                            className={`modern-chip avel-joborder-show-extra-badge ${isEmpty ? 'modern-chip--resume' : 'modern-chip--info'}`}
+                            title={`${toDisplayText(field.fieldName)}: ${value}`}
+                          >
+                            <strong>{toDisplayText(field.fieldName)}</strong>
+                            <span>{value}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </JobOrderShowSidebarCard>
+                ) : null}
 
                 <JobOrderShowSidebarCard
                   title="Capacity & Compensation"

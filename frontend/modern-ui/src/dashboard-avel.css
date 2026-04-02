@@ -9930,6 +9930,32 @@
   margin-top: 4px;
 }
 
+.avel-joborder-show-page--refined .avel-joborder-show-extra-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-extra-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-extra-badge strong {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-extra-badge span {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .avel-joborder-show-page--refined .avel-joborder-show-hiring-plan-item {
   border: 1px solid var(--avel-border, #c7ddea);
   border-radius: 14px;
