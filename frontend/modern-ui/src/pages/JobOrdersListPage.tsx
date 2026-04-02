@@ -175,6 +175,18 @@ function isCountedPositionStatus(status: string, statusSlug: string): boolean {
   return normalizedStatus === 'active' || normalizedSlug === 'active' || normalizedStatus === 'lead' || normalizedSlug === 'lead';
 }
 
+function getRowActionMenuDirection(trigger: HTMLElement): 'up' | 'down' {
+  const rect = trigger.getBoundingClientRect();
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  const spaceAbove = Math.max(0, rect.top);
+  const spaceBelow = Math.max(0, viewportHeight - rect.bottom);
+  const estimatedMenuHeight = 260;
+  if (spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow) {
+    return 'up';
+  }
+  return 'down';
+}
+
 function getJobOrderColumnValue(row: JobOrderRow, key: JobOrderDataColumnKey): string {
   switch (key) {
     case 'jobOrder': return `${toDisplayText(row.title)} #${Number(row.jobOrderID || 0)}`;
@@ -431,6 +443,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [columnFilters, setColumnFilters] = useState<Record<JobOrderDataColumnKey, string>>(emptyColumnFilters());
   const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
   const [monitorToggleError, setMonitorToggleError] = useState('');
+  const [activeRowActionMenuDirection, setActiveRowActionMenuDirection] = useState<'up' | 'down'>('down');
   const [quickActionError, setQuickActionError] = useState('');
   const [statusModal, setStatusModal] = useState<JobOrderStatusModalState | null>(null);
   const [priorityModal, setPriorityModal] = useState<JobOrderPriorityModalState | null>(null);
@@ -1844,11 +1857,15 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                     <button
                                       type="button"
                                       className="avel-candidate-row-menu__trigger"
-                                      onClick={() =>
+                                      onClick={(event) => {
+                                        const nextIsOpen = activeRowActionMenuJobOrderID !== row.jobOrderID;
+                                        if (nextIsOpen) {
+                                          setActiveRowActionMenuDirection(getRowActionMenuDirection(event.currentTarget));
+                                        }
                                         setActiveRowActionMenuJobOrderID((current) =>
                                           current === row.jobOrderID ? null : row.jobOrderID
-                                        )
-                                      }
+                                        );
+                                      }}
                                       aria-label={`Open actions for ${toDisplayText(row.title, 'job order')}`}
                                       aria-expanded={activeRowActionMenuJobOrderID === row.jobOrderID}
                                     >
@@ -1859,7 +1876,13 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                       </svg>
                                     </button>
                                     {activeRowActionMenuJobOrderID === row.jobOrderID ? (
-                                      <div className="avel-candidate-row-menu__panel" role="menu" aria-label="Job order actions">
+                                      <div
+                                        className={`avel-candidate-row-menu__panel${
+                                          activeRowActionMenuDirection === 'up' ? ' avel-candidate-row-menu__panel--up' : ''
+                                        }`}
+                                        role="menu"
+                                        aria-label="Job order actions"
+                                      >
                                         {hasStatusAction ? (
                                           <button
                                             type="button"

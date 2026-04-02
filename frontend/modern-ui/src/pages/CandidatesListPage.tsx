@@ -140,6 +140,18 @@ function getRowColumnValue(row: CandidateRow, key: CandidateDataColumnKey): stri
   }
 }
 
+function getRowActionMenuDirection(trigger: HTMLElement): 'up' | 'down' {
+  const rect = trigger.getBoundingClientRect();
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  const spaceAbove = Math.max(0, rect.top);
+  const spaceBelow = Math.max(0, viewportHeight - rect.bottom);
+  const estimatedMenuHeight = 210;
+  if (spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow) {
+    return 'up';
+  }
+  return 'down';
+}
+
 const stripDiacritics = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
 function normalizeFilterToken(value: string): string {
@@ -282,6 +294,7 @@ export function CandidatesListPage({ bootstrap }: Props) {
   const [columnFilters, setColumnFilters] = useState<Record<CandidateDataColumnKey, string>>(emptyColumnFilters());
   const [visibleColumns, setVisibleColumns] = useState<CandidateColumnVisibility>(DEFAULT_VISIBLE_COLUMNS);
   const [activeRowActionMenuCandidateID, setActiveRowActionMenuCandidateID] = useState<number | null>(null);
+  const [activeRowActionMenuDirection, setActiveRowActionMenuDirection] = useState<'up' | 'down'>('down');
   const columnsMenuRef = useRef<HTMLDetailsElement | null>(null);
   const columnVisibilityStorageKey = useMemo(
     () => `opencats:modern:${bootstrap.siteID}:${bootstrap.userID}:candidates:list:columns:v1`,
@@ -1226,11 +1239,15 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                       <button
                                         type="button"
                                         className="avel-candidate-row-menu__trigger"
-                                        onClick={() =>
+                                        onClick={(event) => {
+                                          const nextIsOpen = activeRowActionMenuCandidateID !== row.candidateID;
+                                          if (nextIsOpen) {
+                                            setActiveRowActionMenuDirection(getRowActionMenuDirection(event.currentTarget));
+                                          }
                                           setActiveRowActionMenuCandidateID((current) =>
                                             current === row.candidateID ? null : row.candidateID
-                                          )
-                                        }
+                                          );
+                                        }}
                                         aria-label={`Open actions for ${toDisplayText(row.fullName, 'candidate')}`}
                                         aria-expanded={activeRowActionMenuCandidateID === row.candidateID}
                                       >
@@ -1241,7 +1258,13 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                         </svg>
                                       </button>
                                       {activeRowActionMenuCandidateID === row.candidateID ? (
-                                        <div className="avel-candidate-row-menu__panel" role="menu" aria-label="Candidate actions">
+                                        <div
+                                          className={`avel-candidate-row-menu__panel${
+                                            activeRowActionMenuDirection === 'up' ? ' avel-candidate-row-menu__panel--up' : ''
+                                          }`}
+                                          role="menu"
+                                          aria-label="Candidate actions"
+                                        >
                                           {canAddToJobOrder ? (
                                             <button
                                               type="button"
