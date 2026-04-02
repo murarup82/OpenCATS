@@ -3328,6 +3328,12 @@ export type JobOrdersListModernDataResponse = {
       name: string;
     }>;
   };
+  summary: {
+    clientInterviewAll: number;
+    clientInterviewHistoricalAll: number;
+    hiredAll: number;
+    rejectedAll: number;
+  };
   actions: {
     addJobOrderURL: string;
     addJobOrderPopupURL: string;

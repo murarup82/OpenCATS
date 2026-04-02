@@ -853,6 +853,90 @@ class JobOrdersUI extends UserInterface
             );
         }
 
+        $summaryTotals = array(
+            'clientInterviewAll' => 0,
+            'clientInterviewHistoricalAll' => 0,
+            'hiredAll' => 0,
+            'rejectedAll' => 0
+        );
+        $summaryOnlyMyJobOrders = ((int) $dataGrid->getFilterValue('OwnerID') === (int) $this->_userID);
+        $summaryDB = DatabaseConnection::getInstance();
+        $summaryWhere = array(
+            sprintf('cjo.site_id = %s', $summaryDB->makeQueryInteger($this->_siteID)),
+            sprintf('jo.site_id = %s', $summaryDB->makeQueryInteger($this->_siteID))
+        );
+        if ((int) $selectedCompanyFilterID > 0)
+        {
+            $summaryWhere[] = sprintf(
+                'jo.company_id = %s',
+                $summaryDB->makeQueryInteger((int) $selectedCompanyFilterID)
+            );
+        }
+        if ($summaryOnlyMyJobOrders)
+        {
+            $summaryWhere[] = sprintf(
+                '(jo.owner = %s OR jo.recruiter = %s)',
+                $summaryDB->makeQueryInteger((int) $this->_userID),
+                $summaryDB->makeQueryInteger((int) $this->_userID)
+            );
+        }
+        if (
+            $_SESSION['CATS']->isLoggedIn() &&
+            $_SESSION['CATS']->getAccessLevel(ACL::SECOBJ_ROOT) < ACCESS_LEVEL_MULTI_SA
+        )
+        {
+            $summaryWhere[] = 'jo.is_admin_hidden = 0';
+        }
+        $summarySQL = sprintf(
+            'SELECT
+                SUM(IF(cjo.status = %s, 1, 0)) AS clientInterviewAll,
+                COUNT(DISTINCT IF(
+                    cjh_ci.candidate_id IS NOT NULL,
+                    CONCAT(cjo.candidate_id, "-", cjo.joborder_id),
+                    NULL
+                )) AS clientInterviewHistoricalAll,
+                SUM(IF(cjo.status = %s, 1, 0)) AS hiredAll,
+                SUM(IF(cjo.status = %s, 1, 0)) AS rejectedAll
+            FROM
+                candidate_joborder cjo
+            INNER JOIN
+                joborder jo
+                ON jo.joborder_id = cjo.joborder_id
+                AND jo.site_id = cjo.site_id
+            LEFT JOIN
+                (
+                    SELECT DISTINCT
+                        candidate_id,
+                        joborder_id,
+                        site_id
+                    FROM
+                        candidate_joborder_status_history
+                    WHERE
+                        status_to = %s
+                    AND
+                        site_id = %s
+                ) AS cjh_ci
+                ON cjh_ci.candidate_id = cjo.candidate_id
+                AND cjh_ci.joborder_id = cjo.joborder_id
+                AND cjh_ci.site_id = cjo.site_id
+            WHERE
+                %s',
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+            PIPELINE_STATUS_HIRED,
+            PIPELINE_STATUS_REJECTED,
+            PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+            $this->_siteID,
+            implode(' AND ', $summaryWhere)
+        );
+        $summaryRow = $summaryDB->getAssoc($summarySQL);
+        if (is_array($summaryRow))
+        {
+            $summaryTotals['clientInterviewAll'] = (int) (isset($summaryRow['clientInterviewAll']) ? $summaryRow['clientInterviewAll'] : 0);
+            $summaryTotals['clientInterviewHistoricalAll'] = (int) (isset($summaryRow['clientInterviewHistoricalAll']) ? $summaryRow['clientInterviewHistoricalAll'] : 0);
+            $summaryTotals['hiredAll'] = (int) (isset($summaryRow['hiredAll']) ? $summaryRow['hiredAll'] : 0);
+            $summaryTotals['rejectedAll'] = (int) (isset($summaryRow['rejectedAll']) ? $summaryRow['rejectedAll'] : 0);
+        }
+
         /* Collect job order IDs from the current page to batch-fetch
            pipeline status counts in a single query. */
         $pageJobOrderIDs = array();
@@ -1086,6 +1170,12 @@ class JobOrdersUI extends UserInterface
             ),
             'state' => array(
                 'errorMessage' => (string) $errMessage
+            ),
+            'summary' => array(
+                'clientInterviewAll' => $summaryTotals['clientInterviewAll'],
+                'clientInterviewHistoricalAll' => $summaryTotals['clientInterviewHistoricalAll'],
+                'hiredAll' => $summaryTotals['hiredAll'],
+                'rejectedAll' => $summaryTotals['rejectedAll']
             ),
             'rows' => $responseRows
         );
