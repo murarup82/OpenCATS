@@ -140,12 +140,13 @@ function getRowColumnValue(row: CandidateRow, key: CandidateDataColumnKey): stri
   }
 }
 
-function getRowActionMenuDirection(trigger: HTMLElement): 'up' | 'down' {
+function getRowActionMenuDirection(trigger: HTMLElement, actionCount: number): 'up' | 'down' {
   const rect = trigger.getBoundingClientRect();
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
   const spaceAbove = Math.max(0, rect.top);
   const spaceBelow = Math.max(0, viewportHeight - rect.bottom);
-  const estimatedMenuHeight = 210;
+  const clampedActionCount = Math.max(1, Math.trunc(actionCount || 0));
+  const estimatedMenuHeight = 18 + (clampedActionCount * 36);
   if (spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow) {
     return 'up';
   }
@@ -1232,6 +1233,10 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                 if (!canAddToJobOrder && !canEditCandidate && !canAddToList) {
                                   return <td key={`${row.candidateID}-actions`}><span className="avel-candidate-row-menu__empty">—</span></td>;
                                 }
+                                const actionCount =
+                                  (canAddToJobOrder ? 1 : 0) +
+                                  (canEditCandidate ? 1 : 0) +
+                                  (canAddToList ? 1 : 0);
 
                                 return (
                                   <td key={`${row.candidateID}-actions`} className="avel-candidate-row-menu-cell">
@@ -1242,7 +1247,9 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                         onClick={(event) => {
                                           const nextIsOpen = activeRowActionMenuCandidateID !== row.candidateID;
                                           if (nextIsOpen) {
-                                            setActiveRowActionMenuDirection(getRowActionMenuDirection(event.currentTarget));
+                                            setActiveRowActionMenuDirection(
+                                              getRowActionMenuDirection(event.currentTarget, actionCount)
+                                            );
                                           }
                                           setActiveRowActionMenuCandidateID((current) =>
                                             current === row.candidateID ? null : row.candidateID

@@ -175,12 +175,13 @@ function isCountedPositionStatus(status: string, statusSlug: string): boolean {
   return normalizedStatus === 'active' || normalizedSlug === 'active' || normalizedStatus === 'lead' || normalizedSlug === 'lead';
 }
 
-function getRowActionMenuDirection(trigger: HTMLElement): 'up' | 'down' {
+function getRowActionMenuDirection(trigger: HTMLElement, actionCount: number): 'up' | 'down' {
   const rect = trigger.getBoundingClientRect();
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
   const spaceAbove = Math.max(0, rect.top);
   const spaceBelow = Math.max(0, viewportHeight - rect.bottom);
-  const estimatedMenuHeight = 260;
+  const clampedActionCount = Math.max(1, Math.trunc(actionCount || 0));
+  const estimatedMenuHeight = 18 + (clampedActionCount * 36);
   if (spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow) {
     return 'up';
   }
@@ -1834,6 +1835,14 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                               const hasStatusAction = canEditJobOrder;
                               const hasPriorityAction = canEditJobOrder;
                               const hasAssignmentAction = canManageRecruiterAllocation;
+                              const actionCount =
+                                (hasStatusAction ? 1 : 0) +
+                                (hasPriorityAction ? 1 : 0) +
+                                (hasAddCandidateAction ? 1 : 0) +
+                                (hasOpenDetailsAction ? 1 : 0) +
+                                (hasEditAction ? 1 : 0) +
+                                (hasHiringPlanAction ? 1 : 0) +
+                                (hasAssignmentAction ? 1 : 0);
                               const hasAnyAction =
                                 hasOpenDetailsAction ||
                                 hasEditAction ||
@@ -1860,7 +1869,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                       onClick={(event) => {
                                         const nextIsOpen = activeRowActionMenuJobOrderID !== row.jobOrderID;
                                         if (nextIsOpen) {
-                                          setActiveRowActionMenuDirection(getRowActionMenuDirection(event.currentTarget));
+                                          setActiveRowActionMenuDirection(
+                                            getRowActionMenuDirection(event.currentTarget, actionCount)
+                                          );
                                         }
                                         setActiveRowActionMenuJobOrderID((current) =>
                                           current === row.jobOrderID ? null : row.jobOrderID
