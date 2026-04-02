@@ -5075,6 +5075,10 @@
   box-shadow: 0 12px 24px rgba(17, 52, 68, 0.18);
 }
 
+.avel-candidates-page .avel-list-panel.avel-candidate-results {
+  overflow: visible;
+}
+
 .avel-joborders-page .avel-list-panel.avel-candidate-results {
   overflow: visible;
 }
