@@ -764,7 +764,10 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     (total, row) => total + (buildJobOrderStatusTone(row.status, row.statusSlug) === 'active' ? 1 : 0),
     0
   );
-  const totalOpenings = filteredRows.reduce((total, row) => total + Number(row.remainingOpenings || 0), 0);
+  const activeStatusRows = filteredRows.filter(
+    (row) => buildJobOrderStatusTone(row.status, row.statusSlug) === 'active'
+  );
+  const totalOpenings = activeStatusRows.reduce((total, row) => total + Number(row.remainingOpenings || 0), 0);
   const totalClientInterview = filteredRows.reduce((total, row) => total + Number(row.clientInterview || 0), 0);
   const totalHired = filteredRows.reduce((total, row) => total + Number(row.hired || 0), 0);
 
@@ -807,7 +810,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
             </div>
             <div
               className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--gdpr"
-              title="Open positions remaining across the currently visible/filtered job orders."
+              title="Open positions remaining across currently visible job orders in Active status only."
             >
               <span className="avel-candidate-stats-bar__label">Openings</span>
               <strong className="avel-candidate-stats-bar__value">{totalOpenings}</strong>
@@ -947,7 +950,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
               <div className="avel-list-panel__header-left">
                 <div className="avel-candidate-results__title-row">
                   <h2 className="avel-list-panel__title">
-                    Active Job Orders {data.meta.totalRows > 0 ? `(${data.meta.totalRows})` : ''}
+                    Job Order Portfolio {data.meta.totalRows > 0 ? `(${data.meta.totalRows})` : ''}
                   </h2>
                   <span className="avel-candidate-results__scope-note">
                     Local table filters refine only the current page selection.
