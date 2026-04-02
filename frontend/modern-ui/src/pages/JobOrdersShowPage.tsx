@@ -1498,21 +1498,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
 
                 <JobOrderShowSidebarCard
                   title="Capacity & Compensation"
-                  description="Openings, submitted candidates, and commercial details."
-                >
-                  <div className="avel-joborder-show-sidebar-stack">
-                    <JobOrderShowValueField label="Openings" value={jobOrder.openings} />
-                    <JobOrderShowValueField label="Openings Available" value={jobOrder.openingsAvailable} />
-                    <JobOrderShowValueField label="Submitted" value={jobOrder.submittedCount} />
-                    <JobOrderShowValueField label="Pipeline Count" value={jobOrder.pipelineCount} />
-                    <JobOrderShowValueField label="Max Rate" value={jobOrder.maxRate} />
-                    <JobOrderShowValueField label="Salary" value={jobOrder.salary} />
-                  </div>
-                </JobOrderShowSidebarCard>
-
-                <JobOrderShowSidebarCard
-                  title="Hiring Plan"
-                  description="Planned openings and delivery windows."
+                  description="Total openings, availability, compensation, and hiring plan."
                   actions={
                     <button
                       type="button"
@@ -1530,8 +1516,19 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   }
                 >
                   <div className="avel-joborder-show-sidebar-stack">
-                    <JobOrderShowValueField label="Total Openings" value={data.hiringPlan.totalOpenings} />
-                    <JobOrderShowValueField label="Rows" value={data.hiringPlan.items.length} />
+                    <JobOrderShowValueField label="Total Openings" value={jobOrder.openings} />
+                    <JobOrderShowValueField label="Openings Available" value={jobOrder.openingsAvailable} />
+                    <JobOrderShowValueField label="Max Rate" value={jobOrder.maxRate} />
+                    <JobOrderShowValueField label="Salary" value={jobOrder.salary} />
+                  </div>
+                  <div className="avel-candidate-edit-inline-card avel-joborder-show-inline-card">
+                    <div className="avel-joborder-show-sidebar-stack">
+                      <JobOrderShowValueField label="Hiring Plan Openings" value={data.hiringPlan.totalOpenings} />
+                      <JobOrderShowValueField label="Hiring Plan Rows" value={data.hiringPlan.items.length} />
+                    </div>
+                  </div>
+                  <div className="avel-joborder-show-inline-card">
+                    <p className="avel-joborder-show-caption">Hiring Plan Items</p>
                   </div>
                   {hasHiringPlanRows ? (
                     <div className="avel-joborder-show-hiring-plan-list">
