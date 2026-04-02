@@ -950,10 +950,30 @@ class JobOrdersUI extends UserInterface
         }
 
         $pipelineStatusCounts = array();
+        $openingsAvailableByJobOrderID = array();
         if (!empty($pageJobOrderIDs))
         {
             $db = DatabaseConnection::getInstance();
             $idList = implode(',', $pageJobOrderIDs);
+            $openingsAvailableSQL = sprintf(
+                'SELECT
+                    joborder_id AS jobOrderID,
+                    openings_available AS openingsAvailable
+                FROM
+                    joborder
+                WHERE
+                    site_id = %s
+                AND
+                    joborder_id IN (%s)',
+                $db->makeQueryInteger($this->_siteID),
+                $idList
+            );
+            $openingsAvailableRS = $db->getAllAssoc($openingsAvailableSQL);
+            foreach ($openingsAvailableRS as $openingsRow)
+            {
+                $openingsAvailableByJobOrderID[(int) $openingsRow['jobOrderID']] = (int) $openingsRow['openingsAvailable'];
+            }
+
             $statusCountSQL = sprintf(
                 'SELECT
                     cjo.joborder_id AS jobOrderID,
@@ -1073,9 +1093,9 @@ class JobOrdersUI extends UserInterface
             $openings = (isset($row['openings'])
                 ? (int) $row['openings']
                 : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : 0));
-            $openingsAvailable = (isset($row['openingsAvailable'])
-                ? (int) $row['openingsAvailable']
-                : $openings);
+            $openingsAvailable = isset($openingsAvailableByJobOrderID[$jobOrderID])
+                ? (int) $openingsAvailableByJobOrderID[$jobOrderID]
+                : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : $openings);
             $counts = isset($pipelineStatusCounts[$jobOrderID])
                 ? $pipelineStatusCounts[$jobOrderID]
                 : array(
