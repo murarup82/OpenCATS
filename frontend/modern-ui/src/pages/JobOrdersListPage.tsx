@@ -891,9 +891,9 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     0
   );
   const totalClientInterviewHistoricalAll = Number(data.summary.clientInterviewHistoricalAll || 0);
-  const totalHired = activeStatusRows.reduce((total, row) => total + Number(row.hired || 0), 0);
+  const totalHired = filteredRows.reduce((total, row) => total + Number(row.hired || 0), 0);
   const totalHiredAll = Number(data.summary.hiredAll || 0);
-  const totalRejected = activeStatusRows.reduce((total, row) => total + Number(row.rejected || 0), 0);
+  const totalRejected = filteredRows.reduce((total, row) => total + Number(row.rejected || 0), 0);
   const totalRejectedAll = Number(data.summary.rejectedAll || 0);
   const rejectionBreakdownRows = rejectionBreakdownModal?.data
     ? rejectionBreakdownModal.data.reasons
@@ -981,14 +981,14 @@ export function JobOrdersListPage({ bootstrap }: Props) {
             </div>
             <div
               className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline avel-candidate-stats-bar__item--hired"
-              title="Candidates currently in Hired status for job orders with Active status; parentheses include all filtered jobs across statuses and closed pipeline entries."
+              title="Candidates currently in Hired status for the job orders returned by the current filters; parentheses include all filtered jobs across statuses and closed pipeline entries."
             >
               <span className="avel-candidate-stats-bar__label">Hired</span>
               <strong className="avel-candidate-stats-bar__value">{formatCountWithClosed(totalHired, totalHiredAll)}</strong>
             </div>
             <div
               className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline avel-candidate-stats-bar__item--rejected"
-              title="Candidates currently in Rejected status for job orders with Active status; parentheses include all filtered jobs across statuses and closed pipeline entries."
+              title="Candidates currently in Rejected status for the job orders returned by the current filters; parentheses include all filtered jobs across statuses and closed pipeline entries."
             >
               <span className="avel-candidate-stats-bar__label">Rejected</span>
               <strong className="avel-candidate-stats-bar__value">{formatCountWithClosed(totalRejected, totalRejectedAll)}</strong>
