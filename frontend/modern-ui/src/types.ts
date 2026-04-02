@@ -21,8 +21,6 @@ export type DashboardModernDataResponse = {
     scope: 'mine' | 'all';
     view: 'list' | 'kanban';
     showClosed: boolean;
-    showMonitored: boolean;
-    isTopManagementUser: boolean;
     canViewAllScopes: boolean;
     jobOrderScopeLabel: string;
     page: number;

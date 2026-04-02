@@ -33,6 +33,7 @@ type JobOrderDataColumnKey =
   | 'jobOrder'
   | 'company'
   | 'status'
+  | 'priority'
   | 'openings'
   | 'remainingOpenings'
   | 'internalValidation'
@@ -57,6 +58,7 @@ const JOB_ORDER_COLUMNS: JobOrderColumnConfig[] = [
   { key: 'jobOrder', title: 'Job Order', sortKey: 'title', filterable: true },
   { key: 'company', title: 'Company', sortKey: 'companyName', filterable: true },
   { key: 'status', title: 'Status', sortKey: 'status', filterable: true },
+  { key: 'priority', title: 'Priority', sortKey: '', filterable: true },
   { key: 'openings', title: 'Total Openings', sortKey: '', filterable: true },
   { key: 'remainingOpenings', title: 'Remaining Openings', sortKey: '', filterable: true },
   { key: 'internalValidation', title: 'Internal Validation', sortKey: '', filterable: true },
@@ -71,6 +73,7 @@ const DEFAULT_VISIBLE_COLUMNS: JobOrderColumnVisibility = {
   jobOrder: true,
   company: false,
   status: true,
+  priority: true,
   openings: true,
   remainingOpenings: true,
   internalValidation: true,
@@ -140,6 +143,7 @@ function getJobOrderColumnValue(row: JobOrderRow, key: JobOrderDataColumnKey): s
     case 'jobOrder': return `${toDisplayText(row.title)} #${Number(row.jobOrderID || 0)}`;
     case 'company': return String(row.companyName || '');
     case 'status': return String(row.status || '');
+    case 'priority': return row.isHot ? 'Hot' : 'Standard';
     case 'openings': return String(Number(row.openings || 0));
     case 'remainingOpenings': return String(Number(row.remainingOpenings || 0));
     case 'internalValidation': return String(Number(row.internalValidation || 0));
@@ -243,6 +247,7 @@ function emptyColumnFilters(): Record<JobOrderDataColumnKey, string> {
     jobOrder: '',
     company: '',
     status: '',
+    priority: '',
     openings: '',
     remainingOpenings: '',
     internalValidation: '',
@@ -259,6 +264,7 @@ function emptyColumnOptions(): Record<JobOrderDataColumnKey, string[]> {
     jobOrder: [],
     company: [],
     status: [],
+    priority: [],
     openings: [],
     remainingOpenings: [],
     internalValidation: [],
@@ -1117,6 +1123,12 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                           />
                                           {columnKey === 'status' ? (
                                             <span className={`modern-chip modern-chip--jo-status-${statusTone}`}>{optionValue}</span>
+                                          ) : columnKey === 'priority' ? (
+                                            optionValue === 'Hot' ? (
+                                              <span className="modern-chip modern-chip--warning">{optionValue}</span>
+                                            ) : (
+                                              <span className="modern-chip">{optionValue}</span>
+                                            )
                                           ) : columnKey === 'monitor' ? (
                                             <span className={`modern-chip modern-chip--monitor ${optionValue === 'Monitored' ? 'modern-chip--monitor-on' : 'modern-chip--monitor-off'}`}>
                                               {optionValue}
@@ -1210,6 +1222,16 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                   <span className={`modern-chip modern-chip--jo-status-${buildJobOrderStatusTone(row.status, row.statusSlug)}`}>
                                     {toDisplayText(row.status)}
                                   </span>
+                                </td>
+                              );
+                            case 'priority':
+                              return (
+                                <td key={`${row.jobOrderID}-priority`}>
+                                  {row.isHot ? (
+                                    <span className="modern-chip modern-chip--warning">Hot</span>
+                                  ) : (
+                                    <span className="modern-chip">Standard</span>
+                                  )}
                                 </td>
                               );
                             case 'openings':
