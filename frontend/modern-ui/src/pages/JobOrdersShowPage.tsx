@@ -131,7 +131,7 @@ function JobOrderShowSectionCard({
           <h2>{title}</h2>
           {description ? <p className="avel-candidate-edit-section__description">{description}</p> : null}
         </div>
-        {actions ? <div className="modern-table-actions">{actions}</div> : null}
+        {actions ? <div className="modern-table-actions avel-joborder-show-card-actions">{actions}</div> : null}
       </div>
       {children}
     </section>
@@ -160,7 +160,7 @@ function JobOrderShowSidebarCard({
           <h2>{title}</h2>
           {description ? <p className="avel-candidate-edit-sidebar-card__description">{description}</p> : null}
         </div>
-        {actions ? <div className="modern-table-actions">{actions}</div> : null}
+        {actions ? <div className="modern-table-actions avel-joborder-show-card-actions">{actions}</div> : null}
       </div>
       <div className="avel-candidate-edit-sidebar-card__body avel-joborder-show-sidebar-card__body">{children}</div>
     </section>
@@ -1179,7 +1179,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
               <div className="avel-candidate-edit-main avel-joborder-show-main">
                 <JobOrderShowSectionCard
                   title="Role & Assignment"
-                  description="Role ownership, company context, and assignment details."
+                  description="Company context and assignment details."
                   className="avel-joborder-show-section--identity"
                 >
                   <div className="avel-candidate-edit-grid avel-candidate-edit-grid--3col">
@@ -1194,22 +1194,18 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                     </JobOrderShowValueField>
                     <JobOrderShowValueField label="Contact" value={jobOrder.contactFullName} />
                     <JobOrderShowValueField label="Recruiter" value={jobOrder.recruiterFullName} />
-                    <JobOrderShowValueField label="Owner" value={jobOrder.ownerFullName} />
-                    <JobOrderShowValueField label="Entered By" value={jobOrder.enteredByFullName} />
                     <JobOrderShowValueField label="Type" value={jobOrder.typeDescription} />
                   </div>
                 </JobOrderShowSectionCard>
 
                 <JobOrderShowSectionCard
                   title="Location & Timing"
-                  description="Placement timing, job location, and lifecycle dates."
+                  description="Placement timing and job location."
                 >
                   <div className="avel-candidate-edit-grid avel-candidate-edit-grid--3col">
                     <JobOrderShowValueField label="Location" value={jobOrder.cityAndState} />
                     <JobOrderShowValueField label="Start Date" value={jobOrder.startDate} />
                     <JobOrderShowValueField label="Duration" value={jobOrder.duration} />
-                    <JobOrderShowValueField label="Created" value={jobOrder.dateCreated} />
-                    <JobOrderShowValueField label="Modified" value={jobOrder.dateModified} />
                     <JobOrderShowValueField label="Age" value={`${Number(jobOrder.daysOld || 0)} days`} />
                   </div>
                 </JobOrderShowSectionCard>
@@ -1552,42 +1548,6 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                   ) : (
                     <div className="modern-state modern-state--empty">No hiring plan rows.</div>
                   )}
-                </JobOrderShowSidebarCard>
-
-                <JobOrderShowSidebarCard
-                  title="Quick Actions"
-                  description="Reporting, audit history, and fallback navigation."
-                >
-                  <div className="modern-table-actions">
-                    <button
-                      type="button"
-                      className="modern-btn modern-btn--mini modern-btn--secondary"
-                      onClick={() =>
-                        setPipelineModal({
-                          url: decodeLegacyURL(data.actions.reportURL),
-                          title: 'Job Order Report',
-                          showRefreshClose: false
-                        })
-                      }
-                    >
-                      Report
-                    </button>
-                    {permissions.canViewHistory ? (
-                      <button
-                        type="button"
-                        className="modern-btn modern-btn--mini modern-btn--secondary"
-                        onClick={() =>
-                          setPipelineModal({
-                            url: decodeLegacyURL(data.actions.historyURL),
-                            title: 'Job Order History',
-                            showRefreshClose: false
-                          })
-                        }
-                      >
-                        History
-                      </button>
-                    ) : null}
-                  </div>
                 </JobOrderShowSidebarCard>
               </aside>
             </div>

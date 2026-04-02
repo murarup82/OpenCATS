@@ -9818,6 +9818,12 @@
   gap: 8px;
 }
 
+.avel-joborder-show-page--refined .avel-joborder-show-section--pipeline > .avel-candidate-add-card__header .avel-joborder-show-card-actions,
+.avel-joborder-show-page--refined .avel-joborder-show-section--attachments > .avel-candidate-add-card__header .avel-joborder-show-card-actions {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
 .avel-joborder-show-page--refined .avel-joborder-show-summary {
   display: flex;
   flex-wrap: wrap;

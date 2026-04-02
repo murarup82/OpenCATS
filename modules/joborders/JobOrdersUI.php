@@ -3479,7 +3479,23 @@ class JobOrdersUI extends UserInterface
 
         $pipelinePayload = array();
         $activePipelineCount = 0;
-        $closedPipelineCount = 0;
+        $closedPipelineCountAll = 0;
+        $db = DatabaseConnection::getInstance();
+        $closedPipelineCountAllSQL = sprintf(
+            "SELECT
+                COUNT(*)
+            FROM
+                candidate_joborder
+            WHERE
+                site_id = %s
+            AND
+                joborder_id = %s
+            AND
+                is_active = 0",
+            $db->makeQueryInteger($this->_siteID),
+            $db->makeQueryInteger($jobOrderID)
+        );
+        $closedPipelineCountAll = (int) $db->getColumn($closedPipelineCountAllSQL, 0, 0);
         foreach ($pipelineRS as $pipelineData)
         {
             $candidateID = (isset($pipelineData['candidateID']) ? (int) $pipelineData['candidateID'] : 0);
@@ -3487,10 +3503,6 @@ class JobOrdersUI extends UserInterface
             if ($isActivePipeline)
             {
                 $activePipelineCount++;
-            }
-            else
-            {
-                $closedPipelineCount++;
             }
 
             $statusLabel = (isset($pipelineData['status']) ? trim($pipelineData['status']) : '--');
@@ -3779,7 +3791,7 @@ class JobOrdersUI extends UserInterface
             ),
             'pipeline' => array(
                 'activeCount' => $activePipelineCount,
-                'closedCount' => $closedPipelineCount,
+                'closedCount' => $closedPipelineCountAll,
                 'items' => $pipelinePayload
             )
         );
