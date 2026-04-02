@@ -3355,8 +3355,14 @@ export type JobOrdersListModernDataResponse = {
     remainingOpenings: number;
     internalValidation: number;
     clientInterview: number;
+    clientInterviewAll: number;
+    clientInterviewHistorical: number;
+    clientInterviewHistoricalAll: number;
     proposed: number;
     hired: number;
+    hiredAll: number;
+    rejected: number;
+    rejectedAll: number;
     ownerName: string;
     recruiterName: string;
     showURL: string;

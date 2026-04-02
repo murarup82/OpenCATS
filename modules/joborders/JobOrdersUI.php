@@ -873,12 +873,43 @@ class JobOrdersUI extends UserInterface
             $statusCountSQL = sprintf(
                 'SELECT
                     cjo.joborder_id AS jobOrderID,
-                    SUM(IF(cjo.status IN (%s, %s), 1, 0)) AS internalValidation,
-                    SUM(IF(cjo.status = %s, 1, 0)) AS clientInterview,
-                    SUM(IF(cjo.status IN (%s, %s, %s, %s, %s, %s), 1, 0)) AS proposed,
-                    SUM(IF(cjo.status = %s, 1, 0)) AS hired
+                    SUM(IF(cjo.status IN (%s, %s) AND cjo.is_active = 1, 1, 0)) AS internalValidation,
+                    SUM(IF(cjo.status = %s AND cjo.is_active = 1, 1, 0)) AS clientInterview,
+                    SUM(IF(cjo.status = %s, 1, 0)) AS clientInterviewAll,
+                    COUNT(DISTINCT IF(
+                        cjo.is_active = 1
+                        AND cjh_ci.candidate_id IS NOT NULL,
+                        CONCAT(cjo.candidate_id, "-", cjo.joborder_id),
+                        NULL
+                    )) AS clientInterviewHistorical,
+                    COUNT(DISTINCT IF(
+                        cjh_ci.candidate_id IS NOT NULL,
+                        CONCAT(cjo.candidate_id, "-", cjo.joborder_id),
+                        NULL
+                    )) AS clientInterviewHistoricalAll,
+                    SUM(IF(cjo.status IN (%s, %s, %s, %s, %s, %s) AND cjo.is_active = 1, 1, 0)) AS proposed,
+                    SUM(IF(cjo.status = %s AND cjo.is_active = 1, 1, 0)) AS hired,
+                    SUM(IF(cjo.status = %s, 1, 0)) AS hiredAll,
+                    SUM(IF(cjo.status = %s AND cjo.is_active = 1, 1, 0)) AS rejected,
+                    SUM(IF(cjo.status = %s, 1, 0)) AS rejectedAll
                 FROM
                     candidate_joborder cjo
+                LEFT JOIN
+                    (
+                        SELECT DISTINCT
+                            candidate_id,
+                            joborder_id,
+                            site_id
+                        FROM
+                            candidate_joborder_status_history
+                        WHERE
+                            status_to = %s
+                        AND
+                            site_id = %s
+                    ) AS cjh_ci
+                    ON cjh_ci.candidate_id = cjo.candidate_id
+                    AND cjh_ci.joborder_id = cjo.joborder_id
+                    AND cjh_ci.site_id = cjo.site_id
                 WHERE
                     cjo.joborder_id IN (%s)
                 AND
@@ -888,6 +919,7 @@ class JobOrdersUI extends UserInterface
                 PIPELINE_STATUS_ALLOCATED,
                 PIPELINE_STATUS_DELIVERY_VALIDATED,
                 PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+                PIPELINE_STATUS_CUSTOMER_INTERVIEW,
                 PIPELINE_STATUS_PROPOSED_TO_CUSTOMER,
                 PIPELINE_STATUS_CUSTOMER_INTERVIEW,
                 PIPELINE_STATUS_CUSTOMER_APPROVED,
@@ -895,6 +927,11 @@ class JobOrdersUI extends UserInterface
                 PIPELINE_STATUS_OFFER_NEGOTIATION,
                 PIPELINE_STATUS_OFFER_ACCEPTED,
                 PIPELINE_STATUS_HIRED,
+                PIPELINE_STATUS_HIRED,
+                PIPELINE_STATUS_REJECTED,
+                PIPELINE_STATUS_REJECTED,
+                PIPELINE_STATUS_CUSTOMER_INTERVIEW,
+                $this->_siteID,
                 $idList,
                 $this->_siteID
             );
@@ -904,8 +941,14 @@ class JobOrdersUI extends UserInterface
                 $pipelineStatusCounts[(int) $countRow['jobOrderID']] = array(
                     'internalValidation' => (int) $countRow['internalValidation'],
                     'clientInterview' => (int) $countRow['clientInterview'],
+                    'clientInterviewAll' => (int) $countRow['clientInterviewAll'],
+                    'clientInterviewHistorical' => (int) $countRow['clientInterviewHistorical'],
+                    'clientInterviewHistoricalAll' => (int) $countRow['clientInterviewHistoricalAll'],
                     'proposed' => (int) $countRow['proposed'],
-                    'hired' => (int) $countRow['hired']
+                    'hired' => (int) $countRow['hired'],
+                    'hiredAll' => (int) $countRow['hiredAll'],
+                    'rejected' => (int) $countRow['rejected'],
+                    'rejectedAll' => (int) $countRow['rejectedAll']
                 );
             }
         }
@@ -948,7 +991,18 @@ class JobOrdersUI extends UserInterface
                 : (isset($row['openingsAvailable']) ? (int) $row['openingsAvailable'] : 0));
             $counts = isset($pipelineStatusCounts[$jobOrderID])
                 ? $pipelineStatusCounts[$jobOrderID]
-                : array('internalValidation' => 0, 'clientInterview' => 0, 'proposed' => 0, 'hired' => 0);
+                : array(
+                    'internalValidation' => 0,
+                    'clientInterview' => 0,
+                    'clientInterviewAll' => 0,
+                    'clientInterviewHistorical' => 0,
+                    'clientInterviewHistoricalAll' => 0,
+                    'proposed' => 0,
+                    'hired' => 0,
+                    'hiredAll' => 0,
+                    'rejected' => 0,
+                    'rejectedAll' => 0
+                );
 
             $responseRows[] = array(
                 'jobOrderID' => $jobOrderID,
@@ -967,8 +1021,14 @@ class JobOrdersUI extends UserInterface
                 'remainingOpenings' => max(0, $openings - $counts['hired']),
                 'internalValidation' => $counts['internalValidation'],
                 'clientInterview' => $counts['clientInterview'],
+                'clientInterviewAll' => $counts['clientInterviewAll'],
+                'clientInterviewHistorical' => $counts['clientInterviewHistorical'],
+                'clientInterviewHistoricalAll' => $counts['clientInterviewHistoricalAll'],
                 'proposed' => $counts['proposed'],
                 'hired' => $counts['hired'],
+                'hiredAll' => $counts['hiredAll'],
+                'rejected' => $counts['rejected'],
+                'rejectedAll' => $counts['rejectedAll'],
                 'ownerName' => $ownerName,
                 'recruiterName' => $recruiterName,
                 'showURL' => sprintf('%s?m=joborders&a=show&jobOrderID=%d&ui=modern', $baseURL, $jobOrderID),

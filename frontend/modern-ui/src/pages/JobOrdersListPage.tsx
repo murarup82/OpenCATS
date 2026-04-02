@@ -101,6 +101,12 @@ function toBooleanString(value: boolean): string {
   return value ? '1' : '0';
 }
 
+function formatCountWithClosed(activeCount: number, totalIncludingClosed: number): string {
+  const activeValue = Number.isFinite(activeCount) ? Math.max(0, Math.trunc(activeCount)) : 0;
+  const totalValue = Number.isFinite(totalIncludingClosed) ? Math.max(0, Math.trunc(totalIncludingClosed)) : activeValue;
+  return `${activeValue} (${Math.max(activeValue, totalValue)})`;
+}
+
 function decodeLegacyURL(url: string): string {
   return String(url || '').replace(/&amp;/g, '&');
 }
@@ -775,7 +781,19 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   );
   const totalOpenings = activeStatusRows.reduce((total, row) => total + Number(row.remainingOpenings || 0), 0);
   const totalClientInterview = filteredRows.reduce((total, row) => total + Number(row.clientInterview || 0), 0);
+  const totalClientInterviewAll = filteredRows.reduce((total, row) => total + Number(row.clientInterviewAll || 0), 0);
+  const totalClientInterviewHistorical = filteredRows.reduce(
+    (total, row) => total + Number(row.clientInterviewHistorical || 0),
+    0
+  );
+  const totalClientInterviewHistoricalAll = filteredRows.reduce(
+    (total, row) => total + Number(row.clientInterviewHistoricalAll || 0),
+    0
+  );
   const totalHired = filteredRows.reduce((total, row) => total + Number(row.hired || 0), 0);
+  const totalHiredAll = filteredRows.reduce((total, row) => total + Number(row.hiredAll || 0), 0);
+  const totalRejected = filteredRows.reduce((total, row) => total + Number(row.rejected || 0), 0);
+  const totalRejectedAll = filteredRows.reduce((total, row) => total + Number(row.rejectedAll || 0), 0);
 
   return (
     <div className="avel-dashboard-page avel-candidates-page avel-joborders-page avel-joborders-page--candidate-grammar">
@@ -823,17 +841,35 @@ export function JobOrdersListPage({ bootstrap }: Props) {
             </div>
             <div
               className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
-              title="Candidates currently in Client Interview pipeline status for the currently visible/filtered job orders."
+              title="Candidates currently in Client Interview for visible jobs; parentheses include closed pipeline entries."
             >
-              <span className="avel-candidate-stats-bar__label">Client Interview</span>
-              <strong className="avel-candidate-stats-bar__value">{totalClientInterview}</strong>
+              <span className="avel-candidate-stats-bar__label">Client Interview (Current)</span>
+              <strong className="avel-candidate-stats-bar__value">
+                {formatCountWithClosed(totalClientInterview, totalClientInterviewAll)}
+              </strong>
             </div>
             <div
               className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
-              title="Candidates currently in Hired pipeline status for the currently visible/filtered job orders."
+              title="Candidates that reached Customer Interview at any point for visible jobs; parentheses include closed pipeline entries."
+            >
+              <span className="avel-candidate-stats-bar__label">Customer Interview (History)</span>
+              <strong className="avel-candidate-stats-bar__value">
+                {formatCountWithClosed(totalClientInterviewHistorical, totalClientInterviewHistoricalAll)}
+              </strong>
+            </div>
+            <div
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
+              title="Candidates currently in Hired status for visible jobs; parentheses include closed pipeline entries."
             >
               <span className="avel-candidate-stats-bar__label">Hired</span>
-              <strong className="avel-candidate-stats-bar__value">{totalHired}</strong>
+              <strong className="avel-candidate-stats-bar__value">{formatCountWithClosed(totalHired, totalHiredAll)}</strong>
+            </div>
+            <div
+              className="avel-candidate-stats-bar__item avel-candidate-stats-bar__item--pipeline"
+              title="Candidates currently in Rejected status for visible jobs; parentheses include closed pipeline entries."
+            >
+              <span className="avel-candidate-stats-bar__label">Rejected</span>
+              <strong className="avel-candidate-stats-bar__value">{formatCountWithClosed(totalRejected, totalRejectedAll)}</strong>
             </div>
           </section>
 
@@ -1270,7 +1306,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                               return (
                                 <td key={`${row.jobOrderID}-hired`} className="avel-joborders-metric-cell">
                                   <span className={`modern-chip ${row.hired > 0 ? 'modern-chip--success' : 'modern-chip--openings-zero'}`}>
-                                    {row.hired}
+                                    {formatCountWithClosed(row.hired, row.hiredAll)}
                                   </span>
                                 </td>
                               );
