@@ -1491,9 +1491,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                       value={jobOrder.status}
                       valueClassName={createStatusClassName(String(jobOrder.status).toLowerCase().replace(/[^a-z0-9]+/g, '-'))}
                     />
-                    <JobOrderShowValueField label="Visibility" value={jobOrder.public ? 'Public Job Order' : 'Internal Job Order'} />
                     <JobOrderShowValueField label="Priority" value={jobOrder.isHot ? 'Hot' : 'Standard'} />
-                    <JobOrderShowValueField label="Admin Hidden" value={jobOrder.isAdminHidden ? 'Yes' : 'No'} />
                     {adminHideToggleError ? <div className="modern-inline-error">{adminHideToggleError}</div> : null}
                   </div>
                 </JobOrderShowSidebarCard>
