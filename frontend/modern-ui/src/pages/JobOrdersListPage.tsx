@@ -1873,20 +1873,16 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                 </td>
                               );
                             case 'actions': {
-                              const hasOpenDetailsAction = String(row.showURL || '').trim() !== '';
                               const hasEditAction = canEditJobOrder && String(row.editURL || '').trim() !== '';
                               const hasHiringPlanAction = canEditJobOrder && String(row.hiringPlanURL || '').trim() !== '';
                               const hasAddCandidateAction = canAddCandidateToPipeline && String(row.addCandidateURL || '').trim() !== '';
                               const hasStatusAction = canEditJobOrder;
-                              const hasPriorityAction = canEditJobOrder;
                               const hasAssignmentAction = canManageRecruiterAllocation;
                               const hasAnyAction =
-                                hasOpenDetailsAction ||
                                 hasEditAction ||
                                 hasHiringPlanAction ||
                                 hasAddCandidateAction ||
                                 hasStatusAction ||
-                                hasPriorityAction ||
                                 hasAssignmentAction;
 
                               if (!hasAnyAction) {
@@ -1920,16 +1916,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                         Change Status
                                       </button>
                                     ) : null}
-                                    {hasPriorityAction ? (
-                                      <button
-                                        type="button"
-                                        className="avel-candidate-row-menu__item"
-                                        role="menuitem"
-                                        onClick={() => openPriorityModalForRow(row)}
-                                      >
-                                        Change Priority
-                                      </button>
-                                    ) : null}
                                     {hasAddCandidateAction ? (
                                       <button
                                         type="button"
@@ -1937,18 +1923,8 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                         role="menuitem"
                                         onClick={() => openAddCandidateModalForRow(row)}
                                       >
-                                        Add Candidate
+                                        Assign Candidate
                                       </button>
-                                    ) : null}
-                                    {hasOpenDetailsAction ? (
-                                      <a
-                                        className="avel-candidate-row-menu__item"
-                                        role="menuitem"
-                                        href={ensureModernUIURL(row.showURL)}
-                                        onClick={() => setActiveRowActionMenuJobOrderID(null)}
-                                      >
-                                        Open Job Order
-                                      </a>
                                     ) : null}
                                     {hasEditAction ? (
                                       <a
