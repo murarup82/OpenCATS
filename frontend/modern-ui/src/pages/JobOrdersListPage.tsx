@@ -1715,8 +1715,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                           switch (column.key) {
                             case 'jobOrder':
                               {
-                                const rowPriorityValue = normalizeJobOrderPriorityValue(row.priority, row.isHot);
-                                const rowPriorityLabel = toDisplayText(row.priorityLabel, getJobOrderPriorityLabel(rowPriorityValue));
                                 return (
                                   <td key={`${row.jobOrderID}-jobOrder`} className="avel-candidate-table__candidate avel-joborders-table__joborder">
                                     <div className="avel-candidate-table__title-row">
@@ -1725,9 +1723,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                       </a>
                                       <div className="avel-candidate-table__quick-tags">
                                         {row.isMonitored ? <span className="modern-chip modern-chip--success">Monitored</span> : null}
-                                        <span className={`modern-chip ${getJobOrderPriorityChipClass(rowPriorityValue)}`}>
-                                          {rowPriorityLabel}
-                                        </span>
                                         {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Attachment</span> : null}
                                         {row.commentCount > 0 ? (
                                           <span className="modern-chip modern-chip--info">{row.commentCount} comments</span>
