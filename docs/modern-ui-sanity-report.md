@@ -1,8 +1,8 @@
 # Modern UI Sanity Report
 
-Started: 2026-04-02T12:12:44.703Z
-Finished: 2026-04-02T12:12:58.823Z
-Overall Required Status: **Fail**
+Started: 2026-04-03T05:39:41.308Z
+Finished: 2026-04-03T05:39:56.148Z
+Overall Required Status: **Pass**
 
 ## Summary
 
@@ -12,7 +12,7 @@ Overall Required Status: **Fail**
 | Coverage Matrix | Pass | Yes | 0 |
 | Route Parity Checklist | Pass | Yes | 0 |
 | Bridge Wildcard Retirement | Pass | Yes | 0 |
-| No-Bridge Action Guard | Fail | Yes | 1 |
+| No-Bridge Action Guard | Pass | Yes | 0 |
 | Unexpected Legacy Redirect Guard | Pass | Yes | 0 |
 | Legacy Fallback Link Guard | Pass | Yes | 0 |
 | Shell No-JS Fallback Guard | Pass | Yes | 0 |
@@ -37,13 +37,13 @@ Command: `npm run build`
 
 [modern-ui] Cleaned build output directory: D:\Work\opencats\OpenCATS\public\modern-ui\build
 [36mvite v8.0.2 [32mbuilding client environment for production...[36m[39m
-[2Ktransforming...✓ 153 modules transformed.
+[2Ktransforming...✓ 154 modules transformed.
 rendering chunks...
 ../../public/modern-ui/build/.vite/manifest.json         0.20 kB
-../../public/modern-ui/build/opencats-modern-ui.css    405.42 kB
-../../public/modern-ui/build/app.bundle.js           2,110.50 kB
+../../public/modern-ui/build/opencats-modern-ui.css    405.68 kB
+../../public/modern-ui/build/app.bundle.js           2,111.98 kB
 
-[32m✓ built in 2.05s[39m
+[32m✓ built in 2.25s[39m
 ```
 
 **stderr**
@@ -94,7 +94,7 @@ Command: `npm run verify:bridge-wildcards`
 **stderr**
 `(no output)`
 
-### No-Bridge Action Guard (Fail)
+### No-Bridge Action Guard (Pass)
 
 Command: `npm run verify:no-bridge-actions`
 
@@ -107,9 +107,7 @@ Command: `npm run verify:no-bridge-actions`
 ```
 
 **stderr**
-```text
-[modern-ui] Bridge actions detected (bridge=3, bridgeExplicit=0, bridgeFallback=3, rows=3).
-```
+`(no output)`
 
 ### Unexpected Legacy Redirect Guard (Pass)
 

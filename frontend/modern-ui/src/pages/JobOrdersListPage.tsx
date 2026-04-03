@@ -10,6 +10,7 @@ import type {
   JobOrdersListModernDataResponse,
   UIModeBootstrap
 } from '../types';
+import { RowActionMenu } from '../components/RowActionMenu';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ErrorState } from '../components/states/ErrorState';
 import { EmptyState } from '../components/states/EmptyState';
@@ -175,18 +176,6 @@ function isCountedPositionStatus(status: string, statusSlug: string): boolean {
   return normalizedStatus === 'active' || normalizedSlug === 'active' || normalizedStatus === 'lead' || normalizedSlug === 'lead';
 }
 
-function getRowActionMenuDirection(trigger: HTMLElement, actionCount: number): 'up' | 'down' {
-  const rect = trigger.getBoundingClientRect();
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-  const spaceAbove = Math.max(0, rect.top);
-  const spaceBelow = Math.max(0, viewportHeight - rect.bottom);
-  const clampedActionCount = Math.max(1, Math.trunc(actionCount || 0));
-  const estimatedMenuHeight = 18 + (clampedActionCount * 36);
-  if (spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow) {
-    return 'up';
-  }
-  return 'down';
-}
 
 function normalizeJobOrderPriorityValue(
   priorityValue: unknown,
@@ -484,7 +473,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
   const [columnFilters, setColumnFilters] = useState<Record<JobOrderDataColumnKey, string>>(emptyColumnFilters());
   const [monitorTogglePendingIDs, setMonitorTogglePendingIDs] = useState<number[]>([]);
   const [monitorToggleError, setMonitorToggleError] = useState('');
-  const [activeRowActionMenuDirection, setActiveRowActionMenuDirection] = useState<'up' | 'down'>('down');
   const [quickActionError, setQuickActionError] = useState('');
   const [statusModal, setStatusModal] = useState<JobOrderStatusModalState | null>(null);
   const [priorityModal, setPriorityModal] = useState<JobOrderPriorityModalState | null>(null);
@@ -597,16 +585,12 @@ export function JobOrdersListPage({ bootstrap }: Props) {
         setActiveHeaderMenuColumn(null);
       }
 
-      if (activeRowActionMenuJobOrderID !== null && !element?.closest('.avel-candidate-row-menu')) {
-        setActiveRowActionMenuJobOrderID(null);
-      }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         closeColumnsMenu();
         setActiveHeaderMenuColumn(null);
-        setActiveRowActionMenuJobOrderID(null);
       }
     };
 
@@ -618,7 +602,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
       document.removeEventListener('touchstart', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [activeHeaderMenuColumn, activeRowActionMenuJobOrderID]);
+  }, [activeHeaderMenuColumn]);
 
   const toggleMonitoredState = useCallback(
     async (row: JobOrderRow) => {
@@ -1923,111 +1907,89 @@ export function JobOrdersListPage({ bootstrap }: Props) {
 
                               return (
                                 <td key={`${row.jobOrderID}-actions`} className="avel-candidate-row-menu-cell">
-                                  <div className="avel-candidate-row-menu">
-                                    <button
-                                      type="button"
-                                      className="avel-candidate-row-menu__trigger"
-                                      onClick={(event) => {
-                                        const nextIsOpen = activeRowActionMenuJobOrderID !== row.jobOrderID;
-                                        if (nextIsOpen) {
-                                          setActiveRowActionMenuDirection(
-                                            getRowActionMenuDirection(event.currentTarget, actionCount)
-                                          );
-                                        }
-                                        setActiveRowActionMenuJobOrderID((current) =>
-                                          current === row.jobOrderID ? null : row.jobOrderID
-                                        );
-                                      }}
-                                      aria-label={`Open actions for ${toDisplayText(row.title, 'job order')}`}
-                                      aria-expanded={activeRowActionMenuJobOrderID === row.jobOrderID}
-                                    >
-                                      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-                                        <circle cx="8" cy="3" r="1.25" fill="currentColor" />
-                                        <circle cx="8" cy="8" r="1.25" fill="currentColor" />
-                                        <circle cx="8" cy="13" r="1.25" fill="currentColor" />
-                                      </svg>
-                                    </button>
-                                    {activeRowActionMenuJobOrderID === row.jobOrderID ? (
-                                      <div
-                                        className={`avel-candidate-row-menu__panel${
-                                          activeRowActionMenuDirection === 'up' ? ' avel-candidate-row-menu__panel--up' : ''
-                                        }`}
-                                        role="menu"
-                                        aria-label="Job order actions"
+                                  <RowActionMenu
+                                    isOpen={activeRowActionMenuJobOrderID === row.jobOrderID}
+                                    onToggle={() =>
+                                      setActiveRowActionMenuJobOrderID((current) =>
+                                        current === row.jobOrderID ? null : row.jobOrderID
+                                      )
+                                    }
+                                    onClose={() => setActiveRowActionMenuJobOrderID(null)}
+                                    triggerLabel={`Open actions for ${toDisplayText(row.title, 'job order')}`}
+                                    menuLabel="Job order actions"
+                                    actionCount={actionCount}
+                                  >
+                                    {hasStatusAction ? (
+                                      <button
+                                        type="button"
+                                        className="avel-candidate-row-menu__item"
+                                        role="menuitem"
+                                        onClick={() => openStatusModalForRow(row)}
                                       >
-                                        {hasStatusAction ? (
-                                          <button
-                                            type="button"
-                                            className="avel-candidate-row-menu__item"
-                                            role="menuitem"
-                                            onClick={() => openStatusModalForRow(row)}
-                                          >
-                                            Change Status
-                                          </button>
-                                        ) : null}
-                                        {hasPriorityAction ? (
-                                          <button
-                                            type="button"
-                                            className="avel-candidate-row-menu__item"
-                                            role="menuitem"
-                                            onClick={() => openPriorityModalForRow(row)}
-                                          >
-                                            Change Priority
-                                          </button>
-                                        ) : null}
-                                        {hasAddCandidateAction ? (
-                                          <button
-                                            type="button"
-                                            className="avel-candidate-row-menu__item"
-                                            role="menuitem"
-                                            onClick={() => openAddCandidateModalForRow(row)}
-                                          >
-                                            Add Candidate
-                                          </button>
-                                        ) : null}
-                                        {hasOpenDetailsAction ? (
-                                          <a
-                                            className="avel-candidate-row-menu__item"
-                                            role="menuitem"
-                                            href={ensureModernUIURL(row.showURL)}
-                                            onClick={() => setActiveRowActionMenuJobOrderID(null)}
-                                          >
-                                            Open Job Order
-                                          </a>
-                                        ) : null}
-                                        {hasEditAction ? (
-                                          <a
-                                            className="avel-candidate-row-menu__item"
-                                            role="menuitem"
-                                            href={ensureModernUIURL(row.editURL)}
-                                            onClick={() => setActiveRowActionMenuJobOrderID(null)}
-                                          >
-                                            Edit Job Order
-                                          </a>
-                                        ) : null}
-                                        {hasHiringPlanAction ? (
-                                          <a
-                                            className="avel-candidate-row-menu__item"
-                                            role="menuitem"
-                                            href={ensureModernUIURL(row.hiringPlanURL)}
-                                            onClick={() => setActiveRowActionMenuJobOrderID(null)}
-                                          >
-                                            Open Hiring Plan
-                                          </a>
-                                        ) : null}
-                                        {hasAssignmentAction ? (
-                                          <button
-                                            type="button"
-                                            className="avel-candidate-row-menu__item"
-                                            role="menuitem"
-                                            onClick={() => openAssignmentModalForRow(row)}
-                                          >
-                                            Assign Recruiter/Owner
-                                          </button>
-                                        ) : null}
-                                      </div>
+                                        Change Status
+                                      </button>
                                     ) : null}
-                                  </div>
+                                    {hasPriorityAction ? (
+                                      <button
+                                        type="button"
+                                        className="avel-candidate-row-menu__item"
+                                        role="menuitem"
+                                        onClick={() => openPriorityModalForRow(row)}
+                                      >
+                                        Change Priority
+                                      </button>
+                                    ) : null}
+                                    {hasAddCandidateAction ? (
+                                      <button
+                                        type="button"
+                                        className="avel-candidate-row-menu__item"
+                                        role="menuitem"
+                                        onClick={() => openAddCandidateModalForRow(row)}
+                                      >
+                                        Add Candidate
+                                      </button>
+                                    ) : null}
+                                    {hasOpenDetailsAction ? (
+                                      <a
+                                        className="avel-candidate-row-menu__item"
+                                        role="menuitem"
+                                        href={ensureModernUIURL(row.showURL)}
+                                        onClick={() => setActiveRowActionMenuJobOrderID(null)}
+                                      >
+                                        Open Job Order
+                                      </a>
+                                    ) : null}
+                                    {hasEditAction ? (
+                                      <a
+                                        className="avel-candidate-row-menu__item"
+                                        role="menuitem"
+                                        href={ensureModernUIURL(row.editURL)}
+                                        onClick={() => setActiveRowActionMenuJobOrderID(null)}
+                                      >
+                                        Edit Job Order
+                                      </a>
+                                    ) : null}
+                                    {hasHiringPlanAction ? (
+                                      <a
+                                        className="avel-candidate-row-menu__item"
+                                        role="menuitem"
+                                        href={ensureModernUIURL(row.hiringPlanURL)}
+                                        onClick={() => setActiveRowActionMenuJobOrderID(null)}
+                                      >
+                                        Open Hiring Plan
+                                      </a>
+                                    ) : null}
+                                    {hasAssignmentAction ? (
+                                      <button
+                                        type="button"
+                                        className="avel-candidate-row-menu__item"
+                                        role="menuitem"
+                                        onClick={() => openAssignmentModalForRow(row)}
+                                      >
+                                        Assign Recruiter/Owner
+                                      </button>
+                                    ) : null}
+                                  </RowActionMenu>
                                 </td>
                               );
                             }
