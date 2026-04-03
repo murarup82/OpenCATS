@@ -22,10 +22,10 @@ Status: **Pass**
 | `docs/modern-ui-compat-deprecation-tracker.md` | Yes | 2026-03-03T04:55:57.027Z |
 | `docs/modern-ui-cutover-checklist.md` | Yes | 2026-03-02T03:52:37.233Z |
 | `docs/modern-ui-parity-checklist.md` | Yes | 2026-03-03T04:48:45.696Z |
-| `docs/modern-ui-quality-gate.md` | Yes | 2026-04-03T05:40:12.339Z |
+| `docs/modern-ui-quality-gate.md` | Yes | 2026-04-03T05:47:55.775Z |
 | `docs/modern-ui-release-runbook.md` | Yes | 2026-03-02T03:23:22.903Z |
 | `docs/modern-ui-rollout-scorecard.md` | Yes | 2026-03-02T03:36:38.903Z |
-| `docs/modern-ui-route-coverage.md` | Yes | 2026-04-03T05:47:30.495Z |
-| `docs/modern-ui-route-parity-checklist.md` | Yes | 2026-04-03T05:47:31.162Z |
-| `docs/modern-ui-sanity-report.md` | Yes | 2026-04-03T05:47:39.505Z |
+| `docs/modern-ui-route-coverage.md` | Yes | 2026-04-03T05:58:30.837Z |
+| `docs/modern-ui-route-parity-checklist.md` | Yes | 2026-04-03T05:58:31.500Z |
+| `docs/modern-ui-sanity-report.md` | Yes | 2026-04-03T05:58:39.816Z |
 | `docs/modern-ui-telemetry-dashboard-snippet.md` | Yes | 2026-03-02T03:26:51.345Z |
