@@ -1217,11 +1217,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                 if (!canAddToJobOrder && !canEditCandidate && !canAddToList) {
                                   return <td key={`${row.candidateID}-actions`}><span className="avel-candidate-row-menu__empty">—</span></td>;
                                 }
-                                const actionCount =
-                                  (canAddToJobOrder ? 1 : 0) +
-                                  (canEditCandidate ? 1 : 0) +
-                                  (canAddToList ? 1 : 0);
-
                                 return (
                                   <td key={`${row.candidateID}-actions`} className="avel-candidate-row-menu-cell">
                                     <RowActionMenu
@@ -1234,7 +1229,6 @@ export function CandidatesListPage({ bootstrap }: Props) {
                                       onClose={() => setActiveRowActionMenuCandidateID(null)}
                                       triggerLabel={`Open actions for ${toDisplayText(row.fullName, 'candidate')}`}
                                       menuLabel="Candidate actions"
-                                      actionCount={actionCount}
                                     >
                                       {canAddToJobOrder ? (
                                         <button

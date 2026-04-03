@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 interface RowActionMenuProps {
@@ -7,9 +7,11 @@ interface RowActionMenuProps {
   onClose: () => void;
   triggerLabel: string;
   menuLabel: string;
-  actionCount: number;
   children: ReactNode;
 }
+
+const GAP = 6;
+const VIEWPORT_MARGIN = 8;
 
 export function RowActionMenu({
   isOpen,
@@ -17,7 +19,6 @@ export function RowActionMenu({
   onClose,
   triggerLabel,
   menuLabel,
-  actionCount,
   children
 }: RowActionMenuProps) {
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -25,39 +26,60 @@ export function RowActionMenu({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
-  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({ visibility: 'hidden' });
 
-  const computePosition = useCallback(() => {
+  const reposition = () => {
     const trigger = triggerRef.current;
-    if (!trigger) return;
+    const panel = panelRef.current;
+    if (!trigger || !panel) return;
 
     const rect = trigger.getBoundingClientRect();
     const vh = window.innerHeight;
     const vw = document.documentElement.clientWidth;
-    const spaceBelow = Math.max(0, vh - rect.bottom);
-    const spaceAbove = Math.max(0, rect.top);
-    const estimatedHeight = 18 + Math.max(1, actionCount) * 36;
-    const openUp = spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
+    const panelHeight = panel.scrollHeight;
+    const rightOffset = Math.max(0, vw - rect.right);
+    const spaceBelow = vh - rect.bottom - GAP;
+    const spaceAbove = rect.top - GAP;
 
-    if (openUp) {
-      setPanelStyle({ bottom: vh - rect.top + 6, right: Math.max(0, vw - rect.right) });
+    if (spaceBelow >= panelHeight) {
+      setPanelStyle({ top: rect.bottom + GAP, right: rightOffset });
+    } else if (spaceAbove >= panelHeight) {
+      setPanelStyle({ bottom: vh - rect.top + GAP, right: rightOffset });
+    } else if (spaceBelow >= spaceAbove) {
+      setPanelStyle({
+        top: rect.bottom + GAP,
+        right: rightOffset,
+        maxHeight: spaceBelow - VIEWPORT_MARGIN,
+        overflowY: 'auto'
+      });
     } else {
-      setPanelStyle({ top: rect.bottom + 6, right: Math.max(0, vw - rect.right) });
+      setPanelStyle({
+        bottom: vh - rect.top + GAP,
+        right: rightOffset,
+        maxHeight: spaceAbove - VIEWPORT_MARGIN,
+        overflowY: 'auto'
+      });
     }
-  }, [actionCount]);
+  };
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setPanelStyle({ visibility: 'hidden' });
+      return;
+    }
+    reposition();
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    computePosition();
-
-    window.addEventListener('scroll', computePosition, true);
-    window.addEventListener('resize', computePosition);
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
     return () => {
-      window.removeEventListener('scroll', computePosition, true);
-      window.removeEventListener('resize', computePosition);
+      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
     };
-  }, [isOpen, computePosition]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;

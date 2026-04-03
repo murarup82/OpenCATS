@@ -1880,14 +1880,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                               const hasStatusAction = canEditJobOrder;
                               const hasPriorityAction = canEditJobOrder;
                               const hasAssignmentAction = canManageRecruiterAllocation;
-                              const actionCount =
-                                (hasStatusAction ? 1 : 0) +
-                                (hasPriorityAction ? 1 : 0) +
-                                (hasAddCandidateAction ? 1 : 0) +
-                                (hasOpenDetailsAction ? 1 : 0) +
-                                (hasEditAction ? 1 : 0) +
-                                (hasHiringPlanAction ? 1 : 0) +
-                                (hasAssignmentAction ? 1 : 0);
                               const hasAnyAction =
                                 hasOpenDetailsAction ||
                                 hasEditAction ||
@@ -1917,7 +1909,6 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                     onClose={() => setActiveRowActionMenuJobOrderID(null)}
                                     triggerLabel={`Open actions for ${toDisplayText(row.title, 'job order')}`}
                                     menuLabel="Job order actions"
-                                    actionCount={actionCount}
                                   >
                                     {hasStatusAction ? (
                                       <button
