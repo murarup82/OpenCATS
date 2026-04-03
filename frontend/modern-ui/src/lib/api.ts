@@ -3052,7 +3052,7 @@ export async function updateJobOrderQuickAction(
   payload: {
     jobOrderID: number;
     status?: string;
-    priority?: 'standard' | 'hot';
+    priority?: 'low' | 'standard' | 'high' | 'hot';
     ownerUserID?: number;
     recruiterUserID?: number;
   }

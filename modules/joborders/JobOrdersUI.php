@@ -1132,12 +1132,16 @@ class JobOrdersUI extends UserInterface
 
         $priorityOptionsPayload = array(
             array(
+                'value' => 'low',
+                'label' => 'Low'
+            ),
+            array(
                 'value' => 'standard',
                 'label' => 'Standard'
             ),
             array(
-                'value' => 'hot',
-                'label' => 'Hot'
+                'value' => 'high',
+                'label' => 'High'
             )
         );
 
@@ -1424,6 +1428,7 @@ class JobOrdersUI extends UserInterface
                     'rejected' => 0,
                     'rejectedAll' => 0
                 );
+            $priorityPayload = $this->buildJobOrderPriorityPayload(isset($row['isHot']) ? (int) $row['isHot'] : 0);
 
             $responseRows[] = array(
                 'jobOrderID' => $jobOrderID,
@@ -1432,7 +1437,10 @@ class JobOrdersUI extends UserInterface
                 'companyID' => (isset($row['companyID']) ? (int) $row['companyID'] : 0),
                 'status' => $status,
                 'statusSlug' => $statusSlug,
-                'isHot' => (isset($row['isHot']) ? ((int) $row['isHot'] === 1) : false),
+                'isHot' => ((bool) $priorityPayload['isHot']),
+                'priority' => (string) $priorityPayload['priority'],
+                'priorityLabel' => (string) $priorityPayload['label'],
+                'priorityTone' => (string) $priorityPayload['tone'],
                 'hasAttachment' => (isset($row['attachmentPresent']) ? ((int) $row['attachmentPresent'] === 1) : false),
                 'isMonitored' => (isset($row['monitoredJOFlag']) ? ((int) $row['monitoredJOFlag'] === 1) : false),
                 'commentCount' => (isset($row['profileCommentCount']) ? (int) $row['profileCommentCount'] : 0),
@@ -4125,6 +4133,9 @@ class JobOrdersUI extends UserInterface
                 'label' => (isset($rejectionReason['label']) ? (string) $rejectionReason['label'] : '')
             );
         }
+        $jobOrderPriorityPayload = $this->buildJobOrderPriorityPayload(
+            isset($data['isHot']) ? (int) $data['isHot'] : 0
+        );
 
         $payload = array(
             'meta' => array(
@@ -4201,7 +4212,10 @@ class JobOrdersUI extends UserInterface
                 'duration' => (isset($data['duration']) ? (string) $data['duration'] : ''),
                 'maxRate' => (isset($data['maxRate']) ? (string) $data['maxRate'] : ''),
                 'salary' => (isset($data['salary']) ? (string) $data['salary'] : ''),
-                'isHot' => (isset($data['isHot']) ? ((int) $data['isHot'] === 1) : false),
+                'isHot' => ((bool) $jobOrderPriorityPayload['isHot']),
+                'priority' => (string) $jobOrderPriorityPayload['priority'],
+                'priorityLabel' => (string) $jobOrderPriorityPayload['label'],
+                'priorityTone' => (string) $jobOrderPriorityPayload['tone'],
                 'isAdminHidden' => (isset($data['isAdminHidden']) ? ((int) $data['isAdminHidden'] === 1) : false),
                 'public' => (isset($data['public']) && trim((string) $data['public']) !== ''),
                 'description' => (isset($data['description']) ? (string) $data['description'] : ''),
@@ -4337,6 +4351,58 @@ class JobOrdersUI extends UserInterface
         }
 
         CATSUtility::transferRelativeURI($redirectURI);
+    }
+
+    private function buildJobOrderPriorityPayload($priorityRawValue)
+    {
+        $normalizedValue = (int) $priorityRawValue;
+        if ($normalizedValue === 1)
+        {
+            return array(
+                'rawValue' => 1,
+                'priority' => 'high',
+                'label' => 'High',
+                'tone' => 'high',
+                'isHot' => true
+            );
+        }
+        if ($normalizedValue === 2)
+        {
+            return array(
+                'rawValue' => 2,
+                'priority' => 'standard',
+                'label' => 'Standard',
+                'tone' => 'standard',
+                'isHot' => false
+            );
+        }
+
+        return array(
+            'rawValue' => 0,
+            'priority' => 'low',
+            'label' => 'Low',
+            'tone' => 'low',
+            'isHot' => false
+        );
+    }
+
+    private function parseJobOrderPriorityRawValue($priorityValue)
+    {
+        $priorityToken = strtolower(trim((string) $priorityValue));
+        if ($priorityToken === 'high' || $priorityToken === 'hot')
+        {
+            return 1;
+        }
+        if ($priorityToken === 'standard')
+        {
+            return 2;
+        }
+        if ($priorityToken === 'low')
+        {
+            return 0;
+        }
+
+        return null;
     }
 
     private function getJobOrderStatusChoices()
@@ -4596,19 +4662,16 @@ class JobOrdersUI extends UserInterface
             }
         }
 
-        $nextIsHot = (isset($jobOrderData['isHot']) ? ((int) $jobOrderData['isHot'] === 1) : false);
+        $currentPriorityPayload = $this->buildJobOrderPriorityPayload(
+            isset($jobOrderData['isHot']) ? (int) $jobOrderData['isHot'] : 0
+        );
+        $nextPriorityRawValue = (int) $currentPriorityPayload['rawValue'];
         if ($hasPriorityUpdate)
         {
-            $priorityValue = strtolower(trim((string) $this->getTrimmedInput('priority', $_POST)));
-            if ($priorityValue === 'hot')
-            {
-                $nextIsHot = true;
-            }
-            else if ($priorityValue === 'standard')
-            {
-                $nextIsHot = false;
-            }
-            else
+            $parsedPriorityRawValue = $this->parseJobOrderPriorityRawValue(
+                $this->getTrimmedInput('priority', $_POST)
+            );
+            if ($parsedPriorityRawValue === null)
             {
                 if (!headers_sent())
                 {
@@ -4623,6 +4686,7 @@ class JobOrdersUI extends UserInterface
                 ));
                 return;
             }
+            $nextPriorityRawValue = (int) $parsedPriorityRawValue;
         }
 
         $canManageRecruiterAllocation = $this->canManageRecruiterAllocation();
@@ -4700,12 +4764,13 @@ class JobOrdersUI extends UserInterface
         }
 
         $currentStatus = (string) (isset($jobOrderData['status']) ? $jobOrderData['status'] : '');
-        $currentIsHot = (isset($jobOrderData['isHot']) ? ((int) $jobOrderData['isHot'] === 1) : false);
+        $currentPriorityRawValue = (int) $currentPriorityPayload['rawValue'];
+        $nextPriorityPayload = $this->buildJobOrderPriorityPayload($nextPriorityRawValue);
         $currentOwnerUserID = (int) (isset($jobOrderData['owner']) ? $jobOrderData['owner'] : 0);
         $currentRecruiterUserID = (int) (isset($jobOrderData['recruiter']) ? $jobOrderData['recruiter'] : 0);
 
         $statusChanged = ($hasStatusUpdate && $nextStatus !== $currentStatus);
-        $priorityChanged = ($hasPriorityUpdate && $nextIsHot !== $currentIsHot);
+        $priorityChanged = ($hasPriorityUpdate && $nextPriorityRawValue !== $currentPriorityRawValue);
         $ownerChanged = ($hasOwnerUpdate && $nextOwnerUserID !== $currentOwnerUserID);
         $recruiterChanged = ($hasRecruiterUpdate && $nextRecruiterUserID !== $currentRecruiterUserID);
 
@@ -4733,7 +4798,7 @@ class JobOrdersUI extends UserInterface
         }
         if ($priorityChanged)
         {
-            $setClauses[] = 'is_hot = ' . $db->makeQueryInteger($nextIsHot ? 1 : 0);
+            $setClauses[] = 'is_hot = ' . $db->makeQueryInteger($nextPriorityRawValue);
         }
         if ($ownerChanged)
         {
@@ -4799,8 +4864,8 @@ class JobOrdersUI extends UserInterface
                 DATA_ITEM_JOBORDER,
                 $jobOrderID,
                 'Priority',
-                ($currentIsHot ? 'Hot' : 'Standard'),
-                ($nextIsHot ? 'Hot' : 'Standard'),
+                (string) $currentPriorityPayload['label'],
+                (string) $nextPriorityPayload['label'],
                 '(USER) updated job order priority from list quick actions.'
             );
         }
@@ -4838,7 +4903,10 @@ class JobOrdersUI extends UserInterface
             'message' => 'Job order updated.',
             'jobOrderID' => $jobOrderID,
             'status' => $nextStatus,
-            'isHot' => ((bool) $nextIsHot),
+            'isHot' => ((bool) $nextPriorityPayload['isHot']),
+            'priority' => (string) $nextPriorityPayload['priority'],
+            'priorityLabel' => (string) $nextPriorityPayload['label'],
+            'priorityTone' => (string) $nextPriorityPayload['tone'],
             'ownerUserID' => (int) $nextOwnerUserID,
             'recruiterUserID' => (int) $nextRecruiterUserID
         ));

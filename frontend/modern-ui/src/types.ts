@@ -3373,6 +3373,9 @@ export type JobOrdersListModernDataResponse = {
     status: string;
     statusSlug: string;
     isHot: boolean;
+    priority: 'low' | 'standard' | 'high';
+    priorityLabel: string;
+    priorityTone: 'low' | 'standard' | 'high';
     hasAttachment: boolean;
     isMonitored: boolean;
     commentCount: number;
@@ -3686,6 +3689,9 @@ export type JobOrdersShowModernDataResponse = {
     maxRate: string;
     salary: string;
     isHot: boolean;
+    priority: 'low' | 'standard' | 'high';
+    priorityLabel: string;
+    priorityTone: 'low' | 'standard' | 'high';
     isAdminHidden: boolean;
     public: boolean;
     description: string;

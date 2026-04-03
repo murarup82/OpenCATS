@@ -188,12 +188,52 @@ function getRowActionMenuDirection(trigger: HTMLElement, actionCount: number): '
   return 'down';
 }
 
+function normalizeJobOrderPriorityValue(
+  priorityValue: unknown,
+  fallbackIsHot = false
+): 'low' | 'standard' | 'high' {
+  const normalized = String(priorityValue || '').trim().toLowerCase();
+  if (normalized === 'high' || normalized === 'hot') {
+    return 'high';
+  }
+  if (normalized === 'standard') {
+    return 'standard';
+  }
+  if (normalized === 'low') {
+    return 'low';
+  }
+  return fallbackIsHot ? 'high' : 'low';
+}
+
+function getJobOrderPriorityLabel(priorityValue: 'low' | 'standard' | 'high'): string {
+  if (priorityValue === 'high') {
+    return 'High';
+  }
+  if (priorityValue === 'standard') {
+    return 'Standard';
+  }
+  return 'Low';
+}
+
+function getJobOrderPriorityChipClass(priorityValue: 'low' | 'standard' | 'high'): string {
+  if (priorityValue === 'high') {
+    return 'modern-chip--priority-high';
+  }
+  if (priorityValue === 'standard') {
+    return 'modern-chip--priority-standard';
+  }
+  return 'modern-chip--priority-low';
+}
+
 function getJobOrderColumnValue(row: JobOrderRow, key: JobOrderDataColumnKey): string {
   switch (key) {
     case 'jobOrder': return `${toDisplayText(row.title)} #${Number(row.jobOrderID || 0)}`;
     case 'company': return String(row.companyName || '');
     case 'status': return String(row.status || '');
-    case 'priority': return row.isHot ? 'Hot' : 'Standard';
+    case 'priority': {
+      const priorityValue = normalizeJobOrderPriorityValue((row as { priority?: string }).priority, row.isHot);
+      return toDisplayText((row as { priorityLabel?: string }).priorityLabel, getJobOrderPriorityLabel(priorityValue));
+    }
     case 'openings': return String(Number(row.openings || 0));
     case 'remainingOpenings': return String(Number(row.remainingOpenings || 0));
     case 'internalValidation': return String(Number(row.internalValidation || 0));
@@ -409,7 +449,7 @@ type JobOrderStatusModalState = {
 type JobOrderPriorityModalState = {
   jobOrderID: number;
   title: string;
-  priority: 'standard' | 'hot';
+  priority: 'low' | 'standard' | 'high';
   pending: boolean;
   error: string;
 };
@@ -686,7 +726,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     setPriorityModal({
       jobOrderID: Number(row.jobOrderID || 0),
       title: toDisplayText(row.title, `Job Order #${Number(row.jobOrderID || 0)}`),
-      priority: row.isHot ? 'hot' : 'standard',
+      priority: normalizeJobOrderPriorityValue(row.priority, row.isHot),
       pending: false,
       error: ''
     });
@@ -938,25 +978,36 @@ export function JobOrdersListPage({ bootstrap }: Props) {
     }));
   }, [data]);
 
-  const quickPriorityOptions = useMemo<Array<{ value: 'standard' | 'hot'; label: string }>>(() => {
+  const quickPriorityOptions = useMemo<Array<{ value: 'low' | 'standard' | 'high'; label: string }>>(() => {
     if (!data) {
       return [
+        { value: 'low', label: 'Low' },
         { value: 'standard', label: 'Standard' },
-        { value: 'hot', label: 'Hot' }
+        { value: 'high', label: 'High' }
       ];
     }
 
+    const seen = new Set<string>();
     const normalized = (data.options.quickActions?.priorities || [])
-      .map((option) => ({
-        value: String(option.value || '').trim().toLowerCase() === 'hot' ? 'hot' : 'standard',
-        label: toDisplayText(option.label, 'Priority')
-      }));
+      .map((option) => {
+        const value = normalizeJobOrderPriorityValue(option.value);
+        if (seen.has(value)) {
+          return null;
+        }
+        seen.add(value);
+        return {
+          value,
+          label: toDisplayText(option.label, getJobOrderPriorityLabel(value))
+        };
+      })
+      .filter((option): option is { value: 'low' | 'standard' | 'high'; label: string } => option !== null);
 
     return normalized.length > 0
       ? normalized
       : [
+          { value: 'low', label: 'Low' },
           { value: 'standard', label: 'Standard' },
-          { value: 'hot', label: 'Hot' }
+          { value: 'high', label: 'High' }
         ];
   }, [data]);
 
@@ -1601,11 +1652,13 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                           {columnKey === 'status' ? (
                                             <span className={`modern-chip modern-chip--jo-status-${statusTone}`}>{optionValue}</span>
                                           ) : columnKey === 'priority' ? (
-                                            optionValue === 'Hot' ? (
-                                              <span className="modern-chip modern-chip--warning">{optionValue}</span>
-                                            ) : (
-                                              <span className="modern-chip">{optionValue}</span>
-                                            )
+                                            <span
+                                              className={`modern-chip ${getJobOrderPriorityChipClass(
+                                                normalizeJobOrderPriorityValue(optionValue)
+                                              )}`}
+                                            >
+                                              {optionValue}
+                                            </span>
                                           ) : columnKey === 'monitor' ? (
                                             <span className={`modern-chip modern-chip--monitor ${optionValue === 'Monitored' ? 'modern-chip--monitor-on' : 'modern-chip--monitor-off'}`}>
                                               {optionValue}
@@ -1677,26 +1730,32 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                         {visibleTableColumns.map((column) => {
                           switch (column.key) {
                             case 'jobOrder':
-                              return (
-                                <td key={`${row.jobOrderID}-jobOrder`} className="avel-candidate-table__candidate avel-joborders-table__joborder">
-                                  <div className="avel-candidate-table__title-row">
-                                    <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.showURL)}>
-                                      {toDisplayText(row.title, 'Job Order')} <span className="avel-candidate-table__id">#{row.jobOrderID}</span>
-                                    </a>
-                                    <div className="avel-candidate-table__quick-tags">
-                                      {row.isMonitored ? <span className="modern-chip modern-chip--success">Monitored</span> : null}
-                                      {row.isHot ? <span className="modern-chip modern-chip--warning">Hot</span> : null}
-                                      {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Attachment</span> : null}
-                                      {row.commentCount > 0 ? (
-                                        <span className="modern-chip modern-chip--info">{row.commentCount} comments</span>
-                                      ) : null}
+                              {
+                                const rowPriorityValue = normalizeJobOrderPriorityValue(row.priority, row.isHot);
+                                const rowPriorityLabel = toDisplayText(row.priorityLabel, getJobOrderPriorityLabel(rowPriorityValue));
+                                return (
+                                  <td key={`${row.jobOrderID}-jobOrder`} className="avel-candidate-table__candidate avel-joborders-table__joborder">
+                                    <div className="avel-candidate-table__title-row">
+                                      <a className="modern-link avel-candidate-table__name" href={ensureModernUIURL(row.showURL)}>
+                                        {toDisplayText(row.title, 'Job Order')} <span className="avel-candidate-table__id">#{row.jobOrderID}</span>
+                                      </a>
+                                      <div className="avel-candidate-table__quick-tags">
+                                        {row.isMonitored ? <span className="modern-chip modern-chip--success">Monitored</span> : null}
+                                        <span className={`modern-chip ${getJobOrderPriorityChipClass(rowPriorityValue)}`}>
+                                          {rowPriorityLabel}
+                                        </span>
+                                        {row.hasAttachment ? <span className="modern-chip modern-chip--resume">Attachment</span> : null}
+                                        {row.commentCount > 0 ? (
+                                          <span className="modern-chip modern-chip--info">{row.commentCount} comments</span>
+                                        ) : null}
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="avel-candidate-table__meta">
-                                    {toDisplayText(row.companyName)} | {Math.max(0, Number(row.daysOld || 0))} days old | Added {toDisplayText(row.dateCreated)}
-                                  </div>
-                                </td>
-                              );
+                                    <div className="avel-candidate-table__meta">
+                                      {toDisplayText(row.companyName)} | {Math.max(0, Number(row.daysOld || 0))} days old | Added {toDisplayText(row.dateCreated)}
+                                    </div>
+                                  </td>
+                                );
+                              }
                             case 'company':
                               return (
                                 <td key={`${row.jobOrderID}-company`}>
@@ -1714,15 +1773,17 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                 </td>
                               );
                             case 'priority':
-                              return (
-                                <td key={`${row.jobOrderID}-priority`}>
-                                  {row.isHot ? (
-                                    <span className="modern-chip modern-chip--warning">Hot</span>
-                                  ) : (
-                                    <span className="modern-chip">Standard</span>
-                                  )}
-                                </td>
-                              );
+                              {
+                                const rowPriorityValue = normalizeJobOrderPriorityValue(row.priority, row.isHot);
+                                const rowPriorityLabel = toDisplayText(row.priorityLabel, getJobOrderPriorityLabel(rowPriorityValue));
+                                return (
+                                  <td key={`${row.jobOrderID}-priority`}>
+                                    <span className={`modern-chip ${getJobOrderPriorityChipClass(rowPriorityValue)}`}>
+                                      {rowPriorityLabel}
+                                    </span>
+                                  </td>
+                                );
+                              }
                             case 'openings':
                               return (
                                 <td key={`${row.jobOrderID}-openings`} className="avel-joborders-metric-cell">
@@ -2070,7 +2131,7 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                         current
                           ? {
                               ...current,
-                              priority: String(event.target.value || '').trim().toLowerCase() === 'hot' ? 'hot' : 'standard',
+                              priority: normalizeJobOrderPriorityValue(event.target.value),
                               error: ''
                             }
                           : current

@@ -3451,6 +3451,24 @@
   color: #92500d;
 }
 
+.avel-joborders-page .modern-chip--priority-low {
+  border-color: #c9d2db;
+  background: #eef2f5;
+  color: #485d70;
+}
+
+.avel-joborders-page .modern-chip--priority-standard {
+  border-color: #bad4e8;
+  background: #eaf5ff;
+  color: #1f6486;
+}
+
+.avel-joborders-page .modern-chip--priority-high {
+  border-color: #c64f4f;
+  background: #d55454;
+  color: #ffffff;
+}
+
 .avel-candidates-page .modern-chip--critical {
   border-color: #eab6b6;
   background: #fff0f0;
@@ -10046,16 +10064,22 @@
   line-height: 1.2;
 }
 
-.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--priority-hot {
-  border-color: #f0c98d;
-  background: #fff5e4;
-  color: #92500d;
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--priority-low {
+  border-color: #c9d2db;
+  background: #eef2f5;
+  color: #485d70;
 }
 
 .avel-joborder-show-page--refined .avel-joborder-show-summary__chip--priority-standard {
-  border-color: #bed6e5;
-  background: #eff7fc;
-  color: #2b607f;
+  border-color: #bad4e8;
+  background: #eaf5ff;
+  color: #1f6486;
+}
+
+.avel-joborder-show-page--refined .avel-joborder-show-summary__chip--priority-high {
+  border-color: #c64f4f;
+  background: #d55454;
+  color: #ffffff;
 }
 
 .avel-joborder-show-page--refined .avel-joborder-show-summary__chip--visibility-public {

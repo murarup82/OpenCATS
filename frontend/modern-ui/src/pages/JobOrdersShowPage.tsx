@@ -109,6 +109,43 @@ function getJobOrderStatusChipTone(statusLabel: unknown): string {
   return 'status-default';
 }
 
+function normalizeJobOrderPriorityValue(
+  priorityValue: unknown,
+  fallbackIsHot = false
+): 'low' | 'standard' | 'high' {
+  const normalized = String(priorityValue || '').trim().toLowerCase();
+  if (normalized === 'high' || normalized === 'hot') {
+    return 'high';
+  }
+  if (normalized === 'standard') {
+    return 'standard';
+  }
+  if (normalized === 'low') {
+    return 'low';
+  }
+  return fallbackIsHot ? 'high' : 'low';
+}
+
+function getJobOrderPriorityLabel(priorityValue: 'low' | 'standard' | 'high'): string {
+  if (priorityValue === 'high') {
+    return 'High';
+  }
+  if (priorityValue === 'standard') {
+    return 'Standard';
+  }
+  return 'Low';
+}
+
+function getJobOrderPriorityChipTone(priorityValue: 'low' | 'standard' | 'high'): string {
+  if (priorityValue === 'high') {
+    return 'priority-high';
+  }
+  if (priorityValue === 'standard') {
+    return 'priority-standard';
+  }
+  return 'priority-low';
+}
+
 type JobOrderShowSectionCardProps = {
   title: string;
   description?: string;
@@ -1087,11 +1124,13 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
   const totalCandidateCount = Number(data.pipeline.activeCount || 0) + Number(data.pipeline.closedCount || 0);
   const hiddenClosedCandidates = !showClosed && Number(data.pipeline.closedCount || 0) > 0;
   const deleteURL = ensureModernUIURL(decodeLegacyURL(data.actions.deleteURL));
+  const jobOrderPriorityValue = normalizeJobOrderPriorityValue(jobOrder.priority, jobOrder.isHot);
+  const jobOrderPriorityLabel = toDisplayText(jobOrder.priorityLabel, getJobOrderPriorityLabel(jobOrderPriorityValue));
   const summaryChips: JobOrderSummaryChip[] = [
     {
       key: 'priority',
-      label: jobOrder.isHot ? 'Priority: Hot' : 'Priority: Standard',
-      tone: jobOrder.isHot ? 'priority-hot' : 'priority-standard'
+      label: `Priority: ${jobOrderPriorityLabel}`,
+      tone: getJobOrderPriorityChipTone(jobOrderPriorityValue)
     },
     {
       key: 'visibility',
@@ -1479,7 +1518,7 @@ export function JobOrdersShowPage({ bootstrap }: Props) {
                       value={jobOrder.status}
                       valueClassName={createStatusClassName(String(jobOrder.status).toLowerCase().replace(/[^a-z0-9]+/g, '-'))}
                     />
-                    <JobOrderShowValueField label="Priority" value={jobOrder.isHot ? 'Hot' : 'Standard'} />
+                    <JobOrderShowValueField label="Priority" value={jobOrderPriorityLabel} />
                     {adminHideToggleError ? <div className="modern-inline-error">{adminHideToggleError}</div> : null}
                   </div>
                 </JobOrderShowSidebarCard>
