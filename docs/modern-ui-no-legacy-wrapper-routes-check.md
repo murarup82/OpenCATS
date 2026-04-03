@@ -1,6 +1,6 @@
 # Modern UI Legacy Wrapper Route Guard
 
-Generated: 2026-04-03T05:40:04.480Z
+Generated: 2026-04-03T05:47:47.937Z
 
 Blocked components: `LegacyActionWorkspacePage`, `LegacyUtilityForwardActionPage`, `LegacyRedirectPage`, `EntityUtilityActionPage`, `ReportsActionPage`, `GraphsActionPage`
 

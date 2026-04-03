@@ -1,6 +1,6 @@
 # Modern UI Intentional Legacy-Forward Endpoint Guard
 
-Generated: 2026-04-03T05:40:05.139Z
+Generated: 2026-04-03T05:47:48.604Z
 
 This guard ensures endpoint-style routes have migrated off `LegacyUtilityForwardActionPage` while preserving required UI switch excludes.
 
