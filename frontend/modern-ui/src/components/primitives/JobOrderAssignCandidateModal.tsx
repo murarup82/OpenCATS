@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   assignCandidateToJobOrder,
   fetchJobOrderAssignCandidateData
@@ -19,6 +19,12 @@ type Props = {
   onAssigned: (message: string) => void;
 };
 
+function toStr(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return '';
+}
+
 export function JobOrderAssignCandidateModal({
   isOpen,
   bootstrap,
@@ -30,88 +36,74 @@ export function JobOrderAssignCandidateModal({
 }: Props) {
   const [data, setData] = useState<JobOrderAssignCandidateModernDataResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
-  const [selectedCandidateID, setSelectedCandidateID] = useState<number>(0);
-  const [selectedStatusID, setSelectedStatusID] = useState<number>(0);
+  const [selectedCandidateID, setSelectedCandidateID] = useState(0);
+  const [selectedStatusID, setSelectedStatusID] = useState(0);
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [confirmRequired, setConfirmRequired] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState('');
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialSearchDone = useRef(false);
+
+  const searchCandidates = useCallback(
+    async (query: string) => {
+      setLoading(true);
+      setError('');
+      try {
+        const payload = await fetchJobOrderAssignCandidateData(bootstrap, sourceURL, query);
+        setData(payload);
+        setSelectedCandidateID(0);
+        const defaultStatusID = Number(payload.meta.defaultAssignmentStatusID || 0);
+        if (defaultStatusID > 0 && selectedStatusID <= 0) {
+          setSelectedStatusID(defaultStatusID);
+        }
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Unable to load candidates.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [bootstrap, sourceURL, selectedStatusID]
+  );
+
   useEffect(() => {
     if (!isOpen) {
+      initialSearchDone.current = false;
       return;
     }
 
-    let isMounted = true;
-    setData(null);
     const initialQuery = String(initialSearchTerm || '').trim();
     setSearchTerm(initialQuery);
-    setAppliedSearchTerm(initialQuery);
+    setData(null);
     setSelectedCandidateID(0);
     setSelectedStatusID(0);
-    setLoading(true);
     setPending(false);
     setError('');
     setConfirmRequired(false);
     setConfirmMessage('');
+    initialSearchDone.current = true;
 
-    fetchJobOrderAssignCandidateData(bootstrap, sourceURL, initialQuery)
-      .then((payload) => {
-        if (!isMounted) {
-          return;
-        }
-        setData(payload);
-        const defaultStatusID = Number(payload.meta.defaultAssignmentStatusID || 0);
-        setSelectedStatusID(defaultStatusID > 0 ? defaultStatusID : 0);
-      })
-      .catch((err: unknown) => {
-        if (!isMounted) {
-          return;
-        }
-        setError(err instanceof Error ? err.message : 'Unable to load candidate search modal.');
-      })
-      .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      });
+    void searchCandidates(initialQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, sourceURL]);
 
+  useEffect(() => {
+    if (!isOpen || !initialSearchDone.current) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      void searchCandidates(searchTerm);
+    }, 350);
     return () => {
-      isMounted = false;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [bootstrap, initialSearchTerm, isOpen, sourceURL]);
-
-  const refreshSearch = async (query: string) => {
-    setLoading(true);
-    setError('');
-    try {
-      const payload = await fetchJobOrderAssignCandidateData(bootstrap, sourceURL, query);
-      setData(payload);
-      setSelectedCandidateID(0);
-      setAppliedSearchTerm(query.trim());
-      if (selectedStatusID <= 0) {
-        const defaultStatusID = Number(payload.meta.defaultAssignmentStatusID || 0);
-        setSelectedStatusID(defaultStatusID > 0 ? defaultStatusID : 0);
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Unable to search candidates.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [searchTerm]);
 
   const visibleRows = useMemo(() => data?.rows || [], [data?.rows]);
 
   const submitAssign = async (forceConfirm: boolean) => {
-    if (!data) {
-      return;
-    }
-    if (selectedCandidateID <= 0) {
-      setError('Select a candidate first.');
-      return;
-    }
+    if (!data || selectedCandidateID <= 0) return;
 
     setPending(true);
     setError('');
@@ -125,7 +117,7 @@ export function JobOrderAssignCandidateModal({
       });
 
       if (result.success) {
-        onAssigned(result.message || 'Candidate added to job order.');
+        onAssigned(result.message || 'Candidate assigned to pipeline.');
         onClose();
         return;
       }
@@ -136,22 +128,21 @@ export function JobOrderAssignCandidateModal({
         return;
       }
 
-      setError(result.message || 'Unable to add candidate to job order.');
+      setError(result.message || 'Unable to assign candidate.');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Unable to add candidate to job order.');
+      setError(err instanceof Error ? err.message : 'Unable to assign candidate.');
     } finally {
       setPending(false);
     }
   };
 
-  const title = data ? `Assign Candidate: ${data.meta.jobOrderTitle}` : 'Assign Candidate';
   const hasRows = visibleRows.length > 0;
   const canAssign = !loading && !pending && selectedCandidateID > 0;
 
   return (
     <Modal
       isOpen={isOpen}
-      title={title}
+      title="Assign Candidate"
       onClose={onClose}
       size="lg"
       closeOnEscape={!pending}
@@ -159,7 +150,7 @@ export function JobOrderAssignCandidateModal({
       footer={
         <>
           <button type="button" className="modern-btn modern-btn--secondary" onClick={onClose} disabled={pending}>
-            Close
+            Cancel
           </button>
           {confirmRequired ? (
             <button
@@ -180,113 +171,106 @@ export function JobOrderAssignCandidateModal({
               disabled={!canAssign}
               onClick={() => void submitAssign(false)}
             >
-              {pending ? 'Assigning...' : 'Assign Candidate'}
+              {pending ? 'Assigning...' : 'Assign to Pipeline'}
             </button>
           )}
         </>
       }
     >
-      <div className="avel-assign-candidate-modal">
-        {subtitle ? <p className="avel-assign-candidate-modal__subtitle">{subtitle}</p> : null}
-        <p className="avel-assign-candidate-modal__hint">
-          Search candidates by name, then assign directly from this modal.
-        </p>
-
-        <form
-          className="modern-command-search avel-assign-candidate-modal__search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void refreshSearch(searchTerm);
-          }}
-        >
-          <span className="modern-command-label">Search Candidates</span>
-          <span className="modern-command-search__shell">
-            <input
-              type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Type candidate name"
-              disabled={loading || pending}
-            />
-          </span>
-        </form>
-
-        {data?.meta.canSetStatusOnAdd ? (
-          <label className="modern-command-field">
-            <span className="modern-command-label">Initial Status</span>
-            <select
-              className="avel-form-control"
-              value={selectedStatusID > 0 ? String(selectedStatusID) : ''}
-              onChange={(event) => setSelectedStatusID(Number(event.target.value || 0))}
-              disabled={loading || pending}
-            >
-              {data.options.assignmentStatuses.map((statusOption) => (
-                <option key={statusOption.statusID} value={String(statusOption.statusID)}>
-                  {statusOption.status}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-
-        {loading ? <div className="modern-state">Loading candidates...</div> : null}
-        {error !== '' ? (
-          <div className="modern-state modern-state--error">
-            {error}
-            {sourceURL.trim() !== '' ? (
-              <a className="modern-link" href={sourceURL}>
-                Open legacy assignment
-              </a>
-            ) : null}
+      <div className="avel-quick-assign">
+        <div className="avel-quick-assign__panel avel-quick-assign__panel--single">
+          <div className="avel-quick-assign__panel-head">
+            <span className="avel-quick-assign__step-badge">1</span>
+            <span className="avel-quick-assign__panel-label">
+              {subtitle || (data ? toStr(data.meta.jobOrderTitle) : 'Job Order')}
+            </span>
           </div>
-        ) : null}
+
+          <span className="modern-command-search avel-quick-assign__panel-search">
+            <span className="modern-command-search__shell">
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Filter by name…"
+                aria-label="Search candidates"
+                disabled={loading || pending}
+              />
+            </span>
+          </span>
+
+          {data?.meta.canSetStatusOnAdd ? (
+            <label className="modern-command-field">
+              <span className="modern-command-label">Initial Status</span>
+              <select
+                className="avel-form-control"
+                value={selectedStatusID > 0 ? String(selectedStatusID) : ''}
+                onChange={(e) => setSelectedStatusID(Number(e.target.value || 0))}
+                disabled={loading || pending}
+              >
+                {data.options.assignmentStatuses.map((opt) => (
+                  <option key={opt.statusID} value={String(opt.statusID)}>
+                    {opt.status}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {loading ? <div className="modern-state">Searching candidates…</div> : null}
+
+          {!loading && hasRows ? (
+            <>
+              <div className="avel-quick-assign__count">
+                {visibleRows.length} candidate{visibleRows.length !== 1 ? 's' : ''}
+              </div>
+              <div className="avel-quick-assign__list" role="listbox" aria-label="Candidates">
+                {visibleRows.map((row) => {
+                  const candidateID = Number(row.candidateID || 0);
+                  const isSelected = candidateID === selectedCandidateID;
+                  const isAssigned = !!row.inPipeline;
+                  return (
+                    <button
+                      key={candidateID}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      className={`avel-quick-assign__item${isSelected ? ' is-selected' : ''}${isAssigned ? ' is-assigned' : ''}`}
+                      onClick={() => !isAssigned && setSelectedCandidateID(candidateID)}
+                      disabled={pending || isAssigned || candidateID <= 0}
+                    >
+                      <span className="avel-quick-assign__item-title">{row.fullName || `Candidate #${candidateID}`}</span>
+                      <span className="avel-quick-assign__item-meta">
+                        {row.city && row.state
+                          ? `${row.city}, ${row.state}`
+                          : row.city || row.state || 'Location not set'}
+                        {row.ownerName ? ` · ${row.ownerName}` : ''}
+                      </span>
+                      {row.keySkills ? (
+                        <span className="avel-quick-assign__item-skills">{row.keySkills}</span>
+                      ) : null}
+                      {isAssigned ? (
+                        <span className="avel-quick-assign__badge">Already in pipeline</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
+
+          {!loading && !hasRows && searchTerm.trim() !== '' ? (
+            <div className="avel-quick-assign__empty">No candidates found for this search.</div>
+          ) : null}
+
+          {!loading && !hasRows && searchTerm.trim() === '' && data ? (
+            <div className="avel-quick-assign__empty">Type a name to search for candidates.</div>
+          ) : null}
+        </div>
+
+        {error !== '' ? <div className="modern-state modern-state--error">{error}</div> : null}
         {confirmRequired && confirmMessage !== '' ? (
           <div className="modern-state modern-state--warning">{confirmMessage}</div>
-        ) : null}
-        {!loading && appliedSearchTerm !== '' && !hasRows ? (
-          <div className="avel-assign-candidate-modal__empty">No candidates found for this search.</div>
-        ) : null}
-        {!loading && appliedSearchTerm === '' && !hasRows ? (
-          <div className="avel-assign-candidate-modal__empty">
-            Enter a name and click search to find candidates.
-          </div>
-        ) : null}
-
-        {hasRows ? (
-          <div className="avel-assign-candidate-modal__list" role="listbox" aria-label="Candidate options">
-            {visibleRows.map((row) => {
-              const candidateID = Number(row.candidateID || 0);
-              const isSelected = candidateID === selectedCandidateID;
-              const isAssigned = !!row.inPipeline;
-              return (
-                <button
-                  key={candidateID}
-                  type="button"
-                  role="option"
-                  aria-selected={isSelected}
-                  className={`avel-assign-candidate-modal__item${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => setSelectedCandidateID(candidateID)}
-                  disabled={pending || isAssigned || candidateID <= 0}
-                >
-                  <span className="avel-assign-candidate-modal__item-title">{row.fullName || `Candidate #${candidateID}`}</span>
-                  <span className="avel-assign-candidate-modal__item-meta">
-                    {row.city && row.state ? `${row.city}, ${row.state}` : row.city || row.state || 'Location not set'}
-                    {row.ownerName ? ` • ${row.ownerName}` : ''}
-                  </span>
-                  {row.keySkills ? <span className="avel-assign-candidate-modal__item-skills">{row.keySkills}</span> : null}
-                  {isAssigned ? <span className="avel-assign-candidate-modal__badge">Already in pipeline</span> : null}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-
-        {data ? (
-          <div className="modern-table-actions">
-            <a className="modern-btn modern-btn--mini modern-btn--secondary" href={data.actions.legacyURL}>
-              Open Legacy Assignment
-            </a>
-          </div>
         ) : null}
       </div>
     </Modal>
