@@ -1872,12 +1872,14 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                               const hasHiringPlanAction = canEditJobOrder && String(row.hiringPlanURL || '').trim() !== '';
                               const hasAddCandidateAction = canAddCandidateToPipeline && String(row.addCandidateURL || '').trim() !== '';
                               const hasStatusAction = canEditJobOrder;
+                              const hasPriorityAction = canEditJobOrder;
                               const hasAssignmentAction = canManageRecruiterAllocation;
                               const hasAnyAction =
                                 hasEditAction ||
                                 hasHiringPlanAction ||
                                 hasAddCandidateAction ||
                                 hasStatusAction ||
+                                hasPriorityAction ||
                                 hasAssignmentAction;
 
                               if (!hasAnyAction) {
@@ -1909,6 +1911,16 @@ export function JobOrdersListPage({ bootstrap }: Props) {
                                         onClick={() => openStatusModalForRow(row)}
                                       >
                                         Change Status
+                                      </button>
+                                    ) : null}
+                                    {hasPriorityAction ? (
+                                      <button
+                                        type="button"
+                                        className="avel-candidate-row-menu__item"
+                                        role="menuitem"
+                                        onClick={() => openPriorityModalForRow(row)}
+                                      >
+                                        Change Priority
                                       </button>
                                     ) : null}
                                     {hasAddCandidateAction ? (
